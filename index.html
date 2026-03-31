@@ -38,7 +38,7 @@
           <span class="team-total" id="total-a">0</span>
         </div>
         <div class="team-drop-zone" id="drop-a" data-team="a">
-          <div class="drop-hint" id="hint-a">Drag players here</div>
+          <div class="drop-hint" id="hint-a">Add players</div>
         </div>
       </div>
       <div class="team-column team-b">
@@ -47,7 +47,7 @@
           <span class="team-total" id="total-b">0</span>
         </div>
         <div class="team-drop-zone" id="drop-b" data-team="b">
-          <div class="drop-hint" id="hint-b">Drag players here</div>
+          <div class="drop-hint" id="hint-b">Add players</div>
         </div>
       </div>
     </div>
@@ -120,6 +120,10 @@
             <div class="player-team">${p.team}</div>
           </div>
           <span class="player-value" data-sources="${sourcesTooltip(p.sources)}">${fmtZ(p.aggregate)}</span>
+          <div class="add-btns">
+            <button class="add-btn add-a" data-name="${p.name.replace(/"/g, '&quot;')}" data-team="a">A</button>
+            <button class="add-btn add-b" data-name="${p.name.replace(/"/g, '&quot;')}" data-team="b">B</button>
+          </div>
         </div>
       `).join('');
 
@@ -130,6 +134,19 @@
           card.classList.add('dragging');
         });
         card.addEventListener('dragend', () => card.classList.remove('dragging'));
+      });
+
+      // Attach add-to-team button events
+      list.querySelectorAll('.add-btn').forEach(btn => {
+        btn.addEventListener('click', e => {
+          e.stopPropagation();
+          const name = btn.dataset.name;
+          const player = allPlayers.find(p => p.name === name);
+          if (!player) return;
+          if (btn.dataset.team === 'a') teamA.push(player);
+          else teamB.push(player);
+          updateAll();
+        });
       });
     }
 
@@ -143,6 +160,7 @@
       team.forEach(p => {
         const el = document.createElement('div');
         el.className = 'team-player';
+        el.dataset.pos = p.position;
         el.innerHTML = `
           <span class="player-pos pos-${p.position}">${p.position}</span>
           <div class="player-info">
@@ -249,6 +267,18 @@
         renderPlayerList();
       });
     });
+
+    // Mobile: fade out intro on scroll
+    if (window.matchMedia('(max-width: 768px)').matches) {
+      const intro = document.querySelector('.intro');
+      window.addEventListener('scroll', () => {
+        if (window.scrollY > 10) {
+          intro.classList.add('scrolled-away');
+        } else {
+          intro.classList.remove('scrolled-away');
+        }
+      }, { passive: true });
+    }
 
     loadPlayers();
   </script>
