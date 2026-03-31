@@ -11,11 +11,12 @@ import http.server
 import json
 import os
 import re
-import subprocess
 import time
+import urllib.request
 
 PORT = 8000
-CACHE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "cache")
+IS_VERCEL = os.environ.get("VERCEL") == "1"
+CACHE_DIR = "/tmp/dynast-z-cache" if IS_VERCEL else os.path.join(os.path.dirname(os.path.abspath(__file__)), "cache")
 CACHE_TTL = 129600  # 36 hours in seconds
 
 KTC_URL = "https://keeptradecut.com/dynasty-rankings"
@@ -40,14 +41,13 @@ def write_cache(name, data):
         json.dump(data, f)
 
 
-def curl_fetch(url):
-    result = subprocess.run(
-        ["curl", "-s", "-L", "--max-time", "15", url],
-        capture_output=True, text=True
-    )
-    if result.returncode != 0:
-        raise RuntimeError(f"curl failed for {url}: {result.stderr}")
-    return result.stdout
+UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+
+
+def http_fetch(url):
+    req = urllib.request.Request(url, headers={"User-Agent": UA})
+    with urllib.request.urlopen(req, timeout=15) as resp:
+        return resp.read().decode("utf-8")
 
 
 def fetch_ktc():
@@ -56,7 +56,7 @@ def fetch_ktc():
         print("Using cached KTC data")
         return cached
     print("Fetching fresh KTC data...")
-    html = curl_fetch(KTC_URL)
+    html = http_fetch(KTC_URL)
     match = re.search(r"var\s+playersArray\s*=\s*(\[.*?\]);\s*\n", html, re.DOTALL)
     if not match:
         raise RuntimeError("Could not find playersArray in KTC page")
@@ -71,7 +71,7 @@ def fetch_fc():
         print("Using cached FantasyCalc data")
         return cached
     print("Fetching fresh FantasyCalc data...")
-    data = json.loads(curl_fetch(FANTASYCALC_URL))
+    data = json.loads(http_fetch(FANTASYCALC_URL))
     write_cache("fc.json", data)
     return data
 
@@ -158,6 +158,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
             self.send_header("Access-Control-Allow-Origin", "*")
+            if IS_VERCEL:
+                self.send_header("Cache-Control", "s-maxage=3600, stale-while-revalidate=86400")
             self.end_headers()
             try:
                 ktc_raw = fetch_ktc()
