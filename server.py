@@ -152,13 +152,7 @@ def merge_players(ktc, fc):
     return merged
 
 
-PUBLIC_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "public")
-
-
 class Handler(http.server.SimpleHTTPRequestHandler):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, directory=PUBLIC_DIR, **kwargs)
-
     def do_GET(self):
         if self.path == "/api/players":
             self.send_response(200)
