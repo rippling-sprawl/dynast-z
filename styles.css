@@ -352,7 +352,7 @@ header h1 {
 }
 
 /* Mobile layout */
-@media (max-width: 768px) {
+@media (max-width: 890px) {
   body {
     height: auto;
     overflow: auto;
