@@ -1,79 +1,32 @@
-#!/usr/bin/env python3
-"""
-Dynast-Z Trade Calculator - Local server that proxies API requests
-to avoid CORS issues and serves the frontend.
+"""Vercel serverless function for /api/players"""
 
-Usage: python3 server.py
-Then open http://localhost:8000
-"""
-
-import http.server
 import json
-import os
 import re
-import subprocess
-import time
-
-PORT = 8000
-CACHE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "cache")
-CACHE_TTL = 129600  # 36 hours in seconds
+import urllib.request
+from http.server import BaseHTTPRequestHandler
 
 KTC_URL = "https://keeptradecut.com/dynasty-rankings"
 FANTASYCALC_URL = "https://api.fantasycalc.com/values/current?isDynasty=true&numQbs=2&numTeams=12&ppr=1"
 
-
-def read_cache(name):
-    path = os.path.join(CACHE_DIR, name)
-    if not os.path.exists(path):
-        return None
-    age = time.time() - os.path.getmtime(path)
-    if age > CACHE_TTL:
-        return None
-    with open(path, "r") as f:
-        return json.load(f)
+UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 
 
-def write_cache(name, data):
-    os.makedirs(CACHE_DIR, exist_ok=True)
-    path = os.path.join(CACHE_DIR, name)
-    with open(path, "w") as f:
-        json.dump(data, f)
-
-
-def curl_fetch(url):
-    result = subprocess.run(
-        ["curl", "-s", "-L", "--max-time", "15", url],
-        capture_output=True, text=True
-    )
-    if result.returncode != 0:
-        raise RuntimeError(f"curl failed for {url}: {result.stderr}")
-    return result.stdout
+def http_fetch(url):
+    req = urllib.request.Request(url, headers={"User-Agent": UA})
+    with urllib.request.urlopen(req, timeout=15) as resp:
+        return resp.read().decode("utf-8")
 
 
 def fetch_ktc():
-    cached = read_cache("ktc.json")
-    if cached is not None:
-        print("Using cached KTC data")
-        return cached
-    print("Fetching fresh KTC data...")
-    html = curl_fetch(KTC_URL)
+    html = http_fetch(KTC_URL)
     match = re.search(r"var\s+playersArray\s*=\s*(\[.*?\]);\s*\n", html, re.DOTALL)
     if not match:
         raise RuntimeError("Could not find playersArray in KTC page")
-    data = json.loads(match.group(1))
-    write_cache("ktc.json", data)
-    return data
+    return json.loads(match.group(1))
 
 
 def fetch_fc():
-    cached = read_cache("fc.json")
-    if cached is not None:
-        print("Using cached FantasyCalc data")
-        return cached
-    print("Fetching fresh FantasyCalc data...")
-    data = json.loads(curl_fetch(FANTASYCALC_URL))
-    write_cache("fc.json", data)
-    return data
+    return json.loads(http_fetch(FANTASYCALC_URL))
 
 
 def normalize_ktc(raw):
@@ -109,7 +62,6 @@ def normalize_fc(raw):
 
 
 def compute_z_scores(players_dict):
-    """Convert raw values to z-scores for a single source's player dict."""
     values = [p["value"] for p in players_dict.values()]
     if len(values) < 2:
         return {name: 0.0 for name in players_dict}
@@ -152,34 +104,23 @@ def merge_players(ktc, fc):
     return merged
 
 
-class Handler(http.server.SimpleHTTPRequestHandler):
+class handler(BaseHTTPRequestHandler):
     def do_GET(self):
-        if self.path == "/api/players":
+        try:
+            ktc_raw = fetch_ktc()
+            fc_raw = fetch_fc()
+            ktc = normalize_ktc(ktc_raw)
+            fc = normalize_fc(fc_raw)
+            players = merge_players(ktc, fc)
+
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
             self.send_header("Access-Control-Allow-Origin", "*")
+            self.send_header("Cache-Control", "s-maxage=3600, stale-while-revalidate=86400")
             self.end_headers()
-            try:
-                ktc_raw = fetch_ktc()
-                fc_raw = fetch_fc()
-                ktc = normalize_ktc(ktc_raw)
-                fc = normalize_fc(fc_raw)
-                players = merge_players(ktc, fc)
-                self.wfile.write(json.dumps(players).encode())
-            except Exception as e:
-                self.wfile.write(json.dumps({"error": str(e)}).encode())
-        elif self.path == "/" or self.path == "":
-            self.path = "/index.html"
-            super().do_GET()
-        else:
-            super().do_GET()
-
-    def log_message(self, format, *args):
-        if "/api/" in (args[0] if args else ""):
-            super().log_message(format, *args)
-
-
-if __name__ == "__main__":
-    print(f"Starting server at http://localhost:{PORT}")
-    with http.server.HTTPServer(("", PORT), Handler) as httpd:
-        httpd.serve_forever()
+            self.wfile.write(json.dumps(players).encode())
+        except Exception as e:
+            self.send_response(500)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(json.dumps({"error": str(e)}).encode())
