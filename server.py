@@ -13,6 +13,7 @@ import os
 import re
 import time
 import urllib.request
+from datetime import datetime
 
 PORT = 8000
 IS_VERCEL = os.environ.get("VERCEL") == "1"
@@ -26,12 +27,12 @@ SLEEPER_PLAYERS_TTL = 86400  # 24 hours for the big players file
 SLEEPER_USERNAME = "baker28"
 
 
-def read_cache(name):
+def read_cache(name, ttl=None):
     path = os.path.join(CACHE_DIR, name)
     if not os.path.exists(path):
         return None
     age = time.time() - os.path.getmtime(path)
-    if age > CACHE_TTL:
+    if age > (ttl if ttl is not None else CACHE_TTL):
         return None
     with open(path, "r") as f:
         return json.load(f)
@@ -184,6 +185,154 @@ def build_teams_list(league_id):
     }
 
 
+TRANSACTIONS_CACHE_TTL = 300  # 5 minutes
+STORE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
+
+
+def read_transaction_store(league_id):
+    """Read the persistent transaction store (keyed by transaction_id)."""
+    path = os.path.join(STORE_DIR, f"transactions_{league_id}.json")
+    if not os.path.exists(path):
+        return {}
+    with open(path, "r") as f:
+        return json.load(f)
+
+
+def write_transaction_store(league_id, store):
+    """Write the persistent transaction store."""
+    os.makedirs(STORE_DIR, exist_ok=True)
+    path = os.path.join(STORE_DIR, f"transactions_{league_id}.json")
+    with open(path, "w") as f:
+        json.dump(store, f, indent=2)
+
+
+def transform_transaction(tx, roster_team_map, sleeper_players):
+    """Transform a single Sleeper transaction into normalized trade data."""
+    roster_ids = tx.get("roster_ids", [])
+    if len(roster_ids) < 2:
+        return None
+
+    a_id, b_id = roster_ids[0], roster_ids[1]
+    team_a = roster_team_map.get(a_id, f"Team {a_id}")
+    team_b = roster_team_map.get(b_id, f"Team {b_id}")
+
+    adds = tx.get("adds") or {}
+    draft_picks = tx.get("draft_picks") or []
+    waiver_budget = tx.get("waiver_budget") or []
+
+    a_receives = []
+    b_receives = []
+
+    # Players
+    for player_id, receiving_roster in adds.items():
+        sp = sleeper_players.get(player_id, {})
+        name = f"{sp.get('first_name', '')} {sp.get('last_name', '')}".strip() or player_id
+        pos = sp.get("position", "OTHER")
+        label = f"{pos} {name}"
+        if receiving_roster == a_id:
+            a_receives.append(label)
+        elif receiving_roster == b_id:
+            b_receives.append(label)
+
+    # Draft picks
+    for pick in draft_picks:
+        season = pick.get("season", "")
+        rd = pick.get("round", "")
+        new_owner = pick.get("owner_id")
+        original_roster = pick.get("roster_id")
+        original_team = roster_team_map.get(original_roster, "")
+        pick_label = f"{season} Round {rd}"
+        if original_team:
+            pick_label += f" ({original_team})"
+        if new_owner == a_id:
+            a_receives.append(pick_label)
+        elif new_owner == b_id:
+            b_receives.append(pick_label)
+
+    # FAAB budget
+    for wb in waiver_budget:
+        sender = wb.get("sender")
+        receiver = wb.get("receiver")
+        amount = wb.get("amount", 0)
+        if amount > 0:
+            label = f"${amount} FAAB"
+            if receiver == a_id:
+                a_receives.append(label)
+            elif receiver == b_id:
+                b_receives.append(label)
+
+    # Date from millisecond timestamp
+    created_ms = tx.get("created", 0)
+    dt = datetime.fromtimestamp(created_ms / 1000)
+    date_str = dt.strftime("%Y-%m-%d")
+    year = dt.year
+
+    return {
+        "transaction_id": tx.get("transaction_id"),
+        "team_a": team_a,
+        "team_b": team_b,
+        "team_a_receives": a_receives,
+        "team_b_receives": b_receives,
+        "date": date_str,
+        "year": year,
+    }
+
+
+def fetch_league_transactions(league_id):
+    """Fetch all trades from Sleeper transactions API, transform for display."""
+    cache_name = f"transactions_{league_id}.json"
+    cached = read_cache(cache_name, ttl=TRANSACTIONS_CACHE_TTL)
+    if cached is not None:
+        print(f"Using cached transactions for league {league_id}")
+        return cached
+
+    print(f"Fetching fresh transactions for league {league_id}...")
+
+    rosters, users, league = fetch_league_data(league_id)
+    sleeper_players = fetch_sleeper_players()
+
+    # Build roster_id -> team_name map
+    user_map = {u["user_id"]: u for u in users}
+    roster_team_map = {}
+    for roster in rosters:
+        owner_id = roster.get("owner_id")
+        user = user_map.get(owner_id, {})
+        team_name = user.get("metadata", {}).get("team_name") or user.get("display_name", "Unknown")
+        roster_team_map[roster["roster_id"]] = team_name
+
+    # Fetch all weeks from API
+    api_trades = []
+    for week in range(1, 19):
+        try:
+            raw = json.loads(http_fetch(f"{SLEEPER_API}/league/{league_id}/transactions/{week}"))
+            for tx in raw:
+                if tx.get("type") == "trade" and tx.get("status") == "complete":
+                    api_trades.append(tx)
+        except Exception:
+            continue
+
+    # Load persistent store and merge new transactions
+    store = read_transaction_store(league_id)
+    new_count = 0
+    for tx in api_trades:
+        tid = tx.get("transaction_id")
+        if tid and tid not in store:
+            transformed = transform_transaction(tx, roster_team_map, sleeper_players)
+            if transformed:
+                store[tid] = transformed
+                new_count += 1
+
+    if new_count > 0:
+        print(f"Stored {new_count} new transaction(s) for league {league_id}")
+        write_transaction_store(league_id, store)
+
+    # Return all stored transactions sorted by date descending
+    result = list(store.values())
+    result.sort(key=lambda t: t["date"], reverse=True)
+    write_cache(cache_name, result)
+    return result
+
+
 def build_team_roster(league_id, roster_id):
     """Build roster for a specific team by roster_id."""
     rosters, users, league = fetch_league_data(league_id)
@@ -314,6 +463,17 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 self.wfile.write(json.dumps(data).encode())
             except Exception as e:
                 self.wfile.write(json.dumps({"error": str(e)}).encode())
+        elif re.match(r"/api/league/[^/]+/transactions", self.path):
+            league_id = self.path.split("/api/league/")[1].split("/transactions")[0]
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.end_headers()
+            try:
+                data = fetch_league_transactions(league_id)
+                self.wfile.write(json.dumps(data).encode())
+            except Exception as e:
+                self.wfile.write(json.dumps({"error": str(e)}).encode())
         elif re.match(r"/api/league/[^/]+/teams", self.path):
             league_id = self.path.split("/api/league/")[1].split("/teams")[0]
             self.send_response(200)
@@ -340,6 +500,15 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 self.wfile.write(json.dumps({"error": str(e)}).encode())
         elif re.match(r"/league/[^/]+/team/", self.path):
             self.path = "/team.html"
+            super().do_GET()
+        elif re.match(r"/league/[^/]+/new-trades", self.path):
+            self.path = "/new-trades.html"
+            super().do_GET()
+        elif re.match(r"/league/[^/]+/trades", self.path):
+            self.path = "/league-trades.html"
+            super().do_GET()
+        elif re.match(r"/league/[^/]+/power", self.path):
+            self.path = "/league-power.html"
             super().do_GET()
         elif self.path.startswith("/league/"):
             self.path = "/league.html"
