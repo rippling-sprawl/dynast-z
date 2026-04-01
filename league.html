@@ -4,11 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dynast-Z - League</title>
-  <link rel="stylesheet" href="styles.css?v=2">
+  
   <style>
     body {
-      height: auto;
-      overflow: auto;
+      height: auto !important;
+      overflow: auto !important;
+      padding: 0 !important;
     }
 
     header {
@@ -37,6 +38,10 @@
       font-size: 14px;
     }
 
+    .player-list {
+      overflow-y: visible;
+    }
+
     .player-card {
       cursor: default;
     }
@@ -56,7 +61,480 @@
     .no-zscore {
       color: #484f58;
     }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: #0f1117;
+  color: #e1e4e8;
+  height: 100vh;
+  overflow: hidden;
+  padding: 16px;
+}
+
+header {
+  background: #161b22;
+  border-bottom: 1px solid #30363d;
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+header h1 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #f0f6fc;
+}
+
+#loading {
+  color: #8b949e;
+  font-size: 14px;
+}
+
+.intro {
+  color: #8b949e;
+  font-size: 13px;
+  line-height: 1.5;
+  padding: 8px 24px;
+  background: #161b22;
+  border-bottom: 1px solid #30363d;
+}
+
+.intro a {
+  color: #58a6ff;
+  text-decoration: none;
+}
+
+.intro a:hover {
+  text-decoration: underline;
+}
+
+.app {
+  display: flex;
+  height: calc(100vh - 49px);
+}
+
+/* Player List (left panel) */
+.player-pool {
+  width: 340px;
+  min-width: 340px;
+  border-right: 1px solid #30363d;
+  display: flex;
+  flex-direction: column;
+  background: #0d1117;
+}
+
+.panel-header {
+  padding: 12px 16px;
+  border-bottom: 1px solid #30363d;
+  background: #161b22;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.panel-header h2 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #f0f6fc;
+}
+
+.panel-header .count {
+  font-size: 12px;
+  color: #8b949e;
+  background: #21262d;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.filter-bar {
+  padding: 8px 16px;
+  border-bottom: 1px solid #30363d;
+  flex-shrink: 0;
+  overflow-x: auto;
+}
+
+.filter-bar::-webkit-scrollbar { height: 4px; }
+.filter-bar::-webkit-scrollbar-track { background: transparent; }
+.filter-bar::-webkit-scrollbar-thumb { background: #30363d; border-radius: 2px; }
+
+.position-filters {
+  display: flex;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.pos-filter {
+  background: #21262d;
+  border: 1px solid #30363d;
+  color: #8b949e;
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.pos-filter.active {
+  background: #1f6feb;
+  border-color: #1f6feb;
+  color: #fff;
+}
+
+.player-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+}
+
+.player-list::-webkit-scrollbar { width: 8px; }
+.player-list::-webkit-scrollbar-track { background: transparent; }
+.player-list::-webkit-scrollbar-thumb { background: #30363d; border-radius: 4px; }
+
+/* Player card */
+.player-card {
+  display: flex;
+  align-items: center;
+  padding: 8px 16px;
+  cursor: grab;
+  border-bottom: 1px solid #21262d;
+  transition: background 0.1s;
+  user-select: none;
+}
+
+.player-card:hover { background: #161b22; }
+.player-card.dragging { opacity: 0.4; }
+
+.player-pos {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 3px;
+  margin-right: 10px;
+  min-width: 30px;
+  text-align: center;
+}
+
+.pos-QB { background: #c2185b; color: #fff; }
+.pos-RB { background: #1565c0; color: #fff; }
+.pos-WR { background: #2e7d32; color: #fff; }
+.pos-TE { background: #e65100; color: #fff; }
+.pos-K { background: #6a1b9a; color: #fff; }
+.pos-DEF { background: #4e342e; color: #fff; }
+
+.player-card-PICK .player-team { display: none; }
+
+.player-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.player-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: #f0f6fc;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.player-team {
+  font-size: 11px;
+  color: #8b949e;
+}
+
+.player-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: #eee;
+  margin-left: 8px;
+  white-space: nowrap;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: #c8c8c8;
+}
+
+/* Trade columns */
+.trade-area {
+  flex: 1;
+  display: flex;
+  gap: 0;
+}
+
+.team-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid #30363d;
+}
+
+.team-column:last-child { border-right: none; }
+
+.team-header {
+  padding: 12px 16px;
+  border-bottom: 1px solid #30363d;
+  background: #161b22;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.team-header h2 {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.team-a .team-header h2 { color: #f78166; }
+.team-b .team-header h2 { color: #7ee787; }
+
+.team-total {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.team-a .team-total { color: #f78166; }
+.team-b .team-total { color: #7ee787; }
+
+.team-drop-zone {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+  min-height: 100px;
+  transition: background 0.15s;
+}
+
+.team-drop-zone::-webkit-scrollbar { width: 8px; }
+.team-drop-zone::-webkit-scrollbar-track { background: transparent; }
+.team-drop-zone::-webkit-scrollbar-thumb { background: #30363d; border-radius: 4px; }
+
+.team-drop-zone.drag-over {
+  background: rgba(56, 139, 253, 0.08);
+}
+
+.drop-hint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #484f58;
+  font-size: 13px;
+  pointer-events: none;
+}
+
+/* Team player cards */
+.team-player {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  margin-bottom: 6px;
+}
+
+.team-player .remove-btn {
+  background: none;
+  border: none;
+  color: #484f58;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 0 4px;
+  margin-left: 8px;
+  line-height: 1;
+}
+
+.team-player .remove-btn:hover { color: #f85149; }
+
+/* Trade result banner */
+.trade-result {
+  padding: 12px 16px;
+  border-top: 1px solid #30363d;
+  background: #161b22;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  flex-shrink: 0;
+}
+
+.trade-result .diff {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.trade-result .label {
+  font-size: 13px;
+  color: #8b949e;
+}
+
+.trade-result .favor-a { color: #f78166; }
+.trade-result .favor-b { color: #7ee787; }
+.trade-result .favor-even { color: #8b949e; }
+
+/* Add-to-team buttons */
+.add-btns {
+  display: flex;
+  gap: 12px;
+  margin-left: 8px;
+  flex-shrink: 0;
+}
+
+.add-btn {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  border: 1px solid #30363d;
+  background: #21262d;
+  color: #8b949e;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.1s, color 0.1s;
+}
+
+.add-btn.add-a:hover { background: #f78166; color: #fff; border-color: #f78166; }
+.add-btn.add-b:hover { background: #7ee787; color: #000; border-color: #7ee787; }
+
+/* Source tooltip */
+.player-value { position: relative; }
+.player-value[data-sources]:hover::after {
+  content: attr(data-sources);
+  position: absolute;
+  bottom: 100%;
+  right: 0;
+  background: #1c2128;
+  border: 1px solid #30363d;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  white-space: pre;
+  z-index: 10;
+  color: #8b949e;
+  pointer-events: none;
+}
+
+/* Mobile layout */
+@media (max-width: 890px), (pointer: coarse) and (hover: none) {
+  body {
+    height: auto;
+    overflow: auto;
+    padding: 0;
+  }
+
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .intro {
+    max-height: 200px;
+    overflow: hidden;
+    transition: max-height 0.35s ease, opacity 0.35s ease, padding 0.35s ease, border-width 0.35s ease;
+  }
+
+  .intro.scrolled-away {
+    max-height: 0;
+    opacity: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    border-bottom-width: 0;
+  }
+
+  .app {
+    flex-direction: column;
+    height: auto;
+  }
+
+  .trade-area {
+    order: 1;
+    flex-shrink: 0;
+    position: sticky;
+    top: 46px;
+    z-index: 99;
+    background: #0d1117;
+  }
+
+  .trade-result {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    border-top: 1px solid #30363d;
+  }
+
+  .player-pool {
+    order: 3;
+    width: 100%;
+    min-width: 0;
+    border-right: none;
+    border-top: 1px solid #30363d;
+    padding-bottom: 52px;
+  }
+
+  .player-list {
+    overflow-y: visible;
+  }
+
+  .team-drop-zone {
+    min-height: 60px;
+  }
+
+  .drop-hint {
+    height: auto;
+    padding: 16px 0;
+  }
+
+  .player-card {
+    padding: 8px 12px;
+  }
+
+  .team-player .player-pos {
+    display: none;
+  }
+
+  .team-player .player-info {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0;
+  }
+
+  .team-player .player-name {
+    width: 100%;
+  }
+
+  .team-player .player-info .player-team {
+    order: 2;
+  }
+
+  .team-player .player-info::before {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 1px 5px;
+    border-radius: 3px;
+    margin-right: 6px;
+    order: 1;
+  }
+
+  .team-player[data-pos="QB"] .player-info::before { background: #c2185b; color: #fff; content: "QB"; }
+  .team-player[data-pos="RB"] .player-info::before { background: #1565c0; color: #fff; content: "RB"; }
+  .team-player[data-pos="WR"] .player-info::before { background: #2e7d32; color: #fff; content: "WR"; }
+  .team-player[data-pos="TE"] .player-info::before { background: #e65100; color: #fff; content: "TE"; }
+  .team-player[data-pos="K"] .player-info::before { background: #6a1b9a; color: #fff; content: "K"; }
+  .team-player[data-pos="DEF"] .player-info::before { background: #4e342e; color: #fff; content: "DEF"; }
+}
+
   </style>
+  
+
 </head>
 <body>
   <header>
@@ -66,16 +544,27 @@
 
   <div class="league-content">
     <div id="loading">Loading team...</div>
-    <div id="player-list"></div>
+    <div class="player-list" id="player-list"></div>
   </div>
 
   <script>
     const leagueId = window.location.pathname.split('/league/')[1];
+    let zMax = 1;
+    let zMin = -1;
+
+    function fmtPos(pos) { return pos === 'PICK' ? 'PK' : pos; }
 
     function fmtZ(z) {
       if (z == null) return '\u2014';
       const sign = z >= 0 ? '+' : '';
       return sign + z.toFixed(2);
+    }
+
+    function zColor(z) {
+      if (z == null) return '';
+      if (z > 0) return `rgba(34, 197, 94, ${Math.min(z / zMax, 1).toFixed(2)})`;
+      if (z < 0) return `rgba(220, 38, 38, ${Math.min(Math.abs(z) / Math.abs(zMin), 1).toFixed(2)})`;
+      return 'transparent';
     }
 
     function sourcesTooltip(sources) {
@@ -92,21 +581,34 @@
         if (data.error) throw new Error(data.error);
 
         document.title = `Dynast-Z - ${data.league_name}`;
-        document.getElementById('header-status').textContent = data.league_name;
+        document.getElementById('header-status').textContent = data.team_name || data.league_name;
         document.getElementById('loading').style.display = 'none';
 
+        const vals = data.players.filter(p => p.aggregate != null).map(p => p.aggregate);
+        zMax = Math.max(...vals) || 1;
+        zMin = Math.min(...vals) || -1;
+
         const container = document.getElementById('player-list');
-        const starters = data.players.filter(p => p.starter);
-        const bench = data.players.filter(p => !p.starter);
+        const posOrder = ['QB', 'RB', 'WR', 'TE', 'K', 'DEF'];
+        const grouped = {};
+        for (const p of data.players) {
+          const pos = p.position || 'OTHER';
+          if (!grouped[pos]) grouped[pos] = [];
+          grouped[pos].push(p);
+        }
+        // Sort each group by aggregate desc
+        for (const pos in grouped) {
+          grouped[pos].sort((a, b) => (b.aggregate ?? -999) - (a.aggregate ?? -999));
+        }
+        // Render in position order
+        const orderedPositions = posOrder.filter(p => grouped[p]).concat(
+          Object.keys(grouped).filter(p => !posOrder.includes(p))
+        );
 
         let html = '';
-        if (starters.length) {
-          html += '<div class="starter-divider">Starters</div>';
-          html += starters.map(playerCard).join('');
-        }
-        if (bench.length) {
-          html += '<div class="starter-divider">Bench</div>';
-          html += bench.map(playerCard).join('');
+        for (const pos of orderedPositions) {
+          html += `<div class="starter-divider">${pos}</div>`;
+          html += grouped[pos].map(playerCard).join('');
         }
         container.innerHTML = html;
       } catch (e) {
@@ -118,13 +620,13 @@
       const zClass = p.aggregate != null ? '' : ' no-zscore';
       const tooltip = sourcesTooltip(p.sources);
       return `
-        <div class="player-card">
-          <span class="player-pos pos-${p.position}">${p.position}</span>
+        <div class="player-card player-card-${p.position}">
+          <span class="player-pos pos-${p.position}">${fmtPos(p.position)}</span>
           <div class="player-info">
             <div class="player-name">${p.name}</div>
-            <div class="player-team">${p.team}</div>
+            <div class="player-team">${p.team || ''}</div>
           </div>
-          <span class="player-value${zClass}" ${tooltip ? `data-sources="${tooltip}"` : ''}>${fmtZ(p.aggregate)}</span>
+          <span class="player-value${zClass}" style="background:${zColor(p.aggregate)}" ${tooltip ? `data-sources="${tooltip}"` : ''}>${fmtZ(p.aggregate)}</span>
         </div>
       `;
     }

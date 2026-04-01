@@ -79,6 +79,10 @@ def fetch_fc():
     return data
 
 
+def norm_pos(pos):
+    return "PICK" if pos == "RDP" else pos
+
+
 def normalize_ktc(raw):
     players = {}
     for p in raw:
@@ -88,7 +92,7 @@ def normalize_ktc(raw):
         if name and value:
             players[name] = {
                 "name": name,
-                "position": p.get("position", ""),
+                "position": norm_pos(p.get("position", "")),
                 "team": p.get("team", ""),
                 "value": value,
             }
@@ -104,7 +108,7 @@ def normalize_fc(raw):
         if name and value:
             players[name] = {
                 "name": name,
-                "position": p.get("position", ""),
+                "position": norm_pos(p.get("position", "")),
                 "team": p.get("maybeTeam", ""),
                 "value": value,
             }
@@ -172,7 +176,13 @@ def build_my_roster(league_id):
     except Exception:
         pass  # z-scores are a bonus, not required
 
-    # Find my roster
+    # Find my user info and roster
+    my_team_name = None
+    for u in users:
+        if u.get("user_id") == my_user_id:
+            my_team_name = u.get("metadata", {}).get("team_name") or u.get("display_name", SLEEPER_USERNAME)
+            break
+
     my_roster = None
     for roster in rosters:
         if roster.get("owner_id") == my_user_id:
@@ -190,7 +200,7 @@ def build_my_roster(league_id):
         if not sp:
             continue
         name = f"{sp.get('first_name', '')} {sp.get('last_name', '')}".strip()
-        position = sp.get("position", "")
+        position = norm_pos(sp.get("position", ""))
         team = sp.get("team", "") or ""
         player_data = {
             "name": name,
@@ -210,14 +220,14 @@ def build_my_roster(league_id):
         p["name"],
     ))
 
-    return {"league_name": league.get("name", "League"), "players": players}
+    return {"league_name": league.get("name", "League"), "team_name": my_team_name, "players": players}
 
 
 def merge_players(ktc, fc):
     ktc_z = compute_z_scores(ktc)
     fc_z = compute_z_scores(fc)
 
-    all_names = set(ktc.keys()) | set(fc.keys()) # prone to name collisions, although this happens rarely
+    all_names = set(ktc.keys()) | set(fc.keys())
     merged = []
     for name in all_names:
         k = ktc.get(name)

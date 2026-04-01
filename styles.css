@@ -161,6 +161,8 @@ header h1 {
 .pos-K { background: #6a1b9a; color: #fff; }
 .pos-DEF { background: #4e342e; color: #fff; }
 
+.player-card-PICK .player-team { display: none; }
+
 .player-info {
   flex: 1;
   min-width: 0;
@@ -183,9 +185,12 @@ header h1 {
 .player-value {
   font-size: 14px;
   font-weight: 600;
-  color: #58a6ff;
+  color: #ddd;
   margin-left: 8px;
   white-space: nowrap;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: #c8c8c8;
 }
 
 /* Trade columns */
@@ -219,16 +224,16 @@ header h1 {
   font-weight: 600;
 }
 
-.team-a .team-header h2 { color: #f78166; }
-.team-b .team-header h2 { color: #7ee787; }
+.team-a .team-header h2 { color: #7d77f2; }
+.team-b .team-header h2 { color: #60b9f0; }
 
 .team-total {
   font-size: 20px;
   font-weight: 700;
 }
 
-.team-a .team-total { color: #f78166; }
-.team-b .team-total { color: #7ee787; }
+.team-a .team-total { color: #7d77f2; }
+.team-b .team-total { color: #60b9f0; }
 
 .team-drop-zone {
   flex: 1;
@@ -309,7 +314,7 @@ header h1 {
 /* Add-to-team buttons */
 .add-btns {
   display: flex;
-  gap: 4px;
+  gap: 12px;
   margin-left: 8px;
   flex-shrink: 0;
 }

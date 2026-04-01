@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dynast-Z | Zee Trade Calculator</title>
-  <link rel="stylesheet" href="styles.css?v=2">
+  <link rel="stylesheet" href="styles.css?v=4">
 </head>
 <body>
   <header>
@@ -15,11 +15,12 @@
   <div class="app">
     <div class="player-pool">
       <div class="panel-header">
-        <h2>Players</h2>
+        <h2>Players & Draft Picks Pool</h2>
         <span class="count" id="player-count">0</span>
       </div>
+      <div class="filter-bar"><input type="text" id="search" placeholder="Search..."></div>
       <div class="filter-bar">
-        <!-- <input type="text" id="search" placeholder="Search players..."> -->
+        
         <div class="position-filters">
           <button class="pos-filter active" data-pos="ALL">All</button>
           <button class="pos-filter" data-pos="QB">QB</button>
@@ -63,6 +64,8 @@
     let teamB = [];
     let searchQuery = '';
     let posFilter = 'ALL';
+    let zMax = 1;
+    let zMin = -1;
 
     // Fetch players from our proxy API
     async function loadPlayers() {
@@ -71,6 +74,8 @@
         const data = await resp.json();
         if (data.error) throw new Error(data.error);
         allPlayers = data;
+        zMax = Math.max(...allPlayers.map(p => p.aggregate)) || 1;
+        zMin = Math.min(...allPlayers.map(p => p.aggregate)) || -1;
         document.getElementById('loading').textContent = `${allPlayers.length} players loaded (Superflex)`;
         renderPlayerList();
       } catch (e) {
@@ -89,16 +94,25 @@
         if (searchQuery) {
           const q = searchQuery.toLowerCase();
           return p.name.toLowerCase().includes(q) ||
-                 p.team.toLowerCase().includes(q) ||
+                 (p.team || '').toLowerCase().includes(q) ||
                  p.position.toLowerCase().includes(q);
         }
         return true;
       });
     }
 
+    function fmtPos(pos) { return pos === 'PICK' ? 'PK' : pos; }
+
     function fmtZ(z) {
       const sign = z >= 0 ? '+' : '';
       return sign + z.toFixed(2);
+    }
+
+    function zColor(z) {
+      if (z == null) return '';
+      if (z > 0) return `rgba(34, 197, 94, ${Math.min(z / zMax, 1).toFixed(2)})`;
+      if (z < 0) return `rgba(220, 38, 38, ${Math.min(Math.abs(z) / Math.abs(zMin), 1).toFixed(2)})`;
+      return 'transparent';
     }
 
     function sourcesTooltip(sources) {
@@ -113,13 +127,13 @@
       document.getElementById('player-count').textContent = available.length;
 
       list.innerHTML = available.map(p => `
-        <div class="player-card" draggable="true" data-name="${p.name.replace(/"/g, '&quot;')}">
-          <span class="player-pos pos-${p.position}">${p.position}</span>
+        <div class="player-card player-card-${p.position}" draggable="true" data-name="${p.name.replace(/"/g, '&quot;')}">
+          <span class="player-pos pos-${p.position}">${fmtPos(p.position)}</span>
           <div class="player-info">
             <div class="player-name">${p.name}</div>
-            <div class="player-team">${p.team}</div>
+            <div class="player-team">${p.team || ''}</div>
           </div>
-          <span class="player-value" data-sources="${sourcesTooltip(p.sources)}">${fmtZ(p.aggregate)}</span>
+          <span class="player-value" style="background:${zColor(p.aggregate)}" data-sources="${sourcesTooltip(p.sources)}">${fmtZ(p.aggregate)}</span>
           <div class="add-btns">
             <button class="add-btn add-a" data-name="${p.name.replace(/"/g, '&quot;')}" data-team="a">A</button>
             <button class="add-btn add-b" data-name="${p.name.replace(/"/g, '&quot;')}" data-team="b">B</button>
@@ -159,15 +173,15 @@
 
       team.forEach(p => {
         const el = document.createElement('div');
-        el.className = 'team-player';
+        el.className = 'team-player player-card-' + p.position;
         el.dataset.pos = p.position;
         el.innerHTML = `
-          <span class="player-pos pos-${p.position}">${p.position}</span>
+          <span class="player-pos pos-${p.position}">${fmtPos(p.position)}</span>
           <div class="player-info">
             <div class="player-name">${p.name}</div>
-            <div class="player-team">${p.team}</div>
+            <div class="player-team">${p.team || ''}</div>
           </div>
-          <span class="player-value">${fmtZ(p.aggregate)}</span>
+          <span class="player-value" style="background:${zColor(p.aggregate)}">${fmtZ(p.aggregate)}</span>
           <button class="remove-btn" data-name="${p.name.replace(/"/g, '&quot;')}">&times;</button>
         `;
         el.querySelector('.remove-btn').addEventListener('click', () => {
@@ -253,10 +267,10 @@
     });
 
     // Search (commented out until functional)
-    // document.getElementById('search').addEventListener('input', e => {
-    //   searchQuery = e.target.value;
-    //   renderPlayerList();
-    // });
+    document.getElementById('search').addEventListener('input', e => {
+      searchQuery = e.target.value;
+      renderPlayerList();
+    });
 
     // Position filters
     document.querySelectorAll('.pos-filter').forEach(btn => {
