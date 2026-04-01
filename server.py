@@ -167,10 +167,14 @@ def build_teams_list(league_id):
     for roster in rosters:
         owner_id = roster.get("owner_id")
         user = user_map.get(owner_id, {})
+        avatar_url = user.get("metadata", {}).get("avatar") or (
+            f"https://sleepercdn.com/avatars/thumbs/{user['avatar']}" if user.get("avatar") else None
+        )
         teams.append({
             "roster_id": roster["roster_id"],
             "team_name": user.get("metadata", {}).get("team_name") or user.get("display_name", "Unknown"),
             "display_name": user.get("display_name", "Unknown"),
+            "avatar": avatar_url,
         })
     teams.sort(key=lambda t: t["team_name"].lower())
     return {
