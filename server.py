@@ -21,6 +21,9 @@ CACHE_TTL = 129600  # 36 hours in seconds
 
 KTC_URL = "https://keeptradecut.com/dynasty-rankings"
 FANTASYCALC_URL = "https://api.fantasycalc.com/values/current?isDynasty=true&numQbs=2&numTeams=12&ppr=1"
+SLEEPER_API = "https://api.sleeper.app/v1"
+SLEEPER_PLAYERS_TTL = 86400  # 24 hours for the big players file
+SLEEPER_USERNAME = "baker28"
 
 
 def read_cache(name):
@@ -121,11 +124,100 @@ def compute_z_scores(players_dict):
     return {name: (p["value"] - mean) / std for name, p in players_dict.items()}
 
 
+def fetch_sleeper_players():
+    """Fetch the full Sleeper player database (~5MB). Cached for 24 hours."""
+    cached = read_cache("sleeper_players.json")
+    if cached is not None:
+        print("Using cached Sleeper players data")
+        return cached
+    print("Fetching fresh Sleeper players data...")
+    data = json.loads(http_fetch(f"{SLEEPER_API}/players/nfl"))
+    write_cache("sleeper_players.json", data)
+    return data
+
+
+def fetch_league_data(league_id):
+    """Fetch rosters and users for a Sleeper league."""
+    rosters = json.loads(http_fetch(f"{SLEEPER_API}/league/{league_id}/rosters"))
+    users = json.loads(http_fetch(f"{SLEEPER_API}/league/{league_id}/users"))
+    league = json.loads(http_fetch(f"{SLEEPER_API}/league/{league_id}"))
+    return rosters, users, league
+
+
+def resolve_sleeper_user_id():
+    """Resolve SLEEPER_USERNAME to a user_id."""
+    cached = read_cache("sleeper_user.json")
+    if cached is not None and cached.get("username") == SLEEPER_USERNAME:
+        return cached["user_id"]
+    data = json.loads(http_fetch(f"{SLEEPER_API}/user/{SLEEPER_USERNAME}"))
+    user_id = data.get("user_id")
+    write_cache("sleeper_user.json", {"username": SLEEPER_USERNAME, "user_id": user_id})
+    return user_id
+
+
+def build_my_roster(league_id):
+    my_user_id = resolve_sleeper_user_id()
+    rosters, users, league = fetch_league_data(league_id)
+    sleeper_players = fetch_sleeper_players()
+
+    # Build z-score lookup from trade calculator data
+    z_lookup = {}
+    try:
+        ktc_raw = fetch_ktc()
+        fc_raw = fetch_fc()
+        ktc = normalize_ktc(ktc_raw)
+        fc = normalize_fc(fc_raw)
+        for p in merge_players(ktc, fc):
+            z_lookup[p["name"]] = p
+    except Exception:
+        pass  # z-scores are a bonus, not required
+
+    # Find my roster
+    my_roster = None
+    for roster in rosters:
+        if roster.get("owner_id") == my_user_id:
+            my_roster = roster
+            break
+    if not my_roster:
+        raise RuntimeError(f"No roster found for user {SLEEPER_USERNAME} in this league")
+
+    player_ids = my_roster.get("players") or []
+    starters = set(my_roster.get("starters") or [])
+
+    players = []
+    for pid in player_ids:
+        sp = sleeper_players.get(pid)
+        if not sp:
+            continue
+        name = f"{sp.get('first_name', '')} {sp.get('last_name', '')}".strip()
+        position = sp.get("position", "")
+        team = sp.get("team", "") or ""
+        player_data = {
+            "name": name,
+            "position": position,
+            "team": team,
+            "starter": pid in starters,
+        }
+        z = z_lookup.get(name)
+        if z:
+            player_data["aggregate"] = z["aggregate"]
+            player_data["sources"] = z["sources"]
+        players.append(player_data)
+
+    players.sort(key=lambda p: (
+        not p["starter"],
+        -(p.get("aggregate") or -999),
+        p["name"],
+    ))
+
+    return {"league_name": league.get("name", "League"), "players": players}
+
+
 def merge_players(ktc, fc):
     ktc_z = compute_z_scores(ktc)
     fc_z = compute_z_scores(fc)
 
-    all_names = set(ktc.keys()) | set(fc.keys())
+    all_names = set(ktc.keys()) | set(fc.keys()) # prone to name collisions, although this happens rarely
     merged = []
     for name in all_names:
         k = ktc.get(name)
@@ -140,7 +232,7 @@ def merge_players(ktc, fc):
         if f:
             sources["fantasycalc.com"] = f["value"]
             z_scores.append(fc_z[name])
-        aggregate = round(sum(z_scores) / len(z_scores), 4)
+        aggregate = round(sum(z_scores) / len(z_scores), 3)
         merged.append({
             "name": name,
             "position": position,
@@ -170,6 +262,25 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 self.wfile.write(json.dumps(players).encode())
             except Exception as e:
                 self.wfile.write(json.dumps({"error": str(e)}).encode())
+        elif self.path.startswith("/api/league/"):
+            league_id = self.path.split("/api/league/")[1].split("?")[0]
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            if IS_VERCEL:
+                self.send_header("Cache-Control", "s-maxage=3600, stale-while-revalidate=86400")
+            self.end_headers()
+            try:
+                data = build_my_roster(league_id)
+                self.wfile.write(json.dumps(data).encode())
+            except Exception as e:
+                self.wfile.write(json.dumps({"error": str(e)}).encode())
+        elif self.path.startswith("/league/"):
+            self.path = "/league.html"
+            super().do_GET()
+        elif self.path == "/trade-calculator":
+            self.path = "/trade-calculator.html"
+            super().do_GET()
         elif self.path == "/" or self.path == "":
             self.path = "/index.html"
             super().do_GET()

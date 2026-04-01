@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dynast-Z - League</title>
+  <link rel="stylesheet" href="styles.css?v=2">
+  <style>
+    body {
+      height: auto;
+      overflow: auto;
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    header a {
+      color: #8b949e;
+      text-decoration: none;
+      font-size: 13px;
+    }
+
+    header a:hover { color: #58a6ff; }
+
+    .league-content {
+      max-width: 560px;
+      margin: 0 auto;
+    }
+
+    #loading {
+      text-align: center;
+      padding: 48px 16px;
+      color: #8b949e;
+      font-size: 14px;
+    }
+
+    .player-card {
+      cursor: default;
+    }
+
+    .starter-divider {
+      padding: 4px 16px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #484f58;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      background: #0d1117;
+      border-top: 1px solid #21262d;
+      border-bottom: 1px solid #21262d;
+    }
+
+    .no-zscore {
+      color: #484f58;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1><a href="/" style="color: inherit; text-decoration: none;">Dynast-Z</a></h1>
+    <div id="header-status">Loading league...</div>
+  </header>
+
+  <div class="league-content">
+    <div id="loading">Loading team...</div>
+    <div id="player-list"></div>
+  </div>
+
+  <script>
+    const leagueId = window.location.pathname.split('/league/')[1];
+
+    function fmtZ(z) {
+      if (z == null) return '\u2014';
+      const sign = z >= 0 ? '+' : '';
+      return sign + z.toFixed(2);
+    }
+
+    function sourcesTooltip(sources) {
+      if (!sources) return '';
+      return Object.entries(sources)
+        .map(([k, v]) => `${k}: ${v.toLocaleString()} (raw)`)
+        .join('\n');
+    }
+
+    async function loadTeam() {
+      try {
+        const resp = await fetch(`/api/league/${leagueId}`);
+        const data = await resp.json();
+        if (data.error) throw new Error(data.error);
+
+        document.title = `Dynast-Z - ${data.league_name}`;
+        document.getElementById('header-status').textContent = data.league_name;
+        document.getElementById('loading').style.display = 'none';
+
+        const container = document.getElementById('player-list');
+        const starters = data.players.filter(p => p.starter);
+        const bench = data.players.filter(p => !p.starter);
+
+        let html = '';
+        if (starters.length) {
+          html += '<div class="starter-divider">Starters</div>';
+          html += starters.map(playerCard).join('');
+        }
+        if (bench.length) {
+          html += '<div class="starter-divider">Bench</div>';
+          html += bench.map(playerCard).join('');
+        }
+        container.innerHTML = html;
+      } catch (e) {
+        document.getElementById('loading').textContent = 'Error: ' + e.message;
+      }
+    }
+
+    function playerCard(p) {
+      const zClass = p.aggregate != null ? '' : ' no-zscore';
+      const tooltip = sourcesTooltip(p.sources);
+      return `
+        <div class="player-card">
+          <span class="player-pos pos-${p.position}">${p.position}</span>
+          <div class="player-info">
+            <div class="player-name">${p.name}</div>
+            <div class="player-team">${p.team}</div>
+          </div>
+          <span class="player-value${zClass}" ${tooltip ? `data-sources="${tooltip}"` : ''}>${fmtZ(p.aggregate)}</span>
+        </div>
+      `;
+    }
+
+    loadTeam();
+  </script>
+</body>
+</html>

@@ -5,282 +5,101 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dynast-Z</title>
   <link rel="stylesheet" href="styles.css?v=2">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0f1117;
+      color: #e1e4e8;
+      min-height: 100vh;
+      padding: 48px 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h1 {
+      font-size: 28px;
+      font-weight: 700;
+      color: #f0f6fc;
+      margin-bottom: 32px;
+    }
+
+    nav {
+      width: 100%;
+      max-width: 480px;
+    }
+
+    nav ul {
+      list-style: none;
+    }
+
+    nav > ul > li {
+      margin-bottom: 16px;
+    }
+
+    nav a {
+      display: block;
+      padding: 12px 16px;
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      color: #58a6ff;
+      text-decoration: none;
+      font-size: 15px;
+      font-weight: 500;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    nav a:hover {
+      background: #1c2128;
+      border-color: #58a6ff;
+    }
+
+    nav ul ul {
+      margin-top: 8px;
+      padding-left: 24px;
+    }
+
+    nav ul ul li {
+      margin-bottom: 8px;
+    }
+
+    nav ul ul a {
+      font-size: 14px;
+      padding: 10px 16px;
+      background: #0d1117;
+    }
+
+    .section-label {
+      display: block;
+      padding: 12px 16px;
+      font-size: 15px;
+      font-weight: 500;
+      color: #f0f6fc;
+    }
+  </style>
 </head>
 <body>
-  <header>
-    <h1>Dynast-Z</h1>
-    <div id="loading">Loading players...</div>
-  </header>
-  <p class="intro">While lesser tools rely on a single source and call it a day, this calculator pulls from both <a href="https://keeptradecut.com" target="_blank">KeepTradeCut</a> and <a href="https://fantasycalc.com" target="_blank">FantasyCalc</a>, normalizes their values into z-scores, and merges them into a single aggregate ranking that is, frankly, superior to anything else you'll find. You're welcome.</p>
-  <div class="app">
-    <div class="player-pool">
-      <div class="panel-header">
-        <h2>Players</h2>
-        <span class="count" id="player-count">0</span>
-      </div>
-      <div class="filter-bar">
-        <!-- <input type="text" id="search" placeholder="Search players..."> -->
-        <div class="position-filters">
-          <button class="pos-filter active" data-pos="ALL">All</button>
-          <button class="pos-filter" data-pos="QB">QB</button>
-          <button class="pos-filter" data-pos="RB">RB</button>
-          <button class="pos-filter" data-pos="WR">WR</button>
-          <button class="pos-filter" data-pos="TE">TE</button>
-        </div>
-      </div>
-      <div class="player-list" id="player-list"></div>
-    </div>
-
-    <div class="trade-area">
-      <div class="team-column team-a">
-        <div class="team-header">
-          <h2>Team A</h2>
-          <span class="team-total" id="total-a">0</span>
-        </div>
-        <div class="team-drop-zone" id="drop-a" data-team="a">
-          <div class="drop-hint" id="hint-a">Add players</div>
-        </div>
-      </div>
-      <div class="team-column team-b">
-        <div class="team-header">
-          <h2>Team B</h2>
-          <span class="team-total" id="total-b">0</span>
-        </div>
-        <div class="team-drop-zone" id="drop-b" data-team="b">
-          <div class="drop-hint" id="hint-b">Add players</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="trade-result" id="trade-result">
-    <span class="label">Add players to compare</span>
-  </div>
-
-  <script>
-    let allPlayers = [];
-    let teamA = [];
-    let teamB = [];
-    let searchQuery = '';
-    let posFilter = 'ALL';
-
-    // Fetch players from our proxy API
-    async function loadPlayers() {
-      try {
-        const resp = await fetch('/api/players');
-        const data = await resp.json();
-        if (data.error) throw new Error(data.error);
-        allPlayers = data;
-        document.getElementById('loading').textContent = `${allPlayers.length} players loaded (Superflex)`;
-        renderPlayerList();
-      } catch (e) {
-        document.getElementById('loading').textContent = 'Error loading: ' + e.message;
-      }
-    }
-
-    function getAvailablePlayers() {
-      const assigned = new Set([
-        ...teamA.map(p => p.name),
-        ...teamB.map(p => p.name),
-      ]);
-      return allPlayers.filter(p => {
-        if (assigned.has(p.name)) return false;
-        if (posFilter !== 'ALL' && p.position !== posFilter) return false;
-        if (searchQuery) {
-          const q = searchQuery.toLowerCase();
-          return p.name.toLowerCase().includes(q) ||
-                 p.team.toLowerCase().includes(q) ||
-                 p.position.toLowerCase().includes(q);
-        }
-        return true;
-      });
-    }
-
-    function fmtZ(z) {
-      const sign = z >= 0 ? '+' : '';
-      return sign + z.toFixed(2);
-    }
-
-    function sourcesTooltip(sources) {
-      return Object.entries(sources)
-        .map(([k, v]) => `${k}: ${v.toLocaleString()} (raw)`)
-        .join('\n');
-    }
-
-    function renderPlayerList() {
-      const list = document.getElementById('player-list');
-      const available = getAvailablePlayers();
-      document.getElementById('player-count').textContent = available.length;
-
-      list.innerHTML = available.map(p => `
-        <div class="player-card" draggable="true" data-name="${p.name.replace(/"/g, '&quot;')}">
-          <span class="player-pos pos-${p.position}">${p.position}</span>
-          <div class="player-info">
-            <div class="player-name">${p.name}</div>
-            <div class="player-team">${p.team}</div>
-          </div>
-          <span class="player-value" data-sources="${sourcesTooltip(p.sources)}">${fmtZ(p.aggregate)}</span>
-          <div class="add-btns">
-            <button class="add-btn add-a" data-name="${p.name.replace(/"/g, '&quot;')}" data-team="a">A</button>
-            <button class="add-btn add-b" data-name="${p.name.replace(/"/g, '&quot;')}" data-team="b">B</button>
-          </div>
-        </div>
-      `).join('');
-
-      // Attach drag events
-      list.querySelectorAll('.player-card').forEach(card => {
-        card.addEventListener('dragstart', e => {
-          e.dataTransfer.setData('text/plain', card.dataset.name);
-          card.classList.add('dragging');
-        });
-        card.addEventListener('dragend', () => card.classList.remove('dragging'));
-      });
-
-      // Attach add-to-team button events
-      list.querySelectorAll('.add-btn').forEach(btn => {
-        btn.addEventListener('click', e => {
-          e.stopPropagation();
-          const name = btn.dataset.name;
-          const player = allPlayers.find(p => p.name === name);
-          if (!player) return;
-          if (btn.dataset.team === 'a') teamA.push(player);
-          else teamB.push(player);
-          updateAll();
-        });
-      });
-    }
-
-    function renderTeam(team, containerId, hintId) {
-      const container = document.getElementById(containerId);
-      const hint = document.getElementById(hintId);
-      // Remove existing team-player cards
-      container.querySelectorAll('.team-player').forEach(el => el.remove());
-      hint.style.display = team.length ? 'none' : 'flex';
-
-      team.forEach(p => {
-        const el = document.createElement('div');
-        el.className = 'team-player';
-        el.dataset.pos = p.position;
-        el.innerHTML = `
-          <span class="player-pos pos-${p.position}">${p.position}</span>
-          <div class="player-info">
-            <div class="player-name">${p.name}</div>
-            <div class="player-team">${p.team}</div>
-          </div>
-          <span class="player-value">${fmtZ(p.aggregate)}</span>
-          <button class="remove-btn" data-name="${p.name.replace(/"/g, '&quot;')}">&times;</button>
-        `;
-        el.querySelector('.remove-btn').addEventListener('click', () => {
-          removePlayer(p.name);
-        });
-        container.insertBefore(el, hint);
-      });
-    }
-
-    function removePlayer(name) {
-      teamA = teamA.filter(p => p.name !== name);
-      teamB = teamB.filter(p => p.name !== name);
-      updateAll();
-    }
-
-    function updateTotals() {
-      const sumA = teamA.reduce((s, p) => s + p.aggregate, 0);
-      const sumB = teamB.reduce((s, p) => s + p.aggregate, 0);
-      document.getElementById('total-a').textContent = fmtZ(sumA);
-      document.getElementById('total-b').textContent = fmtZ(sumB);
-
-      const result = document.getElementById('trade-result');
-      if (teamA.length === 0 && teamB.length === 0) {
-        result.innerHTML = '<span class="label">Add players to compare</span>';
-      } else {
-        const diff = Math.abs(sumA - sumB);
-        let cls, text;
-        if (sumA > sumB) {
-          cls = 'favor-a';
-          text = `Team A wins by ${fmtZ(diff)}`;
-        } else if (sumB > sumA) {
-          cls = 'favor-b';
-          text = `Team B wins by ${fmtZ(diff)}`;
-        } else {
-          cls = 'favor-even';
-          text = 'Even trade';
-        }
-        result.innerHTML = `
-          <span class="label">Team A: ${fmtZ(sumA)}</span>
-          <span class="diff ${cls}">${text}</span>
-          <span class="label">Team B: ${fmtZ(sumB)}</span>
-        `;
-      }
-    }
-
-    function updateAll() {
-      renderPlayerList();
-      renderTeam(teamA, 'drop-a', 'hint-a');
-      renderTeam(teamB, 'drop-b', 'hint-b');
-      updateTotals();
-    }
-
-    // Drop zone setup
-    ['drop-a', 'drop-b'].forEach(id => {
-      const zone = document.getElementById(id);
-      const team = id === 'drop-a' ? 'a' : 'b';
-
-      zone.addEventListener('dragover', e => {
-        e.preventDefault();
-        zone.classList.add('drag-over');
-      });
-
-      zone.addEventListener('dragleave', () => {
-        zone.classList.remove('drag-over');
-      });
-
-      zone.addEventListener('drop', e => {
-        e.preventDefault();
-        zone.classList.remove('drag-over');
-        const name = e.dataTransfer.getData('text/plain');
-        const player = allPlayers.find(p => p.name === name);
-        if (!player) return;
-
-        // Remove from other team if present
-        teamA = teamA.filter(p => p.name !== name);
-        teamB = teamB.filter(p => p.name !== name);
-
-        if (team === 'a') teamA.push(player);
-        else teamB.push(player);
-
-        updateAll();
-      });
-    });
-
-    // Search (commented out until functional)
-    // document.getElementById('search').addEventListener('input', e => {
-    //   searchQuery = e.target.value;
-    //   renderPlayerList();
-    // });
-
-    // Position filters
-    document.querySelectorAll('.pos-filter').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.pos-filter').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        posFilter = btn.dataset.pos;
-        renderPlayerList();
-      });
-    });
-
-    // Mobile: fade out intro on scroll
-    if (window.matchMedia('(max-width: 768px)').matches) {
-      const intro = document.querySelector('.intro');
-      window.addEventListener('scroll', () => {
-        if (window.scrollY > 10) {
-          intro.classList.add('scrolled-away');
-        } else {
-          intro.classList.remove('scrolled-away');
-        }
-      }, { passive: true });
-    }
-
-    loadPlayers();
-  </script>
+  <h1>Dynast-Z</h1>
+  <nav>
+    <ul>
+      <li>
+        <a href="/trade-calculator">Zee Trade Calculator</a>
+      </li>
+      <li>
+        <span class="section-label">Leagues</span>
+        <ul>
+          <li><a href="/league/1314983622930870272">JHBC</a></li>
+          <li><a href="/league/1257450392124407809">Keepers &amp; Weepers</a></li>
+          <!--<li><a href="/league/1340070186379673600">Cut Throat</a></li>-->
+        </ul>
+      </li>
+      <li>
+        <a href="https://sharplystupid.substack.com/">Sharply Stupid Blog</a>
+      </li>
+    </ul>
+  </nav>
 </body>
 </html>
