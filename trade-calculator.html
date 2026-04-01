@@ -15,21 +15,9 @@
     <div id="loading">Loading players...</div>
   </header>
 
-  <div class="nav-overlay" id="nav-overlay">
-    <div class="nav-drawer">
-      <div class="nav-drawer-header">
-        <h2>Dynast-Z</h2>
-        <button class="nav-close" id="nav-close" aria-label="Close menu">&times;</button>
-      </div>
-      <ul>
-        <li><a href="/trade-calculator">Zee Trade Calculator</a></li>
-        <li><span class="nav-section-label">Leagues</span></li>
-        <li class="nav-sub"><a href="/league/1314983622930870272">JHBC</a></li>
-        <li class="nav-sub"><a href="/league/1257450392124407809">Keepers &amp; Weepers</a></li>
-        <li><a href="https://sharplystupid.substack.com/" target="_blank">Sharply Stupid Blog</a></li>
-      </ul>
-    </div>
-  </div>
+  <div id="nav-drawer-mount"></div>
+  <script src="nav.js"></script>
+  <script>initNavDrawer();</script>
   <p class="intro">While lesser tools rely on a single source and call it a day, this calculator pulls from both <a href="https://keeptradecut.com" target="_blank">KeepTradeCut</a> and <a href="https://fantasycalc.com" target="_blank">FantasyCalc</a>, normalizes their values into z-scores, and merges them into a single aggregate ranking that is, frankly, superior to anything else you'll find. You're welcome.</p>
   <div class="app">
     <div class="player-pool">
@@ -312,17 +300,6 @@
         }
       }, { passive: true });
     }
-
-    // Hamburger nav
-    document.getElementById('nav-toggle').addEventListener('click', () => {
-      document.getElementById('nav-overlay').classList.add('open');
-    });
-    document.getElementById('nav-close').addEventListener('click', () => {
-      document.getElementById('nav-overlay').classList.remove('open');
-    });
-    document.getElementById('nav-overlay').addEventListener('click', (e) => {
-      if (e.target === e.currentTarget) e.currentTarget.classList.remove('open');
-    });
 
     loadPlayers();
   </script>

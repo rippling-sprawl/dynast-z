@@ -667,21 +667,9 @@ header h1 {
     </div>
   </header>
 
-  <div class="nav-overlay" id="nav-overlay">
-    <div class="nav-drawer">
-      <div class="nav-drawer-header">
-        <h2>Dynast-Z</h2>
-        <button class="nav-close" id="nav-close" aria-label="Close menu">&times;</button>
-      </div>
-      <ul>
-        <li><a href="/trade-calculator">Zee Trade Calculator</a></li>
-        <li><span class="nav-section-label">Leagues</span></li>
-        <li class="nav-sub"><a href="/league/1314983622930870272">JHBC</a></li>
-        <li class="nav-sub"><a href="/league/1257450392124407809">Keepers &amp; Weepers</a></li>
-        <li><a href="https://sharplystupid.substack.com/" target="_blank">Sharply Stupid Blog</a></li>
-      </ul>
-    </div>
-  </div>
+  <div id="nav-drawer-mount"></div>
+  <script src="nav.js"></script>
+  <script>initNavDrawer();</script>
 
   <div class="league-content">
     <div class="breadcrumbs" id="breadcrumbs"></div>
@@ -775,17 +763,6 @@ header h1 {
         </div>
       `;
     }
-
-    // Hamburger nav
-    document.getElementById('nav-toggle').addEventListener('click', () => {
-      document.getElementById('nav-overlay').classList.add('open');
-    });
-    document.getElementById('nav-close').addEventListener('click', () => {
-      document.getElementById('nav-overlay').classList.remove('open');
-    });
-    document.getElementById('nav-overlay').addEventListener('click', (e) => {
-      if (e.target === e.currentTarget) e.currentTarget.classList.remove('open');
-    });
 
     loadTeam();
   </script>
