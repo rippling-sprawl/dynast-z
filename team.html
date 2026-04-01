@@ -1,4 +1,67 @@
-* { margin: 0; padding: 0; box-sizing: border-box; }
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dynast-Z - Team</title>
+  
+  <style>
+    body {
+      height: auto !important;
+      overflow: auto !important;
+      padding: 0 !important;
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    header a {
+      color: #8b949e;
+      text-decoration: none;
+      font-size: 13px;
+    }
+
+    header a:hover { color: #58a6ff; }
+
+    .league-content {
+      max-width: 560px;
+      margin: 0 auto;
+    }
+
+    #loading {
+      text-align: center;
+      padding: 48px 16px;
+      color: #8b949e;
+      font-size: 14px;
+    }
+
+    .player-list {
+      overflow-y: visible;
+    }
+
+    .player-card {
+      cursor: default;
+    }
+
+    .starter-divider {
+      padding: 4px 16px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #484f58;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      background: #0d1117;
+      border-top: 1px solid #21262d;
+      border-bottom: 1px solid #21262d;
+    }
+
+    .no-zscore {
+      color: #484f58;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -97,10 +160,6 @@ header h1 {
 .filter-bar::-webkit-scrollbar-track { background: transparent; }
 .filter-bar::-webkit-scrollbar-thumb { background: #30363d; border-radius: 2px; }
 
-input {
-  padding: 4px
-}
-
 .position-filters {
   display: flex;
   gap: 4px;
@@ -189,7 +248,7 @@ input {
 .player-value {
   font-size: 14px;
   font-weight: 600;
-  color: #ddd;
+  color: #eee;
   margin-left: 8px;
   white-space: nowrap;
   padding: 2px 8px;
@@ -228,16 +287,16 @@ input {
   font-weight: 600;
 }
 
-.team-a .team-header h2 { color: #7d77f2; }
-.team-b .team-header h2 { color: #60b9f0; }
+.team-a .team-header h2 { color: #f78166; }
+.team-b .team-header h2 { color: #7ee787; }
 
 .team-total {
   font-size: 20px;
   font-weight: 700;
 }
 
-.team-a .team-total { color: #7d77f2; }
-.team-b .team-total { color: #60b9f0; }
+.team-a .team-total { color: #f78166; }
+.team-b .team-total { color: #7ee787; }
 
 .team-drop-zone {
   flex: 1;
@@ -472,3 +531,113 @@ input {
   .team-player[data-pos="K"] .player-info::before { background: #6a1b9a; color: #fff; content: "K"; }
   .team-player[data-pos="DEF"] .player-info::before { background: #4e342e; color: #fff; content: "DEF"; }
 }
+
+  </style>
+  
+
+</head>
+<body>
+  <header>
+    <h1><a href="/" style="color: inherit; text-decoration: none;">Dynast-Z</a></h1>
+    <div id="header-status">
+      <a id="back-link" href="#" style="color: #8b949e; text-decoration: none; font-size: 13px;">Loading...</a>
+    </div>
+  </header>
+
+  <div class="league-content">
+    <div id="loading">Loading team...</div>
+    <div class="player-list" id="player-list"></div>
+  </div>
+
+  <script>
+    const pathParts = window.location.pathname.match(/\/league\/([^/]+)\/team\/([^/]+)/);
+    const leagueId = pathParts[1];
+    const rosterId = pathParts[2];
+    let zMax = 1;
+    let zMin = -1;
+
+    function fmtPos(pos) { return pos === 'PICK' ? 'PK' : pos; }
+
+    function fmtZ(z) {
+      if (z == null) return '\u2014';
+      const sign = z >= 0 ? '+' : '';
+      return sign + z.toFixed(2);
+    }
+
+    function zColor(z) {
+      if (z == null) return '';
+      if (z > 0) return `rgba(34, 197, 94, ${Math.min(z / zMax, 1).toFixed(2)})`;
+      if (z < 0) return `rgba(220, 38, 38, ${Math.min(Math.abs(z) / Math.abs(zMin), 1).toFixed(2)})`;
+      return 'transparent';
+    }
+
+    function sourcesTooltip(sources) {
+      if (!sources) return '';
+      return Object.entries(sources)
+        .map(([k, v]) => `${k}: ${v.toLocaleString()} (raw)`)
+        .join('\n');
+    }
+
+    async function loadTeam() {
+      try {
+        const resp = await fetch(`/api/league/${leagueId}/team/${rosterId}`);
+        const data = await resp.json();
+        if (data.error) throw new Error(data.error);
+
+        document.title = `Dynast-Z - ${data.team_name || data.league_name}`;
+        const backLink = document.getElementById('back-link');
+        backLink.href = `/league/${leagueId}`;
+        backLink.textContent = `← ${data.league_name}`;
+        document.getElementById('loading').style.display = 'none';
+
+        const vals = data.players.filter(p => p.aggregate != null).map(p => p.aggregate);
+        zMax = Math.max(...vals) || 1;
+        zMin = Math.min(...vals) || -1;
+
+        const container = document.getElementById('player-list');
+        const posOrder = ['QB', 'RB', 'WR', 'TE', 'K', 'DEF'];
+        const grouped = {};
+        for (const p of data.players) {
+          const pos = p.position || 'OTHER';
+          if (!grouped[pos]) grouped[pos] = [];
+          grouped[pos].push(p);
+        }
+        // Sort each group by aggregate desc
+        for (const pos in grouped) {
+          grouped[pos].sort((a, b) => (b.aggregate ?? -999) - (a.aggregate ?? -999));
+        }
+        // Render in position order
+        const orderedPositions = posOrder.filter(p => grouped[p]).concat(
+          Object.keys(grouped).filter(p => !posOrder.includes(p))
+        );
+
+        let html = '';
+        for (const pos of orderedPositions) {
+          html += `<div class="starter-divider">${pos}</div>`;
+          html += grouped[pos].map(playerCard).join('');
+        }
+        container.innerHTML = html;
+      } catch (e) {
+        document.getElementById('loading').textContent = 'Error: ' + e.message;
+      }
+    }
+
+    function playerCard(p) {
+      const zClass = p.aggregate != null ? '' : ' no-zscore';
+      const tooltip = sourcesTooltip(p.sources);
+      return `
+        <div class="player-card player-card-${p.position}">
+          <span class="player-pos pos-${p.position}">${fmtPos(p.position)}</span>
+          <div class="player-info">
+            <div class="player-name">${p.name}</div>
+            <div class="player-team">${p.team || ''}</div>
+          </div>
+          <span class="player-value${zClass}" style="background:${zColor(p.aggregate)}" ${tooltip ? `data-sources="${tooltip}"` : ''}>${fmtZ(p.aggregate)}</span>
+        </div>
+      `;
+    }
+
+    loadTeam();
+  </script>
+</body>
+</html>

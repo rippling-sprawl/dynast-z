@@ -159,8 +159,29 @@ def resolve_sleeper_user_id():
     return user_id
 
 
-def build_my_roster(league_id):
-    my_user_id = resolve_sleeper_user_id()
+def build_teams_list(league_id):
+    """Return all teams in a league."""
+    rosters, users, league = fetch_league_data(league_id)
+    user_map = {u["user_id"]: u for u in users}
+    teams = []
+    for roster in rosters:
+        owner_id = roster.get("owner_id")
+        user = user_map.get(owner_id, {})
+        teams.append({
+            "roster_id": roster["roster_id"],
+            "team_name": user.get("metadata", {}).get("team_name") or user.get("display_name", "Unknown"),
+            "display_name": user.get("display_name", "Unknown"),
+        })
+    teams.sort(key=lambda t: t["team_name"].lower())
+    return {
+        "league_name": league.get("name", "League"),
+        "league_id": league_id,
+        "teams": teams,
+    }
+
+
+def build_team_roster(league_id, roster_id):
+    """Build roster for a specific team by roster_id."""
     rosters, users, league = fetch_league_data(league_id)
     sleeper_players = fetch_sleeper_players()
 
@@ -176,23 +197,25 @@ def build_my_roster(league_id):
     except Exception:
         pass  # z-scores are a bonus, not required
 
-    # Find my user info and roster
-    my_team_name = None
-    for u in users:
-        if u.get("user_id") == my_user_id:
-            my_team_name = u.get("metadata", {}).get("team_name") or u.get("display_name", SLEEPER_USERNAME)
-            break
-
-    my_roster = None
+    # Find the roster by roster_id
+    target_roster = None
     for roster in rosters:
-        if roster.get("owner_id") == my_user_id:
-            my_roster = roster
+        if roster.get("roster_id") == int(roster_id):
+            target_roster = roster
             break
-    if not my_roster:
-        raise RuntimeError(f"No roster found for user {SLEEPER_USERNAME} in this league")
+    if not target_roster:
+        raise RuntimeError(f"No roster found with roster_id {roster_id}")
 
-    player_ids = my_roster.get("players") or []
-    starters = set(my_roster.get("starters") or [])
+    # Find owner info
+    owner_id = target_roster.get("owner_id")
+    team_name = None
+    for u in users:
+        if u.get("user_id") == owner_id:
+            team_name = u.get("metadata", {}).get("team_name") or u.get("display_name", "Unknown")
+            break
+
+    player_ids = target_roster.get("players") or []
+    starters = set(target_roster.get("starters") or [])
 
     players = []
     for pid in player_ids:
@@ -220,7 +243,7 @@ def build_my_roster(league_id):
         p["name"],
     ))
 
-    return {"league_name": league.get("name", "League"), "team_name": my_team_name, "players": players}
+    return {"league_name": league.get("name", "League"), "team_name": team_name, "players": players}
 
 
 def merge_players(ktc, fc):
@@ -272,8 +295,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 self.wfile.write(json.dumps(players).encode())
             except Exception as e:
                 self.wfile.write(json.dumps({"error": str(e)}).encode())
-        elif self.path.startswith("/api/league/"):
-            league_id = self.path.split("/api/league/")[1].split("?")[0]
+        elif re.match(r"/api/league/[^/]+/team/[^/]+", self.path):
+            parts = self.path.split("/")
+            league_id = parts[3]
+            roster_id = parts[5].split("?")[0]
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
             self.send_header("Access-Control-Allow-Origin", "*")
@@ -281,10 +306,37 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 self.send_header("Cache-Control", "s-maxage=3600, stale-while-revalidate=86400")
             self.end_headers()
             try:
-                data = build_my_roster(league_id)
+                data = build_team_roster(league_id, roster_id)
                 self.wfile.write(json.dumps(data).encode())
             except Exception as e:
                 self.wfile.write(json.dumps({"error": str(e)}).encode())
+        elif re.match(r"/api/league/[^/]+/teams", self.path):
+            league_id = self.path.split("/api/league/")[1].split("/teams")[0]
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            if IS_VERCEL:
+                self.send_header("Cache-Control", "s-maxage=3600, stale-while-revalidate=86400")
+            self.end_headers()
+            try:
+                data = build_teams_list(league_id)
+                self.wfile.write(json.dumps(data).encode())
+            except Exception as e:
+                self.wfile.write(json.dumps({"error": str(e)}).encode())
+        elif self.path == "/api/trades":
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.end_headers()
+            try:
+                trades_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "trades.json")
+                with open(trades_path, "r") as f:
+                    self.wfile.write(f.read().encode())
+            except Exception as e:
+                self.wfile.write(json.dumps({"error": str(e)}).encode())
+        elif re.match(r"/league/[^/]+/team/", self.path):
+            self.path = "/team.html"
+            super().do_GET()
         elif self.path.startswith("/league/"):
             self.path = "/league.html"
             super().do_GET()
