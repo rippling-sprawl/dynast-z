@@ -5,20 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="icon" type="image/png" href="/favicon.png">
   <title>Dynast-Z | Zee Trade Calculator</title>
-  <link rel="stylesheet" href="/styles/styles.css?v=4">
+  <link rel="stylesheet" href="/styles/styles.css">
+  <link rel="stylesheet" href="/styles/filters.css">
+  <link rel="stylesheet" href="/styles/calculator.css">
 </head>
 <body>
-  <header>
-    <div style="display: flex; align-items: center; gap: 12px;">
-      <button class="hamburger" id="nav-toggle" aria-label="Menu">&#9776;</button>
-      <h1>Dynast-Z</h1>
-    </div>
-    <div id="loading">Loading players...</div>
-  </header>
-
+  <div id="header-mount"></div>
   <div id="nav-drawer-mount"></div>
   <script src="/nav.js"></script>
-  <script>initNavDrawer();</script>
+  <script>initPage('Loading players...');</script>
   <p class="intro">While lesser tools rely on a single source and call it a day, this calculator pulls from both <a href="https://keeptradecut.com" target="_blank">KeepTradeCut</a> and <a href="https://fantasycalc.com" target="_blank">FantasyCalc</a>, normalizes their values into z-scores, and merges them into a single aggregate ranking that is, frankly, superior to anything else you'll find. You're welcome.</p>
   <div class="app">
     <div class="player-pool">
@@ -28,7 +23,7 @@
       </div>
       <div class="filter-bar"><input type="text" id="search" placeholder="Search..."></div>
       <div class="filter-bar">
-        
+
         <div class="position-filters">
           <button class="pos-filter active" data-pos="ALL">All</button>
           <button class="pos-filter" data-pos="QB">QB</button>
@@ -84,10 +79,10 @@
         allPlayers = data;
         zMax = Math.max(...allPlayers.map(p => p.aggregate)) || 1;
         zMin = Math.min(...allPlayers.map(p => p.aggregate)) || -1;
-        document.getElementById('loading').textContent = `${allPlayers.length} players loaded (Superflex)`;
+        document.getElementById('header-status').textContent = `${allPlayers.length} players loaded (Superflex)`;
         renderPlayerList();
       } catch (e) {
-        document.getElementById('loading').textContent = 'Error loading: ' + e.message;
+        document.getElementById('header-status').textContent = 'Error loading: ' + e.message;
       }
     }
 

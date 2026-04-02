@@ -31,6 +31,38 @@ function buildNavDrawerHTML() {
   </div>`;
 }
 
+function buildHeaderHTML(statusText) {
+  return `<header>
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <button class="hamburger" id="nav-toggle" aria-label="Menu">&#9776;</button>
+      <h1><a href="/" style="color: inherit; text-decoration: none;">Dynast-Z</a></h1>
+    </div>
+    <span id="header-status">${statusText || ''}</span>
+  </header>`;
+}
+
+function initPage(statusText) {
+  const headerMount = document.getElementById('header-mount');
+  if (headerMount) {
+    headerMount.outerHTML = buildHeaderHTML(statusText);
+  }
+
+  const drawerMount = document.getElementById('nav-drawer-mount');
+  if (drawerMount) {
+    drawerMount.outerHTML = buildNavDrawerHTML();
+  }
+
+  document.getElementById('nav-toggle').addEventListener('click', () => {
+    document.getElementById('nav-overlay').classList.add('open');
+  });
+  document.getElementById('nav-close').addEventListener('click', () => {
+    document.getElementById('nav-overlay').classList.remove('open');
+  });
+  document.getElementById('nav-overlay').addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) e.currentTarget.classList.remove('open');
+  });
+}
+
 function initNavDrawer() {
   const placeholder = document.getElementById('nav-drawer-mount');
   if (placeholder) {

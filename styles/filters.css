@@ -1,0 +1,56 @@
+/* === Reusable filter controls === */
+.filters {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.filter-select {
+  background: #21262d;
+  border: 1px solid #30363d;
+  color: #e1e4e8;
+  font-size: 13px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.filter-select:focus {
+  outline: none;
+  border-color: #58a6ff;
+}
+
+.filter-bar {
+  padding: 8px 16px;
+  border-bottom: 1px solid #30363d;
+  flex-shrink: 0;
+  overflow-x: auto;
+}
+
+.filter-bar::-webkit-scrollbar { height: 4px; }
+.filter-bar::-webkit-scrollbar-track { background: transparent; }
+.filter-bar::-webkit-scrollbar-thumb { background: #30363d; border-radius: 2px; }
+
+.position-filters {
+  display: flex;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.pos-filter {
+  background: #21262d;
+  border: 1px solid #30363d;
+  color: #8b949e;
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.pos-filter.active {
+  background: #1f6feb;
+  border-color: #1f6feb;
+  color: #fff;
+}

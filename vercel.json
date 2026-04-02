@@ -8,5 +8,13 @@
     { "source": "/league/:leagueId/power", "destination": "/views/league-power.html" },
     { "source": "/league/:leagueId", "destination": "/views/league.html" },
     { "source": "/api/:path*", "destination": "/api/:path*" }
+  ],
+  "headers": [
+    {
+      "source": "/styles/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
+      ]
+    }
   ]
 }

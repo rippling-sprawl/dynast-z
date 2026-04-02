@@ -69,6 +69,7 @@ def fetch_ktc():
         raise RuntimeError("Could not find playersArray in KTC page")
     data = json.loads(match.group(1))
     write_cache("ktc.json", data)
+    print("KTC data complete.")
     return data
 
 
@@ -80,6 +81,7 @@ def fetch_fc():
     print("Fetching fresh FantasyCalc data...")
     data = json.loads(http_fetch(FANTASYCALC_URL))
     write_cache("fc.json", data)
+    print("FantasyCalc data complete.")
     return data
 
 
