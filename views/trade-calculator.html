@@ -14,7 +14,7 @@
   <div id="nav-drawer-mount"></div>
   <script src="/scripts/nav.js"></script>
   <script>initPage('Loading players...');</script>
-  <p class="intro">While lesser tools rely on a single source and call it a day, this calculator pulls from both <a href="https://keeptradecut.com" target="_blank">KeepTradeCut</a> and <a href="https://fantasycalc.com" target="_blank">FantasyCalc</a>, normalizes their values into z-scores, and merges them into a single aggregate ranking that is, frankly, superior to anything else you'll find. You're welcome.</p>
+  <p class="intro">While lesser tools rely on a single source and call it a day, this calculator pulls from <a href="https://keeptradecut.com" target="_blank">KeepTradeCut</a>, <a href="https://fantasypros.com" target="_blank">FantasyPros</a>, and <a href="https://fantasycalc.com" target="_blank">FantasyCalc</a>, normalizes their values into z-scores, and merges them into a single aggregate ranking that is, frankly, superior to anything else you'll find. You're welcome.</p>
   <div class="app">
     <div class="player-pool">
       <div class="panel-header">
@@ -30,6 +30,7 @@
           <button class="pos-filter" data-pos="RB">RB</button>
           <button class="pos-filter" data-pos="WR">WR</button>
           <button class="pos-filter" data-pos="TE">TE</button>
+          <button class="pos-filter" data-pos="PICK">PK</button>
         </div>
       </div>
       <div class="player-list" id="player-list"></div>
@@ -118,9 +119,10 @@
       return 'transparent';
     }
 
+    const sourceAbbr = {'keeptradecut.com':'KTC','fantasypros.com':'FP','fantasycalc.com':'FC'};
     function sourcesTooltip(sources) {
       return Object.entries(sources)
-        .map(([k, v]) => `${k}: ${v.toLocaleString()} (raw)`)
+        .map(([k, v]) => `${sourceAbbr[k]||k}: ${v.toLocaleString()}`)
         .join('\n');
     }
 

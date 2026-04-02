@@ -44,10 +44,11 @@
       return 'transparent';
     }
 
+    const sourceAbbr = {'keeptradecut.com':'KTC','fantasypros.com':'FP','fantasycalc.com':'FC'};
     function sourcesTooltip(sources) {
       if (!sources) return '';
       return Object.entries(sources)
-        .map(([k, v]) => `${k}: ${v.toLocaleString()} (raw)`)
+        .map(([k, v]) => `${sourceAbbr[k]||k}: ${v.toLocaleString()}`)
         .join('\n');
     }
 

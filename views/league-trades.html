@@ -17,11 +17,14 @@
   <script>initPage('Loading trades...');</script>
 
   <div class="league-content">
+    
     <div id="loading">Loading trades...</div>
 
     <div id="sections" style="display: none;">
       <div class="tabs" id="tab-bar"></div>
+      <em style="color: #8b949e; font-size: 12px;">This was created from Sal's sheet and will become, like him, stale. The "Latest Trades" tab will be automated going forward.</em>
 
+      <div class="filter-bar"><input type="text" id="search" placeholder="Search..."></div>
       <div class="filters">
         <select id="filter-team" class="filter-select">
           <option value="">All Teams</option>
@@ -73,10 +76,15 @@
     function renderTrades() {
       const teamFilter = document.getElementById('filter-team').value;
       const yearFilter = document.getElementById('filter-year').value;
+      const searchQuery = document.getElementById('search').value.toLowerCase().trim();
 
       const filtered = allTrades.filter(t => {
         if (teamFilter && t.team_a !== teamFilter && t.team_b !== teamFilter) return false;
         if (yearFilter && String(t.year) !== yearFilter) return false;
+        if (searchQuery) {
+          const haystack = [t.team_a, t.team_b, ...t.team_a_receives, ...t.team_b_receives].join(' ').toLowerCase();
+          if (!haystack.includes(searchQuery)) return false;
+        }
         return true;
       });
 
@@ -136,6 +144,7 @@
 
         teamSelect.addEventListener('change', renderTrades);
         yearSelect.addEventListener('change', renderTrades);
+        document.getElementById('search').addEventListener('input', renderTrades);
 
         renderTrades();
       } catch (e) {

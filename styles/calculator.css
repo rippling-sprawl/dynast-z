@@ -30,8 +30,8 @@ body {
 
 /* Player List (left panel) */
 .player-pool {
-  width: 340px;
-  min-width: 340px;
+  flex: 1;
+  min-width: 0;
   border-right: 1px solid #30363d;
   display: flex;
   flex-direction: column;
@@ -134,7 +134,7 @@ input {
 
 /* Trade columns */
 .trade-area {
-  flex: 1;
+  flex: 2;
   display: flex;
   gap: 0;
 }

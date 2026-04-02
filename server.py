@@ -25,6 +25,7 @@ FANTASYCALC_URL = "https://api.fantasycalc.com/values/current?isDynasty=true&num
 SLEEPER_API = "https://api.sleeper.app/v1"
 SLEEPER_PLAYERS_TTL = 86400  # 24 hours for the big players file
 LEAGUE_DATA_TTL = 3600  # 1 hour for league rosters/users
+FP_DATA_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "fp.json")
 
 
 def read_cache(name, ttl=None):
@@ -90,6 +91,17 @@ def norm_pos(pos):
     return "PICK" if pos == "RDP" else pos
 
 
+_SUFFIXES = re.compile(r"\s+(Jr\.?|Sr\.?|III|II|IV|V)$", re.IGNORECASE)
+_DOTTED_INITIALS = re.compile(r"\b([A-Z])\.")
+
+
+def norm_name(name):
+    """Normalize a player name for merging: strip suffixes, then dots from initials."""
+    name = _DOTTED_INITIALS.sub(r"\1", name)
+    name = _SUFFIXES.sub("", name)
+    return name.strip()
+
+
 def normalize_ktc(raw):
     players = {}
     for p in raw:
@@ -97,8 +109,9 @@ def normalize_ktc(raw):
         sf = p.get("superflexValues", {})
         value = sf.get("value", 0)
         if name and value:
-            players[name] = {
-                "name": name,
+            key = norm_name(name)
+            players[key] = {
+                "name": key,
                 "position": norm_pos(p.get("position", "")),
                 "team": p.get("team", ""),
                 "value": value,
@@ -113,10 +126,37 @@ def normalize_fc(raw):
         name = p.get("name", "")
         value = entry.get("value", 0)
         if name and value:
-            players[name] = {
-                "name": name,
+            key = norm_name(name)
+            players[key] = {
+                "name": key,
                 "position": norm_pos(p.get("position", "")),
                 "team": p.get("maybeTeam", ""),
+                "value": value,
+            }
+    return players
+
+
+def load_fp():
+    """Load FantasyPros data from static JSON file (data/fp.json)."""
+    if not os.path.exists(FP_DATA_PATH):
+        print("No FP data file found at", FP_DATA_PATH)
+        return []
+    with open(FP_DATA_PATH, "r") as f:
+        return json.load(f)
+
+
+def normalize_fp(raw):
+    """Normalize FantasyPros data into {name: {name, position, team, value}} dict."""
+    players = {}
+    for p in raw:
+        name = p.get("name", "")
+        value = p.get("value", 0)
+        if name and value:
+            key = norm_name(name)
+            players[key] = {
+                "name": key,
+                "position": p.get("position", ""),
+                "team": p.get("team", ""),
                 "value": value,
             }
     return players
@@ -351,9 +391,15 @@ def build_team_roster(league_id, roster_id):
     try:
         ktc_raw = fetch_ktc()
         fc_raw = fetch_fc()
+        fp_raw = load_fp()
         ktc = normalize_ktc(ktc_raw)
         fc = normalize_fc(fc_raw)
-        for p in merge_players(ktc, fc):
+        fp = normalize_fp(fp_raw)
+        for p in merge_players(
+            ("keeptradecut.com", ktc),
+            ("fantasycalc.com", fc),
+            ("fantasypros.com", fp),
+        ):
             z_lookup[p["name"]] = p
     except Exception:
         pass  # z-scores are a bonus, not required
@@ -392,7 +438,7 @@ def build_team_roster(league_id, roster_id):
             "team": team,
             "starter": pid in starters,
         }
-        z = z_lookup.get(name)
+        z = z_lookup.get(norm_name(name))
         if z:
             player_data["aggregate"] = z["aggregate"]
             player_data["sources"] = z["sources"]
@@ -407,25 +453,35 @@ def build_team_roster(league_id, roster_id):
     return {"league_name": league.get("name", "League"), "team_name": team_name, "players": players}
 
 
-def merge_players(ktc, fc):
-    ktc_z = compute_z_scores(ktc)
-    fc_z = compute_z_scores(fc)
+def merge_players(*source_pairs):
+    """Merge any number of (label, players_dict) pairs into ranked list.
 
-    all_names = set(ktc.keys()) | set(fc.keys())
+    Each source_pair is ("source_name", {name: {name, position, team, value}}).
+    """
+    # Compute z-scores per source
+    z_maps = []
+    for label, players_dict in source_pairs:
+        z_maps.append((label, players_dict, compute_z_scores(players_dict)))
+
+    # Collect all player names
+    all_names = set()
+    for _, players_dict, _ in z_maps:
+        all_names |= players_dict.keys()
+
     merged = []
     for name in all_names:
-        k = ktc.get(name)
-        f = fc.get(name)
-        position = (k or f)["position"]
-        team = (k or f)["team"]
+        position = None
+        team = None
         sources = {}
         z_scores = []
-        if k:
-            sources["keeptradecut.com"] = k["value"]
-            z_scores.append(ktc_z[name])
-        if f:
-            sources["fantasycalc.com"] = f["value"]
-            z_scores.append(fc_z[name])
+        for label, players_dict, z_dict in z_maps:
+            p = players_dict.get(name)
+            if p:
+                if position is None:
+                    position = p["position"]
+                    team = p["team"]
+                sources[label] = p["value"]
+                z_scores.append(z_dict[name])
         aggregate = round(sum(z_scores) / len(z_scores), 3)
         merged.append({
             "name": name,
@@ -450,9 +506,15 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             try:
                 ktc_raw = fetch_ktc()
                 fc_raw = fetch_fc()
+                fp_raw = load_fp()
                 ktc = normalize_ktc(ktc_raw)
                 fc = normalize_fc(fc_raw)
-                players = merge_players(ktc, fc)
+                fp = normalize_fp(fp_raw)
+                players = merge_players(
+                    ("keeptradecut.com", ktc),
+                    ("fantasycalc.com", fc),
+                    ("fantasypros.com", fp),
+                )
                 self.wfile.write(json.dumps(players).encode())
             except Exception as e:
                 self.wfile.write(json.dumps({"error": str(e)}).encode())
