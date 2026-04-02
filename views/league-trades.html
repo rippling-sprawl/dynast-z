@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dynast-Z - Trades</title>
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <title>Dynast-Z - Past Trades</title>
 
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -61,16 +62,6 @@
       font-size: 14px;
     }
 
-    .placeholder {
-      padding: 24px 16px;
-      text-align: center;
-      color: #484f58;
-      font-size: 14px;
-      background: #161b22;
-      border: 1px solid #30363d;
-      border-radius: 8px;
-    }
-
     /* Tabs */
     .tabs {
       display: flex;
@@ -95,6 +86,16 @@
     .tab.active {
       color: #f0f6fc;
       border-bottom-color: #58a6ff;
+    }
+
+    .placeholder {
+      padding: 24px 16px;
+      text-align: center;
+      color: #484f58;
+      font-size: 14px;
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 8px;
     }
 
     /* Trades filters */
@@ -168,7 +169,6 @@
       font-size: 12px;
     }
 
-    /* Trade items */
     .trade-item {
       display: flex;
       align-items: center;
@@ -341,7 +341,7 @@
   </header>
 
   <div id="nav-drawer-mount"></div>
-  <script src="nav.js"></script>
+  <script src="/nav.js"></script>
   <script>initNavDrawer();</script>
 
   <div class="league-content">
@@ -390,9 +390,6 @@
       }
       if (/^\d{4}\s/.test(raw) || /round|pick|1st|2nd|3rd|4th|5th/i.test(raw)) {
         return { type: 'pick', position: 'PICK', name: raw };
-      }
-      if (/^\$\d+/i.test(raw)) {
-        return { type: 'other', position: 'OTHER', name: raw };
       }
       return { type: 'other', position: 'OTHER', name: raw };
     }
@@ -444,11 +441,11 @@
 
     async function loadTrades() {
       try {
-        const resp = await fetch(`/api/league/${leagueId}/transactions`);
+        const resp = await fetch('/api/trades');
         allTrades = await resp.json();
         if (allTrades.error) throw new Error(allTrades.error);
 
-        document.getElementById('header-status').textContent = 'Trades';
+        document.getElementById('header-status').textContent = 'Past Trades';
         document.getElementById('loading').style.display = 'none';
         document.getElementById('sections').style.display = '';
 

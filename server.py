@@ -11,8 +11,8 @@ import http.server
 import json
 import os
 import re
+import subprocess
 import time
-import urllib.request
 from datetime import datetime
 
 PORT = 8000
@@ -24,7 +24,6 @@ KTC_URL = "https://keeptradecut.com/dynasty-rankings"
 FANTASYCALC_URL = "https://api.fantasycalc.com/values/current?isDynasty=true&numQbs=2&numTeams=12&ppr=1"
 SLEEPER_API = "https://api.sleeper.app/v1"
 SLEEPER_PLAYERS_TTL = 86400  # 24 hours for the big players file
-SLEEPER_USERNAME = "baker28"
 
 
 def read_cache(name, ttl=None):
@@ -49,9 +48,13 @@ UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML,
 
 
 def http_fetch(url):
-    req = urllib.request.Request(url, headers={"User-Agent": UA})
-    with urllib.request.urlopen(req, timeout=15) as resp:
-        return resp.read().decode("utf-8")
+    result = subprocess.run(
+        ["curl", "-s", "-A", UA, "--max-time", "15", url],
+        capture_output=True, text=True,
+    )
+    if result.returncode != 0:
+        raise RuntimeError(f"curl failed ({result.returncode}): {result.stderr.strip()}")
+    return result.stdout
 
 
 def fetch_ktc():
@@ -147,17 +150,6 @@ def fetch_league_data(league_id):
     users = json.loads(http_fetch(f"{SLEEPER_API}/league/{league_id}/users"))
     league = json.loads(http_fetch(f"{SLEEPER_API}/league/{league_id}"))
     return rosters, users, league
-
-
-def resolve_sleeper_user_id():
-    """Resolve SLEEPER_USERNAME to a user_id."""
-    cached = read_cache("sleeper_user.json")
-    if cached is not None and cached.get("username") == SLEEPER_USERNAME:
-        return cached["user_id"]
-    data = json.loads(http_fetch(f"{SLEEPER_API}/user/{SLEEPER_USERNAME}"))
-    user_id = data.get("user_id")
-    write_cache("sleeper_user.json", {"username": SLEEPER_USERNAME, "user_id": user_id})
-    return user_id
 
 
 def build_teams_list(league_id):
@@ -499,25 +491,25 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             except Exception as e:
                 self.wfile.write(json.dumps({"error": str(e)}).encode())
         elif re.match(r"/league/[^/]+/team/", self.path):
-            self.path = "/team.html"
+            self.path = "/views/team.html"
             super().do_GET()
         elif re.match(r"/league/[^/]+/new-trades", self.path):
-            self.path = "/new-trades.html"
+            self.path = "/views/new-trades.html"
             super().do_GET()
         elif re.match(r"/league/[^/]+/trades", self.path):
-            self.path = "/league-trades.html"
+            self.path = "/views/league-trades.html"
             super().do_GET()
         elif re.match(r"/league/[^/]+/power", self.path):
-            self.path = "/league-power.html"
+            self.path = "/views/league-power.html"
             super().do_GET()
         elif self.path.startswith("/league/"):
-            self.path = "/league.html"
+            self.path = "/views/league.html"
             super().do_GET()
         elif self.path == "/trade-calculator":
-            self.path = "/trade-calculator.html"
+            self.path = "/views/trade-calculator.html"
             super().do_GET()
         elif self.path == "/" or self.path == "":
-            self.path = "/index.html"
+            self.path = "/views/index.html"
             super().do_GET()
         else:
             super().do_GET()

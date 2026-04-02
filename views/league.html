@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dynast-Z - Power Rankings</title>
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <title>Dynast-Z - League</title>
 
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -54,6 +55,13 @@
       padding: 16px;
     }
 
+    #loading {
+      text-align: center;
+      padding: 48px 16px;
+      color: #8b949e;
+      font-size: 14px;
+    }
+
     /* Tabs */
     .tabs {
       display: flex;
@@ -80,6 +88,11 @@
       border-bottom-color: #58a6ff;
     }
 
+    /* Section shared */
+    .section {
+      margin-bottom: 24px;
+    }
+
     .placeholder {
       padding: 24px 16px;
       text-align: center;
@@ -89,6 +102,75 @@
       border: 1px solid #30363d;
       border-radius: 8px;
     }
+
+    /* Rosters tab */
+    .team-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      margin-right: 12px;
+      flex-shrink: 0;
+      background: #21262d;
+      object-fit: cover;
+    }
+
+    .team-card-info {
+      display: flex;
+      align-items: center;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .team-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      text-decoration: none;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .team-card:hover {
+      background: #1c2128;
+      border-color: #58a6ff;
+    }
+
+    .team-name {
+      font-size: 15px;
+      font-weight: 500;
+      color: #f0f6fc;
+    }
+
+    .team-owner {
+      font-size: 12px;
+      color: #8b949e;
+    }
+
+    .team-arrow {
+      color: #484f58;
+      font-size: 14px;
+    }
+
+    .team-card:hover .team-arrow {
+      color: #58a6ff;
+    }
+
+    .sleeper-link {
+      display: inline-block;
+      margin-top: 8px;
+      font-size: 12px;
+      color: #58a6ff;
+      text-decoration: none;
+    }
+
+    .sleeper-link:hover {
+      text-decoration: underline;
+    }
+
 
     /* Hamburger nav */
     .hamburger {
@@ -215,16 +297,22 @@
       <button class="hamburger" id="nav-toggle" aria-label="Menu">&#9776;</button>
       <h1><a href="/" style="color: inherit; text-decoration: none;">Dynast-Z</a></h1>
     </div>
-    <span id="header-status">Power Rankings</span>
+    <span id="header-status">Loading league...</span>
   </header>
 
   <div id="nav-drawer-mount"></div>
-  <script src="nav.js"></script>
+  <script src="/nav.js"></script>
   <script>initNavDrawer();</script>
 
   <div class="league-content">
-    <div class="tabs" id="tab-bar"></div>
-    <div class="placeholder">Under construction</div>
+    <div id="loading">Loading league...</div>
+
+    <div id="sections" style="display: none;">
+      <div class="tabs" id="tab-bar"></div>
+
+      <div id="teams-list"></div>
+      <a id="sleeper-link" class="sleeper-link" href="#" target="_blank"></a>
+    </div>
   </div>
 
   <script>
@@ -233,8 +321,8 @@
     // Build tab bar
     const tabs = [
       { label: 'Rosters', href: `/league/${leagueId}` },
+      { label: 'Latest Trades', href: `/league/${leagueId}/new-trades` },
       { label: 'Past Trades', href: `/league/${leagueId}/trades` },
-      { label: 'Trades', href: `/league/${leagueId}/new-trades` },
       { label: 'Power Rankings', href: `/league/${leagueId}/power` },
     ];
     const currentPath = window.location.pathname.replace(/\/$/, '');
@@ -243,6 +331,40 @@
       return `<a class="tab${isActive}" href="${t.href}">${t.label}</a>`;
     }).join('');
 
+    async function loadLeague() {
+      try {
+        const resp = await fetch(`/api/league/${leagueId}/teams`);
+        const data = await resp.json();
+        if (data.error) throw new Error(data.error);
+
+        document.title = `Dynast-Z - ${data.league_name}`;
+        document.getElementById('header-status').textContent = data.league_name;
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('sections').style.display = '';
+
+        const sleeperLink = document.getElementById('sleeper-link');
+        sleeperLink.href = `https://sleeper.com/leagues/${leagueId}`;
+        sleeperLink.textContent = 'View on Sleeper';
+
+        const container = document.getElementById('teams-list');
+        container.innerHTML = data.teams.map(t => `
+          <a href="/league/${leagueId}/team/${t.roster_id}" class="team-card">
+            <div class="team-card-info">
+              ${t.avatar ? `<img class="team-avatar" src="${t.avatar}" alt="" referrerpolicy="no-referrer">` : `<div class="team-avatar"></div>`}
+              <div>
+                <div class="team-name">${t.team_name}</div>
+                <div class="team-owner">${t.display_name}</div>
+              </div>
+            </div>
+            <span class="team-arrow">&#8250;</span>
+          </a>
+        `).join('');
+      } catch (e) {
+        document.getElementById('loading').textContent = 'Error: ' + e.message;
+      }
+    }
+
+    loadLeague();
   </script>
 </body>
 </html>
