@@ -3,9 +3,11 @@ const NAV_ITEMS = [
   { type: 'section', label: 'Tools' },
   { type: 'link', label: 'Zee Trade Calculator', href: '/trade-calculator' },
   { type: 'section', label: 'Leagues' },
-  { type: 'sub', label: 'JHBC', href: '/league/1314983622930870272' },
+  { type: 'link', label: 'JHBC', href: '/league/1314983622930870272' },
   { type: 'section', label: 'News' },
   { type: 'link', label: 'Sharply Stupid Blog', href: 'https://sharplystupid.substack.com/', external: true },
+  { type: 'section', label: 'Resources' },
+  { type: 'link', label: 'Acknowledgements', href: '/acknowledgements' },
 ];
 
 function buildNavDrawerHTML() {

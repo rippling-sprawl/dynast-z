@@ -11,7 +11,8 @@
 <body>
   <div id="header-mount"></div>
   <div id="nav-drawer-mount"></div>
-  <script src="/nav.js"></script>
+  <script src="/scripts/nav.js"></script>
+  <script src="/scripts/tabs.js"></script>
   <script>initPage('Loading league...');</script>
 
   <div class="league-content">
@@ -27,19 +28,7 @@
 
   <script>
     const leagueId = window.location.pathname.match(/\/league\/([^/]+)/)[1];
-
-    // Build tab bar
-    const tabs = [
-      { label: 'Rosters', href: `/league/${leagueId}` },
-      { label: 'Latest Trades', href: `/league/${leagueId}/new-trades` },
-      { label: 'Past Trades', href: `/league/${leagueId}/trades` },
-      { label: 'Power Rankings', href: `/league/${leagueId}/power` },
-    ];
-    const currentPath = window.location.pathname.replace(/\/$/, '');
-    document.getElementById('tab-bar').innerHTML = tabs.map(t => {
-      const isActive = currentPath === t.href ? ' active' : '';
-      return `<a class="tab${isActive}" href="${t.href}">${t.label}</a>`;
-    }).join('');
+    initTabBar(leagueId);
 
     async function loadLeague() {
       try {

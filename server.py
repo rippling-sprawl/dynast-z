@@ -24,6 +24,7 @@ KTC_URL = "https://keeptradecut.com/dynasty-rankings"
 FANTASYCALC_URL = "https://api.fantasycalc.com/values/current?isDynasty=true&numQbs=2&numTeams=12&ppr=1"
 SLEEPER_API = "https://api.sleeper.app/v1"
 SLEEPER_PLAYERS_TTL = 86400  # 24 hours for the big players file
+LEAGUE_DATA_TTL = 3600  # 1 hour for league rosters/users
 
 
 def read_cache(name, ttl=None):
@@ -147,10 +148,17 @@ def fetch_sleeper_players():
 
 
 def fetch_league_data(league_id):
-    """Fetch rosters and users for a Sleeper league."""
+    """Fetch rosters and users for a Sleeper league. Cached for 1 hour."""
+    cache_name = f"league_{league_id}.json"
+    cached = read_cache(cache_name, ttl=LEAGUE_DATA_TTL)
+    if cached is not None:
+        print(f"Using cached league data for {league_id}")
+        return cached["rosters"], cached["users"], cached["league"]
+    print(f"Fetching fresh league data for {league_id}...")
     rosters = json.loads(http_fetch(f"{SLEEPER_API}/league/{league_id}/rosters"))
     users = json.loads(http_fetch(f"{SLEEPER_API}/league/{league_id}/users"))
     league = json.loads(http_fetch(f"{SLEEPER_API}/league/{league_id}"))
+    write_cache(cache_name, {"rosters": rosters, "users": users, "league": league})
     return rosters, users, league
 
 
@@ -179,7 +187,7 @@ def build_teams_list(league_id):
     }
 
 
-TRANSACTIONS_CACHE_TTL = 300  # 5 minutes
+TRANSACTIONS_CACHE_TTL = 600  # 10 minutes
 STORE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
 
 
@@ -207,8 +215,9 @@ def transform_transaction(tx, roster_team_map, sleeper_players):
         return None
 
     a_id, b_id = roster_ids[0], roster_ids[1]
-    team_a = roster_team_map.get(a_id, f"Team {a_id}")
-    team_b = roster_team_map.get(b_id, f"Team {b_id}")
+    default_team = lambda rid: {"team_name": f"Team {rid}", "display_name": f"Team {rid}"}
+    a_info = roster_team_map.get(a_id, default_team(a_id))
+    b_info = roster_team_map.get(b_id, default_team(b_id))
 
     adds = tx.get("adds") or {}
     draft_picks = tx.get("draft_picks") or []
@@ -234,7 +243,8 @@ def transform_transaction(tx, roster_team_map, sleeper_players):
         rd = pick.get("round", "")
         new_owner = pick.get("owner_id")
         original_roster = pick.get("roster_id")
-        original_team = roster_team_map.get(original_roster, "")
+        original_info = roster_team_map.get(original_roster, {})
+        original_team = original_info.get("team_name", "") if isinstance(original_info, dict) else original_info
         pick_label = f"{season} Round {rd}"
         if original_team:
             pick_label += f" ({original_team})"
@@ -263,8 +273,10 @@ def transform_transaction(tx, roster_team_map, sleeper_players):
 
     return {
         "transaction_id": tx.get("transaction_id"),
-        "team_a": team_a,
-        "team_b": team_b,
+        "team_a": a_info["team_name"],
+        "team_a_display": a_info["display_name"],
+        "team_b": b_info["team_name"],
+        "team_b_display": b_info["display_name"],
         "team_a_receives": a_receives,
         "team_b_receives": b_receives,
         "date": date_str,
@@ -285,14 +297,16 @@ def fetch_league_transactions(league_id):
     rosters, users, league = fetch_league_data(league_id)
     sleeper_players = fetch_sleeper_players()
 
-    # Build roster_id -> team_name map
+    # Build roster_id -> team info map
     user_map = {u["user_id"]: u for u in users}
     roster_team_map = {}
     for roster in rosters:
         owner_id = roster.get("owner_id")
         user = user_map.get(owner_id, {})
-        team_name = user.get("metadata", {}).get("team_name") or user.get("display_name", "Unknown")
-        roster_team_map[roster["roster_id"]] = team_name
+        roster_team_map[roster["roster_id"]] = {
+            "team_name": user.get("metadata", {}).get("team_name") or user.get("display_name", "Unknown"),
+            "display_name": user.get("display_name", "Unknown"),
+        }
 
     # Fetch all weeks from API
     api_trades = []
@@ -506,6 +520,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             super().do_GET()
         elif self.path.startswith("/league/"):
             self.path = "/views/league.html"
+            super().do_GET()
+        elif self.path == "/acknowledgements":
+            self.path = "/views/acknowledgements.html"
             super().do_GET()
         elif self.path == "/trade-calculator":
             self.path = "/views/trade-calculator.html"

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="icon" type="image/png" href="/favicon.png">
-  <title>Dynast-Z - Past Trades</title>
+  <title>Historical Trades | Dynast-Z</title>
   <link rel="stylesheet" href="/styles/styles.css">
   <link rel="stylesheet" href="/styles/filters.css">
   <link rel="stylesheet" href="/styles/trades.css">
@@ -12,7 +12,8 @@
 <body>
   <div id="header-mount"></div>
   <div id="nav-drawer-mount"></div>
-  <script src="/nav.js"></script>
+  <script src="/scripts/nav.js"></script>
+  <script src="/scripts/tabs.js"></script>
   <script>initPage('Loading trades...');</script>
 
   <div class="league-content">
@@ -37,19 +38,7 @@
   <script>
     const leagueId = window.location.pathname.match(/\/league\/([^/]+)/)[1];
     let allTrades = [];
-
-    // Build tab bar
-    const tabs = [
-      { label: 'Rosters', href: `/league/${leagueId}` },
-      { label: 'Past Trades', href: `/league/${leagueId}/trades` },
-      { label: 'Trades', href: `/league/${leagueId}/new-trades` },
-      { label: 'Power Rankings', href: `/league/${leagueId}/power` },
-    ];
-    const currentPath = window.location.pathname.replace(/\/$/, '');
-    document.getElementById('tab-bar').innerHTML = tabs.map(t => {
-      const isActive = currentPath === t.href ? ' active' : '';
-      return `<a class="tab${isActive}" href="${t.href}">${t.label}</a>`;
-    }).join('');
+    initTabBar(leagueId);
 
     function parseTradeItem(raw) {
       const posMatch = raw.match(/^(QB|RB|WR|TE|K|DEF)\s+(.+)$/);
@@ -98,11 +87,11 @@
           <div class="trade-date">${formatDate(t.date)}</div>
           <div class="trade-sides">
             <div class="trade-side">
-              <div class="trade-side-header">${t.team_a} <span class="receives-label">receives</span></div>
+              <div class="trade-side-header">${t.team_a} <span class="receives-label">receives</span>${t.team_a_display ? `<div class="trade-team-owner">${t.team_a_display}</div>` : ''}</div>
               ${t.team_a_receives.map(tradeItemHtml).join('')}
             </div>
             <div class="trade-side">
-              <div class="trade-side-header">${t.team_b} <span class="receives-label">receives</span></div>
+              <div class="trade-side-header">${t.team_b} <span class="receives-label">receives</span>${t.team_b_display ? `<div class="trade-team-owner">${t.team_b_display}</div>` : ''}</div>
               ${t.team_b_receives.map(tradeItemHtml).join('')}
             </div>
           </div>
