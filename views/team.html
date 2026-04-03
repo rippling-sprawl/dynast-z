@@ -68,7 +68,7 @@
         zMin = Math.min(...vals) || -1;
 
         const container = document.getElementById('player-list');
-        const posOrder = ['QB', 'RB', 'WR', 'TE', 'K', 'DEF'];
+        const posOrder = ['QB', 'RB', 'WR', 'TE', 'PICK', 'K', 'DEF'];
         const grouped = {};
         for (const p of data.players) {
           const pos = p.position || 'OTHER';

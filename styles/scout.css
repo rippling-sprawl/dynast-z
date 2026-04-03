@@ -105,21 +105,35 @@
   color: #8b949e;
 }
 
+/* Position section headers */
+.scout-pos-header {
+  padding: 4px 12px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-radius: 3px;
+  margin: 0 6px;
+  margin-top: 4px;
+  text-align: center;
+}
+
 /* Player cards inside scout columns */
 .scout-team-col .player-card,
 .scout-pinned .player-card {
   padding: 6px 12px;
   cursor: default;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid #21262d;
 }
 
-.scout-team-col .player-pos,
-.scout-pinned .player-pos {
-  font-size: 9px;
-  padding: 1px 5px;
-  border-radius: 3px;
-  font-weight: 600;
-  min-width: 24px;
-  text-align: center;
+.scout-team-col .player-card-empty,
+.scout-pinned .player-card-empty {
+  padding: 6px 12px;
+  border-bottom: 1px solid #21262d;
+  min-height: 37px;
 }
 
 .scout-team-col .player-name,
@@ -136,21 +150,6 @@
 .scout-pinned .player-value {
   font-size: 12px;
   padding: 2px 6px;
-}
-
-.scout-team-col .starter-divider,
-.scout-pinned .starter-divider {
-  padding: 3px 12px;
-  font-size: 10px;
-}
-
-/* Player card base (copied from calculator.css pattern) */
-.scout-team-col .player-card,
-.scout-pinned .player-card {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  border-bottom: 1px solid #21262d;
 }
 
 .scout-team-col .player-info,
@@ -170,11 +169,50 @@
 }
 
 @media (max-width: 500px) {
+  .scout-compare {
+    gap: 0;
+  }
+
   .scout-pinned {
-    flex: 0 0 220px;
+    flex: 1 1 50%;
+    min-width: 0;
   }
 
   .scout-team-col {
-    flex: 0 0 220px;
+    flex: 0 0 50vw;
+  }
+
+  .scout-others {
+    flex: 1 1 50%;
+    min-width: 0;
+  }
+
+  .scout-pinned .player-name,
+  .scout-team-col .player-name {
+    font-size: 12px;
+  }
+
+  .scout-pinned .player-team,
+  .scout-team-col .player-team {
+    font-size: 9px;
+  }
+
+  .scout-pinned .player-value,
+  .scout-team-col .player-value {
+    font-size: 11px;
+    padding: 1px 4px;
+  }
+
+  .scout-pos-header {
+    font-size: 9px;
+    padding: 3px 8px;
+  }
+
+  .scout-team-header .team-name {
+    font-size: 12px;
+  }
+
+  .scout-team-header .team-owner {
+    font-size: 10px;
   }
 }

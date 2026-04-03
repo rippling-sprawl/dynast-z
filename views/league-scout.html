@@ -24,7 +24,7 @@
 
       <!-- Step 1: Pick Team A -->
       <div id="scout-select">
-        <p style="color: #8b949e; font-size: 13px; margin-bottom: 12px;">Select your team to scout against:</p>
+        <p style="color: #8b949e; font-size: 13px; margin-bottom: 12px;">Select a team to compare to the rest of the teams:</p>
         <div id="team-picker"></div>
       </div>
 
@@ -75,7 +75,6 @@
       const tooltip = sourcesTooltip(p.sources);
       return `
         <div class="player-card player-card-${p.position}">
-          <span class="player-pos pos-${p.position}">${fmtPos(p.position)}</span>
           <div class="player-info">
             <div class="player-name">${p.name}</div>
             <div class="player-team">${p.team || ''}</div>
@@ -85,8 +84,9 @@
       `;
     }
 
-    function renderRoster(players) {
-      const posOrder = ['QB', 'RB', 'WR', 'TE', 'K', 'DEF'];
+    const posOrder = ['QB', 'RB', 'WR', 'TE', 'PICK', 'K', 'DEF'];
+
+    function groupByPosition(players) {
       const grouped = {};
       for (const p of players) {
         const pos = p.position || 'OTHER';
@@ -96,15 +96,19 @@
       for (const pos in grouped) {
         grouped[pos].sort((a, b) => (b.aggregate ?? -999) - (a.aggregate ?? -999));
       }
-      const orderedPositions = posOrder.filter(p => grouped[p]).concat(
-        Object.keys(grouped).filter(p => !posOrder.includes(p))
-      );
-      let html = '';
-      for (const pos of orderedPositions) {
-        html += `<div class="starter-divider">${pos}</div>`;
-        html += grouped[pos].map(playerCard).join('');
+      return grouped;
+    }
+
+    function getOrderedPositions(groupedArrays) {
+      const allPositions = new Set();
+      for (const grouped of groupedArrays) {
+        for (const pos in grouped) allPositions.add(pos);
       }
-      return html;
+      const ordered = posOrder.filter(p => allPositions.has(p));
+      for (const pos of allPositions) {
+        if (!ordered.includes(pos)) ordered.push(pos);
+      }
+      return ordered;
     }
 
     function teamHeader(team) {
@@ -126,6 +130,55 @@
       return data;
     }
 
+    let allTeamData = []; // {team, grouped}
+
+    function renderCompareView() {
+      const pinnedEl = document.getElementById('pinned-team');
+      const othersEl = document.getElementById('other-teams');
+
+      if (!allTeamData.length) return;
+
+      const pinnedData = allTeamData[0];
+      const otherData = allTeamData.slice(1);
+      const allGrouped = allTeamData.map(d => d.grouped);
+      const positions = getOrderedPositions(allGrouped);
+
+      // Find max players per position across all teams
+      const maxPerPos = {};
+      for (const pos of positions) {
+        maxPerPos[pos] = 0;
+        for (const d of allTeamData) {
+          maxPerPos[pos] = Math.max(maxPerPos[pos], (d.grouped[pos] || []).length);
+        }
+      }
+
+      // Build pinned column
+      let pinnedHtml = teamHeader(pinnedData.team);
+      for (const pos of positions) {
+        pinnedHtml += `<div class="scout-pos-header pos-${pos}">${fmtPos(pos)}</div>`;
+        const players = pinnedData.grouped[pos] || [];
+        for (let i = 0; i < maxPerPos[pos]; i++) {
+          pinnedHtml += players[i] ? playerCard(players[i]) : '<div class="player-card player-card-empty"></div>';
+        }
+      }
+      pinnedEl.innerHTML = pinnedHtml;
+
+      // Build other columns
+      let othersHtml = '';
+      for (const d of otherData) {
+        let colHtml = teamHeader(d.team);
+        for (const pos of positions) {
+          colHtml += `<div class="scout-pos-header pos-${pos}">${fmtPos(pos)}</div>`;
+          const players = d.grouped[pos] || [];
+          for (let i = 0; i < maxPerPos[pos]; i++) {
+            colHtml += players[i] ? playerCard(players[i]) : '<div class="player-card player-card-empty"></div>';
+          }
+        }
+        othersHtml += `<div class="scout-team-col" id="scout-col-${d.team.roster_id}">${colHtml}</div>`;
+      }
+      othersEl.innerHTML = othersHtml;
+    }
+
     async function selectTeamA(team) {
       document.getElementById('scout-select').style.display = 'none';
       document.getElementById('scout-view').style.display = '';
@@ -135,6 +188,7 @@
       const othersEl = document.getElementById('other-teams');
       pinnedEl.innerHTML = teamHeader(team) + '<div style="text-align:center;padding:24px;color:#8b949e;font-size:13px;">Loading...</div>';
       othersEl.innerHTML = '';
+      allTeamData = [];
 
       // Load Team A
       const teamAData = await loadTeamRoster(team.roster_id);
@@ -142,7 +196,8 @@
       globalZMax = Math.max(...allVals) || 1;
       globalZMin = Math.min(...allVals) || -1;
 
-      pinnedEl.innerHTML = teamHeader(team) + renderRoster(teamAData.players);
+      allTeamData.push({ team, grouped: groupByPosition(teamAData.players) });
+      renderCompareView();
 
       // Load all other teams in parallel
       const otherTeams = teamsData.filter(t => t.roster_id !== team.roster_id);
@@ -159,25 +214,19 @@
       const rosterPromises = otherTeams.map(async (t) => {
         try {
           const data = await loadTeamRoster(t.roster_id);
-          // Update global z bounds
           const vals = data.players.filter(p => p.aggregate != null).map(p => p.aggregate);
           if (vals.length) {
             globalZMax = Math.max(globalZMax, ...vals);
             globalZMin = Math.min(globalZMin, ...vals);
           }
-          const col = document.getElementById(`scout-col-${t.roster_id}`);
-          if (col) {
-            col.innerHTML = teamHeader(t) + renderRoster(data.players);
-          }
+          allTeamData.push({ team: t, grouped: groupByPosition(data.players) });
         } catch (e) {
-          const col = document.getElementById(`scout-col-${t.roster_id}`);
-          if (col) {
-            col.innerHTML = teamHeader(t) + `<div style="text-align:center;padding:24px;color:#8b949e;font-size:13px;">Error loading</div>`;
-          }
+          allTeamData.push({ team: t, grouped: {} });
         }
       });
 
       await Promise.all(rosterPromises);
+      renderCompareView();
     }
 
     document.getElementById('scout-back-btn').addEventListener('click', () => {
