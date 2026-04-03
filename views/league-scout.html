@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <title>Scout | Dynast-Z</title>
+  <link rel="stylesheet" href="/styles/styles.css">
+  <link rel="stylesheet" href="/styles/league.css">
+  <link rel="stylesheet" href="/styles/scout.css">
+</head>
+<body>
+  <div id="header-mount"></div>
+  <div id="nav-drawer-mount"></div>
+  <script src="/scripts/nav.js"></script>
+  <script src="/scripts/tabs.js"></script>
+  <script>initPage('Scout');</script>
+
+  <div class="league-content">
+    <div id="loading">Loading teams...</div>
+
+    <div id="sections" style="display: none;">
+      <div class="tabs" id="tab-bar"></div>
+
+      <!-- Step 1: Pick Team A -->
+      <div id="scout-select">
+        <p style="color: #8b949e; font-size: 13px; margin-bottom: 12px;">Select your team to scout against:</p>
+        <div id="team-picker"></div>
+      </div>
+
+      <!-- Step 2: Compare view -->
+      <div id="scout-view" style="display: none;">
+        <button class="scout-back" id="scout-back-btn">&#8249; Change team</button>
+        <div class="scout-compare">
+          <div class="scout-pinned" id="pinned-team"></div>
+          <div class="scout-others" id="other-teams"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const leagueId = window.location.pathname.match(/\/league\/([^/]+)/)[1];
+    let teamsData = [];
+    let globalZMax = 1;
+    let globalZMin = -1;
+
+    initTabBar(leagueId);
+
+    function fmtPos(pos) { return pos === 'PICK' ? 'PK' : pos; }
+
+    function fmtZ(z) {
+      if (z == null) return '\u2014';
+      const sign = z >= 0 ? '+' : '';
+      return sign + z.toFixed(2);
+    }
+
+    function zColor(z) {
+      if (z == null) return '';
+      if (z > 0) return `rgba(34, 197, 94, ${Math.min(z / globalZMax, 1).toFixed(2)})`;
+      if (z < 0) return `rgba(220, 38, 38, ${Math.min(Math.abs(z) / Math.abs(globalZMin), 1).toFixed(2)})`;
+      return 'transparent';
+    }
+
+    const sourceAbbr = {'keeptradecut.com':'KTC','fantasypros.com':'FP','fantasycalc.com':'FC'};
+    function sourcesTooltip(sources) {
+      if (!sources) return '';
+      return Object.entries(sources)
+        .map(([k, v]) => `${sourceAbbr[k]||k}: ${v.toLocaleString()}`)
+        .join('\n');
+    }
+
+    function playerCard(p) {
+      const zClass = p.aggregate != null ? '' : ' no-zscore';
+      const tooltip = sourcesTooltip(p.sources);
+      return `
+        <div class="player-card player-card-${p.position}">
+          <span class="player-pos pos-${p.position}">${fmtPos(p.position)}</span>
+          <div class="player-info">
+            <div class="player-name">${p.name}</div>
+            <div class="player-team">${p.team || ''}</div>
+          </div>
+          <span class="player-value${zClass}" style="background:${zColor(p.aggregate)}" ${tooltip ? `data-sources="${tooltip}"` : ''}>${fmtZ(p.aggregate)}</span>
+        </div>
+      `;
+    }
+
+    function renderRoster(players) {
+      const posOrder = ['QB', 'RB', 'WR', 'TE', 'K', 'DEF'];
+      const grouped = {};
+      for (const p of players) {
+        const pos = p.position || 'OTHER';
+        if (!grouped[pos]) grouped[pos] = [];
+        grouped[pos].push(p);
+      }
+      for (const pos in grouped) {
+        grouped[pos].sort((a, b) => (b.aggregate ?? -999) - (a.aggregate ?? -999));
+      }
+      const orderedPositions = posOrder.filter(p => grouped[p]).concat(
+        Object.keys(grouped).filter(p => !posOrder.includes(p))
+      );
+      let html = '';
+      for (const pos of orderedPositions) {
+        html += `<div class="starter-divider">${pos}</div>`;
+        html += grouped[pos].map(playerCard).join('');
+      }
+      return html;
+    }
+
+    function teamHeader(team) {
+      return `
+        <div class="scout-team-header">
+          ${team.avatar ? `<img class="team-avatar" src="${team.avatar}" alt="" referrerpolicy="no-referrer">` : `<div class="team-avatar"></div>`}
+          <div>
+            <div class="team-name">${team.team_name}</div>
+            <div class="team-owner">${team.display_name}</div>
+          </div>
+        </div>
+      `;
+    }
+
+    async function loadTeamRoster(rosterId) {
+      const resp = await fetch(`/api/league/${leagueId}/team/${rosterId}`);
+      const data = await resp.json();
+      if (data.error) throw new Error(data.error);
+      return data;
+    }
+
+    async function selectTeamA(team) {
+      document.getElementById('scout-select').style.display = 'none';
+      document.getElementById('scout-view').style.display = '';
+      document.body.classList.add('scout-active');
+
+      const pinnedEl = document.getElementById('pinned-team');
+      const othersEl = document.getElementById('other-teams');
+      pinnedEl.innerHTML = teamHeader(team) + '<div style="text-align:center;padding:24px;color:#8b949e;font-size:13px;">Loading...</div>';
+      othersEl.innerHTML = '';
+
+      // Load Team A
+      const teamAData = await loadTeamRoster(team.roster_id);
+      const allVals = teamAData.players.filter(p => p.aggregate != null).map(p => p.aggregate);
+      globalZMax = Math.max(...allVals) || 1;
+      globalZMin = Math.min(...allVals) || -1;
+
+      pinnedEl.innerHTML = teamHeader(team) + renderRoster(teamAData.players);
+
+      // Load all other teams in parallel
+      const otherTeams = teamsData.filter(t => t.roster_id !== team.roster_id);
+
+      // Create placeholder columns
+      othersEl.innerHTML = otherTeams.map(t => `
+        <div class="scout-team-col" id="scout-col-${t.roster_id}">
+          ${teamHeader(t)}
+          <div style="text-align:center;padding:24px;color:#8b949e;font-size:13px;">Loading...</div>
+        </div>
+      `).join('');
+
+      // Fetch all rosters in parallel
+      const rosterPromises = otherTeams.map(async (t) => {
+        try {
+          const data = await loadTeamRoster(t.roster_id);
+          // Update global z bounds
+          const vals = data.players.filter(p => p.aggregate != null).map(p => p.aggregate);
+          if (vals.length) {
+            globalZMax = Math.max(globalZMax, ...vals);
+            globalZMin = Math.min(globalZMin, ...vals);
+          }
+          const col = document.getElementById(`scout-col-${t.roster_id}`);
+          if (col) {
+            col.innerHTML = teamHeader(t) + renderRoster(data.players);
+          }
+        } catch (e) {
+          const col = document.getElementById(`scout-col-${t.roster_id}`);
+          if (col) {
+            col.innerHTML = teamHeader(t) + `<div style="text-align:center;padding:24px;color:#8b949e;font-size:13px;">Error loading</div>`;
+          }
+        }
+      });
+
+      await Promise.all(rosterPromises);
+    }
+
+    document.getElementById('scout-back-btn').addEventListener('click', () => {
+      document.getElementById('scout-view').style.display = 'none';
+      document.getElementById('scout-select').style.display = '';
+      document.body.classList.remove('scout-active');
+    });
+
+    async function loadTeams() {
+      try {
+        const resp = await fetch(`/api/league/${leagueId}/teams`);
+        const data = await resp.json();
+        if (data.error) throw new Error(data.error);
+
+        teamsData = data.teams;
+        document.title = `Dynast-Z - ${data.league_name} - Scout`;
+        document.getElementById('header-status').textContent = data.league_name;
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('sections').style.display = '';
+
+        const picker = document.getElementById('team-picker');
+        picker.innerHTML = data.teams.map(t => `
+          <div class="team-card" data-roster-id="${t.roster_id}">
+            <div class="team-card-info">
+              ${t.avatar ? `<img class="team-avatar" src="${t.avatar}" alt="" referrerpolicy="no-referrer">` : `<div class="team-avatar"></div>`}
+              <div>
+                <div class="team-name">${t.team_name}</div>
+                <div class="team-owner">${t.display_name}</div>
+              </div>
+            </div>
+            <span class="team-arrow">&#8250;</span>
+          </div>
+        `).join('');
+
+        picker.addEventListener('click', (e) => {
+          const card = e.target.closest('.team-card');
+          if (!card) return;
+          const rosterId = card.dataset.rosterId;
+          const team = teamsData.find(t => String(t.roster_id) === rosterId);
+          if (team) selectTeamA(team);
+        });
+      } catch (e) {
+        document.getElementById('loading').textContent = 'Error: ' + e.message;
+      }
+    }
+
+    loadTeams();
+  </script>
+</body>
+</html>

@@ -574,6 +574,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         elif re.match(r"/league/[^/]+/new-trades", self.path):
             self.path = "/views/new-trades.html"
             super().do_GET()
+        elif re.match(r"/league/[^/]+/scout", self.path):
+            self.path = "/views/league-scout.html"
+            super().do_GET()
         elif re.match(r"/league/[^/]+/trades", self.path):
             self.path = "/views/league-trades.html"
             super().do_GET()
