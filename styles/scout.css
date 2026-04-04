@@ -218,6 +218,10 @@
   max-width: 100%;
 }
 
+.scout-trade-active .tabs {
+  display: none;
+}
+
 #scout-trade {
   display: flex;
   flex-wrap: wrap;
