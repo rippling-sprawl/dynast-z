@@ -69,3 +69,11 @@
 .sleeper-link:hover {
   text-decoration: underline;
 }
+
+
+/* Mobile layout */
+@media (max-width: 890px), (pointer: coarse) and (hover: none) {
+  .team-avatar {
+    margin-right: 0;
+  }
+}

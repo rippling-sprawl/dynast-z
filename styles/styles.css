@@ -118,13 +118,12 @@ header a:hover { color: #58a6ff; }
   background: #21262d;
   border: 1px solid #30363d;
   color: #8b949e;
-  width: 32px;
-  height: 32px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  padding: 4px 12px;
   border-radius: 6px;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   transition: background 0.15s, color 0.15s, border-color 0.15s;
   flex-shrink: 0;
 }
@@ -161,15 +160,6 @@ header a:hover { color: #58a6ff; }
 .share-toast.visible {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
-}
-
-/* Share watermark (visible only in captured image) */
-.share-watermark {
-  text-align: center;
-  padding: 6px 0;
-  font-size: 11px;
-  color: #484f58;
-  letter-spacing: 0.5px;
 }
 
 /* Hamburger nav */

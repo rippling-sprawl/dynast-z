@@ -1,17 +1,9 @@
 /* === Share Trade as Image === */
 
 async function captureTradeImage(element) {
-  // Temporarily hide remove buttons and hints
-  const removeButtons = element.querySelectorAll('.trade-remove-btn, .remove-btn');
-  const hints = element.querySelectorAll('.scout-trade-hint, .drop-hint');
-  removeButtons.forEach(btn => btn.style.display = 'none');
-  hints.forEach(h => h.style.display = 'none');
-
-  // Add watermark
-  const watermark = document.createElement('div');
-  watermark.className = 'share-watermark';
-  watermark.textContent = 'dynastz.com';
-  element.appendChild(watermark);
+  // Temporarily hide remove buttons, hints, and share button
+  const hideEls = element.querySelectorAll('.trade-remove-btn, .remove-btn, .scout-trade-hint, .drop-hint, .share-btn');
+  hideEls.forEach(el => el.style.display = 'none');
 
   try {
     const canvas = await html2canvas(element, {
@@ -20,11 +12,17 @@ async function captureTradeImage(element) {
       scale: 2,
       logging: false,
     });
+
+    // Draw watermark on the canvas directly
+    const ctx = canvas.getContext('2d');
+    ctx.font = '600 ' + (11 * 2) + 'px -apple-system, BlinkMacSystemFont, sans-serif';
+    ctx.fillStyle = '#484f58';
+    ctx.textAlign = 'center';
+    ctx.fillText('dynastz.com', canvas.width / 2, canvas.height - 12);
+
     return new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
   } finally {
-    removeButtons.forEach(btn => btn.style.display = '');
-    hints.forEach(h => h.style.display = '');
-    watermark.remove();
+    hideEls.forEach(el => el.style.display = '');
   }
 }
 
@@ -37,7 +35,7 @@ async function shareTradeImage(blob) {
       await navigator.share({ files: [file] });
       return;
     } catch (e) {
-      if (e.name === 'AbortError') return; // user cancelled
+      if (e.name === 'AbortError') return;
     }
   }
 
@@ -46,7 +44,7 @@ async function shareTradeImage(blob) {
     await navigator.clipboard.write([
       new ClipboardItem({ 'image/png': blob })
     ]);
-    showShareToast('Copied to clipboard');
+    showShareToast('Trade snapshot was copied!');
     return;
   } catch (e) {
     // fall through to download
@@ -59,7 +57,7 @@ async function shareTradeImage(blob) {
   a.download = 'dynast-z-trade.png';
   a.click();
   URL.revokeObjectURL(url);
-  showShareToast('Image saved');
+  showShareToast('Trade snapshot was saved!');
 }
 
 function showShareToast(message) {
@@ -80,7 +78,7 @@ function createShareButton(onClick) {
   const btn = document.createElement('button');
   btn.className = 'share-btn';
   btn.title = 'Share trade image';
-  btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>';
+  btn.textContent = 'Share';
   btn.addEventListener('click', async () => {
     btn.disabled = true;
     try {
