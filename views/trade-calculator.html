@@ -8,11 +8,13 @@
   <link rel="stylesheet" href="/styles/styles.css">
   <link rel="stylesheet" href="/styles/filters.css">
   <link rel="stylesheet" href="/styles/calculator.css">
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 </head>
 <body>
   <div id="header-mount"></div>
   <div id="nav-drawer-mount"></div>
   <script src="/scripts/nav.js"></script>
+  <script src="/scripts/share-trade.js"></script>
   <script>initPage('Loading players...');</script>
   <p class="intro">While lesser tools rely on a single source and call it a day, this calculator pulls from <a href="https://keeptradecut.com" target="_blank">KeepTradeCut</a>, <a href="https://fantasypros.com" target="_blank">FantasyPros</a>, and <a href="https://fantasycalc.com" target="_blank">FantasyCalc</a>, normalizes their values into z-scores, and merges them into a single aggregate ranking that is, frankly, superior to anything else you'll find. You're welcome.</p>
   <div class="app">
@@ -224,6 +226,14 @@
           text = 'Even trade';
         }
         result.innerHTML = `<span class="diff ${cls}">${text}</span>`;
+        if (teamA.length > 0 && teamB.length > 0) {
+          const shareBtn = createShareButton(async () => {
+            const el = document.querySelector('.trade-area');
+            const blob = await captureTradeImage(el);
+            await shareTradeImage(blob);
+          });
+          result.appendChild(shareBtn);
+        }
       }
     }
 

@@ -113,6 +113,65 @@ header a:hover { color: #58a6ff; }
   line-height: 16px;
 }
 
+/* Share trade button */
+.share-btn {
+  background: #21262d;
+  border: 1px solid #30363d;
+  color: #8b949e;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  flex-shrink: 0;
+}
+
+.share-btn:hover {
+  background: #58a6ff;
+  color: #fff;
+  border-color: #58a6ff;
+}
+
+.share-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* Share toast */
+.share-toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(8px);
+  background: #161b22;
+  border: 1px solid #30363d;
+  color: #f0f6fc;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  z-index: 1000;
+  opacity: 0;
+  transition: opacity 0.3s, transform 0.3s;
+  pointer-events: none;
+}
+
+.share-toast.visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Share watermark (visible only in captured image) */
+.share-watermark {
+  text-align: center;
+  padding: 6px 0;
+  font-size: 11px;
+  color: #484f58;
+  letter-spacing: 0.5px;
+}
+
 /* Hamburger nav */
 .hamburger {
   background: none;

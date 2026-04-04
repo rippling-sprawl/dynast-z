@@ -8,12 +8,14 @@
   <link rel="stylesheet" href="/styles/styles.css">
   <link rel="stylesheet" href="/styles/league.css">
   <link rel="stylesheet" href="/styles/scout.css">
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 </head>
 <body>
   <div id="header-mount"></div>
   <div id="nav-drawer-mount"></div>
   <script src="/scripts/nav.js"></script>
   <script src="/scripts/tabs.js"></script>
+  <script src="/scripts/share-trade.js"></script>
   <script>initPage('Scout');</script>
 
   <div class="league-content">
@@ -42,29 +44,31 @@
       <div id="scout-trade" style="display: none;">
         <button class="scout-back" id="trade-back-btn">&#8249; Back to scout</button>
         <div class="scout-trade-layout">
-          <div class="scout-trade-result" id="trade-result">
-            <span class="label">Add players to compare</span>
-          </div>
-          <div class="scout-trade-areas">
-            <div class="scout-trade-area scout-trade-a">
-              <div class="scout-trade-header trade-header-a">
-                <div id="trade-team-a-avatar" class="team-avatar"></div>
-                <h2 id="trade-team-a-name">Team A</h2>
-                <span class="scout-trade-total" id="trade-total-a">0</span>
+          <div id="scout-trade-capture">
+            <div class="scout-trade-areas">
+              <div class="scout-trade-area scout-trade-a">
+                <div class="scout-trade-header trade-header-a">
+                  <div id="trade-team-a-avatar" class="team-avatar"></div>
+                  <h2 id="trade-team-a-name">Team A</h2>
+                  <span class="scout-trade-total" id="trade-total-a">0</span>
+                </div>
+                <div class="scout-trade-zone" id="trade-zone-a">
+                  <div class="scout-trade-hint" id="trade-hint-a">Add players</div>
+                </div>
               </div>
-              <div class="scout-trade-zone" id="trade-zone-a">
-                <div class="scout-trade-hint" id="trade-hint-a">Add players</div>
+              <div class="scout-trade-area scout-trade-b">
+                <div class="scout-trade-header trade-header-b">
+                  <div id="trade-team-b-avatar" class="team-avatar"></div>
+                  <h2 id="trade-team-b-name">Team B</h2>
+                  <span class="scout-trade-total" id="trade-total-b">0</span>
+                </div>
+                <div class="scout-trade-zone" id="trade-zone-b">
+                  <div class="scout-trade-hint" id="trade-hint-b">Add players</div>
+                </div>
               </div>
             </div>
-            <div class="scout-trade-area scout-trade-b">
-              <div class="scout-trade-header trade-header-b">
-                <div id="trade-team-b-avatar" class="team-avatar"></div>
-                <h2 id="trade-team-b-name">Team B</h2>
-                <span class="scout-trade-total" id="trade-total-b">0</span>
-              </div>
-              <div class="scout-trade-zone" id="trade-zone-b">
-                <div class="scout-trade-hint" id="trade-hint-b">Add players</div>
-              </div>
+            <div class="scout-trade-result" id="trade-result">
+              <span class="label">Add players to compare</span>
             </div>
           </div>
           <div class="scout-trade-rosters">
@@ -433,6 +437,14 @@
           text = 'Even trade';
         }
         result.innerHTML = `<span class="diff ${cls}">${text}</span>`;
+        if (tradeTeamA.length > 0 && tradeTeamB.length > 0) {
+          const shareBtn = createShareButton(async () => {
+            const el = document.getElementById('scout-trade-capture');
+            const blob = await captureTradeImage(el);
+            await shareTradeImage(blob);
+          });
+          result.appendChild(shareBtn);
+        }
       }
     }
 
