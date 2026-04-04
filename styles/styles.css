@@ -51,7 +51,7 @@ header a:hover { color: #58a6ff; }
 .league-content {
   max-width: 620px;
   margin: 0 auto;
-  padding: 16px;
+  padding: 16px 0;
 }
 
 /* Tabs */
@@ -224,7 +224,7 @@ header a:hover { color: #58a6ff; }
 
 @media (max-width: 500px) {
   .league-content {
-    padding: 12px;
+    padding: 12px 0;
   }
 
   .tabs {
