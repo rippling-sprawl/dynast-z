@@ -228,16 +228,16 @@
 }
 
 #scout-trade-capture {
-  flex-shrink: 0;
-  max-height: 40%;
+  flex-shrink: 1;
+  max-height: 45%;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  min-height: 0;
 }
 
 .scout-trade-areas {
   display: flex;
-  flex: 1;
+  flex-shrink: 1;
   min-height: 0;
   overflow: hidden;
 }
@@ -306,9 +306,8 @@
 
 .scout-trade-zone {
   padding: 8px;
-  min-height: 60px;
   border-bottom: 1px solid #30363d;
-  flex: 1;
+  flex-shrink: 1;
   overflow-y: auto;
 }
 
