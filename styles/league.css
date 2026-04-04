@@ -74,6 +74,6 @@
 /* Mobile layout */
 @media (max-width: 890px), (pointer: coarse) and (hover: none) {
   .team-avatar {
-    margin-right: 0;
+    margin-right: 4px;
   }
 }

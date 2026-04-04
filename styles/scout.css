@@ -35,7 +35,7 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 0;
+  padding: 6px 4px;
   font-size: 13px;
   color: #58a6ff;
   background: none;
@@ -109,10 +109,18 @@
   height: 28px;
 }
 
+.scout-team-header .scout-team-info {
+  flex: 1;
+  min-width: 0;
+}
+
 .scout-team-header .team-name {
   font-size: 14px;
   font-weight: 600;
   color: #f0f6fc;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .scout-team-header .team-owner {
@@ -289,8 +297,12 @@
 
 .scout-trade-header h2 {
   flex: 1;
+  min-width: 0;
   font-size: 14px;
   font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .trade-header-a h2 { color: #f78166; }
