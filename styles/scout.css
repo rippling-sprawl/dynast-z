@@ -173,6 +173,319 @@
   min-width: 0;
 }
 
+/* === Trade button on team headers === */
+.scout-trade-btn {
+  margin-left: auto;
+  background: #21262d;
+  border: 1px solid #30363d;
+  color: #8b949e;
+  font-size: 16px;
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  flex-shrink: 0;
+}
+
+.scout-trade-btn:hover {
+  background: #58a6ff;
+  color: #fff;
+  border-color: #58a6ff;
+}
+
+/* === Scout trade view === */
+.scout-trade-active .league-content {
+  max-width: 100%;
+}
+
+#scout-trade {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+#scout-trade > .scout-back {
+  margin-bottom: 12px;
+}
+
+.scout-trade-layout {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: calc(100vh - 165px);
+}
+
+.scout-trade-areas {
+  display: flex;
+  flex: 0 1 auto;
+  max-height: 40%;
+  overflow: hidden;
+}
+
+.scout-trade-area {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.scout-trade-area.scout-trade-a {
+  border-right: 1px solid #30363d;
+}
+
+.scout-trade-rosters {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.scout-trade-roster-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.scout-trade-roster-col.scout-trade-a {
+  border-right: 1px solid #30363d;
+}
+
+.scout-trade-header {
+  padding: 10px 14px;
+  border-bottom: 1px solid #30363d;
+  background: #161b22;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.scout-trade-header h2 {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.trade-header-a h2 { color: #f78166; }
+.trade-header-b h2 { color: #7ee787; }
+
+.scout-trade-total {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.scout-trade-a .scout-trade-total { color: #f78166; }
+.scout-trade-b .scout-trade-total { color: #7ee787; }
+
+.scout-trade-zone {
+  padding: 8px;
+  min-height: 60px;
+  border-bottom: 1px solid #30363d;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.scout-trade-hint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 44px;
+  color: #484f58;
+  font-size: 13px;
+  pointer-events: none;
+}
+
+.trade-player {
+  display: flex;
+  align-items: center;
+  padding: 6px 10px;
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  margin-bottom: 4px;
+}
+
+.trade-player .player-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: #f0f6fc;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.trade-player .player-team {
+  font-size: 10px;
+  color: #6e7681;
+}
+
+.trade-player .player-pos {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 3px;
+  margin-right: 8px;
+  min-width: 30px;
+  text-align: center;
+}
+
+.trade-player .player-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.trade-player .player-value {
+  font-size: 12px;
+  font-weight: 600;
+  color: #eee;
+  margin-left: 8px;
+  white-space: nowrap;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.trade-player.player-card-PICK .player-team,
+.scout-trade-roster-card.player-card-PICK .player-team {
+  display: none;
+}
+
+.trade-remove-btn {
+  background: none;
+  border: none;
+  color: #484f58;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 0 4px;
+  margin-left: 6px;
+  line-height: 1;
+}
+
+.trade-remove-btn:hover { color: #f85149; }
+
+.scout-trade-roster-header {
+  padding: 6px 14px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #8b949e;
+  background: #161b22;
+  border-bottom: 1px solid #30363d;
+  flex-shrink: 0;
+}
+
+.scout-trade-roster {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 0;
+}
+
+.scout-trade-roster::-webkit-scrollbar { width: 8px; }
+.scout-trade-roster::-webkit-scrollbar-track { background: transparent; }
+.scout-trade-roster::-webkit-scrollbar-thumb { background: #30363d; border-radius: 4px; }
+
+.scout-trade-roster-card {
+  display: flex;
+  align-items: center;
+  padding: 6px 14px;
+  cursor: pointer;
+  border-bottom: 1px solid #21262d;
+  transition: background 0.1s;
+}
+
+.scout-trade-roster-card:hover:not(.scout-trade-roster-empty) {
+  background: #161b22;
+}
+
+.scout-trade-roster-empty {
+  min-height: 37px;
+  cursor: default;
+}
+
+.scout-trade-roster-card .player-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: #f0f6fc;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.scout-trade-roster-card .player-team {
+  font-size: 10px;
+  color: #6e7681;
+}
+
+.scout-trade-roster-card .player-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.scout-trade-roster-card .player-value {
+  font-size: 12px;
+  font-weight: 600;
+  color: #eee;
+  margin-left: 8px;
+  white-space: nowrap;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+/* Trade result banner */
+.scout-trade-result {
+  width: 100%;
+  padding: 10px 16px;
+  border-top: 1px solid #30363d;
+  background: #161b22;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  flex-shrink: 0;
+}
+
+.scout-trade-result .diff {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.scout-trade-result .label {
+  font-size: 13px;
+  color: #8b949e;
+}
+
+.scout-trade-result .favor-a { color: #f78166; }
+.scout-trade-result .favor-b { color: #7ee787; }
+.scout-trade-result .favor-even { color: #8b949e; }
+
+/* Source tooltip in trade views */
+.trade-player .player-value[data-sources]:hover::after,
+.scout-trade-roster-card .player-value[data-sources]:hover::after {
+  content: attr(data-sources);
+  position: absolute;
+  bottom: 100%;
+  right: 0;
+  background: #1c2128;
+  border: 1px solid #30363d;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  white-space: pre;
+  z-index: 10;
+  color: #8b949e;
+  pointer-events: none;
+}
+
+.trade-player .player-value,
+.scout-trade-roster-card .player-value {
+  position: relative;
+}
+
 @media (max-width: 700px) {
   .scout-pinned {
     flex: 0 0 260px;
@@ -252,5 +565,53 @@
 
   .scout-team-header .team-owner {
     font-size: 10px;
+  }
+
+  /* Trade view mobile */
+  .scout-trade-layout {
+    height: calc(100vh - 160px);
+  }
+
+  .scout-trade-header h2 {
+    font-size: 12px;
+  }
+
+  .scout-trade-total {
+    font-size: 15px;
+  }
+
+  .trade-player .player-name,
+  .scout-trade-roster-card .player-name {
+    font-size: 12px;
+  }
+
+  .trade-player .player-team,
+  .scout-trade-roster-card .player-team {
+    font-size: 9px;
+  }
+
+  .trade-player .player-value,
+  .scout-trade-roster-card .player-value {
+    font-size: 11px;
+    padding: 1px 4px;
+  }
+
+  .scout-trade-result {
+    gap: 8px;
+    padding: 8px 10px;
+  }
+
+  .scout-trade-result .diff {
+    font-size: 13px;
+  }
+
+  .scout-trade-result .label {
+    font-size: 11px;
+  }
+
+  .scout-trade-btn {
+    width: 26px;
+    height: 26px;
+    font-size: 14px;
   }
 }

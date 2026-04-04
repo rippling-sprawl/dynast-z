@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <link rel="icon" type="image/png" href="/favicon.png">
   <title>Scout | Dynast-Z</title>
   <link rel="stylesheet" href="/styles/styles.css">
@@ -35,6 +35,46 @@
         <div class="scout-compare">
           <div class="scout-pinned" id="pinned-team"></div>
           <div class="scout-others" id="other-teams"></div>
+        </div>
+      </div>
+
+      <!-- Step 3: Trade view between two teams -->
+      <div id="scout-trade" style="display: none;">
+        <button class="scout-back" id="trade-back-btn">&#8249; Back to scout</button>
+        <div class="scout-trade-layout">
+          <div class="scout-trade-areas">
+            <div class="scout-trade-area scout-trade-a">
+              <div class="scout-trade-header trade-header-a">
+                <h2 id="trade-team-a-name">Team A</h2>
+                <span class="scout-trade-total" id="trade-total-a">0</span>
+              </div>
+              <div class="scout-trade-zone" id="trade-zone-a">
+                <div class="scout-trade-hint" id="trade-hint-a">Add players</div>
+              </div>
+            </div>
+            <div class="scout-trade-area scout-trade-b">
+              <div class="scout-trade-header trade-header-b">
+                <h2 id="trade-team-b-name">Team B</h2>
+                <span class="scout-trade-total" id="trade-total-b">0</span>
+              </div>
+              <div class="scout-trade-zone" id="trade-zone-b">
+                <div class="scout-trade-hint" id="trade-hint-b">Add players</div>
+              </div>
+            </div>
+          </div>
+          <div class="scout-trade-result" id="trade-result">
+            <span class="label">Add players to compare</span>
+          </div>
+          <div class="scout-trade-rosters">
+            <div class="scout-trade-roster-col scout-trade-a">
+              <div class="scout-trade-roster-header">Roster</div>
+              <div class="scout-trade-roster" id="trade-roster-a"></div>
+            </div>
+            <div class="scout-trade-roster-col scout-trade-b">
+              <div class="scout-trade-roster-header">Roster</div>
+              <div class="scout-trade-roster" id="trade-roster-b"></div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -74,10 +114,11 @@
     function playerCard(p) {
       const zClass = p.aggregate != null ? '' : ' no-zscore';
       const tooltip = sourcesTooltip(p.sources);
+      const taxiLabel = p.taxi ? '<span class="taxi-label">PS</span>' : '';
       return `
         <div class="player-card player-card-${p.position}">
           <div class="player-info">
-            <div class="player-name">${p.name}</div>
+            <div class="player-name">${p.name}${taxiLabel}</div>
             <div class="player-team">${p.team || ''}</div>
           </div>
           <span class="player-value${zClass}" style="background:${zColor(p.aggregate)}" ${tooltip ? `data-sources="${tooltip}"` : ''}>${fmtZ(p.aggregate)}</span>
@@ -85,7 +126,7 @@
       `;
     }
 
-    const posOrder = ['QB', 'RB', 'WR', 'TE', 'PICK', 'K', 'DEF'];
+    const posOrder = ['QB', 'RB', 'WR', 'TE', 'PICK'];
 
     function groupByPosition(players) {
       const grouped = {};
@@ -95,15 +136,18 @@
         grouped[pos].push(p);
       }
       for (const pos in grouped) {
-        grouped[pos].sort((a, b) => (b.aggregate ?? -999) - (a.aggregate ?? -999));
+        if (pos === 'PICK') grouped[pos].sort((a, b) => a.name.localeCompare(b.name));
+        else grouped[pos].sort((a, b) => (b.aggregate ?? -999) - (a.aggregate ?? -999));
       }
       return grouped;
     }
 
+    const hiddenPos = new Set(['K', 'DEF']);
+
     function getOrderedPositions(groupedArrays) {
       const allPositions = new Set();
       for (const grouped of groupedArrays) {
-        for (const pos in grouped) allPositions.add(pos);
+        for (const pos in grouped) if (!hiddenPos.has(pos)) allPositions.add(pos);
       }
       const ordered = posOrder.filter(p => allPositions.has(p));
       for (const pos of allPositions) {
@@ -112,7 +156,8 @@
       return ordered;
     }
 
-    function teamHeader(team) {
+    function teamHeader(team, opts = {}) {
+      const tradeBtn = opts.showTrade ? `<button class="scout-trade-btn" data-roster-id="${team.roster_id}" title="Trade with this team">&#8644;</button>` : '';
       return `
         <div class="scout-team-header">
           ${team.avatar ? `<img class="team-avatar" src="${team.avatar}" alt="" referrerpolicy="no-referrer">` : `<div class="team-avatar"></div>`}
@@ -120,6 +165,7 @@
             <div class="team-name">${team.team_name}</div>
             <div class="team-owner">${team.display_name}</div>
           </div>
+          ${tradeBtn}
         </div>
       `;
     }
@@ -167,7 +213,7 @@
       // Build other columns
       let othersHtml = '';
       for (const d of otherData) {
-        let colHtml = teamHeader(d.team);
+        let colHtml = teamHeader(d.team, { showTrade: true });
         for (const pos of positions) {
           colHtml += `<div class="scout-pos-header pos-${pos}">${fmtPos(pos)}</div>`;
           const players = d.grouped[pos] || [];
@@ -239,6 +285,178 @@
       document.getElementById('scout-view').style.display = 'none';
       document.getElementById('scout-select').style.display = '';
       document.body.classList.remove('scout-active');
+    });
+
+    // === Trade view logic ===
+    let tradeTeamA = []; // players added to Team A's trade
+    let tradeTeamB = []; // players added to Team B's trade
+    let tradeRosterA = []; // full roster for Team A
+    let tradeRosterB = []; // full roster for Team B
+    let tradeTeamAInfo = null;
+    let tradeTeamBInfo = null;
+
+    function openTradeView(teamBRosterId) {
+      const pinnedData = allTeamData[0];
+      const teamBData = allTeamData.find(d => String(d.team.roster_id) === String(teamBRosterId));
+      if (!pinnedData || !teamBData) return;
+
+      tradeTeamAInfo = pinnedData.team;
+      tradeTeamBInfo = teamBData.team;
+
+      // Flatten grouped rosters back into arrays
+      tradeRosterA = [];
+      for (const pos of posOrder) {
+        if (pinnedData.grouped[pos]) tradeRosterA.push(...pinnedData.grouped[pos]);
+      }
+      tradeRosterB = [];
+      for (const pos of posOrder) {
+        if (teamBData.grouped[pos]) tradeRosterB.push(...teamBData.grouped[pos]);
+      }
+
+      tradeTeamA = [];
+      tradeTeamB = [];
+
+      document.getElementById('trade-team-a-name').textContent = tradeTeamAInfo.team_name;
+      document.getElementById('trade-team-b-name').textContent = tradeTeamBInfo.team_name;
+
+      document.getElementById('scout-view').style.display = 'none';
+      document.getElementById('scout-trade').style.display = '';
+      document.body.classList.add('scout-trade-active');
+
+      renderTrade();
+    }
+
+    function renderTradeZone(team, zoneId, hintId) {
+      const zone = document.getElementById(zoneId);
+      const hint = document.getElementById(hintId);
+      zone.querySelectorAll('.trade-player').forEach(el => el.remove());
+      hint.style.display = team.length ? 'none' : 'flex';
+
+      team.forEach(p => {
+        const el = document.createElement('div');
+        el.className = 'trade-player player-card-' + p.position;
+        el.innerHTML = `
+          <span class="player-pos pos-${p.position}">${fmtPos(p.position)}</span>
+          <div class="player-info">
+            <div class="player-name">${p.name}</div>
+            <div class="player-team">${p.team || ''}</div>
+          </div>
+          <span class="player-value" style="background:${zColor(p.aggregate)}" ${sourcesTooltip(p.sources) ? `data-sources="${sourcesTooltip(p.sources)}"` : ''}>${fmtZ(p.aggregate)}</span>
+          <button class="trade-remove-btn" data-name="${p.name.replace(/"/g, '&quot;')}">&times;</button>
+        `;
+        el.querySelector('.trade-remove-btn').addEventListener('click', () => {
+          tradeTeamA = tradeTeamA.filter(x => x.name !== p.name);
+          tradeTeamB = tradeTeamB.filter(x => x.name !== p.name);
+          renderTrade();
+        });
+        zone.insertBefore(el, hint);
+      });
+    }
+
+    function renderTradeRoster(fullRoster, tradedPlayers, containerId, team, positions, maxPerPos) {
+      const container = document.getElementById(containerId);
+      const tradedNames = new Set(tradedPlayers.map(p => p.name));
+      const available = fullRoster.filter(p => !tradedNames.has(p.name));
+      const grouped = groupByPosition(available);
+
+      let html = '';
+      for (const pos of positions) {
+        html += `<div class="scout-pos-header pos-${pos}">${fmtPos(pos)}</div>`;
+        const players = grouped[pos] || [];
+        for (let i = 0; i < maxPerPos[pos]; i++) {
+          if (players[i]) {
+            const p = players[i];
+            html += `
+              <div class="scout-trade-roster-card player-card-${p.position}" data-name="${p.name.replace(/"/g, '&quot;')}" data-team="${team}">
+                <div class="player-info">
+                  <div class="player-name">${p.name}${p.taxi ? '<span class="taxi-label">PS</span>' : ''}</div>
+                  <div class="player-team">${p.team || ''}</div>
+                </div>
+                <span class="player-value" style="background:${zColor(p.aggregate)}" ${sourcesTooltip(p.sources) ? `data-sources="${sourcesTooltip(p.sources)}"` : ''}>${fmtZ(p.aggregate)}</span>
+              </div>
+            `;
+          } else {
+            html += '<div class="scout-trade-roster-card scout-trade-roster-empty"></div>';
+          }
+        }
+      }
+      container.innerHTML = html;
+
+      container.querySelectorAll('.scout-trade-roster-card:not(.scout-trade-roster-empty)').forEach(card => {
+        card.addEventListener('click', () => {
+          const name = card.dataset.name;
+          const player = fullRoster.find(p => p.name === name);
+          if (!player) return;
+          if (team === 'a') tradeTeamA.push(player);
+          else tradeTeamB.push(player);
+          renderTrade();
+        });
+      });
+    }
+
+    function updateTradeResult() {
+      const sumA = tradeTeamA.reduce((s, p) => s + (p.aggregate || 0), 0);
+      const sumB = tradeTeamB.reduce((s, p) => s + (p.aggregate || 0), 0);
+      document.getElementById('trade-total-a').textContent = fmtZ(sumA);
+      document.getElementById('trade-total-b').textContent = fmtZ(sumB);
+
+      const result = document.getElementById('trade-result');
+      if (tradeTeamA.length === 0 && tradeTeamB.length === 0) {
+        result.innerHTML = '<span class="label">Add players to compare</span>';
+      } else {
+        const diff = Math.abs(sumA - sumB);
+        let cls, text;
+        const nameA = tradeTeamAInfo.team_name;
+        const nameB = tradeTeamBInfo.team_name;
+        if (sumA < sumB) {
+          cls = 'favor-a';
+          text = `${nameA} wins by ${fmtZ(diff)}`;
+        } else if (sumB < sumA) {
+          cls = 'favor-b';
+          text = `${nameB} wins by ${fmtZ(diff)}`;
+        } else {
+          cls = 'favor-even';
+          text = 'Even trade';
+        }
+        result.innerHTML = `<span class="diff ${cls}">${text}</span>`;
+      }
+    }
+
+    function renderTrade() {
+      renderTradeZone(tradeTeamA, 'trade-zone-a', 'trade-hint-a');
+      renderTradeZone(tradeTeamB, 'trade-zone-b', 'trade-hint-b');
+
+      // Compute aligned positions and max counts across both rosters
+      const tradedNamesA = new Set(tradeTeamA.map(p => p.name));
+      const tradedNamesB = new Set(tradeTeamB.map(p => p.name));
+      const availA = tradeRosterA.filter(p => !tradedNamesA.has(p.name));
+      const availB = tradeRosterB.filter(p => !tradedNamesB.has(p.name));
+      const groupedA = groupByPosition(availA);
+      const groupedB = groupByPosition(availB);
+      const positions = getOrderedPositions([groupedA, groupedB]);
+      const maxPerPos = {};
+      for (const pos of positions) {
+        maxPerPos[pos] = Math.max((groupedA[pos] || []).length, (groupedB[pos] || []).length);
+      }
+
+      renderTradeRoster(tradeRosterA, tradeTeamA, 'trade-roster-a', 'a', positions, maxPerPos);
+      renderTradeRoster(tradeRosterB, tradeTeamB, 'trade-roster-b', 'b', positions, maxPerPos);
+      updateTradeResult();
+    }
+
+    // Trade button click handler (delegated on other-teams)
+    document.getElementById('other-teams').addEventListener('click', (e) => {
+      const btn = e.target.closest('.scout-trade-btn');
+      if (!btn) return;
+      e.stopPropagation();
+      openTradeView(btn.dataset.rosterId);
+    });
+
+    // Back from trade to scout
+    document.getElementById('trade-back-btn').addEventListener('click', () => {
+      document.getElementById('scout-trade').style.display = 'none';
+      document.getElementById('scout-view').style.display = '';
+      document.body.classList.remove('scout-trade-active');
     });
 
     async function loadTeams() {

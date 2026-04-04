@@ -99,6 +99,21 @@ header a:hover { color: #58a6ff; }
 .pos-K { background: #6a1b9a; color: #fff; }
 .pos-DEF { background: #4e342e; color: #fff; }
 
+/* Taxi / Practice Squad label */
+.taxi-label {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 700;
+  color: #8b949e;
+  background: #21262d;
+  border: 1px solid #30363d;
+  padding: 0 4px;
+  border-radius: 3px;
+  margin-left: 6px;
+  vertical-align: middle;
+  line-height: 16px;
+}
+
 /* Hamburger nav */
 .hamburger {
   background: none;

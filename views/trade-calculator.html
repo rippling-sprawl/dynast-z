@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <link rel="icon" type="image/png" href="/favicon.png">
   <title>Trade Calculator | Dynast-Z</title>
   <link rel="stylesheet" href="/styles/styles.css">
@@ -55,11 +55,10 @@
           <div class="drop-hint" id="hint-b">Add players</div>
         </div>
       </div>
+      <div class="trade-result" id="trade-result">
+        <span class="label">Add players to compare</span>
+      </div>
     </div>
-  </div>
-
-  <div class="trade-result" id="trade-result">
-    <span class="label">Add players to compare</span>
   </div>
 
   <script>
@@ -214,21 +213,17 @@
       } else {
         const diff = Math.abs(sumA - sumB);
         let cls, text;
-        if (sumA > sumB) {
+        if (sumA < sumB) {
           cls = 'favor-a';
           text = `Team A wins by ${fmtZ(diff)}`;
-        } else if (sumB > sumA) {
+        } else if (sumB < sumA) {
           cls = 'favor-b';
           text = `Team B wins by ${fmtZ(diff)}`;
         } else {
           cls = 'favor-even';
           text = 'Even trade';
         }
-        result.innerHTML = `
-          <span class="label">Team A: ${fmtZ(sumA)}</span>
-          <span class="diff ${cls}">${text}</span>
-          <span class="label">Team B: ${fmtZ(sumB)}</span>
-        `;
+        result.innerHTML = `<span class="diff ${cls}">${text}</span>`;
       }
     }
 

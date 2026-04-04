@@ -202,6 +202,111 @@ def fetch_league_data(league_id):
     return rosters, users, league
 
 
+def fetch_league_picks(league_id):
+    """Fetch traded picks and draft order for a league. Cached with league data."""
+    cache_name = f"picks_{league_id}.json"
+    cached = read_cache(cache_name, ttl=LEAGUE_DATA_TTL)
+    if cached is not None:
+        return cached["traded_picks"], cached.get("draft_order")
+    traded_picks = json.loads(http_fetch(f"{SLEEPER_API}/league/{league_id}/traded_picks"))
+    drafts = json.loads(http_fetch(f"{SLEEPER_API}/league/{league_id}/drafts"))
+    draft_order = drafts[0].get("draft_order") if drafts else None
+    write_cache(cache_name, {"traded_picks": traded_picks, "draft_order": draft_order})
+    return traded_picks, draft_order
+
+
+_ORDINALS = {1: "1st", 2: "2nd", 3: "3rd", 4: "4th", 5: "5th", 6: "6th", 7: "7th"}
+
+
+def _pick_name_variants(season, rd, slot, total_rosters):
+    """Return a list of name variants to try matching against z_lookup, best first."""
+    ordinal = _ORDINALS.get(rd, f"{rd}th")
+    names = []
+    if slot:
+        names.append(f"{season} Pick {rd}.{slot:02d}")
+    third = max(total_rosters // 3, 1)
+    if slot:
+        if slot <= third:
+            tier = "Early"
+        elif slot <= third * 2:
+            tier = "Mid"
+        else:
+            tier = "Late"
+        names.append(f"{season} {tier} {ordinal}")
+    else:
+        names.append(f"{season} Mid {ordinal}")
+    names.append(f"{season} {ordinal}")
+    return names
+
+
+def build_picks_for_roster(roster_id, rosters, users, league, traded_picks, draft_order, z_lookup):
+    """Compute all draft picks owned by a roster and return as player-like dicts."""
+    total_rosters = league.get("total_rosters", 12)
+    draft_rounds = min(league.get("settings", {}).get("draft_rounds", 4), 4)
+    current_season = int(league.get("season", "2026"))
+    seasons = sorted({current_season, current_season + 1, current_season + 2}
+                     | {int(tp["season"]) for tp in traded_picks})
+
+    # Map roster_id -> owner_id (user_id) and short team name
+    roster_owner = {r["roster_id"]: r.get("owner_id") for r in rosters}
+    user_map = {u["user_id"]: u for u in users}
+    def roster_label(rid):
+        uid = roster_owner.get(rid)
+        u = user_map.get(uid, {})
+        return u.get("display_name", f"T{rid}")
+
+    # Map user_id -> draft slot (1-based) from draft_order
+    user_slot = {}
+    if draft_order:
+        for uid, slot in draft_order.items():
+            user_slot[uid] = slot
+
+    # traded_picks tells us current ownership overrides
+    ownership = {}  # (season, round, original_roster_id) -> current_owner_roster_id
+    for tp in traded_picks:
+        key = (tp["season"], tp["round"], tp["roster_id"])
+        ownership[key] = tp["owner_id"]
+
+    picks = []
+    for season in seasons:
+        for rd in range(1, draft_rounds + 1):
+            for orig_rid in range(1, total_rosters + 1):
+                key = (str(season), rd, orig_rid)
+                current_owner = ownership.get(key, orig_rid)
+                if current_owner != roster_id:
+                    continue
+                # This roster owns this pick
+                owner_uid = roster_owner.get(orig_rid)
+                slot = user_slot.get(owner_uid) if owner_uid else None
+                pick_slot = slot if season == current_season else None
+                variants = _pick_name_variants(str(season), rd, pick_slot, total_rosters)
+                # Display name: include original team label if traded
+                ordinal = _ORDINALS.get(rd, f"{rd}th")
+                if orig_rid != roster_id:
+                    display = f"{season} {ordinal} ({roster_label(orig_rid)})"
+                else:
+                    display = f"{season} {ordinal}"
+                # Try to match z_lookup
+                z = None
+                for v in variants:
+                    z = z_lookup.get(norm_name(v))
+                    if z:
+                        break
+                pick_data = {
+                    "name": display,
+                    "position": "PICK",
+                    "team": "",
+                    "starter": False,
+                }
+                if z:
+                    pick_data["aggregate"] = z["aggregate"]
+                    pick_data["sources"] = z["sources"]
+                picks.append(pick_data)
+
+    picks.sort(key=lambda p: -(p.get("aggregate") or -999))
+    return picks
+
+
 def build_teams_list(league_id):
     """Return all teams in a league."""
     rosters, users, league = fetch_league_data(league_id)
@@ -423,6 +528,7 @@ def build_team_roster(league_id, roster_id):
 
     player_ids = target_roster.get("players") or []
     starters = set(target_roster.get("starters") or [])
+    taxi = set(target_roster.get("taxi") or [])
 
     players = []
     for pid in player_ids:
@@ -437,12 +543,23 @@ def build_team_roster(league_id, roster_id):
             "position": position,
             "team": team,
             "starter": pid in starters,
+            "taxi": pid in taxi,
         }
         z = z_lookup.get(norm_name(name))
         if z:
             player_data["aggregate"] = z["aggregate"]
             player_data["sources"] = z["sources"]
         players.append(player_data)
+
+    # Add draft picks
+    try:
+        traded_picks, draft_order = fetch_league_picks(league_id)
+        picks = build_picks_for_roster(
+            int(roster_id), rosters, users, league, traded_picks, draft_order, z_lookup
+        )
+        players.extend(picks)
+    except Exception:
+        pass  # draft picks are a bonus
 
     players.sort(key=lambda p: (
         not p["starter"],

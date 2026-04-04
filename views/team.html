@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <link rel="icon" type="image/png" href="/favicon.png">
   <title>Team | Dynast-Z</title>
   <link rel="stylesheet" href="/styles/styles.css">
@@ -75,9 +75,10 @@
           if (!grouped[pos]) grouped[pos] = [];
           grouped[pos].push(p);
         }
-        // Sort each group by aggregate desc
+        // Sort each group: picks by name, others by aggregate desc
         for (const pos in grouped) {
-          grouped[pos].sort((a, b) => (b.aggregate ?? -999) - (a.aggregate ?? -999));
+          if (pos === 'PICK') grouped[pos].sort((a, b) => a.name.localeCompare(b.name));
+          else grouped[pos].sort((a, b) => (b.aggregate ?? -999) - (a.aggregate ?? -999));
         }
         // Render in position order
         const orderedPositions = posOrder.filter(p => grouped[p]).concat(
@@ -98,11 +99,12 @@
     function playerCard(p) {
       const zClass = p.aggregate != null ? '' : ' no-zscore';
       const tooltip = sourcesTooltip(p.sources);
+      const taxiLabel = p.taxi ? '<span class="taxi-label">PS</span>' : '';
       return `
         <div class="player-card player-card-${p.position}">
           <span class="player-pos pos-${p.position}">${fmtPos(p.position)}</span>
           <div class="player-info">
-            <div class="player-name">${p.name}</div>
+            <div class="player-name">${p.name}${taxiLabel}</div>
             <div class="player-team">${p.team || ''}</div>
           </div>
           <span class="player-value${zClass}" style="background:${zColor(p.aggregate)}" ${tooltip ? `data-sources="${tooltip}"` : ''}>${fmtZ(p.aggregate)}</span>
