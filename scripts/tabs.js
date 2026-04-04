@@ -4,7 +4,7 @@ const LEAGUE_TABS = [
   { label: 'Scout', suffix: '/scout' },
   { label: 'Latest Trades', suffix: '/new-trades' },
   { label: 'Past Trades', suffix: '/trades' },
-  { label: 'Power Rankings', suffix: '/power' },
+  //{ label: 'Power Rankings', suffix: '/power' },
 ];
 
 function initTabBar(leagueId) {

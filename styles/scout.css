@@ -14,13 +14,28 @@
   cursor: pointer;
 }
 
-/* Back button */
+/* Back button + swipe hint row */
+#scout-view > .scout-back,
+#scout-view > .swipe-hint {
+  margin-bottom: 12px;
+}
+
+#scout-view {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+}
+
+#scout-view > .scout-compare {
+  width: 100%;
+}
+
 .scout-back {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   padding: 6px 0;
-  margin-bottom: 12px;
   font-size: 13px;
   color: #58a6ff;
   background: none;
@@ -168,9 +183,16 @@
   }
 }
 
+/* Swipe hint — mobile only */
+.swipe-hint {
+  display: none;
+}
+
 @media (max-width: 500px) {
   .scout-compare {
     gap: 0;
+    height: calc(100vh - 140px);
+    padding-bottom: 16px;
   }
 
   .scout-pinned {
@@ -185,6 +207,22 @@
   .scout-others {
     flex: 1 1 50%;
     min-width: 0;
+  }
+
+  .swipe-hint {
+    display: inline-flex;
+    align-items: center;
+    background: #58a6ff;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 5px 10px;
+    border-radius: 6px;
+    transition: opacity 0.4s ease;
+  }
+
+  .swipe-hint.hidden {
+    opacity: 0;
   }
 
   .scout-pinned .player-name,

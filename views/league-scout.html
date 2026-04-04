@@ -31,6 +31,7 @@
       <!-- Step 2: Compare view -->
       <div id="scout-view" style="display: none;">
         <button class="scout-back" id="scout-back-btn">&#8249; Change team</button>
+        <div class="swipe-hint" id="swipe-hint">Swipe Through Teams &#8250;</div>
         <div class="scout-compare">
           <div class="scout-pinned" id="pinned-team"></div>
           <div class="scout-others" id="other-teams"></div>
@@ -228,6 +229,11 @@
       await Promise.all(rosterPromises);
       renderCompareView();
     }
+
+    document.getElementById('other-teams').addEventListener('scroll', () => {
+      const hint = document.getElementById('swipe-hint');
+      if (hint) hint.classList.add('hidden');
+    }, { once: true });
 
     document.getElementById('scout-back-btn').addEventListener('click', () => {
       document.getElementById('scout-view').style.display = 'none';
