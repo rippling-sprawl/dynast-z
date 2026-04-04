@@ -173,6 +173,14 @@
   min-width: 0;
 }
 
+.scout-team-col .player-team,
+.scout-pinned .player-team,
+.scout-trade-roster-card .player-team {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
 /* === Trade button on team headers === */
 .scout-trade-btn {
   margin-left: auto;
@@ -262,11 +270,17 @@
   background: #161b22;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 10px;
   flex-shrink: 0;
 }
 
+.scout-trade-header .team-avatar {
+  width: 28px;
+  height: 28px;
+}
+
 .scout-trade-header h2 {
+  flex: 1;
   font-size: 14px;
   font-weight: 600;
 }

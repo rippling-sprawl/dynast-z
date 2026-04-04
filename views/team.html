@@ -104,8 +104,8 @@
         <div class="player-card player-card-${p.position}">
           <span class="player-pos pos-${p.position}">${fmtPos(p.position)}</span>
           <div class="player-info">
-            <div class="player-name">${p.name}${taxiLabel}</div>
-            <div class="player-team">${p.team || ''}</div>
+            <div class="player-name">${p.name}</div>
+            <div class="player-team">${p.team || ''}${taxiLabel}</div>
           </div>
           <span class="player-value${zClass}" style="background:${zColor(p.aggregate)}" ${tooltip ? `data-sources="${tooltip}"` : ''}>${fmtZ(p.aggregate)}</span>
         </div>

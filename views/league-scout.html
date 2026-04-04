@@ -42,9 +42,13 @@
       <div id="scout-trade" style="display: none;">
         <button class="scout-back" id="trade-back-btn">&#8249; Back to scout</button>
         <div class="scout-trade-layout">
+          <div class="scout-trade-result" id="trade-result">
+            <span class="label">Add players to compare</span>
+          </div>
           <div class="scout-trade-areas">
             <div class="scout-trade-area scout-trade-a">
               <div class="scout-trade-header trade-header-a">
+                <div id="trade-team-a-avatar" class="team-avatar"></div>
                 <h2 id="trade-team-a-name">Team A</h2>
                 <span class="scout-trade-total" id="trade-total-a">0</span>
               </div>
@@ -54,6 +58,7 @@
             </div>
             <div class="scout-trade-area scout-trade-b">
               <div class="scout-trade-header trade-header-b">
+                <div id="trade-team-b-avatar" class="team-avatar"></div>
                 <h2 id="trade-team-b-name">Team B</h2>
                 <span class="scout-trade-total" id="trade-total-b">0</span>
               </div>
@@ -61,9 +66,6 @@
                 <div class="scout-trade-hint" id="trade-hint-b">Add players</div>
               </div>
             </div>
-          </div>
-          <div class="scout-trade-result" id="trade-result">
-            <span class="label">Add players to compare</span>
           </div>
           <div class="scout-trade-rosters">
             <div class="scout-trade-roster-col scout-trade-a">
@@ -118,8 +120,8 @@
       return `
         <div class="player-card player-card-${p.position}">
           <div class="player-info">
-            <div class="player-name">${p.name}${taxiLabel}</div>
-            <div class="player-team">${p.team || ''}</div>
+            <div class="player-name">${p.name}</div>
+            <div class="player-team">${p.team || ''}${taxiLabel}</div>
           </div>
           <span class="player-value${zClass}" style="background:${zColor(p.aggregate)}" ${tooltip ? `data-sources="${tooltip}"` : ''}>${fmtZ(p.aggregate)}</span>
         </div>
@@ -319,6 +321,19 @@
       document.getElementById('trade-team-a-name').textContent = tradeTeamAInfo.team_name;
       document.getElementById('trade-team-b-name').textContent = tradeTeamBInfo.team_name;
 
+      const avatarA = document.getElementById('trade-team-a-avatar');
+      const avatarB = document.getElementById('trade-team-b-avatar');
+      if (tradeTeamAInfo.avatar) {
+        avatarA.outerHTML = `<img class="team-avatar" id="trade-team-a-avatar" src="${tradeTeamAInfo.avatar}" alt="" referrerpolicy="no-referrer">`;
+      } else {
+        avatarA.outerHTML = '<div class="team-avatar" id="trade-team-a-avatar"></div>';
+      }
+      if (tradeTeamBInfo.avatar) {
+        avatarB.outerHTML = `<img class="team-avatar" id="trade-team-b-avatar" src="${tradeTeamBInfo.avatar}" alt="" referrerpolicy="no-referrer">`;
+      } else {
+        avatarB.outerHTML = '<div class="team-avatar" id="trade-team-b-avatar"></div>';
+      }
+
       document.getElementById('scout-view').style.display = 'none';
       document.getElementById('scout-trade').style.display = '';
       document.body.classList.add('scout-trade-active');
@@ -338,7 +353,7 @@
         el.innerHTML = `
           <div class="player-info">
             <div class="player-name">${p.name}</div>
-            <div class="player-meta"><span class="player-pos pos-${p.position}">${fmtPos(p.position)}</span><span class="player-team">${p.team || ''}</span></div>
+            <div class="player-meta"><span class="player-pos pos-${p.position}">${fmtPos(p.position)}</span><span class="player-team">${p.team || ''}</span>${p.taxi ? '<span class="taxi-label">PS</span>' : ''}</div>
           </div>
           <span class="player-value" style="background:${zColor(p.aggregate)}" ${sourcesTooltip(p.sources) ? `data-sources="${sourcesTooltip(p.sources)}"` : ''}>${fmtZ(p.aggregate)}</span>
           <button class="trade-remove-btn" data-name="${p.name.replace(/"/g, '&quot;')}">&times;</button>
@@ -368,8 +383,8 @@
             html += `
               <div class="scout-trade-roster-card player-card-${p.position}" data-name="${p.name.replace(/"/g, '&quot;')}" data-team="${team}">
                 <div class="player-info">
-                  <div class="player-name">${p.name}${p.taxi ? '<span class="taxi-label">PS</span>' : ''}</div>
-                  <div class="player-team">${p.team || ''}</div>
+                  <div class="player-name">${p.name}</div>
+                  <div class="player-team">${p.team || ''}${p.taxi ? '<span class="taxi-label">PS</span>' : ''}</div>
                 </div>
                 <span class="player-value" style="background:${zColor(p.aggregate)}" ${sourcesTooltip(p.sources) ? `data-sources="${sourcesTooltip(p.sources)}"` : ''}>${fmtZ(p.aggregate)}</span>
               </div>
