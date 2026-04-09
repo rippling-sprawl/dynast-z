@@ -19,10 +19,10 @@
       <div class="masters-breadcrumbs" style="padding-bottom:8px"><a href="/masters">Masters</a><span class="separator">/</span><span>Select Golfers</span></div>
       <h2>Select Golfers</h2>
       <p class="subtitle">Pick your winner, top 5, and top 10 finishers</p>
-
-      <div class="selection-counts" id="counts"></div>
-
+<a href="/masters/leaderboard" class="subtle-link">View Leaderboard &rarr;</a>
       <input type="text" class="masters-search" id="search" placeholder="Search golfers..." style="margin-bottom:0">
+
+      
     </div>
 
     <div id="loading" class="masters-loading">Loading golfers...</div>
@@ -39,7 +39,6 @@
       </table>
     </div>
 
-    <a href="/masters/leaderboard" class="masters-cta" id="view-leaderboard" style="display:none;margin:16px 0">View Leaderboard &rarr;</a>
   </div>
 
   <script src="/scripts/masters-utils.js?v=6eaf88a7"></script>
@@ -109,29 +108,10 @@
         });
       });
 
-      updateCounts();
-      updateCTA();
     }
 
     function save() {
       saveSelections(sel);
-    }
-
-    function updateCounts() {
-      const c = document.getElementById('counts');
-      const w = (sel.winner || []).length;
-      const t5 = (sel.top5 || []).length;
-      const t10 = (sel.top10 || []).length;
-      c.innerHTML = `
-        <span class="count-badge ${w > 0 ? 'full' : ''}">WIN: ${w}</span>
-        <span class="count-badge ${t5 > 0 ? 'full' : ''}">T5: ${t5}</span>
-        <span class="count-badge ${t10 > 0 ? 'full' : ''}">T10: ${t10}</span>
-      `;
-    }
-
-    function updateCTA() {
-      const hasAny = (sel.winner || []).length > 0 || (sel.top5 || []).length > 0 || (sel.top10 || []).length > 0;
-      document.getElementById('view-leaderboard').style.display = hasAny ? 'block' : 'none';
     }
 
     document.getElementById('search').addEventListener('input', e => {

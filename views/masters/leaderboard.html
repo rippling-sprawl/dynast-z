@@ -23,12 +23,13 @@
       </p>
 
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-        <input type="text" class="masters-search" id="search" placeholder="Search players..." style="margin-bottom:0">
+        <input type="text" class="masters-search" id="search" placeholder="Search players..." style="margin-bottom:0;">
         <div class="lb-filters">
           <button class="lb-filter-btn mine" data-filter="mine">MINE</button>
           <button class="lb-filter-btn win" data-filter="winner">WIN</button>
           <button class="lb-filter-btn t5" data-filter="top5">T5</button>
           <button class="lb-filter-btn t10" data-filter="top10">T10</button>
+          <button class="lb-filter-btn three-ball" data-filter="3ball">3-BALL</button>
         </div>
         <div class="masters-hint" id="tap-hint" style="margin-bottom:0;margin-left:auto;white-space:nowrap">Tap player for details</div>
       </div>
@@ -112,6 +113,8 @@
           for (const f of activeFilters) {
             if (f === 'mine') {
               if (isSelected(n, sel) || threeBallNames.has(n)) return true;
+            } else if (f === '3ball') {
+              if (threeBallNames.has(n)) return true;
             } else {
               if (sel[f] && sel[f].includes(n)) return true;
             }

@@ -83,6 +83,21 @@ body.masters-body {
   background: #93c5fd;
 }
 
+.subtle-link {
+  display: block;
+  font-size: 12px;
+  font-family: monospace;
+  color: #888;
+  text-decoration: none;
+  padding: 4px 0;
+  margin-bottom: 8px;
+  transition: color 0.15s;
+}
+
+.subtle-link:hover {
+  color: #ccc;
+}
+
 /* --- Hub cards --- */
 .hub-grid {
   display: grid;
@@ -143,7 +158,6 @@ body.masters-body {
 .lb-filters {
   display: flex;
   gap: 4px;
-  margin-left: auto;
   flex-shrink: 0;
 }
 
@@ -167,6 +181,7 @@ body.masters-body {
 .lb-filter-btn.active.win { border-color: #c8f542; color: #c8f542; }
 .lb-filter-btn.active.t5 { border-color: #60a5fa; color: #60a5fa; }
 .lb-filter-btn.active.t10 { border-color: #a78bfa; color: #a78bfa; }
+.lb-filter-btn.active.three-ball { border-color: #f59e0b; color: #f59e0b; }
 
 /* --- Leaderboard sticky header --- */
 .lb-sticky-header {
