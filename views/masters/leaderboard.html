@@ -14,15 +14,24 @@
   <script src="/scripts/nav.js"></script>
   <script>initPage('Leaderboard');</script>
 
-  <div class="masters-content">
-    <div class="masters-breadcrumbs"><a href="/masters">Masters</a><span class="separator">/</span><span>Leaderboard</span></div>
-    <h2>Leaderboard</h2>
-    <p class="subtitle">
-      Sorted by aggregate score &bull; Your golfers highlighted
-      <span class="refresh-badge" id="updated"></span>
-    </p>
+  <div class="masters-content" style="padding-top:0;padding-bottom:0">
+    <div class="lb-sticky-header" id="sticky-header">
+      <div class="masters-breadcrumbs" style="padding-bottom:8px"><a href="/masters">Masters</a><span class="separator">/</span><span>Leaderboard</span></div>
+      <h2>Leaderboard</h2>
+      <p class="subtitle">
+        <span class="refresh-badge" id="updated"></span>
+      </p>
 
-    <div class="masters-hint" id="tap-hint">Tap a player to see round details</div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <input type="text" class="masters-search" id="search" placeholder="Search players..." style="margin-bottom:0">
+        <div class="lb-filters">
+          <button class="lb-filter-btn win" data-filter="winner">WIN</button>
+          <button class="lb-filter-btn t5" data-filter="top5">T5</button>
+          <button class="lb-filter-btn t10" data-filter="top10">T10</button>
+        </div>
+        <div class="masters-hint" id="tap-hint" style="margin-bottom:0;margin-left:auto;white-space:nowrap">Tap player for details</div>
+      </div>
+    </div>
 
     <div id="loading" class="masters-loading">Loading leaderboard...</div>
     <div id="board" style="display:none"></div>
@@ -32,12 +41,51 @@
   <script>
     let scoresData = null;
     let expandedIds = new Set();
+    let activeFilters = new Set();
+
+    function get3BallMyGolfers() {
+      const config = get3BallGroups();
+      const names = new Set();
+      for (const groups of Object.values(config.rounds || {})) {
+        for (const g of groups) {
+          if (g.myGolfer) names.add(g.myGolfer);
+        }
+      }
+      return names;
+    }
+
+    function selectionBadges(name, sel, threeBallNames) {
+      let html = '';
+      const isWin = sel.winner && sel.winner.includes(name);
+      const isT5 = sel.top5 && sel.top5.includes(name);
+      const isT10 = sel.top10 && sel.top10.includes(name);
+      const is3B = threeBallNames.has(name);
+      if (!isWin && !isT5 && !isT10 && !is3B) return '';
+      html += '<div class="selection-badges">';
+      if (isWin) html += '<span class="sel-badge win">WIN</span>';
+      if (isT5) html += '<span class="sel-badge t5">T5</span>';
+      if (isT10) html += '<span class="sel-badge t10">T10</span>';
+      if (is3B) html += '<span class="sel-badge three-ball">3-BALL</span>';
+      html += '</div>';
+      return html;
+    }
+
+    function setStickyPositions() {
+      const siteHeader = document.querySelector('header');
+      const stickyHeader = document.getElementById('sticky-header');
+      const headerH = siteHeader ? siteHeader.offsetHeight : 0;
+      stickyHeader.style.top = headerH + 'px';
+      const thTop = headerH + stickyHeader.offsetHeight;
+      document.querySelectorAll('.masters-table th').forEach(th => {
+        th.style.top = thTop + 'px';
+      });
+    }
 
     async function loadAndRender() {
       try {
         const raw = await fetchScores();
         scoresData = raw.data;
-        renderBoard();
+        renderBoard(document.getElementById('search').value);
         document.getElementById('loading').style.display = 'none';
         document.getElementById('board').style.display = 'block';
         document.getElementById('updated').textContent = 'Updated ' + timeAgo();
@@ -46,14 +94,28 @@
       }
     }
 
-    function renderBoard() {
+    function renderBoard(filter) {
       const sel = getSelections();
-      const players = sortByToPar(scoresData.player);
+      const threeBallNames = get3BallMyGolfers();
+      const q = (filter || '').toLowerCase();
+      const allPlayers = sortByToPar(scoresData.player);
+      let players = q ? allPlayers.filter(p => p.full_name.toLowerCase().includes(q)) : allPlayers;
+      if (activeFilters.size > 0) {
+        players = players.filter(p => {
+          const n = p.full_name;
+          for (const f of activeFilters) {
+            if (sel[f] && sel[f].includes(n)) return true;
+          }
+          return false;
+        });
+      }
       const pars = scoresData.pars;
       const board = document.getElementById('board');
 
-      let html = '<div class="table-wrap"><table class="masters-table"><thead><tr>';
-      html += '<th>POS</th><th>PLAYER</th><th>TODAY</th><th>THRU</th><th>TO PAR</th>';
+      let html = '<table class="masters-table">';
+      html += '<colgroup><col style="width:42px"><col><col style="width:52px"><col style="width:46px"><col style="width:58px"></colgroup>';
+      html += '<thead><tr>';
+      html += '<th>POS</th><th>PLAYER</th><th style="text-align:right">TODAY</th><th style="text-align:right">THRU</th><th style="text-align:right">TO PAR</th>';
       html += '</tr></thead><tbody>';
 
       players.forEach((p, i) => {
@@ -65,20 +127,23 @@
         html += `<tr class="${cls}" data-id="${id}">`;
         html += `<td>${p.pos || ''}</td>`;
         html += `<td class="player-name">${p.full_name}</td>`;
-        html += `<td class="${scoreClass(p.today)}">${formatScore(p.today)}</td>`;
-        html += `<td>${p.thru || ''}</td>`;
-        html += `<td class="${scoreClass(p.topar)}" style="font-weight:700">${formatScore(p.topar)}</td>`;
+        html += `<td class="${scoreClass(p.today)}" style="text-align:right">${formatScore(p.today)}</td>`;
+        html += `<td style="text-align:right">${p.thru || ''}</td>`;
+        html += `<td class="${scoreClass(p.topar)}" style="font-weight:700;text-align:right">${formatScore(p.topar)}</td>`;
         html += '</tr>';
 
         // Detail row
         html += `<tr class="detail-row" id="${id}" style="display:${expanded ? 'table-row' : 'none'}">`;
         html += '<td colspan="5">';
+        html += selectionBadges(p.full_name, sel, threeBallNames);
         html += renderRounds(p, pars);
         html += '</td></tr>';
       });
 
-      html += '</tbody></table></div>';
+      html += '</tbody></table>';
       board.innerHTML = html;
+
+      setStickyPositions();
 
       board.querySelectorAll('tr.clickable').forEach(row => {
         row.addEventListener('click', () => {
@@ -180,6 +245,25 @@
       return html;
     }
 
+    document.getElementById('search').addEventListener('input', e => {
+      if (scoresData) renderBoard(e.target.value);
+    });
+
+    document.querySelectorAll('.lb-filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const f = btn.dataset.filter;
+        if (activeFilters.has(f)) {
+          activeFilters.delete(f);
+          btn.classList.remove('active');
+        } else {
+          activeFilters.add(f);
+          btn.classList.add('active');
+        }
+        if (scoresData) renderBoard(document.getElementById('search').value);
+      });
+    });
+
+    setStickyPositions();
     loadAndRender();
     setInterval(loadAndRender, 11 * 60 * 1000);
   </script>

@@ -118,10 +118,68 @@ body.masters-body {
   margin: 0;
 }
 
+/* --- Selection badges in detail row --- */
+.selection-badges {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.sel-badge {
+  font-size: 10px;
+  font-family: monospace;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 3px;
+}
+
+.sel-badge.win { background: #c8f542; color: #111; }
+.sel-badge.t5 { background: #60a5fa; color: #111; }
+.sel-badge.t10 { background: #a78bfa; color: #111; }
+.sel-badge.three-ball { background: #f59e0b; color: #111; }
+
+/* --- Leaderboard filter toggles --- */
+.lb-filters {
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.lb-filter-btn {
+  font-size: 10px;
+  font-family: monospace;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid #30363d;
+  background: transparent;
+  color: #888;
+  cursor: pointer;
+}
+
+.lb-filter-btn:hover {
+  border-color: #555;
+}
+
+.lb-filter-btn.active.win { border-color: #c8f542; color: #c8f542; }
+.lb-filter-btn.active.t5 { border-color: #60a5fa; color: #60a5fa; }
+.lb-filter-btn.active.t10 { border-color: #a78bfa; color: #a78bfa; }
+
+/* --- Leaderboard sticky header --- */
+.lb-sticky-header {
+  position: sticky;
+  z-index: 10;
+  background: #111;
+  padding: 12px 0;
+}
+
 /* --- Tables --- */
 .masters-table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: fixed;
 }
 
 .masters-table th {
@@ -132,11 +190,11 @@ body.masters-body {
   color: #999;
   font-weight: 600;
   white-space: nowrap;
-  background: #1a1a1a;
+  background: #111;
   border-bottom: 1px solid #2a2a2a;
   position: sticky;
   top: 0;
-  z-index: 2;
+  z-index: 5;
 }
 
 .masters-table td {
@@ -152,6 +210,9 @@ body.masters-body {
   font-weight: 700;
   color: #f0f0f0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .masters-table tr.clickable {
@@ -227,10 +288,12 @@ body.masters-body {
   padding: 10px 14px 12px;
   background: #0d0d0d;
   border-bottom: 1px solid #222;
+  max-width: 0;
 }
 
 .rounds-container {
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* --- 3-ball --- */
@@ -434,9 +497,9 @@ body.masters-body {
 
 /* --- Scrollable table wrapper --- */
 .table-wrap {
-  overflow-x: auto;
   border: 1px solid #222;
   border-radius: 6px;
+  overflow: hidden;
 }
 
 /* --- Selection counts --- */
@@ -497,6 +560,15 @@ body.masters-body {
 
   .hub-grid {
     grid-template-columns: 1fr;
+  }
+
+  .masters-table th,
+  .masters-table td {
+    padding: 8px 6px;
+  }
+
+  .masters-table .player-name {
+    font-size: 11px;
   }
 
   .golfer-select-row {
