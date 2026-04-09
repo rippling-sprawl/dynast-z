@@ -272,6 +272,7 @@ body.masters-body {
 
 .hole-cell {
   text-align: center;
+  font-size: 11px;
   padding: 3px 4px;
   border-radius: 2px;
   min-width: 22px;
@@ -285,18 +286,69 @@ body.masters-body {
 .hole-cell.no-score { color: #333; }
 
 .round-label {
+  display: block;
   font-size: 10px;
   color: #555;
   font-family: monospace;
-  padding: 3px 6px;
+  padding: 3px 0;
   white-space: nowrap;
+}
+
+.nine-group {
+  margin-bottom: 6px;
+}
+
+.nine-row {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  width: 100%;
+}
+
+.nine-holes {
+  display: flex;
+  gap: 1px;
+  flex: 1;
+}
+
+.nine-holes .hole-col {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+}
+
+.hole-col .hole-cell {
+  width: 100%;
+}
+
+.hole-header {
+  color: #ccc;
+  font-weight: 600;
+}
+
+.hole-par {
+  color: #999;
+  font-size: 10px;
+}
+
+.nine-group .nine-row + .nine-row {
+  margin-top: 4px;
+  padding-top: 4px;
+  border-top: 1px solid #222;
 }
 
 .round-total {
   font-size: 11px;
   font-weight: 700;
-  padding: 3px 6px;
   text-align: center;
+  justify-content: center;
+}
+
+.round-total.hole-header {
+  font-weight: 400;
 }
 
 /* --- Detail row --- */
