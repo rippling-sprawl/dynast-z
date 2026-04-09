@@ -163,6 +163,7 @@ body.masters-body {
   border-color: #555;
 }
 
+.lb-filter-btn.active.mine { border-color: #f59e0b; color: #f59e0b; }
 .lb-filter-btn.active.win { border-color: #c8f542; color: #c8f542; }
 .lb-filter-btn.active.t5 { border-color: #60a5fa; color: #60a5fa; }
 .lb-filter-btn.active.t10 { border-color: #a78bfa; color: #a78bfa; }
@@ -183,9 +184,9 @@ body.masters-body {
 }
 
 .masters-table th {
-  padding: 8px 9px;
+  padding: 10px 9px;
   text-align: left;
-  font-size: 10px;
+  font-size: 11px;
   font-family: monospace;
   color: #999;
   font-weight: 600;
@@ -411,42 +412,14 @@ body.masters-body {
 }
 
 /* --- Select golfers table --- */
-.golfer-select-row {
-  display: grid;
-  grid-template-columns: 1fr 50px 50px 50px;
-  align-items: center;
-  padding: 6px 12px;
-  border-bottom: 1px solid #1e1e1e;
-  font-size: 12px;
-}
 
-.golfer-select-row:hover {
-  background: #1a1a1a;
-}
-
-.golfer-select-row .col-label {
-  font-size: 10px;
-  color: #444;
-  font-family: monospace;
-  font-weight: 600;
-  text-align: center;
-}
-
-.golfer-select-row input[type="checkbox"],
-.golfer-select-row input[type="radio"] {
+.masters-table input[type="checkbox"] {
   accent-color: #60a5fa;
   width: 16px;
   height: 16px;
   margin: 0 auto;
   display: block;
-}
-
-.golfer-select-header {
-  background: #1a1a1a;
-  border-bottom: 1px solid #2a2a2a;
-  position: sticky;
-  top: 0;
-  z-index: 2;
+  cursor: pointer;
 }
 
 /* --- Refresh badge --- */
@@ -568,12 +541,6 @@ body.masters-body {
   }
 
   .masters-table .player-name {
-    font-size: 11px;
-  }
-
-  .golfer-select-row {
-    grid-template-columns: 1fr 40px 40px 40px;
-    padding: 6px 8px;
     font-size: 11px;
   }
 

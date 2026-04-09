@@ -6,7 +6,7 @@
   <link rel="icon" type="image/png" href="/favicon.png">
   <title>Select Golfers | Masters 2026</title>
   <link rel="stylesheet" href="/styles/styles.css?v=aeb3671a">
-  <link rel="stylesheet" href="/styles/masters.css?v=911247ff">
+  <link rel="stylesheet" href="/styles/masters.css?v=347a7e50">
 </head>
 <body class="masters-body">
   <div id="header-mount"></div>
@@ -14,31 +14,49 @@
   <script src="/scripts/nav.js?v=19e1cd3d"></script>
   <script>initPage('Select Golfers');</script>
 
-  <div class="masters-content">
-    <div class="masters-breadcrumbs"><a href="/masters">Masters</a><span class="separator">/</span><span>Select Golfers</span></div>
-    <h2>Select Golfers</h2>
-    <p class="subtitle">Pick your winner, top 5, and top 10 finishers</p>
+  <div class="masters-content" style="padding-top:0;padding-bottom:0">
+    <div class="lb-sticky-header" id="sticky-header">
+      <div class="masters-breadcrumbs" style="padding-bottom:8px"><a href="/masters">Masters</a><span class="separator">/</span><span>Select Golfers</span></div>
+      <h2>Select Golfers</h2>
+      <p class="subtitle">Pick your winner, top 5, and top 10 finishers</p>
 
-    <div class="selection-counts" id="counts"></div>
+      <div class="selection-counts" id="counts"></div>
 
-    <input type="text" class="masters-search" id="search" placeholder="Search golfers...">
+      <input type="text" class="masters-search" id="search" placeholder="Search golfers..." style="margin-bottom:0">
+    </div>
 
     <div id="loading" class="masters-loading">Loading golfers...</div>
     <div id="golfer-list" style="display:none">
-      <div class="golfer-select-row golfer-select-header">
-        <span>Player</span>
-        <span class="col-label">WIN</span>
-        <span class="col-label">T5</span>
-        <span class="col-label">T10</span>
-      </div>
-      <div id="rows"></div>
+      <table class="masters-table" id="golfer-table">
+        <colgroup><col><col style="width:50px"><col style="width:50px"><col style="width:50px"></colgroup>
+        <thead><tr>
+          <th>PLAYER</th>
+          <th style="text-align:center">WIN</th>
+          <th style="text-align:center">T5</th>
+          <th style="text-align:center">T10</th>
+        </tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
     </div>
+
+    <a href="/masters/leaderboard" class="masters-cta" id="view-leaderboard" style="display:none;margin:16px 0">View Leaderboard &rarr;</a>
   </div>
 
   <script src="/scripts/masters-utils.js?v=6eaf88a7"></script>
   <script>
     let allPlayers = [];
     let sel = getSelections();
+
+    function setStickyPositions() {
+      const siteHeader = document.querySelector('header');
+      const stickyHeader = document.getElementById('sticky-header');
+      const headerH = siteHeader ? siteHeader.offsetHeight : 0;
+      stickyHeader.style.top = headerH + 'px';
+      const thTop = headerH + stickyHeader.offsetHeight;
+      document.querySelectorAll('.masters-table th').forEach(th => {
+        th.style.top = thTop + 'px';
+      });
+    }
 
     async function init() {
       try {
@@ -49,6 +67,7 @@
         render();
         document.getElementById('loading').style.display = 'none';
         document.getElementById('golfer-list').style.display = 'block';
+        setStickyPositions();
       } catch (e) {
         document.getElementById('loading').textContent = 'Failed to load golfers: ' + e.message;
       }
@@ -67,12 +86,13 @@
         const isWin = sel.winner.includes(name);
         const isT5 = sel.top5.includes(name);
         const isT10 = sel.top10.includes(name);
-        return `<div class="golfer-select-row">
-          <span class="player-name">${name}</span>
-          <input type="checkbox" data-cat="winner" data-name="${name}" ${isWin ? 'checked' : ''}>
-          <input type="checkbox" data-cat="top5" data-name="${name}" ${isT5 ? 'checked' : ''}>
-          <input type="checkbox" data-cat="top10" data-name="${name}" ${isT10 ? 'checked' : ''}>
-        </div>`;
+        const selected = isWin || isT5 || isT10;
+        return `<tr class="${selected ? 'selected-golfer' : ''}">
+          <td class="player-name">${name}</td>
+          <td style="text-align:center"><input type="checkbox" data-cat="winner" data-name="${name}" ${isWin ? 'checked' : ''}></td>
+          <td style="text-align:center"><input type="checkbox" data-cat="top5" data-name="${name}" ${isT5 ? 'checked' : ''}></td>
+          <td style="text-align:center"><input type="checkbox" data-cat="top10" data-name="${name}" ${isT10 ? 'checked' : ''}></td>
+        </tr>`;
       }).join('');
 
       rows.querySelectorAll('input[type="checkbox"]').forEach(cb => {
@@ -90,6 +110,7 @@
       });
 
       updateCounts();
+      updateCTA();
     }
 
     function save() {
@@ -108,10 +129,16 @@
       `;
     }
 
+    function updateCTA() {
+      const hasAny = (sel.winner || []).length > 0 || (sel.top5 || []).length > 0 || (sel.top10 || []).length > 0;
+      document.getElementById('view-leaderboard').style.display = hasAny ? 'block' : 'none';
+    }
+
     document.getElementById('search').addEventListener('input', e => {
       render(e.target.value);
     });
 
+    setStickyPositions();
     init();
   </script>
 </body>

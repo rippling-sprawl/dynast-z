@@ -6,7 +6,7 @@
   <link rel="icon" type="image/png" href="/favicon.png">
   <title>Leaderboard | Masters 2026</title>
   <link rel="stylesheet" href="/styles/styles.css?v=aeb3671a">
-  <link rel="stylesheet" href="/styles/masters.css?v=911247ff">
+  <link rel="stylesheet" href="/styles/masters.css?v=347a7e50">
 </head>
 <body class="masters-body">
   <div id="header-mount"></div>
@@ -25,6 +25,7 @@
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
         <input type="text" class="masters-search" id="search" placeholder="Search players..." style="margin-bottom:0">
         <div class="lb-filters">
+          <button class="lb-filter-btn mine" data-filter="mine">MINE</button>
           <button class="lb-filter-btn win" data-filter="winner">WIN</button>
           <button class="lb-filter-btn t5" data-filter="top5">T5</button>
           <button class="lb-filter-btn t10" data-filter="top10">T10</button>
@@ -42,6 +43,11 @@
     let scoresData = null;
     let expandedIds = new Set();
     let activeFilters = new Set();
+
+    // Hide tap hint if user has used it before
+    if (localStorage.getItem('masters_hint_dismissed')) {
+      document.getElementById('tap-hint').classList.add('hidden');
+    }
 
     function get3BallMyGolfers() {
       const config = get3BallGroups();
@@ -104,7 +110,11 @@
         players = players.filter(p => {
           const n = p.full_name;
           for (const f of activeFilters) {
-            if (sel[f] && sel[f].includes(n)) return true;
+            if (f === 'mine') {
+              if (isSelected(n, sel) || threeBallNames.has(n)) return true;
+            } else {
+              if (sel[f] && sel[f].includes(n)) return true;
+            }
           }
           return false;
         });
@@ -148,7 +158,10 @@
       board.querySelectorAll('tr.clickable').forEach(row => {
         row.addEventListener('click', () => {
           const hint = document.getElementById('tap-hint');
-          if (hint) hint.classList.add('hidden');
+          if (hint && !hint.classList.contains('hidden')) {
+            hint.classList.add('hidden');
+            localStorage.setItem('masters_hint_dismissed', '1');
+          }
           const id = row.dataset.id;
           const detail = document.getElementById(id);
           if (detail.style.display === 'table-row') {
