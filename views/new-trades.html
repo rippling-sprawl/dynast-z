@@ -14,7 +14,7 @@
   <div id="nav-drawer-mount"></div>
   <script src="/scripts/nav.js?v=19e1cd3d"></script>
   <script src="/scripts/tabs.js?v=e73e870b"></script>
-  <script>initPage('Loading trades...');</script>
+  <script>initPage();</script>
 
   <div class="league-content">
     
@@ -117,7 +117,6 @@
         allTrades = await resp.json();
         if (allTrades.error) throw new Error(allTrades.error);
 
-        document.getElementById('header-status').textContent = 'Trades';
         document.getElementById('loading').style.display = 'none';
         document.getElementById('sections').style.display = '';
 

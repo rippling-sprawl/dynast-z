@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <title>Account | Dynast-Z</title>
+  <link rel="stylesheet" href="/styles/styles.css">
+  <link rel="stylesheet" href="/styles/masters.css">
+</head>
+<body class="masters-body">
+  <div id="header-mount"></div>
+  <div id="nav-drawer-mount"></div>
+  <script src="/scripts/nav.js"></script>
+  <script>initPage();</script>
+
+  <div class="masters-content" style="max-width:420px">
+    <div class="masters-breadcrumbs"><a href="/">Home</a><span class="separator">/</span><span>Account</span></div>
+
+    <!-- Logged-in state -->
+    <div id="logged-in" style="display:none">
+      <h2>Your Account</h2>
+      <p class="subtitle">Signed in as <strong id="acct-name" style="color:#f0f0f0"></strong></p>
+
+      <div class="group-form" style="margin-top:16px">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <label style="font-size:10px;color:#444;font-family:monospace;display:block;margin-bottom:4px">YOUR SYNC CODE</label>
+            <span id="acct-code" style="font-size:20px;font-weight:700;font-family:monospace;letter-spacing:3px;color:#60a5fa"></span>
+          </div>
+          <button class="masters-btn" id="copy-code" style="font-size:11px">Copy</button>
+        </div>
+        <p style="font-size:11px;color:#555;margin-top:8px;font-family:monospace">Use this name + code to sign in on other devices</p>
+      </div>
+
+      <button class="masters-btn danger" id="sign-out" style="margin-top:16px;width:100%;padding:10px">Sign Out</button>
+    </div>
+
+    <!-- Logged-out state -->
+    <div id="logged-out">
+      <h2>Account</h2>
+      <p class="subtitle">Sync your selections across devices</p>
+
+      <!-- Create account -->
+      <div class="group-form" style="margin-top:16px">
+        <span style="font-size:11px;color:#555;font-family:monospace;display:block;margin-bottom:8px">CREATE ACCOUNT</span>
+        <div class="form-row">
+          <label>NAME</label>
+          <input type="text" class="masters-search" id="reg-name" placeholder="Your name" autocomplete="off" style="margin:0;max-width:none;flex:1">
+        </div>
+        <button class="masters-btn" id="reg-btn" style="width:100%;padding:8px;margin-top:4px">Create Account</button>
+        <div id="reg-error" style="color:#f87171;font-size:11px;font-family:monospace;margin-top:6px;display:none"></div>
+
+        <!-- Show code after registration -->
+        <div id="reg-success" style="display:none;margin-top:12px;text-align:center;padding:12px;background:#111;border-radius:6px;border:1px solid #2a2a2a">
+          <p style="font-size:11px;color:#555;font-family:monospace;margin-bottom:6px">YOUR SYNC CODE</p>
+          <span id="reg-code" style="font-size:24px;font-weight:700;font-family:monospace;letter-spacing:4px;color:#60a5fa"></span>
+          <p style="font-size:11px;color:#555;font-family:monospace;margin-top:8px">Save this code to sign in on other devices</p>
+        </div>
+      </div>
+
+      <!-- Sign in -->
+      <div class="group-form" style="margin-top:12px">
+        <span style="font-size:11px;color:#555;font-family:monospace;display:block;margin-bottom:8px">SIGN IN</span>
+        <div class="form-row">
+          <label>NAME</label>
+          <input type="text" class="masters-search" id="login-name" placeholder="Your name" autocomplete="off" style="margin:0;max-width:none;flex:1">
+        </div>
+        <div class="form-row">
+          <label>CODE</label>
+          <input type="text" class="masters-search" id="login-code" placeholder="e.g. K7X2M9" autocomplete="off" maxlength="6" style="margin:0;max-width:none;flex:1;text-transform:uppercase;letter-spacing:2px;font-family:monospace">
+        </div>
+        <button class="masters-btn" id="login-btn" style="width:100%;padding:8px;margin-top:4px">Sign In</button>
+        <div id="login-error" style="color:#f87171;font-size:11px;font-family:monospace;margin-top:6px;display:none"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/scripts/auth.js"></script>
+  <script src="/scripts/sync.js"></script>
+  <script src="/scripts/masters-utils.js"></script>
+  <script>
+    function showState() {
+      const user = getUser();
+      if (user) {
+        document.getElementById('logged-out').style.display = 'none';
+        document.getElementById('logged-in').style.display = 'block';
+        document.getElementById('acct-name').textContent = user.display_name;
+        document.getElementById('acct-code').textContent = user.claim_code || '------';
+      } else {
+        document.getElementById('logged-in').style.display = 'none';
+        document.getElementById('logged-out').style.display = 'block';
+      }
+    }
+
+    // Create account
+    document.getElementById('reg-btn').addEventListener('click', async () => {
+      const name = document.getElementById('reg-name').value.trim();
+      const errEl = document.getElementById('reg-error');
+      errEl.style.display = 'none';
+      if (!name) { errEl.textContent = 'Enter a name'; errEl.style.display = 'block'; return; }
+
+      try {
+        document.getElementById('reg-btn').disabled = true;
+        const result = await register(name);
+        document.getElementById('reg-code').textContent = result.claim_code;
+        document.getElementById('reg-success').style.display = 'block';
+
+        // Auto-migrate existing localStorage data to server
+        const sel = getSelections();
+        if (sel && Object.keys(sel).length > 0) syncPush('masters', 'selections', sel);
+        const ball = get3BallGroups();
+        if (ball && ball.rounds && Object.keys(ball.rounds).length > 0) syncPush('masters', '3ball', ball);
+
+        // Show logged-in state after a moment so user can see the code
+        setTimeout(showState, 2000);
+      } catch (e) {
+        errEl.textContent = e.message;
+        errEl.style.display = 'block';
+        document.getElementById('reg-btn').disabled = false;
+      }
+    });
+
+    // Sign in
+    document.getElementById('login-btn').addEventListener('click', async () => {
+      const name = document.getElementById('login-name').value.trim();
+      const code = document.getElementById('login-code').value.trim();
+      const errEl = document.getElementById('login-error');
+      errEl.style.display = 'none';
+      if (!name || !code) { errEl.textContent = 'Enter name and code'; errEl.style.display = 'block'; return; }
+
+      try {
+        document.getElementById('login-btn').disabled = true;
+        await login(name, code);
+
+        // Pull server data into localStorage
+        const sel = await syncPull('masters', 'selections');
+        if (sel) localStorage.setItem('masters_selections', JSON.stringify(sel));
+        const ball = await syncPull('masters', '3ball');
+        if (ball) localStorage.setItem('masters_3ball', JSON.stringify(ball));
+
+        showState();
+      } catch (e) {
+        errEl.textContent = e.message;
+        errEl.style.display = 'block';
+        document.getElementById('login-btn').disabled = false;
+      }
+    });
+
+    // Copy code
+    document.getElementById('copy-code').addEventListener('click', () => {
+      const code = document.getElementById('acct-code').textContent;
+      navigator.clipboard.writeText(code).then(() => {
+        document.getElementById('copy-code').textContent = 'Copied!';
+        setTimeout(() => { document.getElementById('copy-code').textContent = 'Copy'; }, 1500);
+      });
+    });
+
+    // Sign out
+    document.getElementById('sign-out').addEventListener('click', () => {
+      clearUser();
+      showState();
+    });
+
+    showState();
+  </script>
+</body>
+</html>

@@ -11,8 +11,9 @@
 <body class="masters-body">
   <div id="header-mount"></div>
   <div id="nav-drawer-mount"></div>
+  <script src="/scripts/auth.js"></script>
   <script src="/scripts/nav.js?v=19e1cd3d"></script>
-  <script>initPage('3-Ball Results');</script>
+  <script>initPage();</script>
 
   <div class="masters-content">
     <div class="masters-breadcrumbs"><a href="/masters">Masters</a><span class="separator">/</span><span>3-Ball Results</span></div>
@@ -25,6 +26,8 @@
     <div id="results" style="display:none"></div>
   </div>
 
+  <script src="/scripts/auth.js"></script>
+  <script src="/scripts/sync.js"></script>
   <script src="/scripts/masters-utils.js?v=6eaf88a7"></script>
   <script>
     let scoresData = null;
@@ -132,6 +135,11 @@
 
     loadAndRender();
     setInterval(loadAndRender, 11 * 60 * 1000);
+
+    // Sync from server if logged in, then re-render
+    initMastersSync().then(() => {
+      if (scoresData) renderResults();
+    });
   </script>
 </body>
 </html>

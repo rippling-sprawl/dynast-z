@@ -8,6 +8,7 @@
     { "source": "/league/:leagueId/trades", "destination": "/views/league-trades.html" },
     { "source": "/league/:leagueId/power", "destination": "/views/league-power.html" },
     { "source": "/league/:leagueId", "destination": "/views/league.html" },
+    { "source": "/account", "destination": "/views/account.html" },
     { "source": "/masters", "destination": "/views/masters/index.html" },
     { "source": "/masters/select-golfers", "destination": "/views/masters/select-golfers.html" },
     { "source": "/masters/3-ball-results", "destination": "/views/masters/3-ball-results.html" },

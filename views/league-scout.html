@@ -16,7 +16,7 @@
   <script src="/scripts/nav.js?v=19e1cd3d"></script>
   <script src="/scripts/tabs.js?v=e73e870b"></script>
   <script src="/scripts/share-trade.js?v=d6e07501"></script>
-  <script>initPage('Scout');</script>
+  <script>initPage();</script>
 
   <div class="league-content">
     <div id="loading">Loading teams...</div>
@@ -509,7 +509,6 @@
 
         teamsData = data.teams;
         document.title = `Dynast-Z - ${data.league_name} - Scout`;
-        document.getElementById('header-status').textContent = data.league_name;
         document.getElementById('loading').style.display = 'none';
         document.getElementById('sections').style.display = '';
 

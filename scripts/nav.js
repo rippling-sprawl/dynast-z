@@ -40,20 +40,24 @@ function buildNavDrawerHTML() {
   </div>`;
 }
 
-function buildHeaderHTML(statusText) {
+function buildHeaderHTML() {
+  const user = typeof getUser === 'function' ? getUser() : null;
+  const acctHTML = user
+    ? `<a href="/account" style="font-size:11px;font-family:monospace;color:#60a5fa;text-decoration:none">${user.display_name}</a>`
+    : `<a href="/account" style="font-size:11px;font-family:monospace;color:#555;text-decoration:none">Sign In</a>`;
   return `<header>
     <div style="display: flex; align-items: center; gap: 12px;">
       <button class="hamburger" id="nav-toggle" aria-label="Menu">&#9776;</button>
       <h1><a href="/" style="color: inherit; text-decoration: none;">Dynast-Z</a></h1>
     </div>
-    <span id="header-status">${statusText || ''}</span>
+    ${acctHTML}
   </header>`;
 }
 
-function initPage(statusText) {
+function initPage() {
   const headerMount = document.getElementById('header-mount');
   if (headerMount) {
-    headerMount.outerHTML = buildHeaderHTML(statusText);
+    headerMount.outerHTML = buildHeaderHTML();
   }
 
   const drawerMount = document.getElementById('nav-drawer-mount');

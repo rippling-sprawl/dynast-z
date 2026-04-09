@@ -7,13 +7,19 @@ Usage: python3 server.py
 Then open http://localhost:8000
 """
 
+from dotenv import load_dotenv
+load_dotenv()
+
 import http.server
 import json
 import os
 import re
+import secrets
 import subprocess
 import time
+import urllib.request
 from datetime import datetime
+from urllib.parse import urlparse, parse_qs
 
 PORT = 8000
 IS_VERCEL = os.environ.get("VERCEL") == "1"
@@ -28,6 +34,26 @@ LEAGUE_DATA_TTL = 3600  # 1 hour for league rosters/users
 FP_DATA_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "fp.json")
 MASTERS_SCORES_URL = "https://www.masters.com/en_US/scores/feeds/2026/scores.json"
 MASTERS_SCORES_TTL = 300  # 5 minutes
+
+SUPABASE_URL = os.environ.get("SUPABASE_URL", "")
+SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "")
+CODE_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+
+
+def supabase_request(path, method="GET", body=None, extra_headers=None):
+    if not SUPABASE_URL:
+        raise Exception("SUPABASE_URL not set — set env vars for account sync")
+    url = f"{SUPABASE_URL}/rest/v1/{path}"
+    data = json.dumps(body).encode() if body else None
+    req = urllib.request.Request(url, data=data, method=method)
+    req.add_header("apikey", SUPABASE_KEY)
+    req.add_header("Authorization", f"Bearer {SUPABASE_KEY}")
+    req.add_header("Content-Type", "application/json")
+    if extra_headers:
+        for k, v in extra_headers.items():
+            req.add_header(k, v)
+    with urllib.request.urlopen(req) as resp:
+        return json.loads(resp.read())
 
 
 def read_cache(name, ttl=None):
@@ -699,6 +725,33 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     self.wfile.write(f.read().encode())
             except Exception as e:
                 self.wfile.write(json.dumps({"error": str(e)}).encode())
+        elif self.path.startswith("/api/sync"):
+            user_id = self.headers.get("X-User-Id")
+            if not user_id:
+                self._json_response(401, {"error": "Not authenticated"})
+                return
+            try:
+                parsed = urlparse(self.path)
+                params = parse_qs(parsed.query)
+                sport = params.get("sport", [None])[0]
+                if not sport:
+                    self._json_response(400, {"error": "sport parameter is required"})
+                    return
+                key = params.get("key", [None])[0]
+                query = (
+                    f"user_data?user_id=eq.{urllib.request.quote(user_id)}"
+                    f"&sport=eq.{urllib.request.quote(sport)}"
+                    f"&select=data_key,data,updated_at"
+                )
+                if key:
+                    query += f"&data_key=eq.{urllib.request.quote(key)}"
+                rows = supabase_request(query)
+                if key:
+                    self._json_response(200, rows[0]["data"] if rows else None)
+                else:
+                    self._json_response(200, {r["data_key"]: r["data"] for r in rows})
+            except Exception as e:
+                self._json_response(500, {"error": str(e)})
         elif self.path == "/api/masters/scores":
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
@@ -711,6 +764,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 self.wfile.write(json.dumps(data).encode())
             except Exception as e:
                 self.wfile.write(json.dumps({"error": str(e)}).encode())
+        elif self.path == "/account":
+            self.path = "/views/account.html"
+            super().do_GET()
         elif self.path == "/masters":
             self.path = "/views/masters/index.html"
             super().do_GET()
@@ -758,6 +814,106 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             super().do_GET()
         else:
             super().do_GET()
+
+    def do_POST(self):
+        if self.path == "/api/auth":
+            length = int(self.headers.get("Content-Length", 0))
+            body = json.loads(self.rfile.read(length)) if length else {}
+            action = body.get("action")
+            try:
+                if action == "register":
+                    display_name = (body.get("display_name") or "").strip()
+                    if not display_name:
+                        self._json_response(400, {"error": "Display name is required"})
+                        return
+                    existing = supabase_request(
+                        f"users?display_name=eq.{urllib.request.quote(display_name)}&select=id"
+                    )
+                    if existing:
+                        self._json_response(409, {"error": "That name is already taken"})
+                        return
+                    for _ in range(10):
+                        code = "".join(secrets.choice(CODE_CHARS) for _ in range(6))
+                        taken = supabase_request(f"users?claim_code=eq.{code}&select=id")
+                        if not taken:
+                            break
+                    result = supabase_request("users", method="POST", body={
+                        "display_name": display_name, "claim_code": code,
+                    }, extra_headers={"Prefer": "return=representation"})
+                    user = result[0]
+                    self._json_response(200, {
+                        "user_id": user["id"], "display_name": user["display_name"],
+                        "claim_code": user["claim_code"],
+                    })
+                elif action == "login":
+                    display_name = (body.get("display_name") or "").strip()
+                    claim_code = (body.get("claim_code") or "").strip().upper()
+                    if not display_name or not claim_code:
+                        self._json_response(400, {"error": "Display name and code are required"})
+                        return
+                    users = supabase_request(
+                        f"users?display_name=eq.{urllib.request.quote(display_name)}"
+                        f"&claim_code=eq.{urllib.request.quote(claim_code)}&select=id,display_name,claim_code"
+                    )
+                    if not users:
+                        self._json_response(401, {"error": "Invalid name or code"})
+                        return
+                    user = users[0]
+                    self._json_response(200, {
+                        "user_id": user["id"], "display_name": user["display_name"],
+                        "claim_code": user["claim_code"],
+                    })
+                else:
+                    self._json_response(400, {"error": "Unknown action"})
+            except Exception as e:
+                self._json_response(500, {"error": str(e)})
+        else:
+            self.send_response(404)
+            self.end_headers()
+
+    def do_PUT(self):
+        if self.path == "/api/sync":
+            user_id = self.headers.get("X-User-Id")
+            if not user_id:
+                self._json_response(401, {"error": "Not authenticated"})
+                return
+            try:
+                length = int(self.headers.get("Content-Length", 0))
+                body = json.loads(self.rfile.read(length)) if length else {}
+                sport = body.get("sport")
+                key = body.get("key")
+                data = body.get("data")
+                if not sport or not key:
+                    self._json_response(400, {"error": "sport and key are required"})
+                    return
+                supabase_request(
+                    "user_data?on_conflict=user_id,sport,data_key",
+                    method="POST", body={
+                        "user_id": user_id, "sport": sport, "data_key": key,
+                        "data": data, "updated_at": "now()",
+                    }, extra_headers={"Prefer": "resolution=merge-duplicates,return=minimal"},
+                )
+                self._json_response(200, {"ok": True})
+            except Exception as e:
+                self._json_response(500, {"error": str(e)})
+        else:
+            self.send_response(404)
+            self.end_headers()
+
+    def do_OPTIONS(self):
+        self.send_response(204)
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, PUT, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type, X-User-Id")
+        self.end_headers()
+
+    def _json_response(self, status, data):
+        self.send_response(status)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type, X-User-Id")
+        self.end_headers()
+        self.wfile.write(json.dumps(data).encode())
 
     def log_message(self, format, *args):
         if "/api/" in (args[0] if args else ""):

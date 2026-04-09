@@ -11,8 +11,9 @@
 <body class="masters-body">
   <div id="header-mount"></div>
   <div id="nav-drawer-mount"></div>
+  <script src="/scripts/auth.js"></script>
   <script src="/scripts/nav.js?v=19e1cd3d"></script>
-  <script>initPage('3-Ball Setup');</script>
+  <script>initPage();</script>
 
   <div class="masters-content">
     <div class="masters-breadcrumbs"><a href="/masters">Masters</a><span class="separator">/</span><span>3-Ball Setup</span></div>
@@ -34,6 +35,8 @@
     <a href="/masters/3-ball-results" class="masters-cta" id="view-results" style="display:none">View 3-Ball Results &rarr;</a>
   </div>
 
+  <script src="/scripts/auth.js"></script>
+  <script src="/scripts/sync.js"></script>
   <script src="/scripts/masters-utils.js?v=6eaf88a7"></script>
   <script>
     let allPlayers = [];
@@ -170,6 +173,18 @@
     });
 
     init();
+
+    // Sync 3-ball groups from server if logged in, then re-render
+    initMastersSync().then(result => {
+      if (result) {
+        config = result.threeBall;
+        if (!config.round) config.round = 1;
+        if (!config.rounds) config.rounds = {};
+        renderRoundSelector();
+        renderGroups();
+        updateCTA();
+      }
+    });
   </script>
 </body>
 </html>

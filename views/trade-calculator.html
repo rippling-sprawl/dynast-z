@@ -15,7 +15,7 @@
   <div id="nav-drawer-mount"></div>
   <script src="/scripts/nav.js?v=19e1cd3d"></script>
   <script src="/scripts/share-trade.js?v=d6e07501"></script>
-  <script>initPage('Loading players...');</script>
+  <script>initPage();</script>
   <p class="intro">While lesser tools rely on a single source and call it a day, this calculator pulls from <a href="https://keeptradecut.com" target="_blank">KeepTradeCut</a>, <a href="https://fantasypros.com" target="_blank">FantasyPros</a>, and <a href="https://fantasycalc.com" target="_blank">FantasyCalc</a>, normalizes their values into z-scores, and merges them into a single aggregate ranking that is, frankly, superior to anything else you'll find. You're welcome.</p>
   <div class="app">
     <div class="player-pool">
@@ -81,10 +81,9 @@
         allPlayers = data;
         zMax = Math.max(...allPlayers.map(p => p.aggregate)) || 1;
         zMin = Math.min(...allPlayers.map(p => p.aggregate)) || -1;
-        document.getElementById('header-status').textContent = `${allPlayers.length} players loaded (Superflex)`;
         renderPlayerList();
       } catch (e) {
-        document.getElementById('header-status').textContent = 'Error loading: ' + e.message;
+        console.error('Error loading: ' + e.message);
       }
     }
 

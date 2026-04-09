@@ -38,7 +38,11 @@ function getSelections() {
 }
 
 function saveSelections(sel) {
-  localStorage.setItem('masters_selections', JSON.stringify(sel));
+  if (typeof saveWithSync === 'function') {
+    saveWithSync('masters', 'selections', 'masters_selections', sel);
+  } else {
+    localStorage.setItem('masters_selections', JSON.stringify(sel));
+  }
 }
 
 function isSelected(name, sel) {
@@ -64,7 +68,18 @@ function get3BallGroups() {
 }
 
 function save3BallGroups(data) {
-  localStorage.setItem('masters_3ball', JSON.stringify(data));
+  if (typeof saveWithSync === 'function') {
+    saveWithSync('masters', '3ball', 'masters_3ball', data);
+  } else {
+    localStorage.setItem('masters_3ball', JSON.stringify(data));
+  }
+}
+
+async function initMastersSync() {
+  if (typeof loadWithSync !== 'function' || !isLoggedIn()) return;
+  const sel = await loadWithSync('masters', 'selections', 'masters_selections', {});
+  const ball = await loadWithSync('masters', '3ball', 'masters_3ball', { rounds: {} });
+  return { selections: sel, threeBall: ball };
 }
 
 function sortByToPar(players) {

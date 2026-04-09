@@ -11,8 +11,9 @@
 <body class="masters-body">
   <div id="header-mount"></div>
   <div id="nav-drawer-mount"></div>
+  <script src="/scripts/auth.js"></script>
   <script src="/scripts/nav.js?v=19e1cd3d"></script>
-  <script>initPage('Select Golfers');</script>
+  <script>initPage();</script>
 
   <div class="masters-content" style="padding-top:0;padding-bottom:0">
     <div class="lb-sticky-header" id="sticky-header">
@@ -41,6 +42,8 @@
 
   </div>
 
+  <script src="/scripts/auth.js"></script>
+  <script src="/scripts/sync.js"></script>
   <script src="/scripts/masters-utils.js?v=6eaf88a7"></script>
   <script>
     let allPlayers = [];
@@ -120,6 +123,11 @@
 
     setStickyPositions();
     init();
+
+    // Sync selections from server if logged in, then re-render
+    initMastersSync().then(result => {
+      if (result) { sel = result.selections; render(document.getElementById('search').value); }
+    });
   </script>
 </body>
 </html>

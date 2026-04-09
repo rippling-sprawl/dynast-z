@@ -11,8 +11,9 @@
 <body class="masters-body">
   <div id="header-mount"></div>
   <div id="nav-drawer-mount"></div>
+  <script src="/scripts/auth.js"></script>
   <script src="/scripts/nav.js?v=19e1cd3d"></script>
-  <script>initPage('Leaderboard');</script>
+  <script>initPage();</script>
 
   <div class="masters-content" style="padding-top:0;padding-bottom:0">
     <div class="lb-sticky-header" id="sticky-header">
@@ -39,6 +40,8 @@
     <div id="board" style="display:none"></div>
   </div>
 
+  <script src="/scripts/auth.js"></script>
+  <script src="/scripts/sync.js"></script>
   <script src="/scripts/masters-utils.js?v=6eaf88a7"></script>
   <script>
     let scoresData = null;
@@ -282,6 +285,11 @@
     setStickyPositions();
     loadAndRender();
     setInterval(loadAndRender, 11 * 60 * 1000);
+
+    // Sync selections from server if logged in, then re-render
+    initMastersSync().then(() => {
+      if (scoresData) renderBoard(document.getElementById('search').value);
+    });
   </script>
 </body>
 </html>
