@@ -7,8 +7,11 @@ Usage: python3 server.py
 Then open http://localhost:8000
 """
 
-from dotenv import load_dotenv
-load_dotenv()
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
 
 import http.server
 import json
