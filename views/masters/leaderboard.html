@@ -104,6 +104,26 @@
       }
     }
 
+    function getStreakEmoji(player, pars) {
+      const rounds = ['round1', 'round2', 'round3', 'round4'];
+      const rels = [];
+      for (const rKey of rounds) {
+        const rd = player[rKey];
+        if (!rd || !rd.scores) continue;
+        const roundPars = pars[rKey] || [];
+        for (let h = 0; h < rd.scores.length; h++) {
+          if (rd.scores[h] !== null && rd.scores[h] !== undefined) {
+            rels.push(rd.scores[h] - (roundPars[h] || 0));
+          }
+        }
+      }
+      if (rels.length < 3) return '';
+      const lastTwo = rels[rels.length - 1] + rels[rels.length - 2];
+      if (lastTwo <= -2) return ' 🔥';
+      if (lastTwo >= 2) return ' 🧊';
+      return '';
+    }
+
     function renderBoard(filter) {
       const sel = getSelections();
       const threeBallNames = get3BallMyGolfers();
@@ -142,7 +162,7 @@
 
         html += `<tr class="${cls}" data-id="${id}">`;
         html += `<td>${p.pos || ''}</td>`;
-        html += `<td class="player-name">${p.full_name}</td>`;
+        html += `<td class="player-name">${p.full_name}${getStreakEmoji(p, pars)}</td>`;
         html += `<td class="${scoreClass(p.today)}" style="text-align:right">${formatScore(p.today)}</td>`;
         html += `<td style="text-align:right">${p.thru || ''}</td>`;
         html += `<td class="${scoreClass(p.topar)}" style="font-weight:700;text-align:right">${formatScore(p.topar)}</td>`;

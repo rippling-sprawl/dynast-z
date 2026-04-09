@@ -47,6 +47,9 @@ body.masters-body {
 
 /* --- Tap hint --- */
 .masters-hint {
+  position: fixed;
+  right: 12px;
+  top: 66vh;
   display: inline-flex;
   align-items: center;
   background: #58a6ff;
@@ -55,12 +58,11 @@ body.masters-body {
   font-family: monospace;
   padding: 5px 10px;
   border-radius: 6px;
-  margin-bottom: 12px;
-  transition: opacity 0.4s ease;
+  z-index: 100;
 }
 
 .masters-hint.hidden {
-  opacity: 0;
+  display: none;
 }
 
 /* --- CTA button --- */
