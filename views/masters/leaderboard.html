@@ -15,11 +15,14 @@
   <script>initPage('Leaderboard');</script>
 
   <div class="masters-content">
+    <div class="masters-breadcrumbs"><a href="/masters">Masters</a><span class="separator">/</span><span>Leaderboard</span></div>
     <h2>Leaderboard</h2>
     <p class="subtitle">
       Sorted by aggregate score &bull; Your golfers highlighted
       <span class="refresh-badge" id="updated"></span>
     </p>
+
+    <div class="masters-hint" id="tap-hint">Tap a player to see round details</div>
 
     <div id="loading" class="masters-loading">Loading leaderboard...</div>
     <div id="board" style="display:none"></div>
@@ -79,6 +82,8 @@
 
       board.querySelectorAll('tr.clickable').forEach(row => {
         row.addEventListener('click', () => {
+          const hint = document.getElementById('tap-hint');
+          if (hint) hint.classList.add('hidden');
           const id = row.dataset.id;
           const detail = document.getElementById(id);
           if (detail.style.display === 'table-row') {
@@ -161,12 +166,12 @@
       html += '<span class="round-label" style="visibility:hidden">R0</span>';
       html += '<div style="display:flex;gap:1px">';
       for (let h = 1; h <= 9; h++) {
-        html += `<div class="hole-cell" style="color:#333;font-size:9px">${h}</div>`;
+        html += `<div class="hole-cell" style="color:#888;font-size:9px">${h}</div>`;
       }
       html += '</div><div class="round-total" style="visibility:hidden">0</div>';
       html += '<div style="display:flex;gap:1px">';
       for (let h = 10; h <= 18; h++) {
-        html += `<div class="hole-cell" style="color:#333;font-size:9px">${h}</div>`;
+        html += `<div class="hole-cell" style="color:#888;font-size:9px">${h}</div>`;
       }
       html += '</div>';
       html += '</div>';

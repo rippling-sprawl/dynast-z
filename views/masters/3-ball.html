@@ -15,6 +15,7 @@
   <script>initPage('3-Ball Setup');</script>
 
   <div class="masters-content">
+    <div class="masters-breadcrumbs"><a href="/masters">Masters</a><span class="separator">/</span><span>3-Ball Setup</span></div>
     <h2>3-Ball Setup</h2>
     <p class="subtitle">Select your golfer and opponents for each matchup</p>
 
@@ -29,6 +30,8 @@
     <div id="actions" style="display:none;margin-top:12px">
       <button class="masters-btn" id="add-group">+ Add Group</button>
     </div>
+
+    <a href="/masters/3-ball-results" class="masters-cta" id="view-results" style="display:none">View 3-Ball Results &rarr;</a>
   </div>
 
   <script src="/scripts/masters-utils.js"></script>
@@ -36,7 +39,14 @@
     let allPlayers = [];
     let config = get3BallGroups();
     if (!config.round) config.round = 1;
-    if (!config.groups) config.groups = [];
+
+    function currentGroups() {
+      return config.rounds[config.round] || [];
+    }
+
+    function setCurrentGroups(groups) {
+      config.rounds[config.round] = groups;
+    }
 
     async function init() {
       try {
@@ -47,6 +57,7 @@
 
         renderRoundSelector();
         renderGroups();
+        updateCTA();
         document.getElementById('loading').style.display = 'none';
         document.getElementById('groups-container').style.display = 'block';
         document.getElementById('actions').style.display = 'block';
@@ -57,14 +68,18 @@
 
     function renderRoundSelector() {
       const container = document.getElementById('round-sel');
-      container.innerHTML = [1, 2, 3, 4].map(r =>
-        `<button class="masters-btn ${config.round === r ? 'active' : ''}" data-round="${r}">R${r}</button>`
-      ).join('');
+      container.innerHTML = [1, 2, 3, 4].map(r => {
+        const count = (config.rounds[r] || []).length;
+        const badge = count > 0 ? ` (${count})` : '';
+        return `<button class="masters-btn ${config.round === r ? 'active' : ''}" data-round="${r}">R${r}${badge}</button>`;
+      }).join('');
       container.querySelectorAll('button').forEach(btn => {
         btn.addEventListener('click', () => {
           config.round = parseInt(btn.dataset.round);
           save();
           renderRoundSelector();
+          renderGroups();
+          updateCTA();
         });
       });
     }
@@ -78,13 +93,14 @@
     }
 
     function renderGroups() {
+      const groups = currentGroups();
       const container = document.getElementById('groups-container');
-      if (config.groups.length === 0) {
-        container.innerHTML = '<p class="masters-empty">No groups yet. Click "+ Add Group" to start.</p>';
+      if (groups.length === 0) {
+        container.innerHTML = '<p class="masters-empty">No groups for Round ' + config.round + ' yet. Click "+ Add Group" to start.</p>';
         return;
       }
 
-      container.innerHTML = config.groups.map((g, i) => `
+      container.innerHTML = groups.map((g, i) => `
         <div class="group-form">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
             <span style="font-size:11px;color:#555;font-family:monospace">GROUP ${i + 1}</span>
@@ -109,12 +125,13 @@
         sel.addEventListener('change', () => {
           const gi = parseInt(sel.dataset.group);
           const role = sel.dataset.role;
+          const groups = currentGroups();
           if (role === 'my') {
-            config.groups[gi].myGolfer = sel.value;
+            groups[gi].myGolfer = sel.value;
           } else if (role === 'opp0') {
-            config.groups[gi].opponents[0] = sel.value;
+            groups[gi].opponents[0] = sel.value;
           } else if (role === 'opp1') {
-            config.groups[gi].opponents[1] = sel.value;
+            groups[gi].opponents[1] = sel.value;
           }
           save();
         });
@@ -122,7 +139,9 @@
 
       container.querySelectorAll('[data-remove]').forEach(btn => {
         btn.addEventListener('click', () => {
-          config.groups.splice(parseInt(btn.dataset.remove), 1);
+          const groups = currentGroups();
+          groups.splice(parseInt(btn.dataset.remove), 1);
+          setCurrentGroups(groups);
           save();
           renderGroups();
         });
@@ -131,10 +150,21 @@
 
     function save() {
       save3BallGroups(config);
+      updateCTA();
+    }
+
+    function updateCTA() {
+      const groups = currentGroups();
+      const hasComplete = groups.some(g =>
+        g.myGolfer && g.opponents[0] && g.opponents[1]
+      );
+      document.getElementById('view-results').style.display = hasComplete ? 'block' : 'none';
     }
 
     document.getElementById('add-group').addEventListener('click', () => {
-      config.groups.push({ myGolfer: '', opponents: ['', ''] });
+      const groups = currentGroups();
+      groups.push({ myGolfer: '', opponents: ['', ''] });
+      setCurrentGroups(groups);
       save();
       renderGroups();
     });

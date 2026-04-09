@@ -15,6 +15,7 @@
   <script>initPage('3-Ball Results');</script>
 
   <div class="masters-content">
+    <div class="masters-breadcrumbs"><a href="/masters">Masters</a><span class="separator">/</span><span>3-Ball Results</span></div>
     <h2>3-Ball Results</h2>
     <p class="subtitle">
       Live matchup results &bull; <span class="refresh-badge" id="updated"></span>
@@ -67,15 +68,17 @@
       const config = get3BallGroups();
       const container = document.getElementById('results');
 
-      if (!config.groups || config.groups.length === 0) {
-        container.innerHTML = '<p class="masters-empty">No 3-ball groups configured. <a href="/masters/3-ball" style="color:#60a5fa">Set up groups</a></p>';
+      const roundNum = config.round || 1;
+      const groups = (config.rounds && config.rounds[roundNum]) || [];
+
+      if (groups.length === 0) {
+        container.innerHTML = '<p class="masters-empty">No 3-ball groups for Round ' + roundNum + '. <a href="/masters/3-ball" style="color:#60a5fa">Set up groups</a></p>';
         return;
       }
 
-      const roundNum = config.round || 1;
       let html = `<div style="margin-bottom:12px;font-size:11px;color:#555;font-family:monospace">ROUND ${roundNum}</div>`;
 
-      config.groups.forEach((group, gi) => {
+      groups.forEach((group, gi) => {
         if (!group.myGolfer) return;
 
         const myPlayer = findPlayer(group.myGolfer);

@@ -51,8 +51,16 @@ function isSelected(name, sel) {
 
 function get3BallGroups() {
   try {
-    return JSON.parse(localStorage.getItem('masters_3ball') || '{}');
-  } catch { return {}; }
+    const data = JSON.parse(localStorage.getItem('masters_3ball') || '{}');
+    // Migrate old flat format to per-round format
+    if (data.groups && !data.rounds) {
+      data.rounds = { [data.round || 1]: data.groups };
+      delete data.groups;
+      localStorage.setItem('masters_3ball', JSON.stringify(data));
+    }
+    if (!data.rounds) data.rounds = {};
+    return data;
+  } catch { return { rounds: {} }; }
 }
 
 function save3BallGroups(data) {
