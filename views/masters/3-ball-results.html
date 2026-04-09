@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <title>3-Ball Results | Masters 2026</title>
+  <link rel="stylesheet" href="/styles/styles.css">
+  <link rel="stylesheet" href="/styles/masters.css">
+</head>
+<body class="masters-body">
+  <div id="header-mount"></div>
+  <div id="nav-drawer-mount"></div>
+  <script src="/scripts/nav.js"></script>
+  <script>initPage('3-Ball Results');</script>
+
+  <div class="masters-content">
+    <h2>3-Ball Results</h2>
+    <p class="subtitle">
+      Live matchup results &bull; <span class="refresh-badge" id="updated"></span>
+    </p>
+
+    <div id="loading" class="masters-loading">Loading results...</div>
+    <div id="results" style="display:none"></div>
+  </div>
+
+  <script src="/scripts/masters-utils.js"></script>
+  <script>
+    let scoresData = null;
+
+    async function loadAndRender() {
+      try {
+        const raw = await fetchScores();
+        scoresData = raw.data;
+        renderResults();
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('results').style.display = 'block';
+        document.getElementById('updated').textContent = 'Updated ' + timeAgo();
+      } catch (e) {
+        document.getElementById('loading').textContent = 'Failed to load: ' + e.message;
+      }
+    }
+
+    function findPlayer(name) {
+      return scoresData.player.find(p => p.full_name === name);
+    }
+
+    function getRoundScore(player, roundNum) {
+      const rKey = 'round' + roundNum;
+      const rd = player[rKey];
+      if (!rd) return { score: null, thru: null };
+
+      if (rd.roundStatus === 'Playing') {
+        return { score: rd.fantasy, thru: player.thru };
+      }
+      if (rd.total !== null && rd.total !== undefined) {
+        const pars = [0]; // fallback
+        return { score: rd.fantasy, thru: 'F' };
+      }
+      if (rd.fantasy !== null && rd.fantasy !== undefined) {
+        return { score: rd.fantasy, thru: rd.roundStatus === 'Complete' ? 'F' : player.thru };
+      }
+      return { score: null, thru: null };
+    }
+
+    function renderResults() {
+      const config = get3BallGroups();
+      const container = document.getElementById('results');
+
+      if (!config.groups || config.groups.length === 0) {
+        container.innerHTML = '<p class="masters-empty">No 3-ball groups configured. <a href="/masters/3-ball" style="color:#60a5fa">Set up groups</a></p>';
+        return;
+      }
+
+      const roundNum = config.round || 1;
+      let html = `<div style="margin-bottom:12px;font-size:11px;color:#555;font-family:monospace">ROUND ${roundNum}</div>`;
+
+      config.groups.forEach((group, gi) => {
+        if (!group.myGolfer) return;
+
+        const myPlayer = findPlayer(group.myGolfer);
+        const opponents = (group.opponents || []).filter(Boolean).map(findPlayer).filter(Boolean);
+
+        if (!myPlayer) {
+          html += `<div class="three-ball-group"><div class="group-row"><span class="golfer-name" style="color:#f87171">${group.myGolfer} — not found</span></div></div>`;
+          return;
+        }
+
+        const myResult = getRoundScore(myPlayer, roundNum);
+        const oppResults = opponents.map(opp => ({
+          player: opp,
+          ...getRoundScore(opp, roundNum)
+        }));
+
+        // Determine win/loss
+        const myScoreNum = myResult.score !== null ? myResult.score : 999;
+        const allOpponentScores = oppResults.map(o => o.score !== null ? o.score : 999);
+        const bestOpp = Math.min(...allOpponentScores);
+        let myStatus = 'tied';
+        if (myResult.score !== null && allOpponentScores.length > 0) {
+          if (myScoreNum < bestOpp) myStatus = 'winning';
+          else if (myScoreNum > bestOpp) myStatus = 'losing';
+        }
+
+        html += '<div class="three-ball-group">';
+        html += `<div class="results-header"><span>Player</span><span style="text-align:center">R${roundNum}</span><span style="text-align:right">Thru</span></div>`;
+
+        // My golfer row
+        html += `<div class="group-row my-golfer ${myStatus}">`;
+        html += `<span class="golfer-name">${myPlayer.full_name}</span>`;
+        html += `<span class="round-score ${scoreClass(myResult.score)}">${formatScore(myResult.score)}</span>`;
+        html += `<span class="thru-col">${myResult.thru || ''}</span>`;
+        html += '</div>';
+
+        // Opponent rows
+        oppResults.forEach(opp => {
+          html += '<div class="group-row">';
+          html += `<span class="golfer-name" style="font-weight:400;color:#aaa">${opp.player.full_name}</span>`;
+          html += `<span class="round-score ${scoreClass(opp.score)}">${formatScore(opp.score)}</span>`;
+          html += `<span class="thru-col">${opp.thru || ''}</span>`;
+          html += '</div>';
+        });
+
+        html += '</div>';
+      });
+
+      container.innerHTML = html;
+    }
+
+    loadAndRender();
+    setInterval(loadAndRender, 11 * 60 * 1000);
+  </script>
+</body>
+</html>

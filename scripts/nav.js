@@ -1,5 +1,12 @@
 // Shared navigation data and hamburger drawer component
 const NAV_ITEMS = [
+  { type: 'section', label: 'Masters' },
+  { type: 'link', label: 'Hub', href: '/masters' },
+  { type: 'link', label: 'Leaderboard', href: '/masters/leaderboard' },
+  { type: 'link', label: 'Select Golfers', href: '/masters/select-golfers' },
+  { type: 'link', label: '3-Ball Setup', href: '/masters/3-ball' },
+  { type: 'link', label: '3-Ball Results', href: '/masters/3-ball-results' },
+  { type: 'link', label: 'EV Model', href: '/masters/ev-model' },
   { type: 'section', label: 'Tools' },
   { type: 'link', label: 'Trade Calculator', href: '/trade-calculator' },
   { type: 'section', label: 'Leagues' },

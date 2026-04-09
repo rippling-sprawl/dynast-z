@@ -7,6 +7,12 @@
     { "source": "/league/:leagueId/trades", "destination": "/views/league-trades.html" },
     { "source": "/league/:leagueId/power", "destination": "/views/league-power.html" },
     { "source": "/league/:leagueId", "destination": "/views/league.html" },
+    { "source": "/masters", "destination": "/views/masters/index.html" },
+    { "source": "/masters/select-golfers", "destination": "/views/masters/select-golfers.html" },
+    { "source": "/masters/3-ball-results", "destination": "/views/masters/3-ball-results.html" },
+    { "source": "/masters/3-ball", "destination": "/views/masters/3-ball.html" },
+    { "source": "/masters/leaderboard", "destination": "/views/masters/leaderboard.html" },
+    { "source": "/masters/ev-model", "destination": "/views/masters/ev-model.html" },
     { "source": "/api/:path*", "destination": "/api/:path*" }
   ],
   "headers": [

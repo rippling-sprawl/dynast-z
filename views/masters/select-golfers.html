@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <title>Select Golfers | Masters 2026</title>
+  <link rel="stylesheet" href="/styles/styles.css">
+  <link rel="stylesheet" href="/styles/masters.css">
+</head>
+<body class="masters-body">
+  <div id="header-mount"></div>
+  <div id="nav-drawer-mount"></div>
+  <script src="/scripts/nav.js"></script>
+  <script>initPage('Select Golfers');</script>
+
+  <div class="masters-content">
+    <h2>Select Golfers</h2>
+    <p class="subtitle">Pick your winner, top 5, and top 10 finishers</p>
+
+    <div class="selection-counts" id="counts"></div>
+
+    <input type="text" class="masters-search" id="search" placeholder="Search golfers...">
+
+    <div id="loading" class="masters-loading">Loading golfers...</div>
+    <div id="golfer-list" style="display:none">
+      <div class="golfer-select-row golfer-select-header">
+        <span>Player</span>
+        <span class="col-label">WIN</span>
+        <span class="col-label">T5</span>
+        <span class="col-label">T10</span>
+      </div>
+      <div id="rows"></div>
+    </div>
+  </div>
+
+  <script src="/scripts/masters-utils.js"></script>
+  <script>
+    let allPlayers = [];
+    let sel = getSelections();
+
+    async function init() {
+      try {
+        const raw = await fetchScores();
+        allPlayers = raw.data.player
+          .map(p => p.full_name)
+          .sort((a, b) => a.localeCompare(b));
+        render();
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('golfer-list').style.display = 'block';
+      } catch (e) {
+        document.getElementById('loading').textContent = 'Failed to load golfers: ' + e.message;
+      }
+    }
+
+    function render(filter) {
+      const rows = document.getElementById('rows');
+      const q = (filter || '').toLowerCase();
+      const players = q ? allPlayers.filter(n => n.toLowerCase().includes(q)) : allPlayers;
+
+      if (!sel.winner) sel.winner = [];
+      if (!sel.top5) sel.top5 = [];
+      if (!sel.top10) sel.top10 = [];
+
+      rows.innerHTML = players.map(name => {
+        const isWin = sel.winner.includes(name);
+        const isT5 = sel.top5.includes(name);
+        const isT10 = sel.top10.includes(name);
+        return `<div class="golfer-select-row">
+          <span class="player-name">${name}</span>
+          <input type="checkbox" data-cat="winner" data-name="${name}" ${isWin ? 'checked' : ''}>
+          <input type="checkbox" data-cat="top5" data-name="${name}" ${isT5 ? 'checked' : ''}>
+          <input type="checkbox" data-cat="top10" data-name="${name}" ${isT10 ? 'checked' : ''}>
+        </div>`;
+      }).join('');
+
+      rows.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+        cb.addEventListener('change', () => {
+          const name = cb.dataset.name;
+          const cat = cb.dataset.cat;
+          if (cb.checked) {
+            if (!sel[cat].includes(name)) sel[cat].push(name);
+          } else {
+            sel[cat] = sel[cat].filter(n => n !== name);
+          }
+          save();
+          render(document.getElementById('search').value);
+        });
+      });
+
+      updateCounts();
+    }
+
+    function save() {
+      saveSelections(sel);
+    }
+
+    function updateCounts() {
+      const c = document.getElementById('counts');
+      const w = (sel.winner || []).length;
+      const t5 = (sel.top5 || []).length;
+      const t10 = (sel.top10 || []).length;
+      c.innerHTML = `
+        <span class="count-badge ${w > 0 ? 'full' : ''}">WIN: ${w}</span>
+        <span class="count-badge ${t5 > 0 ? 'full' : ''}">T5: ${t5}</span>
+        <span class="count-badge ${t10 > 0 ? 'full' : ''}">T10: ${t10}</span>
+      `;
+    }
+
+    document.getElementById('search').addEventListener('input', e => {
+      render(e.target.value);
+    });
+
+    init();
+  </script>
+</body>
+</html>

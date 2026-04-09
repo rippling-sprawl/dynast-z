@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <title>Leaderboard | Masters 2026</title>
+  <link rel="stylesheet" href="/styles/styles.css">
+  <link rel="stylesheet" href="/styles/masters.css">
+</head>
+<body class="masters-body">
+  <div id="header-mount"></div>
+  <div id="nav-drawer-mount"></div>
+  <script src="/scripts/nav.js"></script>
+  <script>initPage('Leaderboard');</script>
+
+  <div class="masters-content">
+    <h2>Leaderboard</h2>
+    <p class="subtitle">
+      Sorted by aggregate score &bull; Your golfers highlighted
+      <span class="refresh-badge" id="updated"></span>
+    </p>
+
+    <div id="loading" class="masters-loading">Loading leaderboard...</div>
+    <div id="board" style="display:none"></div>
+  </div>
+
+  <script src="/scripts/masters-utils.js"></script>
+  <script>
+    let scoresData = null;
+    let expandedIds = new Set();
+
+    async function loadAndRender() {
+      try {
+        const raw = await fetchScores();
+        scoresData = raw.data;
+        renderBoard();
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('board').style.display = 'block';
+        document.getElementById('updated').textContent = 'Updated ' + timeAgo();
+      } catch (e) {
+        document.getElementById('loading').textContent = 'Failed to load: ' + e.message;
+      }
+    }
+
+    function renderBoard() {
+      const sel = getSelections();
+      const players = sortByToPar(scoresData.player);
+      const pars = scoresData.pars;
+      const board = document.getElementById('board');
+
+      let html = '<div class="table-wrap"><table class="masters-table"><thead><tr>';
+      html += '<th>POS</th><th>PLAYER</th><th>TODAY</th><th>THRU</th><th>TO PAR</th>';
+      html += '</tr></thead><tbody>';
+
+      players.forEach((p, i) => {
+        const selected = isSelected(p.full_name, sel);
+        const cls = selected ? 'selected-golfer clickable' : 'clickable';
+        const id = 'lb-' + i;
+        const expanded = expandedIds.has(id);
+
+        html += `<tr class="${cls}" data-id="${id}">`;
+        html += `<td>${p.pos || ''}</td>`;
+        html += `<td class="player-name">${p.full_name}</td>`;
+        html += `<td class="${scoreClass(p.today)}">${formatScore(p.today)}</td>`;
+        html += `<td>${p.thru || ''}</td>`;
+        html += `<td class="${scoreClass(p.topar)}" style="font-weight:700">${formatScore(p.topar)}</td>`;
+        html += '</tr>';
+
+        // Detail row
+        html += `<tr class="detail-row" id="${id}" style="display:${expanded ? 'table-row' : 'none'}">`;
+        html += '<td colspan="5">';
+        html += renderRounds(p, pars);
+        html += '</td></tr>';
+      });
+
+      html += '</tbody></table></div>';
+      board.innerHTML = html;
+
+      board.querySelectorAll('tr.clickable').forEach(row => {
+        row.addEventListener('click', () => {
+          const id = row.dataset.id;
+          const detail = document.getElementById(id);
+          if (detail.style.display === 'table-row') {
+            detail.style.display = 'none';
+            expandedIds.delete(id);
+          } else {
+            detail.style.display = 'table-row';
+            expandedIds.add(id);
+          }
+        });
+      });
+    }
+
+    function renderRounds(player, pars) {
+      const rounds = ['round1', 'round2', 'round3', 'round4'];
+      let html = '<div class="rounds-container">';
+
+      rounds.forEach((rKey, ri) => {
+        const rd = player[rKey];
+        if (!rd || !rd.scores || rd.scores.every(s => s === null)) return;
+
+        const roundPars = pars[rKey] || [];
+        const scores = rd.scores || [];
+
+        html += '<div style="margin-bottom:8px">';
+        html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:2px">`;
+        html += `<span class="round-label">R${ri + 1}</span>`;
+
+        // Front 9
+        html += '<div style="display:flex;gap:1px">';
+        for (let h = 0; h < 9; h++) {
+          const s = scores[h];
+          const par = roundPars[h];
+          if (s === null || s === undefined) {
+            html += '<div class="hole-cell no-score">&middot;</div>';
+          } else {
+            const rel = s - par;
+            html += `<div class="hole-cell ${holeClass(rel)}">${formatHoleScore(rel)}</div>`;
+          }
+        }
+        html += '</div>';
+
+        // Out total
+        const front = scores.slice(0, 9);
+        const frontPlayed = front.filter(s => s !== null && s !== undefined);
+        const frontPars = roundPars.slice(0, 9).filter((_, i) => front[i] !== null && front[i] !== undefined);
+        const frontRel = frontPlayed.reduce((a, s, i) => a + (s - frontPars[i]), 0);
+        if (frontPlayed.length > 0) {
+          html += `<div class="round-total ${scoreClass(frontRel)}">${formatScore(frontRel)}</div>`;
+        }
+
+        // Back 9
+        html += '<div style="display:flex;gap:1px">';
+        for (let h = 9; h < 18; h++) {
+          const s = scores[h];
+          const par = roundPars[h];
+          if (s === null || s === undefined) {
+            html += '<div class="hole-cell no-score">&middot;</div>';
+          } else {
+            const rel = s - par;
+            html += `<div class="hole-cell ${holeClass(rel)}">${formatHoleScore(rel)}</div>`;
+          }
+        }
+        html += '</div>';
+
+        // In total
+        const back = scores.slice(9, 18);
+        const backPlayed = back.filter(s => s !== null && s !== undefined);
+        const backPars = roundPars.slice(9, 18).filter((_, i) => back[i] !== null && back[i] !== undefined);
+        const backRel = backPlayed.reduce((a, s, i) => a + (s - backPars[i]), 0);
+        if (backPlayed.length > 0) {
+          html += `<div class="round-total ${scoreClass(backRel)}">${formatScore(backRel)}</div>`;
+        }
+
+        html += '</div></div>';
+      });
+
+      // Hole numbers header
+      html += '<div style="display:flex;align-items:center;gap:8px;margin-top:4px">';
+      html += '<span class="round-label" style="visibility:hidden">R0</span>';
+      html += '<div style="display:flex;gap:1px">';
+      for (let h = 1; h <= 9; h++) {
+        html += `<div class="hole-cell" style="color:#333;font-size:9px">${h}</div>`;
+      }
+      html += '</div><div class="round-total" style="visibility:hidden">0</div>';
+      html += '<div style="display:flex;gap:1px">';
+      for (let h = 10; h <= 18; h++) {
+        html += `<div class="hole-cell" style="color:#333;font-size:9px">${h}</div>`;
+      }
+      html += '</div>';
+      html += '</div>';
+
+      html += '</div>';
+      return html;
+    }
+
+    loadAndRender();
+    setInterval(loadAndRender, 11 * 60 * 1000);
+  </script>
+</body>
+</html>

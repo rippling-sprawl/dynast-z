@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <title>3-Ball Setup | Masters 2026</title>
+  <link rel="stylesheet" href="/styles/styles.css">
+  <link rel="stylesheet" href="/styles/masters.css">
+</head>
+<body class="masters-body">
+  <div id="header-mount"></div>
+  <div id="nav-drawer-mount"></div>
+  <script src="/scripts/nav.js"></script>
+  <script>initPage('3-Ball Setup');</script>
+
+  <div class="masters-content">
+    <h2>3-Ball Setup</h2>
+    <p class="subtitle">Select your golfer and opponents for each matchup</p>
+
+    <div style="margin-bottom:16px">
+      <label style="font-size:10px;color:#444;font-family:monospace;display:block;margin-bottom:6px">ROUND</label>
+      <div class="round-selector" id="round-sel"></div>
+    </div>
+
+    <div id="loading" class="masters-loading">Loading golfers...</div>
+    <div id="groups-container" style="display:none"></div>
+
+    <div id="actions" style="display:none;margin-top:12px">
+      <button class="masters-btn" id="add-group">+ Add Group</button>
+    </div>
+  </div>
+
+  <script src="/scripts/masters-utils.js"></script>
+  <script>
+    let allPlayers = [];
+    let config = get3BallGroups();
+    if (!config.round) config.round = 1;
+    if (!config.groups) config.groups = [];
+
+    async function init() {
+      try {
+        const raw = await fetchScores();
+        allPlayers = raw.data.player
+          .map(p => p.full_name)
+          .sort((a, b) => a.localeCompare(b));
+
+        renderRoundSelector();
+        renderGroups();
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('groups-container').style.display = 'block';
+        document.getElementById('actions').style.display = 'block';
+      } catch (e) {
+        document.getElementById('loading').textContent = 'Failed to load: ' + e.message;
+      }
+    }
+
+    function renderRoundSelector() {
+      const container = document.getElementById('round-sel');
+      container.innerHTML = [1, 2, 3, 4].map(r =>
+        `<button class="masters-btn ${config.round === r ? 'active' : ''}" data-round="${r}">R${r}</button>`
+      ).join('');
+      container.querySelectorAll('button').forEach(btn => {
+        btn.addEventListener('click', () => {
+          config.round = parseInt(btn.dataset.round);
+          save();
+          renderRoundSelector();
+        });
+      });
+    }
+
+    function playerOptions(selected) {
+      let html = '<option value="">-- Select --</option>';
+      allPlayers.forEach(name => {
+        html += `<option value="${name}" ${name === selected ? 'selected' : ''}>${name}</option>`;
+      });
+      return html;
+    }
+
+    function renderGroups() {
+      const container = document.getElementById('groups-container');
+      if (config.groups.length === 0) {
+        container.innerHTML = '<p class="masters-empty">No groups yet. Click "+ Add Group" to start.</p>';
+        return;
+      }
+
+      container.innerHTML = config.groups.map((g, i) => `
+        <div class="group-form">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <span style="font-size:11px;color:#555;font-family:monospace">GROUP ${i + 1}</span>
+            <button class="masters-btn danger" data-remove="${i}" style="padding:2px 8px;font-size:11px">&times;</button>
+          </div>
+          <div class="form-row">
+            <label>MY GOLFER</label>
+            <select class="masters-select" data-group="${i}" data-role="my">${playerOptions(g.myGolfer)}</select>
+          </div>
+          <div class="form-row">
+            <label>OPP 1</label>
+            <select class="masters-select" data-group="${i}" data-role="opp0">${playerOptions(g.opponents[0])}</select>
+          </div>
+          <div class="form-row">
+            <label>OPP 2</label>
+            <select class="masters-select" data-group="${i}" data-role="opp1">${playerOptions(g.opponents[1])}</select>
+          </div>
+        </div>
+      `).join('');
+
+      container.querySelectorAll('select').forEach(sel => {
+        sel.addEventListener('change', () => {
+          const gi = parseInt(sel.dataset.group);
+          const role = sel.dataset.role;
+          if (role === 'my') {
+            config.groups[gi].myGolfer = sel.value;
+          } else if (role === 'opp0') {
+            config.groups[gi].opponents[0] = sel.value;
+          } else if (role === 'opp1') {
+            config.groups[gi].opponents[1] = sel.value;
+          }
+          save();
+        });
+      });
+
+      container.querySelectorAll('[data-remove]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          config.groups.splice(parseInt(btn.dataset.remove), 1);
+          save();
+          renderGroups();
+        });
+      });
+    }
+
+    function save() {
+      save3BallGroups(config);
+    }
+
+    document.getElementById('add-group').addEventListener('click', () => {
+      config.groups.push({ myGolfer: '', opponents: ['', ''] });
+      save();
+      renderGroups();
+    });
+
+    init();
+  </script>
+</body>
+</html>

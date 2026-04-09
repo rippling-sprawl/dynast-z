@@ -26,6 +26,8 @@ SLEEPER_API = "https://api.sleeper.app/v1"
 SLEEPER_PLAYERS_TTL = 86400  # 24 hours for the big players file
 LEAGUE_DATA_TTL = 3600  # 1 hour for league rosters/users
 FP_DATA_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "fp.json")
+MASTERS_SCORES_URL = "https://www.masters.com/en_US/scores/feeds/2026/scores.json"
+MASTERS_SCORES_TTL = 300  # 5 minutes
 
 
 def read_cache(name, ttl=None):
@@ -72,6 +74,18 @@ def fetch_ktc():
     data = json.loads(match.group(1))
     write_cache("ktc.json", data)
     print("KTC data complete.")
+    return data
+
+
+def fetch_masters_scores():
+    cached = read_cache("masters_scores.json", ttl=MASTERS_SCORES_TTL)
+    if cached is not None:
+        print("Using cached Masters scores")
+        return cached
+    print("Fetching fresh Masters scores...")
+    data = json.loads(http_fetch(MASTERS_SCORES_URL))
+    write_cache("masters_scores.json", data)
+    print("Masters scores complete.")
     return data
 
 
@@ -685,6 +699,33 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     self.wfile.write(f.read().encode())
             except Exception as e:
                 self.wfile.write(json.dumps({"error": str(e)}).encode())
+        elif self.path == "/api/masters/scores":
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            if IS_VERCEL:
+                self.send_header("Cache-Control", "s-maxage=300, stale-while-revalidate=600")
+            self.end_headers()
+            try:
+                data = fetch_masters_scores()
+                self.wfile.write(json.dumps(data).encode())
+            except Exception as e:
+                self.wfile.write(json.dumps({"error": str(e)}).encode())
+        elif self.path == "/masters":
+            self.path = "/views/masters/index.html"
+            super().do_GET()
+        elif self.path.startswith("/masters/select-golfers"):
+            self.path = "/views/masters/select-golfers.html"
+            super().do_GET()
+        elif self.path.startswith("/masters/3-ball-results"):
+            self.path = "/views/masters/3-ball-results.html"
+            super().do_GET()
+        elif re.match(r"/masters/3-ball$", self.path):
+            self.path = "/views/masters/3-ball.html"
+            super().do_GET()
+        elif self.path.startswith("/masters/leaderboard"):
+            self.path = "/views/masters/leaderboard.html"
+            super().do_GET()
         elif re.match(r"/masters/ev-model", self.path):
             self.path = "/views/masters/ev-model.html"
             super().do_GET()
