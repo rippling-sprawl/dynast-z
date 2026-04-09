@@ -685,6 +685,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     self.wfile.write(f.read().encode())
             except Exception as e:
                 self.wfile.write(json.dumps({"error": str(e)}).encode())
+        elif re.match(r"/masters/ev-model", self.path):
+            self.path = "/views/masters/ev-model.html"
+            super().do_GET()
         elif re.match(r"/league/[^/]+/team/", self.path):
             self.path = "/views/team.html"
             super().do_GET()
