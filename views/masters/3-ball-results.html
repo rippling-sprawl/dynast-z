@@ -22,6 +22,8 @@
       Live matchup results &bull; <span class="refresh-badge" id="updated"></span>
     </p>
 
+    <div class="round-selector" id="round-sel"></div>
+
     <div id="loading" class="masters-loading">Loading results...</div>
     <div id="results" style="display:none"></div>
   </div>
@@ -31,6 +33,24 @@
   <script src="/scripts/masters-utils.js?v=6eaf88a7"></script>
   <script>
     let scoresData = null;
+    let config = get3BallGroups();
+    let selectedRound = config.round || 1;
+
+    function renderRoundSelector() {
+      const container = document.getElementById('round-sel');
+      container.innerHTML = [1, 2, 3, 4].map(r => {
+        const count = (config.rounds[r] || []).length;
+        const badge = count > 0 ? ` (${count})` : '';
+        return `<button class="masters-btn ${selectedRound === r ? 'active' : ''}" data-round="${r}">R${r}${badge}</button>`;
+      }).join('');
+      container.querySelectorAll('button').forEach(btn => {
+        btn.addEventListener('click', () => {
+          selectedRound = parseInt(btn.dataset.round);
+          renderRoundSelector();
+          if (scoresData) renderResults();
+        });
+      });
+    }
 
     async function loadAndRender() {
       try {
@@ -68,10 +88,9 @@
     }
 
     function renderResults() {
-      const config = get3BallGroups();
       const container = document.getElementById('results');
 
-      const roundNum = config.round || 1;
+      const roundNum = selectedRound;
       const groups = (config.rounds && config.rounds[roundNum]) || [];
 
       if (groups.length === 0) {
@@ -79,7 +98,7 @@
         return;
       }
 
-      let html = `<div style="margin-bottom:12px;font-size:11px;color:#555;font-family:monospace">ROUND ${roundNum}</div>`;
+      let html = '';
 
       groups.forEach((group, gi) => {
         if (!group.myGolfer) return;
@@ -133,11 +152,15 @@
       container.innerHTML = html;
     }
 
+    renderRoundSelector();
     loadAndRender();
     setInterval(loadAndRender, 11 * 60 * 1000);
 
     // Sync from server if logged in, then re-render
     initMastersSync().then(() => {
+      config = get3BallGroups();
+      selectedRound = config.round || 1;
+      renderRoundSelector();
       if (scoresData) renderResults();
     });
   </script>

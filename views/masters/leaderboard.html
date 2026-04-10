@@ -55,11 +55,11 @@
 
     function get3BallMyGolfers() {
       const config = get3BallGroups();
+      const roundNum = config.round || 1;
+      const groups = (config.rounds && config.rounds[roundNum]) || [];
       const names = new Set();
-      for (const groups of Object.values(config.rounds || {})) {
-        for (const g of groups) {
-          if (g.myGolfer) names.add(g.myGolfer);
-        }
+      for (const g of groups) {
+        if (g.myGolfer) names.add(g.myGolfer);
       }
       return names;
     }
