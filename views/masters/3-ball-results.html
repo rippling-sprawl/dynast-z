@@ -75,7 +75,7 @@
       if (!rd) return { score: null, thru: null };
 
       if (rd.roundStatus === 'Playing') {
-        return { score: rd.fantasy, thru: player.thru };
+        return { score: player.today, thru: player.thru };
       }
       if (rd.total !== null && rd.total !== undefined) {
         const pars = [0]; // fallback
