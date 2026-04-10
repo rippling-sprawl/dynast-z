@@ -12,6 +12,7 @@
     { "source": "/masters", "destination": "/views/masters/index.html" },
     { "source": "/masters/select-golfers", "destination": "/views/masters/select-golfers.html" },
     { "source": "/masters/3-ball-results", "destination": "/views/masters/3-ball-results.html" },
+    { "source": "/masters/3-ball-lookup", "destination": "/views/masters/3-ball-lookup.html" },
     { "source": "/masters/3-ball", "destination": "/views/masters/3-ball.html" },
     { "source": "/masters/leaderboard", "destination": "/views/masters/leaderboard.html" },
     { "source": "/masters/ev-model", "destination": "/views/masters/ev-model.html" },

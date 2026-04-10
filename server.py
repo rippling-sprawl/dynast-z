@@ -755,6 +755,31 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     self._json_response(200, {r["data_key"]: r["data"] for r in rows})
             except Exception as e:
                 self._json_response(500, {"error": str(e)})
+        elif self.path.startswith("/api/lookup"):
+            parsed = urlparse(self.path)
+            params = parse_qs(parsed.query)
+            username = params.get("username", [None])[0]
+            if not username:
+                self._json_response(400, {"error": "username parameter is required"})
+                return
+            try:
+                users = supabase_request(
+                    f"users?display_name=eq.{urllib.request.quote(username)}&select=id,display_name"
+                )
+                if not users:
+                    self._json_response(404, {"error": "no username found"})
+                    return
+                uid = users[0]["id"]
+                rows = supabase_request(
+                    f"user_data?user_id=eq.{uid}"
+                    f"&sport=eq.masters"
+                    f"&data_key=eq.3ball"
+                    f"&select=data"
+                )
+                data = rows[0]["data"] if rows else {"rounds": {}}
+                self._json_response(200, {"username": users[0]["display_name"], "threeBall": data})
+            except Exception as e:
+                self._json_response(500, {"error": str(e)})
         elif self.path == "/api/masters/scores":
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
@@ -778,6 +803,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             super().do_GET()
         elif self.path.startswith("/masters/3-ball-results"):
             self.path = "/views/masters/3-ball-results.html"
+            super().do_GET()
+        elif self.path.startswith("/masters/3-ball-lookup"):
+            self.path = "/views/masters/3-ball-lookup.html"
             super().do_GET()
         elif re.match(r"/masters/3-ball$", self.path):
             self.path = "/views/masters/3-ball.html"

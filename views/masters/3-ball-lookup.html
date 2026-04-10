@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <link rel="icon" type="image/png" href="/favicon.png">
-  <title>3-Ball Results | Masters 2026</title>
+  <title>3-Ball Lookup | Masters 2026</title>
   <link rel="stylesheet" href="/styles/styles.css?v=aeb3671a">
   <link rel="stylesheet" href="/styles/masters.css?v=347a7e50">
 </head>
@@ -16,30 +16,118 @@
   <script>initPage();</script>
 
   <div class="masters-content">
-    <div class="masters-breadcrumbs"><a href="/masters">Masters</a><span class="separator">/</span><span>3-Ball Results</span></div>
-    <h2>3-Ball Results</h2>
-    <p class="subtitle">
-      Live matchup results &bull; <span class="refresh-badge" id="updated"></span>
-    </p>
+    <div class="masters-breadcrumbs"><a href="/masters">Masters</a><span class="separator">/</span><span>3-Ball Lookup</span></div>
+    <h2>3-Ball Lookup</h2>
+    <p class="subtitle">View another user's 3-ball results</p>
 
-    <div class="round-selector" id="round-sel"></div>
+    <div class="lookup-search">
+      <input type="text" id="username-input" placeholder="Enter username" autocapitalize="off" autocorrect="off">
+      <button class="masters-btn active" id="search-btn">Search</button>
+    </div>
 
-    <div id="loading" class="masters-loading">Loading results...</div>
-    <div id="results" style="display:none"></div>
+    <div id="error" class="masters-empty" style="display:none"></div>
+    <div id="user-results" style="display:none">
+      <h3 id="user-label" style="margin:16px 0 8px;color:#ccc"></h3>
+      <div class="round-selector" id="round-sel"></div>
+      <div id="loading" class="masters-loading" style="display:none">Loading scores...</div>
+      <div id="results"></div>
+    </div>
   </div>
 
-  <script src="/scripts/auth.js"></script>
+  <style>
+    .lookup-search {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .lookup-search input {
+      flex: 1;
+      padding: 10px 12px;
+      border-radius: 6px;
+      border: 1px solid #444;
+      background: #1a1a1a;
+      color: #f0f0f0;
+      font-size: 14px;
+      font-family: inherit;
+    }
+    .lookup-search input:focus {
+      outline: none;
+      border-color: #60a5fa;
+    }
+  </style>
+
   <script src="/scripts/sync.js"></script>
   <script src="/scripts/masters-utils.js?v=6eaf88a7"></script>
   <script>
     let scoresData = null;
-    let config = get3BallGroups();
-    let selectedRound = config.round || 1;
+    let lookupConfig = null;
+    let selectedRound = 1;
+    let lookupUsername = null;
+
+    const input = document.getElementById('username-input');
+    const searchBtn = document.getElementById('search-btn');
+    const errorEl = document.getElementById('error');
+    const userResults = document.getElementById('user-results');
+
+    function showError(msg) {
+      errorEl.textContent = msg;
+      errorEl.style.display = 'block';
+      userResults.style.display = 'none';
+    }
+
+    function hideError() {
+      errorEl.style.display = 'none';
+    }
+
+    async function doSearch() {
+      const username = input.value.trim();
+      if (!username) return;
+
+      hideError();
+      userResults.style.display = 'none';
+
+      try {
+        const resp = await fetch('/api/lookup?username=' + encodeURIComponent(username));
+        const data = await resp.json();
+
+        if (!resp.ok) {
+          if (resp.status === 404) {
+            showError('No username found');
+          } else {
+            showError(data.error || 'Something went wrong');
+          }
+          return;
+        }
+
+        lookupUsername = data.username;
+        lookupConfig = data.threeBall;
+        if (!lookupConfig.rounds) lookupConfig.rounds = {};
+
+        document.getElementById('user-label').textContent = lookupUsername + "'s 3-Ball Results";
+        selectedRound = lookupConfig.round || 1;
+        userResults.style.display = 'block';
+        renderRoundSelector();
+
+        if (!scoresData) {
+          document.getElementById('loading').style.display = 'block';
+          const raw = await fetchScores();
+          scoresData = raw.data;
+          document.getElementById('loading').style.display = 'none';
+        }
+
+        renderResults();
+      } catch (e) {
+        showError('Failed to look up user: ' + e.message);
+      }
+    }
+
+    searchBtn.addEventListener('click', doSearch);
+    input.addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
 
     function renderRoundSelector() {
       const container = document.getElementById('round-sel');
       container.innerHTML = [1, 2, 3, 4].map(r => {
-        const count = (config.rounds[r] || []).length;
+        const count = (lookupConfig.rounds[r] || []).length;
         const badge = count > 0 ? ` (${count})` : '';
         return `<button class="masters-btn ${selectedRound === r ? 'active' : ''}" data-round="${r}">R${r}${badge}</button>`;
       }).join('');
@@ -50,19 +138,6 @@
           if (scoresData) renderResults();
         });
       });
-    }
-
-    async function loadAndRender() {
-      try {
-        const raw = await fetchScores();
-        scoresData = raw.data;
-        renderResults();
-        document.getElementById('loading').style.display = 'none';
-        document.getElementById('results').style.display = 'block';
-        document.getElementById('updated').textContent = 'Updated ' + timeAgo();
-      } catch (e) {
-        document.getElementById('loading').textContent = 'Failed to load: ' + e.message;
-      }
     }
 
     function findPlayer(name) {
@@ -78,7 +153,6 @@
         return { score: player.today, thru: player.thru };
       }
       if (rd.total !== null && rd.total !== undefined) {
-        const pars = [0]; // fallback
         return { score: rd.fantasy, thru: 'F' };
       }
       if (rd.fantasy !== null && rd.fantasy !== undefined) {
@@ -89,18 +163,16 @@
 
     function renderResults() {
       const container = document.getElementById('results');
-
-      const roundNum = selectedRound;
-      const groups = (config.rounds && config.rounds[roundNum]) || [];
+      const groups = (lookupConfig.rounds && lookupConfig.rounds[selectedRound]) || [];
 
       if (groups.length === 0) {
-        container.innerHTML = '<p class="masters-empty">No 3-ball groups for Round ' + roundNum + '. <a href="/masters/3-ball" style="color:#60a5fa">Set up groups</a></p>';
+        container.innerHTML = '<p class="masters-empty">' + lookupUsername + ' has no 3-ball selections for Round ' + selectedRound + '</p>';
         return;
       }
 
       let html = '<div class="three-ball-results-grid">';
 
-      groups.forEach((group, gi) => {
+      groups.forEach((group) => {
         if (!group.myGolfer) return;
 
         const myPlayer = findPlayer(group.myGolfer);
@@ -111,13 +183,12 @@
           return;
         }
 
-        const myResult = getRoundScore(myPlayer, roundNum);
+        const myResult = getRoundScore(myPlayer, selectedRound);
         const oppResults = opponents.map(opp => ({
           player: opp,
-          ...getRoundScore(opp, roundNum)
+          ...getRoundScore(opp, selectedRound)
         }));
 
-        // Determine win/loss
         function toNum(s) { return (s === 'E' || s === 0 || s === '0') ? 0 : (s !== null && s !== undefined ? Number(s) : 999); }
         const myScoreNum = toNum(myResult.score);
         const allOpponentScores = oppResults.map(o => toNum(o.score));
@@ -129,16 +200,14 @@
         }
 
         html += '<div class="three-ball-group">';
-        html += `<div class="results-header"><span>Player</span><span style="text-align:center">R${roundNum}</span><span style="text-align:right">Thru</span></div>`;
+        html += `<div class="results-header"><span>Player</span><span style="text-align:center">R${selectedRound}</span><span style="text-align:right">Thru</span></div>`;
 
-        // My golfer row
         html += `<div class="group-row my-golfer ${myStatus}">`;
         html += `<span class="golfer-name">${myPlayer.full_name}</span>`;
         html += `<span class="round-score ${scoreClass(myResult.score)}">${formatScore(myResult.score)}</span>`;
         html += `<span class="thru-col">${myResult.thru || ''}</span>`;
         html += '</div>';
 
-        // Opponent rows
         oppResults.forEach(opp => {
           html += '<div class="group-row">';
           html += `<span class="golfer-name" style="font-weight:400;color:#aaa">${opp.player.full_name}</span>`;
@@ -153,18 +222,6 @@
       html += '</div>';
       container.innerHTML = html;
     }
-
-    renderRoundSelector();
-    loadAndRender();
-    setInterval(loadAndRender, 11 * 60 * 1000);
-
-    // Sync from server if logged in, then re-render
-    initMastersSync().then(() => {
-      config = get3BallGroups();
-      selectedRound = config.round || 1;
-      renderRoundSelector();
-      if (scoresData) renderResults();
-    });
   </script>
 </body>
 </html>
