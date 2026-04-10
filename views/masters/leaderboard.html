@@ -163,8 +163,12 @@
         html += `<tr class="${cls}" data-id="${id}">`;
         html += `<td>${p.pos || ''}</td>`;
         html += `<td class="player-name">${p.full_name}${getStreakEmoji(p, pars)}</td>`;
-        html += `<td class="${scoreClass(p.today)}" style="text-align:right">${formatScore(p.today)}</td>`;
-        html += `<td style="text-align:right">${p.thru || ''}</td>`;
+        if (!p.today && !p.thru && p.teetime) {
+          html += `<td colspan="2" style="text-align:right;color:#888;font-size:11px">${p.teetime}</td>`;
+        } else {
+          html += `<td class="${scoreClass(p.today)}" style="text-align:right">${formatScore(p.today)}</td>`;
+          html += `<td style="text-align:right">${p.thru || ''}</td>`;
+        }
         html += `<td class="${scoreClass(p.topar)}" style="font-weight:700;text-align:right">${formatScore(p.topar)}</td>`;
         html += '</tr>';
 
