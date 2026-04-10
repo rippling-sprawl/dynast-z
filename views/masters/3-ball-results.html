@@ -98,7 +98,7 @@
         return;
       }
 
-      let html = '';
+      let html = '<div class="three-ball-results-grid">';
 
       groups.forEach((group, gi) => {
         if (!group.myGolfer) return;
@@ -149,6 +149,7 @@
         html += '</div>';
       });
 
+      html += '</div>';
       container.innerHTML = html;
     }
 
