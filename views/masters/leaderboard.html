@@ -118,9 +118,9 @@
         }
       }
       if (rels.length < 3) return '';
-      const lastTwo = rels[rels.length - 1] + rels[rels.length - 2];
-      if (lastTwo <= -2) return ' 🔥';
-      if (lastTwo >= 2) return ' 🧊';
+      const lastThree = rels[rels.length - 1] + rels[rels.length - 2] + rels[rels.length - 3];
+      if (lastThree <= -2) return ' 🔥';
+      if (lastThree >= 2) return ' 🧊';
       return '';
     }
 
@@ -202,10 +202,11 @@
     }
 
     function renderRounds(player, pars) {
-      const rounds = ['round1', 'round2', 'round3', 'round4'];
+      const rounds = ['round4', 'round3', 'round2', 'round1'];
       let html = '<div class="rounds-container">';
 
-      rounds.forEach((rKey, ri) => {
+      rounds.forEach((rKey) => {
+        const ri = parseInt(rKey.slice(5)) - 1;
         const rd = player[rKey];
         if (!rd || !rd.scores || rd.scores.every(s => s === null)) return;
 
