@@ -87,12 +87,12 @@
       });
     }
 
-    function playerOptions(selected) {
-      let html = '<option value="">-- Select --</option>';
-      allPlayers.forEach(name => {
-        html += `<option value="${name}" ${name === selected ? 'selected' : ''}>${name}</option>`;
-      });
-      return html;
+    function autocompleteHTML(groupIndex, role, value) {
+      return `<div class="autocomplete-wrap" data-group="${groupIndex}" data-role="${role}">
+        <input type="text" class="masters-autocomplete" placeholder="Search player..." value="${value || ''}" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+        <button class="autocomplete-clear ${value ? 'visible' : ''}" type="button">&times;</button>
+        <ul class="autocomplete-list"></ul>
+      </div>`;
     }
 
     function renderGroups() {
@@ -111,34 +111,20 @@
           </div>
           <div class="form-row">
             <label>MY GOLFER</label>
-            <select class="masters-select" data-group="${i}" data-role="my">${playerOptions(g.myGolfer)}</select>
+            ${autocompleteHTML(i, 'my', g.myGolfer)}
           </div>
           <div class="form-row">
             <label>OPP 1</label>
-            <select class="masters-select" data-group="${i}" data-role="opp0">${playerOptions(g.opponents[0])}</select>
+            ${autocompleteHTML(i, 'opp0', g.opponents[0])}
           </div>
           <div class="form-row">
             <label>OPP 2</label>
-            <select class="masters-select" data-group="${i}" data-role="opp1">${playerOptions(g.opponents[1])}</select>
+            ${autocompleteHTML(i, 'opp1', g.opponents[1])}
           </div>
         </div>
       `).join('');
 
-      container.querySelectorAll('select').forEach(sel => {
-        sel.addEventListener('change', () => {
-          const gi = parseInt(sel.dataset.group);
-          const role = sel.dataset.role;
-          const groups = currentGroups();
-          if (role === 'my') {
-            groups[gi].myGolfer = sel.value;
-          } else if (role === 'opp0') {
-            groups[gi].opponents[0] = sel.value;
-          } else if (role === 'opp1') {
-            groups[gi].opponents[1] = sel.value;
-          }
-          save();
-        });
-      });
+      initAutocomplete();
 
       container.querySelectorAll('[data-remove]').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -150,6 +136,103 @@
         });
       });
     }
+
+    function initAutocomplete() {
+      document.querySelectorAll('.autocomplete-wrap').forEach(wrap => {
+        const input = wrap.querySelector('.masters-autocomplete');
+        const list = wrap.querySelector('.autocomplete-list');
+        const clearBtn = wrap.querySelector('.autocomplete-clear');
+        const groupIndex = parseInt(wrap.dataset.group);
+        const role = wrap.dataset.role;
+        let selectedValue = input.value;
+        let highlightIndex = -1;
+
+        function setValue(name) {
+          selectedValue = name;
+          input.value = name;
+          clearBtn.classList.toggle('visible', !!name);
+          list.classList.remove('open');
+          const groups = currentGroups();
+          if (role === 'my') groups[groupIndex].myGolfer = name;
+          else if (role === 'opp0') groups[groupIndex].opponents[0] = name;
+          else if (role === 'opp1') groups[groupIndex].opponents[1] = name;
+          save();
+        }
+
+        function showSuggestions(query) {
+          const q = query.toLowerCase().trim();
+          if (!q) { list.classList.remove('open'); return; }
+          const matches = allPlayers.filter(name => {
+            const parts = name.toLowerCase().split(' ');
+            return parts.some(part => part.startsWith(q)) || name.toLowerCase().includes(q);
+          }).slice(0, 15);
+          if (matches.length === 0) { list.classList.remove('open'); return; }
+          highlightIndex = -1;
+          list.innerHTML = matches.map((name, idx) =>
+            `<li data-index="${idx}" data-name="${name}">${name}</li>`
+          ).join('');
+          list.classList.add('open');
+        }
+
+        input.addEventListener('input', () => {
+          selectedValue = '';
+          clearBtn.classList.remove('visible');
+          showSuggestions(input.value);
+          const groups = currentGroups();
+          if (role === 'my') groups[groupIndex].myGolfer = '';
+          else if (role === 'opp0') groups[groupIndex].opponents[0] = '';
+          else if (role === 'opp1') groups[groupIndex].opponents[1] = '';
+          save();
+        });
+
+        input.addEventListener('focus', () => {
+          if (input.value && !selectedValue) showSuggestions(input.value);
+          if (selectedValue) input.select();
+        });
+
+        input.addEventListener('keydown', (e) => {
+          const items = list.querySelectorAll('li');
+          if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            highlightIndex = Math.min(highlightIndex + 1, items.length - 1);
+            items.forEach((li, idx) => li.classList.toggle('highlighted', idx === highlightIndex));
+            if (items[highlightIndex]) items[highlightIndex].scrollIntoView({ block: 'nearest' });
+          } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            highlightIndex = Math.max(highlightIndex - 1, 0);
+            items.forEach((li, idx) => li.classList.toggle('highlighted', idx === highlightIndex));
+            if (items[highlightIndex]) items[highlightIndex].scrollIntoView({ block: 'nearest' });
+          } else if (e.key === 'Enter') {
+            e.preventDefault();
+            if (highlightIndex >= 0 && items[highlightIndex]) {
+              setValue(items[highlightIndex].dataset.name);
+            }
+          } else if (e.key === 'Escape') {
+            list.classList.remove('open');
+            input.blur();
+          }
+        });
+
+        list.addEventListener('mousedown', (e) => {
+          e.preventDefault();
+          const li = e.target.closest('li');
+          if (li) setValue(li.dataset.name);
+        });
+
+        clearBtn.addEventListener('mousedown', (e) => {
+          e.preventDefault();
+          setValue('');
+          input.value = '';
+          input.focus();
+        });
+      });
+    }
+
+    document.addEventListener('mousedown', (e) => {
+      if (!e.target.closest('.autocomplete-wrap')) {
+        document.querySelectorAll('.autocomplete-list.open').forEach(l => l.classList.remove('open'));
+      }
+    });
 
     function save() {
       save3BallGroups(config);

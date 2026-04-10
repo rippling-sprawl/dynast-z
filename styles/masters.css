@@ -544,6 +544,90 @@ body.masters-body {
   flex: 1;
 }
 
+/* --- Autocomplete --- */
+.autocomplete-wrap {
+  position: relative;
+  flex: 1;
+}
+
+.masters-autocomplete {
+  background: #161b22;
+  border: 1px solid #30363d;
+  color: #e0e0e0;
+  padding: 6px 28px 6px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.masters-autocomplete:focus {
+  outline: none;
+  border-color: #60a5fa;
+}
+
+.masters-autocomplete::placeholder {
+  color: #555;
+}
+
+.autocomplete-clear {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #666;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 2px 4px;
+  line-height: 1;
+  display: none;
+}
+
+.autocomplete-clear.visible {
+  display: block;
+}
+
+.autocomplete-list {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-top: none;
+  border-radius: 0 0 4px 4px;
+  max-height: 200px;
+  overflow-y: auto;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: none;
+}
+
+.autocomplete-list.open {
+  display: block;
+}
+
+.autocomplete-list li {
+  padding: 10px;
+  font-size: 13px;
+  color: #e0e0e0;
+  cursor: pointer;
+}
+
+.autocomplete-list li.highlighted {
+  background: #21262d;
+}
+
+.autocomplete-list li:active {
+  background: #60a5fa;
+  color: #111;
+}
+
 /* --- Scrollable table wrapper --- */
 .table-wrap {
   border: 1px solid #222;
