@@ -75,11 +75,26 @@ function save3BallGroups(data) {
   }
 }
 
+function getGroupPicks() {
+  try {
+    return JSON.parse(localStorage.getItem('masters_groups') || '{"groups":[]}');
+  } catch { return { groups: [] }; }
+}
+
+function saveGroupPicks(data) {
+  if (typeof saveWithSync === 'function') {
+    saveWithSync('masters', 'groups', 'masters_groups', data);
+  } else {
+    localStorage.setItem('masters_groups', JSON.stringify(data));
+  }
+}
+
 async function initMastersSync() {
   if (typeof loadWithSync !== 'function' || !isLoggedIn()) return;
   const sel = await loadWithSync('masters', 'selections', 'masters_selections', {});
   const ball = await loadWithSync('masters', '3ball', 'masters_3ball', { rounds: {} });
-  return { selections: sel, threeBall: ball };
+  const grp = await loadWithSync('masters', 'groups', 'masters_groups', { groups: [] });
+  return { selections: sel, threeBall: ball, groupPicks: grp };
 }
 
 function sortByToPar(players) {

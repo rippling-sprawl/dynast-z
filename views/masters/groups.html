@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <title>Groups Setup | Masters 2026</title>
+  <link rel="stylesheet" href="/styles/styles.css?v=aeb3671a">
+  <link rel="stylesheet" href="/styles/masters.css?v=347a7e50">
+</head>
+<body class="masters-body">
+  <div id="header-mount"></div>
+  <div id="nav-drawer-mount"></div>
+  <script src="/scripts/auth.js"></script>
+  <script src="/scripts/nav.js?v=19e1cd3d"></script>
+  <script>initPage();</script>
+
+  <div class="masters-content">
+    <div class="masters-breadcrumbs"><a href="/masters">Masters</a><span class="separator">/</span><span>Groups Setup</span></div>
+    <h2>Groups Setup</h2>
+    <p class="subtitle">Select your golfer and 4 opponents for each group</p>
+
+    <div id="loading" class="masters-loading">Loading golfers...</div>
+    <div id="groups-container" style="display:none"></div>
+
+    <div id="actions" style="display:none;margin-top:12px">
+      <button class="masters-btn" id="add-group">+ Add Group</button>
+    </div>
+
+    <a href="/masters/group-results" class="masters-cta" id="view-results" style="display:none">View Group Results &rarr;</a>
+  </div>
+
+  <script src="/scripts/auth.js"></script>
+  <script src="/scripts/sync.js"></script>
+  <script src="/scripts/masters-utils.js?v=6eaf88a7"></script>
+  <script>
+    let allPlayers = [];
+    let config = getGroupPicks();
+    if (!config.groups) config.groups = [];
+
+    async function init() {
+      try {
+        const raw = await fetchScores();
+        allPlayers = raw.data.player
+          .map(p => p.full_name)
+          .sort((a, b) => a.localeCompare(b));
+
+        renderGroups();
+        updateCTA();
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('groups-container').style.display = 'block';
+        document.getElementById('actions').style.display = 'block';
+      } catch (e) {
+        document.getElementById('loading').textContent = 'Failed to load: ' + e.message;
+      }
+    }
+
+    function autocompleteHTML(groupIndex, role, value) {
+      return `<div class="autocomplete-wrap" data-group="${groupIndex}" data-role="${role}">
+        <input type="text" class="masters-autocomplete" placeholder="Search player..." value="${value || ''}" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+        <button class="autocomplete-clear ${value ? 'visible' : ''}" type="button">&times;</button>
+        <ul class="autocomplete-list"></ul>
+      </div>`;
+    }
+
+    function renderGroups() {
+      const groups = config.groups;
+      const container = document.getElementById('groups-container');
+      if (groups.length === 0) {
+        container.innerHTML = '<p class="masters-empty">No groups yet. Click "+ Add Group" to start.</p>';
+        return;
+      }
+
+      container.innerHTML = groups.map((g, i) => `
+        <div class="group-form">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <span style="font-size:11px;color:#555;font-family:monospace">GROUP ${i + 1}</span>
+            <button class="masters-btn danger" data-remove="${i}" style="padding:2px 8px;font-size:11px">&times;</button>
+          </div>
+          <div class="form-row">
+            <label>MY GOLFER</label>
+            ${autocompleteHTML(i, 'my', g.myGolfer)}
+          </div>
+          <div class="form-row">
+            <label>OPP 1</label>
+            ${autocompleteHTML(i, 'opp0', g.opponents[0])}
+          </div>
+          <div class="form-row">
+            <label>OPP 2</label>
+            ${autocompleteHTML(i, 'opp1', g.opponents[1])}
+          </div>
+          <div class="form-row">
+            <label>OPP 3</label>
+            ${autocompleteHTML(i, 'opp2', g.opponents[2])}
+          </div>
+          <div class="form-row">
+            <label>OPP 4</label>
+            ${autocompleteHTML(i, 'opp3', g.opponents[3])}
+          </div>
+        </div>
+      `).join('');
+
+      initAutocomplete();
+
+      container.querySelectorAll('[data-remove]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          config.groups.splice(parseInt(btn.dataset.remove), 1);
+          save();
+          renderGroups();
+        });
+      });
+    }
+
+    function initAutocomplete() {
+      document.querySelectorAll('.autocomplete-wrap').forEach(wrap => {
+        const input = wrap.querySelector('.masters-autocomplete');
+        const list = wrap.querySelector('.autocomplete-list');
+        const clearBtn = wrap.querySelector('.autocomplete-clear');
+        const groupIndex = parseInt(wrap.dataset.group);
+        const role = wrap.dataset.role;
+        let selectedValue = input.value;
+        let highlightIndex = -1;
+
+        function setValue(name) {
+          selectedValue = name;
+          input.value = name;
+          clearBtn.classList.toggle('visible', !!name);
+          list.classList.remove('open');
+          const g = config.groups[groupIndex];
+          if (role === 'my') g.myGolfer = name;
+          else {
+            const idx = parseInt(role.replace('opp', ''));
+            g.opponents[idx] = name;
+          }
+          save();
+        }
+
+        function showSuggestions(query) {
+          const q = query.toLowerCase().trim();
+          if (!q) { list.classList.remove('open'); return; }
+          const matches = allPlayers.filter(name => {
+            const parts = name.toLowerCase().split(' ');
+            return parts.some(part => part.startsWith(q)) || name.toLowerCase().includes(q);
+          }).slice(0, 15);
+          if (matches.length === 0) { list.classList.remove('open'); return; }
+          highlightIndex = -1;
+          list.innerHTML = matches.map((name, idx) =>
+            `<li data-index="${idx}" data-name="${name}">${name}</li>`
+          ).join('');
+          list.classList.add('open');
+        }
+
+        input.addEventListener('input', () => {
+          selectedValue = '';
+          clearBtn.classList.remove('visible');
+          showSuggestions(input.value);
+          const g = config.groups[groupIndex];
+          if (role === 'my') g.myGolfer = '';
+          else {
+            const idx = parseInt(role.replace('opp', ''));
+            g.opponents[idx] = '';
+          }
+          save();
+        });
+
+        input.addEventListener('focus', () => {
+          if (input.value && !selectedValue) showSuggestions(input.value);
+          if (selectedValue) input.select();
+        });
+
+        input.addEventListener('keydown', (e) => {
+          const items = list.querySelectorAll('li');
+          if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            highlightIndex = Math.min(highlightIndex + 1, items.length - 1);
+            items.forEach((li, idx) => li.classList.toggle('highlighted', idx === highlightIndex));
+            if (items[highlightIndex]) items[highlightIndex].scrollIntoView({ block: 'nearest' });
+          } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            highlightIndex = Math.max(highlightIndex - 1, 0);
+            items.forEach((li, idx) => li.classList.toggle('highlighted', idx === highlightIndex));
+            if (items[highlightIndex]) items[highlightIndex].scrollIntoView({ block: 'nearest' });
+          } else if (e.key === 'Enter') {
+            e.preventDefault();
+            if (highlightIndex >= 0 && items[highlightIndex]) {
+              setValue(items[highlightIndex].dataset.name);
+            }
+          } else if (e.key === 'Escape') {
+            list.classList.remove('open');
+            input.blur();
+          }
+        });
+
+        list.addEventListener('mousedown', (e) => {
+          e.preventDefault();
+          const li = e.target.closest('li');
+          if (li) setValue(li.dataset.name);
+        });
+
+        clearBtn.addEventListener('mousedown', (e) => {
+          e.preventDefault();
+          setValue('');
+          input.value = '';
+          input.focus();
+        });
+      });
+    }
+
+    document.addEventListener('mousedown', (e) => {
+      if (!e.target.closest('.autocomplete-wrap')) {
+        document.querySelectorAll('.autocomplete-list.open').forEach(l => l.classList.remove('open'));
+      }
+    });
+
+    function save() {
+      saveGroupPicks(config);
+      updateCTA();
+    }
+
+    function updateCTA() {
+      const hasComplete = config.groups.some(g =>
+        g.myGolfer && g.opponents.some(o => o)
+      );
+      document.getElementById('view-results').style.display = hasComplete ? 'block' : 'none';
+    }
+
+    document.getElementById('add-group').addEventListener('click', () => {
+      config.groups.push({ myGolfer: '', opponents: ['', '', '', ''] });
+      save();
+      renderGroups();
+    });
+
+    init();
+
+    initMastersSync().then(result => {
+      if (result && result.groupPicks) {
+        config = result.groupPicks;
+        if (!config.groups) config.groups = [];
+        renderGroups();
+        updateCTA();
+      }
+    });
+  </script>
+</body>
+</html>

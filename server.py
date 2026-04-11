@@ -804,6 +804,12 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         elif self.path.startswith("/masters/3-ball-results"):
             self.path = "/views/masters/3-ball-results.html"
             super().do_GET()
+        elif self.path.startswith("/masters/group-results"):
+            self.path = "/views/masters/group-results.html"
+            super().do_GET()
+        elif re.match(r"/masters/groups$", self.path):
+            self.path = "/views/masters/groups.html"
+            super().do_GET()
         elif self.path.startswith("/masters/3-ball-lookup"):
             self.path = "/views/masters/3-ball-lookup.html"
             super().do_GET()

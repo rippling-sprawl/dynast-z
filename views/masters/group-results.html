@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <title>Group Results | Masters 2026</title>
+  <link rel="stylesheet" href="/styles/styles.css?v=aeb3671a">
+  <link rel="stylesheet" href="/styles/masters.css?v=347a7e50">
+</head>
+<body class="masters-body">
+  <div id="header-mount"></div>
+  <div id="nav-drawer-mount"></div>
+  <script src="/scripts/auth.js"></script>
+  <script src="/scripts/nav.js?v=19e1cd3d"></script>
+  <script>initPage();</script>
+
+  <div class="masters-content">
+    <div class="masters-breadcrumbs"><a href="/masters">Masters</a><span class="separator">/</span><span>Group Results</span></div>
+    <h2>Group Results</h2>
+    <p class="subtitle">
+      Live tournament group results &bull; <span class="refresh-badge" id="updated"></span>
+    </p>
+
+    <div id="loading" class="masters-loading">Loading results...</div>
+    <div id="results" style="display:none"></div>
+  </div>
+
+  <script src="/scripts/auth.js"></script>
+  <script src="/scripts/sync.js"></script>
+  <script src="/scripts/masters-utils.js?v=6eaf88a7"></script>
+  <script>
+    let scoresData = null;
+    let config = getGroupPicks();
+
+    async function loadAndRender() {
+      try {
+        const raw = await fetchScores();
+        scoresData = raw.data;
+        renderResults();
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('results').style.display = 'block';
+        document.getElementById('updated').textContent = 'Updated ' + timeAgo();
+      } catch (e) {
+        document.getElementById('loading').textContent = 'Failed to load: ' + e.message;
+      }
+    }
+
+    function findPlayer(name) {
+      return scoresData.player.find(p => p.full_name === name);
+    }
+
+    function toNum(s) {
+      return (s === 'E' || s === 0 || s === '0') ? 0 : (s !== null && s !== undefined && s !== '' ? Number(s) : 999);
+    }
+
+    function renderResults() {
+      const container = document.getElementById('results');
+      const groups = config.groups || [];
+
+      if (groups.length === 0) {
+        container.innerHTML = '<p class="masters-empty">No groups set up. <a href="/masters/groups" style="color:#60a5fa">Set up groups</a></p>';
+        return;
+      }
+
+      let html = '<div class="three-ball-results-grid">';
+
+      groups.forEach((group) => {
+        if (!group.myGolfer) return;
+
+        const myPlayer = findPlayer(group.myGolfer);
+        const opponents = (group.opponents || []).filter(Boolean).map(findPlayer).filter(Boolean);
+
+        if (!myPlayer) {
+          html += `<div class="three-ball-group"><div class="group-row"><span class="golfer-name" style="color:#f87171">${group.myGolfer} — not found</span></div></div>`;
+          return;
+        }
+
+        const allEntries = [
+          { player: myPlayer, isMine: true },
+          ...opponents.map(opp => ({ player: opp, isMine: false }))
+        ].sort((a, b) => toNum(a.player.topar) - toNum(b.player.topar));
+
+        const myScoreNum = toNum(myPlayer.topar);
+        const allOppNums = opponents.map(o => toNum(o.topar));
+        const bestOpp = Math.min(...allOppNums);
+        let myStatus = 'tied';
+        if (myPlayer.topar !== null && myPlayer.topar !== '' && allOppNums.length > 0) {
+          if (myScoreNum < bestOpp) myStatus = 'winning';
+          else if (myScoreNum > bestOpp) myStatus = 'losing';
+        }
+
+        html += '<div class="three-ball-group">';
+        html += `<div class="results-header"><span>Player</span><span style="text-align:center">To Par</span><span style="text-align:right">Thru</span></div>`;
+
+        allEntries.forEach(entry => {
+          const p = entry.player;
+          if (entry.isMine) {
+            html += `<div class="group-row my-golfer ${myStatus}">`;
+            html += `<span class="golfer-name">${p.full_name}</span>`;
+          } else {
+            html += '<div class="group-row">';
+            html += `<span class="golfer-name" style="font-weight:400;color:#aaa">${p.full_name}</span>`;
+          }
+          html += `<span class="round-score ${scoreClass(p.topar)}">${formatScore(p.topar)}</span>`;
+          html += `<span class="thru-col">${p.thru || ''}</span>`;
+          html += '</div>';
+        });
+
+        html += '</div>';
+      });
+
+      html += '</div>';
+      container.innerHTML = html;
+    }
+
+    loadAndRender();
+    setInterval(loadAndRender, 11 * 60 * 1000);
+
+    initMastersSync().then(result => {
+      if (result && result.groupPicks) {
+        config = result.groupPicks;
+        if (!config.groups) config.groups = [];
+        if (scoresData) renderResults();
+      }
+    });
+  </script>
+</body>
+</html>
