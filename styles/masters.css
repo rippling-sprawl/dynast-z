@@ -45,6 +45,23 @@ body.masters-body {
   color: #444;
 }
 
+.masters-page-nav {
+  display: flex;
+  gap: 12px;
+  padding-bottom: 12px;
+  border-top: 1px solid #2a2a2a;
+  padding-top: 8px;
+  font-size: 12px;
+  font-family: monospace;
+}
+.masters-page-nav a {
+  color: #60a5fa;
+  text-decoration: none;
+}
+.masters-page-nav a:hover {
+  text-decoration: underline;
+}
+
 /* --- Tap hint --- */
 .masters-hint {
   position: fixed;
