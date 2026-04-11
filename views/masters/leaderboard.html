@@ -148,39 +148,52 @@
       const pars = scoresData.pars;
       const board = document.getElementById('board');
 
-      let html = '<table class="masters-table">';
-      html += '<colgroup><col style="width:42px"><col><col style="width:52px"><col style="width:46px"><col style="width:58px"></colgroup>';
-      html += '<thead><tr>';
-      html += '<th>POS</th><th>PLAYER</th><th style="text-align:right">TODAY</th><th style="text-align:right">THRU</th><th style="text-align:right">TO PAR</th>';
-      html += '</tr></thead><tbody>';
+      const activePlayers = players.filter(p => p.status !== 'C');
+      const cutPlayers = players.filter(p => p.status === 'C');
 
-      players.forEach((p, i) => {
-        const selected = isSelected(p.full_name, sel);
-        const cls = selected ? 'selected-golfer clickable' : 'clickable';
-        const id = 'lb-' + i;
-        const expanded = expandedIds.has(id);
+      function renderTableRows(list, idPrefix) {
+        let html = '';
+        list.forEach((p, i) => {
+          const selected = isSelected(p.full_name, sel);
+          const cls = selected ? 'selected-golfer clickable' : 'clickable';
+          const id = idPrefix + i;
+          const expanded = expandedIds.has(id);
 
-        html += `<tr class="${cls}" data-id="${id}">`;
-        html += `<td>${p.pos || ''}</td>`;
-        html += `<td class="player-name">${p.full_name}${getStreakEmoji(p, pars)}</td>`;
-        if (!p.today && !p.thru && p.teetime) {
-          html += `<td colspan="2" style="text-align:right;color:#888;font-size:11px">${p.teetime}</td>`;
-        } else {
-          html += `<td class="${scoreClass(p.today)}" style="text-align:right">${formatScore(p.today)}</td>`;
-          html += `<td style="text-align:right">${p.thru || ''}</td>`;
-        }
-        html += `<td class="${scoreClass(p.topar)}" style="font-weight:700;text-align:right">${formatScore(p.topar)}</td>`;
-        html += '</tr>';
+          html += `<tr class="${cls}" data-id="${id}">`;
+          html += `<td>${p.pos || ''}</td>`;
+          html += `<td class="player-name">${p.full_name}${getStreakEmoji(p, pars)}</td>`;
+          if (!p.today && !p.thru && p.teetime) {
+            html += `<td colspan="2" style="text-align:right;color:#888;font-size:11px">${p.teetime}</td>`;
+          } else {
+            html += `<td class="${scoreClass(p.today)}" style="text-align:right">${formatScore(p.today)}</td>`;
+            html += `<td style="text-align:right">${p.thru || ''}</td>`;
+          }
+          html += `<td class="${scoreClass(p.topar)}" style="font-weight:700;text-align:right">${formatScore(p.topar)}</td>`;
+          html += '</tr>';
 
-        // Detail row
-        html += `<tr class="detail-row" id="${id}" style="display:${expanded ? 'table-row' : 'none'}">`;
-        html += '<td colspan="5">';
-        html += selectionBadges(p.full_name, sel, threeBallNames);
-        html += renderRounds(p, pars);
-        html += '</td></tr>';
-      });
+          html += `<tr class="detail-row" id="${id}" style="display:${expanded ? 'table-row' : 'none'}">`;
+          html += '<td colspan="5">';
+          html += selectionBadges(p.full_name, sel, threeBallNames);
+          html += renderRounds(p, pars);
+          html += '</td></tr>';
+        });
+        return html;
+      }
 
+      const cols = '<colgroup><col style="width:42px"><col><col style="width:52px"><col style="width:46px"><col style="width:58px"></colgroup>';
+      const thead = '<thead><tr><th>POS</th><th>PLAYER</th><th style="text-align:right">TODAY</th><th style="text-align:right">THRU</th><th style="text-align:right">TO PAR</th></tr></thead>';
+
+      let html = '<table class="masters-table">' + cols + thead + '<tbody>';
+      html += renderTableRows(activePlayers, 'lb-');
       html += '</tbody></table>';
+
+      if (cutPlayers.length > 0) {
+        html += '<h3 class="cut-heading">CUT</h3>';
+        html += '<table class="masters-table">' + cols + thead + '<tbody>';
+        html += renderTableRows(cutPlayers, 'cut-');
+        html += '</tbody></table>';
+      }
+
       board.innerHTML = html;
 
       setStickyPositions();

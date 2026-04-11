@@ -193,6 +193,16 @@ body.masters-body {
   padding: 12px 0;
 }
 
+.cut-heading {
+  margin: 24px 0 8px;
+  padding: 8px 12px;
+  color: #f87171;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  border-top: 1px solid #333;
+}
+
 /* --- Tables --- */
 .masters-table {
   width: 100%;
