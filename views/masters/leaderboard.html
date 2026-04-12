@@ -160,7 +160,7 @@
           const id = idPrefix + i;
           const expanded = expandedIds.has(id);
 
-          html += `<tr class="${cls}" data-id="${id}">`;
+          html += `<tr class="${cls}" data-id="${id}" data-player="${p.full_name}">`;
           html += `<td>${p.pos || ''}</td>`;
           html += `<td class="player-name">${p.full_name}${getStreakEmoji(p, pars)}</td>`;
           if (!p.today && !p.thru && p.teetime) {
@@ -321,6 +321,111 @@
     initMastersSync().then(() => {
       if (scoresData) renderBoard(document.getElementById('search').value);
     });
+
+    // Long-press dialog
+    let longPressTimer = null;
+    let longPressFired = false;
+
+    function wikiUrl(name) {
+      return 'https://en.wikipedia.org/wiki/' + encodeURIComponent(name.replace(/ /g, '_'));
+    }
+
+    function showPlayerMenu(name) {
+      let dialog = document.getElementById('player-menu');
+      if (!dialog) {
+        dialog = document.createElement('div');
+        dialog.id = 'player-menu';
+        dialog.innerHTML = `
+          <div class="player-menu-backdrop"></div>
+          <div class="player-menu-sheet">
+            <div class="player-menu-name"></div>
+            <a class="player-menu-item" target="_blank" rel="noopener">Wikipedia</a>
+            <button class="player-menu-cancel">Cancel</button>
+          </div>`;
+        document.body.appendChild(dialog);
+        dialog.querySelector('.player-menu-backdrop').addEventListener('click', closePlayerMenu);
+        dialog.querySelector('.player-menu-cancel').addEventListener('click', closePlayerMenu);
+      }
+      dialog.querySelector('.player-menu-name').textContent = name;
+      const link = dialog.querySelector('.player-menu-item');
+      link.href = wikiUrl(name);
+      dialog.classList.add('open');
+    }
+
+    function closePlayerMenu() {
+      const dialog = document.getElementById('player-menu');
+      if (dialog) dialog.classList.remove('open');
+    }
+
+    document.getElementById('board').addEventListener('pointerdown', e => {
+      const row = e.target.closest('tr.clickable');
+      if (!row) return;
+      longPressFired = false;
+      longPressTimer = setTimeout(() => {
+        longPressFired = true;
+        showPlayerMenu(row.dataset.player);
+      }, 500);
+    });
+
+    document.getElementById('board').addEventListener('pointerup', () => {
+      clearTimeout(longPressTimer);
+    });
+
+    document.getElementById('board').addEventListener('pointercancel', () => {
+      clearTimeout(longPressTimer);
+    });
+
+    document.getElementById('board').addEventListener('pointermove', e => {
+      if (e.pointerType === 'mouse') return;
+      clearTimeout(longPressTimer);
+    });
+
+    // Suppress tap when long press fired
+    document.getElementById('board').addEventListener('click', e => {
+      if (longPressFired) {
+        e.stopPropagation();
+        longPressFired = false;
+      }
+    }, true);
   </script>
+
+  <style>
+    #player-menu { display: none; }
+    #player-menu.open { display: block; }
+    .player-menu-backdrop {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
+    }
+    .player-menu-sheet {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: #1a1a1a;
+      border-radius: 12px 12px 0 0;
+      padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
+      z-index: 1001;
+    }
+    .player-menu-name {
+      font-weight: 700; font-size: 15px;
+      color: #f0f0f0;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #2a2a2a;
+      margin-bottom: 8px;
+    }
+    .player-menu-item {
+      display: block;
+      padding: 12px 0;
+      color: #60a5fa;
+      text-decoration: none;
+      font-size: 14px;
+    }
+    .player-menu-cancel {
+      display: block; width: 100%;
+      margin-top: 8px; padding: 12px 0;
+      background: #2a2a2a;
+      border: none; border-radius: 8px;
+      color: #aaa; font-size: 14px;
+      cursor: pointer;
+    }
+  </style>
 </body>
 </html>
