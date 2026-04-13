@@ -12,7 +12,7 @@ const CURRENT_GOLF_YEAR = 2026;
 function buildNavItems() {
   const items = [
     { type: 'section', label: CURRENT_GOLF_YEAR + ' Golf' },
-    { type: 'link', label: 'Season Calendar', href: '/golf/' + CURRENT_GOLF_YEAR },
+    { type: 'link', label: 'Season Calendar', href: '/golf/' + CURRENT_GOLF_YEAR + '/season' },
   ];
   for (const t of GOLF_TOURNAMENTS) {
     items.push({ type: 'sub', label: t.name, href: '/golf/' + CURRENT_GOLF_YEAR + '/' + t.slug });

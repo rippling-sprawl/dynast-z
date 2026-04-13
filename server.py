@@ -865,6 +865,11 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self.end_headers()
         # Golf routes: /golf/:year/:tournament/:page
         elif re.match(r"/golf/\d{4}$", self.path):
+            year = self.path.split("/")[2]
+            self.send_response(301)
+            self.send_header("Location", f"/golf/{year}/season")
+            self.end_headers()
+        elif re.match(r"/golf/\d{4}/season$", self.path):
             self.path = "/views/golf/season.html"
             super().do_GET()
         elif re.match(r"/golf/\d{4}/[^/]+$", self.path):
