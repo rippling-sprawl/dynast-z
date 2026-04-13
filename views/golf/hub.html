@@ -12,11 +12,11 @@
   <div id="header-mount"></div>
   <div id="nav-drawer-mount"></div>
   <script src="/scripts/auth.js?v=d20e1128"></script>
-  <script src="/scripts/nav.js?v=fb97bdc9"></script>
+  <script src="/scripts/nav.js?v=e48ca5e8"></script>
   <script>initPage();</script>
 
   <div class="masters-content">
-    <div class="masters-breadcrumbs"><a id="season-link" href="/golf/2026/season">2026 Season</a><span class="separator">/</span><span id="breadcrumb-name">Tournament</span></div>
+    <div class="masters-breadcrumbs"><a id="season-link" href="/golf/2026">2026 Season</a><span class="separator">/</span><span id="breadcrumb-name">Tournament</span></div>
     <h2 id="page-title">Tournament</h2>
     <p class="subtitle" id="page-subtitle"></p>
 
@@ -51,7 +51,7 @@
     }
   </style>
 
-  <script src="/scripts/golf-utils.js?v=267a2ad4"></script>
+  <script src="/scripts/golf-utils.js?v=9ca7c49f"></script>
   <script>
     const info = getTournamentInfo();
     const basePath = '/golf/' + TOURNAMENT_CONTEXT.year + '/' + TOURNAMENT_CONTEXT.tournament;
@@ -59,7 +59,7 @@
     document.title = info.name + ' ' + TOURNAMENT_CONTEXT.year + ' | Dynast-Z';
     document.getElementById('page-title').textContent = info.name + ' ' + TOURNAMENT_CONTEXT.year;
     document.getElementById('breadcrumb-name').textContent = info.name;
-    document.getElementById('season-link').href = '/golf/' + TOURNAMENT_CONTEXT.year + '/season';
+    document.getElementById('season-link').href = '/golf/' + TOURNAMENT_CONTEXT.year;
 
     const allCards = [
       { href: '/leaderboard', title: 'Leaderboard', desc: 'Live tournament leaderboard with hole-by-hole scoring', needsData: true },

@@ -12,7 +12,7 @@
   <div id="header-mount"></div>
   <div id="nav-drawer-mount"></div>
   <script src="/scripts/auth.js?v=d20e1128"></script>
-  <script src="/scripts/nav.js?v=fb97bdc9"></script>
+  <script src="/scripts/nav.js?v=e48ca5e8"></script>
   <script>initPage();</script>
 
   <div class="masters-content">
@@ -69,9 +69,9 @@
   </style>
 
   <script>
-    // Parse year from URL: /golf/2026
+    // Parse year from URL: /season/2026 or /golf/2026
     const parts = window.location.pathname.split('/').filter(Boolean);
-    const year = parts[1] || '2026';
+    const year = parts[1] || '2026'; // works for both /season/2026 and /golf/2026
     document.getElementById('page-title').textContent = year + ' Golf Season';
     document.title = year + ' Golf Season | Dynast-Z';
 

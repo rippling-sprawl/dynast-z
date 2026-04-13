@@ -181,9 +181,9 @@ function getTournamentInfo() {
   // Synchronous fallback names
   const names = {
     masters: 'The Masters',
-    pga: 'PGA Championship',
+    'pga-championship': 'PGA Championship',
     'us-open': 'US Open',
-    open: 'The Open Championship',
+    'british-open': 'The Open Championship',
   };
   return { name: names[t] || t, tournament: t, year: y };
 }

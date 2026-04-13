@@ -10,9 +10,9 @@ UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML,
 TOURNAMENTS = {
     ("masters", "2026"): {"mode": "archive", "path": "data/masters/2026.json"},
     ("masters", "2027"): {"mode": "live", "url": "https://www.masters.com/en_US/scores/feeds/2027/scores.json"},
-    ("pga", "2026"): {"mode": "upcoming"},
+    ("pga-championship", "2026"): {"mode": "upcoming"},
     ("us-open", "2026"): {"mode": "upcoming"},
-    ("open", "2026"): {"mode": "upcoming"},
+    ("british-open", "2026"): {"mode": "upcoming"},
 }
 
 

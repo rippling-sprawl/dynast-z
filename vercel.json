@@ -3,7 +3,8 @@
   "redirects": [
     { "source": "/masters", "destination": "/golf/2026/masters", "statusCode": 301 },
     { "source": "/masters/:page", "destination": "/golf/2026/masters/:page", "statusCode": 301 },
-    { "source": "/golf/:year", "destination": "/golf/:year/season", "statusCode": 301 }
+    { "source": "/golf/:year", "destination": "/season/:year", "statusCode": 301 },
+    { "source": "/golf/:year/season", "destination": "/season/:year", "statusCode": 301 }
   ],
   "rewrites": [
     { "source": "/", "destination": "/views/index.html" },
@@ -15,16 +16,16 @@
     { "source": "/league/:leagueId", "destination": "/views/league.html" },
     { "source": "/account", "destination": "/views/account.html" },
     { "source": "/archive", "destination": "/views/archive.html" },
-    { "source": "/golf/:year/season", "destination": "/views/golf/season.html" },
-    { "source": "/golf/:year/:tournament", "destination": "/views/golf/hub.html" },
+    { "source": "/season/:year", "destination": "/views/golf/season.html" },
     { "source": "/golf/:year/:tournament/leaderboard", "destination": "/views/golf/leaderboard.html" },
     { "source": "/golf/:year/:tournament/select-golfers", "destination": "/views/golf/select-golfers.html" },
-    { "source": "/golf/:year/:tournament/3-ball", "destination": "/views/golf/3-ball.html" },
     { "source": "/golf/:year/:tournament/3-ball-results", "destination": "/views/golf/3-ball-results.html" },
     { "source": "/golf/:year/:tournament/3-ball-lookup", "destination": "/views/golf/3-ball-lookup.html" },
-    { "source": "/golf/:year/:tournament/groups", "destination": "/views/golf/groups.html" },
+    { "source": "/golf/:year/:tournament/3-ball", "destination": "/views/golf/3-ball.html" },
     { "source": "/golf/:year/:tournament/group-results", "destination": "/views/golf/group-results.html" },
+    { "source": "/golf/:year/:tournament/groups", "destination": "/views/golf/groups.html" },
     { "source": "/golf/:year/:tournament/ev-model", "destination": "/views/golf/ev-model.html" },
+    { "source": "/golf/:year/:tournament", "destination": "/views/golf/hub.html" },
     { "source": "/acknowledgements", "destination": "/views/acknowledgements.html" },
     { "source": "/api/:path*", "destination": "/api/:path*" }
   ],

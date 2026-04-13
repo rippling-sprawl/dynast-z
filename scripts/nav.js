@@ -2,9 +2,9 @@
 
 const GOLF_TOURNAMENTS = [
   { slug: 'masters', name: 'The Masters', dates: 'Apr 9-12' },
-  { slug: 'pga', name: 'PGA Championship', dates: 'May 14-17' },
+  { slug: 'pga-championship', name: 'PGA Championship', dates: 'May 14-17' },
   { slug: 'us-open', name: 'US Open', dates: 'Jun 18-21' },
-  { slug: 'open', name: 'The Open', dates: 'Jul 16-19' },
+  { slug: 'british-open', name: 'The Open', dates: 'Jul 16-19' },
 ];
 
 const CURRENT_GOLF_YEAR = 2026;
@@ -12,7 +12,7 @@ const CURRENT_GOLF_YEAR = 2026;
 function buildNavItems() {
   const items = [
     { type: 'section', label: CURRENT_GOLF_YEAR + ' Golf' },
-    { type: 'link', label: 'Season Calendar', href: '/golf/' + CURRENT_GOLF_YEAR + '/season' },
+    { type: 'link', label: 'Season Calendar', href: '/golf/' + CURRENT_GOLF_YEAR },
   ];
   for (const t of GOLF_TOURNAMENTS) {
     items.push({ type: 'sub', label: t.name, href: '/golf/' + CURRENT_GOLF_YEAR + '/' + t.slug });

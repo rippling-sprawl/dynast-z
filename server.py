@@ -41,9 +41,9 @@ MASTERS_SCORES_TTL = 300  # 5 minutes
 GOLF_TOURNAMENTS = {
     ("masters", "2026"): {"mode": "archive", "path": "data/masters/2026.json"},
     ("masters", "2027"): {"mode": "live", "url": "https://www.masters.com/en_US/scores/feeds/2027/scores.json"},
-    ("pga", "2026"): {"mode": "upcoming"},
+    ("pga-championship", "2026"): {"mode": "upcoming"},
     ("us-open", "2026"): {"mode": "upcoming"},
-    ("open", "2026"): {"mode": "upcoming"},
+    ("british-open", "2026"): {"mode": "upcoming"},
 }
 DATA_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -864,12 +864,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self.send_header("Location", f"/golf/2026/masters/{page}")
             self.end_headers()
         # Golf routes: /golf/:year/:tournament/:page
-        elif re.match(r"/golf/\d{4}$", self.path):
-            year = self.path.split("/")[2]
-            self.send_response(301)
-            self.send_header("Location", f"/golf/{year}/season")
-            self.end_headers()
-        elif re.match(r"/golf/\d{4}/season$", self.path):
+        elif re.match(r"/golf/\d{4}$", self.path) or re.match(r"/season/\d{4}$", self.path):
             self.path = "/views/golf/season.html"
             super().do_GET()
         elif re.match(r"/golf/\d{4}/[^/]+$", self.path):
