@@ -35,8 +35,17 @@ SLEEPER_API = "https://api.sleeper.app/v1"
 SLEEPER_PLAYERS_TTL = 86400  # 24 hours for the big players file
 LEAGUE_DATA_TTL = 3600  # 1 hour for league rosters/users
 FP_DATA_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "fp.json")
-MASTERS_SCORES_URL = "https://www.masters.com/en_US/scores/feeds/2026/scores.json"
 MASTERS_SCORES_TTL = 300  # 5 minutes
+
+# Tournament configuration: (tournament, year) -> mode + source
+GOLF_TOURNAMENTS = {
+    ("masters", "2026"): {"mode": "archive", "path": "data/masters/2026.json"},
+    ("masters", "2027"): {"mode": "live", "url": "https://www.masters.com/en_US/scores/feeds/2027/scores.json"},
+    ("pga", "2026"): {"mode": "upcoming"},
+    ("us-open", "2026"): {"mode": "upcoming"},
+    ("open", "2026"): {"mode": "upcoming"},
+}
+DATA_DIR = os.path.dirname(os.path.abspath(__file__))
 
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "")
@@ -106,16 +115,38 @@ def fetch_ktc():
     return data
 
 
+def fetch_golf_scores(tournament, year):
+    key = (tournament, year)
+    config = GOLF_TOURNAMENTS.get(key)
+    if not config:
+        raise ValueError(f"Unknown tournament: {tournament} {year}")
+
+    mode = config["mode"]
+
+    if mode == "upcoming":
+        return {"status": "upcoming", "tournament": tournament, "year": int(year)}
+
+    if mode == "archive":
+        data_path = os.path.join(DATA_DIR, config["path"])
+        with open(data_path, "r") as f:
+            return json.load(f)
+
+    if mode == "live":
+        cache_name = f"golf_{tournament}_{year}.json"
+        cached = read_cache(cache_name, ttl=MASTERS_SCORES_TTL)
+        if cached is not None:
+            print(f"Using cached {tournament} {year} scores")
+            return cached
+        print(f"Fetching fresh {tournament} {year} scores...")
+        data = json.loads(http_fetch(config["url"]))
+        write_cache(cache_name, data)
+        return data
+
+    raise ValueError(f"Unknown mode: {mode}")
+
+
 def fetch_masters_scores():
-    cached = read_cache("masters_scores.json", ttl=MASTERS_SCORES_TTL)
-    if cached is not None:
-        print("Using cached Masters scores")
-        return cached
-    print("Fetching fresh Masters scores...")
-    data = json.loads(http_fetch(MASTERS_SCORES_URL))
-    write_cache("masters_scores.json", data)
-    print("Masters scores complete.")
-    return data
+    return fetch_golf_scores("masters", "2026")
 
 
 def fetch_fc():
@@ -770,9 +801,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     self._json_response(404, {"error": "no username found"})
                     return
                 uid = users[0]["id"]
+                sport = params.get("sport", ["masters"])[0]
                 rows = supabase_request(
                     f"user_data?user_id=eq.{uid}"
-                    f"&sport=eq.masters"
+                    f"&sport=eq.{urllib.request.quote(sport)}"
                     f"&data_key=eq.3ball"
                     f"&select=data"
                 )
@@ -780,12 +812,35 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 self._json_response(200, {"username": users[0]["display_name"], "threeBall": data})
             except Exception as e:
                 self._json_response(500, {"error": str(e)})
+        elif self.path.startswith("/api/golf/scores"):
+            parsed_url = urlparse(self.path)
+            qparams = parse_qs(parsed_url.query)
+            tournament = qparams.get("tournament", [None])[0]
+            year = qparams.get("year", [None])[0]
+            if not tournament or not year:
+                self._json_response(400, {"error": "tournament and year parameters are required"})
+                return
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            if IS_VERCEL:
+                config = GOLF_TOURNAMENTS.get((tournament, year), {})
+                if config.get("mode") == "archive":
+                    self.send_header("Cache-Control", "public, max-age=86400, s-maxage=86400")
+                else:
+                    self.send_header("Cache-Control", "s-maxage=300, stale-while-revalidate=600")
+            self.end_headers()
+            try:
+                data = fetch_golf_scores(tournament, year)
+                self.wfile.write(json.dumps(data).encode())
+            except Exception as e:
+                self.wfile.write(json.dumps({"error": str(e)}).encode())
         elif self.path == "/api/masters/scores":
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
             self.send_header("Access-Control-Allow-Origin", "*")
             if IS_VERCEL:
-                self.send_header("Cache-Control", "s-maxage=300, stale-while-revalidate=600")
+                self.send_header("Cache-Control", "public, max-age=86400, s-maxage=86400")
             self.end_headers()
             try:
                 data = fetch_masters_scores()
@@ -795,32 +850,49 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         elif self.path == "/account":
             self.path = "/views/account.html"
             super().do_GET()
+        elif self.path == "/archive":
+            self.path = "/views/archive.html"
+            super().do_GET()
+        # Redirect old /masters/* URLs to /golf/2026/masters/*
         elif self.path == "/masters":
-            self.path = "/views/masters/index.html"
+            self.send_response(301)
+            self.send_header("Location", "/golf/2026/masters")
+            self.end_headers()
+        elif self.path.startswith("/masters/"):
+            page = self.path[len("/masters/"):].split("?")[0]
+            self.send_response(301)
+            self.send_header("Location", f"/golf/2026/masters/{page}")
+            self.end_headers()
+        # Golf routes: /golf/:year/:tournament/:page
+        elif re.match(r"/golf/\d{4}$", self.path):
+            self.path = "/views/golf/season.html"
             super().do_GET()
-        elif self.path.startswith("/masters/select-golfers"):
-            self.path = "/views/masters/select-golfers.html"
+        elif re.match(r"/golf/\d{4}/[^/]+$", self.path):
+            self.path = "/views/golf/hub.html"
             super().do_GET()
-        elif self.path.startswith("/masters/3-ball-results"):
-            self.path = "/views/masters/3-ball-results.html"
+        elif re.match(r"/golf/\d{4}/[^/]+/leaderboard", self.path):
+            self.path = "/views/golf/leaderboard.html"
             super().do_GET()
-        elif self.path.startswith("/masters/group-results"):
-            self.path = "/views/masters/group-results.html"
+        elif re.match(r"/golf/\d{4}/[^/]+/select-golfers", self.path):
+            self.path = "/views/golf/select-golfers.html"
             super().do_GET()
-        elif re.match(r"/masters/groups$", self.path):
-            self.path = "/views/masters/groups.html"
+        elif re.match(r"/golf/\d{4}/[^/]+/3-ball-results", self.path):
+            self.path = "/views/golf/3-ball-results.html"
             super().do_GET()
-        elif self.path.startswith("/masters/3-ball-lookup"):
-            self.path = "/views/masters/3-ball-lookup.html"
+        elif re.match(r"/golf/\d{4}/[^/]+/3-ball-lookup", self.path):
+            self.path = "/views/golf/3-ball-lookup.html"
             super().do_GET()
-        elif re.match(r"/masters/3-ball$", self.path):
-            self.path = "/views/masters/3-ball.html"
+        elif re.match(r"/golf/\d{4}/[^/]+/3-ball$", self.path):
+            self.path = "/views/golf/3-ball.html"
             super().do_GET()
-        elif self.path.startswith("/masters/leaderboard"):
-            self.path = "/views/masters/leaderboard.html"
+        elif re.match(r"/golf/\d{4}/[^/]+/group-results", self.path):
+            self.path = "/views/golf/group-results.html"
             super().do_GET()
-        elif re.match(r"/masters/ev-model", self.path):
-            self.path = "/views/masters/ev-model.html"
+        elif re.match(r"/golf/\d{4}/[^/]+/groups$", self.path):
+            self.path = "/views/golf/groups.html"
+            super().do_GET()
+        elif re.match(r"/golf/\d{4}/[^/]+/ev-model", self.path):
+            self.path = "/views/golf/ev-model.html"
             super().do_GET()
         elif re.match(r"/league/[^/]+/team/", self.path):
             self.path = "/views/team.html"

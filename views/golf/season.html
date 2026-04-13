@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <title>2026 Golf Season | Dynast-Z</title>
+  <link rel="stylesheet" href="/styles/styles.css?v=df002b71">
+  <link rel="stylesheet" href="/styles/masters.css?v=14d037d9">
+</head>
+<body class="masters-body">
+  <div id="header-mount"></div>
+  <div id="nav-drawer-mount"></div>
+  <script src="/scripts/auth.js?v=d20e1128"></script>
+  <script src="/scripts/nav.js?v=052ca4bd"></script>
+  <script>initPage();</script>
+
+  <div class="masters-content">
+    <h2 id="page-title">Golf Season</h2>
+    <p class="subtitle">Major Championships</p>
+
+    <div class="hub-grid" id="season-grid">
+      <div class="masters-loading">Loading tournaments...</div>
+    </div>
+  </div>
+
+  <style>
+    .tournament-card {
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-radius: 6px;
+      padding: 16px;
+      text-decoration: none;
+      color: #e0e0e0;
+      transition: border-color 0.15s;
+      display: block;
+    }
+    .tournament-card:hover {
+      border-color: #60a5fa;
+    }
+    .tournament-card h3 {
+      font-size: 14px;
+      font-weight: 600;
+      color: #f0f0f0;
+      margin-bottom: 4px;
+    }
+    .tournament-card .venue {
+      font-size: 11px;
+      color: #888;
+      margin: 0 0 8px;
+    }
+    .tournament-card .dates {
+      font-size: 11px;
+      color: #aaa;
+      font-family: monospace;
+    }
+    .status-badge {
+      display: inline-block;
+      font-size: 10px;
+      font-family: monospace;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 3px;
+      margin-left: 8px;
+    }
+    .status-badge.complete { background: #4ade80; color: #111; }
+    .status-badge.live { background: #f59e0b; color: #111; }
+    .status-badge.upcoming { background: #333; color: #888; }
+  </style>
+
+  <script>
+    // Parse year from URL: /golf/2026
+    const parts = window.location.pathname.split('/').filter(Boolean);
+    const year = parts[1] || '2026';
+    document.getElementById('page-title').textContent = year + ' Golf Season';
+    document.title = year + ' Golf Season | Dynast-Z';
+
+    fetch('/data/tournaments.json')
+      .then(r => r.json())
+      .then(data => {
+        const season = data[year];
+        if (!season) {
+          document.getElementById('season-grid').innerHTML = '<p class="masters-empty">No tournaments found for ' + year + '</p>';
+          return;
+        }
+
+        const slugs = Object.keys(season);
+        document.getElementById('season-grid').innerHTML = slugs.map(slug => {
+          const t = season[slug];
+          const badgeClass = t.status === 'complete' ? 'complete' : t.status === 'live' ? 'live' : 'upcoming';
+          const badgeText = t.status === 'complete' ? 'COMPLETE' : t.status === 'live' ? 'LIVE' : 'UPCOMING';
+          return `<a class="tournament-card" href="/golf/${year}/${slug}">
+            <h3>${t.name} <span class="status-badge ${badgeClass}">${badgeText}</span></h3>
+            <p class="venue">${t.venue}</p>
+            <p class="dates">${t.dates}</p>
+          </a>`;
+        }).join('');
+      })
+      .catch(() => {
+        document.getElementById('season-grid').innerHTML = '<p class="masters-empty">Failed to load tournaments</p>';
+      });
+  </script>
+</body>
+</html>

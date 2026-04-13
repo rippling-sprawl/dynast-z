@@ -1,21 +1,37 @@
 // Shared navigation data and hamburger drawer component
-const NAV_ITEMS = [
-  { type: 'section', label: 'Masters' },
-  { type: 'link', label: 'Hub', href: '/masters' },
-  { type: 'link', label: 'Leaderboard', href: '/masters/leaderboard' },
-  { type: 'link', label: 'Select Golfers', href: '/masters/select-golfers' },
-  { type: 'link', label: '3-Ball Setup', href: '/masters/3-ball' },
-  { type: 'link', label: '3-Ball Results', href: '/masters/3-ball-results' },
-  { type: 'link', label: 'EV Model', href: '/masters/ev-model' },
-  { type: 'section', label: 'Tools' },
-  { type: 'link', label: 'Trade Calculator', href: '/trade-calculator' },
-  { type: 'section', label: 'Leagues' },
-  { type: 'link', label: 'JHBC', href: '/league/1314983622930870272' },
-  { type: 'section', label: 'News' },
-  { type: 'link', label: 'Sharply Stupid Blog', href: 'https://sharplystupid.substack.com/', external: true },
-  { type: 'section', label: 'Resources' },
-  { type: 'link', label: 'Acknowledgements', href: '/acknowledgements' },
+
+const GOLF_TOURNAMENTS = [
+  { slug: 'masters', name: 'The Masters', dates: 'Apr 9-12' },
+  { slug: 'pga', name: 'PGA Championship', dates: 'May 14-17' },
+  { slug: 'us-open', name: 'US Open', dates: 'Jun 18-21' },
+  { slug: 'open', name: 'The Open', dates: 'Jul 16-19' },
 ];
+
+const CURRENT_GOLF_YEAR = 2026;
+
+function buildNavItems() {
+  const items = [
+    { type: 'section', label: CURRENT_GOLF_YEAR + ' Golf' },
+    { type: 'link', label: 'Season Calendar', href: '/golf/' + CURRENT_GOLF_YEAR },
+  ];
+  for (const t of GOLF_TOURNAMENTS) {
+    items.push({ type: 'sub', label: t.name, href: '/golf/' + CURRENT_GOLF_YEAR + '/' + t.slug });
+  }
+  items.push({ type: 'link', label: 'Archive', href: '/archive' });
+  items.push(
+    { type: 'section', label: 'Tools' },
+    { type: 'link', label: 'Trade Calculator', href: '/trade-calculator' },
+    { type: 'section', label: 'Leagues' },
+    { type: 'link', label: 'JHBC', href: '/league/1314983622930870272' },
+    { type: 'section', label: 'News' },
+    { type: 'link', label: 'Sharply Stupid Blog', href: 'https://sharplystupid.substack.com/', external: true },
+    { type: 'section', label: 'Resources' },
+    { type: 'link', label: 'Acknowledgements', href: '/acknowledgements' },
+  );
+  return items;
+}
+
+const NAV_ITEMS = buildNavItems();
 
 function buildNavDrawerHTML() {
   const items = NAV_ITEMS.map(item => {

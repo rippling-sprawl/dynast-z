@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <link rel="icon" type="image/png" href="/favicon.png">
-  <title>3-Ball Results | Masters 2026</title>
+  <title>3-Ball Results | Dynast-Z</title>
   <link rel="stylesheet" href="/styles/styles.css?v=df002b71">
   <link rel="stylesheet" href="/styles/masters.css?v=14d037d9">
 </head>
@@ -16,8 +16,8 @@
   <script>initPage();</script>
 
   <div class="masters-content">
-    <div class="masters-breadcrumbs"><a href="/masters">Masters</a><span class="separator">/</span><span>3-Ball Results</span></div>
-    <div class="masters-page-nav"><a href="/masters/leaderboard">Leaderboard</a><a href="/masters/group-results">Group Results</a></div>
+    <div class="masters-breadcrumbs"><a id="hub-link" href="#">Tournament</a><span class="separator">/</span><span>3-Ball Results</span></div>
+    <div class="masters-page-nav"><a id="link-lb" href="#">Leaderboard</a><a id="link-groups" href="#">Group Results</a></div>
     <h2>3-Ball Results</h2>
     <p class="subtitle">
       Live matchup results &bull; <span class="refresh-badge" id="updated"></span>
@@ -31,8 +31,16 @@
 
   <script src="/scripts/auth.js?v=d20e1128"></script>
   <script src="/scripts/sync.js?v=f19ba045"></script>
-  <script src="/scripts/masters-utils.js?v=47f1bd2c"></script>
+  <script src="/scripts/golf-utils.js?v=267a2ad4"></script>
   <script>
+    const info = getTournamentInfo();
+    const basePath = '/golf/' + TOURNAMENT_CONTEXT.year + '/' + TOURNAMENT_CONTEXT.tournament;
+    document.title = '3-Ball Results | ' + info.name + ' ' + TOURNAMENT_CONTEXT.year;
+    document.getElementById('hub-link').textContent = info.name;
+    document.getElementById('hub-link').href = basePath;
+    document.getElementById('link-lb').href = basePath + '/leaderboard';
+    document.getElementById('link-groups').href = basePath + '/group-results';
+
     let scoresData = null;
     let config = get3BallGroups();
     let selectedRound = config.round || 1;
@@ -56,6 +64,10 @@
     async function loadAndRender() {
       try {
         const raw = await fetchScores();
+        if (raw.status === 'upcoming') {
+          document.getElementById('loading').textContent = 'Tournament has not started yet.';
+          return;
+        }
         scoresData = raw.data;
         renderResults();
         document.getElementById('loading').style.display = 'none';
@@ -79,7 +91,6 @@
         return { score: player.today, thru: player.thru };
       }
       if (rd.total !== null && rd.total !== undefined) {
-        const pars = [0]; // fallback
         return { score: rd.fantasy, thru: 'F' };
       }
       if (rd.fantasy !== null && rd.fantasy !== undefined) {
@@ -95,7 +106,7 @@
       const groups = (config.rounds && config.rounds[roundNum]) || [];
 
       if (groups.length === 0) {
-        container.innerHTML = '<p class="masters-empty">No 3-ball groups for Round ' + roundNum + '. <a href="/masters/3-ball" style="color:#60a5fa">Set up groups</a></p>';
+        container.innerHTML = '<p class="masters-empty">No 3-ball groups for Round ' + roundNum + '. <a href="' + basePath + '/3-ball" style="color:#60a5fa">Set up groups</a></p>';
         return;
       }
 
@@ -108,7 +119,7 @@
         const opponents = (group.opponents || []).filter(Boolean).map(findPlayer).filter(Boolean);
 
         if (!myPlayer) {
-          html += `<div class="three-ball-group"><div class="group-row"><span class="golfer-name" style="color:#f87171">${group.myGolfer} — not found</span></div></div>`;
+          html += `<div class="three-ball-group"><div class="group-row"><span class="golfer-name" style="color:#f87171">${group.myGolfer} \u2014 not found</span></div></div>`;
           return;
         }
 
@@ -118,7 +129,6 @@
           ...getRoundScore(opp, roundNum)
         }));
 
-        // Determine win/loss
         function toNum(s) { return (s === 'E' || s === 0 || s === '0') ? 0 : (s !== null && s !== undefined ? Number(s) : 999); }
         const myScoreNum = toNum(myResult.score);
         const allOpponentScores = oppResults.map(o => toNum(o.score));
@@ -132,14 +142,12 @@
         html += '<div class="three-ball-group">';
         html += `<div class="results-header"><span>Player</span><span style="text-align:center">R${roundNum}</span><span style="text-align:right">Thru</span></div>`;
 
-        // My golfer row
         html += `<div class="group-row my-golfer ${myStatus}">`;
         html += `<span class="golfer-name">${myPlayer.full_name}</span>`;
         html += `<span class="round-score ${scoreClass(myResult.score)}">${formatScore(myResult.score)}</span>`;
         html += `<span class="thru-col">${myResult.thru || ''}</span>`;
         html += '</div>';
 
-        // Opponent rows
         oppResults.forEach(opp => {
           html += '<div class="group-row">';
           html += `<span class="golfer-name" style="font-weight:400;color:#aaa">${opp.player.full_name}</span>`;
@@ -159,8 +167,7 @@
     loadAndRender();
     setInterval(loadAndRender, 11 * 60 * 1000);
 
-    // Sync from server if logged in, then re-render
-    initMastersSync().then(() => {
+    initTournamentSync().then(() => {
       config = get3BallGroups();
       selectedRound = config.round || 1;
       renderRoundSelector();

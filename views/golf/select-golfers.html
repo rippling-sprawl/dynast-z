@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <link rel="icon" type="image/png" href="/favicon.png">
-  <title>Select Golfers | Masters 2026</title>
+  <title>Select Golfers | Dynast-Z</title>
   <link rel="stylesheet" href="/styles/styles.css?v=df002b71">
   <link rel="stylesheet" href="/styles/masters.css?v=14d037d9">
 </head>
@@ -17,13 +17,11 @@
 
   <div class="masters-content" style="padding-top:0;padding-bottom:0">
     <div class="lb-sticky-header" id="sticky-header">
-      <div class="masters-breadcrumbs" style="padding-bottom:8px"><a href="/masters">Masters</a><span class="separator">/</span><span>Select Golfers</span></div>
+      <div class="masters-breadcrumbs" style="padding-bottom:8px"><a id="hub-link" href="#">Tournament</a><span class="separator">/</span><span>Select Golfers</span></div>
       <h2>Select Golfers</h2>
       <p class="subtitle">Pick your winner, top 5, and top 10 finishers</p>
-<a href="/masters/leaderboard" class="subtle-link">View Leaderboard &rarr;</a>
+      <a id="lb-link" href="#" class="subtle-link">View Leaderboard &rarr;</a>
       <input type="text" class="masters-search" id="search" placeholder="Search golfers..." style="margin-bottom:0">
-
-      
     </div>
 
     <div id="loading" class="masters-loading">Loading golfers...</div>
@@ -39,13 +37,19 @@
         <tbody id="rows"></tbody>
       </table>
     </div>
-
   </div>
 
   <script src="/scripts/auth.js?v=d20e1128"></script>
   <script src="/scripts/sync.js?v=f19ba045"></script>
-  <script src="/scripts/masters-utils.js?v=47f1bd2c"></script>
+  <script src="/scripts/golf-utils.js?v=267a2ad4"></script>
   <script>
+    const info = getTournamentInfo();
+    const basePath = '/golf/' + TOURNAMENT_CONTEXT.year + '/' + TOURNAMENT_CONTEXT.tournament;
+    document.title = 'Select Golfers | ' + info.name + ' ' + TOURNAMENT_CONTEXT.year;
+    document.getElementById('hub-link').textContent = info.name;
+    document.getElementById('hub-link').href = basePath;
+    document.getElementById('lb-link').href = basePath + '/leaderboard';
+
     let allPlayers = [];
     let sel = getSelections();
 
@@ -63,6 +67,10 @@
     async function init() {
       try {
         const raw = await fetchScores();
+        if (raw.status === 'upcoming') {
+          document.getElementById('loading').textContent = 'Tournament has not started yet. Player list will be available closer to the event.';
+          return;
+        }
         allPlayers = raw.data.player
           .map(p => p.full_name)
           .sort((a, b) => a.localeCompare(b));
@@ -110,7 +118,6 @@
           render(document.getElementById('search').value);
         });
       });
-
     }
 
     function save() {
@@ -124,8 +131,7 @@
     setStickyPositions();
     init();
 
-    // Sync selections from server if logged in, then re-render
-    initMastersSync().then(result => {
+    initTournamentSync().then(result => {
       if (result) { sel = result.selections; render(document.getElementById('search').value); }
     });
   </script>

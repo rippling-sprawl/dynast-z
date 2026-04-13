@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <link rel="icon" type="image/png" href="/favicon.png">
-  <title>3-Ball Setup | Masters 2026</title>
+  <title>3-Ball Setup | Dynast-Z</title>
   <link rel="stylesheet" href="/styles/styles.css?v=df002b71">
   <link rel="stylesheet" href="/styles/masters.css?v=14d037d9">
 </head>
@@ -16,7 +16,7 @@
   <script>initPage();</script>
 
   <div class="masters-content">
-    <div class="masters-breadcrumbs"><a href="/masters">Masters</a><span class="separator">/</span><span>3-Ball Setup</span></div>
+    <div class="masters-breadcrumbs"><a id="hub-link" href="#">Tournament</a><span class="separator">/</span><span>3-Ball Setup</span></div>
     <h2>3-Ball Setup</h2>
     <p class="subtitle">Select your golfer and opponents for each matchup</p>
 
@@ -32,13 +32,20 @@
       <button class="masters-btn" id="add-group">+ Add Group</button>
     </div>
 
-    <a href="/masters/3-ball-results" class="masters-cta" id="view-results" style="display:none">View 3-Ball Results &rarr;</a>
+    <a id="view-results" class="masters-cta" href="#" style="display:none">View 3-Ball Results &rarr;</a>
   </div>
 
   <script src="/scripts/auth.js?v=d20e1128"></script>
   <script src="/scripts/sync.js?v=f19ba045"></script>
-  <script src="/scripts/masters-utils.js?v=47f1bd2c"></script>
+  <script src="/scripts/golf-utils.js?v=267a2ad4"></script>
   <script>
+    const info = getTournamentInfo();
+    const basePath = '/golf/' + TOURNAMENT_CONTEXT.year + '/' + TOURNAMENT_CONTEXT.tournament;
+    document.title = '3-Ball Setup | ' + info.name + ' ' + TOURNAMENT_CONTEXT.year;
+    document.getElementById('hub-link').textContent = info.name;
+    document.getElementById('hub-link').href = basePath;
+    document.getElementById('view-results').href = basePath + '/3-ball-results';
+
     let allPlayers = [];
     let config = get3BallGroups();
     if (!config.round) config.round = 1;
@@ -54,6 +61,10 @@
     async function init() {
       try {
         const raw = await fetchScores();
+        if (raw.status === 'upcoming') {
+          document.getElementById('loading').textContent = 'Tournament has not started yet. Player list will be available closer to the event.';
+          return;
+        }
         allPlayers = raw.data.player
           .map(p => p.full_name)
           .sort((a, b) => a.localeCompare(b));
@@ -257,8 +268,7 @@
 
     init();
 
-    // Sync 3-ball groups from server if logged in, then re-render
-    initMastersSync().then(result => {
+    initTournamentSync().then(result => {
       if (result) {
         config = result.threeBall;
         if (!config.round) config.round = 1;

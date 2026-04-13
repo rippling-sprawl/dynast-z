@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <link rel="icon" type="image/png" href="/favicon.png">
-  <title>Leaderboard | Masters 2026</title>
+  <title>Leaderboard | Dynast-Z</title>
   <link rel="stylesheet" href="/styles/styles.css?v=df002b71">
   <link rel="stylesheet" href="/styles/masters.css?v=14d037d9">
 </head>
@@ -17,8 +17,8 @@
 
   <div class="masters-content" style="padding-top:0;padding-bottom:0">
     <div class="lb-sticky-header" id="sticky-header">
-      <div class="masters-breadcrumbs" style="padding-bottom:8px"><a href="/masters">Masters</a><span class="separator">/</span><span>Leaderboard</span></div>
-      <div class="masters-page-nav"><a href="/masters/3-ball-results">3-Ball Results</a><a href="/masters/group-results">Group Results</a></div>
+      <div class="masters-breadcrumbs" style="padding-bottom:8px"><a id="hub-link" href="#">Tournament</a><span class="separator">/</span><span>Leaderboard</span></div>
+      <div class="masters-page-nav"><a id="link-3ball" href="#">3-Ball Results</a><a id="link-groups" href="#">Group Results</a></div>
       <h2>Leaderboard</h2>
       <p class="subtitle">
         <span class="refresh-badge" id="updated"></span>
@@ -43,14 +43,21 @@
 
   <script src="/scripts/auth.js?v=d20e1128"></script>
   <script src="/scripts/sync.js?v=f19ba045"></script>
-  <script src="/scripts/masters-utils.js?v=47f1bd2c"></script>
+  <script src="/scripts/golf-utils.js?v=267a2ad4"></script>
   <script>
+    const info = getTournamentInfo();
+    const basePath = '/golf/' + TOURNAMENT_CONTEXT.year + '/' + TOURNAMENT_CONTEXT.tournament;
+    document.title = 'Leaderboard | ' + info.name + ' ' + TOURNAMENT_CONTEXT.year;
+    document.getElementById('hub-link').textContent = info.name;
+    document.getElementById('hub-link').href = basePath;
+    document.getElementById('link-3ball').href = basePath + '/3-ball-results';
+    document.getElementById('link-groups').href = basePath + '/group-results';
+
     let scoresData = null;
     let expandedIds = new Set();
     let activeFilters = new Set();
 
-    // Hide tap hint if user has used it before
-    if (localStorage.getItem('masters_hint_dismissed')) {
+    if (localStorage.getItem('golf_hint_dismissed')) {
       document.getElementById('tap-hint').classList.add('hidden');
     }
 
@@ -95,6 +102,10 @@
     async function loadAndRender() {
       try {
         const raw = await fetchScores();
+        if (raw.status === 'upcoming') {
+          document.getElementById('loading').textContent = 'Tournament has not started yet.';
+          return;
+        }
         scoresData = raw.data;
         renderBoard(document.getElementById('search').value);
         document.getElementById('loading').style.display = 'none';
@@ -120,8 +131,8 @@
       }
       if (rels.length < 3) return '';
       const lastThree = rels[rels.length - 1] + rels[rels.length - 2] + rels[rels.length - 3];
-      if (lastThree <= -2) return ' 🔥';
-      if (lastThree >= 2) return ' 🧊';
+      if (lastThree <= -2) return ' \u{1F525}';
+      if (lastThree >= 2) return ' \u{1F9CA}';
       return '';
     }
 
@@ -204,7 +215,7 @@
           const hint = document.getElementById('tap-hint');
           if (hint && !hint.classList.contains('hidden')) {
             hint.classList.add('hidden');
-            localStorage.setItem('masters_hint_dismissed', '1');
+            localStorage.setItem('golf_hint_dismissed', '1');
           }
           const id = row.dataset.id;
           const detail = document.getElementById(id);
@@ -242,7 +253,6 @@
           const par = roundPars[h];
           html += '<div class="hole-col">';
           html += `<div class="hole-cell hole-header">${h + 1}</div>`;
-          
           if (s === null || s === undefined) {
             html += '<div class="hole-cell no-score">&middot;</div>';
           } else {
@@ -275,7 +285,6 @@
             const rel = s - par;
             html += `<div class="hole-cell ${holeClass(rel)}">${formatHoleScore(rel)}</div>`;
           }
-
           html += `<div class="hole-cell hole-par">${par || ''}</div>`;
           html += '</div>';
         }
@@ -317,8 +326,7 @@
     loadAndRender();
     setInterval(loadAndRender, 11 * 60 * 1000);
 
-    // Sync selections from server if logged in, then re-render
-    initMastersSync().then(() => {
+    initTournamentSync().then(() => {
       if (scoresData) renderBoard(document.getElementById('search').value);
     });
 
@@ -380,7 +388,6 @@
       clearTimeout(longPressTimer);
     });
 
-    // Suppress tap when long press fired
     document.getElementById('board').addEventListener('click', e => {
       if (longPressFired) {
         e.stopPropagation();

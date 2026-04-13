@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <title>Archive | Dynast-Z</title>
+  <link rel="stylesheet" href="/styles/styles.css?v=df002b71">
+  <link rel="stylesheet" href="/styles/masters.css?v=14d037d9">
+</head>
+<body class="masters-body">
+  <div id="header-mount"></div>
+  <div id="nav-drawer-mount"></div>
+  <script src="/scripts/auth.js?v=d20e1128"></script>
+  <script src="/scripts/nav.js?v=052ca4bd"></script>
+  <script>initPage();</script>
+
+  <div class="masters-content">
+    <h2>Archive</h2>
+    <p class="subtitle">Browse past tournament results</p>
+
+    <div id="archive-list">
+      <div class="masters-loading">Loading archive...</div>
+    </div>
+  </div>
+
+  <style>
+    .archive-season {
+      margin-bottom: 24px;
+    }
+    .archive-season h3 {
+      font-size: 16px;
+      font-weight: 700;
+      color: #f0f0f0;
+      margin-bottom: 8px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #2a2a2a;
+    }
+    .archive-tournament {
+      display: block;
+      padding: 12px;
+      margin-bottom: 4px;
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-radius: 6px;
+      text-decoration: none;
+      color: #e0e0e0;
+      transition: border-color 0.15s;
+    }
+    .archive-tournament:hover {
+      border-color: #60a5fa;
+    }
+    .archive-tournament .name {
+      font-weight: 600;
+      font-size: 13px;
+      color: #f0f0f0;
+    }
+    .archive-tournament .meta {
+      font-size: 11px;
+      color: #888;
+      margin-top: 2px;
+    }
+  </style>
+
+  <script>
+    fetch('/data/tournaments.json')
+      .then(r => r.json())
+      .then(data => {
+        const years = Object.keys(data).sort().reverse();
+        const container = document.getElementById('archive-list');
+
+        let html = '';
+        for (const year of years) {
+          const season = data[year];
+          const completed = Object.entries(season).filter(([_, t]) => t.status === 'complete');
+          if (completed.length === 0) continue;
+
+          html += '<div class="archive-season">';
+          html += `<h3>${year} Season</h3>`;
+          for (const [slug, t] of completed) {
+            html += `<a class="archive-tournament" href="/golf/${year}/${slug}">
+              <div class="name">${t.name}</div>
+              <div class="meta">${t.venue} &bull; ${t.dates}</div>
+            </a>`;
+          }
+          html += '</div>';
+        }
+
+        if (!html) {
+          html = '<p class="masters-empty">No archived tournaments yet.</p>';
+        }
+
+        container.innerHTML = html;
+      })
+      .catch(() => {
+        document.getElementById('archive-list').innerHTML = '<p class="masters-empty">Failed to load archive</p>';
+      });
+  </script>
+</body>
+</html>

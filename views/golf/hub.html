@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <title>Tournament | Dynast-Z</title>
+  <link rel="stylesheet" href="/styles/styles.css?v=df002b71">
+  <link rel="stylesheet" href="/styles/masters.css?v=14d037d9">
+</head>
+<body class="masters-body">
+  <div id="header-mount"></div>
+  <div id="nav-drawer-mount"></div>
+  <script src="/scripts/auth.js?v=d20e1128"></script>
+  <script src="/scripts/nav.js?v=052ca4bd"></script>
+  <script>initPage();</script>
+
+  <div class="masters-content">
+    <div class="masters-breadcrumbs"><a id="season-link" href="/golf/2026">2026 Season</a><span class="separator">/</span><span id="breadcrumb-name">Tournament</span></div>
+    <h2 id="page-title">Tournament</h2>
+    <p class="subtitle" id="page-subtitle"></p>
+
+    <div id="hub-active" style="display:none">
+      <div class="hub-grid" id="hub-grid"></div>
+    </div>
+
+    <div id="hub-upcoming" style="display:none">
+      <div class="upcoming-banner">
+        <p>This tournament hasn't started yet.</p>
+        <p class="upcoming-date" id="upcoming-date"></p>
+      </div>
+      <div class="hub-grid" id="hub-grid-upcoming"></div>
+    </div>
+  </div>
+
+  <style>
+    .upcoming-banner {
+      text-align: center;
+      padding: 32px 16px;
+      color: #888;
+      font-size: 13px;
+      font-family: monospace;
+    }
+    .upcoming-banner .upcoming-date {
+      color: #60a5fa;
+      margin-top: 4px;
+    }
+    .hub-card.disabled {
+      opacity: 0.4;
+      pointer-events: none;
+    }
+  </style>
+
+  <script src="/scripts/golf-utils.js?v=267a2ad4"></script>
+  <script>
+    const info = getTournamentInfo();
+    const basePath = '/golf/' + TOURNAMENT_CONTEXT.year + '/' + TOURNAMENT_CONTEXT.tournament;
+
+    document.title = info.name + ' ' + TOURNAMENT_CONTEXT.year + ' | Dynast-Z';
+    document.getElementById('page-title').textContent = info.name + ' ' + TOURNAMENT_CONTEXT.year;
+    document.getElementById('breadcrumb-name').textContent = info.name;
+    document.getElementById('season-link').href = '/golf/' + TOURNAMENT_CONTEXT.year;
+
+    const allCards = [
+      { href: '/leaderboard', title: 'Leaderboard', desc: 'Live tournament leaderboard with hole-by-hole scoring', needsData: true },
+      { href: '/select-golfers', title: 'Select Golfers', desc: 'Pick your winner, top 5, and top 10 finishers', needsData: true },
+      { href: '/3-ball', title: '3-Ball Setup', desc: 'Set up head-to-head matchups for each round', needsData: true },
+      { href: '/3-ball-results', title: '3-Ball Results', desc: 'Live results for your 3-ball matchups', needsData: true },
+      { href: '/3-ball-lookup', title: '3-Ball Lookup', desc: "View another user's 3-ball results", needsData: true },
+      { href: '/groups', title: 'Groups Setup', desc: 'Set up tournament-long group matchups (1 vs 4)', needsData: true },
+      { href: '/group-results', title: 'Group Results', desc: 'Live results for your group matchups', needsData: true },
+    ];
+
+    // Check tournament status
+    fetchScores().then(data => {
+      if (data.status === 'upcoming') {
+        // Show upcoming state
+        document.getElementById('hub-upcoming').style.display = 'block';
+        getTournamentMeta().then(meta => {
+          const t = meta[TOURNAMENT_CONTEXT.year] && meta[TOURNAMENT_CONTEXT.year][TOURNAMENT_CONTEXT.tournament];
+          if (t) {
+            document.getElementById('page-subtitle').textContent = t.venue;
+            document.getElementById('upcoming-date').textContent = t.dates;
+          }
+        });
+        // Show cards but disable data-dependent ones
+        document.getElementById('hub-grid-upcoming').innerHTML = allCards.map(c =>
+          `<a class="hub-card disabled" href="${basePath + c.href}"><h3>${c.title}</h3><p>${c.desc}</p></a>`
+        ).join('');
+      } else {
+        // Tournament has data — show all cards active
+        document.getElementById('hub-active').style.display = 'block';
+        getTournamentMeta().then(meta => {
+          const t = meta[TOURNAMENT_CONTEXT.year] && meta[TOURNAMENT_CONTEXT.year][TOURNAMENT_CONTEXT.tournament];
+          if (t) document.getElementById('page-subtitle').textContent = t.venue;
+        });
+        document.getElementById('hub-grid').innerHTML = allCards.map(c =>
+          `<a class="hub-card" href="${basePath + c.href}"><h3>${c.title}</h3><p>${c.desc}</p></a>`
+        ).join('');
+      }
+    }).catch(() => {
+      // Fallback: show all cards
+      document.getElementById('hub-active').style.display = 'block';
+      document.getElementById('hub-grid').innerHTML = allCards.map(c =>
+        `<a class="hub-card" href="${basePath + c.href}"><h3>${c.title}</h3><p>${c.desc}</p></a>`
+      ).join('');
+    });
+  </script>
+</body>
+</html>

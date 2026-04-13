@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <link rel="icon" type="image/png" href="/favicon.png">
-  <title>Group Results | Masters 2026</title>
+  <title>Group Results | Dynast-Z</title>
   <link rel="stylesheet" href="/styles/styles.css?v=df002b71">
   <link rel="stylesheet" href="/styles/masters.css?v=14d037d9">
 </head>
@@ -16,8 +16,8 @@
   <script>initPage();</script>
 
   <div class="masters-content">
-    <div class="masters-breadcrumbs"><a href="/masters">Masters</a><span class="separator">/</span><span>Group Results</span></div>
-    <div class="masters-page-nav"><a href="/masters/leaderboard">Leaderboard</a><a href="/masters/3-ball-results">3-Ball Results</a></div>
+    <div class="masters-breadcrumbs"><a id="hub-link" href="#">Tournament</a><span class="separator">/</span><span>Group Results</span></div>
+    <div class="masters-page-nav"><a id="link-lb" href="#">Leaderboard</a><a id="link-3ball" href="#">3-Ball Results</a></div>
     <h2>Group Results</h2>
     <p class="subtitle">
       Live tournament group results &bull; <span class="refresh-badge" id="updated"></span>
@@ -29,14 +29,26 @@
 
   <script src="/scripts/auth.js?v=d20e1128"></script>
   <script src="/scripts/sync.js?v=f19ba045"></script>
-  <script src="/scripts/masters-utils.js?v=47f1bd2c"></script>
+  <script src="/scripts/golf-utils.js?v=267a2ad4"></script>
   <script>
+    const info = getTournamentInfo();
+    const basePath = '/golf/' + TOURNAMENT_CONTEXT.year + '/' + TOURNAMENT_CONTEXT.tournament;
+    document.title = 'Group Results | ' + info.name + ' ' + TOURNAMENT_CONTEXT.year;
+    document.getElementById('hub-link').textContent = info.name;
+    document.getElementById('hub-link').href = basePath;
+    document.getElementById('link-lb').href = basePath + '/leaderboard';
+    document.getElementById('link-3ball').href = basePath + '/3-ball-results';
+
     let scoresData = null;
     let config = getGroupPicks();
 
     async function loadAndRender() {
       try {
         const raw = await fetchScores();
+        if (raw.status === 'upcoming') {
+          document.getElementById('loading').textContent = 'Tournament has not started yet.';
+          return;
+        }
         scoresData = raw.data;
         renderResults();
         document.getElementById('loading').style.display = 'none';
@@ -60,7 +72,7 @@
       const groups = config.groups || [];
 
       if (groups.length === 0) {
-        container.innerHTML = '<p class="masters-empty">No groups set up. <a href="/masters/groups" style="color:#60a5fa">Set up groups</a></p>';
+        container.innerHTML = '<p class="masters-empty">No groups set up. <a href="' + basePath + '/groups" style="color:#60a5fa">Set up groups</a></p>';
         return;
       }
 
@@ -73,7 +85,7 @@
         const opponents = (group.opponents || []).filter(Boolean).map(findPlayer).filter(Boolean);
 
         if (!myPlayer) {
-          html += `<div class="three-ball-group"><div class="group-row"><span class="golfer-name" style="color:#f87171">${group.myGolfer} — not found</span></div></div>`;
+          html += `<div class="three-ball-group"><div class="group-row"><span class="golfer-name" style="color:#f87171">${group.myGolfer} \u2014 not found</span></div></div>`;
           return;
         }
 
@@ -118,7 +130,7 @@
     loadAndRender();
     setInterval(loadAndRender, 11 * 60 * 1000);
 
-    initMastersSync().then(result => {
+    initTournamentSync().then(result => {
       if (result && result.groupPicks) {
         config = result.groupPicks;
         if (!config.groups) config.groups = [];

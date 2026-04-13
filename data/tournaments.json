@@ -1,0 +1,32 @@
+{
+  "2026": {
+    "masters": {
+      "name": "The Masters",
+      "venue": "Augusta National Golf Club",
+      "dates": "Apr 9-12, 2026",
+      "status": "complete",
+      "color": "#006747"
+    },
+    "pga": {
+      "name": "PGA Championship",
+      "venue": "Aronimink Golf Club",
+      "dates": "May 14-17, 2026",
+      "status": "upcoming",
+      "color": "#00205b"
+    },
+    "us-open": {
+      "name": "US Open",
+      "venue": "Oakmont Country Club",
+      "dates": "Jun 18-21, 2026",
+      "status": "upcoming",
+      "color": "#c41230"
+    },
+    "open": {
+      "name": "The Open Championship",
+      "venue": "Royal Portrush Golf Club",
+      "dates": "Jul 16-19, 2026",
+      "status": "upcoming",
+      "color": "#1a1a2e"
+    }
+  }
+}

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <link rel="icon" type="image/png" href="/favicon.png">
-  <title>3-Ball Lookup | Masters 2026</title>
+  <title>3-Ball Lookup | Dynast-Z</title>
   <link rel="stylesheet" href="/styles/styles.css?v=df002b71">
   <link rel="stylesheet" href="/styles/masters.css?v=14d037d9">
 </head>
@@ -16,7 +16,7 @@
   <script>initPage();</script>
 
   <div class="masters-content">
-    <div class="masters-breadcrumbs"><a href="/masters">Masters</a><span class="separator">/</span><span>3-Ball Lookup</span></div>
+    <div class="masters-breadcrumbs"><a id="hub-link" href="#">Tournament</a><span class="separator">/</span><span>3-Ball Lookup</span></div>
     <h2>3-Ball Lookup</h2>
     <p class="subtitle">View another user's 3-ball results</p>
 
@@ -57,8 +57,14 @@
   </style>
 
   <script src="/scripts/sync.js?v=f19ba045"></script>
-  <script src="/scripts/masters-utils.js?v=47f1bd2c"></script>
+  <script src="/scripts/golf-utils.js?v=267a2ad4"></script>
   <script>
+    const info = getTournamentInfo();
+    const basePath = '/golf/' + TOURNAMENT_CONTEXT.year + '/' + TOURNAMENT_CONTEXT.tournament;
+    document.title = '3-Ball Lookup | ' + info.name + ' ' + TOURNAMENT_CONTEXT.year;
+    document.getElementById('hub-link').textContent = info.name;
+    document.getElementById('hub-link').href = basePath;
+
     let scoresData = null;
     let lookupConfig = null;
     let selectedRound = 1;
@@ -87,7 +93,8 @@
       userResults.style.display = 'none';
 
       try {
-        const resp = await fetch('/api/lookup?username=' + encodeURIComponent(username));
+        const sport = syncSport();
+        const resp = await fetch('/api/lookup?username=' + encodeURIComponent(username) + '&sport=' + encodeURIComponent(sport));
         const data = await resp.json();
 
         if (!resp.ok) {
@@ -179,7 +186,7 @@
         const opponents = (group.opponents || []).filter(Boolean).map(findPlayer).filter(Boolean);
 
         if (!myPlayer) {
-          html += `<div class="three-ball-group"><div class="group-row"><span class="golfer-name" style="color:#f87171">${group.myGolfer} — not found</span></div></div>`;
+          html += `<div class="three-ball-group"><div class="group-row"><span class="golfer-name" style="color:#f87171">${group.myGolfer} \u2014 not found</span></div></div>`;
           return;
         }
 

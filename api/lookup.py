@@ -39,9 +39,10 @@ class handler(BaseHTTPRequestHandler):
 
             user_id = users[0]["id"]
 
+            sport = params.get("sport", ["masters"])[0]
             rows = supabase_request(
                 f"user_data?user_id=eq.{user_id}"
-                f"&sport=eq.masters"
+                f"&sport=eq.{urllib.request.quote(sport)}"
                 f"&data_key=eq.3ball"
                 f"&select=data"
             )

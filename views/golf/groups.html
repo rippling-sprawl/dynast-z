@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <link rel="icon" type="image/png" href="/favicon.png">
-  <title>3-Ball Setup | Masters 2026</title>
+  <title>Groups Setup | Dynast-Z</title>
   <link rel="stylesheet" href="/styles/styles.css?v=df002b71">
   <link rel="stylesheet" href="/styles/masters.css?v=14d037d9">
 </head>
@@ -16,14 +16,9 @@
   <script>initPage();</script>
 
   <div class="masters-content">
-    <div class="masters-breadcrumbs"><a href="/masters">Masters</a><span class="separator">/</span><span>3-Ball Setup</span></div>
-    <h2>3-Ball Setup</h2>
-    <p class="subtitle">Select your golfer and opponents for each matchup</p>
-
-    <div style="margin-bottom:16px">
-      <label style="font-size:10px;color:#444;font-family:monospace;display:block;margin-bottom:6px">ROUND</label>
-      <div class="round-selector" id="round-sel"></div>
-    </div>
+    <div class="masters-breadcrumbs"><a id="hub-link" href="#">Tournament</a><span class="separator">/</span><span>Groups Setup</span></div>
+    <h2>Groups Setup</h2>
+    <p class="subtitle">Select your golfer and 4 opponents for each group</p>
 
     <div id="loading" class="masters-loading">Loading golfers...</div>
     <div id="groups-container" style="display:none"></div>
@@ -32,33 +27,35 @@
       <button class="masters-btn" id="add-group">+ Add Group</button>
     </div>
 
-    <a href="/masters/3-ball-results" class="masters-cta" id="view-results" style="display:none">View 3-Ball Results &rarr;</a>
+    <a id="view-results" class="masters-cta" href="#" style="display:none">View Group Results &rarr;</a>
   </div>
 
   <script src="/scripts/auth.js?v=d20e1128"></script>
   <script src="/scripts/sync.js?v=f19ba045"></script>
-  <script src="/scripts/masters-utils.js?v=47f1bd2c"></script>
+  <script src="/scripts/golf-utils.js?v=267a2ad4"></script>
   <script>
+    const info = getTournamentInfo();
+    const basePath = '/golf/' + TOURNAMENT_CONTEXT.year + '/' + TOURNAMENT_CONTEXT.tournament;
+    document.title = 'Groups Setup | ' + info.name + ' ' + TOURNAMENT_CONTEXT.year;
+    document.getElementById('hub-link').textContent = info.name;
+    document.getElementById('hub-link').href = basePath;
+    document.getElementById('view-results').href = basePath + '/group-results';
+
     let allPlayers = [];
-    let config = get3BallGroups();
-    if (!config.round) config.round = 1;
-
-    function currentGroups() {
-      return config.rounds[config.round] || [];
-    }
-
-    function setCurrentGroups(groups) {
-      config.rounds[config.round] = groups;
-    }
+    let config = getGroupPicks();
+    if (!config.groups) config.groups = [];
 
     async function init() {
       try {
         const raw = await fetchScores();
+        if (raw.status === 'upcoming') {
+          document.getElementById('loading').textContent = 'Tournament has not started yet. Player list will be available closer to the event.';
+          return;
+        }
         allPlayers = raw.data.player
           .map(p => p.full_name)
           .sort((a, b) => a.localeCompare(b));
 
-        renderRoundSelector();
         renderGroups();
         updateCTA();
         document.getElementById('loading').style.display = 'none';
@@ -67,24 +64,6 @@
       } catch (e) {
         document.getElementById('loading').textContent = 'Failed to load: ' + e.message;
       }
-    }
-
-    function renderRoundSelector() {
-      const container = document.getElementById('round-sel');
-      container.innerHTML = [1, 2, 3, 4].map(r => {
-        const count = (config.rounds[r] || []).length;
-        const badge = count > 0 ? ` (${count})` : '';
-        return `<button class="masters-btn ${config.round === r ? 'active' : ''}" data-round="${r}">R${r}${badge}</button>`;
-      }).join('');
-      container.querySelectorAll('button').forEach(btn => {
-        btn.addEventListener('click', () => {
-          config.round = parseInt(btn.dataset.round);
-          save();
-          renderRoundSelector();
-          renderGroups();
-          updateCTA();
-        });
-      });
     }
 
     function autocompleteHTML(groupIndex, role, value) {
@@ -96,10 +75,10 @@
     }
 
     function renderGroups() {
-      const groups = currentGroups();
+      const groups = config.groups;
       const container = document.getElementById('groups-container');
       if (groups.length === 0) {
-        container.innerHTML = '<p class="masters-empty">No groups for Round ' + config.round + ' yet. Click "+ Add Group" to start.</p>';
+        container.innerHTML = '<p class="masters-empty">No groups yet. Click "+ Add Group" to start.</p>';
         return;
       }
 
@@ -121,6 +100,14 @@
             <label>OPP 2</label>
             ${autocompleteHTML(i, 'opp1', g.opponents[1])}
           </div>
+          <div class="form-row">
+            <label>OPP 3</label>
+            ${autocompleteHTML(i, 'opp2', g.opponents[2])}
+          </div>
+          <div class="form-row">
+            <label>OPP 4</label>
+            ${autocompleteHTML(i, 'opp3', g.opponents[3])}
+          </div>
         </div>
       `).join('');
 
@@ -128,9 +115,7 @@
 
       container.querySelectorAll('[data-remove]').forEach(btn => {
         btn.addEventListener('click', () => {
-          const groups = currentGroups();
-          groups.splice(parseInt(btn.dataset.remove), 1);
-          setCurrentGroups(groups);
+          config.groups.splice(parseInt(btn.dataset.remove), 1);
           save();
           renderGroups();
         });
@@ -152,10 +137,12 @@
           input.value = name;
           clearBtn.classList.toggle('visible', !!name);
           list.classList.remove('open');
-          const groups = currentGroups();
-          if (role === 'my') groups[groupIndex].myGolfer = name;
-          else if (role === 'opp0') groups[groupIndex].opponents[0] = name;
-          else if (role === 'opp1') groups[groupIndex].opponents[1] = name;
+          const g = config.groups[groupIndex];
+          if (role === 'my') g.myGolfer = name;
+          else {
+            const idx = parseInt(role.replace('opp', ''));
+            g.opponents[idx] = name;
+          }
           save();
         }
 
@@ -178,10 +165,12 @@
           selectedValue = '';
           clearBtn.classList.remove('visible');
           showSuggestions(input.value);
-          const groups = currentGroups();
-          if (role === 'my') groups[groupIndex].myGolfer = '';
-          else if (role === 'opp0') groups[groupIndex].opponents[0] = '';
-          else if (role === 'opp1') groups[groupIndex].opponents[1] = '';
+          const g = config.groups[groupIndex];
+          if (role === 'my') g.myGolfer = '';
+          else {
+            const idx = parseInt(role.replace('opp', ''));
+            g.opponents[idx] = '';
+          }
           save();
         });
 
@@ -235,35 +224,29 @@
     });
 
     function save() {
-      save3BallGroups(config);
+      saveGroupPicks(config);
       updateCTA();
     }
 
     function updateCTA() {
-      const groups = currentGroups();
-      const hasComplete = groups.some(g =>
-        g.myGolfer && g.opponents[0] && g.opponents[1]
+      const hasComplete = config.groups.some(g =>
+        g.myGolfer && g.opponents.some(o => o)
       );
       document.getElementById('view-results').style.display = hasComplete ? 'block' : 'none';
     }
 
     document.getElementById('add-group').addEventListener('click', () => {
-      const groups = currentGroups();
-      groups.push({ myGolfer: '', opponents: ['', ''] });
-      setCurrentGroups(groups);
+      config.groups.push({ myGolfer: '', opponents: ['', '', '', ''] });
       save();
       renderGroups();
     });
 
     init();
 
-    // Sync 3-ball groups from server if logged in, then re-render
-    initMastersSync().then(result => {
-      if (result) {
-        config = result.threeBall;
-        if (!config.round) config.round = 1;
-        if (!config.rounds) config.rounds = {};
-        renderRoundSelector();
+    initTournamentSync().then(result => {
+      if (result && result.groupPicks) {
+        config = result.groupPicks;
+        if (!config.groups) config.groups = [];
         renderGroups();
         updateCTA();
       }
