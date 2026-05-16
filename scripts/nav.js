@@ -23,6 +23,7 @@ function buildNavItems() {
     { type: 'link', label: 'Trade Calculator', href: '/trade-calculator' },
     { type: 'section', label: 'Leagues' },
     { type: 'link', label: 'JHBC', href: '/league/1314983622930870272' },
+    { type: 'link', label: 'Drew Dynasty', href: '/league/1312081645817327616' },
     { type: 'section', label: 'News' },
     { type: 'link', label: 'Sharply Stupid Blog', href: 'https://sharplystupid.substack.com/', external: true },
     { type: 'section', label: 'Resources' },
