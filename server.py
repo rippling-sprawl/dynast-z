@@ -444,8 +444,11 @@ def fetch_league_schedule(league_id):
         })
     teams.sort(key=lambda t: t["team_name"].lower())
 
+    # The Sleeper schedule is fixed for the season; cache until year rollover.
     cache_name = f"schedule_{league_id}.json"
-    cached = read_cache(cache_name, ttl=LEAGUE_DATA_TTL)
+    now = datetime.now()
+    year_end_ttl = int((datetime(now.year + 1, 1, 1) - now).total_seconds())
+    cached = read_cache(cache_name, ttl=year_end_ttl)
     if cached is not None:
         print(f"Using cached schedule for {league_id}")
         weeks = cached

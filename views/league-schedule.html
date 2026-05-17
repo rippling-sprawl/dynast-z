@@ -7,7 +7,7 @@
   <title>Schedule | Dynast-Z</title>
   <link rel="stylesheet" href="/styles/styles.css?v=df002b71">
   <link rel="stylesheet" href="/styles/league.css?v=5b7e80b4">
-  <link rel="stylesheet" href="/styles/league-schedule.css?v=60cda496">
+  <link rel="stylesheet" href="/styles/league-schedule.css?v=2fd448c5">
 </head>
 <body>
   <div id="header-mount"></div>
@@ -56,7 +56,7 @@
     }
 
     let scheduleData = null;
-    let sortState = { key: 'team', dir: 'asc' };  // key: 'team' | 'pr' | 'sos'
+    let sortState = { key: 'pr', dir: 'desc' };  // key: 'team' | 'pr' | 'sos'
 
     function sortTeams(teams) {
       const dir = sortState.dir === 'asc' ? 1 : -1;
@@ -117,8 +117,8 @@
       html += '<thead><tr>';
       html += `<th class="team-col">
         <div class="team-col-header">
-          <span class="team-col-label" data-sort="team">Team${sortArrow('team')}</span>
           <span class="team-col-sorts">
+            <button class="sort-chip${sortState.key === 'team' ? ' active' : ''}" data-sort="team">Team${sortArrow('team')}</button>
             <button class="sort-chip${sortState.key === 'pr' ? ' active' : ''}" data-sort="pr">PR${sortArrow('pr')}</button>
             <button class="sort-chip${sortState.key === 'sos' ? ' active' : ''}" data-sort="sos">SoS${sortArrow('sos')}</button>
           </span>

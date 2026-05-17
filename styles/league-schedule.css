@@ -96,10 +96,6 @@
   gap: 8px;
 }
 
-.team-col-label {
-  font-size: 11px;
-}
-
 .team-col-sorts {
   display: inline-flex;
   gap: 4px;
