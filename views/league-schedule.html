@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <title>Schedule | Dynast-Z</title>
+  <link rel="stylesheet" href="/styles/styles.css?v=df002b71">
+  <link rel="stylesheet" href="/styles/league.css?v=5b7e80b4">
+  <link rel="stylesheet" href="/styles/league-schedule.css?v=60cda496">
+</head>
+<body>
+  <div id="header-mount"></div>
+  <div id="nav-drawer-mount"></div>
+  <script src="/scripts/nav.js?v=cd972c1a"></script>
+  <script src="/scripts/tabs.js?v=ca72d019"></script>
+  <script>initPage();</script>
+
+  <div class="league-content schedule-content">
+    <div class="tabs" id="tab-bar"></div>
+    <p class="schedule-intro">
+      Power rankings sourced from <a href="https://www.fantasypros.com/" target="_blank" rel="noreferrer">Fantasy Pros</a>. Regular season only (weeks 1–14).
+    </p>
+    <div id="loading">Loading schedule...</div>
+    <div id="schedule-mount" style="display:none;"></div>
+  </div>
+
+  <script>
+    const leagueId = window.location.pathname.match(/\/league\/([^/]+)/)[1];
+    initTabBar(leagueId);
+
+    const WEEKS = 14;
+
+    // HSL hue interpolation: green (140) → yellow (60) → red (0)
+    function gradientColor(value, min, max) {
+      if (value == null || max === min) return '#8b949e';
+      const t = Math.max(0, Math.min(1, (value - min) / (max - min)));
+      const hue = 140 - t * 140;
+      return `hsl(${hue.toFixed(0)}, 70%, 45%)`;
+    }
+
+    function fmtPr(pr) { return pr == null ? '—' : String(pr); }
+    function fmtSos(sos) { return sos == null ? '—' : sos.toFixed(1); }
+
+    function computeSos(rosterId, schedule, teamByRid) {
+      const opps = schedule[String(rosterId)] || {};
+      const prs = [];
+      for (let w = 1; w <= WEEKS; w++) {
+        const opp = opps[String(w)];
+        if (opp == null) continue;
+        const oppTeam = teamByRid[String(opp)];
+        if (oppTeam && oppTeam.pr != null) prs.push(oppTeam.pr);
+      }
+      if (!prs.length) return null;
+      return prs.reduce((a, b) => a + b, 0) / prs.length;
+    }
+
+    let scheduleData = null;
+    let sortState = { key: 'team', dir: 'asc' };  // key: 'team' | 'pr' | 'sos'
+
+    function sortTeams(teams) {
+      const dir = sortState.dir === 'asc' ? 1 : -1;
+      const arr = teams.slice();
+      if (sortState.key === 'team') {
+        arr.sort((a, b) => a.team_name.toLowerCase().localeCompare(b.team_name.toLowerCase()) * dir);
+      } else if (sortState.key === 'pr') {
+        arr.sort((a, b) => {
+          const av = a.pr == null ? -Infinity : a.pr;
+          const bv = b.pr == null ? -Infinity : b.pr;
+          return (av - bv) * dir;
+        });
+      } else if (sortState.key === 'sos') {
+        arr.sort((a, b) => {
+          const av = a._sos == null ? -Infinity : a._sos;
+          const bv = b._sos == null ? -Infinity : b._sos;
+          return (av - bv) * dir;
+        });
+      }
+      return arr;
+    }
+
+    function sortArrow(key) {
+      if (sortState.key !== key) return '';
+      return sortState.dir === 'asc' ? ' ▲' : ' ▼';
+    }
+
+    function onSortClick(key) {
+      if (sortState.key === key) {
+        sortState.dir = sortState.dir === 'asc' ? 'desc' : 'asc';
+      } else {
+        sortState.key = key;
+        sortState.dir = key === 'team' ? 'asc' : 'desc';
+      }
+      render();
+    }
+
+    function render() {
+      const teamByRid = {};
+      for (const t of scheduleData.teams) teamByRid[String(t.roster_id)] = t;
+
+      // Cache SoS per team for sorting
+      for (const t of scheduleData.teams) {
+        if (t._sos === undefined) t._sos = computeSos(t.roster_id, scheduleData.schedule, teamByRid);
+      }
+
+      const prVals = scheduleData.teams.map(t => t.pr).filter(p => p != null);
+      const prMin = prVals.length ? Math.min(...prVals) : 0;
+      const prMax = prVals.length ? Math.max(...prVals) : 100;
+
+      const sosVals = scheduleData.teams.map(t => t._sos).filter(s => s != null);
+      const sosMin = sosVals.length ? Math.min(...sosVals) : 0;
+      const sosMax = sosVals.length ? Math.max(...sosVals) : 100;
+
+      const sortedTeams = sortTeams(scheduleData.teams);
+
+      let html = '<div class="schedule-scroll"><table class="schedule-table">';
+      html += '<thead><tr>';
+      html += `<th class="team-col">
+        <div class="team-col-header">
+          <span class="team-col-label" data-sort="team">Team${sortArrow('team')}</span>
+          <span class="team-col-sorts">
+            <button class="sort-chip${sortState.key === 'pr' ? ' active' : ''}" data-sort="pr">PR${sortArrow('pr')}</button>
+            <button class="sort-chip${sortState.key === 'sos' ? ' active' : ''}" data-sort="sos">SoS${sortArrow('sos')}</button>
+          </span>
+        </div>
+      </th>`;
+      for (let w = 1; w <= WEEKS; w++) html += `<th class="week-col">${w}</th>`;
+      html += '</tr></thead><tbody>';
+
+      for (const t of sortedTeams) {
+        const sos = t._sos;
+        const sosColor = gradientColor(sos, sosMin, sosMax);
+        const avatar = t.avatar
+          ? `<img class="team-avatar" src="${t.avatar}" alt="" referrerpolicy="no-referrer">`
+          : `<div class="team-avatar"></div>`;
+        html += `<tr><td class="team-col">
+          <div class="team-col-content">
+            ${avatar}
+            <div class="team-col-text">
+              <div class="team-col-name">${t.team_name}</div>
+              <div class="team-col-meta">
+                <span>PR: <strong>${fmtPr(t.pr)}</strong></span>
+                <span>SoS: <strong style="color:${sosColor}">${fmtSos(sos)}</strong></span>
+              </div>
+            </div>
+          </div>
+        </td>`;
+
+        const opps = scheduleData.schedule[String(t.roster_id)] || {};
+        for (let w = 1; w <= WEEKS; w++) {
+          const oppRid = opps[String(w)];
+          if (oppRid == null) {
+            html += '<td class="opp-cell opp-missing">—</td>';
+            continue;
+          }
+          const opp = teamByRid[String(oppRid)];
+          if (!opp) {
+            html += '<td class="opp-cell opp-missing">?</td>';
+            continue;
+          }
+          const oppPrColor = gradientColor(opp.pr, prMin, prMax);
+          const oppAvatar = opp.avatar
+            ? `<img class="team-avatar" src="${opp.avatar}" alt="" referrerpolicy="no-referrer">`
+            : `<div class="team-avatar"></div>`;
+          html += `<td class="opp-cell">
+            <div class="opp-cell-content">
+              ${oppAvatar}
+              <div class="opp-pr"><strong style="color:${oppPrColor}">${fmtPr(opp.pr)}</strong></div>
+            </div>
+          </td>`;
+        }
+        html += '</tr>';
+      }
+      html += '</tbody></table></div>';
+
+      const mount = document.getElementById('schedule-mount');
+      mount.innerHTML = html;
+      mount.querySelectorAll('[data-sort]').forEach(el => {
+        el.addEventListener('click', () => onSortClick(el.dataset.sort));
+      });
+    }
+
+    async function loadSchedule() {
+      try {
+        const resp = await fetch(`/api/league/${leagueId}/schedule`);
+        const data = await resp.json();
+        if (data.error) throw new Error(data.error);
+
+        scheduleData = data;
+        document.title = `Dynast-Z - ${data.league_name} - Schedule`;
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('schedule-mount').style.display = '';
+        render();
+      } catch (e) {
+        document.getElementById('loading').textContent = 'Error: ' + e.message;
+      }
+    }
+
+    loadSchedule();
+  </script>
+</body>
+</html>

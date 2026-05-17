@@ -35,6 +35,8 @@ SLEEPER_API = "https://api.sleeper.app/v1"
 SLEEPER_PLAYERS_TTL = 86400  # 24 hours for the big players file
 LEAGUE_DATA_TTL = 3600  # 1 hour for league rosters/users
 FP_DATA_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "fp.json")
+POWER_RANKINGS_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "power_rankings.json")
+REGULAR_SEASON_WEEKS = 14
 MASTERS_SCORES_TTL = 300  # 5 minutes
 
 # Tournament configuration: (tournament, year) -> mode + source
@@ -406,6 +408,84 @@ def build_teams_list(league_id):
     }
 
 
+def load_power_rankings(league_id):
+    """Load static power rankings for a league. Returns {team_name: pr} or {}."""
+    if not os.path.exists(POWER_RANKINGS_PATH):
+        return {}
+    with open(POWER_RANKINGS_PATH, "r") as f:
+        return json.load(f).get(str(league_id), {})
+
+
+def fetch_league_schedule(league_id):
+    """Build the regular-season (weeks 1-14) schedule grid for a league."""
+    rosters, users, league = fetch_league_data(league_id)
+    user_map = {u["user_id"]: u for u in users}
+
+    pr_map = load_power_rankings(league_id)
+
+    teams = []
+    for roster in rosters:
+        owner_id = roster.get("owner_id")
+        user = user_map.get(owner_id, {})
+        team_name = user.get("metadata", {}).get("team_name") or user.get("display_name", "Unknown")
+        display_name = user.get("display_name", "Unknown")
+        avatar_url = user.get("metadata", {}).get("avatar") or (
+            f"https://sleepercdn.com/avatars/thumbs/{user['avatar']}" if user.get("avatar") else None
+        )
+        pr = pr_map.get(team_name)
+        if pr is None:
+            pr = pr_map.get(display_name)
+        teams.append({
+            "roster_id": roster["roster_id"],
+            "team_name": team_name,
+            "display_name": display_name,
+            "avatar": avatar_url,
+            "pr": pr,
+        })
+    teams.sort(key=lambda t: t["team_name"].lower())
+
+    cache_name = f"schedule_{league_id}.json"
+    cached = read_cache(cache_name, ttl=LEAGUE_DATA_TTL)
+    if cached is not None:
+        print(f"Using cached schedule for {league_id}")
+        weeks = cached
+    else:
+        print(f"Fetching fresh schedule for {league_id}...")
+        weeks = {}
+        for week in range(1, REGULAR_SEASON_WEEKS + 1):
+            try:
+                raw = json.loads(http_fetch(f"{SLEEPER_API}/league/{league_id}/matchups/{week}"))
+            except Exception:
+                continue
+            by_matchup = {}
+            for row in raw:
+                mid = row.get("matchup_id")
+                if mid is None:
+                    continue
+                by_matchup.setdefault(mid, []).append(row.get("roster_id"))
+            pairs = {}
+            for ids in by_matchup.values():
+                if len(ids) == 2:
+                    a, b = ids
+                    pairs[a] = b
+                    pairs[b] = a
+            weeks[str(week)] = {str(rid): opp for rid, opp in pairs.items()}
+        write_cache(cache_name, weeks)
+
+    schedule = {str(t["roster_id"]): {} for t in teams}
+    for week_str, pairs in weeks.items():
+        for rid_str, opp_rid in pairs.items():
+            if rid_str in schedule:
+                schedule[rid_str][week_str] = opp_rid
+
+    return {
+        "league_name": league.get("name", "League"),
+        "league_id": league_id,
+        "teams": teams,
+        "schedule": schedule,
+    }
+
+
 TRANSACTIONS_CACHE_TTL = 600  # 10 minutes
 STORE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
 
@@ -748,6 +828,19 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 self.wfile.write(json.dumps(data).encode())
             except Exception as e:
                 self.wfile.write(json.dumps({"error": str(e)}).encode())
+        elif re.match(r"/api/league/[^/]+/schedule", self.path):
+            league_id = self.path.split("/api/league/")[1].split("/schedule")[0]
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            if IS_VERCEL:
+                self.send_header("Cache-Control", "s-maxage=3600, stale-while-revalidate=86400")
+            self.end_headers()
+            try:
+                data = fetch_league_schedule(league_id)
+                self.wfile.write(json.dumps(data).encode())
+            except Exception as e:
+                self.wfile.write(json.dumps({"error": str(e)}).encode())
         elif self.path == "/api/trades":
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
@@ -908,6 +1001,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             super().do_GET()
         elif re.match(r"/league/[^/]+/power", self.path):
             self.path = "/views/league-power.html"
+            super().do_GET()
+        elif re.match(r"/league/[^/]+/schedule", self.path):
+            self.path = "/views/league-schedule.html"
             super().do_GET()
         elif self.path.startswith("/league/"):
             self.path = "/views/league.html"
