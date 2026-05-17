@@ -488,21 +488,29 @@ def fetch_league_schedule(league_id):
 
 TRANSACTIONS_CACHE_TTL = 600  # 10 minutes
 STORE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
+# Vercel's /var/task is read-only; writes must go to /tmp
+STORE_WRITE_DIR = "/tmp/dynast-z-store" if IS_VERCEL else STORE_DIR
 
 
 def read_transaction_store(league_id):
-    """Read the persistent transaction store (keyed by transaction_id)."""
-    path = os.path.join(STORE_DIR, f"transactions_{league_id}.json")
-    if not os.path.exists(path):
-        return {}
-    with open(path, "r") as f:
-        return json.load(f)
+    """Read the persistent transaction store (keyed by transaction_id).
+
+    On Vercel, prefer the writable /tmp copy if present, falling back to the
+    repo-bundled seed file.
+    """
+    filename = f"transactions_{league_id}.json"
+    for d in (STORE_WRITE_DIR, STORE_DIR):
+        path = os.path.join(d, filename)
+        if os.path.exists(path):
+            with open(path, "r") as f:
+                return json.load(f)
+    return {}
 
 
 def write_transaction_store(league_id, store):
     """Write the persistent transaction store."""
-    os.makedirs(STORE_DIR, exist_ok=True)
-    path = os.path.join(STORE_DIR, f"transactions_{league_id}.json")
+    os.makedirs(STORE_WRITE_DIR, exist_ok=True)
+    path = os.path.join(STORE_WRITE_DIR, f"transactions_{league_id}.json")
     with open(path, "w") as f:
         json.dump(store, f, indent=2)
 
