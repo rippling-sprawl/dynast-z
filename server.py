@@ -253,7 +253,7 @@ def compute_z_scores(players_dict):
 
 def fetch_sleeper_players():
     """Fetch the full Sleeper player database (~5MB). Cached for 24 hours."""
-    cached = read_cache("sleeper_players.json")
+    cached = read_cache("sleeper_players.json", ttl=SLEEPER_PLAYERS_TTL)
     if cached is not None:
         print("Using cached Sleeper players data")
         return cached
@@ -279,16 +279,29 @@ def fetch_league_data(league_id):
 
 
 def fetch_league_picks(league_id):
-    """Fetch traded picks and draft order for a league. Cached with league data."""
+    """Fetch traded picks, draft order, and completed-draft seasons for a league.
+
+    completed_seasons are the seasons whose rookie draft has already happened —
+    those picks have turned into rostered players and must not be synthesized.
+    Cached with league data.
+    """
     cache_name = f"picks_{league_id}.json"
     cached = read_cache(cache_name, ttl=LEAGUE_DATA_TTL)
     if cached is not None:
-        return cached["traded_picks"], cached.get("draft_order")
+        return (cached["traded_picks"], cached.get("draft_order"),
+                set(cached.get("completed_seasons") or []))
     traded_picks = json.loads(http_fetch(f"{SLEEPER_API}/league/{league_id}/traded_picks"))
     drafts = json.loads(http_fetch(f"{SLEEPER_API}/league/{league_id}/drafts"))
     draft_order = drafts[0].get("draft_order") if drafts else None
-    write_cache(cache_name, {"traded_picks": traded_picks, "draft_order": draft_order})
-    return traded_picks, draft_order
+    completed_seasons = sorted({
+        int(d["season"]) for d in drafts
+        if d.get("status") == "complete" and d.get("season")
+    })
+    write_cache(cache_name, {
+        "traded_picks": traded_picks, "draft_order": draft_order,
+        "completed_seasons": completed_seasons,
+    })
+    return traded_picks, draft_order, set(completed_seasons)
 
 
 _ORDINALS = {1: "1st", 2: "2nd", 3: "3rd", 4: "4th", 5: "5th", 6: "6th", 7: "7th"}
@@ -315,13 +328,19 @@ def _pick_name_variants(season, rd, slot, total_rosters):
     return names
 
 
-def build_picks_for_roster(roster_id, rosters, users, league, traded_picks, draft_order, z_lookup):
-    """Compute all draft picks owned by a roster and return as player-like dicts."""
+def build_picks_for_roster(roster_id, rosters, users, league, traded_picks, draft_order, z_lookup,
+                           completed_seasons=()):
+    """Compute all draft picks owned by a roster and return as player-like dicts.
+
+    Seasons whose draft is already complete are skipped — those picks have become
+    rostered players, so synthesizing them would double-count.
+    """
     total_rosters = league.get("total_rosters", 12)
     draft_rounds = min(league.get("settings", {}).get("draft_rounds", 4), 4)
     current_season = int(league.get("season", "2026"))
-    seasons = sorted({current_season, current_season + 1, current_season + 2}
-                     | {int(tp["season"]) for tp in traded_picks})
+    seasons = sorted(({current_season, current_season + 1, current_season + 2}
+                      | {int(tp["season"]) for tp in traded_picks})
+                     - set(completed_seasons))
 
     # Map roster_id -> owner_id (user_id) and short team name
     roster_owner = {r["roster_id"]: r.get("owner_id") for r in rosters}
@@ -718,9 +737,10 @@ def build_team_roster(league_id, roster_id):
 
     # Add draft picks
     try:
-        traded_picks, draft_order = fetch_league_picks(league_id)
+        traded_picks, draft_order, completed_seasons = fetch_league_picks(league_id)
         picks = build_picks_for_roster(
-            int(roster_id), rosters, users, league, traded_picks, draft_order, z_lookup
+            int(roster_id), rosters, users, league, traded_picks, draft_order, z_lookup,
+            completed_seasons,
         )
         players.extend(picks)
     except Exception:
