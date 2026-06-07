@@ -38,6 +38,28 @@
   border-color: #58a6ff;
 }
 
+/* Team grid: 2-across on medium and smaller, 3-across on large and larger */
+.team-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.team-grid .team-card {
+  margin-bottom: 0;
+}
+
+/* Widen the container on the team-listing views so 3-across has room */
+.league-content:has(.team-grid) {
+  max-width: 900px;
+}
+
+@media (min-width: 900px) {
+  .team-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
 .team-name {
   font-size: 15px;
   font-weight: 500;

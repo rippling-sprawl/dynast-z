@@ -9,7 +9,7 @@
     { "source": "/", "destination": "/views/index.html" },
     { "source": "/trade-calculator", "destination": "/views/trade-calculator.html" },
     { "source": "/league/:leagueId/team/:rosterId", "destination": "/views/team.html" },
-    { "source": "/league/:leagueId/new-trades", "destination": "/views/new-trades.html" },
+    { "source": "/league/:leagueId/trades", "destination": "/views/trades.html" },
     { "source": "/league/:leagueId/trades", "destination": "/views/league-trades.html" },
     { "source": "/league/:leagueId/power", "destination": "/views/league-power.html" },
     { "source": "/league/:leagueId/schedule", "destination": "/views/league-schedule.html" },

@@ -6,14 +6,46 @@
   <link rel="icon" type="image/png" href="/favicon.png">
   <title>Dynast-Z</title>
   <link rel="stylesheet" href="/styles/styles.css?v=df002b71">
-  <link rel="stylesheet" href="/styles/index.css?v=ef357832">
+  <link rel="stylesheet" href="/styles/index.css?v=a1b2c3d4">
 </head>
-<body>
-  <h1>Dynast-Z</h1>
-  <nav id="index-nav"></nav>
+<body class="index-body">
+  <div id="header-mount"></div>
+  <div id="nav-drawer-mount"></div>
+  <script src="/scripts/auth.js?v=d20e1128"></script>
   <script src="/scripts/nav.js?v=cd972c1a"></script>
-  <script>
-    document.getElementById('index-nav').innerHTML = buildIndexNavHTML();
-  </script>
+  <script>initPage();</script>
+
+  <main class="home">
+    <div class="home-grid">
+      <a class="home-tile" href="/golf">
+        <span class="home-tile-emoji">🏌️</span>
+        <span class="home-tile-text">
+          <span class="home-tile-title">Golf</span>
+          <span class="home-tile-desc">Majors, leaderboards, 3-balls &amp; groups</span>
+        </span>
+      </a>
+      <a class="home-tile" href="/football">
+        <span class="home-tile-emoji">🏈</span>
+        <span class="home-tile-text">
+          <span class="home-tile-title">Football</span>
+          <span class="home-tile-desc">Trade tools &amp; dynasty leagues</span>
+        </span>
+      </a>
+      <a class="home-tile" href="https://sharplystupid.substack.com/" target="_blank">
+        <span class="home-tile-emoji">📰</span>
+        <span class="home-tile-text">
+          <span class="home-tile-title">News</span>
+          <span class="home-tile-desc">The Sharply Stupid blog</span>
+        </span>
+      </a>
+      <a class="home-tile" href="/acknowledgements">
+        <span class="home-tile-emoji">🧠</span>
+        <span class="home-tile-text">
+          <span class="home-tile-title">About</span>
+          <span class="home-tile-desc">Resources &amp; acknowledgements</span>
+        </span>
+      </a>
+    </div>
+  </main>
 </body>
 </html>

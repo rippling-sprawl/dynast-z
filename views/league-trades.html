@@ -95,11 +95,11 @@
           <div class="trade-date">${formatDate(t.date)}</div>
           <div class="trade-sides">
             <div class="trade-side">
-              <div class="trade-side-header">${t.team_a} <span class="receives-label">receives</span>${t.team_a_display ? `<div class="trade-team-owner">${t.team_a_display}</div>` : ''}</div>
+              <div class="trade-side-header">${t.team_a_display || t.team_a} <span class="receives-label">receives</span></div>
               ${t.team_a_receives.map(tradeItemHtml).join('')}
             </div>
             <div class="trade-side">
-              <div class="trade-side-header">${t.team_b} <span class="receives-label">receives</span>${t.team_b_display ? `<div class="trade-team-owner">${t.team_b_display}</div>` : ''}</div>
+              <div class="trade-side-header">${t.team_b_display || t.team_b} <span class="receives-label">receives</span></div>
               ${t.team_b_receives.map(tradeItemHtml).join('')}
             </div>
           </div>

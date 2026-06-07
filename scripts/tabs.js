@@ -1,10 +1,9 @@
 // Shared league tab bar component
 const LEAGUE_TABS = [
-  { label: 'Rosters', suffix: '' },
   { label: 'Scout', suffix: '/scout' },
+  { label: 'Rosters', suffix: '/rosters' },
   { label: 'Schedule', suffix: '/schedule' },
-  { label: 'Latest Trades', suffix: '/new-trades' },
-  { label: 'Past Trades', suffix: '/trades' },
+  { label: 'Trades', suffix: '/trades' },
   //{ label: 'Power Rankings', suffix: '/power' },
 ];
 

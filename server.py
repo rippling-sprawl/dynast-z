@@ -987,6 +987,13 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self.send_response(301)
             self.send_header("Location", f"/golf/2026/masters/{page}")
             self.end_headers()
+        # Hub pages
+        elif self.path == "/golf":
+            self.path = "/views/golf-hub.html"
+            super().do_GET()
+        elif self.path == "/football":
+            self.path = "/views/football.html"
+            super().do_GET()
         # Golf routes: /golf/:year/:tournament/:page
         elif re.match(r"/golf/\d{4}$", self.path) or re.match(r"/season/\d{4}$", self.path):
             self.path = "/views/golf/season.html"
@@ -1021,14 +1028,11 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         elif re.match(r"/league/[^/]+/team/", self.path):
             self.path = "/views/team.html"
             super().do_GET()
-        elif re.match(r"/league/[^/]+/new-trades", self.path):
-            self.path = "/views/new-trades.html"
+        elif re.match(r"/league/[^/]+/trades", self.path):
+            self.path = "/views/trades.html"
             super().do_GET()
         elif re.match(r"/league/[^/]+/scout", self.path):
             self.path = "/views/league-scout.html"
-            super().do_GET()
-        elif re.match(r"/league/[^/]+/trades", self.path):
-            self.path = "/views/league-trades.html"
             super().do_GET()
         elif re.match(r"/league/[^/]+/power", self.path):
             self.path = "/views/league-power.html"

@@ -7,7 +7,7 @@
 
 /* Team selection grid - reuses team-card styles from league.css */
 #scout-select {
-  max-width: 560px;
+  max-width: 900px;
 }
 
 #scout-select .team-card {

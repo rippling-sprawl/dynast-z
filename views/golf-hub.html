@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <title>Golf | Dynast-Z</title>
+  <link rel="stylesheet" href="/styles/styles.css?v=df002b71">
+  <link rel="stylesheet" href="/styles/masters.css?v=14d037d9">
+</head>
+<body class="masters-body">
+  <div id="header-mount"></div>
+  <div id="nav-drawer-mount"></div>
+  <script src="/scripts/auth.js?v=d20e1128"></script>
+  <script src="/scripts/nav.js?v=cd972c1a"></script>
+  <script>initPage();</script>
+
+  <div class="masters-content">
+    <h2>Golf</h2>
+    <p class="subtitle">Major Championships</p>
+    <div class="hub-grid" id="golf-grid"></div>
+  </div>
+
+  <script>
+    const cards = [
+      { href: '/golf/' + CURRENT_GOLF_YEAR, title: 'Season Calendar', desc: 'All majors for the ' + CURRENT_GOLF_YEAR + ' season' },
+      ...GOLF_TOURNAMENTS.map(t => ({
+        href: '/golf/' + CURRENT_GOLF_YEAR + '/' + t.slug,
+        title: t.name,
+        desc: t.dates,
+      })),
+      { href: '/archive', title: 'Archive', desc: 'Past tournaments & results' },
+    ];
+    document.getElementById('golf-grid').innerHTML = cards.map(c =>
+      `<a class="hub-card" href="${c.href}"><h3>${c.title}</h3><p>${c.desc}</p></a>`
+    ).join('');
+  </script>
+</body>
+</html>

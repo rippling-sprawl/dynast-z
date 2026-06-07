@@ -2,33 +2,34 @@
 
 const GOLF_TOURNAMENTS = [
   { slug: 'masters', name: 'The Masters', dates: 'Apr 9-12' },
-  { slug: 'pga-championship', name: 'PGA Championship', dates: 'May 14-17' },
-  { slug: 'us-open', name: 'US Open', dates: 'Jun 18-21' },
-  { slug: 'british-open', name: 'The Open', dates: 'Jul 16-19' },
+  // { slug: 'pga-championship', name: 'PGA Championship', dates: 'May 14-17' },
+  // { slug: 'us-open', name: 'US Open', dates: 'Jun 18-21' },
+  // { slug: 'british-open', name: 'The Open', dates: 'Jul 16-19' },
 ];
 
 const CURRENT_GOLF_YEAR = 2026;
 
 function buildNavItems() {
-  const items = [
-    { type: 'section', label: CURRENT_GOLF_YEAR + ' Golf' },
-    { type: 'link', label: 'Season Calendar', href: '/golf/' + CURRENT_GOLF_YEAR },
-  ];
-  for (const t of GOLF_TOURNAMENTS) {
-    items.push({ type: 'sub', label: t.name, href: '/golf/' + CURRENT_GOLF_YEAR + '/' + t.slug });
-  }
-  items.push({ type: 'link', label: 'Archive', href: '/archive' });
+  const items = []
   items.push(
-    { type: 'section', label: 'Tools' },
+    { type: 'section', label: 'Football' },
     { type: 'link', label: 'Trade Calculator', href: '/trade-calculator' },
-    { type: 'section', label: 'Leagues' },
     { type: 'link', label: 'JHBC', href: '/league/1314983622930870272' },
     { type: 'link', label: 'Drew Dynasty', href: '/league/1312081645817327616' },
-    { type: 'section', label: 'News' },
-    { type: 'link', label: 'Sharply Stupid Blog', href: 'https://sharplystupid.substack.com/', external: true },
+    // { type: 'section', label: 'News' },
     { type: 'section', label: 'Resources' },
+    { type: 'link', label: 'Sharply Stupid Blog', href: 'https://sharplystupid.substack.com/', external: true },
     { type: 'link', label: 'Acknowledgements', href: '/acknowledgements' },
   );
+
+  items.push(
+    { type: 'section', label: 'Golf' },
+    // { type: 'link', label: 'Season Calendar', href: '/golf/' + CURRENT_GOLF_YEAR },
+  );
+  for (const t of GOLF_TOURNAMENTS) {
+    items.push({ type: 'link', label: t.name, href: '/golf/' + CURRENT_GOLF_YEAR + '/' + t.slug });
+  }
+  // items.push({ type: 'link', label: 'Archive', href: '/archive' });
   return items;
 }
 
