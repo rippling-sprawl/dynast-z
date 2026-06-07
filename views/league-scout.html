@@ -137,11 +137,12 @@
       const zClass = p.aggregate != null ? '' : ' no-zscore';
       const tooltip = sourcesTooltip(p.sources);
       const taxiLabel = p.taxi ? '<span class="taxi-label">PS</span>' : '';
+      const rookieLabel = p.rookie ? '<span class="taxi-label">R</span>' : '';
       return `
         <div class="player-card player-card-${p.position}">
           <div class="player-info">
             <div class="player-name">${fmtName(p.name, p.position)}</div>
-            <div class="player-team">${p.team || ''}${taxiLabel}</div>
+            <div class="player-team">${p.team || ''}${rookieLabel}${taxiLabel}</div>
           </div>
           <span class="player-value${zClass}" style="background:${zColor(p.aggregate)}" ${tooltip ? `data-sources="${tooltip}"` : ''}>${fmtZ(p.aggregate)}</span>
         </div>
@@ -373,7 +374,7 @@
         el.innerHTML = `
           <div class="player-info">
             <div class="player-name">${fmtName(p.name, p.position)}</div>
-            <div class="player-meta"><span class="player-pos pos-${p.position}">${fmtPos(p.position)}</span><span class="player-team">${p.team || ''}</span>${p.taxi ? '<span class="taxi-label">PS</span>' : ''}</div>
+            <div class="player-meta"><span class="player-pos pos-${p.position}">${fmtPos(p.position)}</span><span class="player-team">${p.team || ''}</span>${p.rookie ? '<span class="taxi-label">R</span>' : ''}${p.taxi ? '<span class="taxi-label">PS</span>' : ''}</div>
           </div>
           <span class="player-value" style="background:${zColor(p.aggregate)}" ${sourcesTooltip(p.sources) ? `data-sources="${sourcesTooltip(p.sources)}"` : ''}>${fmtZ(p.aggregate)}</span>
           <button class="trade-remove-btn" data-name="${p.name.replace(/"/g, '&quot;')}">&times;</button>
@@ -404,7 +405,7 @@
               <div class="scout-trade-roster-card player-card-${p.position}" data-name="${p.name.replace(/"/g, '&quot;')}" data-team="${team}">
                 <div class="player-info">
                   <div class="player-name">${fmtName(p.name, p.position)}</div>
-                  <div class="player-team">${p.team || ''}${p.taxi ? '<span class="taxi-label">PS</span>' : ''}</div>
+                  <div class="player-team">${p.team || ''}${p.rookie ? '<span class="taxi-label">R</span>' : ''}${p.taxi ? '<span class="taxi-label">PS</span>' : ''}</div>
                 </div>
                 <span class="player-value" style="background:${zColor(p.aggregate)}" ${sourcesTooltip(p.sources) ? `data-sources="${sourcesTooltip(p.sources)}"` : ''}>${fmtZ(p.aggregate)}</span>
               </div>

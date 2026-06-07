@@ -100,12 +100,13 @@
       const zClass = p.aggregate != null ? '' : ' no-zscore';
       const tooltip = sourcesTooltip(p.sources);
       const taxiLabel = p.taxi ? '<span class="taxi-label">PS</span>' : '';
+      const rookieLabel = p.rookie ? '<span class="taxi-label">R</span>' : '';
       return `
         <div class="player-card player-card-${p.position}">
           <span class="player-pos pos-${p.position}">${fmtPos(p.position)}</span>
           <div class="player-info">
             <div class="player-name">${p.name}</div>
-            <div class="player-team">${p.team || ''}${taxiLabel}</div>
+            <div class="player-team">${p.team || ''}${rookieLabel}${taxiLabel}</div>
           </div>
           <span class="player-value${zClass}" style="background:${zColor(p.aggregate)}" ${tooltip ? `data-sources="${tooltip}"` : ''}>${fmtZ(p.aggregate)}</span>
         </div>

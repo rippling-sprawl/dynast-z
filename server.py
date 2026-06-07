@@ -728,6 +728,7 @@ def build_team_roster(league_id, roster_id):
             "team": team,
             "starter": pid in starters,
             "taxi": pid in taxi,
+            "rookie": sp.get("years_exp") == 0,
         }
         z = z_lookup.get(norm_name(name))
         if z:
