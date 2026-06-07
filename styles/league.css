@@ -23,8 +23,8 @@
 .team-card {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 12px 16px;
+  min-width: 0;
+  padding: 12px 10px;
   background: #161b22;
   border: 1px solid #30363d;
   border-radius: 8px;
@@ -38,10 +38,11 @@
   border-color: #58a6ff;
 }
 
-/* Team grid: 2-across on medium and smaller, 3-across on large and larger */
+/* Team grid: tiles always 50% of the container (minmax(0,1fr) lets a long
+   name shrink-and-ellipsis instead of widening the track / forcing scroll). */
 .team-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
 }
 
@@ -49,35 +50,30 @@
   margin-bottom: 0;
 }
 
-/* Widen the container on the team-listing views so 3-across has room */
 .league-content:has(.team-grid) {
   max-width: 900px;
 }
 
-@media (min-width: 900px) {
-  .team-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
+/* Let the name/owner column shrink below its content so ellipsis can apply */
+.team-card-info > div {
+  min-width: 0;
 }
 
 .team-name {
   font-size: 15px;
   font-weight: 500;
   color: #f0f6fc;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .team-owner {
   font-size: 12px;
   color: #8b949e;
-}
-
-.team-arrow {
-  color: #484f58;
-  font-size: 14px;
-}
-
-.team-card:hover .team-arrow {
-  color: #58a6ff;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .sleeper-link {
