@@ -995,6 +995,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         elif self.path == "/football":
             self.path = "/views/football.html"
             super().do_GET()
+        elif self.path == "/odds":
+            self.path = "/views/odds.html"
+            super().do_GET()
         # Golf routes: /golf/:year/:tournament/:page
         elif re.match(r"/golf/\d{4}$", self.path) or re.match(r"/season/\d{4}$", self.path):
             self.path = "/views/golf/season.html"

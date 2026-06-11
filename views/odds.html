@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <title>Odds | Dynast-Z</title>
+  <link rel="stylesheet" href="/styles/styles.css?v=df002b71">
+  <link rel="stylesheet" href="/styles/index.css?v=a1b2c3d4">
+  <style>
+    .odds-wrap { max-width: 900px; margin: 0 auto; padding: 0 12px 48px; }
+
+    /* Top row of tabs */
+    .odds-tabs {
+      display: flex;
+      gap: 18px;
+      overflow-x: auto;
+      border-bottom: 1px solid #2a2f3a;
+      margin-bottom: 16px;
+      -webkit-overflow-scrolling: touch;
+    }
+    .odds-tab {
+      background: none;
+      border: none;
+      color: #6ea8fe;
+      font-size: 15px;
+      padding: 12px 2px;
+      white-space: nowrap;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+    }
+    .odds-tab.is-active {
+      color: #cfe0ff;
+      border-bottom-color: #6ea8fe;
+    }
+
+    .odds-card-title {
+      font-size: 17px;
+      font-weight: 600;
+      padding: 12px 4px;
+      margin-top: 8px;
+    }
+
+    /* Coupon = collapsible section */
+    .odds-coupon { border-top: 1px solid #2a2f3a; }
+    .odds-coupon-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      background: #1b1f27;
+      border: none;
+      color: #c9d2e0;
+      font-size: 14px;
+      font-weight: 600;
+      padding: 12px 8px;
+      cursor: pointer;
+      text-align: left;
+    }
+    .odds-coupon-caret { color: #6b7585; transition: transform .15s; }
+    .odds-coupon.is-collapsed .odds-coupon-caret { transform: rotate(-90deg); }
+    .odds-coupon.is-collapsed .odds-coupon-body { display: none; }
+
+    .odds-runner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 8px;
+      border-top: 1px solid #20252f;
+    }
+    .odds-runner-name { color: #e6eaf0; font-size: 14px; }
+    .odds-odds {
+      min-width: 64px;
+      text-align: center;
+      color: #cfe0ff;
+      border: 1px solid #3a5bbf;
+      border-radius: 6px;
+      padding: 8px 10px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .odds-status { padding: 24px 8px; color: #8b95a5; }
+  </style>
+</head>
+<body class="index-body">
+  <div id="header-mount"></div>
+  <div id="nav-drawer-mount"></div>
+  <script src="/scripts/auth.js?v=d20e1128"></script>
+  <script src="/scripts/nav.js?v=cd972c1a"></script>
+  <script>initPage();</script>
+
+  <main class="home">
+    <div class="odds-wrap">
+      <div class="odds-tabs" id="odds-tabs"></div>
+      <div id="odds-content">
+        <div class="odds-status">Loading odds…</div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // Which tab to show first.
+    const DEFAULT_TAB_ID = 568;
+
+    let LAYOUT = null;
+    let MARKETS = null;
+
+    function fmtAmerican(odds) {
+      if (odds === null || odds === undefined) return '—';
+      return odds > 0 ? '+' + odds : String(odds);
+    }
+
+    function buildTabs(activeId) {
+      const tabsEl = document.getElementById('odds-tabs');
+      tabsEl.innerHTML = '';
+      const order = LAYOUT.tabsDisplayOrder || Object.keys(LAYOUT.tabs);
+      order.forEach(id => {
+        const tab = LAYOUT.tabs[String(id)];
+        if (!tab) return;
+        const btn = document.createElement('button');
+        btn.className = 'odds-tab' + (String(id) === String(activeId) ? ' is-active' : '');
+        btn.textContent = tab.title;
+        btn.onclick = () => renderTab(id);
+        tabsEl.appendChild(btn);
+      });
+    }
+
+    // Renders a single coupon (collapsible): title + its market's runners.
+    function buildCoupon(couponRef) {
+      const coupon = LAYOUT.coupons[String(couponRef.id)];
+      if (!coupon) return null;
+
+      const wrap = document.createElement('div');
+      wrap.className = 'odds-coupon' + (couponRef.isCollapsed ? ' is-collapsed' : '');
+
+      const header = document.createElement('button');
+      header.className = 'odds-coupon-header';
+      header.innerHTML =
+        '<span>' + (coupon.title || '') + '</span>' +
+        '<span class="odds-coupon-caret">▾</span>';
+      header.onclick = () => wrap.classList.toggle('is-collapsed');
+      wrap.appendChild(header);
+
+      const body = document.createElement('div');
+      body.className = 'odds-coupon-body';
+
+      const market = coupon.marketId ? MARKETS[coupon.marketId] : null;
+      const runners = (market && market.runners) || [];
+      if (!runners.length) {
+        const empty = document.createElement('div');
+        empty.className = 'odds-runner';
+        empty.innerHTML = '<span class="odds-runner-name">No market data</span>';
+        body.appendChild(empty);
+      }
+      runners.forEach(r => {
+        let odds = null;
+        try { odds = r.winRunnerOdds.americanDisplayOdds.americanOdds; } catch (e) {}
+        const row = document.createElement('div');
+        row.className = 'odds-runner';
+        row.innerHTML =
+          '<span class="odds-runner-name">' + (r.runnerName || '') + '</span>' +
+          '<span class="odds-odds">' + fmtAmerican(odds) + '</span>';
+        body.appendChild(row);
+      });
+
+      wrap.appendChild(body);
+      return wrap;
+    }
+
+    // Renders one card: title + each of its coupons.
+    function buildCard(cardRef) {
+      const card = LAYOUT.cards[String(cardRef.id)];
+      if (!card) return null;
+
+      const frag = document.createDocumentFragment();
+      const title = document.createElement('div');
+      title.className = 'odds-card-title';
+      title.textContent = card.title || '';
+      frag.appendChild(title);
+
+      (card.coupons || []).forEach(c => {
+        const el = buildCoupon(c);
+        if (el) frag.appendChild(el);
+      });
+      return frag;
+    }
+
+    function renderTab(tabId) {
+      buildTabs(tabId);
+      const content = document.getElementById('odds-content');
+      content.innerHTML = '';
+
+      const tab = LAYOUT.tabs[String(tabId)];
+      if (!tab) {
+        content.innerHTML = '<div class="odds-status">Tab not found.</div>';
+        return;
+      }
+      (tab.cards || []).forEach(cardRef => {
+        const el = buildCard(cardRef);
+        if (el) content.appendChild(el);
+      });
+    }
+
+    async function init() {
+      try {
+        const res = await fetch('/data/fd.json');
+        const data = await res.json();
+        LAYOUT = data.layout;
+        MARKETS = data.attachments.markets;
+        renderTab(DEFAULT_TAB_ID);
+      } catch (err) {
+        document.getElementById('odds-content').innerHTML =
+          '<div class="odds-status">Failed to load odds data.</div>';
+        console.error(err);
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>
