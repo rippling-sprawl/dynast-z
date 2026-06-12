@@ -1,0 +1,2487 @@
+{
+    "sports": [
+        {
+            "id": "3",
+            "seoIdentifier": "football",
+            "name": "Football",
+            "sortOrder": 66
+        }
+    ],
+    "leagues": [
+        {
+            "id": "88808",
+            "seoIdentifier": "nfl",
+            "name": "NFL",
+            "sportId": "3",
+            "sortOrder": 4847,
+            "tags": [
+                "Featured"
+            ],
+            "isTeamSwap": true
+        }
+    ],
+    "events": [
+        {
+            "id": "1f18db43-b8b3-405f-4efd-08dea7b6bc05",
+            "seoIdentifier": "nfl-2026-27---matthew-stafford",
+            "sportId": "3",
+            "leagueId": "88808",
+            "name": "NFL 2026/27 - Matthew Stafford",
+            "startEventDate": "2026-09-13T18:00:00.0000000Z",
+            "participants": [
+                {
+                    "id": "18397",
+                    "name": "LA Rams",
+                    "type": "Team",
+                    "metadata": {
+                        "rosettaTeamId": "18397",
+                        "rosettaTeamName": "Rams",
+                        "shortName": "LAR",
+                        "teamColor": "#003594"
+                    },
+                    "seoIdentifier": "Rams",
+                    "isNationalTeam": false,
+                    "countryCode": "US"
+                },
+                {
+                    "name": "Matthew Stafford",
+                    "type": "Team",
+                    "isNationalTeam": false,
+                    "countryCode": "ZZ"
+                }
+            ],
+            "status": "NOT_STARTED",
+            "tags": [
+                "OSB"
+            ],
+            "metadata": {
+                "settlementDate": "2027-01-11T05:00:00Z"
+            },
+            "sortOrder": 547212001,
+            "subscriptionKey": "events-1578325481"
+        },
+        {
+            "id": "3053f837-b12a-48e9-4f1b-08dea7b6bc05",
+            "seoIdentifier": "nfl-2026-27---c.j.-stroud",
+            "sportId": "3",
+            "leagueId": "88808",
+            "name": "NFL 2026/27 - C.J. Stroud",
+            "startEventDate": "2026-09-13T18:00:00.0000000Z",
+            "participants": [
+                {
+                    "name": "C.J. Stroud",
+                    "type": "Team",
+                    "isNationalTeam": false,
+                    "countryCode": "US"
+                },
+                {
+                    "id": "18500",
+                    "name": "HOU Texans",
+                    "type": "Team",
+                    "metadata": {
+                        "rosettaTeamId": "18500",
+                        "rosettaTeamName": "Texans",
+                        "shortName": "HOU",
+                        "teamColor": "#03202f"
+                    },
+                    "seoIdentifier": "Texans",
+                    "isNationalTeam": false,
+                    "countryCode": "US"
+                }
+            ],
+            "status": "NOT_STARTED",
+            "tags": [
+                "OSB"
+            ],
+            "metadata": {
+                "settlementDate": "2027-01-11T05:00:00Z"
+            },
+            "sortOrder": 547212001,
+            "subscriptionKey": "events-1578325481"
+        },
+        {
+            "id": "89af3fbb-f53d-4447-4f1c-08dea7b6bc05",
+            "seoIdentifier": "nfl-2026-27---trevor-lawrence",
+            "sportId": "3",
+            "leagueId": "88808",
+            "name": "NFL 2026/27 - Trevor Lawrence",
+            "startEventDate": "2026-09-13T18:00:00.0000000Z",
+            "participants": [
+                {
+                    "id": "18489",
+                    "name": "JAX Jaguars",
+                    "type": "Team",
+                    "metadata": {
+                        "rosettaTeamId": "18489",
+                        "rosettaTeamName": "Jaguars",
+                        "shortName": "JAX",
+                        "teamColor": "#101820"
+                    },
+                    "seoIdentifier": "Jaguars",
+                    "isNationalTeam": false,
+                    "countryCode": "US"
+                },
+                {
+                    "name": "Trevor Lawrence",
+                    "type": "Team",
+                    "isNationalTeam": false,
+                    "countryCode": "US"
+                }
+            ],
+            "status": "NOT_STARTED",
+            "tags": [
+                "OSB"
+            ],
+            "metadata": {
+                "settlementDate": "2027-01-11T05:00:00Z"
+            },
+            "sortOrder": 547212001,
+            "subscriptionKey": "events-1578325481"
+        },
+        {
+            "id": "b80bb72e-c07f-4182-4f1a-08dea7b6bc05",
+            "seoIdentifier": "nfl-2026-27---jared-goff",
+            "sportId": "3",
+            "leagueId": "88808",
+            "name": "NFL 2026/27 - Jared Goff",
+            "startEventDate": "2026-09-13T18:00:00.0000000Z",
+            "participants": [
+                {
+                    "id": "18348",
+                    "name": "DET Lions",
+                    "type": "Team",
+                    "metadata": {
+                        "rosettaTeamId": "18348",
+                        "rosettaTeamName": "Lions",
+                        "shortName": "DET",
+                        "teamColor": "#0076b6"
+                    },
+                    "seoIdentifier": "Lions",
+                    "isNationalTeam": false,
+                    "countryCode": "US"
+                },
+                {
+                    "name": "Jared Goff",
+                    "type": "Team",
+                    "isNationalTeam": false,
+                    "countryCode": "US"
+                }
+            ],
+            "status": "NOT_STARTED",
+            "tags": [
+                "OSB"
+            ],
+            "metadata": {
+                "settlementDate": "2027-01-11T05:00:00Z"
+            },
+            "sortOrder": 547212001,
+            "subscriptionKey": "events-1578325481"
+        },
+        {
+            "id": "bb6a7d63-1415-4f03-4f19-08dea7b6bc05",
+            "seoIdentifier": "nfl-2026-27---baker-mayfield",
+            "sportId": "3",
+            "leagueId": "88808",
+            "name": "NFL 2026/27 - Baker Mayfield",
+            "startEventDate": "2026-09-13T18:00:00.0000000Z",
+            "participants": [
+                {
+                    "id": "18474",
+                    "name": "TB Buccaneers",
+                    "type": "Team",
+                    "metadata": {
+                        "rosettaTeamId": "18474",
+                        "rosettaTeamName": "Buccaneers",
+                        "shortName": "TB",
+                        "teamColor": "#d50a0a"
+                    },
+                    "seoIdentifier": "Buccaneers",
+                    "isNationalTeam": false,
+                    "countryCode": "US"
+                },
+                {
+                    "name": "Baker Mayfield",
+                    "type": "Team",
+                    "isNationalTeam": false,
+                    "countryCode": "ZZ"
+                }
+            ],
+            "status": "NOT_STARTED",
+            "tags": [
+                "OSB"
+            ],
+            "metadata": {
+                "settlementDate": "2027-01-11T05:00:00Z"
+            },
+            "sortOrder": 547212001,
+            "subscriptionKey": "events-1578325481"
+        },
+        {
+            "id": "c574cbc8-3fda-4692-4f12-08dea7b6bc05",
+            "seoIdentifier": "nfl-2026-27---tyler-shough",
+            "sportId": "3",
+            "leagueId": "88808",
+            "name": "NFL 2026/27 - Tyler Shough",
+            "startEventDate": "2026-09-13T18:00:00.0000000Z",
+            "participants": [
+                {
+                    "name": "Tyler Shough",
+                    "type": "Team",
+                    "isNationalTeam": false,
+                    "countryCode": "US"
+                },
+                {
+                    "id": "18423",
+                    "name": "NO Saints",
+                    "type": "Team",
+                    "metadata": {
+                        "rosettaTeamId": "18423",
+                        "rosettaTeamName": "Saints",
+                        "shortName": "NO",
+                        "teamColor": "#d3bc8d"
+                    },
+                    "seoIdentifier": "Saints",
+                    "isNationalTeam": false,
+                    "countryCode": "US"
+                }
+            ],
+            "status": "NOT_STARTED",
+            "tags": [
+                "OSB"
+            ],
+            "metadata": {
+                "settlementDate": "2027-01-11T05:00:00Z"
+            },
+            "sortOrder": 547212001,
+            "subscriptionKey": "events-1578325481"
+        },
+        {
+            "id": "c9ae20b5-5c8d-439a-4f0c-08dea7b6bc05",
+            "seoIdentifier": "nfl-2026-27---brock-purdy",
+            "sportId": "3",
+            "leagueId": "88808",
+            "name": "NFL 2026/27 - Brock Purdy",
+            "startEventDate": "2026-09-13T18:00:00.0000000Z",
+            "participants": [
+                {
+                    "id": "18465",
+                    "name": "SF 49ers",
+                    "type": "Team",
+                    "metadata": {
+                        "rosettaTeamId": "18465",
+                        "rosettaTeamName": "49ers",
+                        "shortName": "SF",
+                        "teamColor": "#aa0000"
+                    },
+                    "seoIdentifier": "49ers",
+                    "isNationalTeam": false,
+                    "countryCode": "US"
+                },
+                {
+                    "name": "Brock Purdy",
+                    "type": "Team",
+                    "isNationalTeam": false,
+                    "countryCode": "US"
+                }
+            ],
+            "status": "NOT_STARTED",
+            "tags": [
+                "OSB"
+            ],
+            "metadata": {
+                "settlementDate": "2027-01-11T05:00:00Z"
+            },
+            "sortOrder": 547212001,
+            "subscriptionKey": "events-1578325481"
+        },
+        {
+            "id": "d9618009-851d-4e05-4f05-08dea7b6bc05",
+            "seoIdentifier": "nfl-2026-27---sam-darnold",
+            "sportId": "3",
+            "leagueId": "88808",
+            "name": "NFL 2026/27 - Sam Darnold",
+            "startEventDate": "2026-09-13T18:00:00.0000000Z",
+            "participants": [
+                {
+                    "id": "18471",
+                    "name": "SEA Seahawks",
+                    "type": "Team",
+                    "metadata": {
+                        "rosettaTeamId": "18471",
+                        "rosettaTeamName": "Seahawks",
+                        "shortName": "SEA",
+                        "teamColor": "#002244"
+                    },
+                    "seoIdentifier": "Seahawks",
+                    "isNationalTeam": false,
+                    "countryCode": "US"
+                },
+                {
+                    "name": "Sam Darnold",
+                    "type": "Team",
+                    "isNationalTeam": false,
+                    "countryCode": "ZZ"
+                }
+            ],
+            "status": "NOT_STARTED",
+            "tags": [
+                "OSB"
+            ],
+            "metadata": {
+                "settlementDate": "2027-01-11T05:00:00Z"
+            },
+            "sortOrder": 547212001,
+            "subscriptionKey": "events-1578325481"
+        },
+        {
+            "id": "eff2655f-23a2-46af-4f1d-08dea7b6bc05",
+            "seoIdentifier": "nfl-2026-27---cameron-ward",
+            "sportId": "3",
+            "leagueId": "88808",
+            "name": "NFL 2026/27 - Cameron Ward",
+            "startEventDate": "2026-09-13T18:00:00.0000000Z",
+            "participants": [
+                {
+                    "name": "Cameron Ward",
+                    "type": "Team",
+                    "isNationalTeam": false,
+                    "countryCode": "US"
+                },
+                {
+                    "id": "18366",
+                    "name": "TEN Titans",
+                    "type": "Team",
+                    "metadata": {
+                        "rosettaTeamId": "18366",
+                        "rosettaTeamName": "Titans",
+                        "shortName": "TEN",
+                        "teamColor": "#0c2340"
+                    },
+                    "seoIdentifier": "Titans",
+                    "isNationalTeam": false,
+                    "countryCode": "US"
+                }
+            ],
+            "status": "NOT_STARTED",
+            "tags": [
+                "OSB"
+            ],
+            "metadata": {
+                "settlementDate": "2027-01-11T05:00:00Z"
+            },
+            "sortOrder": 547212001,
+            "subscriptionKey": "events-1578325481"
+        },
+        {
+            "id": "3b4b0778-1dc2-4b9e-d220-08deb4d6d015",
+            "seoIdentifier": "nfl-2026-27---bryce-young",
+            "sportId": "3",
+            "leagueId": "88808",
+            "name": "NFL 2026/27 - Bryce Young",
+            "startEventDate": "2026-09-13T18:00:00.0000000Z",
+            "participants": [
+                {
+                    "id": "18484",
+                    "name": "CAR Panthers",
+                    "type": "Team",
+                    "metadata": {
+                        "rosettaTeamId": "18484",
+                        "rosettaTeamName": "Panthers",
+                        "shortName": "CAR",
+                        "teamColor": "#0085ca"
+                    },
+                    "seoIdentifier": "Panthers",
+                    "isNationalTeam": false,
+                    "countryCode": "US"
+                },
+                {
+                    "name": "Bryce Young",
+                    "type": "Team",
+                    "isNationalTeam": false,
+                    "countryCode": "US"
+                }
+            ],
+            "status": "NOT_STARTED",
+            "tags": [
+                "OSB"
+            ],
+            "metadata": {
+                "settlementDate": "2027-01-11T05:00:00Z"
+            },
+            "sortOrder": 547212002,
+            "subscriptionKey": "events-1578325481"
+        },
+        {
+            "id": "88969675-08c6-451c-d2e3-08deb4d6d015",
+            "seoIdentifier": "nfl-2026-27---malik-willis",
+            "sportId": "3",
+            "leagueId": "88808",
+            "name": "NFL 2026/27 - Malik Willis",
+            "startEventDate": "2026-09-13T18:00:00.0000000Z",
+            "participants": [
+                {
+                    "name": "Malik Willis",
+                    "type": "Team",
+                    "isNationalTeam": false,
+                    "countryCode": "US"
+                },
+                {
+                    "id": "18401",
+                    "name": "MIA Dolphins",
+                    "type": "Team",
+                    "metadata": {
+                        "rosettaTeamId": "18401",
+                        "rosettaTeamName": "Dolphins",
+                        "shortName": "MIA",
+                        "teamColor": "#008e97"
+                    },
+                    "seoIdentifier": "Dolphins",
+                    "isNationalTeam": false,
+                    "countryCode": "US"
+                }
+            ],
+            "status": "NOT_STARTED",
+            "tags": [
+                "OSB"
+            ],
+            "metadata": {
+                "settlementDate": "2027-01-11T05:00:00Z"
+            },
+            "sortOrder": 547212002,
+            "subscriptionKey": "events-1578325481"
+        },
+        {
+            "id": "ccc5c457-0a2b-44d7-d21e-08deb4d6d015",
+            "seoIdentifier": "nfl-2026-27---jaxson-dart",
+            "sportId": "3",
+            "leagueId": "88808",
+            "name": "NFL 2026/27 - Jaxson Dart",
+            "startEventDate": "2026-09-13T18:00:00.0000000Z",
+            "participants": [
+                {
+                    "name": "Jaxson Dart",
+                    "type": "Team",
+                    "isNationalTeam": false,
+                    "countryCode": "US"
+                },
+                {
+                    "id": "18432",
+                    "name": "NY Giants",
+                    "type": "Team",
+                    "metadata": {
+                        "rosettaTeamId": "18432",
+                        "rosettaTeamName": "Giants",
+                        "shortName": "NYG",
+                        "teamColor": "#0b2265"
+                    },
+                    "seoIdentifier": "Giants",
+                    "isNationalTeam": false,
+                    "countryCode": "US"
+                }
+            ],
+            "status": "NOT_STARTED",
+            "tags": [
+                "OSB"
+            ],
+            "metadata": {
+                "settlementDate": "2027-01-11T05:00:00Z"
+            },
+            "sortOrder": 547212002,
+            "subscriptionKey": "events-1578325481"
+        },
+        {
+            "id": "d4fafae8-052d-434d-d21d-08deb4d6d015",
+            "seoIdentifier": "nfl-2026-27---aaron-rodgers",
+            "sportId": "3",
+            "leagueId": "88808",
+            "name": "NFL 2026/27 - Aaron Rodgers",
+            "startEventDate": "2026-09-13T18:00:00.0000000Z",
+            "participants": [
+                {
+                    "id": "18456",
+                    "name": "PIT Steelers",
+                    "type": "Team",
+                    "metadata": {
+                        "rosettaTeamId": "18456",
+                        "rosettaTeamName": "Steelers",
+                        "shortName": "PIT",
+                        "teamColor": "#ffb612"
+                    },
+                    "seoIdentifier": "Steelers",
+                    "isNationalTeam": false,
+                    "countryCode": "US"
+                },
+                {
+                    "name": "Aaron Rodgers",
+                    "type": "Team",
+                    "isNationalTeam": false,
+                    "countryCode": "ZZ"
+                }
+            ],
+            "status": "NOT_STARTED",
+            "tags": [
+                "OSB"
+            ],
+            "metadata": {
+                "settlementDate": "2027-01-11T05:00:00Z"
+            },
+            "sortOrder": 547212002,
+            "subscriptionKey": "events-1578325481"
+        },
+        {
+            "id": "3ce14eac-2335-4be1-292a-08de970bad08",
+            "seoIdentifier": "nfl-2026-27---dak-prescott",
+            "sportId": "3",
+            "leagueId": "88808",
+            "name": "NFL 2026/27 - Dak Prescott",
+            "startEventDate": "2026-09-13T18:00:00.0000000Z",
+            "participants": [
+                {
+                    "id": "18336",
+                    "name": "DAL Cowboys",
+                    "type": "Team",
+                    "metadata": {
+                        "rosettaTeamId": "18336",
+                        "rosettaTeamName": "Cowboys",
+                        "shortName": "DAL",
+                        "teamColor": "#003594"
+                    },
+                    "seoIdentifier": "Cowboys",
+                    "isNationalTeam": false,
+                    "countryCode": "US"
+                },
+                {
+                    "name": "Dak Prescott",
+                    "type": "Team",
+                    "isNationalTeam": false,
+                    "countryCode": "ZZ"
+                }
+            ],
+            "status": "NOT_STARTED",
+            "tags": [
+                "OSB"
+            ],
+            "metadata": {
+                "settlementDate": "2027-01-11T05:00:00Z"
+            },
+            "sortOrder": 547212004,
+            "subscriptionKey": "events-1578325481"
+        },
+        {
+            "id": "5a137ae1-3ed4-4a27-292b-08de970bad08",
+            "seoIdentifier": "nfl-2026-27---jayden-daniels",
+            "sportId": "3",
+            "leagueId": "88808",
+            "name": "NFL 2026/27 - Jayden Daniels",
+            "startEventDate": "2026-09-13T18:00:00.0000000Z",
+            "participants": [
+                {
+                    "name": "Jayden Daniels",
+                    "type": "Team",
+                    "isNationalTeam": false,
+                    "countryCode": "US"
+                },
+                {
+                    "id": "18480",
+                    "name": "WAS Commanders",
+                    "type": "Team",
+                    "metadata": {
+                        "rosettaTeamId": "18480",
+                        "rosettaTeamName": "Commanders",
+                        "shortName": "WAS",
+                        "teamColor": "#5a1414"
+                    },
+                    "seoIdentifier": "Commanders",
+                    "isNationalTeam": false,
+                    "countryCode": "US"
+                }
+            ],
+            "status": "NOT_STARTED",
+            "tags": [
+                "OSB"
+            ],
+            "metadata": {
+                "settlementDate": "2027-01-11T05:00:00Z"
+            },
+            "sortOrder": 547212004,
+            "subscriptionKey": "events-1578325481"
+        },
+        {
+            "id": "68edb163-3b6d-40cb-2930-08de970bad08",
+            "seoIdentifier": "nfl-2026-27---bo-nix",
+            "sportId": "3",
+            "leagueId": "88808",
+            "name": "NFL 2026/27 - Bo Nix",
+            "startEventDate": "2026-09-13T18:00:00.0000000Z",
+            "participants": [
+                {
+                    "id": "18342",
+                    "name": "DEN Broncos",
+                    "type": "Team",
+                    "metadata": {
+                        "rosettaTeamId": "18342",
+                        "rosettaTeamName": "Broncos",
+                        "shortName": "DEN",
+                        "teamColor": "#fb4f14"
+                    },
+                    "seoIdentifier": "Broncos",
+                    "isNationalTeam": false,
+                    "countryCode": "US"
+                },
+                {
+                    "name": "Bo Nix",
+                    "type": "Team",
+                    "isNationalTeam": false,
+                    "countryCode": "US"
+                }
+            ],
+            "status": "NOT_STARTED",
+            "tags": [
+                "OSB"
+            ],
+            "metadata": {
+                "settlementDate": "2027-01-11T05:00:00Z"
+            },
+            "sortOrder": 547212004,
+            "subscriptionKey": "events-1578325481"
+        },
+        {
+            "id": "92786f32-1740-4486-2929-08de970bad08",
+            "seoIdentifier": "nfl-2026-27---joe-burrow",
+            "sportId": "3",
+            "leagueId": "88808",
+            "name": "NFL 2026/27 - Joe Burrow",
+            "startEventDate": "2026-09-13T18:00:00.0000000Z",
+            "participants": [
+                {
+                    "name": "Joe Burrow",
+                    "type": "Team",
+                    "isNationalTeam": false,
+                    "countryCode": "US"
+                },
+                {
+                    "id": "18320",
+                    "name": "CIN Bengals",
+                    "type": "Team",
+                    "metadata": {
+                        "rosettaTeamId": "18320",
+                        "rosettaTeamName": "Bengals",
+                        "shortName": "CIN",
+                        "teamColor": "#fb4f14"
+                    },
+                    "seoIdentifier": "Bengals",
+                    "isNationalTeam": false,
+                    "countryCode": "US"
+                }
+            ],
+            "status": "NOT_STARTED",
+            "tags": [
+                "OSB"
+            ],
+            "metadata": {
+                "settlementDate": "2027-01-11T05:00:00Z"
+            },
+            "sortOrder": 547212004,
+            "subscriptionKey": "events-1578325481"
+        },
+        {
+            "id": "94f38d80-6211-422e-2926-08de970bad08",
+            "seoIdentifier": "nfl-2026-27---lamar-jackson",
+            "sportId": "3",
+            "leagueId": "88808",
+            "name": "NFL 2026/27 - Lamar Jackson",
+            "startEventDate": "2026-09-13T18:00:00.0000000Z",
+            "participants": [
+                {
+                    "id": "18495",
+                    "name": "BAL Ravens",
+                    "type": "Team",
+                    "metadata": {
+                        "rosettaTeamId": "18495",
+                        "rosettaTeamName": "Ravens",
+                        "shortName": "BAL",
+                        "teamColor": "#241773"
+                    },
+                    "seoIdentifier": "Ravens",
+                    "isNationalTeam": false,
+                    "countryCode": "US"
+                },
+                {
+                    "name": "Lamar Jackson",
+                    "type": "Team",
+                    "isNationalTeam": false,
+                    "countryCode": "ZZ"
+                }
+            ],
+            "status": "NOT_STARTED",
+            "tags": [
+                "OSB"
+            ],
+            "metadata": {
+                "settlementDate": "2027-01-11T05:00:00Z"
+            },
+            "sortOrder": 547212004,
+            "subscriptionKey": "events-1578325481"
+        },
+        {
+            "id": "9fcb5528-feb9-4872-2928-08de970bad08",
+            "seoIdentifier": "nfl-2026-27---caleb-williams",
+            "sportId": "3",
+            "leagueId": "88808",
+            "name": "NFL 2026/27 - Caleb Williams",
+            "startEventDate": "2026-09-13T18:00:00.0000000Z",
+            "participants": [
+                {
+                    "name": "Caleb Williams",
+                    "type": "Team",
+                    "isNationalTeam": false,
+                    "countryCode": "US"
+                },
+                {
+                    "id": "18312",
+                    "name": "CHI Bears",
+                    "type": "Team",
+                    "metadata": {
+                        "rosettaTeamId": "18312",
+                        "rosettaTeamName": "Bears",
+                        "shortName": "CHI",
+                        "teamColor": "#0b162a"
+                    },
+                    "seoIdentifier": "Bears",
+                    "isNationalTeam": false,
+                    "countryCode": "US"
+                }
+            ],
+            "status": "NOT_STARTED",
+            "tags": [
+                "OSB"
+            ],
+            "metadata": {
+                "settlementDate": "2027-01-11T05:00:00Z"
+            },
+            "sortOrder": 547212004,
+            "subscriptionKey": "events-1578325481"
+        },
+        {
+            "id": "b2c8ecc1-034b-466f-292c-08de970bad08",
+            "seoIdentifier": "nfl-2026-27---drake-maye",
+            "sportId": "3",
+            "leagueId": "88808",
+            "name": "NFL 2026/27 - Drake Maye",
+            "startEventDate": "2026-09-13T18:00:00.0000000Z",
+            "participants": [
+                {
+                    "name": "Drake Maye",
+                    "type": "Team",
+                    "isNationalTeam": false,
+                    "countryCode": "US"
+                },
+                {
+                    "id": "18415",
+                    "name": "NE Patriots",
+                    "type": "Team",
+                    "metadata": {
+                        "rosettaTeamId": "18415",
+                        "rosettaTeamName": "Patriots",
+                        "shortName": "NE",
+                        "teamColor": "#C60C30"
+                    },
+                    "seoIdentifier": "Patriots",
+                    "isNationalTeam": false,
+                    "countryCode": "US"
+                }
+            ],
+            "status": "NOT_STARTED",
+            "tags": [
+                "OSB"
+            ],
+            "metadata": {
+                "settlementDate": "2027-01-11T05:00:00Z"
+            },
+            "sortOrder": 547212004,
+            "subscriptionKey": "events-1578325481"
+        },
+        {
+            "id": "ba999c39-088d-4899-2927-08de970bad08",
+            "seoIdentifier": "nfl-2026-27---josh-allen",
+            "sportId": "3",
+            "leagueId": "88808",
+            "name": "NFL 2026/27 - Josh Allen",
+            "startEventDate": "2026-09-13T18:00:00.0000000Z",
+            "participants": [
+                {
+                    "id": "18302",
+                    "name": "BUF Bills",
+                    "type": "Team",
+                    "metadata": {
+                        "rosettaTeamId": "18302",
+                        "rosettaTeamName": "Bills",
+                        "shortName": "BUF",
+                        "teamColor": "#00338d"
+                    },
+                    "seoIdentifier": "Bills",
+                    "isNationalTeam": false,
+                    "countryCode": "US"
+                },
+                {
+                    "name": "Josh Allen",
+                    "type": "Team",
+                    "isNationalTeam": false,
+                    "countryCode": "US"
+                }
+            ],
+            "status": "NOT_STARTED",
+            "tags": [
+                "OSB"
+            ],
+            "metadata": {
+                "settlementDate": "2027-01-11T05:00:00Z"
+            },
+            "sortOrder": 547212004,
+            "subscriptionKey": "events-1578325481"
+        },
+        {
+            "id": "d7c3ea52-c67a-4d81-292d-08de970bad08",
+            "seoIdentifier": "nfl-2026-27---justin-herbert",
+            "sportId": "3",
+            "leagueId": "88808",
+            "name": "NFL 2026/27 - Justin Herbert",
+            "startEventDate": "2026-09-13T18:00:00.0000000Z",
+            "participants": [
+                {
+                    "id": "18461",
+                    "name": "LA Chargers",
+                    "type": "Team",
+                    "metadata": {
+                        "rosettaTeamId": "18461",
+                        "rosettaTeamName": "Chargers",
+                        "shortName": "LAC",
+                        "teamColor": "#0080c6"
+                    },
+                    "seoIdentifier": "Chargers",
+                    "isNationalTeam": false,
+                    "countryCode": "US"
+                },
+                {
+                    "name": "Justin Herbert",
+                    "type": "Team",
+                    "isNationalTeam": false,
+                    "countryCode": "US"
+                }
+            ],
+            "status": "NOT_STARTED",
+            "tags": [
+                "OSB"
+            ],
+            "metadata": {
+                "settlementDate": "2027-01-11T05:00:00Z"
+            },
+            "sortOrder": 547212004,
+            "subscriptionKey": "events-1578325481"
+        },
+        {
+            "id": "e9ef5f0c-98d9-4fa1-292f-08de970bad08",
+            "seoIdentifier": "nfl-2026-27---jordan-love",
+            "sportId": "3",
+            "leagueId": "88808",
+            "name": "NFL 2026/27 - Jordan Love",
+            "startEventDate": "2026-09-13T18:00:00.0000000Z",
+            "participants": [
+                {
+                    "id": "18357",
+                    "name": "GB Packers",
+                    "type": "Team",
+                    "metadata": {
+                        "rosettaTeamId": "18357",
+                        "rosettaTeamName": "Packers",
+                        "shortName": "GB",
+                        "teamColor": "#203731"
+                    },
+                    "seoIdentifier": "Packers",
+                    "isNationalTeam": false,
+                    "countryCode": "US"
+                },
+                {
+                    "name": "Jordan Love",
+                    "type": "Team",
+                    "isNationalTeam": false,
+                    "countryCode": "US"
+                }
+            ],
+            "status": "NOT_STARTED",
+            "tags": [
+                "OSB"
+            ],
+            "metadata": {
+                "settlementDate": "2027-01-11T05:00:00Z"
+            },
+            "sortOrder": 547212004,
+            "subscriptionKey": "events-1578325481"
+        },
+        {
+            "id": "f948906e-6466-4b9e-292e-08de970bad08",
+            "seoIdentifier": "nfl-2026-27---jalen-hurts",
+            "sportId": "3",
+            "leagueId": "88808",
+            "name": "NFL 2026/27 - Jalen Hurts",
+            "startEventDate": "2026-09-13T18:00:00.0000000Z",
+            "participants": [
+                {
+                    "name": "Jalen Hurts",
+                    "type": "Team",
+                    "isNationalTeam": false,
+                    "countryCode": "US"
+                },
+                {
+                    "id": "18448",
+                    "name": "PHI Eagles",
+                    "type": "Team",
+                    "metadata": {
+                        "rosettaTeamId": "18448",
+                        "rosettaTeamName": "Eagles",
+                        "shortName": "PHI",
+                        "teamColor": "#004c54"
+                    },
+                    "seoIdentifier": "Eagles",
+                    "isNationalTeam": false,
+                    "countryCode": "US"
+                }
+            ],
+            "status": "NOT_STARTED",
+            "tags": [
+                "OSB"
+            ],
+            "metadata": {
+                "settlementDate": "2027-01-11T05:00:00Z"
+            },
+            "sortOrder": 547212004,
+            "subscriptionKey": "events-1578325481"
+        },
+        {
+            "id": "7c60c2db-0a17-4a38-10ca-08de9f98d696",
+            "seoIdentifier": "nfl-2026-27---fernando-mendoza",
+            "sportId": "3",
+            "leagueId": "88808",
+            "name": "NFL 2026/27 - Fernando Mendoza",
+            "startEventDate": "2026-09-13T18:00:00.0000000Z",
+            "participants": [
+                {
+                    "name": "Fernando Mendoza",
+                    "type": "Team",
+                    "isNationalTeam": false,
+                    "countryCode": "US"
+                },
+                {
+                    "id": "18388",
+                    "name": "LV Raiders",
+                    "type": "Team",
+                    "metadata": {
+                        "rosettaTeamId": "18388",
+                        "rosettaTeamName": "Raiders",
+                        "shortName": "LV",
+                        "teamColor": "#000000"
+                    },
+                    "seoIdentifier": "Raiders",
+                    "isNationalTeam": false,
+                    "countryCode": "US"
+                }
+            ],
+            "status": "NOT_STARTED",
+            "tags": [
+                "OSB"
+            ],
+            "metadata": {
+                "settlementDate": "2027-01-11T05:00:00Z"
+            },
+            "sortOrder": 547212011,
+            "subscriptionKey": "events-1578325481"
+        }
+    ],
+    "markets": [
+        {
+            "id": "327009763",
+            "eventId": "94f38d80-6211-422e-2926-08de970bad08",
+            "sportId": "3",
+            "leagueId": "88808",
+            "name": "NFL 2026/27 - Lamar Jackson Regular Season Passing Yards",
+            "subcategoryId": "17147",
+            "componentMapping": {
+                "primary": 29,
+                "fallback": 0
+            },
+            "marketType": {
+                "id": "5207",
+                "betOfferTypeId": 0,
+                "name": "Regular Season Passing Yards OU"
+            },
+            "subscriptionKey": "events-1578325481",
+            "sortOrder": 327009763,
+            "tags": [
+                "Default",
+                "OSB"
+            ],
+            "blurbId": "b150b68b-457d-4ec5-b19e-f2c9a9585440",
+            "dynamicMetadata": {}
+        },
+        {
+            "id": "327009784",
+            "eventId": "ba999c39-088d-4899-2927-08de970bad08",
+            "sportId": "3",
+            "leagueId": "88808",
+            "name": "NFL 2026/27 - Josh Allen Regular Season Passing Yards",
+            "subcategoryId": "17147",
+            "componentMapping": {
+                "primary": 29,
+                "fallback": 0
+            },
+            "marketType": {
+                "id": "5207",
+                "betOfferTypeId": 0,
+                "name": "Regular Season Passing Yards OU"
+            },
+            "subscriptionKey": "events-1578325481",
+            "sortOrder": 327009784,
+            "tags": [
+                "Default",
+                "OSB"
+            ],
+            "blurbId": "b150b68b-457d-4ec5-b19e-f2c9a9585440",
+            "dynamicMetadata": {}
+        },
+        {
+            "id": "327009815",
+            "eventId": "9fcb5528-feb9-4872-2928-08de970bad08",
+            "sportId": "3",
+            "leagueId": "88808",
+            "name": "NFL 2026/27 - Caleb Williams Regular Season Passing Yards",
+            "subcategoryId": "17147",
+            "componentMapping": {
+                "primary": 29,
+                "fallback": 0
+            },
+            "marketType": {
+                "id": "5207",
+                "betOfferTypeId": 0,
+                "name": "Regular Season Passing Yards OU"
+            },
+            "subscriptionKey": "events-1578325481",
+            "sortOrder": 327009815,
+            "tags": [
+                "Default",
+                "OSB"
+            ],
+            "blurbId": "b150b68b-457d-4ec5-b19e-f2c9a9585440",
+            "dynamicMetadata": {}
+        },
+        {
+            "id": "327009859",
+            "eventId": "92786f32-1740-4486-2929-08de970bad08",
+            "sportId": "3",
+            "leagueId": "88808",
+            "name": "NFL 2026/27 - Joe Burrow Regular Season Passing Yards",
+            "subcategoryId": "17147",
+            "componentMapping": {
+                "primary": 29,
+                "fallback": 0
+            },
+            "marketType": {
+                "id": "5207",
+                "betOfferTypeId": 0,
+                "name": "Regular Season Passing Yards OU"
+            },
+            "subscriptionKey": "events-1578325481",
+            "sortOrder": 327009859,
+            "tags": [
+                "Default",
+                "OSB"
+            ],
+            "blurbId": "b150b68b-457d-4ec5-b19e-f2c9a9585440",
+            "dynamicMetadata": {}
+        },
+        {
+            "id": "327009914",
+            "eventId": "3ce14eac-2335-4be1-292a-08de970bad08",
+            "sportId": "3",
+            "leagueId": "88808",
+            "name": "NFL 2026/27 - Dak Prescott Regular Season Passing Yards",
+            "subcategoryId": "17147",
+            "componentMapping": {
+                "primary": 29,
+                "fallback": 0
+            },
+            "marketType": {
+                "id": "5207",
+                "betOfferTypeId": 0,
+                "name": "Regular Season Passing Yards OU"
+            },
+            "subscriptionKey": "events-1578325481",
+            "sortOrder": 327009914,
+            "tags": [
+                "Default",
+                "OSB"
+            ],
+            "blurbId": "b150b68b-457d-4ec5-b19e-f2c9a9585440",
+            "dynamicMetadata": {}
+        },
+        {
+            "id": "327009980",
+            "eventId": "5a137ae1-3ed4-4a27-292b-08de970bad08",
+            "sportId": "3",
+            "leagueId": "88808",
+            "name": "NFL 2026/27 - Jayden Daniels Regular Season Passing Yards",
+            "subcategoryId": "17147",
+            "componentMapping": {
+                "primary": 29,
+                "fallback": 0
+            },
+            "marketType": {
+                "id": "5207",
+                "betOfferTypeId": 0,
+                "name": "Regular Season Passing Yards OU"
+            },
+            "subscriptionKey": "events-1578325481",
+            "sortOrder": 327009980,
+            "tags": [
+                "Default",
+                "OSB"
+            ],
+            "blurbId": "b150b68b-457d-4ec5-b19e-f2c9a9585440",
+            "dynamicMetadata": {}
+        },
+        {
+            "id": "327009994",
+            "eventId": "b2c8ecc1-034b-466f-292c-08de970bad08",
+            "sportId": "3",
+            "leagueId": "88808",
+            "name": "NFL 2026/27 - Drake Maye Regular Season Passing Yards",
+            "subcategoryId": "17147",
+            "componentMapping": {
+                "primary": 29,
+                "fallback": 0
+            },
+            "marketType": {
+                "id": "5207",
+                "betOfferTypeId": 0,
+                "name": "Regular Season Passing Yards OU"
+            },
+            "subscriptionKey": "events-1578325481",
+            "sortOrder": 327009994,
+            "tags": [
+                "Default",
+                "OSB"
+            ],
+            "blurbId": "b150b68b-457d-4ec5-b19e-f2c9a9585440",
+            "dynamicMetadata": {}
+        },
+        {
+            "id": "327010070",
+            "eventId": "d7c3ea52-c67a-4d81-292d-08de970bad08",
+            "sportId": "3",
+            "leagueId": "88808",
+            "name": "NFL 2026/27 - Justin Herbert Regular Season Passing Yards",
+            "subcategoryId": "17147",
+            "componentMapping": {
+                "primary": 29,
+                "fallback": 0
+            },
+            "marketType": {
+                "id": "5207",
+                "betOfferTypeId": 0,
+                "name": "Regular Season Passing Yards OU"
+            },
+            "subscriptionKey": "events-1578325481",
+            "sortOrder": 327010070,
+            "tags": [
+                "Default",
+                "OSB"
+            ],
+            "blurbId": "b150b68b-457d-4ec5-b19e-f2c9a9585440",
+            "dynamicMetadata": {}
+        },
+        {
+            "id": "327010111",
+            "eventId": "f948906e-6466-4b9e-292e-08de970bad08",
+            "sportId": "3",
+            "leagueId": "88808",
+            "name": "NFL 2026/27 - Jalen Hurts Regular Season Passing Yards",
+            "subcategoryId": "17147",
+            "componentMapping": {
+                "primary": 29,
+                "fallback": 0
+            },
+            "marketType": {
+                "id": "5207",
+                "betOfferTypeId": 0,
+                "name": "Regular Season Passing Yards OU"
+            },
+            "subscriptionKey": "events-1578325481",
+            "sortOrder": 327010111,
+            "tags": [
+                "Default",
+                "OSB"
+            ],
+            "blurbId": "b150b68b-457d-4ec5-b19e-f2c9a9585440",
+            "dynamicMetadata": {}
+        },
+        {
+            "id": "327010121",
+            "eventId": "e9ef5f0c-98d9-4fa1-292f-08de970bad08",
+            "sportId": "3",
+            "leagueId": "88808",
+            "name": "NFL 2026/27 - Jordan Love Regular Season Passing Yards",
+            "subcategoryId": "17147",
+            "componentMapping": {
+                "primary": 29,
+                "fallback": 0
+            },
+            "marketType": {
+                "id": "5207",
+                "betOfferTypeId": 0,
+                "name": "Regular Season Passing Yards OU"
+            },
+            "subscriptionKey": "events-1578325481",
+            "sortOrder": 327010121,
+            "tags": [
+                "Default",
+                "OSB"
+            ],
+            "blurbId": "b150b68b-457d-4ec5-b19e-f2c9a9585440",
+            "dynamicMetadata": {}
+        },
+        {
+            "id": "327017804",
+            "eventId": "68edb163-3b6d-40cb-2930-08de970bad08",
+            "sportId": "3",
+            "leagueId": "88808",
+            "name": "NFL 2026/27 - Bo Nix Regular Season Passing Yards",
+            "subcategoryId": "17147",
+            "componentMapping": {
+                "primary": 29,
+                "fallback": 0
+            },
+            "marketType": {
+                "id": "5207",
+                "betOfferTypeId": 0,
+                "name": "Regular Season Passing Yards OU"
+            },
+            "subscriptionKey": "events-1578325481",
+            "sortOrder": 327017804,
+            "tags": [
+                "Default",
+                "OSB"
+            ],
+            "blurbId": "b150b68b-457d-4ec5-b19e-f2c9a9585440",
+            "dynamicMetadata": {}
+        },
+        {
+            "id": "328779988",
+            "eventId": "7c60c2db-0a17-4a38-10ca-08de9f98d696",
+            "sportId": "3",
+            "leagueId": "88808",
+            "name": "NFL 2026/27 - Fernando Mendoza Regular Season Passing Yards",
+            "subcategoryId": "17147",
+            "componentMapping": {
+                "primary": 29,
+                "fallback": 0
+            },
+            "marketType": {
+                "id": "5207",
+                "betOfferTypeId": 0,
+                "name": "Regular Season Passing Yards OU"
+            },
+            "subscriptionKey": "events-1578325481",
+            "sortOrder": 328779988,
+            "tags": [
+                "Default",
+                "OSB"
+            ],
+            "blurbId": "b150b68b-457d-4ec5-b19e-f2c9a9585440",
+            "dynamicMetadata": {}
+        },
+        {
+            "id": "332332350",
+            "eventId": "1f18db43-b8b3-405f-4efd-08dea7b6bc05",
+            "sportId": "3",
+            "leagueId": "88808",
+            "name": "NFL 2026/27 - Matthew Stafford Regular Season Passing Yards",
+            "subcategoryId": "17147",
+            "componentMapping": {
+                "primary": 29,
+                "fallback": 0
+            },
+            "marketType": {
+                "id": "5207",
+                "betOfferTypeId": 0,
+                "name": "Regular Season Passing Yards OU"
+            },
+            "subscriptionKey": "events-1578325481",
+            "sortOrder": 332332350,
+            "tags": [
+                "Default",
+                "OSB"
+            ],
+            "blurbId": "b150b68b-457d-4ec5-b19e-f2c9a9585440",
+            "dynamicMetadata": {}
+        },
+        {
+            "id": "332333800",
+            "eventId": "d9618009-851d-4e05-4f05-08dea7b6bc05",
+            "sportId": "3",
+            "leagueId": "88808",
+            "name": "NFL 2026/27 - Sam Darnold Regular Season Passing Yards",
+            "subcategoryId": "17147",
+            "componentMapping": {
+                "primary": 29,
+                "fallback": 0
+            },
+            "marketType": {
+                "id": "5207",
+                "betOfferTypeId": 0,
+                "name": "Regular Season Passing Yards OU"
+            },
+            "subscriptionKey": "events-1578325481",
+            "sortOrder": 332333800,
+            "tags": [
+                "Default",
+                "OSB"
+            ],
+            "blurbId": "b150b68b-457d-4ec5-b19e-f2c9a9585440",
+            "dynamicMetadata": {}
+        },
+        {
+            "id": "332334232",
+            "eventId": "c9ae20b5-5c8d-439a-4f0c-08dea7b6bc05",
+            "sportId": "3",
+            "leagueId": "88808",
+            "name": "NFL 2026/27 - Brock Purdy Regular Season Passing Yards",
+            "subcategoryId": "17147",
+            "componentMapping": {
+                "primary": 29,
+                "fallback": 0
+            },
+            "marketType": {
+                "id": "5207",
+                "betOfferTypeId": 0,
+                "name": "Regular Season Passing Yards OU"
+            },
+            "subscriptionKey": "events-1578325481",
+            "sortOrder": 332334232,
+            "tags": [
+                "Default",
+                "OSB"
+            ],
+            "blurbId": "b150b68b-457d-4ec5-b19e-f2c9a9585440",
+            "dynamicMetadata": {}
+        },
+        {
+            "id": "332334749",
+            "eventId": "c574cbc8-3fda-4692-4f12-08dea7b6bc05",
+            "sportId": "3",
+            "leagueId": "88808",
+            "name": "NFL 2026/27 - Tyler Shough Regular Season Passing Yards",
+            "subcategoryId": "17147",
+            "componentMapping": {
+                "primary": 29,
+                "fallback": 0
+            },
+            "marketType": {
+                "id": "5207",
+                "betOfferTypeId": 0,
+                "name": "Regular Season Passing Yards OU"
+            },
+            "subscriptionKey": "events-1578325481",
+            "sortOrder": 332334749,
+            "tags": [
+                "Default",
+                "OSB"
+            ],
+            "blurbId": "b150b68b-457d-4ec5-b19e-f2c9a9585440",
+            "dynamicMetadata": {}
+        },
+        {
+            "id": "332335300",
+            "eventId": "bb6a7d63-1415-4f03-4f19-08dea7b6bc05",
+            "sportId": "3",
+            "leagueId": "88808",
+            "name": "NFL 2026/27 - Baker Mayfield Regular Season Passing Yards",
+            "subcategoryId": "17147",
+            "componentMapping": {
+                "primary": 29,
+                "fallback": 0
+            },
+            "marketType": {
+                "id": "5207",
+                "betOfferTypeId": 0,
+                "name": "Regular Season Passing Yards OU"
+            },
+            "subscriptionKey": "events-1578325481",
+            "sortOrder": 332335300,
+            "tags": [
+                "Default",
+                "OSB"
+            ],
+            "blurbId": "b150b68b-457d-4ec5-b19e-f2c9a9585440",
+            "dynamicMetadata": {}
+        },
+        {
+            "id": "332335837",
+            "eventId": "b80bb72e-c07f-4182-4f1a-08dea7b6bc05",
+            "sportId": "3",
+            "leagueId": "88808",
+            "name": "NFL 2026/27 - Jared Goff Regular Season Passing Yards",
+            "subcategoryId": "17147",
+            "componentMapping": {
+                "primary": 29,
+                "fallback": 0
+            },
+            "marketType": {
+                "id": "5207",
+                "betOfferTypeId": 0,
+                "name": "Regular Season Passing Yards OU"
+            },
+            "subscriptionKey": "events-1578325481",
+            "sortOrder": 332335837,
+            "tags": [
+                "Default",
+                "OSB"
+            ],
+            "blurbId": "b150b68b-457d-4ec5-b19e-f2c9a9585440",
+            "dynamicMetadata": {}
+        },
+        {
+            "id": "332336372",
+            "eventId": "3053f837-b12a-48e9-4f1b-08dea7b6bc05",
+            "sportId": "3",
+            "leagueId": "88808",
+            "name": "NFL 2026/27 - C.J. Stroud Regular Season Passing Yards",
+            "subcategoryId": "17147",
+            "componentMapping": {
+                "primary": 29,
+                "fallback": 0
+            },
+            "marketType": {
+                "id": "5207",
+                "betOfferTypeId": 0,
+                "name": "Regular Season Passing Yards OU"
+            },
+            "subscriptionKey": "events-1578325481",
+            "sortOrder": 332336372,
+            "tags": [
+                "Default",
+                "OSB"
+            ],
+            "blurbId": "b150b68b-457d-4ec5-b19e-f2c9a9585440",
+            "dynamicMetadata": {}
+        },
+        {
+            "id": "332336663",
+            "eventId": "89af3fbb-f53d-4447-4f1c-08dea7b6bc05",
+            "sportId": "3",
+            "leagueId": "88808",
+            "name": "NFL 2026/27 - Trevor Lawrence Regular Season Passing Yards",
+            "subcategoryId": "17147",
+            "componentMapping": {
+                "primary": 29,
+                "fallback": 0
+            },
+            "marketType": {
+                "id": "5207",
+                "betOfferTypeId": 0,
+                "name": "Regular Season Passing Yards OU"
+            },
+            "subscriptionKey": "events-1578325481",
+            "sortOrder": 332336663,
+            "tags": [
+                "Default",
+                "OSB"
+            ],
+            "blurbId": "b150b68b-457d-4ec5-b19e-f2c9a9585440",
+            "dynamicMetadata": {}
+        },
+        {
+            "id": "332337152",
+            "eventId": "eff2655f-23a2-46af-4f1d-08dea7b6bc05",
+            "sportId": "3",
+            "leagueId": "88808",
+            "name": "NFL 2026/27 - Cameron Ward Regular Season Passing Yards",
+            "subcategoryId": "17147",
+            "componentMapping": {
+                "primary": 29,
+                "fallback": 0
+            },
+            "marketType": {
+                "id": "5207",
+                "betOfferTypeId": 0,
+                "name": "Regular Season Passing Yards OU"
+            },
+            "subscriptionKey": "events-1578325481",
+            "sortOrder": 332337152,
+            "tags": [
+                "Default",
+                "OSB"
+            ],
+            "blurbId": "b150b68b-457d-4ec5-b19e-f2c9a9585440",
+            "dynamicMetadata": {}
+        },
+        {
+            "id": "335921610",
+            "eventId": "d4fafae8-052d-434d-d21d-08deb4d6d015",
+            "sportId": "3",
+            "leagueId": "88808",
+            "name": "NFL 2026/27 - Aaron Rodgers Regular Season Passing Yards",
+            "subcategoryId": "17147",
+            "componentMapping": {
+                "primary": 29,
+                "fallback": 0
+            },
+            "marketType": {
+                "id": "5207",
+                "betOfferTypeId": 0,
+                "name": "Regular Season Passing Yards OU"
+            },
+            "subscriptionKey": "events-1578325481",
+            "sortOrder": 335921610,
+            "tags": [
+                "Default",
+                "OSB"
+            ],
+            "blurbId": "b150b68b-457d-4ec5-b19e-f2c9a9585440",
+            "dynamicMetadata": {}
+        },
+        {
+            "id": "335921633",
+            "eventId": "ccc5c457-0a2b-44d7-d21e-08deb4d6d015",
+            "sportId": "3",
+            "leagueId": "88808",
+            "name": "NFL 2026/27 - Jaxson Dart Regular Season Passing Yards",
+            "subcategoryId": "17147",
+            "componentMapping": {
+                "primary": 29,
+                "fallback": 0
+            },
+            "marketType": {
+                "id": "5207",
+                "betOfferTypeId": 0,
+                "name": "Regular Season Passing Yards OU"
+            },
+            "subscriptionKey": "events-1578325481",
+            "sortOrder": 335921633,
+            "tags": [
+                "Default",
+                "OSB"
+            ],
+            "blurbId": "b150b68b-457d-4ec5-b19e-f2c9a9585440",
+            "dynamicMetadata": {}
+        },
+        {
+            "id": "335921664",
+            "eventId": "3b4b0778-1dc2-4b9e-d220-08deb4d6d015",
+            "sportId": "3",
+            "leagueId": "88808",
+            "name": "NFL 2026/27 - Bryce Young Regular Season Passing Yards",
+            "subcategoryId": "17147",
+            "componentMapping": {
+                "primary": 29,
+                "fallback": 0
+            },
+            "marketType": {
+                "id": "5207",
+                "betOfferTypeId": 0,
+                "name": "Regular Season Passing Yards OU"
+            },
+            "subscriptionKey": "events-1578325481",
+            "sortOrder": 335921664,
+            "tags": [
+                "Default",
+                "OSB"
+            ],
+            "blurbId": "b150b68b-457d-4ec5-b19e-f2c9a9585440",
+            "dynamicMetadata": {}
+        },
+        {
+            "id": "336652356",
+            "eventId": "88969675-08c6-451c-d2e3-08deb4d6d015",
+            "sportId": "3",
+            "leagueId": "88808",
+            "name": "NFL 2026/27 - Malik Willis Regular Season Passing Yards",
+            "subcategoryId": "17147",
+            "componentMapping": {
+                "primary": 29,
+                "fallback": 0
+            },
+            "marketType": {
+                "id": "5207",
+                "betOfferTypeId": 0,
+                "name": "Regular Season Passing Yards OU"
+            },
+            "subscriptionKey": "events-1578325481",
+            "sortOrder": 336652356,
+            "tags": [
+                "Default",
+                "OSB"
+            ],
+            "blurbId": "b150b68b-457d-4ec5-b19e-f2c9a9585440",
+            "dynamicMetadata": {}
+        }
+    ],
+    "selections": [
+        {
+            "id": "0QA332332350#591861480_13L88808Q1807034Q2-1",
+            "marketId": "332332350",
+            "label": "Over 3999.5",
+            "displayOdds": {
+                "american": "\u2212110",
+                "decimal": "1.90",
+                "fractional": "10/11"
+            },
+            "trueOdds": 1.90909091,
+            "outcomeType": "Over",
+            "sortOrder": 1000,
+            "tags": [
+                "OSB"
+            ],
+            "metadata": {}
+        },
+        {
+            "id": "0QA332332350#591861479_13L88808Q1807033Q2-1",
+            "marketId": "332332350",
+            "label": "Under 3999.5",
+            "displayOdds": {
+                "american": "\u2212110",
+                "decimal": "1.90",
+                "fractional": "10/11"
+            },
+            "trueOdds": 1.90909091,
+            "outcomeType": "Under",
+            "sortOrder": 1002,
+            "tags": [
+                "OSB"
+            ],
+            "metadata": {}
+        },
+        {
+            "id": "0QA332336372#591872937_13L88808Q11679851Q2-1",
+            "marketId": "332336372",
+            "label": "Over 3649.5",
+            "displayOdds": {
+                "american": "\u002B100",
+                "decimal": "2.00",
+                "fractional": "1/1"
+            },
+            "trueOdds": 2,
+            "outcomeType": "Over",
+            "sortOrder": 1000,
+            "tags": [
+                "OSB"
+            ],
+            "metadata": {}
+        },
+        {
+            "id": "0QA332336372#591872936_13L88808Q11679852Q2-1",
+            "marketId": "332336372",
+            "label": "Under 3649.5",
+            "displayOdds": {
+                "american": "\u2212120",
+                "decimal": "1.83",
+                "fractional": "5/6"
+            },
+            "trueOdds": 1.83333334,
+            "outcomeType": "Under",
+            "sortOrder": 1002,
+            "tags": [
+                "OSB"
+            ],
+            "metadata": {}
+        },
+        {
+            "id": "0QA332336663#591873764_13L88808Q12450417Q2-1",
+            "marketId": "332336663",
+            "label": "Over 3749.5",
+            "displayOdds": {
+                "american": "\u002B100",
+                "decimal": "2.00",
+                "fractional": "1/1"
+            },
+            "trueOdds": 2,
+            "outcomeType": "Over",
+            "sortOrder": 1000,
+            "tags": [
+                "OSB"
+            ],
+            "metadata": {}
+        },
+        {
+            "id": "0QA332336663#591873763_13L88808Q12450368Q2-1",
+            "marketId": "332336663",
+            "label": "Under 3749.5",
+            "displayOdds": {
+                "american": "\u2212120",
+                "decimal": "1.83",
+                "fractional": "5/6"
+            },
+            "trueOdds": 1.83333334,
+            "outcomeType": "Under",
+            "sortOrder": 1002,
+            "tags": [
+                "OSB"
+            ],
+            "metadata": {}
+        },
+        {
+            "id": "0QA332335837#591871212_13L88808Q12450427Q2-1",
+            "marketId": "332335837",
+            "label": "Over 4099.5",
+            "displayOdds": {
+                "american": "\u002B100",
+                "decimal": "2.00",
+                "fractional": "1/1"
+            },
+            "trueOdds": 2,
+            "outcomeType": "Over",
+            "sortOrder": 1000,
+            "tags": [
+                "OSB"
+            ],
+            "metadata": {}
+        },
+        {
+            "id": "0QA332335837#591871211_13L88808Q12450383Q2-1",
+            "marketId": "332335837",
+            "label": "Under 4099.5",
+            "displayOdds": {
+                "american": "\u2212120",
+                "decimal": "1.83",
+                "fractional": "5/6"
+            },
+            "trueOdds": 1.83333334,
+            "outcomeType": "Under",
+            "sortOrder": 1002,
+            "tags": [
+                "OSB"
+            ],
+            "metadata": {}
+        },
+        {
+            "id": "0QA332335300#591869627_13L88808Q11684916Q2-1",
+            "marketId": "332335300",
+            "label": "Over 3599.5",
+            "displayOdds": {
+                "american": "\u002B100",
+                "decimal": "2.00",
+                "fractional": "1/1"
+            },
+            "trueOdds": 2,
+            "outcomeType": "Over",
+            "sortOrder": 1000,
+            "tags": [
+                "OSB"
+            ],
+            "metadata": {}
+        },
+        {
+            "id": "0QA332335300#591869626_13L88808Q11684917Q2-1",
+            "marketId": "332335300",
+            "label": "Under 3599.5",
+            "displayOdds": {
+                "american": "\u2212120",
+                "decimal": "1.83",
+                "fractional": "5/6"
+            },
+            "trueOdds": 1.83333334,
+            "outcomeType": "Under",
+            "sortOrder": 1002,
+            "tags": [
+                "OSB"
+            ],
+            "metadata": {}
+        },
+        {
+            "id": "0QA332334749#591867671_13L88808Q11679851Q2-1",
+            "marketId": "332334749",
+            "label": "Over 3649.5",
+            "displayOdds": {
+                "american": "\u2212110",
+                "decimal": "1.90",
+                "fractional": "10/11"
+            },
+            "trueOdds": 1.90909091,
+            "outcomeType": "Over",
+            "sortOrder": 1000,
+            "tags": [
+                "OSB"
+            ],
+            "metadata": {}
+        },
+        {
+            "id": "0QA332334749#591867670_13L88808Q11679852Q2-1",
+            "marketId": "332334749",
+            "label": "Under 3649.5",
+            "displayOdds": {
+                "american": "\u2212110",
+                "decimal": "1.90",
+                "fractional": "10/11"
+            },
+            "trueOdds": 1.90909091,
+            "outcomeType": "Under",
+            "sortOrder": 1002,
+            "tags": [
+                "OSB"
+            ],
+            "metadata": {}
+        },
+        {
+            "id": "0QA332334232#591866201_13L88808Q1855176Q2-1",
+            "marketId": "332334232",
+            "label": "Over 3799.5",
+            "displayOdds": {
+                "american": "\u2212110",
+                "decimal": "1.90",
+                "fractional": "10/11"
+            },
+            "trueOdds": 1.90909091,
+            "outcomeType": "Over",
+            "sortOrder": 1000,
+            "tags": [
+                "OSB"
+            ],
+            "metadata": {}
+        },
+        {
+            "id": "0QA332334232#591866200_13L88808Q1855177Q2-1",
+            "marketId": "332334232",
+            "label": "Under 3799.5",
+            "displayOdds": {
+                "american": "\u2212110",
+                "decimal": "1.90",
+                "fractional": "10/11"
+            },
+            "trueOdds": 1.90909091,
+            "outcomeType": "Under",
+            "sortOrder": 1002,
+            "tags": [
+                "OSB"
+            ],
+            "metadata": {}
+        },
+        {
+            "id": "0QA332333800#2179592991_13L88808Q11679826Q2-1",
+            "marketId": "332333800",
+            "label": "Over 3699.5",
+            "displayOdds": {
+                "american": "\u2212110",
+                "decimal": "1.90",
+                "fractional": "10/11"
+            },
+            "trueOdds": 1.90909091,
+            "outcomeType": "Over",
+            "sortOrder": 1000,
+            "tags": [
+                "OSB"
+            ],
+            "metadata": {}
+        },
+        {
+            "id": "0QA332333800#2179592990_13L88808Q11679827Q2-1",
+            "marketId": "332333800",
+            "label": "Under 3699.5",
+            "displayOdds": {
+                "american": "\u2212110",
+                "decimal": "1.90",
+                "fractional": "10/11"
+            },
+            "trueOdds": 1.90909091,
+            "outcomeType": "Under",
+            "sortOrder": 1002,
+            "tags": [
+                "OSB"
+            ],
+            "metadata": {}
+        },
+        {
+            "id": "0QA332337152#591875168_13L88808Q12450406Q2-1",
+            "marketId": "332337152",
+            "label": "Over 3299.5",
+            "displayOdds": {
+                "american": "\u2212110",
+                "decimal": "1.90",
+                "fractional": "10/11"
+            },
+            "trueOdds": 1.90909091,
+            "outcomeType": "Over",
+            "sortOrder": 1000,
+            "tags": [
+                "OSB"
+            ],
+            "metadata": {}
+        },
+        {
+            "id": "0QA332337152#591875167_13L88808Q12450351Q2-1",
+            "marketId": "332337152",
+            "label": "Under 3299.5",
+            "displayOdds": {
+                "american": "\u2212110",
+                "decimal": "1.90",
+                "fractional": "10/11"
+            },
+            "trueOdds": 1.90909091,
+            "outcomeType": "Under",
+            "sortOrder": 1002,
+            "tags": [
+                "OSB"
+            ],
+            "metadata": {}
+        },
+        {
+            "id": "0QA335921664#2157100476_13L88808Q12450400Q2-1",
+            "marketId": "335921664",
+            "label": "Over 3074.5",
+            "displayOdds": {
+                "american": "\u2212110",
+                "decimal": "1.90",
+                "fractional": "10/11"
+            },
+            "trueOdds": 1.90909091,
+            "outcomeType": "Over",
+            "sortOrder": 1000,
+            "tags": [
+                "OSB"
+            ],
+            "metadata": {}
+        },
+        {
+            "id": "0QA335921664#2157100475_13L88808Q12450342Q2-1",
+            "marketId": "335921664",
+            "label": "Under 3074.5",
+            "displayOdds": {
+                "american": "\u2212110",
+                "decimal": "1.90",
+                "fractional": "10/11"
+            },
+            "trueOdds": 1.90909091,
+            "outcomeType": "Under",
+            "sortOrder": 1002,
+            "tags": [
+                "OSB"
+            ],
+            "metadata": {}
+        },
+        {
+            "id": "0QA336652356#2159763001_13L88808Q12027819Q2-1",
+            "marketId": "336652356",
+            "label": "Over 3050.5",
+            "displayOdds": {
+                "american": "\u2212110",
+                "decimal": "1.90",
+                "fractional": "10/11"
+            },
+            "trueOdds": 1.90909091,
+            "outcomeType": "Over",
+            "sortOrder": 1000,
+            "tags": [
+                "OSB"
+            ],
+            "metadata": {}
+        },
+        {
+            "id": "0QA336652356#2159763000_13L88808Q12027818Q2-1",
+            "marketId": "336652356",
+            "label": "Under 3050.5",
+            "displayOdds": {
+                "american": "\u2212110",
+                "decimal": "1.90",
+                "fractional": "10/11"
+            },
+            "trueOdds": 1.90909091,
+            "outcomeType": "Under",
+            "sortOrder": 1002,
+            "tags": [
+                "OSB"
+            ],
+            "metadata": {}
+        },
+        {
+            "id": "0QA335921633#2157100474_13L88808Q1807036Q2-1",
+            "marketId": "335921633",
+            "label": "Over 3150.5",
+            "displayOdds": {
+                "american": "\u2212110",
+                "decimal": "1.90",
+                "fractional": "10/11"
+            },
+            "trueOdds": 1.90909091,
+            "outcomeType": "Over",
+            "sortOrder": 1000,
+            "tags": [
+                "OSB"
+            ],
+            "metadata": {}
+        },
+        {
+            "id": "0QA335921633#2157100473_13L88808Q1807035Q2-1",
+            "marketId": "335921633",
+            "label": "Under 3150.5",
+            "displayOdds": {
+                "american": "\u2212110",
+                "decimal": "1.90",
+                "fractional": "10/11"
+            },
+            "trueOdds": 1.90909091,
+            "outcomeType": "Under",
+            "sortOrder": 1002,
+            "tags": [
+                "OSB"
+            ],
+            "metadata": {}
+        },
+        {
+            "id": "0QA335921610#2157100472_13L88808Q11679832Q2-1",
+            "marketId": "335921610",
+            "label": "Over 3199.5",
+            "displayOdds": {
+                "american": "\u2212110",
+                "decimal": "1.90",
+                "fractional": "10/11"
+            },
+            "trueOdds": 1.90909091,
+            "outcomeType": "Over",
+            "sortOrder": 1000,
+            "tags": [
+                "OSB"
+            ],
+            "metadata": {}
+        },
+        {
+            "id": "0QA335921610#2157100471_13L88808Q11679833Q2-1",
+            "marketId": "335921610",
+            "label": "Under 3199.5",
+            "displayOdds": {
+                "american": "\u2212110",
+                "decimal": "1.90",
+                "fractional": "10/11"
+            },
+            "trueOdds": 1.90909091,
+            "outcomeType": "Under",
+            "sortOrder": 1002,
+            "tags": [
+                "OSB"
+            ],
+            "metadata": {}
+        },
+        {
+            "id": "0QA327009914#570041328_13L88808Q1807034Q2-1",
+            "marketId": "327009914",
+            "label": "Over 3999.5",
+            "displayOdds": {
+                "american": "\u2212110",
+                "decimal": "1.90",
+                "fractional": "10/11"
+            },
+            "trueOdds": 1.90909091,
+            "outcomeType": "Over",
+            "sortOrder": 1000,
+            "tags": [
+                "OSB"
+            ],
+            "metadata": {}
+        },
+        {
+            "id": "0QA327009914#570041327_13L88808Q1807033Q2-1",
+            "marketId": "327009914",
+            "label": "Under 3999.5",
+            "displayOdds": {
+                "american": "\u2212110",
+                "decimal": "1.90",
+                "fractional": "10/11"
+            },
+            "trueOdds": 1.90909091,
+            "outcomeType": "Under",
+            "sortOrder": 1002,
+            "tags": [
+                "OSB"
+            ],
+            "metadata": {}
+        },
+        {
+            "id": "0QA327009980#2172086744_13L88808Q12449341Q2-1",
+            "marketId": "327009980",
+            "label": "Over 3249.5",
+            "displayOdds": {
+                "american": "\u2212110",
+                "decimal": "1.90",
+                "fractional": "10/11"
+            },
+            "trueOdds": 1.90909091,
+            "outcomeType": "Over",
+            "sortOrder": 1000,
+            "tags": [
+                "OSB"
+            ],
+            "metadata": {}
+        },
+        {
+            "id": "0QA327009980#2172086743_13L88808Q12449342Q2-1",
+            "marketId": "327009980",
+            "label": "Under 3249.5",
+            "displayOdds": {
+                "american": "\u2212110",
+                "decimal": "1.90",
+                "fractional": "10/11"
+            },
+            "trueOdds": 1.90909091,
+            "outcomeType": "Under",
+            "sortOrder": 1002,
+            "tags": [
+                "OSB"
+            ],
+            "metadata": {}
+        },
+        {
+            "id": "0QA327017804#570035827_13L88808Q12449347Q2-1",
+            "marketId": "327017804",
+            "label": "Over 3499.5",
+            "displayOdds": {
+                "american": "\u2212110",
+                "decimal": "1.90",
+                "fractional": "10/11"
+            },
+            "trueOdds": 1.90909091,
+            "outcomeType": "Over",
+            "sortOrder": 1000,
+            "tags": [
+                "OSB"
+            ],
+            "metadata": {}
+        },
+        {
+            "id": "0QA327017804#570035826_13L88808Q12449348Q2-1",
+            "marketId": "327017804",
+            "label": "Under 3499.5",
+            "displayOdds": {
+                "american": "\u2212110",
+                "decimal": "1.90",
+                "fractional": "10/11"
+            },
+            "trueOdds": 1.90909091,
+            "outcomeType": "Under",
+            "sortOrder": 1002,
+            "tags": [
+                "OSB"
+            ],
+            "metadata": {}
+        },
+        {
+            "id": "0QA327009859#576923739_13L88808Q1807034Q2-1",
+            "marketId": "327009859",
+            "label": "Over 3999.5",
+            "displayOdds": {
+                "american": "\u2212110",
+                "decimal": "1.90",
+                "fractional": "10/11"
+            },
+            "trueOdds": 1.90909091,
+            "outcomeType": "Over",
+            "sortOrder": 1000,
+            "tags": [
+                "OSB"
+            ],
+            "metadata": {}
+        },
+        {
+            "id": "0QA327009859#576923738_13L88808Q1807033Q2-1",
+            "marketId": "327009859",
+            "label": "Under 3999.5",
+            "displayOdds": {
+                "american": "\u2212110",
+                "decimal": "1.90",
+                "fractional": "10/11"
+            },
+            "trueOdds": 1.90909091,
+            "outcomeType": "Under",
+            "sortOrder": 1002,
+            "tags": [
+                "OSB"
+            ],
+            "metadata": {}
+        },
+        {
+            "id": "0QA327009763#570046358_13L88808Q12449341Q2-1",
+            "marketId": "327009763",
+            "label": "Over 3249.5",
+            "displayOdds": {
+                "american": "\u2212110",
+                "decimal": "1.90",
+                "fractional": "10/11"
+            },
+            "trueOdds": 1.90909091,
+            "outcomeType": "Over",
+            "sortOrder": 1000,
+            "tags": [
+                "OSB"
+            ],
+            "metadata": {}
+        },
+        {
+            "id": "0QA327009763#570046357_13L88808Q12449342Q2-1",
+            "marketId": "327009763",
+            "label": "Under 3249.5",
+            "displayOdds": {
+                "american": "\u2212110",
+                "decimal": "1.90",
+                "fractional": "10/11"
+            },
+            "trueOdds": 1.90909091,
+            "outcomeType": "Under",
+            "sortOrder": 1002,
+            "tags": [
+                "OSB"
+            ],
+            "metadata": {}
+        },
+        {
+            "id": "0QA327009815#2165483809_13L88808Q12450414Q2-1",
+            "marketId": "327009815",
+            "label": "Over 3624.5",
+            "displayOdds": {
+                "american": "\u2212115",
+                "decimal": "1.86",
+                "fractional": "20/23"
+            },
+            "trueOdds": 1.86956522,
+            "outcomeType": "Over",
+            "sortOrder": 1000,
+            "tags": [
+                "OSB"
+            ],
+            "metadata": {}
+        },
+        {
+            "id": "0QA327009815#2165483808_13L88808Q12450364Q2-1",
+            "marketId": "327009815",
+            "label": "Under 3624.5",
+            "displayOdds": {
+                "american": "\u2212105",
+                "decimal": "1.95",
+                "fractional": "20/21"
+            },
+            "trueOdds": 1.95238096,
+            "outcomeType": "Under",
+            "sortOrder": 1002,
+            "tags": [
+                "OSB"
+            ],
+            "metadata": {}
+        },
+        {
+            "id": "0QA327009994#586121118_13L88808Q1855176Q2-1",
+            "marketId": "327009994",
+            "label": "Over 3799.5",
+            "displayOdds": {
+                "american": "\u2212120",
+                "decimal": "1.83",
+                "fractional": "5/6"
+            },
+            "trueOdds": 1.83333334,
+            "outcomeType": "Over",
+            "sortOrder": 1000,
+            "tags": [
+                "OSB"
+            ],
+            "metadata": {}
+        },
+        {
+            "id": "0QA327009994#586121117_13L88808Q1855177Q2-1",
+            "marketId": "327009994",
+            "label": "Under 3799.5",
+            "displayOdds": {
+                "american": "\u002B100",
+                "decimal": "2.00",
+                "fractional": "1/1"
+            },
+            "trueOdds": 2,
+            "outcomeType": "Under",
+            "sortOrder": 1002,
+            "tags": [
+                "OSB"
+            ],
+            "metadata": {}
+        },
+        {
+            "id": "0QA327009784#570045122_13L88808Q1855174Q2-1",
+            "marketId": "327009784",
+            "label": "Over 3549.5",
+            "displayOdds": {
+                "american": "\u2212110",
+                "decimal": "1.90",
+                "fractional": "10/11"
+            },
+            "trueOdds": 1.90909091,
+            "outcomeType": "Over",
+            "sortOrder": 1000,
+            "tags": [
+                "OSB"
+            ],
+            "metadata": {}
+        },
+        {
+            "id": "0QA327009784#570045121_13L88808Q1855175Q2-1",
+            "marketId": "327009784",
+            "label": "Under 3549.5",
+            "displayOdds": {
+                "american": "\u2212110",
+                "decimal": "1.90",
+                "fractional": "10/11"
+            },
+            "trueOdds": 1.90909091,
+            "outcomeType": "Under",
+            "sortOrder": 1002,
+            "tags": [
+                "OSB"
+            ],
+            "metadata": {}
+        },
+        {
+            "id": "0QA327010070#594154986_13L88808Q12450413Q2-1",
+            "marketId": "327010070",
+            "label": "Over 3574.5",
+            "displayOdds": {
+                "american": "\u2212110",
+                "decimal": "1.90",
+                "fractional": "10/11"
+            },
+            "trueOdds": 1.90909091,
+            "outcomeType": "Over",
+            "sortOrder": 1000,
+            "tags": [
+                "OSB"
+            ],
+            "metadata": {}
+        },
+        {
+            "id": "0QA327010070#594154985_13L88808Q12450361Q2-1",
+            "marketId": "327010070",
+            "label": "Under 3574.5",
+            "displayOdds": {
+                "american": "\u2212110",
+                "decimal": "1.90",
+                "fractional": "10/11"
+            },
+            "trueOdds": 1.90909091,
+            "outcomeType": "Under",
+            "sortOrder": 1002,
+            "tags": [
+                "OSB"
+            ],
+            "metadata": {}
+        },
+        {
+            "id": "0QA327010121#570044743_13L88808Q1855174Q2-1",
+            "marketId": "327010121",
+            "label": "Over 3549.5",
+            "displayOdds": {
+                "american": "\u2212110",
+                "decimal": "1.90",
+                "fractional": "10/11"
+            },
+            "trueOdds": 1.90909091,
+            "outcomeType": "Over",
+            "sortOrder": 1000,
+            "tags": [
+                "OSB"
+            ],
+            "metadata": {}
+        },
+        {
+            "id": "0QA327010121#570044742_13L88808Q1855175Q2-1",
+            "marketId": "327010121",
+            "label": "Under 3549.5",
+            "displayOdds": {
+                "american": "\u2212110",
+                "decimal": "1.90",
+                "fractional": "10/11"
+            },
+            "trueOdds": 1.90909091,
+            "outcomeType": "Under",
+            "sortOrder": 1002,
+            "tags": [
+                "OSB"
+            ],
+            "metadata": {}
+        },
+        {
+            "id": "0QA327010111#570043068_13L88808Q12449341Q2-1",
+            "marketId": "327010111",
+            "label": "Over 3249.5",
+            "displayOdds": {
+                "american": "\u2212110",
+                "decimal": "1.90",
+                "fractional": "10/11"
+            },
+            "trueOdds": 1.90909091,
+            "outcomeType": "Over",
+            "sortOrder": 1000,
+            "tags": [
+                "OSB"
+            ],
+            "metadata": {}
+        },
+        {
+            "id": "0QA327010111#570043067_13L88808Q12449342Q2-1",
+            "marketId": "327010111",
+            "label": "Under 3249.5",
+            "displayOdds": {
+                "american": "\u2212110",
+                "decimal": "1.90",
+                "fractional": "10/11"
+            },
+            "trueOdds": 1.90909091,
+            "outcomeType": "Under",
+            "sortOrder": 1002,
+            "tags": [
+                "OSB"
+            ],
+            "metadata": {}
+        },
+        {
+            "id": "0QA328779988#2176286503_13L88808Q12458354Q2-1",
+            "marketId": "328779988",
+            "label": "Over 2399.5",
+            "displayOdds": {
+                "american": "\u002B100",
+                "decimal": "2.00",
+                "fractional": "1/1"
+            },
+            "trueOdds": 2,
+            "outcomeType": "Over",
+            "sortOrder": 1000,
+            "tags": [
+                "OSB"
+            ],
+            "metadata": {}
+        },
+        {
+            "id": "0QA328779988#2176286502_13L88808Q12458355Q2-1",
+            "marketId": "328779988",
+            "label": "Under 2399.5",
+            "displayOdds": {
+                "american": "\u2212120",
+                "decimal": "1.83",
+                "fractional": "5/6"
+            },
+            "trueOdds": 1.83333334,
+            "outcomeType": "Under",
+            "sortOrder": 1002,
+            "tags": [
+                "OSB"
+            ],
+            "metadata": {}
+        }
+    ],
+    "subscriptionPartials": {
+        "events-1578325481": {
+            "entity": "events",
+            "query": "$filter=leagueId eq \u002788808\u0027 AND clientMetadata/Subcategories/any(s: s/Id eq \u002717147\u0027) and tags/any(t: t eq \u0027OSB\u0027)",
+            "includeMarkets": "$filter=clientMetadata/subCategoryId eq \u002717147\u0027 AND tags/all(t: t ne \u0027SportcastBetBuilder\u0027) and tags/any(t: t eq \u0027OSB\u0027)",
+            "locale": "en"
+        }
+    }
+}

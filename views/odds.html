@@ -8,69 +8,95 @@
   <link rel="stylesheet" href="/styles/styles.css?v=df002b71">
   <link rel="stylesheet" href="/styles/index.css?v=a1b2c3d4">
   <style>
+    main.home { padding-left: 0; padding-right: 0; }
     .odds-wrap { max-width: 900px; margin: 0 auto; padding: 0 12px 48px; }
 
-    /* Top row of tabs */
+    /* Tabs render as a vertical list; once one is chosen the list is replaced
+       by breadcrumbs (see .odds-crumbs). */
     .odds-tabs {
       display: flex;
-      gap: 18px;
-      overflow-x: auto;
-      border-bottom: 1px solid #2a2f3a;
+      flex-direction: column;
       margin-bottom: 16px;
-      -webkit-overflow-scrolling: touch;
     }
     .odds-tab {
       background: none;
       border: none;
+      border-bottom: 1px solid #2a2f3a;
       color: #6ea8fe;
-      font-size: 15px;
-      padding: 12px 2px;
-      white-space: nowrap;
+      font-size: 16px;
+      padding: 16px 8px;
+      text-align: left;
       cursor: pointer;
-      border-bottom: 2px solid transparent;
     }
-    .odds-tab.is-active {
-      color: #cfe0ff;
-      border-bottom-color: #6ea8fe;
-    }
-
-    .odds-card-title {
-      font-size: 17px;
+    .odds-tab:hover { color: #cfe0ff; }
+    .odds-section {
+      padding: 20px 8px 8px;
+      color: #8b95a5;
+      font-size: 12px;
       font-weight: 600;
-      padding: 12px 4px;
-      margin-top: 8px;
+      text-transform: uppercase;
+      letter-spacing: .05em;
     }
 
-    /* Coupon = collapsible section */
+    /* Breadcrumbs shown in place of the tab list after a selection. */
+    /* Breadcrumbs stay pinned (top offset set in JS to clear the site header). */
+    .odds-crumbs {
+      position: sticky;
+      z-index: 50;
+      background: #0f1117;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 8px;
+      border-bottom: 1px solid #2a2f3a;
+      font-size: 14px;
+    }
+    .odds-crumb-link {
+      background: none;
+      border: none;
+      color: #6ea8fe;
+      cursor: pointer;
+      font-size: 14px;
+      padding: 0;
+    }
+    .odds-crumb-sep { color: #56607a; }
+    .odds-crumb-current { color: #cfe0ff; font-weight: 600; }
+
+    /* Coupon = collapsible section.
+       Field-based markets (Divisions, Conferences, Super Bowl): the header sits
+       above a stack of runner rows. OU-based markets (Player Props): the header
+       sits inline with FD/DK price columns. */
     .odds-coupon { border-top: 1px solid #2a2f3a; }
     .odds-coupon-header {
       display: flex;
       align-items: center;
-      justify-content: space-between;
       width: 100%;
-      background: #1b1f27;
-      border: none;
       color: #c9d2e0;
       font-size: 14px;
-      font-weight: 600;
       padding: 12px 8px;
-      cursor: pointer;
       text-align: left;
     }
-    .odds-coupon-caret { color: #6b7585; transition: transform .15s; }
-    .odds-coupon.is-collapsed .odds-coupon-caret { transform: rotate(-90deg); }
-    .odds-coupon.is-collapsed .odds-coupon-body { display: none; }
 
+    /* Field-based runner row: name on the left, price badge on the right. */
     .odds-runner {
       display: flex;
       align-items: center;
       justify-content: space-between;
       padding: 12px 8px;
       border-top: 1px solid #20252f;
+      gap: 12px;
     }
     .odds-runner-name { color: #e6eaf0; font-size: 14px; }
+    .odds-books { display: flex; gap: 8px; }
+    .odds-book { text-align: center; min-width: 70px; }
+    .odds-book-label {
+      font-size: 10px;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      color: #6b7585;
+      margin-bottom: 4px;
+    }
     .odds-odds {
-      min-width: 64px;
       text-align: center;
       color: #cfe0ff;
       border: 1px solid #3a5bbf;
@@ -78,6 +104,52 @@
       padding: 8px 10px;
       font-size: 14px;
       font-weight: 600;
+    }
+
+    /* OU-based market: header inline with FD/DK columns; each column stacks its
+       own prices so the row never scrolls horizontally. */
+    .odds-coupon.is-ou { display: flex; align-items: flex-start; gap: 12px; }
+    /* Header takes 0.7 share vs the body's 1 — i.e. 30% narrower than the body. */
+    .odds-coupon.is-ou .odds-coupon-header { flex: 0.7; width: auto; }
+    .odds-coupon.is-ou .odds-coupon-body { flex: 1; display: flex; gap: 12px; padding: 8px; }
+    /* The single FD/DK heading row pinned above the coupons (top set in JS). */
+    .odds-ou-head {
+      position: sticky;
+      z-index: 49;
+      background: #0f1117;
+      border-bottom: 1px solid #2a2f3a;
+    }
+    .odds-col { display: flex; flex-direction: column; gap: 6px; min-width: 78px; }
+    .odds-col-head {
+      font-size: 11px;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      color: #8b95a5;
+      text-align: center;
+      font-weight: 600;
+    }
+    /* In the OU layout the label is the badge and the odds sit small inside it. */
+    .odds-coupon.is-ou .odds-book-label {
+      margin-bottom: 0;
+      text-align: center;
+      color: #cfe0ff;
+      border: 1px solid #3a5bbf;
+      border-radius: 6px;
+      padding: 8px 10px;
+      font-size: 14px;
+      font-weight: 600;
+      text-transform: none;
+      letter-spacing: 0;
+    }
+    .odds-coupon.is-ou .odds-odds {
+      border: none;
+      padding: 0;
+      margin-top: 4px;
+      font-size: 10px;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      font-weight: 400;
+      color: #6b7585;
     }
 
     .odds-status { padding: 24px 8px; color: #8b95a5; }
@@ -100,115 +172,430 @@
   </main>
 
   <script>
-    // Which tab to show first.
-    const DEFAULT_TAB_ID = 568;
-
     let LAYOUT = null;
     let MARKETS = null;
+    let DK_BY_PLAYER = {};   // normalized player name -> { name, Over:{line,odds}, Under:{line,odds} }
 
+    // Drop the trailing season label (e.g. " 2026-27") from any display string.
+    function stripYear(s) {
+      return (s || '').replace(/\s*2026-27/g, '');
+    }
+
+    function escapeRe(s) {
+      return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+    // Runner names redundantly repeat the coupon's leading entity, e.g. coupon
+    // "Arizona Cardinals - Regular Season Wins" with runner "Arizona Cardinals
+    // Over 2.5 Wins". Regex-strip that shared leading title from the runner name.
+    function stripMarketTitle(runnerName, couponTitle) {
+      const rn = stripYear(runnerName).trim();
+      const titleWords = stripYear(couponTitle).trim().split(/\s+/);
+      const rnWords = rn.split(/\s+/);
+      let i = 0;
+      while (i < titleWords.length && i < rnWords.length && titleWords[i] === rnWords[i]) i++;
+      if (i === 0) return rn;
+      const prefix = rnWords.slice(0, i).map(escapeRe).join('\\s+');
+      return rn.replace(new RegExp('^' + prefix + '\\s*'), '').trim() || rn;
+    }
+
+    // Coupon titles repeat their card's section title, e.g. card "Regular Season
+    // Passing Yards" with coupon "Aaron Rodgers Regular Season Passing Yards".
+    // Regex-strip the section title (and any dangling separator) from the coupon.
+    function stripSectionTitle(couponTitle, cardTitle) {
+      const full = stripYear(couponTitle).trim();
+      const section = stripYear(cardTitle).trim();
+      if (!section) return full;
+      const out = full
+        .replace(new RegExp('\\s*' + escapeRe(section) + '\\s*', 'i'), ' ')
+        .replace(/^\s*[-–|:]\s*|\s*[-–|:]\s*$/g, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+      return out || full;
+    }
+
+    // FanDuel odds come through as a signed integer.
     function fmtAmerican(odds) {
       if (odds === null || odds === undefined) return '—';
       return odds > 0 ? '+' + odds : String(odds);
     }
 
-    function buildTabs(activeId) {
-      const tabsEl = document.getElementById('odds-tabs');
-      tabsEl.innerHTML = '';
-      const order = LAYOUT.tabsDisplayOrder || Object.keys(LAYOUT.tabs);
-      order.forEach(id => {
-        const tab = LAYOUT.tabs[String(id)];
-        if (!tab) return;
-        const btn = document.createElement('button');
-        btn.className = 'odds-tab' + (String(id) === String(activeId) ? ' is-active' : '');
-        btn.textContent = tab.title;
-        btn.onclick = () => renderTab(id);
-        tabsEl.appendChild(btn);
+    // DraftKings odds come through as a string using a unicode minus (−).
+    function fmtDk(american) {
+      if (!american) return '—';
+      return american.replace('−', '-');
+    }
+
+    function normName(name) {
+      return (name || '')
+        .toLowerCase()
+        .replace(/\./g, '')
+        .replace(/[^a-z\s]/g, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+
+    // Names don't match exactly across books (e.g. "Cam Ward" vs "Cameron Ward"),
+    // so fall back to last-name match with a first-name prefix.
+    function findDkPlayer(player) {
+      const key = normName(player);
+      if (DK_BY_PLAYER[key]) return DK_BY_PLAYER[key];
+      const parts = key.split(' ');
+      const last = parts[parts.length - 1];
+      const first = parts[0];
+      for (const k in DK_BY_PLAYER) {
+        const kp = k.split(' ');
+        const kLast = kp[kp.length - 1];
+        const kFirst = kp[0];
+        if (kLast === last && (kFirst.startsWith(first) || first.startsWith(kFirst))) {
+          return DK_BY_PLAYER[k];
+        }
+      }
+      return null;
+    }
+
+    // Build a player-keyed index of DraftKings passing-yards prices.
+    function buildDkIndex(dk) {
+      const marketPlayer = {};   // dk marketId -> player name
+      (dk.markets || []).forEach(m => {
+        const player = (m.name || '')
+          .replace(/^NFL[^-]*-\s*/, '')
+          .replace(/\s+Regular Season.*$/i, '')
+          .trim();
+        marketPlayer[m.id] = player;
+      });
+      (dk.selections || []).forEach(s => {
+        const player = marketPlayer[s.marketId];
+        if (!player) return;
+        const dir = s.outcomeType;               // "Over" / "Under"
+        if (dir !== 'Over' && dir !== 'Under') return;
+        const lineMatch = (s.label || '').match(/([\d.]+)/);
+        const key = normName(player);
+        if (!DK_BY_PLAYER[key]) DK_BY_PLAYER[key] = { name: player };
+        DK_BY_PLAYER[key][dir] = {
+          line: lineMatch ? lineMatch[1] : null,
+          odds: fmtDk((s.displayOdds || {}).american)
+        };
       });
     }
 
-    // Renders a single coupon (collapsible): title + its market's runners.
-    function buildCoupon(couponRef) {
+    // Parse an fd runner like "Lamar Jackson Over 3200.5" into player + direction.
+    function parseRunner(runnerName) {
+      const m = (runnerName || '').match(/^(.*?)\s+(Over|Under)\s+([\d.]+)\s*$/);
+      if (!m) return null;
+      return { player: m[1], dir: m[2], line: m[3] };
+    }
+
+    // Level 0 — the landing view: a vertical list of every tab. Each navigates
+    // by setting the URL hash (#/<tab>) so the path is shareable and survives
+    // refresh; the hashchange listener re-renders.
+    function renderTabList() {
+      const tabsEl = document.getElementById('odds-tabs');
+      tabsEl.className = 'odds-tabs';
+      tabsEl.innerHTML = '';
+      const order = LAYOUT.tabsDisplayOrder || Object.keys(LAYOUT.tabs);
+
+      const addTab = (id) => {
+        const tab = LAYOUT.tabs[String(id)];
+        const btn = document.createElement('button');
+        btn.className = 'odds-tab';
+        btn.textContent = tab.title;
+        btn.onclick = () => { location.hash = '#/' + id; };
+        tabsEl.appendChild(btn);
+      };
+
+      // These markets are demoted to a separate "In-Active" section at the bottom.
+      const INACTIVE = new Set(['Games', 'Week 1', 'NFL Draft']);
+      const active = [], inactive = [];
+      order.forEach(id => {
+        const tab = LAYOUT.tabs[String(id)];
+        if (!tab) return;
+        (INACTIVE.has(tab.title) ? inactive : active).push(id);
+      });
+
+      active.forEach(addTab);
+      if (inactive.length) {
+        const section = document.createElement('div');
+        section.className = 'odds-section';
+        section.textContent = 'In-Active';
+        tabsEl.appendChild(section);
+        inactive.forEach(addTab);
+      }
+
+      document.getElementById('odds-content').innerHTML = '';
+      applyStickyTops();
+    }
+
+    // Render breadcrumbs into #odds-tabs. Each item is { label, hash }; items with
+    // a hash are clickable links, the final item (hash null) is the current page.
+    function renderCrumbs(items) {
+      const tabsEl = document.getElementById('odds-tabs');
+      tabsEl.className = 'odds-crumbs';
+      tabsEl.innerHTML = '';
+      items.forEach((it, idx) => {
+        if (idx > 0) {
+          const sep = document.createElement('span');
+          sep.className = 'odds-crumb-sep';
+          sep.textContent = '›';
+          tabsEl.appendChild(sep);
+        }
+        if (it.hash != null) {
+          const link = document.createElement('button');
+          link.className = 'odds-crumb-link';
+          link.textContent = it.label;
+          link.onclick = () => { location.hash = it.hash; };
+          tabsEl.appendChild(link);
+        } else {
+          const cur = document.createElement('span');
+          cur.className = 'odds-crumb-current';
+          cur.textContent = it.label;
+          tabsEl.appendChild(cur);
+        }
+      });
+    }
+
+    // True when every runner is an Over/Under selection (player props), vs a
+    // field market that lists entities (teams) to win.
+    function couponRunners(couponRef) {
+      const coupon = LAYOUT.coupons[String(couponRef.id)];
+      const market = coupon && coupon.marketId ? MARKETS[coupon.marketId] : null;
+      return (market && market.runners) || [];
+    }
+    function isOuCoupon(couponRef) {
+      const runners = couponRunners(couponRef);
+      return runners.length > 0 && runners.every(r => parseRunner(r.runnerName));
+    }
+    function couponHasDk(couponRef) {
+      return couponRunners(couponRef).some(r => {
+        const p = parseRunner(r.runnerName);
+        if (!p) return false;
+        const dkPlayer = findDkPlayer(p.player);
+        return !!(dkPlayer && dkPlayer[p.dir]);
+      });
+    }
+
+    // The single FD/DK heading row, pinned above an OU card's coupons. Mirrors a
+    // coupon's is-ou layout (0.7 header spacer + body columns) so it lines up.
+    function buildOuHead(showDk) {
+      const wrap = document.createElement('div');
+      wrap.className = 'odds-coupon is-ou odds-ou-head';
+      const spacer = document.createElement('div');
+      spacer.className = 'odds-coupon-header';
+      const body = document.createElement('div');
+      body.className = 'odds-coupon-body';
+      (showDk ? ['FD', 'DK'] : ['FD']).forEach(label => {
+        const col = ouColumn();
+        const head = document.createElement('div');
+        head.className = 'odds-col-head';
+        head.textContent = label;
+        col.appendChild(head);
+        body.appendChild(col);
+      });
+      wrap.append(spacer, body);
+      return wrap;
+    }
+
+    // Renders a single coupon: title + its market's runners.
+    function buildCoupon(couponRef, cardTitle, showDk) {
       const coupon = LAYOUT.coupons[String(couponRef.id)];
       if (!coupon) return null;
 
-      const wrap = document.createElement('div');
-      wrap.className = 'odds-coupon' + (couponRef.isCollapsed ? ' is-collapsed' : '');
+      const runners = couponRunners(couponRef);
+      // OU markets have Over/Under runners (e.g. "Lamar Jackson Over 3200.5");
+      // field markets list entities (e.g. "Buffalo Bills"). They render differently.
+      const isOU = isOuCoupon(couponRef);
 
-      const header = document.createElement('button');
+      const wrap = document.createElement('div');
+      wrap.className = 'odds-coupon' + (isOU ? ' is-ou' : '');
+
+      const header = document.createElement('div');
       header.className = 'odds-coupon-header';
-      header.innerHTML =
-        '<span>' + (coupon.title || '') + '</span>' +
-        '<span class="odds-coupon-caret">▾</span>';
-      header.onclick = () => wrap.classList.toggle('is-collapsed');
+      header.textContent = stripSectionTitle(coupon.title, cardTitle);
       wrap.appendChild(header);
 
       const body = document.createElement('div');
       body.className = 'odds-coupon-body';
 
-      const market = coupon.marketId ? MARKETS[coupon.marketId] : null;
-      const runners = (market && market.runners) || [];
       if (!runners.length) {
-        const empty = document.createElement('div');
-        empty.className = 'odds-runner';
-        empty.innerHTML = '<span class="odds-runner-name">No market data</span>';
-        body.appendChild(empty);
+        body.textContent = 'No market data';
+      } else if (isOU) {
+        buildOuBody(body, runners, showDk);
+      } else {
+        buildFieldBody(body, runners, coupon.title);
       }
-      runners.forEach(r => {
-        let odds = null;
-        try { odds = r.winRunnerOdds.americanDisplayOdds.americanOdds; } catch (e) {}
-        const row = document.createElement('div');
-        row.className = 'odds-runner';
-        row.innerHTML =
-          '<span class="odds-runner-name">' + (r.runnerName || '') + '</span>' +
-          '<span class="odds-odds">' + fmtAmerican(odds) + '</span>';
-        body.appendChild(row);
-      });
 
       wrap.appendChild(body);
       return wrap;
     }
 
-    // Renders one card: title + each of its coupons.
-    function buildCard(cardRef) {
-      const card = LAYOUT.cards[String(cardRef.id)];
-      if (!card) return null;
+    // Field-based market: one row per entity — name on the left, FanDuel price
+    // (and DraftKings, if it ever matched) on the right.
+    function buildFieldBody(body, runners, couponTitle) {
+      runners.forEach(r => {
+        let odds = null;
+        try { odds = r.winRunnerOdds.americanDisplayOdds.americanOdds; } catch (e) {}
 
-      const frag = document.createDocumentFragment();
-      const title = document.createElement('div');
-      title.className = 'odds-card-title';
-      title.textContent = card.title || '';
-      frag.appendChild(title);
-
-      (card.coupons || []).forEach(c => {
-        const el = buildCoupon(c);
-        if (el) frag.appendChild(el);
+        const row = document.createElement('div');
+        row.className = 'odds-runner';
+        row.innerHTML =
+          '<span class="odds-runner-name">' + stripMarketTitle(r.runnerName, couponTitle) + '</span>' +
+          '<div class="odds-books">' +
+            '<div class="odds-book">' +
+              '<div class="odds-book-label">FD</div>' +
+              '<div class="odds-odds">' + fmtAmerican(odds) + '</div>' +
+            '</div>' +
+          '</div>';
+        body.appendChild(row);
       });
-      return frag;
     }
 
-    function renderTab(tabId) {
-      buildTabs(tabId);
+    // OU-based market: each column stacks its own Over/Under prices so the
+    // runners line up vertically. The FD/DK headings live once at the top of the
+    // card (buildOuHead), not per coupon. showDk is decided at the card level so
+    // every coupon keeps the same columns and stays aligned with that heading.
+    function buildOuBody(body, runners, showDk) {
+      const fdCol = ouColumn();
+      const dkCol = ouColumn();
+
+      runners.forEach(r => {
+        let odds = null;
+        try { odds = r.winRunnerOdds.americanDisplayOdds.americanOdds; } catch (e) {}
+        const parsed = parseRunner(r.runnerName);
+        const dir = parsed ? parsed.dir.charAt(0) : '';   // "O" / "U"
+
+        fdCol.appendChild(ouCell(dir + ' ' + (parsed ? parsed.line : ''), fmtAmerican(odds)));
+
+        if (showDk) {
+          // Match the DraftKings price for this player + Over/Under.
+          let dk = null;
+          if (parsed) {
+            const dkPlayer = findDkPlayer(parsed.player);
+            if (dkPlayer && dkPlayer[parsed.dir]) dk = dkPlayer[parsed.dir];
+          }
+          dkCol.appendChild(dk ? ouCell(dir + ' ' + (dk.line || ''), dk.odds || '—')
+                                : ouCell('', '—'));
+        }
+      });
+
+      body.appendChild(fdCol);
+      if (showDk) body.appendChild(dkCol);
+    }
+
+    function ouColumn() {
+      const col = document.createElement('div');
+      col.className = 'odds-col';
+      return col;
+    }
+
+    function ouCell(labelText, oddsText) {
+      const cell = document.createElement('div');
+      cell.className = 'odds-book-label';
+      cell.innerHTML = labelText + '<div class="odds-odds">' + oddsText + '</div>';
+      return cell;
+    }
+
+    // Renders one card: title + each of its coupons.
+    // Level 2 — a chosen card: breadcrumbs (Markets › tab › card) + its coupons.
+    function renderCard(tabId, cardId) {
+      const tab = LAYOUT.tabs[String(tabId)];
+      const card = LAYOUT.cards[String(cardId)];
+      renderCrumbs([
+        { label: 'Markets', hash: '#/' },
+        { label: tab ? tab.title : 'Unknown', hash: '#/' + tabId },
+        { label: card ? card.title : 'Unknown', hash: null }
+      ]);
+
       const content = document.getElementById('odds-content');
       content.innerHTML = '';
+      if (!card) {
+        content.innerHTML = '<div class="odds-status">Card not found.</div>';
+        return;
+      }
+      // OU cards get one shared, pinned FD/DK heading; DK shows only if at least
+      // one coupon has matching DraftKings prices, so the columns stay aligned.
+      const ouRefs = (card.coupons || []).filter(isOuCoupon);
+      const showDk = ouRefs.some(couponHasDk);
+      if (ouRefs.length) content.appendChild(buildOuHead(showDk));
 
+      (card.coupons || []).forEach(c => {
+        const el = buildCoupon(c, card.title, showDk);
+        if (el) content.appendChild(el);
+      });
+
+      applyStickyTops();
+    }
+
+    // Pin the breadcrumbs below the site header, and the FD/DK head below the
+    // breadcrumbs, by measuring their heights (the site header is itself sticky).
+    function applyStickyTops() {
+      const headerH = (document.querySelector('header') || {}).offsetHeight || 0;
+      const crumbs = document.getElementById('odds-tabs');
+      const isCrumbs = crumbs.classList.contains('odds-crumbs');
+      crumbs.style.top = isCrumbs ? headerH + 'px' : '';
+      const ouHead = document.querySelector('.odds-ou-head');
+      if (ouHead) ouHead.style.top = (headerH + (isCrumbs ? crumbs.offsetHeight : 0)) + 'px';
+    }
+
+    // Level 1 — a chosen tab: breadcrumbs + a vertical list of its cards, each
+    // a deeplink (#/<tab>/<card>) styled like the tab list.
+    function renderTab(tabId) {
       const tab = LAYOUT.tabs[String(tabId)];
+      renderCrumbs([
+        { label: 'Markets', hash: '#/' },
+        { label: tab ? tab.title : 'Unknown', hash: null }
+      ]);
+
+      const content = document.getElementById('odds-content');
+      content.innerHTML = '';
       if (!tab) {
         content.innerHTML = '<div class="odds-status">Tab not found.</div>';
         return;
       }
+      const list = document.createElement('div');
+      list.className = 'odds-tabs';
       (tab.cards || []).forEach(cardRef => {
-        const el = buildCard(cardRef);
-        if (el) content.appendChild(el);
+        const card = LAYOUT.cards[String(cardRef.id)];
+        if (!card) return;
+        const btn = document.createElement('button');
+        btn.className = 'odds-tab';
+        btn.textContent = card.title || '';
+        btn.onclick = () => { location.hash = '#/' + tabId + '/' + cardRef.id; };
+        list.appendChild(btn);
       });
+      content.appendChild(list);
+      applyStickyTops();
+    }
+
+    // Map the current URL hash to a view: #/ -> tabs, #/<tab> -> cards,
+    // #/<tab>/<card> -> coupons.
+    function route() {
+      const parts = location.hash.replace(/^#\/?/, '').split('/').filter(Boolean);
+      const [tabId, cardId] = parts;
+      if (tabId && cardId) renderCard(tabId, cardId);
+      else if (tabId) renderTab(tabId);
+      else renderTabList();
     }
 
     async function init() {
       try {
-        const res = await fetch('/data/fd.json');
-        const data = await res.json();
+        const [fdRes, dkRes] = await Promise.all([
+          fetch('/data/fd.json'),
+          fetch('/data/dk.json')
+        ]);
+        const data = await fdRes.json();
         LAYOUT = data.layout;
         MARKETS = data.attachments.markets;
-        renderTab(DEFAULT_TAB_ID);
+
+        try {
+          const dk = await dkRes.json();
+          buildDkIndex(dk);
+        } catch (e) {
+          console.warn('DraftKings data unavailable; showing FanDuel only.', e);
+        }
+
+        window.addEventListener('hashchange', route);
+        window.addEventListener('resize', applyStickyTops);
+        route();
       } catch (err) {
         document.getElementById('odds-content').innerHTML =
           '<div class="odds-status">Failed to load odds data.</div>';
