@@ -33,7 +33,7 @@
          column stays put (sticky) and wraps; the book columns keep their width
          and scroll horizontally as a group when they don't all fit. */
       --nb-name-w: 124px;
-      --nb-col-w: 76px;
+      --nb-col-w: 57px;
     }
 
     main.home { padding-left: 0; padding-right: 0; background: #f2f1e3; }
@@ -152,7 +152,7 @@
       display: flex;
       align-items: center;
       color: var(--nb-ink-soft);
-      font-size: 14px;
+      font-size: 13px;
       letter-spacing: .3px;
     }
     /* Header row above field-market runners: just the FD/DK column labels. */
@@ -189,11 +189,12 @@
       left: 0;
       z-index: 2;
       background: var(--nb-bg);
-      flex: 0 0 var(--nb-name-w);
-      width: var(--nb-name-w);
+      flex: 0 0 calc(var(--nb-name-w) * 1.15);
+      width: calc(var(--nb-name-w) * 1.15);
       align-items: center;
+      font-size: 14px;
     }
-    .odds-coupon.is-ou .odds-coupon-body { flex: 0 0 auto; display: flex; gap: 12px; padding: 8px; align-items: stretch; }
+    .odds-coupon.is-ou .odds-coupon-body { flex: 0 0 auto; display: flex; gap: 8px; padding: 8px; align-items: stretch; }
     /* Coupons scroll horizontally as a group; the name column above pins left.
        The pinned FD/DK/SCORE heading row lives outside this container (so it stays
        pinned to the top on vertical scroll) and is kept in horizontal sync by JS. */
@@ -211,8 +212,19 @@
     /* Fixed-width book columns: they keep their width and scroll rather than
        shrinking, so FMV/FD/DK/SCORE stay readable however many books there are. */
     .odds-col { display: flex; flex-direction: column; gap: 6px; flex: 0 0 var(--nb-col-w); width: var(--nb-col-w); }
-    /* FMV deviation markers, sitting inside the FD/DK line badge. */
-    .odds-arrow { font-size: 9px; margin-left: 3px; vertical-align: middle; }
+    /* The line value, centered in its column. The deviation arrow is absolutely
+       positioned just off its right edge so it rides the same line without
+       shifting the value off-center. */
+    .odds-line { position: relative; display: inline-block; }
+    .odds-arrow {
+      position: absolute;
+      left: 100%;
+      top: 50%;
+      transform: translateY(-50%);
+      margin-left: 2px;
+      font-size: 9px;
+      line-height: 1;
+    }
     .odds-arrow.up { color: var(--nb-up); }
     .odds-arrow.down { color: var(--nb-down); }
     .odds-col-head {
@@ -239,16 +251,16 @@
       justify-content: center;
       text-align: center;
       color: var(--nb-ink);
-      background: var(--nb-surface);
-      border: 1px solid var(--nb-accent);
-      border-radius: 0;
-      padding: 8px 10px;
+      padding: 7px 4px;
       font-family: var(--nb-mono);
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 600;
       text-transform: none;
       letter-spacing: 0;
     }
+    /* Columns are divided by a single hairline (head + every badge share the
+       column's left border) instead of each badge being a bordered box. */
+    .odds-coupon.is-ou .odds-col + .odds-col { border-left: 1px solid var(--nb-line); }
     .odds-coupon.is-ou .odds-odds {
       border: none;
       background: none;
@@ -272,6 +284,37 @@
 
     @media (max-width: 600px) {
       .odds-tab { font-size: 12px; }
+
+      /* Tighten the pinned name + book columns so the standard FMV/FD/DK/SCORE
+         set fits an iPhone viewport without horizontal scroll. ~92 + 4×42 + gaps
+         ≈ 296px, comfortably inside a 390px viewport's content width. The vars
+         live on .odds-wrap (not :root), so the override must too — else the
+         closer .odds-wrap declaration wins and descendants keep the wide value. */
+      .odds-wrap { --nb-name-w: 92px; --nb-col-w: 42px; }
+
+      .odds-coupon.is-ou { gap: 6px; }
+      .odds-coupon.is-ou .odds-coupon-body { gap: 6px; padding: 6px; }
+      .odds-col { gap: 4px; }
+
+      /* Smaller, tighter OU odds badges (the book-label is the badge). */
+      .odds-coupon.is-ou .odds-book-label {
+        min-height: 44px;
+        padding: 6px 2px;
+        font-size: 10px;
+      }
+      .odds-coupon.is-ou .odds-odds { font-size: 9px; }
+      .odds-arrow { font-size: 8px; margin-left: 1px; }
+      .odds-col-head { font-size: 10px; letter-spacing: .5px; }
+
+      /* Field markets: tighter row gaps + smaller price badge/labels. */
+      .odds-runner { gap: 8px; }
+      .odds-books { gap: 6px; }
+      .odds-odds { padding: 6px 4px; font-size: 12px; }
+      .odds-book-label { font-size: 9px; }
+
+      /* Slightly smaller player/team names on narrow screens. */
+      .odds-runner-name { font-size: 12px; }
+      .odds-coupon.is-ou .odds-coupon-header { font-size: 13px; }
     }
   </style>
 </head>
@@ -496,6 +539,7 @@
       order.forEach(id => {
         const tab = LAYOUT.tabs[String(id)];
         if (!tab) return;
+        if (!tabHasData(tab)) return;
         (INACTIVE.has(tab.title) ? inactive : active).push(id);
       });
 
@@ -552,6 +596,16 @@
       return runners.length > 0 && runners.every(r => parseRunner(r.runnerName));
     }
 
+    // A card/tab is worth listing only if some coupon under it actually has
+    // prices. Fully-empty markets — FanDuel layout entries whose odds never
+    // loaded (see docs/NO_MARKET_DATA.md) — are hidden from navigation.
+    function cardHasData(card) {
+      return !!card && (card.coupons || []).some(ref => couponRunners(ref).length > 0);
+    }
+    function tabHasData(tab) {
+      return !!tab && (tab.cards || []).some(ref => cardHasData(LAYOUT.cards[String(ref.id)]));
+    }
+
     // The single FD/DK heading row, pinned above an OU card's coupons. Mirrors a
     // coupon's is-ou layout (0.7 header spacer + body columns) so it lines up.
     function buildOuHead(showDk) {
@@ -579,6 +633,9 @@
       if (!coupon) return null;
 
       const runners = couponRunners(couponRef);
+      // Coupons whose market never loaded its runners carry no prices (see
+      // docs/NO_MARKET_DATA.md); hide them rather than render an empty row.
+      if (!runners.length) return null;
       // OU markets have Over/Under runners (e.g. "Lamar Jackson Over 3200.5");
       // field markets list entities (e.g. "Buffalo Bills"). They render differently.
       const isOU = isOuCoupon(couponRef);
@@ -588,15 +645,21 @@
 
       const header = document.createElement('div');
       header.className = 'odds-coupon-header';
-      header.textContent = stripSectionTitle(coupon.title, cardTitle);
+      const headerText = stripSectionTitle(coupon.title, cardTitle);
+      const spaceIdx = headerText.indexOf(' ');
+      if (spaceIdx === -1) {
+        header.textContent = headerText;
+      } else {
+        header.appendChild(document.createTextNode(headerText.slice(0, spaceIdx)));
+        header.appendChild(document.createElement('br'));
+        header.appendChild(document.createTextNode(headerText.slice(spaceIdx + 1)));
+      }
       wrap.appendChild(header);
 
       const body = document.createElement('div');
       body.className = 'odds-coupon-body';
 
-      if (!runners.length) {
-        body.textContent = 'No market data';
-      } else if (isOU) {
+      if (isOU) {
         // Match DraftKings prices only within this card's stat (e.g. passing
         // yards), so a player's price never leaks across to a different stat.
         buildOuBody(body, runners, showDk, statKey(cardTitle));
@@ -663,7 +726,7 @@
         if (lineNum >= fmv * 1.02) arrow = '<span class="odds-arrow up">▲</span>';
         else if (lineNum <= fmv * 0.98) arrow = '<span class="odds-arrow down">▼</span>';
       }
-      return (lineStr || '') + arrow;
+      return '<span class="odds-line">' + (lineStr || '') + arrow + '</span>';
     }
 
     // OU-based market: each column stacks its own Over/Under prices so the
@@ -779,6 +842,10 @@
         content.innerHTML = '<div class="odds-status">Card not found.</div>';
         return;
       }
+      if (!cardHasData(card)) {
+        content.innerHTML = '<div class="odds-status">No markets available.</div>';
+        return;
+      }
       // Every section shows FD and DK columns. OU cards get one shared, pinned
       // FD/DK heading above their coupons; field coupons carry their own header
       // row (built in buildFieldBody) since each lists its own set of entities.
@@ -838,6 +905,7 @@
       (tab.cards || []).forEach(cardRef => {
         const card = LAYOUT.cards[String(cardRef.id)];
         if (!card) return;
+        if (!cardHasData(card)) return;
         const btn = document.createElement('button');
         btn.className = 'odds-tab';
         btn.textContent = card.title || '';
