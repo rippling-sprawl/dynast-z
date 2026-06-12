@@ -86,18 +86,15 @@ def runner_odds(r):
         return None
 
 
-def main():
-    if not os.path.exists(FD_PATH):
-        sys.exit("No FanDuel file at %s (run parse_fd_import.py first)" % FD_PATH)
-    fd = json.load(open(FD_PATH))
+def apply_fd_outrights(doc, fd):
+    """Upsert FanDuel's outright/award columns from a parsed fd.json dict (the
+    {layout, attachments} shape) into the shared outrights `doc`. Mutates doc and
+    returns a summary. Pure: no file I/O — the FD column never clobbers DK/SCORE."""
     layout = fd.get("layout") or {}
     markets_att = (fd.get("attachments") or {}).get("markets") or {}
     coupons = layout.get("coupons") or {}
-    doc = load_outrights()
 
     markets = {}        # canon key -> {cand_key: (disp, american)}
-    skipped = {}
-
     for coup in coupons.values():
         title = coup.get("title") or ""
         mid = coup.get("marketId")
@@ -123,12 +120,22 @@ def main():
         cands = [(k, disp, am) for k, (disp, am) in bucket.items()]
         upsert_market(doc, key, "fd", cands)
 
+    return {"coupons": len(coupons),
+            "markets": {k: len(v) for k, v in markets.items()}}
+
+
+def main():
+    if not os.path.exists(FD_PATH):
+        sys.exit("No FanDuel file at %s (run parse_fd_import.py first)" % FD_PATH)
+    fd = json.load(open(FD_PATH))
+    doc = load_outrights()
+    s = apply_fd_outrights(doc, fd)
     save_outrights(doc)
 
-    print("FD outrights — read data/fd.json (%d coupons)" % len(coupons))
+    print("FD outrights — read data/fd.json (%d coupons)" % s["coupons"])
     print("\nCanonical markets written (FD column):")
-    for key in sorted(markets):
-        print("  %-26s %3d candidates" % (key, len(markets[key])))
+    for key in sorted(s["markets"]):
+        print("  %-26s %3d candidates" % (key, s["markets"][key]))
     print("\nWrote data/outrights.json")
 
 

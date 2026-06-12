@@ -1,0 +1,8 @@
+# Build-time only — raw Recorder bundles parsed locally by scripts/parse_*.py
+# into the served data/*.json files. Never fetched by any page; keep them out of
+# the deploy (≈5.5 MB) and off the public CDN at /data/imports/*.
+data/imports/
+
+# Dev reference artifacts, not data the site serves.
+data/fd_layout.png
+data/prompts/

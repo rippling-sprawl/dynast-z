@@ -189,14 +189,21 @@ def load_outrights():
     return {"markets": {}, "milestones": {}}
 
 
-def save_outrights(doc):
+def sort_doc(doc):
     # Keep candidates sorted best-price-first so the file is stable to diff and
     # the renderer needs no sort. Implied prob: higher = shorter (better) price.
+    # Pure (mutates and returns doc, no I/O) so the serverless ingest endpoint
+    # can reuse it before persisting to its store.
     for mkt in doc.get("markets", {}).values():
         mkt["candidates"].sort(key=_cand_sort_key)
     for ms in doc.get("milestones", {}).values():
         for th in ms.get("thresholds", {}).values():
             th["candidates"].sort(key=_cand_sort_key)
+    return doc
+
+
+def save_outrights(doc):
+    sort_doc(doc)
     with open(OUT_PATH, "w") as f:
         json.dump(doc, f, indent=2, ensure_ascii=False)
 

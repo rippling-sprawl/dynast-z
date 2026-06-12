@@ -63,15 +63,13 @@ def is_ou(selections):
     return any((s.get("outcomeType") in ("Over", "Under")) for s in selections)
 
 
-def load_existing_units():
-    """Existing dk.json -> {market name: {market, event, selections}}."""
-    units = {}
-    if not os.path.exists(OUT_PATH):
-        return units, {}, {}
-    try:
-        old = json.load(open(OUT_PATH))
-    except Exception:
-        return units, {}, {}
+def units_from_doc(old):
+    """Decompose a parsed dk.json dict into ({name: {market, event, selections}},
+    sports, leagues). Pure (no file I/O) so the ingest endpoint can pass the
+    doc it loaded from its store."""
+    units, sports, leagues = {}, {}, {}
+    if not isinstance(old, dict):
+        return units, sports, leagues
     sels_by_mid = {}
     for s in old.get("selections", []):
         sels_by_mid.setdefault(s.get("marketId"), []).append(s)
@@ -90,13 +88,12 @@ def load_existing_units():
     return units, sports, leagues
 
 
-def main():
-    if not os.path.exists(IMPORT_PATH):
-        sys.exit("No bundle at %s" % IMPORT_PATH)
-    bundle = json.load(open(IMPORT_PATH))
-    captures = bundle.get("captures", [])
-
-    units, sports, leagues = load_existing_units()
+def merge_dk_props(existing, captures):
+    """Merge a DraftKings bundle's Over/Under markets into the prior dk.json doc
+    `existing` (a dict or None), returning (out, summary) in DK's native shape.
+    Pure: no file I/O, no printing. Outright/award markets are reported in
+    summary['outrights'] but not written (the outright parser handles those)."""
+    units, sports, leagues = units_from_doc(existing)
     existing_names = set(units)
 
     kept_hosts, dropped, market_responses = set(), 0, 0
@@ -161,30 +158,53 @@ def main():
         "subscriptionPartials": {},
     }
 
-    updated = len(captured_ou & existing_names)
-    added = len(captured_ou - existing_names)
+    summary = {
+        "captures": len(captures),
+        "market_responses": market_responses,
+        "dropped": dropped,
+        "kept_hosts": sorted(h for h in kept_hosts if h),
+        "existing": len(existing_names),
+        "in_bundle": len(captured_ou),
+        "updated": len(captured_ou & existing_names),
+        "added": len(captured_ou - existing_names),
+        "markets": len(markets),
+        "selections": len(selections),
+        "outrights": outrights,
+        "changed": bool(captured_ou),
+    }
+    return out, summary
+
+
+def main():
+    if not os.path.exists(IMPORT_PATH):
+        sys.exit("No bundle at %s" % IMPORT_PATH)
+    bundle = json.load(open(IMPORT_PATH))
+    captures = bundle.get("captures", [])
+
+    existing = json.load(open(OUT_PATH)) if os.path.exists(OUT_PATH) else None
+    out, s = merge_dk_props(existing, captures)
 
     print("Parsed %d captures (%d market responses, dropped %d blocked: %s)" %
-          (len(captures), market_responses, dropped, ", ".join(BLOCK)))
-    print("Source hosts:", ", ".join(sorted(h for h in kept_hosts if h)) or "—")
+          (s["captures"], s["market_responses"], s["dropped"], ", ".join(BLOCK)))
+    print("Source hosts:", ", ".join(s["kept_hosts"]) or "—")
     print()
     print("Over/Under player-prop markets")
-    print("  existing : %d" % len(existing_names))
+    print("  existing : %d" % s["existing"])
     print("  in bundle: %d  (updated %d, added %d)" %
-          (len(captured_ou), updated, added))
-    print("  total    : %d markets, %d selections" % (len(markets), len(selections)))
+          (s["in_bundle"], s["updated"], s["added"]))
+    print("  total    : %d markets, %d selections" % (s["markets"], s["selections"]))
 
-    if not captured_ou:
+    if not s["changed"]:
         print("\nNo OU markets in bundle — dk.json left unchanged.")
         return
 
     with open(OUT_PATH, "w") as f:
         json.dump(out, f, indent=2)
 
-    if outrights:
+    if s["outrights"]:
         print("\nOutright/award markets present but NOT written (no Over/Under view yet):")
-        for n in sorted(outrights):
-            print("  - %s (%d selections)" % (n, outrights[n]))
+        for n in sorted(s["outrights"]):
+            print("  - %s (%d selections)" % (n, s["outrights"][n]))
 
     print("\nWrote data/dk.json")
 

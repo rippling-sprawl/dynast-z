@@ -102,16 +102,13 @@ def wrap(title, markets):
     ]}}}
 
 
-def main():
-    if not os.path.exists(IMPORT_PATH):
-        sys.exit("No bundle at %s" % IMPORT_PATH)
-    bundle = json.load(open(IMPORT_PATH))
-    captures = bundle.get("captures", [])
-
+def collect_score(captures):
+    """Scan captures for theScore markets. Returns (totals, list_markets,
+    kept_hosts, dropped): `totals` maps a TOTAL market name to its slim form
+    (deduped, keeping the version with the most selections); `list_markets` maps
+    each LIST/outright name to its selection count (reported, not written)."""
     kept_hosts, dropped = set(), 0
-    # market name -> slim market (dedupe; keep the version with most selections)
-    totals = {}
-    list_markets = {}
+    totals, list_markets = {}, {}
     for c in captures:
         url = c.get("url", "")
         if blocked(url):
@@ -136,35 +133,33 @@ def main():
             prev = totals.get(name)
             if prev is None or len(slim["selections"]) > len(prev["selections"]):
                 totals[name] = slim
+    return totals, list_markets, kept_hosts, dropped
 
-    # group TOTAL markets by stat file
+
+def merge_score(existing_by_stat, captures):
+    """Merge a theScore bundle into the prior per-stat docs. `existing_by_stat`
+    maps a stat file name ("wins", "passing_yards", ...) to its wrapped doc.
+    Returns (out_by_stat, summary): out_by_stat holds ONLY the stats this bundle
+    changed (each a freshly-wrapped doc), so the caller updates just those keys.
+    Pure: no file I/O, no printing."""
+    existing_by_stat = existing_by_stat or {}
+    totals, list_markets, kept_hosts, dropped = collect_score(captures)
+
     grouped = {fname: [] for _, fname, _ in STAT_MAP}
     titles = {fname: title for _, fname, title in STAT_MAP}
     for name, slim in totals.items():
-        suffix, fname, title = classify(name)
+        _suffix, fname, _title = classify(name)
         grouped[fname].append(slim)
 
-    print("Parsed %d captures (dropped %d blocked: %s)" %
-          (len(captures), dropped, ", ".join(BLOCK)))
-    print("Source hosts:", ", ".join(sorted(h for h in kept_hosts if h)) or "—")
-    print()
-    # Merge into existing files: a partial capture must never delete markets.
-    # Union by market name; a freshly-captured market overrides the stored one.
-    print("%-16s %8s %8s %8s %8s" % ("stat", "existing", "updated", "added", "total"))
-    print("-" * 54)
-    written = 0
+    out_by_stat = {}
+    stats = {}            # fname -> {existing, updated, added, total, changed}
     for _, fname, _ in STAT_MAP:
-        path = os.path.join(SCORE_DIR, fname + ".json")
         existing = {}
-        if os.path.exists(path):
-            try:
-                old = json.load(open(path))
-                for m in iter_markets(old):
-                    if isinstance(m.get("name"), str):
-                        existing[m["name"]] = m
-            except Exception:
-                pass
-        old_n = len(existing)
+        old = existing_by_stat.get(fname)
+        if old:
+            for m in iter_markets(old):
+                if isinstance(m.get("name"), str):
+                    existing[m["name"]] = m
 
         captured = grouped[fname]
         updated = sum(1 for m in captured if m["name"] in existing)
@@ -174,20 +169,64 @@ def main():
             merged[m["name"]] = m            # new capture wins on conflict
         mkts = sorted(merged.values(), key=lambda m: m["name"])
 
-        if not captured:
+        changed = bool(captured)
+        if changed:
+            out_by_stat[fname] = wrap(titles[fname], mkts)
+        stats[fname] = {"existing": len(existing), "updated": updated,
+                        "added": added, "total": len(mkts), "changed": changed}
+
+    summary = {
+        "captures": len(captures),
+        "dropped": dropped,
+        "kept_hosts": sorted(h for h in kept_hosts if h),
+        "stats": stats,
+        "list_markets": list_markets,
+        "changed": bool(out_by_stat),
+    }
+    return out_by_stat, summary
+
+
+def main():
+    if not os.path.exists(IMPORT_PATH):
+        sys.exit("No bundle at %s" % IMPORT_PATH)
+    bundle = json.load(open(IMPORT_PATH))
+    captures = bundle.get("captures", [])
+
+    existing_by_stat = {}
+    for _, fname, _ in STAT_MAP:
+        path = os.path.join(SCORE_DIR, fname + ".json")
+        if os.path.exists(path):
+            try:
+                existing_by_stat[fname] = json.load(open(path))
+            except Exception:
+                pass
+
+    out_by_stat, s = merge_score(existing_by_stat, captures)
+
+    print("Parsed %d captures (dropped %d blocked: %s)" %
+          (s["captures"], s["dropped"], ", ".join(BLOCK)))
+    print("Source hosts:", ", ".join(s["kept_hosts"]) or "—")
+    print()
+    print("%-16s %8s %8s %8s %8s" % ("stat", "existing", "updated", "added", "total"))
+    print("-" * 54)
+    written = 0
+    for _, fname, _ in STAT_MAP:
+        st = s["stats"][fname]
+        if not st["changed"]:
             print("%-16s %8d %8s %8s %8d   (no capture — kept)" %
-                  (fname, old_n, "-", "-", len(mkts)))
+                  (fname, st["existing"], "-", "-", st["total"]))
             continue
-        with open(path, "w") as f:
-            json.dump(wrap(titles[fname], mkts), f, indent=2)
+        with open(os.path.join(SCORE_DIR, fname + ".json"), "w") as f:
+            json.dump(out_by_stat[fname], f, indent=2)
         written += 1
-        print("%-16s %8d %8d %8d %8d" % (fname, old_n, updated, added, len(mkts)))
+        print("%-16s %8d %8d %8d %8d" %
+              (fname, st["existing"], st["updated"], st["added"], st["total"]))
 
     print()
-    if list_markets:
+    if s["list_markets"]:
         print("LIST/outright markets present but NOT written (no Over/Under view yet):")
-        for n in sorted(list_markets):
-            print("  - %s (%d selections)" % (n, list_markets[n]))
+        for n in sorted(s["list_markets"]):
+            print("  - %s (%d selections)" % (n, s["list_markets"][n]))
     print("\nWrote %d/%d stat files." % (written, len(STAT_MAP)))
 
 

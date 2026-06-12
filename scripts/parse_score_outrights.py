@@ -55,13 +55,11 @@ def candidate(sel, kind):
     return (norm_name(name), name, american)
 
 
-def main():
-    if not os.path.exists(IMPORT_PATH):
-        sys.exit("No bundle at %s" % IMPORT_PATH)
-    bundle = json.load(open(IMPORT_PATH))
-    captures = bundle.get("captures", [])
-    doc = load_outrights()
-
+def apply_score_outrights(doc, captures):
+    """Upsert theScore's outright (LIST) award/futures columns from a bundle's
+    captures into the shared outrights `doc`. Mutates doc and returns a summary
+    (with the unmapped LIST market names). Pure: no file I/O — the SCORE column
+    never clobbers FD/DK."""
     kept_hosts, dropped = set(), 0
     markets = {}        # canon key -> {cand_key: (disp, american)}
     skipped = {}
@@ -95,18 +93,34 @@ def main():
         cands = [(k, disp, am) for k, (disp, am) in bucket.items()]
         upsert_market(doc, key, "score", cands)
 
+    return {
+        "captures": len(captures),
+        "dropped": dropped,
+        "kept_hosts": sorted(h for h in kept_hosts if h),
+        "markets": {k: len(v) for k, v in markets.items()},
+        "skipped": skipped,
+    }
+
+
+def main():
+    if not os.path.exists(IMPORT_PATH):
+        sys.exit("No bundle at %s" % IMPORT_PATH)
+    bundle = json.load(open(IMPORT_PATH))
+    captures = bundle.get("captures", [])
+    doc = load_outrights()
+    s = apply_score_outrights(doc, captures)
     save_outrights(doc)
 
     print("SCORE outrights — parsed %d captures (dropped %d blocked)" %
-          (len(captures), dropped))
-    print("Source hosts:", ", ".join(sorted(h for h in kept_hosts if h)) or "-")
+          (s["captures"], s["dropped"]))
+    print("Source hosts:", ", ".join(s["kept_hosts"]) or "-")
     print("\nCanonical markets written (SCORE column):")
-    for key in sorted(markets):
-        print("  %-24s %3d candidates" % (key, len(markets[key])))
-    if skipped:
+    for key in sorted(s["markets"]):
+        print("  %-24s %3d candidates" % (key, s["markets"][key]))
+    if s["skipped"]:
         print("\nUnmapped SCORE LIST markets (not written):")
-        for n in sorted(skipped):
-            print("  - %s (%d)" % (n, skipped[n]))
+        for n in sorted(s["skipped"]):
+            print("  - %s (%d)" % (n, s["skipped"][n]))
     print("\nWrote data/outrights.json")
 
 

@@ -106,13 +106,14 @@ def merge_dicts(base, fresh, keys):
     return counts
 
 
-def main():
-    if not os.path.exists(IMPORT_PATH):
-        sys.exit("No bundle at %s" % IMPORT_PATH)
-    bundle = json.load(open(IMPORT_PATH))
-    captures = bundle.get("captures", [])
-
-    out = load_existing()
+def merge_fd(out, captures):
+    """Merge a FanDuel bundle's captures into the in-memory {layout, attachments}
+    doc `out` (mutated and returned). Pure: no file I/O, no printing — both the
+    CLI main() and the serverless ingest endpoint call this. Returns
+    (out, summary); summary carries the per-collection update/add counts the CLI
+    prints plus a `changed` flag (True when the bundle held FanDuel content)."""
+    out.setdefault("layout", {})
+    out.setdefault("attachments", {})
     layout = out["layout"]
     att = out["attachments"]
     # Snapshot every collection's size before merging, for the summary table.
@@ -169,10 +170,6 @@ def main():
                     if sid is not None and rd.get("winRunnerOdds"):
                         price_ticks[sid] = rd
 
-    if page_snapshots == 0 and not os.path.exists(OUT_PATH):
-        sys.exit("No content-managed-page snapshot in bundle and no existing "
-                 "data/fd.json to update — nothing to write.")
-
     # Fold live price ticks into the matching runners by selectionId.
     priced = 0
     if price_ticks:
@@ -190,29 +187,58 @@ def main():
                     r["handicap"] = rd["handicap"]
                 priced += 1
 
-    new_markets = len((att.get("markets") or {}))
-    new_coupons = len((layout.get("coupons") or {}))
+    summary = {
+        "captures": len(captures),
+        "page_snapshots": page_snapshots,
+        "dropped": dropped,
+        "kept_hosts": sorted(h for h in kept_hosts if h),
+        "old_befores": old_befores,
+        "att_counts": att_counts,
+        "layout_counts": layout_counts,
+        "price_ticks": len(price_ticks),
+        "priced": priced,
+        "markets": len((att.get("markets") or {})),
+        "coupons": len((layout.get("coupons") or {})),
+        "tabs": len((layout.get("tabs") or {})),
+        "changed": page_snapshots > 0 or bool(price_ticks),
+    }
+    return out, summary
 
+
+def main():
+    if not os.path.exists(IMPORT_PATH):
+        sys.exit("No bundle at %s" % IMPORT_PATH)
+    bundle = json.load(open(IMPORT_PATH))
+    captures = bundle.get("captures", [])
+
+    out = load_existing()
+    out, s = merge_fd(out, captures)
+
+    if s["page_snapshots"] == 0 and not os.path.exists(OUT_PATH):
+        sys.exit("No content-managed-page snapshot in bundle and no existing "
+                 "data/fd.json to update — nothing to write.")
+
+    att, layout = out["attachments"], out["layout"]
     print("Parsed %d captures (%d page snapshots, dropped %d blocked: %s)" %
-          (len(captures), page_snapshots, dropped, ", ".join(BLOCK)))
-    print("Source hosts:", ", ".join(sorted(h for h in kept_hosts if h)) or "—")
+          (s["captures"], s["page_snapshots"], s["dropped"], ", ".join(BLOCK)))
+    print("Source hosts:", ", ".join(s["kept_hosts"]) or "—")
     print()
     # One row per id-keyed collection: existing-before, updated, added, total-now.
     print("%-14s %8s %8s %8s %8s" % ("collection", "existing", "updated", "added", "total"))
     print("-" * 50)
     for coll in ATT_DICTS + LAYOUT_DICTS:
-        counts = att_counts.get(coll) or layout_counts.get(coll)
+        counts = s["att_counts"].get(coll) or s["layout_counts"].get(coll)
         if counts is None:
             continue
         bucket = att if coll in ATT_DICTS else layout
         updated, added = counts
         print("%-14s %8d %8d %8d %8d" %
-              (coll, old_befores.get(coll, 0), updated, added, len(bucket.get(coll) or {})))
-    if price_ticks:
+              (coll, s["old_befores"].get(coll, 0), updated, added, len(bucket.get(coll) or {})))
+    if s["price_ticks"]:
         print("\nLive price ticks: %d selections in bundle, %d folded into runners."
-              % (len(price_ticks), priced))
+              % (s["price_ticks"], s["priced"]))
 
-    if page_snapshots == 0 and not price_ticks:
+    if not s["changed"]:
         print("\nNo FanDuel content in bundle — fd.json left unchanged.")
         return
 
@@ -220,7 +246,7 @@ def main():
         json.dump(out, f, indent=2)
 
     print("\nWrote data/fd.json (%d markets, %d coupons, %d tabs)" %
-          (new_markets, new_coupons, len(layout.get("tabs") or {})))
+          (s["markets"], s["coupons"], s["tabs"]))
 
 
 if __name__ == "__main__":
