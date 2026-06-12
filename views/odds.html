@@ -278,6 +278,55 @@
       color: var(--nb-muted);
     }
 
+    /* DK milestone disclosure. The 🪜 toggle is pinned in the (sticky) player
+       name cell, so it stays visible as the odds scroll. The panel it reveals
+       wraps onto its own full-width flex line below the odds — hence flex-wrap
+       on the coupon — and is hidden until toggled. */
+    .odds-coupon.is-ou { flex-wrap: wrap; }
+    .odds-ms-toggle {
+      position: absolute;
+      top: 50%;
+      right: 6px;
+      transform: translateY(-50%);
+      z-index: 3;
+      background: none;
+      border: 0;
+      padding: 0;
+      cursor: pointer;
+      font-size: 13px;
+      line-height: 1;
+      opacity: .5;
+      filter: grayscale(.4);
+      transition: opacity .15s ease, filter .15s ease;
+    }
+    .odds-ms-toggle:hover, .odds-ms-toggle.is-open { opacity: 1; filter: none; }
+    .odds-ms-panel {
+      flex: 1 0 100%;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px 16px;
+      padding: 10px 8px 12px calc(var(--nb-name-w) * 1.15 + 12px);
+      border-top: 1px solid var(--nb-line);
+    }
+    .odds-ms-panel[hidden] { display: none; }
+    .odds-ms-cap {
+      font-family: var(--nb-display);
+      font-size: 10px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--nb-muted);
+    }
+    .odds-ms-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      font-family: var(--nb-mono);
+    }
+    .odds-ms-line { font-size: 13px; font-weight: 600; color: var(--nb-ink); }
+    .odds-ms-odds { font-size: 10px; letter-spacing: .04em; color: var(--nb-muted); }
+
     .odds-status {
       padding: 24px 8px;
       color: var(--nb-muted);
@@ -344,6 +393,10 @@
       /* Slightly smaller player/team names on narrow screens. */
       .odds-runner-name { font-size: 12px; }
       .odds-coupon.is-ou .odds-coupon-header { font-size: 13px; }
+
+      /* Narrower name column + 6px coupon gap on mobile; realign the panel. */
+      .odds-ms-panel { padding-left: calc(var(--nb-name-w) * 1.15 + 6px); gap: 6px 12px; }
+      .odds-ms-toggle { font-size: 12px; right: 4px; }
     }
   </style>
 </head>
@@ -725,6 +778,7 @@
       const body = document.createElement('div');
       body.className = 'odds-coupon-body';
 
+      let ouMilestones = null;
       if (isOU) {
         // Match DraftKings prices only within this card's stat (e.g. passing
         // yards), so a player's price never leaks across to a different stat.
@@ -734,18 +788,55 @@
         if (info && info.length) {
           wrap._sortName = info[0].player;
           wrap._sortFmv = info[0].fmv;
+          ouMilestones = (info[0].milestones && info[0].milestones.length)
+            ? info[0].milestones : null;
         }
       } else {
         buildFieldBody(body, runners, coupon.title, showDk);
       }
 
       wrap.appendChild(body);
+      // A player with DK "Player to Have X+" milestones gets a 🪜 toggle by their
+      // name that reveals an (initially hidden) panel listing those thresholds.
+      if (ouMilestones) addMilestonePanel(wrap, header, ouMilestones);
       return wrap;
     }
 
-    // Field-based market: one row per entity — name on the left, FanDuel and
-    // DraftKings price columns on the right under a shared FD/DK header. Field
-    // markets carry no DraftKings data yet, so the DK column shows a dash.
+    // FD field markets (Super Bowl, Division/Conference Winners, #1 Seed) list the
+    // teams that can win but carry only FanDuel prices. outrights.json holds the
+    // same markets with DK/SCORE prices keyed by team, so map an FD coupon title to
+    // its outright market key to borrow those columns. Returns null if unmatched.
+    function outrightKeyForFieldCoupon(title) {
+      const t = stripYear(title || '').toLowerCase();
+      if (/super bowl.*\bwinner\b/.test(t)) return 'super_bowl_winner';
+      const div = t.match(/\b(afc|nfc)\s+(east|north|south|west)\s+winner\b/);
+      if (div) return div[1] + '_' + div[2] + '_winner';
+      const champ = t.match(/\b(afc|nfc)\s+championship\s+winner\b/);
+      if (champ) return champ[1] + '_winner';
+      const seed = t.match(/\b(afc|nfc)\s+number\s*1\s*seed\b/);
+      if (seed) return seed[1] + '_1_seed';
+      return null;
+    }
+
+    // DK/SCORE prices for a field coupon's teams: normName(team) -> { dk, score }.
+    // Empty when the coupon has no matching outright market (e.g. finishing orders).
+    function fieldBookPrices(couponTitle) {
+      const out = {};
+      const key = outrightKeyForFieldCoupon(couponTitle);
+      const market = key && OUTRIGHTS && OUTRIGHTS.markets && OUTRIGHTS.markets[key];
+      if (!market) return out;
+      (market.candidates || []).forEach(c => {
+        const fdName = c.names && c.names.fd;
+        if (!fdName || !c.prices) return;
+        out[normName(fdName)] = { dk: c.prices.dk || null, score: c.prices.score || null };
+      });
+      return out;
+    }
+
+    // Field-based market: one row per entity — team name on the left, then FD plus
+    // (when showDk) DK and SCORE price columns under a shared header. DK/SCORE come
+    // from the matching outright market via fieldBookPrices; a team a book hasn't
+    // priced shows a dash.
     function buildFieldBody(body, runners, couponTitle, showDk) {
       const head = document.createElement('div');
       head.className = 'odds-runner odds-field-head';
@@ -758,9 +849,12 @@
         '</div>';
       body.appendChild(head);
 
+      const bookPrices = showDk ? fieldBookPrices(couponTitle) : {};
+
       runners.forEach(r => {
         let odds = null;
         try { odds = r.winRunnerOdds.americanDisplayOdds.americanOdds; } catch (e) {}
+        const bp = bookPrices[normName(stripYear(r.runnerName))] || {};
 
         const row = document.createElement('div');
         row.className = 'odds-runner';
@@ -768,8 +862,8 @@
           '<span class="odds-runner-name">' + stripMarketTitle(r.runnerName, couponTitle) + '</span>' +
           '<div class="odds-books">' +
             '<div class="odds-book"><div class="odds-odds">' + fmtAmerican(odds) + '</div></div>' +
-            (showDk ? '<div class="odds-book"><div class="odds-odds">—</div></div>' : '') +
-            (showDk ? '<div class="odds-book"><div class="odds-odds">—</div></div>' : '') +
+            (showDk ? '<div class="odds-book"><div class="odds-odds">' + fmtDk(bp.dk) + '</div></div>' : '') +
+            (showDk ? '<div class="odds-book"><div class="odds-odds">' + fmtDk(bp.score) + '</div></div>' : '') +
           '</div>';
         body.appendChild(row);
       });
@@ -856,7 +950,12 @@
         }
 
         // DraftKings line/prices for the same player + stat.
-        let dkLineStr = null, dkLineNum = null, dkOdds = null, dkIsMilestone = false;
+        let dkLineStr = null, dkLineNum = null, dkOdds = null;
+        // "Player to Have X+" milestones are DK-only, single yes-price thresholds.
+        // They're surfaced through a per-player collapsible panel (not the book
+        // columns) and, being yes-prices rather than O/U lines, never enter FMV.
+        // The list is pre-sorted ascending by threshold.
+        let dkMilestones = [];
         if (showDk) {
           const dkPlayer = findDkPlayer(player, stat);
           const side = dkPlayer && (dkPlayer.Over || dkPlayer.Under);
@@ -864,31 +963,21 @@
             dkLineStr = side.line;
             dkLineNum = side.line != null ? Number(side.line) : null;
             dkOdds = ouOddsText(dkPlayer.Over && dkPlayer.Over.odds, dkPlayer.Under && dkPlayer.Under.odds);
-          } else {
-            // DK carries no Over/Under for this stat (only Passing Yards), but it
-            // may have a "Player to Have X+" milestone — surface the threshold
-            // nearest the player's FD/SCORE line as an over-only DK cell (no
-            // "O "/"U" prefix, since a milestone is a single yes-price).
-            const target = fdLine != null ? fdLine : scLineNum;
-            const ms = findMilestone(player, stat, target);
-            if (ms) {
-              dkLineStr = String(ms.line);
-              dkLineNum = ms.line;
-              dkOdds = ms.odds;
-              dkIsMilestone = true;
-            }
           }
+          const msEntry = findIndexedPlayer(MS_BY_PLAYER, player, stat);
+          if (msEntry && msEntry.list.length) dkMilestones = msEntry.list;
         }
 
-        // FMV = average of whichever book O/U lines are present. A milestone
-        // threshold is a yes-price, not an O/U line, so it's excluded from FMV
-        // (but its arrow still compares the threshold to the FMV line).
+        // FMV = average of whichever book O/U lines are present. Milestone
+        // thresholds are yes-prices, not O/U lines, so they never enter FMV.
         const lines = [];
         if (fdLine != null && !isNaN(fdLine)) lines.push(fdLine);
-        if (dkLineNum != null && !isNaN(dkLineNum) && !dkIsMilestone) lines.push(dkLineNum);
+        if (dkLineNum != null && !isNaN(dkLineNum)) lines.push(dkLineNum);
         if (scLineNum != null && !isNaN(scLineNum)) lines.push(scLineNum);
         const fmv = lines.length ? lines.reduce((a, b) => a + b, 0) / lines.length : null;
-        info.push({ player: player, fmv: fmv });
+        // Milestones aren't shown in the book columns — they live in a collapsible
+        // panel (built by buildCoupon from this info entry), hidden by default.
+        info.push({ player: player, fmv: fmv, milestones: dkMilestones });
 
         fmvCol.appendChild(ouCell(fmv != null ? fmtFmv(fmv) : '—', ''));
         fdCol.appendChild(hasFd
@@ -922,6 +1011,44 @@
       cell.className = 'odds-book-label';
       cell.innerHTML = labelText + (oddsText ? '<div class="odds-odds">' + oddsText + '</div>' : '');
       return cell;
+    }
+
+    // Appends a 🪜 toggle to a coupon's name header plus a hidden panel (wrapped
+    // onto its own full-width flex line below the odds) listing the player's DK
+    // "X+" milestone thresholds and yes-prices. Both start hidden; the toggle
+    // shows/hides the panel. Milestone prices are plain — no deviation arrows.
+    function addMilestonePanel(wrap, header, milestones) {
+      const panel = document.createElement('div');
+      panel.className = 'odds-ms-panel';
+      panel.hidden = true;
+      const cap = document.createElement('span');
+      cap.className = 'odds-ms-cap';
+      cap.textContent = 'DK milestones';
+      panel.appendChild(cap);
+      milestones.forEach(ms => {
+        const item = document.createElement('div');
+        item.className = 'odds-ms-item';
+        item.innerHTML =
+          '<span class="odds-ms-line">' + ms.line + '+</span>' +
+          '<span class="odds-ms-odds">' + ms.odds + '</span>';
+        panel.appendChild(item);
+      });
+
+      const toggle = document.createElement('button');
+      toggle.type = 'button';
+      toggle.className = 'odds-ms-toggle';
+      toggle.textContent = '🪜';
+      toggle.title = 'Show milestones';
+      toggle.setAttribute('aria-label', 'Toggle milestones');
+      toggle.setAttribute('aria-expanded', 'false');
+      toggle.onclick = () => {
+        const show = panel.hidden;
+        panel.hidden = !show;
+        toggle.classList.toggle('is-open', show);
+        toggle.setAttribute('aria-expanded', String(show));
+      };
+      header.appendChild(toggle);
+      wrap.appendChild(panel);
     }
 
     // Renders one card: title + each of its coupons.
@@ -1043,12 +1170,21 @@
         content.innerHTML = '<div class="odds-status">Tab not found.</div>';
         return;
       }
+      // Only the cards that actually carry data are navigable.
+      const shown = (tab.cards || []).filter(cardRef => {
+        const card = LAYOUT.cards[String(cardRef.id)];
+        return card && cardHasData(card);
+      });
+      // A tab with a single child is just a pass-through: skip the one-item list
+      // and deep-link straight to that card (replace so Back skips this level).
+      if (shown.length === 1) {
+        location.replace('#/' + tabId + '/' + shown[0].id);
+        return;
+      }
       const list = document.createElement('div');
       list.className = 'odds-tabs';
-      (tab.cards || []).forEach(cardRef => {
+      shown.forEach(cardRef => {
         const card = LAYOUT.cards[String(cardRef.id)];
-        if (!card) return;
-        if (!cardHasData(card)) return;
         const btn = document.createElement('button');
         btn.className = 'odds-tab';
         btn.textContent = card.title || '';
@@ -1173,15 +1309,6 @@
         });
       });
       Object.values(MS_BY_PLAYER).forEach(e => e.list.sort((a, b) => a.line - b.line));
-    }
-    // The milestone threshold for a player nearest a target line (the player's
-    // FD/SCORE line). Falls back to the median threshold when there's no target.
-    function findMilestone(player, stat, target) {
-      const e = findIndexedPlayer(MS_BY_PLAYER, player, stat);
-      if (!e || !e.list.length) return null;
-      if (target == null || isNaN(target)) return e.list[Math.floor(e.list.length / 2)];
-      return e.list.reduce((best, x) =>
-        Math.abs(x.line - target) < Math.abs(best.line - target) ? x : best);
     }
     // Every milestone player for a stat (with the median threshold as the line)
     // so synthesizeUnion adds rows for players FD/SCORE don't carry.
