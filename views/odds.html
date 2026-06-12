@@ -8,8 +8,38 @@
   <link rel="stylesheet" href="/styles/styles.css?v=df002b71">
   <link rel="stylesheet" href="/styles/index.css?v=a1b2c3d4">
   <style>
-    main.home { padding-left: 0; padding-right: 0; }
-    .odds-wrap { max-width: 900px; margin: 0 auto; padding: 0 12px 48px; }
+    .index-body {
+      background: #f2f1e3;
+    }
+    /* New Belgium palette + type. Light cream theme, signature orange-red accent,
+       heavy uppercase display lettering, sharp (square) corners. Custom web fonts
+       fall back to a Helvetica/Arial stack and a system monospace. */
+    .odds-wrap {
+      --nb-bg: #f2f1e3;
+      --nb-surface: #fffafb;
+      --nb-ink: #1b2533;
+      --nb-ink-soft: #373737;
+      --nb-muted: #857550;
+      --nb-accent: #d74229;
+      --nb-accent-2: #f68b21;
+      --nb-line: #ddd8c2;
+      --nb-line-soft: #e7e2d0;
+      --nb-up: #6f8f1f;
+      --nb-down: #d74229;
+      --nb-display: "Adso", "ccsamaritanlower-bold", "Helvetica Neue", Arial, sans-serif;
+      --nb-body: "futura-pt", "ccsamaritanlower-regular", "Helvetica Neue", Arial, sans-serif;
+      --nb-mono: ui-monospace, "SFMono-Regular", Menlo, "Roboto Mono", "Courier New", monospace;
+    }
+
+    main.home { padding-left: 0; padding-right: 0; background: #f2f1e3; }
+    .odds-wrap {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 0 12px 48px;
+      background: var(--nb-bg);
+      color: var(--nb-ink);
+      font-family: var(--nb-body);
+    }
 
     /* Tabs render as a vertical list; once one is chosen the list is replaced
        by breadcrumbs (see .odds-crumbs). */
@@ -21,21 +51,27 @@
     .odds-tab {
       background: none;
       border: none;
-      border-bottom: 1px solid #2a2f3a;
-      color: #6ea8fe;
-      font-size: 16px;
-      padding: 16px 8px;
+      border-bottom: 1px solid var(--nb-line);
+      color: var(--nb-ink);
+      font-family: var(--nb-display);
+      font-size: 18px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 18px 8px;
       text-align: left;
       cursor: pointer;
+      transition: color .15s ease;
     }
-    .odds-tab:hover { color: #cfe0ff; }
+    .odds-tab:hover { color: var(--nb-accent); }
     .odds-section {
-      padding: 20px 8px 8px;
-      color: #8b95a5;
+      padding: 24px 8px 8px;
+      color: var(--nb-muted);
+      font-family: var(--nb-display);
       font-size: 12px;
-      font-weight: 600;
+      font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: .05em;
+      letter-spacing: 2px;
     }
 
     /* Breadcrumbs shown in place of the tab list after a selection. */
@@ -43,37 +79,45 @@
     .odds-crumbs {
       position: sticky;
       z-index: 50;
-      background: #0f1117;
+      background: var(--nb-bg);
       display: flex;
       align-items: center;
       gap: 8px;
-      padding: 12px 8px;
-      border-bottom: 1px solid #2a2f3a;
-      font-size: 14px;
+      padding: 14px 8px;
+      border-bottom: 2px solid var(--nb-ink);
+      font-family: var(--nb-display);
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
     }
     .odds-crumb-link {
       background: none;
       border: none;
-      color: #6ea8fe;
+      color: var(--nb-accent);
       cursor: pointer;
-      font-size: 14px;
+      font: inherit;
       padding: 0;
     }
-    .odds-crumb-sep { color: #56607a; }
-    .odds-crumb-current { color: #cfe0ff; font-weight: 600; }
+    .odds-crumb-link:hover { color: var(--nb-ink); }
+    .odds-crumb-sep { color: var(--nb-muted); }
+    .odds-crumb-current { color: var(--nb-ink); font-weight: 700; }
 
     /* Coupon = collapsible section.
        Field-based markets (Divisions, Conferences, Super Bowl): the header sits
        above a stack of runner rows. OU-based markets (Player Props): the header
        sits inline with FD/DK price columns. */
-    .odds-coupon { border-top: 1px solid #2a2f3a; }
+    .odds-coupon { border-top: 1px solid var(--nb-line); }
     .odds-coupon-header {
       display: flex;
       align-items: center;
       width: 100%;
-      color: #c9d2e0;
-      font-size: 14px;
-      padding: 12px 8px;
+      color: var(--nb-ink);
+      font-family: var(--nb-display);
+      font-size: 15px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      padding: 14px 8px;
       text-align: left;
     }
 
@@ -83,25 +127,29 @@
       align-items: center;
       justify-content: space-between;
       padding: 12px 8px;
-      border-top: 1px solid #20252f;
+      border-top: 1px solid var(--nb-line-soft);
       gap: 12px;
     }
-    .odds-runner-name { color: #e6eaf0; font-size: 14px; }
+    .odds-runner-name { color: var(--nb-ink-soft); font-size: 14px; letter-spacing: .3px; }
+    /* Header row above field-market runners: just the FD/DK column labels. */
+    .odds-field-head { border-top: none; padding-bottom: 2px; }
     .odds-books { display: flex; gap: 8px; }
     .odds-book { text-align: center; min-width: 70px; }
     .odds-book-label {
+      font-family: var(--nb-mono);
       font-size: 10px;
       letter-spacing: .04em;
       text-transform: uppercase;
-      color: #6b7585;
+      color: var(--nb-muted);
       margin-bottom: 4px;
     }
     .odds-odds {
       text-align: center;
-      color: #cfe0ff;
-      border: 1px solid #3a5bbf;
-      border-radius: 6px;
+      color: var(--nb-ink);
+      border: 1px solid var(--nb-accent);
+      border-radius: 0;
       padding: 8px 10px;
+      font-family: var(--nb-mono);
       font-size: 14px;
       font-weight: 600;
     }
@@ -111,31 +159,51 @@
     .odds-coupon.is-ou { display: flex; align-items: flex-start; gap: 12px; }
     /* Header takes 0.7 share vs the body's 1 — i.e. 30% narrower than the body. */
     .odds-coupon.is-ou .odds-coupon-header { flex: 0.7; width: auto; }
-    .odds-coupon.is-ou .odds-coupon-body { flex: 1; display: flex; gap: 12px; padding: 8px; }
+    .odds-coupon.is-ou .odds-coupon-body { flex: 1; display: flex; gap: 12px; padding: 8px; align-items: stretch; }
     /* The single FD/DK heading row pinned above the coupons (top set in JS). */
     .odds-ou-head {
       position: sticky;
       z-index: 49;
-      background: #0f1117;
-      border-bottom: 1px solid #2a2f3a;
+      background: var(--nb-bg);
+      border-bottom: 1px solid var(--nb-ink);
     }
-    .odds-col { display: flex; flex-direction: column; gap: 6px; min-width: 78px; }
+    /* Equal-width columns: flex-basis 0 + grow 1 so FMV/FD/DK each take exactly a
+       third of the body regardless of their contents. min-width:0 lets them shrink
+       evenly instead of being padded out to their text width. */
+    .odds-col { display: flex; flex-direction: column; gap: 6px; flex: 1 1 0; min-width: 0; }
+    /* FMV deviation markers, sitting inside the FD/DK line badge. */
+    .odds-arrow { font-size: 9px; margin-left: 3px; vertical-align: middle; }
+    .odds-arrow.up { color: var(--nb-up); }
+    .odds-arrow.down { color: var(--nb-down); }
     .odds-col-head {
+      font-family: var(--nb-display);
       font-size: 11px;
-      letter-spacing: .04em;
+      letter-spacing: 1px;
       text-transform: uppercase;
-      color: #8b95a5;
+      color: var(--nb-muted);
       text-align: center;
-      font-weight: 600;
+      font-weight: 700;
     }
-    /* In the OU layout the label is the badge and the odds sit small inside it. */
+    /* In the OU layout the label is the badge and the odds sit small inside it.
+       Every badge is the same size: full column width (box-sizing keeps padding
+       inside that width) and a shared min-height with its content centered, so a
+       one-line FMV badge matches a two-line FD/DK badge across every column. */
     .odds-coupon.is-ou .odds-book-label {
       margin-bottom: 0;
+      box-sizing: border-box;
+      width: 100%;
+      min-height: 52px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
       text-align: center;
-      color: #cfe0ff;
-      border: 1px solid #3a5bbf;
-      border-radius: 6px;
+      color: var(--nb-ink);
+      background: var(--nb-surface);
+      border: 1px solid var(--nb-accent);
+      border-radius: 0;
       padding: 8px 10px;
+      font-family: var(--nb-mono);
       font-size: 14px;
       font-weight: 600;
       text-transform: none;
@@ -143,16 +211,24 @@
     }
     .odds-coupon.is-ou .odds-odds {
       border: none;
+      background: none;
       padding: 0;
       margin-top: 4px;
+      font-family: var(--nb-mono);
       font-size: 10px;
       letter-spacing: .04em;
       text-transform: uppercase;
       font-weight: 400;
-      color: #6b7585;
+      color: var(--nb-muted);
     }
 
-    .odds-status { padding: 24px 8px; color: #8b95a5; }
+    .odds-status {
+      padding: 24px 8px;
+      color: var(--nb-muted);
+      font-family: var(--nb-display);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
   </style>
 </head>
 <body class="index-body">
@@ -235,16 +311,33 @@
         .trim();
     }
 
-    // Names don't match exactly across books (e.g. "Cam Ward" vs "Cameron Ward"),
-    // so fall back to last-name match with a first-name prefix.
-    function findDkPlayer(player) {
-      const key = normName(player);
-      if (DK_BY_PLAYER[key]) return DK_BY_PLAYER[key];
-      const parts = key.split(' ');
+    // Reduce a market description to its stat, e.g. "Aaron Rodgers Regular Season
+    // Passing Yards 2026-27" or the card title "Regular Season Passing Yards" both
+    // collapse to "passing yards". Used to match a DraftKings price to the same
+    // stat so a QB's passing line never leaks onto, say, a rushing-yards card.
+    function statKey(s) {
+      return (s || '')
+        .toLowerCase()
+        .replace(/.*regular season\s*/, '')
+        .replace(/[^a-z\s]/g, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+
+    // DK_BY_PLAYER is keyed "<normalized name>|<stat>". Names don't match exactly
+    // across books (e.g. "Cam Ward" vs "Cameron Ward"), so within the requested
+    // stat fall back to a last-name match with a first-name prefix.
+    function findDkPlayer(player, stat) {
+      const want = stat || '';
+      const exact = normName(player) + '|' + want;
+      if (DK_BY_PLAYER[exact]) return DK_BY_PLAYER[exact];
+      const parts = normName(player).split(' ');
       const last = parts[parts.length - 1];
       const first = parts[0];
       for (const k in DK_BY_PLAYER) {
-        const kp = k.split(' ');
+        const sep = k.lastIndexOf('|');
+        if (k.slice(sep + 1) !== want) continue;
+        const kp = k.slice(0, sep).split(' ');
         const kLast = kp[kp.length - 1];
         const kFirst = kp[0];
         if (kLast === last && (kFirst.startsWith(first) || first.startsWith(kFirst))) {
@@ -254,24 +347,25 @@
       return null;
     }
 
-    // Build a player-keyed index of DraftKings passing-yards prices.
+    // Build a (player + stat)-keyed index of DraftKings prices.
     function buildDkIndex(dk) {
-      const marketPlayer = {};   // dk marketId -> player name
+      const marketInfo = {};   // dk marketId -> { player, stat }
       (dk.markets || []).forEach(m => {
-        const player = (m.name || '')
+        const name = m.name || '';
+        const player = name
           .replace(/^NFL[^-]*-\s*/, '')
           .replace(/\s+Regular Season.*$/i, '')
           .trim();
-        marketPlayer[m.id] = player;
+        marketInfo[m.id] = { player, stat: statKey(name) };
       });
       (dk.selections || []).forEach(s => {
-        const player = marketPlayer[s.marketId];
-        if (!player) return;
+        const info = marketInfo[s.marketId];
+        if (!info || !info.player) return;
         const dir = s.outcomeType;               // "Over" / "Under"
         if (dir !== 'Over' && dir !== 'Under') return;
         const lineMatch = (s.label || '').match(/([\d.]+)/);
-        const key = normName(player);
-        if (!DK_BY_PLAYER[key]) DK_BY_PLAYER[key] = { name: player };
+        const key = normName(info.player) + '|' + info.stat;
+        if (!DK_BY_PLAYER[key]) DK_BY_PLAYER[key] = { name: info.player };
         DK_BY_PLAYER[key][dir] = {
           line: lineMatch ? lineMatch[1] : null,
           odds: fmtDk((s.displayOdds || {}).american)
@@ -365,14 +459,6 @@
       const runners = couponRunners(couponRef);
       return runners.length > 0 && runners.every(r => parseRunner(r.runnerName));
     }
-    function couponHasDk(couponRef) {
-      return couponRunners(couponRef).some(r => {
-        const p = parseRunner(r.runnerName);
-        if (!p) return false;
-        const dkPlayer = findDkPlayer(p.player);
-        return !!(dkPlayer && dkPlayer[p.dir]);
-      });
-    }
 
     // The single FD/DK heading row, pinned above an OU card's coupons. Mirrors a
     // coupon's is-ou layout (0.7 header spacer + body columns) so it lines up.
@@ -383,7 +469,7 @@
       spacer.className = 'odds-coupon-header';
       const body = document.createElement('div');
       body.className = 'odds-coupon-body';
-      (showDk ? ['FD', 'DK'] : ['FD']).forEach(label => {
+      (showDk ? ['FMV', 'FD', 'DK'] : ['FMV', 'FD']).forEach(label => {
         const col = ouColumn();
         const head = document.createElement('div');
         head.className = 'odds-col-head';
@@ -419,18 +505,32 @@
       if (!runners.length) {
         body.textContent = 'No market data';
       } else if (isOU) {
-        buildOuBody(body, runners, showDk);
+        // Match DraftKings prices only within this card's stat (e.g. passing
+        // yards), so a player's price never leaks across to a different stat.
+        buildOuBody(body, runners, showDk, statKey(cardTitle));
       } else {
-        buildFieldBody(body, runners, coupon.title);
+        buildFieldBody(body, runners, coupon.title, showDk);
       }
 
       wrap.appendChild(body);
       return wrap;
     }
 
-    // Field-based market: one row per entity — name on the left, FanDuel price
-    // (and DraftKings, if it ever matched) on the right.
-    function buildFieldBody(body, runners, couponTitle) {
+    // Field-based market: one row per entity — name on the left, FanDuel and
+    // DraftKings price columns on the right under a shared FD/DK header. Field
+    // markets carry no DraftKings data yet, so the DK column shows a dash.
+    function buildFieldBody(body, runners, couponTitle, showDk) {
+      const head = document.createElement('div');
+      head.className = 'odds-runner odds-field-head';
+      head.innerHTML =
+        '<span class="odds-runner-name"></span>' +
+        '<div class="odds-books">' +
+          (showDk ? ['FD', 'DK'] : ['FD'])
+            .map(l => '<div class="odds-book"><div class="odds-col-head">' + l + '</div></div>')
+            .join('') +
+        '</div>';
+      body.appendChild(head);
+
       runners.forEach(r => {
         let odds = null;
         try { odds = r.winRunnerOdds.americanDisplayOdds.americanOdds; } catch (e) {}
@@ -440,43 +540,94 @@
         row.innerHTML =
           '<span class="odds-runner-name">' + stripMarketTitle(r.runnerName, couponTitle) + '</span>' +
           '<div class="odds-books">' +
-            '<div class="odds-book">' +
-              '<div class="odds-book-label">FD</div>' +
-              '<div class="odds-odds">' + fmtAmerican(odds) + '</div>' +
-            '</div>' +
+            '<div class="odds-book"><div class="odds-odds">' + fmtAmerican(odds) + '</div></div>' +
+            (showDk ? '<div class="odds-book"><div class="odds-odds">—</div></div>' : '') +
           '</div>';
         body.appendChild(row);
       });
     }
 
+    // The Over and Under of a market share the same line, so "O <over> / U <under>"
+    // is the price subtext for a cell. A blank side is dropped.
+    function ouOddsText(over, under) {
+      const parts = [];
+      if (over != null && over !== '') parts.push('O ' + over);
+      if (under != null && under !== '') parts.push('U ' + under);
+      return parts.join(' / ');
+    }
+
+    // Lines are clean half-points; FMV is their average, so trim a trailing ".0".
+    function fmtLine(n) {
+      if (n == null || isNaN(n)) return '';
+      const r = Math.round(n * 10) / 10;
+      return Number.isInteger(r) ? String(r) : r.toFixed(1);
+    }
+
+    // A book's line, plus an up/down arrow when it sits >=2% off fair value.
+    function lineWithArrow(lineStr, lineNum, fmv) {
+      let arrow = '';
+      if (lineNum != null && !isNaN(lineNum) && fmv != null && fmv > 0) {
+        if (lineNum >= fmv * 1.02) arrow = '<span class="odds-arrow up">▲</span>';
+        else if (lineNum <= fmv * 0.98) arrow = '<span class="odds-arrow down">▼</span>';
+      }
+      return (lineStr || '') + arrow;
+    }
+
     // OU-based market: each column stacks its own Over/Under prices so the
-    // runners line up vertically. The FD/DK headings live once at the top of the
-    // card (buildOuHead), not per coupon. showDk is decided at the card level so
-    // every coupon keeps the same columns and stays aligned with that heading.
-    function buildOuBody(body, runners, showDk) {
+    // runners line up vertically. The FMV/FD/DK headings live once at the top of
+    // the card (buildOuHead), not per coupon. showDk is decided at the card level
+    // so every coupon keeps the same columns and stays aligned with that heading.
+    // FMV (fair market value) is the average of the books' lines, shown first.
+    function buildOuBody(body, runners, showDk, stat) {
+      const fmvCol = ouColumn();
       const fdCol = ouColumn();
       const dkCol = ouColumn();
 
+      // Collapse runners to one row per player: Over and Under share a line, so
+      // the line is per player and the two prices become the cell's subtext.
+      const order = [];
+      const byPlayer = {};
       runners.forEach(r => {
+        const parsed = parseRunner(r.runnerName);
+        if (!parsed) return;
         let odds = null;
         try { odds = r.winRunnerOdds.americanDisplayOdds.americanOdds; } catch (e) {}
-        const parsed = parseRunner(r.runnerName);
-        const dir = parsed ? parsed.dir.charAt(0) : '';   // "O" / "U"
+        if (!byPlayer[parsed.player]) { byPlayer[parsed.player] = { line: parsed.line }; order.push(parsed.player); }
+        byPlayer[parsed.player][parsed.dir.charAt(0)] = fmtAmerican(odds);
+      });
 
-        fdCol.appendChild(ouCell(dir + ' ' + (parsed ? parsed.line : ''), fmtAmerican(odds)));
+      order.forEach(player => {
+        const row = byPlayer[player];
+        const fdLine = row.line != null ? Number(row.line) : null;
 
+        // DraftKings line/prices for the same player + stat.
+        let dkLineStr = null, dkLineNum = null, dkOdds = null;
         if (showDk) {
-          // Match the DraftKings price for this player + Over/Under.
-          let dk = null;
-          if (parsed) {
-            const dkPlayer = findDkPlayer(parsed.player);
-            if (dkPlayer && dkPlayer[parsed.dir]) dk = dkPlayer[parsed.dir];
+          const dkPlayer = findDkPlayer(player, stat);
+          const side = dkPlayer && (dkPlayer.Over || dkPlayer.Under);
+          if (side) {
+            dkLineStr = side.line;
+            dkLineNum = side.line != null ? Number(side.line) : null;
+            dkOdds = ouOddsText(dkPlayer.Over && dkPlayer.Over.odds, dkPlayer.Under && dkPlayer.Under.odds);
           }
-          dkCol.appendChild(dk ? ouCell(dir + ' ' + (dk.line || ''), dk.odds || '—')
-                                : ouCell('', '—'));
+        }
+
+        // FMV = average of whichever book lines are present.
+        const lines = [];
+        if (fdLine != null && !isNaN(fdLine)) lines.push(fdLine);
+        if (dkLineNum != null && !isNaN(dkLineNum)) lines.push(dkLineNum);
+        const fmv = lines.length ? lines.reduce((a, b) => a + b, 0) / lines.length : null;
+
+        fmvCol.appendChild(ouCell(fmv != null ? fmtLine(fmv) : '—', ''));
+        fdCol.appendChild(ouCell(lineWithArrow(row.line, fdLine, fmv), ouOddsText(row.O, row.U)));
+        if (showDk) {
+          dkCol.appendChild(dkLineStr != null
+            ? ouCell(lineWithArrow(dkLineStr, dkLineNum, fmv), dkOdds)
+            : ouCell('', '—'));
         }
       });
 
+      body.appendChild(fmvCol);
       body.appendChild(fdCol);
       if (showDk) body.appendChild(dkCol);
     }
@@ -490,7 +641,7 @@
     function ouCell(labelText, oddsText) {
       const cell = document.createElement('div');
       cell.className = 'odds-book-label';
-      cell.innerHTML = labelText + '<div class="odds-odds">' + oddsText + '</div>';
+      cell.innerHTML = labelText + (oddsText ? '<div class="odds-odds">' + oddsText + '</div>' : '');
       return cell;
     }
 
@@ -511,10 +662,11 @@
         content.innerHTML = '<div class="odds-status">Card not found.</div>';
         return;
       }
-      // OU cards get one shared, pinned FD/DK heading; DK shows only if at least
-      // one coupon has matching DraftKings prices, so the columns stay aligned.
+      // Every section shows FD and DK columns. OU cards get one shared, pinned
+      // FD/DK heading above their coupons; field coupons carry their own header
+      // row (built in buildFieldBody) since each lists its own set of entities.
+      const showDk = true;
       const ouRefs = (card.coupons || []).filter(isOuCoupon);
-      const showDk = ouRefs.some(couponHasDk);
       if (ouRefs.length) content.appendChild(buildOuHead(showDk));
 
       (card.coupons || []).forEach(c => {

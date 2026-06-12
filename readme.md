@@ -6,5 +6,3 @@ Sports / fantasy web app served by a Python Flask static-template server
 ## Documentation
 
 - [Odds page](docs/ODDS.md) — FanDuel + DraftKings odds comparison (`/odds`)
-
-_More documentation to follow._

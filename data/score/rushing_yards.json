@@ -1,0 +1,1424 @@
+{
+    "data": {
+        "page": {
+            "id": "Page:a8da4db2-1679-4b53-a85f-ab2b6aa6830d",
+            "title": "Regular Season Rushing Yards",
+            "pageChildren": [
+                {
+                    "id": "Section:a8da4db2-1679-4b53-a85f-ab2b6aa6830d",
+                    "label": "Lines",
+                    "default": true,
+                    "sectionChildren": [
+                        {
+                            "hasMoreEvents": false,
+                            "icon": null,
+                            "id": "MarketplaceShelf:a8da4db2-1679-4b53-a85f-ab2b6aa6830d",
+                            "label": null,
+                            "link": null,
+                            "marketplaceShelfBanner": null,
+                            "marketplaceShelfChildren": [
+                                {
+                                    "attributes": [],
+                                    "id": "MultipleMarketCard:a8da4db2-1679-4b53-a85f-ab2b6aa6830d",
+                                    "featuredTitle": null,
+                                    "deepLink": null,
+                                    "fallbackEvent": {
+                                        "id": "SpecialEvent:a2ede8b3-a821-4a36-ae14-1a6129c0fcd6",
+                                        "deepLink": {
+                                            "canonicalUrl": "espn-sportsbook:/sport/football/organization/united-states/competition/nfl",
+                                            "webUrl": "/sport/football/organization/united-states/competition/nfl",
+                                            "__typename": "TsbDeepLink"
+                                        },
+                                        "espnMedia": null,
+                                        "extraInformation": null,
+                                        "name": "NFL Regular Season Player Totals 2026/27",
+                                        "startTime": "2026-09-10T00:15:00.000000Z",
+                                        "status": "PRE_GAME",
+                                        "slug": "2026-09-09-united-states-nfl-regular-season-player-totals-2026-27",
+                                        "resourceUri": null,
+                                        "competition": {
+                                            "id": "Competition:e27d6912-e11b-4c8e-a573-09e57c7b9fa5",
+                                            "name": "NFL",
+                                            "slug": "nfl",
+                                            "resourceUri": "",
+                                            "__typename": "Competition"
+                                        },
+                                        "sport": {
+                                            "id": "Sport:487d04b6-db83-4100-84c3-e36e7a2c98a6",
+                                            "name": "Football",
+                                            "slug": "football",
+                                            "resourceUri": "",
+                                            "__typename": "Sport"
+                                        },
+                                        "organization": {
+                                            "id": "Organization:33a971c4-7e93-4271-9546-7f02e7ec80d8",
+                                            "slug": "united-states",
+                                            "__typename": "Organization"
+                                        },
+                                        "statistics": null,
+                                        "homeKeyStarter": null,
+                                        "awayKeyStarter": null,
+                                        "eventLiveStream": null,
+                                        "updatedAtTime": "2026-06-12T15:02:50.525160Z",
+                                        "__typename": "SpecialEvent"
+                                    },
+                                    "markets": [
+                                        {
+                                            "id": "Market:a04e7b0e-52dd-44a9-80f4-122ac1b4f651",
+                                            "name": "Josh Allen Total Rushing Yards",
+                                            "status": "OPEN",
+                                            "type": "TOTAL",
+                                            "extraInformation": null,
+                                            "startTime": "2026-09-10T00:15:00.000000Z",
+                                            "statisticAccrued": null,
+                                            "updatedAtTime": "2026-06-10T20:33:35.873263Z",
+                                            "__typename": "Market",
+                                            "selections": [
+                                                {
+                                                    "id": "MarketSelection:51f83b7b-59fe-40ac-98d5-6cef099d92a1",
+                                                    "rawId": "51f83b7b-59fe-40ac-98d5-6cef099d92a1",
+                                                    "name": {
+                                                        "cleanName": "Over",
+                                                        "defaultName": "O 450.5",
+                                                        "fullName": "Over 450.5",
+                                                        "minimalName": "O 450.5",
+                                                        "__typename": "SelectionName"
+                                                    },
+                                                    "odds": {
+                                                        "denominatorLong": "5",
+                                                        "numeratorLong": "9",
+                                                        "formattedOdds": "-125",
+                                                        "__typename": "Odds"
+                                                    },
+                                                    "participant": null,
+                                                    "points": {
+                                                        "decimalPoints": 450.5,
+                                                        "formattedPoints": "450.5",
+                                                        "__typename": "Points"
+                                                    },
+                                                    "status": "OPEN",
+                                                    "type": "OVER",
+                                                    "probabilityEncrypted": null,
+                                                    "__typename": "MarketSelection"
+                                                },
+                                                {
+                                                    "id": "MarketSelection:39c15fe8-ca9c-4ed5-a874-04c73a1ece23",
+                                                    "rawId": "39c15fe8-ca9c-4ed5-a874-04c73a1ece23",
+                                                    "name": {
+                                                        "cleanName": "Under",
+                                                        "defaultName": "U 450.5",
+                                                        "fullName": "Under 450.5",
+                                                        "minimalName": "U 450.5",
+                                                        "__typename": "SelectionName"
+                                                    },
+                                                    "odds": {
+                                                        "denominatorLong": "21",
+                                                        "numeratorLong": "41",
+                                                        "formattedOdds": "-105",
+                                                        "__typename": "Odds"
+                                                    },
+                                                    "participant": null,
+                                                    "points": {
+                                                        "decimalPoints": 450.5,
+                                                        "formattedPoints": "450.5",
+                                                        "__typename": "Points"
+                                                    },
+                                                    "status": "OPEN",
+                                                    "type": "UNDER",
+                                                    "probabilityEncrypted": null,
+                                                    "__typename": "MarketSelection"
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "id": "Market:59cd1e5a-8ba0-478a-935b-23ebbf157a3b",
+                                            "name": "Lamar Jackson Total Rushing Yards",
+                                            "status": "OPEN",
+                                            "type": "TOTAL",
+                                            "extraInformation": null,
+                                            "startTime": "2026-09-10T00:15:00.000000Z",
+                                            "statisticAccrued": null,
+                                            "updatedAtTime": "2026-06-10T20:33:35.979743Z",
+                                            "__typename": "Market",
+                                            "selections": [
+                                                {
+                                                    "id": "MarketSelection:83bbcc27-7fa2-438a-b8f8-69d8c72a0efa",
+                                                    "rawId": "83bbcc27-7fa2-438a-b8f8-69d8c72a0efa",
+                                                    "name": {
+                                                        "cleanName": "Over",
+                                                        "defaultName": "O 525.5",
+                                                        "fullName": "Over 525.5",
+                                                        "minimalName": "O 525.5",
+                                                        "__typename": "SelectionName"
+                                                    },
+                                                    "odds": {
+                                                        "denominatorLong": "23",
+                                                        "numeratorLong": "43",
+                                                        "formattedOdds": "-115",
+                                                        "__typename": "Odds"
+                                                    },
+                                                    "participant": null,
+                                                    "points": {
+                                                        "decimalPoints": 525.5,
+                                                        "formattedPoints": "525.5",
+                                                        "__typename": "Points"
+                                                    },
+                                                    "status": "OPEN",
+                                                    "type": "OVER",
+                                                    "probabilityEncrypted": null,
+                                                    "__typename": "MarketSelection"
+                                                },
+                                                {
+                                                    "id": "MarketSelection:db4e9075-479d-41c4-a1de-fd5e454f1b90",
+                                                    "rawId": "db4e9075-479d-41c4-a1de-fd5e454f1b90",
+                                                    "name": {
+                                                        "cleanName": "Under",
+                                                        "defaultName": "U 525.5",
+                                                        "fullName": "Under 525.5",
+                                                        "minimalName": "U 525.5",
+                                                        "__typename": "SelectionName"
+                                                    },
+                                                    "odds": {
+                                                        "denominatorLong": "23",
+                                                        "numeratorLong": "43",
+                                                        "formattedOdds": "-115",
+                                                        "__typename": "Odds"
+                                                    },
+                                                    "participant": null,
+                                                    "points": {
+                                                        "decimalPoints": 525.5,
+                                                        "formattedPoints": "525.5",
+                                                        "__typename": "Points"
+                                                    },
+                                                    "status": "OPEN",
+                                                    "type": "UNDER",
+                                                    "probabilityEncrypted": null,
+                                                    "__typename": "MarketSelection"
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "id": "Market:29b9a7a1-8875-46df-8df6-790d9cf137c1",
+                                            "name": "D'Andre Swift Total Rushing Yards",
+                                            "status": "OPEN",
+                                            "type": "TOTAL",
+                                            "extraInformation": null,
+                                            "startTime": "2026-09-10T00:15:00.000000Z",
+                                            "statisticAccrued": null,
+                                            "updatedAtTime": "2026-06-10T20:33:35.974339Z",
+                                            "__typename": "Market",
+                                            "selections": [
+                                                {
+                                                    "id": "MarketSelection:46530f0c-18b0-4c5c-8aa9-0c70cda96126",
+                                                    "rawId": "46530f0c-18b0-4c5c-8aa9-0c70cda96126",
+                                                    "name": {
+                                                        "cleanName": "Over",
+                                                        "defaultName": "O 725.5",
+                                                        "fullName": "Over 725.5",
+                                                        "minimalName": "O 725.5",
+                                                        "__typename": "SelectionName"
+                                                    },
+                                                    "odds": {
+                                                        "denominatorLong": "23",
+                                                        "numeratorLong": "43",
+                                                        "formattedOdds": "-115",
+                                                        "__typename": "Odds"
+                                                    },
+                                                    "participant": null,
+                                                    "points": {
+                                                        "decimalPoints": 725.5,
+                                                        "formattedPoints": "725.5",
+                                                        "__typename": "Points"
+                                                    },
+                                                    "status": "OPEN",
+                                                    "type": "OVER",
+                                                    "probabilityEncrypted": null,
+                                                    "__typename": "MarketSelection"
+                                                },
+                                                {
+                                                    "id": "MarketSelection:c6db8b8c-e768-4063-a5a3-74b27d919bb3",
+                                                    "rawId": "c6db8b8c-e768-4063-a5a3-74b27d919bb3",
+                                                    "name": {
+                                                        "cleanName": "Under",
+                                                        "defaultName": "U 725.5",
+                                                        "fullName": "Under 725.5",
+                                                        "minimalName": "U 725.5",
+                                                        "__typename": "SelectionName"
+                                                    },
+                                                    "odds": {
+                                                        "denominatorLong": "23",
+                                                        "numeratorLong": "43",
+                                                        "formattedOdds": "-115",
+                                                        "__typename": "Odds"
+                                                    },
+                                                    "participant": null,
+                                                    "points": {
+                                                        "decimalPoints": 725.5,
+                                                        "formattedPoints": "725.5",
+                                                        "__typename": "Points"
+                                                    },
+                                                    "status": "OPEN",
+                                                    "type": "UNDER",
+                                                    "probabilityEncrypted": null,
+                                                    "__typename": "MarketSelection"
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "id": "Market:55dc3d97-803e-406d-a2eb-7014897bae80",
+                                            "name": "Tony Pollard Total Rushing Yards",
+                                            "status": "OPEN",
+                                            "type": "TOTAL",
+                                            "extraInformation": null,
+                                            "startTime": "2026-09-10T00:15:00.000000Z",
+                                            "statisticAccrued": null,
+                                            "updatedAtTime": "2026-06-10T20:33:35.958876Z",
+                                            "__typename": "Market",
+                                            "selections": [
+                                                {
+                                                    "id": "MarketSelection:9f02e489-c202-4602-a21b-180db7099d5a",
+                                                    "rawId": "9f02e489-c202-4602-a21b-180db7099d5a",
+                                                    "name": {
+                                                        "cleanName": "Over",
+                                                        "defaultName": "O 750.5",
+                                                        "fullName": "Over 750.5",
+                                                        "minimalName": "O 750.5",
+                                                        "__typename": "SelectionName"
+                                                    },
+                                                    "odds": {
+                                                        "denominatorLong": "23",
+                                                        "numeratorLong": "43",
+                                                        "formattedOdds": "-115",
+                                                        "__typename": "Odds"
+                                                    },
+                                                    "participant": null,
+                                                    "points": {
+                                                        "decimalPoints": 750.5,
+                                                        "formattedPoints": "750.5",
+                                                        "__typename": "Points"
+                                                    },
+                                                    "status": "OPEN",
+                                                    "type": "OVER",
+                                                    "probabilityEncrypted": null,
+                                                    "__typename": "MarketSelection"
+                                                },
+                                                {
+                                                    "id": "MarketSelection:703215aa-93b1-4b4d-bbb4-abec2aeef674",
+                                                    "rawId": "703215aa-93b1-4b4d-bbb4-abec2aeef674",
+                                                    "name": {
+                                                        "cleanName": "Under",
+                                                        "defaultName": "U 750.5",
+                                                        "fullName": "Under 750.5",
+                                                        "minimalName": "U 750.5",
+                                                        "__typename": "SelectionName"
+                                                    },
+                                                    "odds": {
+                                                        "denominatorLong": "23",
+                                                        "numeratorLong": "43",
+                                                        "formattedOdds": "-115",
+                                                        "__typename": "Odds"
+                                                    },
+                                                    "participant": null,
+                                                    "points": {
+                                                        "decimalPoints": 750.5,
+                                                        "formattedPoints": "750.5",
+                                                        "__typename": "Points"
+                                                    },
+                                                    "status": "OPEN",
+                                                    "type": "UNDER",
+                                                    "probabilityEncrypted": null,
+                                                    "__typename": "MarketSelection"
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "id": "Market:190d6ec9-85c3-4321-9ce8-9095fba88cfb",
+                                            "name": "Chase Brown Total Rushing Yards",
+                                            "status": "OPEN",
+                                            "type": "TOTAL",
+                                            "extraInformation": null,
+                                            "startTime": "2026-09-10T00:15:00.000000Z",
+                                            "statisticAccrued": null,
+                                            "updatedAtTime": "2026-06-10T20:33:35.959656Z",
+                                            "__typename": "Market",
+                                            "selections": [
+                                                {
+                                                    "id": "MarketSelection:95aba685-3528-4263-87c9-d30534b18b72",
+                                                    "rawId": "95aba685-3528-4263-87c9-d30534b18b72",
+                                                    "name": {
+                                                        "cleanName": "Over",
+                                                        "defaultName": "O 800.5",
+                                                        "fullName": "Over 800.5",
+                                                        "minimalName": "O 800.5",
+                                                        "__typename": "SelectionName"
+                                                    },
+                                                    "odds": {
+                                                        "denominatorLong": "23",
+                                                        "numeratorLong": "43",
+                                                        "formattedOdds": "-115",
+                                                        "__typename": "Odds"
+                                                    },
+                                                    "participant": null,
+                                                    "points": {
+                                                        "decimalPoints": 800.5,
+                                                        "formattedPoints": "800.5",
+                                                        "__typename": "Points"
+                                                    },
+                                                    "status": "OPEN",
+                                                    "type": "OVER",
+                                                    "probabilityEncrypted": null,
+                                                    "__typename": "MarketSelection"
+                                                },
+                                                {
+                                                    "id": "MarketSelection:ca19455b-5336-4959-9c19-41d56aa2a55c",
+                                                    "rawId": "ca19455b-5336-4959-9c19-41d56aa2a55c",
+                                                    "name": {
+                                                        "cleanName": "Under",
+                                                        "defaultName": "U 800.5",
+                                                        "fullName": "Under 800.5",
+                                                        "minimalName": "U 800.5",
+                                                        "__typename": "SelectionName"
+                                                    },
+                                                    "odds": {
+                                                        "denominatorLong": "23",
+                                                        "numeratorLong": "43",
+                                                        "formattedOdds": "-115",
+                                                        "__typename": "Odds"
+                                                    },
+                                                    "participant": null,
+                                                    "points": {
+                                                        "decimalPoints": 800.5,
+                                                        "formattedPoints": "800.5",
+                                                        "__typename": "Points"
+                                                    },
+                                                    "status": "OPEN",
+                                                    "type": "UNDER",
+                                                    "probabilityEncrypted": null,
+                                                    "__typename": "MarketSelection"
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "id": "Market:141f186e-5d8d-4298-b055-9ab6d393a946",
+                                            "name": "David Montgomery Total Rushing Yards",
+                                            "status": "OPEN",
+                                            "type": "TOTAL",
+                                            "extraInformation": null,
+                                            "startTime": "2026-09-10T00:15:00.000000Z",
+                                            "statisticAccrued": null,
+                                            "updatedAtTime": "2026-06-10T20:33:39.984431Z",
+                                            "__typename": "Market",
+                                            "selections": [
+                                                {
+                                                    "id": "MarketSelection:fb0cac5d-fa6d-4397-90e1-98cb5d3e99f1",
+                                                    "rawId": "fb0cac5d-fa6d-4397-90e1-98cb5d3e99f1",
+                                                    "name": {
+                                                        "cleanName": "Over",
+                                                        "defaultName": "O 800.5",
+                                                        "fullName": "Over 800.5",
+                                                        "minimalName": "O 800.5",
+                                                        "__typename": "SelectionName"
+                                                    },
+                                                    "odds": {
+                                                        "denominatorLong": "6",
+                                                        "numeratorLong": "11",
+                                                        "formattedOdds": "-120",
+                                                        "__typename": "Odds"
+                                                    },
+                                                    "participant": null,
+                                                    "points": {
+                                                        "decimalPoints": 800.5,
+                                                        "formattedPoints": "800.5",
+                                                        "__typename": "Points"
+                                                    },
+                                                    "status": "OPEN",
+                                                    "type": "OVER",
+                                                    "probabilityEncrypted": null,
+                                                    "__typename": "MarketSelection"
+                                                },
+                                                {
+                                                    "id": "MarketSelection:a753db12-82c6-46de-b437-9a79a36e93ec",
+                                                    "rawId": "a753db12-82c6-46de-b437-9a79a36e93ec",
+                                                    "name": {
+                                                        "cleanName": "Under",
+                                                        "defaultName": "U 800.5",
+                                                        "fullName": "Under 800.5",
+                                                        "minimalName": "U 800.5",
+                                                        "__typename": "SelectionName"
+                                                    },
+                                                    "odds": {
+                                                        "denominatorLong": "11",
+                                                        "numeratorLong": "21",
+                                                        "formattedOdds": "-110",
+                                                        "__typename": "Odds"
+                                                    },
+                                                    "participant": null,
+                                                    "points": {
+                                                        "decimalPoints": 800.5,
+                                                        "formattedPoints": "800.5",
+                                                        "__typename": "Points"
+                                                    },
+                                                    "status": "OPEN",
+                                                    "type": "UNDER",
+                                                    "probabilityEncrypted": null,
+                                                    "__typename": "MarketSelection"
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "id": "Market:ebb91ecc-389c-4b5f-a9f6-432932e23fa3",
+                                            "name": "Breece Hall Total Rushing Yards",
+                                            "status": "OPEN",
+                                            "type": "TOTAL",
+                                            "extraInformation": null,
+                                            "startTime": "2026-09-10T00:15:00.000000Z",
+                                            "statisticAccrued": null,
+                                            "updatedAtTime": "2026-06-10T20:33:35.927233Z",
+                                            "__typename": "Market",
+                                            "selections": [
+                                                {
+                                                    "id": "MarketSelection:b3495530-95cb-42ac-bf23-b7b86e754288",
+                                                    "rawId": "b3495530-95cb-42ac-bf23-b7b86e754288",
+                                                    "name": {
+                                                        "cleanName": "Over",
+                                                        "defaultName": "O 825.5",
+                                                        "fullName": "Over 825.5",
+                                                        "minimalName": "O 825.5",
+                                                        "__typename": "SelectionName"
+                                                    },
+                                                    "odds": {
+                                                        "denominatorLong": "23",
+                                                        "numeratorLong": "43",
+                                                        "formattedOdds": "-115",
+                                                        "__typename": "Odds"
+                                                    },
+                                                    "participant": null,
+                                                    "points": {
+                                                        "decimalPoints": 825.5,
+                                                        "formattedPoints": "825.5",
+                                                        "__typename": "Points"
+                                                    },
+                                                    "status": "OPEN",
+                                                    "type": "OVER",
+                                                    "probabilityEncrypted": null,
+                                                    "__typename": "MarketSelection"
+                                                },
+                                                {
+                                                    "id": "MarketSelection:dd8b25d9-4cc7-447d-81f8-09b80331c96c",
+                                                    "rawId": "dd8b25d9-4cc7-447d-81f8-09b80331c96c",
+                                                    "name": {
+                                                        "cleanName": "Under",
+                                                        "defaultName": "U 825.5",
+                                                        "fullName": "Under 825.5",
+                                                        "minimalName": "U 825.5",
+                                                        "__typename": "SelectionName"
+                                                    },
+                                                    "odds": {
+                                                        "denominatorLong": "23",
+                                                        "numeratorLong": "43",
+                                                        "formattedOdds": "-115",
+                                                        "__typename": "Odds"
+                                                    },
+                                                    "participant": null,
+                                                    "points": {
+                                                        "decimalPoints": 825.5,
+                                                        "formattedPoints": "825.5",
+                                                        "__typename": "Points"
+                                                    },
+                                                    "status": "OPEN",
+                                                    "type": "UNDER",
+                                                    "probabilityEncrypted": null,
+                                                    "__typename": "MarketSelection"
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "id": "Market:0bf0e240-d129-4e1e-89b7-933f1caac4a5",
+                                            "name": "Jeremiyah Love Total Rushing Yards",
+                                            "status": "OPEN",
+                                            "type": "TOTAL",
+                                            "extraInformation": null,
+                                            "startTime": "2026-09-10T00:15:00.000000Z",
+                                            "statisticAccrued": null,
+                                            "updatedAtTime": "2026-06-10T20:33:35.922089Z",
+                                            "__typename": "Market",
+                                            "selections": [
+                                                {
+                                                    "id": "MarketSelection:95138d12-01dd-4d79-87b8-11f4f9e17a0a",
+                                                    "rawId": "95138d12-01dd-4d79-87b8-11f4f9e17a0a",
+                                                    "name": {
+                                                        "cleanName": "Over",
+                                                        "defaultName": "O 825.5",
+                                                        "fullName": "Over 825.5",
+                                                        "minimalName": "O 825.5",
+                                                        "__typename": "SelectionName"
+                                                    },
+                                                    "odds": {
+                                                        "denominatorLong": "23",
+                                                        "numeratorLong": "43",
+                                                        "formattedOdds": "-115",
+                                                        "__typename": "Odds"
+                                                    },
+                                                    "participant": null,
+                                                    "points": {
+                                                        "decimalPoints": 825.5,
+                                                        "formattedPoints": "825.5",
+                                                        "__typename": "Points"
+                                                    },
+                                                    "status": "OPEN",
+                                                    "type": "OVER",
+                                                    "probabilityEncrypted": null,
+                                                    "__typename": "MarketSelection"
+                                                },
+                                                {
+                                                    "id": "MarketSelection:32da531d-0a4b-497d-b405-040aecdc4d84",
+                                                    "rawId": "32da531d-0a4b-497d-b405-040aecdc4d84",
+                                                    "name": {
+                                                        "cleanName": "Under",
+                                                        "defaultName": "U 825.5",
+                                                        "fullName": "Under 825.5",
+                                                        "minimalName": "U 825.5",
+                                                        "__typename": "SelectionName"
+                                                    },
+                                                    "odds": {
+                                                        "denominatorLong": "23",
+                                                        "numeratorLong": "43",
+                                                        "formattedOdds": "-115",
+                                                        "__typename": "Odds"
+                                                    },
+                                                    "participant": null,
+                                                    "points": {
+                                                        "decimalPoints": 825.5,
+                                                        "formattedPoints": "825.5",
+                                                        "__typename": "Points"
+                                                    },
+                                                    "status": "OPEN",
+                                                    "type": "UNDER",
+                                                    "probabilityEncrypted": null,
+                                                    "__typename": "MarketSelection"
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "id": "Market:7e1156ad-5ce6-4e9d-bb6a-3c23b7c79df9",
+                                            "name": "Kenneth Walker III Total Rushing Yards",
+                                            "status": "OPEN",
+                                            "type": "TOTAL",
+                                            "extraInformation": null,
+                                            "startTime": "2026-09-10T00:15:00.000000Z",
+                                            "statisticAccrued": null,
+                                            "updatedAtTime": "2026-06-10T20:33:35.853311Z",
+                                            "__typename": "Market",
+                                            "selections": [
+                                                {
+                                                    "id": "MarketSelection:08a9aa74-c998-42ab-8b91-2fbb03c93f81",
+                                                    "rawId": "08a9aa74-c998-42ab-8b91-2fbb03c93f81",
+                                                    "name": {
+                                                        "cleanName": "Over",
+                                                        "defaultName": "O 875.5",
+                                                        "fullName": "Over 875.5",
+                                                        "minimalName": "O 875.5",
+                                                        "__typename": "SelectionName"
+                                                    },
+                                                    "odds": {
+                                                        "denominatorLong": "13",
+                                                        "numeratorLong": "23",
+                                                        "formattedOdds": "-130",
+                                                        "__typename": "Odds"
+                                                    },
+                                                    "participant": null,
+                                                    "points": {
+                                                        "decimalPoints": 875.5,
+                                                        "formattedPoints": "875.5",
+                                                        "__typename": "Points"
+                                                    },
+                                                    "status": "OPEN",
+                                                    "type": "OVER",
+                                                    "probabilityEncrypted": null,
+                                                    "__typename": "MarketSelection"
+                                                },
+                                                {
+                                                    "id": "MarketSelection:e5fcb7c1-b3e4-4f60-b3cb-055339f830c1",
+                                                    "rawId": "e5fcb7c1-b3e4-4f60-b3cb-055339f830c1",
+                                                    "name": {
+                                                        "cleanName": "Under",
+                                                        "defaultName": "U 875.5",
+                                                        "fullName": "Under 875.5",
+                                                        "minimalName": "U 875.5",
+                                                        "__typename": "SelectionName"
+                                                    },
+                                                    "odds": {
+                                                        "denominatorLong": "1",
+                                                        "numeratorLong": "2",
+                                                        "formattedOdds": "Even",
+                                                        "__typename": "Odds"
+                                                    },
+                                                    "participant": null,
+                                                    "points": {
+                                                        "decimalPoints": 875.5,
+                                                        "formattedPoints": "875.5",
+                                                        "__typename": "Points"
+                                                    },
+                                                    "status": "OPEN",
+                                                    "type": "UNDER",
+                                                    "probabilityEncrypted": null,
+                                                    "__typename": "MarketSelection"
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "id": "Market:86f3e43f-aba9-4cc8-a696-3c66e6610be3",
+                                            "name": "Omarion Hampton Total Rushing Yards",
+                                            "status": "OPEN",
+                                            "type": "TOTAL",
+                                            "extraInformation": null,
+                                            "startTime": "2026-09-10T00:15:00.000000Z",
+                                            "statisticAccrued": null,
+                                            "updatedAtTime": "2026-06-10T20:33:35.952701Z",
+                                            "__typename": "Market",
+                                            "selections": [
+                                                {
+                                                    "id": "MarketSelection:534a0645-e8b0-4243-b05a-802d07e86c6c",
+                                                    "rawId": "534a0645-e8b0-4243-b05a-802d07e86c6c",
+                                                    "name": {
+                                                        "cleanName": "Over",
+                                                        "defaultName": "O 875.5",
+                                                        "fullName": "Over 875.5",
+                                                        "minimalName": "O 875.5",
+                                                        "__typename": "SelectionName"
+                                                    },
+                                                    "odds": {
+                                                        "denominatorLong": "23",
+                                                        "numeratorLong": "43",
+                                                        "formattedOdds": "-115",
+                                                        "__typename": "Odds"
+                                                    },
+                                                    "participant": null,
+                                                    "points": {
+                                                        "decimalPoints": 875.5,
+                                                        "formattedPoints": "875.5",
+                                                        "__typename": "Points"
+                                                    },
+                                                    "status": "OPEN",
+                                                    "type": "OVER",
+                                                    "probabilityEncrypted": null,
+                                                    "__typename": "MarketSelection"
+                                                },
+                                                {
+                                                    "id": "MarketSelection:10b53246-794b-49cd-9c3a-a33b209c0f1b",
+                                                    "rawId": "10b53246-794b-49cd-9c3a-a33b209c0f1b",
+                                                    "name": {
+                                                        "cleanName": "Under",
+                                                        "defaultName": "U 875.5",
+                                                        "fullName": "Under 875.5",
+                                                        "minimalName": "U 875.5",
+                                                        "__typename": "SelectionName"
+                                                    },
+                                                    "odds": {
+                                                        "denominatorLong": "23",
+                                                        "numeratorLong": "43",
+                                                        "formattedOdds": "-115",
+                                                        "__typename": "Odds"
+                                                    },
+                                                    "participant": null,
+                                                    "points": {
+                                                        "decimalPoints": 875.5,
+                                                        "formattedPoints": "875.5",
+                                                        "__typename": "Points"
+                                                    },
+                                                    "status": "OPEN",
+                                                    "type": "UNDER",
+                                                    "probabilityEncrypted": null,
+                                                    "__typename": "MarketSelection"
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "id": "Market:438891db-6e8b-4c75-938f-6f49baddf57f",
+                                            "name": "Christian McCaffrey Total Rushing Yards",
+                                            "status": "OPEN",
+                                            "type": "TOTAL",
+                                            "extraInformation": null,
+                                            "startTime": "2026-09-10T00:15:00.000000Z",
+                                            "statisticAccrued": null,
+                                            "updatedAtTime": "2026-06-10T20:33:35.948297Z",
+                                            "__typename": "Market",
+                                            "selections": [
+                                                {
+                                                    "id": "MarketSelection:e975f514-830e-4ec0-90c2-ad30d7b48820",
+                                                    "rawId": "e975f514-830e-4ec0-90c2-ad30d7b48820",
+                                                    "name": {
+                                                        "cleanName": "Over",
+                                                        "defaultName": "O 900.5",
+                                                        "fullName": "Over 900.5",
+                                                        "minimalName": "O 900.5",
+                                                        "__typename": "SelectionName"
+                                                    },
+                                                    "odds": {
+                                                        "denominatorLong": "23",
+                                                        "numeratorLong": "43",
+                                                        "formattedOdds": "-115",
+                                                        "__typename": "Odds"
+                                                    },
+                                                    "participant": null,
+                                                    "points": {
+                                                        "decimalPoints": 900.5,
+                                                        "formattedPoints": "900.5",
+                                                        "__typename": "Points"
+                                                    },
+                                                    "status": "OPEN",
+                                                    "type": "OVER",
+                                                    "probabilityEncrypted": null,
+                                                    "__typename": "MarketSelection"
+                                                },
+                                                {
+                                                    "id": "MarketSelection:029aa521-561b-430f-b315-9b2277e6a5e8",
+                                                    "rawId": "029aa521-561b-430f-b315-9b2277e6a5e8",
+                                                    "name": {
+                                                        "cleanName": "Under",
+                                                        "defaultName": "U 900.5",
+                                                        "fullName": "Under 900.5",
+                                                        "minimalName": "U 900.5",
+                                                        "__typename": "SelectionName"
+                                                    },
+                                                    "odds": {
+                                                        "denominatorLong": "23",
+                                                        "numeratorLong": "43",
+                                                        "formattedOdds": "-115",
+                                                        "__typename": "Odds"
+                                                    },
+                                                    "participant": null,
+                                                    "points": {
+                                                        "decimalPoints": 900.5,
+                                                        "formattedPoints": "900.5",
+                                                        "__typename": "Points"
+                                                    },
+                                                    "status": "OPEN",
+                                                    "type": "UNDER",
+                                                    "probabilityEncrypted": null,
+                                                    "__typename": "MarketSelection"
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "id": "Market:3d198b36-d0a0-41fc-9bb6-4a8d62da4be3",
+                                            "name": "Javonte Williams Total Rushing Yards",
+                                            "status": "OPEN",
+                                            "type": "TOTAL",
+                                            "extraInformation": null,
+                                            "startTime": "2026-09-10T00:15:00.000000Z",
+                                            "statisticAccrued": null,
+                                            "updatedAtTime": "2026-06-10T20:33:35.906426Z",
+                                            "__typename": "Market",
+                                            "selections": [
+                                                {
+                                                    "id": "MarketSelection:561e6ce1-7d8b-4197-aed1-b8b206e202f9",
+                                                    "rawId": "561e6ce1-7d8b-4197-aed1-b8b206e202f9",
+                                                    "name": {
+                                                        "cleanName": "Over",
+                                                        "defaultName": "O 900.5",
+                                                        "fullName": "Over 900.5",
+                                                        "minimalName": "O 900.5",
+                                                        "__typename": "SelectionName"
+                                                    },
+                                                    "odds": {
+                                                        "denominatorLong": "23",
+                                                        "numeratorLong": "43",
+                                                        "formattedOdds": "-115",
+                                                        "__typename": "Odds"
+                                                    },
+                                                    "participant": null,
+                                                    "points": {
+                                                        "decimalPoints": 900.5,
+                                                        "formattedPoints": "900.5",
+                                                        "__typename": "Points"
+                                                    },
+                                                    "status": "OPEN",
+                                                    "type": "OVER",
+                                                    "probabilityEncrypted": null,
+                                                    "__typename": "MarketSelection"
+                                                },
+                                                {
+                                                    "id": "MarketSelection:0bceea43-e4b9-44de-bc3b-c3f1f75b2abf",
+                                                    "rawId": "0bceea43-e4b9-44de-bc3b-c3f1f75b2abf",
+                                                    "name": {
+                                                        "cleanName": "Under",
+                                                        "defaultName": "U 900.5",
+                                                        "fullName": "Under 900.5",
+                                                        "minimalName": "U 900.5",
+                                                        "__typename": "SelectionName"
+                                                    },
+                                                    "odds": {
+                                                        "denominatorLong": "23",
+                                                        "numeratorLong": "43",
+                                                        "formattedOdds": "-115",
+                                                        "__typename": "Odds"
+                                                    },
+                                                    "participant": null,
+                                                    "points": {
+                                                        "decimalPoints": 900.5,
+                                                        "formattedPoints": "900.5",
+                                                        "__typename": "Points"
+                                                    },
+                                                    "status": "OPEN",
+                                                    "type": "UNDER",
+                                                    "probabilityEncrypted": null,
+                                                    "__typename": "MarketSelection"
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "id": "Market:389a251c-778a-4db6-8906-62b7cd58fd9b",
+                                            "name": "Ashton Jeanty Total Rushing Yards",
+                                            "status": "OPEN",
+                                            "type": "TOTAL",
+                                            "extraInformation": null,
+                                            "startTime": "2026-09-10T00:15:00.000000Z",
+                                            "statisticAccrued": null,
+                                            "updatedAtTime": "2026-06-10T20:33:35.854046Z",
+                                            "__typename": "Market",
+                                            "selections": [
+                                                {
+                                                    "id": "MarketSelection:c5433478-94ac-4a5d-9b32-a1ba9a1c0ad2",
+                                                    "rawId": "c5433478-94ac-4a5d-9b32-a1ba9a1c0ad2",
+                                                    "name": {
+                                                        "cleanName": "Over",
+                                                        "defaultName": "O 925.5",
+                                                        "fullName": "Over 925.5",
+                                                        "minimalName": "O 925.5",
+                                                        "__typename": "SelectionName"
+                                                    },
+                                                    "odds": {
+                                                        "denominatorLong": "13",
+                                                        "numeratorLong": "23",
+                                                        "formattedOdds": "-130",
+                                                        "__typename": "Odds"
+                                                    },
+                                                    "participant": null,
+                                                    "points": {
+                                                        "decimalPoints": 925.5,
+                                                        "formattedPoints": "925.5",
+                                                        "__typename": "Points"
+                                                    },
+                                                    "status": "OPEN",
+                                                    "type": "OVER",
+                                                    "probabilityEncrypted": null,
+                                                    "__typename": "MarketSelection"
+                                                },
+                                                {
+                                                    "id": "MarketSelection:c375bdfd-8cb4-469f-951d-54aa16b74e38",
+                                                    "rawId": "c375bdfd-8cb4-469f-951d-54aa16b74e38",
+                                                    "name": {
+                                                        "cleanName": "Under",
+                                                        "defaultName": "U 925.5",
+                                                        "fullName": "Under 925.5",
+                                                        "minimalName": "U 925.5",
+                                                        "__typename": "SelectionName"
+                                                    },
+                                                    "odds": {
+                                                        "denominatorLong": "1",
+                                                        "numeratorLong": "2",
+                                                        "formattedOdds": "Even",
+                                                        "__typename": "Odds"
+                                                    },
+                                                    "participant": null,
+                                                    "points": {
+                                                        "decimalPoints": 925.5,
+                                                        "formattedPoints": "925.5",
+                                                        "__typename": "Points"
+                                                    },
+                                                    "status": "OPEN",
+                                                    "type": "UNDER",
+                                                    "probabilityEncrypted": null,
+                                                    "__typename": "MarketSelection"
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "id": "Market:53cc276e-eeef-4737-9680-10d40408ec63",
+                                            "name": "De'Von Achane Total Rushing Yards",
+                                            "status": "OPEN",
+                                            "type": "TOTAL",
+                                            "extraInformation": null,
+                                            "startTime": "2026-09-10T00:15:00.000000Z",
+                                            "statisticAccrued": null,
+                                            "updatedAtTime": "2026-06-10T20:33:35.880279Z",
+                                            "__typename": "Market",
+                                            "selections": [
+                                                {
+                                                    "id": "MarketSelection:b1f226d4-c7c8-4ee7-ab97-d745a591aa87",
+                                                    "rawId": "b1f226d4-c7c8-4ee7-ab97-d745a591aa87",
+                                                    "name": {
+                                                        "cleanName": "Over",
+                                                        "defaultName": "O 950.5",
+                                                        "fullName": "Over 950.5",
+                                                        "minimalName": "O 950.5",
+                                                        "__typename": "SelectionName"
+                                                    },
+                                                    "odds": {
+                                                        "denominatorLong": "5",
+                                                        "numeratorLong": "9",
+                                                        "formattedOdds": "-125",
+                                                        "__typename": "Odds"
+                                                    },
+                                                    "participant": null,
+                                                    "points": {
+                                                        "decimalPoints": 950.5,
+                                                        "formattedPoints": "950.5",
+                                                        "__typename": "Points"
+                                                    },
+                                                    "status": "OPEN",
+                                                    "type": "OVER",
+                                                    "probabilityEncrypted": null,
+                                                    "__typename": "MarketSelection"
+                                                },
+                                                {
+                                                    "id": "MarketSelection:ae0eb30e-c354-4db1-9db5-660ebcbb7bd6",
+                                                    "rawId": "ae0eb30e-c354-4db1-9db5-660ebcbb7bd6",
+                                                    "name": {
+                                                        "cleanName": "Under",
+                                                        "defaultName": "U 950.5",
+                                                        "fullName": "Under 950.5",
+                                                        "minimalName": "U 950.5",
+                                                        "__typename": "SelectionName"
+                                                    },
+                                                    "odds": {
+                                                        "denominatorLong": "21",
+                                                        "numeratorLong": "41",
+                                                        "formattedOdds": "-105",
+                                                        "__typename": "Odds"
+                                                    },
+                                                    "participant": null,
+                                                    "points": {
+                                                        "decimalPoints": 950.5,
+                                                        "formattedPoints": "950.5",
+                                                        "__typename": "Points"
+                                                    },
+                                                    "status": "OPEN",
+                                                    "type": "UNDER",
+                                                    "probabilityEncrypted": null,
+                                                    "__typename": "MarketSelection"
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "id": "Market:ca584833-592b-4b31-9105-cb0d6d36d2ac",
+                                            "name": "Saquon Barkley Total Rushing Yards",
+                                            "status": "OPEN",
+                                            "type": "TOTAL",
+                                            "extraInformation": null,
+                                            "startTime": "2026-09-10T00:15:00.000000Z",
+                                            "statisticAccrued": null,
+                                            "updatedAtTime": "2026-06-10T20:33:35.850578Z",
+                                            "__typename": "Market",
+                                            "selections": [
+                                                {
+                                                    "id": "MarketSelection:33d458ba-c30c-40df-b8c0-ea1fe8f69ef0",
+                                                    "rawId": "33d458ba-c30c-40df-b8c0-ea1fe8f69ef0",
+                                                    "name": {
+                                                        "cleanName": "Over",
+                                                        "defaultName": "O 1000.5",
+                                                        "fullName": "Over 1000.5",
+                                                        "minimalName": "O 1000.5",
+                                                        "__typename": "SelectionName"
+                                                    },
+                                                    "odds": {
+                                                        "denominatorLong": "13",
+                                                        "numeratorLong": "23",
+                                                        "formattedOdds": "-130",
+                                                        "__typename": "Odds"
+                                                    },
+                                                    "participant": null,
+                                                    "points": {
+                                                        "decimalPoints": 1000.5,
+                                                        "formattedPoints": "1000.5",
+                                                        "__typename": "Points"
+                                                    },
+                                                    "status": "OPEN",
+                                                    "type": "OVER",
+                                                    "probabilityEncrypted": null,
+                                                    "__typename": "MarketSelection"
+                                                },
+                                                {
+                                                    "id": "MarketSelection:da8dd99b-0af2-4a1b-9a6d-c9d365356c70",
+                                                    "rawId": "da8dd99b-0af2-4a1b-9a6d-c9d365356c70",
+                                                    "name": {
+                                                        "cleanName": "Under",
+                                                        "defaultName": "U 1000.5",
+                                                        "fullName": "Under 1000.5",
+                                                        "minimalName": "U 1000.5",
+                                                        "__typename": "SelectionName"
+                                                    },
+                                                    "odds": {
+                                                        "denominatorLong": "1",
+                                                        "numeratorLong": "2",
+                                                        "formattedOdds": "Even",
+                                                        "__typename": "Odds"
+                                                    },
+                                                    "participant": null,
+                                                    "points": {
+                                                        "decimalPoints": 1000.5,
+                                                        "formattedPoints": "1000.5",
+                                                        "__typename": "Points"
+                                                    },
+                                                    "status": "OPEN",
+                                                    "type": "UNDER",
+                                                    "probabilityEncrypted": null,
+                                                    "__typename": "MarketSelection"
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "id": "Market:a2510bd5-1406-408a-8740-9dec4b4c7da8",
+                                            "name": "Bijan Robinson Total Rushing Yards",
+                                            "status": "OPEN",
+                                            "type": "TOTAL",
+                                            "extraInformation": null,
+                                            "startTime": "2026-09-10T00:15:00.000000Z",
+                                            "statisticAccrued": null,
+                                            "updatedAtTime": "2026-06-10T20:33:35.904223Z",
+                                            "__typename": "Market",
+                                            "selections": [
+                                                {
+                                                    "id": "MarketSelection:8679b2ec-112c-4b78-bc4d-be5ca373c731",
+                                                    "rawId": "8679b2ec-112c-4b78-bc4d-be5ca373c731",
+                                                    "name": {
+                                                        "cleanName": "Over",
+                                                        "defaultName": "O 1100.5",
+                                                        "fullName": "Over 1100.5",
+                                                        "minimalName": "O 1100.5",
+                                                        "__typename": "SelectionName"
+                                                    },
+                                                    "odds": {
+                                                        "denominatorLong": "23",
+                                                        "numeratorLong": "43",
+                                                        "formattedOdds": "-115",
+                                                        "__typename": "Odds"
+                                                    },
+                                                    "participant": null,
+                                                    "points": {
+                                                        "decimalPoints": 1100.5,
+                                                        "formattedPoints": "1100.5",
+                                                        "__typename": "Points"
+                                                    },
+                                                    "status": "OPEN",
+                                                    "type": "OVER",
+                                                    "probabilityEncrypted": null,
+                                                    "__typename": "MarketSelection"
+                                                },
+                                                {
+                                                    "id": "MarketSelection:9532635a-aa41-426e-bb1a-b3c11ecfc875",
+                                                    "rawId": "9532635a-aa41-426e-bb1a-b3c11ecfc875",
+                                                    "name": {
+                                                        "cleanName": "Under",
+                                                        "defaultName": "U 1100.5",
+                                                        "fullName": "Under 1100.5",
+                                                        "minimalName": "U 1100.5",
+                                                        "__typename": "SelectionName"
+                                                    },
+                                                    "odds": {
+                                                        "denominatorLong": "23",
+                                                        "numeratorLong": "43",
+                                                        "formattedOdds": "-115",
+                                                        "__typename": "Odds"
+                                                    },
+                                                    "participant": null,
+                                                    "points": {
+                                                        "decimalPoints": 1100.5,
+                                                        "formattedPoints": "1100.5",
+                                                        "__typename": "Points"
+                                                    },
+                                                    "status": "OPEN",
+                                                    "type": "UNDER",
+                                                    "probabilityEncrypted": null,
+                                                    "__typename": "MarketSelection"
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "id": "Market:77565185-9551-49fb-a06a-055961d1428c",
+                                            "name": "Jahmyr Gibbs Total Rushing Yards",
+                                            "status": "OPEN",
+                                            "type": "TOTAL",
+                                            "extraInformation": null,
+                                            "startTime": "2026-09-10T00:15:00.000000Z",
+                                            "statisticAccrued": null,
+                                            "updatedAtTime": "2026-06-10T20:33:35.902567Z",
+                                            "__typename": "Market",
+                                            "selections": [
+                                                {
+                                                    "id": "MarketSelection:7e001944-0aa0-4edf-9a7f-332681a1508c",
+                                                    "rawId": "7e001944-0aa0-4edf-9a7f-332681a1508c",
+                                                    "name": {
+                                                        "cleanName": "Over",
+                                                        "defaultName": "O 1125.5",
+                                                        "fullName": "Over 1125.5",
+                                                        "minimalName": "O 1125.5",
+                                                        "__typename": "SelectionName"
+                                                    },
+                                                    "odds": {
+                                                        "denominatorLong": "23",
+                                                        "numeratorLong": "43",
+                                                        "formattedOdds": "-115",
+                                                        "__typename": "Odds"
+                                                    },
+                                                    "participant": null,
+                                                    "points": {
+                                                        "decimalPoints": 1125.5,
+                                                        "formattedPoints": "1125.5",
+                                                        "__typename": "Points"
+                                                    },
+                                                    "status": "OPEN",
+                                                    "type": "OVER",
+                                                    "probabilityEncrypted": null,
+                                                    "__typename": "MarketSelection"
+                                                },
+                                                {
+                                                    "id": "MarketSelection:738393ab-e697-4fd9-bed4-c935dc3c8a20",
+                                                    "rawId": "738393ab-e697-4fd9-bed4-c935dc3c8a20",
+                                                    "name": {
+                                                        "cleanName": "Under",
+                                                        "defaultName": "U 1125.5",
+                                                        "fullName": "Under 1125.5",
+                                                        "minimalName": "U 1125.5",
+                                                        "__typename": "SelectionName"
+                                                    },
+                                                    "odds": {
+                                                        "denominatorLong": "23",
+                                                        "numeratorLong": "43",
+                                                        "formattedOdds": "-115",
+                                                        "__typename": "Odds"
+                                                    },
+                                                    "participant": null,
+                                                    "points": {
+                                                        "decimalPoints": 1125.5,
+                                                        "formattedPoints": "1125.5",
+                                                        "__typename": "Points"
+                                                    },
+                                                    "status": "OPEN",
+                                                    "type": "UNDER",
+                                                    "probabilityEncrypted": null,
+                                                    "__typename": "MarketSelection"
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "id": "Market:74eed37c-c110-4d2b-beb2-4441657e40fd",
+                                            "name": "James Cook Total Rushing Yards",
+                                            "status": "OPEN",
+                                            "type": "TOTAL",
+                                            "extraInformation": null,
+                                            "startTime": "2026-09-10T00:15:00.000000Z",
+                                            "statisticAccrued": null,
+                                            "updatedAtTime": "2026-06-10T20:33:35.893800Z",
+                                            "__typename": "Market",
+                                            "selections": [
+                                                {
+                                                    "id": "MarketSelection:c8e27c14-5517-4fd3-8010-74264a0f6135",
+                                                    "rawId": "c8e27c14-5517-4fd3-8010-74264a0f6135",
+                                                    "name": {
+                                                        "cleanName": "Over",
+                                                        "defaultName": "O 1150.5",
+                                                        "fullName": "Over 1150.5",
+                                                        "minimalName": "O 1150.5",
+                                                        "__typename": "SelectionName"
+                                                    },
+                                                    "odds": {
+                                                        "denominatorLong": "23",
+                                                        "numeratorLong": "43",
+                                                        "formattedOdds": "-115",
+                                                        "__typename": "Odds"
+                                                    },
+                                                    "participant": null,
+                                                    "points": {
+                                                        "decimalPoints": 1150.5,
+                                                        "formattedPoints": "1150.5",
+                                                        "__typename": "Points"
+                                                    },
+                                                    "status": "OPEN",
+                                                    "type": "OVER",
+                                                    "probabilityEncrypted": null,
+                                                    "__typename": "MarketSelection"
+                                                },
+                                                {
+                                                    "id": "MarketSelection:dee1be69-6b26-48e8-8912-982c4affa7ce",
+                                                    "rawId": "dee1be69-6b26-48e8-8912-982c4affa7ce",
+                                                    "name": {
+                                                        "cleanName": "Under",
+                                                        "defaultName": "U 1150.5",
+                                                        "fullName": "Under 1150.5",
+                                                        "minimalName": "U 1150.5",
+                                                        "__typename": "SelectionName"
+                                                    },
+                                                    "odds": {
+                                                        "denominatorLong": "23",
+                                                        "numeratorLong": "43",
+                                                        "formattedOdds": "-115",
+                                                        "__typename": "Odds"
+                                                    },
+                                                    "participant": null,
+                                                    "points": {
+                                                        "decimalPoints": 1150.5,
+                                                        "formattedPoints": "1150.5",
+                                                        "__typename": "Points"
+                                                    },
+                                                    "status": "OPEN",
+                                                    "type": "UNDER",
+                                                    "probabilityEncrypted": null,
+                                                    "__typename": "MarketSelection"
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "id": "Market:a3f0bff0-5815-4ed5-868a-2978bcd7c598",
+                                            "name": "Jonathan Taylor Total Rushing Yards",
+                                            "status": "OPEN",
+                                            "type": "TOTAL",
+                                            "extraInformation": null,
+                                            "startTime": "2026-09-10T00:15:00.000000Z",
+                                            "statisticAccrued": null,
+                                            "updatedAtTime": "2026-06-10T20:33:35.879835Z",
+                                            "__typename": "Market",
+                                            "selections": [
+                                                {
+                                                    "id": "MarketSelection:3a5ac644-88df-4262-b8e7-9708aeede67c",
+                                                    "rawId": "3a5ac644-88df-4262-b8e7-9708aeede67c",
+                                                    "name": {
+                                                        "cleanName": "Over",
+                                                        "defaultName": "O 1175.5",
+                                                        "fullName": "Over 1175.5",
+                                                        "minimalName": "O 1175.5",
+                                                        "__typename": "SelectionName"
+                                                    },
+                                                    "odds": {
+                                                        "denominatorLong": "23",
+                                                        "numeratorLong": "43",
+                                                        "formattedOdds": "-115",
+                                                        "__typename": "Odds"
+                                                    },
+                                                    "participant": null,
+                                                    "points": {
+                                                        "decimalPoints": 1175.5,
+                                                        "formattedPoints": "1175.5",
+                                                        "__typename": "Points"
+                                                    },
+                                                    "status": "OPEN",
+                                                    "type": "OVER",
+                                                    "probabilityEncrypted": null,
+                                                    "__typename": "MarketSelection"
+                                                },
+                                                {
+                                                    "id": "MarketSelection:54e1f44f-e5b5-42f7-b13f-7d2f9ba80200",
+                                                    "rawId": "54e1f44f-e5b5-42f7-b13f-7d2f9ba80200",
+                                                    "name": {
+                                                        "cleanName": "Under",
+                                                        "defaultName": "U 1175.5",
+                                                        "fullName": "Under 1175.5",
+                                                        "minimalName": "U 1175.5",
+                                                        "__typename": "SelectionName"
+                                                    },
+                                                    "odds": {
+                                                        "denominatorLong": "23",
+                                                        "numeratorLong": "43",
+                                                        "formattedOdds": "-115",
+                                                        "__typename": "Odds"
+                                                    },
+                                                    "participant": null,
+                                                    "points": {
+                                                        "decimalPoints": 1175.5,
+                                                        "formattedPoints": "1175.5",
+                                                        "__typename": "Points"
+                                                    },
+                                                    "status": "OPEN",
+                                                    "type": "UNDER",
+                                                    "probabilityEncrypted": null,
+                                                    "__typename": "MarketSelection"
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "id": "Market:3dc79761-ca29-4343-9812-0187e91f7514",
+                                            "name": "Derrick Henry Total Rushing Yards",
+                                            "status": "OPEN",
+                                            "type": "TOTAL",
+                                            "extraInformation": null,
+                                            "startTime": "2026-09-10T00:15:00.000000Z",
+                                            "statisticAccrued": null,
+                                            "updatedAtTime": "2026-06-10T20:33:35.876849Z",
+                                            "__typename": "Market",
+                                            "selections": [
+                                                {
+                                                    "id": "MarketSelection:ce9980a3-1e6b-4f95-97fb-c9ba3834870c",
+                                                    "rawId": "ce9980a3-1e6b-4f95-97fb-c9ba3834870c",
+                                                    "name": {
+                                                        "cleanName": "Over",
+                                                        "defaultName": "O 1200.5",
+                                                        "fullName": "Over 1200.5",
+                                                        "minimalName": "O 1200.5",
+                                                        "__typename": "SelectionName"
+                                                    },
+                                                    "odds": {
+                                                        "denominatorLong": "23",
+                                                        "numeratorLong": "43",
+                                                        "formattedOdds": "-115",
+                                                        "__typename": "Odds"
+                                                    },
+                                                    "participant": null,
+                                                    "points": {
+                                                        "decimalPoints": 1200.5,
+                                                        "formattedPoints": "1200.5",
+                                                        "__typename": "Points"
+                                                    },
+                                                    "status": "OPEN",
+                                                    "type": "OVER",
+                                                    "probabilityEncrypted": null,
+                                                    "__typename": "MarketSelection"
+                                                },
+                                                {
+                                                    "id": "MarketSelection:09c4aec5-9359-4576-99e2-088b25772d0f",
+                                                    "rawId": "09c4aec5-9359-4576-99e2-088b25772d0f",
+                                                    "name": {
+                                                        "cleanName": "Under",
+                                                        "defaultName": "U 1200.5",
+                                                        "fullName": "Under 1200.5",
+                                                        "minimalName": "U 1200.5",
+                                                        "__typename": "SelectionName"
+                                                    },
+                                                    "odds": {
+                                                        "denominatorLong": "23",
+                                                        "numeratorLong": "43",
+                                                        "formattedOdds": "-115",
+                                                        "__typename": "Odds"
+                                                    },
+                                                    "participant": null,
+                                                    "points": {
+                                                        "decimalPoints": 1200.5,
+                                                        "formattedPoints": "1200.5",
+                                                        "__typename": "Points"
+                                                    },
+                                                    "status": "OPEN",
+                                                    "type": "UNDER",
+                                                    "probabilityEncrypted": null,
+                                                    "__typename": "MarketSelection"
+                                                }
+                                            ]
+                                        }
+                                    ],
+                                    "marketTags": [
+                                        "NFL Season Player Totals"
+                                    ],
+                                    "rawId": "a8da4db2-1679-4b53-a85f-ab2b6aa6830d",
+                                    "__typename": "MultipleMarketCard"
+                                }
+                            ],
+                            "__typename": "MarketplaceShelf"
+                        }
+                    ],
+                    "fallbackChild": null,
+                    "__typename": "Section"
+                }
+            ],
+            "__typename": "Page"
+        }
+    }
+}
