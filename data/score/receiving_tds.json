@@ -1,1893 +1,831 @@
 {
-    "data": {
-        "page": {
-            "id": "Page:a023de6b-be94-4f69-aab6-53ae7480d85a",
-            "title": "Regular Season Receiving TDs",
-            "pageChildren": [
+  "data": {
+    "page": {
+      "title": "Regular Season Receiving TDs",
+      "pageChildren": [
+        {
+          "sectionChildren": [
+            {
+              "marketplaceShelfChildren": [
                 {
-                    "id": "Section:a023de6b-be94-4f69-aab6-53ae7480d85a",
-                    "label": "Lines",
-                    "default": true,
-                    "sectionChildren": [
+                  "markets": [
+                    {
+                      "name": "Alec Pierce Total Receiving TDs",
+                      "type": "TOTAL",
+                      "selections": [
                         {
-                            "hasMoreEvents": false,
-                            "icon": null,
-                            "id": "MarketplaceShelf:a023de6b-be94-4f69-aab6-53ae7480d85a",
-                            "label": null,
-                            "link": null,
-                            "marketplaceShelfBanner": null,
-                            "marketplaceShelfChildren": [
-                                {
-                                    "attributes": [],
-                                    "id": "MultipleMarketCard:a023de6b-be94-4f69-aab6-53ae7480d85a",
-                                    "featuredTitle": null,
-                                    "deepLink": null,
-                                    "fallbackEvent": {
-                                        "id": "SpecialEvent:a2ede8b3-a821-4a36-ae14-1a6129c0fcd6",
-                                        "deepLink": {
-                                            "canonicalUrl": "espn-sportsbook:/sport/football/organization/united-states/competition/nfl",
-                                            "webUrl": "/sport/football/organization/united-states/competition/nfl",
-                                            "__typename": "TsbDeepLink"
-                                        },
-                                        "espnMedia": null,
-                                        "extraInformation": null,
-                                        "name": "NFL Regular Season Player Totals 2026/27",
-                                        "startTime": "2026-09-10T00:15:00.000000Z",
-                                        "status": "PRE_GAME",
-                                        "slug": "2026-09-09-united-states-nfl-regular-season-player-totals-2026-27",
-                                        "resourceUri": null,
-                                        "competition": {
-                                            "id": "Competition:e27d6912-e11b-4c8e-a573-09e57c7b9fa5",
-                                            "name": "NFL",
-                                            "slug": "nfl",
-                                            "resourceUri": "",
-                                            "__typename": "Competition"
-                                        },
-                                        "sport": {
-                                            "id": "Sport:487d04b6-db83-4100-84c3-e36e7a2c98a6",
-                                            "name": "Football",
-                                            "slug": "football",
-                                            "resourceUri": "",
-                                            "__typename": "Sport"
-                                        },
-                                        "organization": {
-                                            "id": "Organization:33a971c4-7e93-4271-9546-7f02e7ec80d8",
-                                            "slug": "united-states",
-                                            "__typename": "Organization"
-                                        },
-                                        "statistics": null,
-                                        "homeKeyStarter": null,
-                                        "awayKeyStarter": null,
-                                        "eventLiveStream": null,
-                                        "updatedAtTime": "2026-06-12T15:02:50.525160Z",
-                                        "__typename": "SpecialEvent"
-                                    },
-                                    "markets": [
-                                        {
-                                            "id": "Market:259025b7-2267-4845-88f3-6cb983d30946",
-                                            "name": "Xavier Worthy Total Receiving TDs",
-                                            "status": "OPEN",
-                                            "type": "TOTAL",
-                                            "extraInformation": null,
-                                            "startTime": "2026-09-10T00:15:00.000000Z",
-                                            "statisticAccrued": null,
-                                            "updatedAtTime": "2026-06-03T20:24:46.794442Z",
-                                            "__typename": "Market",
-                                            "selections": [
-                                                {
-                                                    "id": "MarketSelection:06179a14-cf69-4312-b7be-d2bc1c5875a5",
-                                                    "rawId": "06179a14-cf69-4312-b7be-d2bc1c5875a5",
-                                                    "name": {
-                                                        "cleanName": "Over",
-                                                        "defaultName": "O 3.5",
-                                                        "fullName": "Over 3.5",
-                                                        "minimalName": "O 3.5",
-                                                        "__typename": "SelectionName"
-                                                    },
-                                                    "odds": {
-                                                        "denominatorLong": "7",
-                                                        "numeratorLong": "12",
-                                                        "formattedOdds": "-140",
-                                                        "__typename": "Odds"
-                                                    },
-                                                    "participant": null,
-                                                    "points": {
-                                                        "decimalPoints": 3.5,
-                                                        "formattedPoints": "3.5",
-                                                        "__typename": "Points"
-                                                    },
-                                                    "status": "OPEN",
-                                                    "type": "OVER",
-                                                    "probabilityEncrypted": null,
-                                                    "__typename": "MarketSelection"
-                                                },
-                                                {
-                                                    "id": "MarketSelection:f44fa196-d739-45e4-97f8-2dc852ad146d",
-                                                    "rawId": "f44fa196-d739-45e4-97f8-2dc852ad146d",
-                                                    "name": {
-                                                        "cleanName": "Under",
-                                                        "defaultName": "U 3.5",
-                                                        "fullName": "Under 3.5",
-                                                        "minimalName": "U 3.5",
-                                                        "__typename": "SelectionName"
-                                                    },
-                                                    "odds": {
-                                                        "denominatorLong": "10",
-                                                        "numeratorLong": "21",
-                                                        "formattedOdds": "+110",
-                                                        "__typename": "Odds"
-                                                    },
-                                                    "participant": null,
-                                                    "points": {
-                                                        "decimalPoints": 3.5,
-                                                        "formattedPoints": "3.5",
-                                                        "__typename": "Points"
-                                                    },
-                                                    "status": "OPEN",
-                                                    "type": "UNDER",
-                                                    "probabilityEncrypted": null,
-                                                    "__typename": "MarketSelection"
-                                                }
-                                            ]
-                                        },
-                                        {
-                                            "id": "Market:d44a5d2b-1e10-43b5-9b71-2c05eec00ab3",
-                                            "name": "Alec Pierce Total Receiving TDs",
-                                            "status": "OPEN",
-                                            "type": "TOTAL",
-                                            "extraInformation": null,
-                                            "startTime": "2026-09-10T00:15:00.000000Z",
-                                            "statisticAccrued": null,
-                                            "updatedAtTime": "2026-06-03T20:23:18.182192Z",
-                                            "__typename": "Market",
-                                            "selections": [
-                                                {
-                                                    "id": "MarketSelection:0b8e13d4-edf2-4976-89f1-2eacb1c57837",
-                                                    "rawId": "0b8e13d4-edf2-4976-89f1-2eacb1c57837",
-                                                    "name": {
-                                                        "cleanName": "Over",
-                                                        "defaultName": "O 4.5",
-                                                        "fullName": "Over 4.5",
-                                                        "minimalName": "O 4.5",
-                                                        "__typename": "SelectionName"
-                                                    },
-                                                    "odds": {
-                                                        "denominatorLong": "13",
-                                                        "numeratorLong": "23",
-                                                        "formattedOdds": "-130",
-                                                        "__typename": "Odds"
-                                                    },
-                                                    "participant": null,
-                                                    "points": {
-                                                        "decimalPoints": 4.5,
-                                                        "formattedPoints": "4.5",
-                                                        "__typename": "Points"
-                                                    },
-                                                    "status": "OPEN",
-                                                    "type": "OVER",
-                                                    "probabilityEncrypted": null,
-                                                    "__typename": "MarketSelection"
-                                                },
-                                                {
-                                                    "id": "MarketSelection:bdfe834c-c881-403e-822e-fa86557b2cd9",
-                                                    "rawId": "bdfe834c-c881-403e-822e-fa86557b2cd9",
-                                                    "name": {
-                                                        "cleanName": "Under",
-                                                        "defaultName": "U 4.5",
-                                                        "fullName": "Under 4.5",
-                                                        "minimalName": "U 4.5",
-                                                        "__typename": "SelectionName"
-                                                    },
-                                                    "odds": {
-                                                        "denominatorLong": "1",
-                                                        "numeratorLong": "2",
-                                                        "formattedOdds": "Even",
-                                                        "__typename": "Odds"
-                                                    },
-                                                    "participant": null,
-                                                    "points": {
-                                                        "decimalPoints": 4.5,
-                                                        "formattedPoints": "4.5",
-                                                        "__typename": "Points"
-                                                    },
-                                                    "status": "OPEN",
-                                                    "type": "UNDER",
-                                                    "probabilityEncrypted": null,
-                                                    "__typename": "MarketSelection"
-                                                }
-                                            ]
-                                        },
-                                        {
-                                            "id": "Market:e5413a3d-d57c-4d6c-877b-93fca7d811d8",
-                                            "name": "DK Metcalf Total Receiving TDs",
-                                            "status": "OPEN",
-                                            "type": "TOTAL",
-                                            "extraInformation": null,
-                                            "startTime": "2026-09-10T00:15:00.000000Z",
-                                            "statisticAccrued": null,
-                                            "updatedAtTime": "2026-06-03T20:23:21.375559Z",
-                                            "__typename": "Market",
-                                            "selections": [
-                                                {
-                                                    "id": "MarketSelection:4d3a59f6-769f-4a93-840a-5e2eb68de1ae",
-                                                    "rawId": "4d3a59f6-769f-4a93-840a-5e2eb68de1ae",
-                                                    "name": {
-                                                        "cleanName": "Over",
-                                                        "defaultName": "O 4.5",
-                                                        "fullName": "Over 4.5",
-                                                        "minimalName": "O 4.5",
-                                                        "__typename": "SelectionName"
-                                                    },
-                                                    "odds": {
-                                                        "denominatorLong": "13",
-                                                        "numeratorLong": "23",
-                                                        "formattedOdds": "-130",
-                                                        "__typename": "Odds"
-                                                    },
-                                                    "participant": null,
-                                                    "points": {
-                                                        "decimalPoints": 4.5,
-                                                        "formattedPoints": "4.5",
-                                                        "__typename": "Points"
-                                                    },
-                                                    "status": "OPEN",
-                                                    "type": "OVER",
-                                                    "probabilityEncrypted": null,
-                                                    "__typename": "MarketSelection"
-                                                },
-                                                {
-                                                    "id": "MarketSelection:ee4c54a6-bd62-4e01-b3f8-a6534d08c29e",
-                                                    "rawId": "ee4c54a6-bd62-4e01-b3f8-a6534d08c29e",
-                                                    "name": {
-                                                        "cleanName": "Under",
-                                                        "defaultName": "U 4.5",
-                                                        "fullName": "Under 4.5",
-                                                        "minimalName": "U 4.5",
-                                                        "__typename": "SelectionName"
-                                                    },
-                                                    "odds": {
-                                                        "denominatorLong": "1",
-                                                        "numeratorLong": "2",
-                                                        "formattedOdds": "Even",
-                                                        "__typename": "Odds"
-                                                    },
-                                                    "participant": null,
-                                                    "points": {
-                                                        "decimalPoints": 4.5,
-                                                        "formattedPoints": "4.5",
-                                                        "__typename": "Points"
-                                                    },
-                                                    "status": "OPEN",
-                                                    "type": "UNDER",
-                                                    "probabilityEncrypted": null,
-                                                    "__typename": "MarketSelection"
-                                                }
-                                            ]
-                                        },
-                                        {
-                                            "id": "Market:b65b2b28-7732-4366-9144-c496ada11b8d",
-                                            "name": "DeVonta Smith Total Receiving TDs",
-                                            "status": "OPEN",
-                                            "type": "TOTAL",
-                                            "extraInformation": null,
-                                            "startTime": "2026-09-10T00:15:00.000000Z",
-                                            "statisticAccrued": null,
-                                            "updatedAtTime": "2026-06-03T20:23:24.395051Z",
-                                            "__typename": "Market",
-                                            "selections": [
-                                                {
-                                                    "id": "MarketSelection:d92e89c3-bae1-48c6-8aef-ea4c6c53719a",
-                                                    "rawId": "d92e89c3-bae1-48c6-8aef-ea4c6c53719a",
-                                                    "name": {
-                                                        "cleanName": "Over",
-                                                        "defaultName": "O 4.5",
-                                                        "fullName": "Over 4.5",
-                                                        "minimalName": "O 4.5",
-                                                        "__typename": "SelectionName"
-                                                    },
-                                                    "odds": {
-                                                        "denominatorLong": "13",
-                                                        "numeratorLong": "23",
-                                                        "formattedOdds": "-130",
-                                                        "__typename": "Odds"
-                                                    },
-                                                    "participant": null,
-                                                    "points": {
-                                                        "decimalPoints": 4.5,
-                                                        "formattedPoints": "4.5",
-                                                        "__typename": "Points"
-                                                    },
-                                                    "status": "OPEN",
-                                                    "type": "OVER",
-                                                    "probabilityEncrypted": null,
-                                                    "__typename": "MarketSelection"
-                                                },
-                                                {
-                                                    "id": "MarketSelection:692b10f5-0da8-4fb2-bfa7-40179a25aeda",
-                                                    "rawId": "692b10f5-0da8-4fb2-bfa7-40179a25aeda",
-                                                    "name": {
-                                                        "cleanName": "Under",
-                                                        "defaultName": "U 4.5",
-                                                        "fullName": "Under 4.5",
-                                                        "minimalName": "U 4.5",
-                                                        "__typename": "SelectionName"
-                                                    },
-                                                    "odds": {
-                                                        "denominatorLong": "1",
-                                                        "numeratorLong": "2",
-                                                        "formattedOdds": "Even",
-                                                        "__typename": "Odds"
-                                                    },
-                                                    "participant": null,
-                                                    "points": {
-                                                        "decimalPoints": 4.5,
-                                                        "formattedPoints": "4.5",
-                                                        "__typename": "Points"
-                                                    },
-                                                    "status": "OPEN",
-                                                    "type": "UNDER",
-                                                    "probabilityEncrypted": null,
-                                                    "__typename": "MarketSelection"
-                                                }
-                                            ]
-                                        },
-                                        {
-                                            "id": "Market:fc8d0ab5-6583-4a92-87d5-ff8842d26382",
-                                            "name": "Garrett Wilson Total Receiving TDs",
-                                            "status": "OPEN",
-                                            "type": "TOTAL",
-                                            "extraInformation": null,
-                                            "startTime": "2026-09-10T00:15:00.000000Z",
-                                            "statisticAccrued": null,
-                                            "updatedAtTime": "2026-06-03T20:23:28.736841Z",
-                                            "__typename": "Market",
-                                            "selections": [
-                                                {
-                                                    "id": "MarketSelection:96f76e0d-5de3-4e1d-82f4-87f8045bda32",
-                                                    "rawId": "96f76e0d-5de3-4e1d-82f4-87f8045bda32",
-                                                    "name": {
-                                                        "cleanName": "Over",
-                                                        "defaultName": "O 4.5",
-                                                        "fullName": "Over 4.5",
-                                                        "minimalName": "O 4.5",
-                                                        "__typename": "SelectionName"
-                                                    },
-                                                    "odds": {
-                                                        "denominatorLong": "20",
-                                                        "numeratorLong": "43",
-                                                        "formattedOdds": "+115",
-                                                        "__typename": "Odds"
-                                                    },
-                                                    "participant": null,
-                                                    "points": {
-                                                        "decimalPoints": 4.5,
-                                                        "formattedPoints": "4.5",
-                                                        "__typename": "Points"
-                                                    },
-                                                    "status": "OPEN",
-                                                    "type": "OVER",
-                                                    "probabilityEncrypted": null,
-                                                    "__typename": "MarketSelection"
-                                                },
-                                                {
-                                                    "id": "MarketSelection:8a797ced-a67e-4942-80e8-61de640bc8e6",
-                                                    "rawId": "8a797ced-a67e-4942-80e8-61de640bc8e6",
-                                                    "name": {
-                                                        "cleanName": "Under",
-                                                        "defaultName": "U 4.5",
-                                                        "fullName": "Under 4.5",
-                                                        "minimalName": "U 4.5",
-                                                        "__typename": "SelectionName"
-                                                    },
-                                                    "odds": {
-                                                        "denominatorLong": "29",
-                                                        "numeratorLong": "49",
-                                                        "formattedOdds": "-145",
-                                                        "__typename": "Odds"
-                                                    },
-                                                    "participant": null,
-                                                    "points": {
-                                                        "decimalPoints": 4.5,
-                                                        "formattedPoints": "4.5",
-                                                        "__typename": "Points"
-                                                    },
-                                                    "status": "OPEN",
-                                                    "type": "UNDER",
-                                                    "probabilityEncrypted": null,
-                                                    "__typename": "MarketSelection"
-                                                }
-                                            ]
-                                        },
-                                        {
-                                            "id": "Market:04697fa4-1c10-462b-b82e-35bee7d2b171",
-                                            "name": "Jake Ferguson Total Receiving TDs",
-                                            "status": "OPEN",
-                                            "type": "TOTAL",
-                                            "extraInformation": null,
-                                            "startTime": "2026-09-10T00:15:00.000000Z",
-                                            "statisticAccrued": null,
-                                            "updatedAtTime": "2026-06-03T20:24:11.753150Z",
-                                            "__typename": "Market",
-                                            "selections": [
-                                                {
-                                                    "id": "MarketSelection:b3297521-1da7-49e2-a6f7-ef5a9d29c5af",
-                                                    "rawId": "b3297521-1da7-49e2-a6f7-ef5a9d29c5af",
-                                                    "name": {
-                                                        "cleanName": "Over",
-                                                        "defaultName": "O 4.5",
-                                                        "fullName": "Over 4.5",
-                                                        "minimalName": "O 4.5",
-                                                        "__typename": "SelectionName"
-                                                    },
-                                                    "odds": {
-                                                        "denominatorLong": "1",
-                                                        "numeratorLong": "2",
-                                                        "formattedOdds": "Even",
-                                                        "__typename": "Odds"
-                                                    },
-                                                    "participant": null,
-                                                    "points": {
-                                                        "decimalPoints": 4.5,
-                                                        "formattedPoints": "4.5",
-                                                        "__typename": "Points"
-                                                    },
-                                                    "status": "OPEN",
-                                                    "type": "OVER",
-                                                    "probabilityEncrypted": null,
-                                                    "__typename": "MarketSelection"
-                                                },
-                                                {
-                                                    "id": "MarketSelection:bdab55f1-81e2-47b2-91b5-b9d0a0625ab9",
-                                                    "rawId": "bdab55f1-81e2-47b2-91b5-b9d0a0625ab9",
-                                                    "name": {
-                                                        "cleanName": "Under",
-                                                        "defaultName": "U 4.5",
-                                                        "fullName": "Under 4.5",
-                                                        "minimalName": "U 4.5",
-                                                        "__typename": "SelectionName"
-                                                    },
-                                                    "odds": {
-                                                        "denominatorLong": "13",
-                                                        "numeratorLong": "23",
-                                                        "formattedOdds": "-130",
-                                                        "__typename": "Odds"
-                                                    },
-                                                    "participant": null,
-                                                    "points": {
-                                                        "decimalPoints": 4.5,
-                                                        "formattedPoints": "4.5",
-                                                        "__typename": "Points"
-                                                    },
-                                                    "status": "OPEN",
-                                                    "type": "UNDER",
-                                                    "probabilityEncrypted": null,
-                                                    "__typename": "MarketSelection"
-                                                }
-                                            ]
-                                        },
-                                        {
-                                            "id": "Market:144a5158-f233-4395-bc51-526881224537",
-                                            "name": "Jaylen Waddle Total Receiving TDs",
-                                            "status": "OPEN",
-                                            "type": "TOTAL",
-                                            "extraInformation": null,
-                                            "startTime": "2026-09-10T00:15:00.000000Z",
-                                            "statisticAccrued": null,
-                                            "updatedAtTime": "2026-06-03T20:24:16.206151Z",
-                                            "__typename": "Market",
-                                            "selections": [
-                                                {
-                                                    "id": "MarketSelection:6eb77702-be54-48b9-8d96-6132ff5469d0",
-                                                    "rawId": "6eb77702-be54-48b9-8d96-6132ff5469d0",
-                                                    "name": {
-                                                        "cleanName": "Over",
-                                                        "defaultName": "O 4.5",
-                                                        "fullName": "Over 4.5",
-                                                        "minimalName": "O 4.5",
-                                                        "__typename": "SelectionName"
-                                                    },
-                                                    "odds": {
-                                                        "denominatorLong": "5",
-                                                        "numeratorLong": "9",
-                                                        "formattedOdds": "-125",
-                                                        "__typename": "Odds"
-                                                    },
-                                                    "participant": null,
-                                                    "points": {
-                                                        "decimalPoints": 4.5,
-                                                        "formattedPoints": "4.5",
-                                                        "__typename": "Points"
-                                                    },
-                                                    "status": "OPEN",
-                                                    "type": "OVER",
-                                                    "probabilityEncrypted": null,
-                                                    "__typename": "MarketSelection"
-                                                },
-                                                {
-                                                    "id": "MarketSelection:e15aa11d-b465-4e11-95dc-91872727befb",
-                                                    "rawId": "e15aa11d-b465-4e11-95dc-91872727befb",
-                                                    "name": {
-                                                        "cleanName": "Under",
-                                                        "defaultName": "U 4.5",
-                                                        "fullName": "Under 4.5",
-                                                        "minimalName": "U 4.5",
-                                                        "__typename": "SelectionName"
-                                                    },
-                                                    "odds": {
-                                                        "denominatorLong": "21",
-                                                        "numeratorLong": "41",
-                                                        "formattedOdds": "-105",
-                                                        "__typename": "Odds"
-                                                    },
-                                                    "participant": null,
-                                                    "points": {
-                                                        "decimalPoints": 4.5,
-                                                        "formattedPoints": "4.5",
-                                                        "__typename": "Points"
-                                                    },
-                                                    "status": "OPEN",
-                                                    "type": "UNDER",
-                                                    "probabilityEncrypted": null,
-                                                    "__typename": "MarketSelection"
-                                                }
-                                            ]
-                                        },
-                                        {
-                                            "id": "Market:fc58185f-98ee-4cc0-9d5e-c342f2c2270f",
-                                            "name": "Ladd McConkey Total Receiving TDs",
-                                            "status": "OPEN",
-                                            "type": "TOTAL",
-                                            "extraInformation": null,
-                                            "startTime": "2026-09-10T00:15:00.000000Z",
-                                            "statisticAccrued": null,
-                                            "updatedAtTime": "2026-06-03T20:24:20.341876Z",
-                                            "__typename": "Market",
-                                            "selections": [
-                                                {
-                                                    "id": "MarketSelection:d9f45b70-b0b3-4be3-adf3-b323dd50b1a3",
-                                                    "rawId": "d9f45b70-b0b3-4be3-adf3-b323dd50b1a3",
-                                                    "name": {
-                                                        "cleanName": "Over",
-                                                        "defaultName": "O 4.5",
-                                                        "fullName": "Over 4.5",
-                                                        "minimalName": "O 4.5",
-                                                        "__typename": "SelectionName"
-                                                    },
-                                                    "odds": {
-                                                        "denominatorLong": "7",
-                                                        "numeratorLong": "12",
-                                                        "formattedOdds": "-140",
-                                                        "__typename": "Odds"
-                                                    },
-                                                    "participant": null,
-                                                    "points": {
-                                                        "decimalPoints": 4.5,
-                                                        "formattedPoints": "4.5",
-                                                        "__typename": "Points"
-                                                    },
-                                                    "status": "OPEN",
-                                                    "type": "OVER",
-                                                    "probabilityEncrypted": null,
-                                                    "__typename": "MarketSelection"
-                                                },
-                                                {
-                                                    "id": "MarketSelection:851890f0-7c8e-45e9-8767-08474fa7f418",
-                                                    "rawId": "851890f0-7c8e-45e9-8767-08474fa7f418",
-                                                    "name": {
-                                                        "cleanName": "Under",
-                                                        "defaultName": "U 4.5",
-                                                        "fullName": "Under 4.5",
-                                                        "minimalName": "U 4.5",
-                                                        "__typename": "SelectionName"
-                                                    },
-                                                    "odds": {
-                                                        "denominatorLong": "10",
-                                                        "numeratorLong": "21",
-                                                        "formattedOdds": "+110",
-                                                        "__typename": "Odds"
-                                                    },
-                                                    "participant": null,
-                                                    "points": {
-                                                        "decimalPoints": 4.5,
-                                                        "formattedPoints": "4.5",
-                                                        "__typename": "Points"
-                                                    },
-                                                    "status": "OPEN",
-                                                    "type": "UNDER",
-                                                    "probabilityEncrypted": null,
-                                                    "__typename": "MarketSelection"
-                                                }
-                                            ]
-                                        },
-                                        {
-                                            "id": "Market:b9592efc-4623-4809-979f-a895a5dd8817",
-                                            "name": "Terry McLaurin Total Receiving TDs",
-                                            "status": "OPEN",
-                                            "type": "TOTAL",
-                                            "extraInformation": null,
-                                            "startTime": "2026-09-10T00:15:00.000000Z",
-                                            "statisticAccrued": null,
-                                            "updatedAtTime": "2026-06-03T20:24:32.526912Z",
-                                            "__typename": "Market",
-                                            "selections": [
-                                                {
-                                                    "id": "MarketSelection:5cc33905-5b26-486d-8ac2-0278ff57097b",
-                                                    "rawId": "5cc33905-5b26-486d-8ac2-0278ff57097b",
-                                                    "name": {
-                                                        "cleanName": "Over",
-                                                        "defaultName": "O 4.5",
-                                                        "fullName": "Over 4.5",
-                                                        "minimalName": "O 4.5",
-                                                        "__typename": "SelectionName"
-                                                    },
-                                                    "odds": {
-                                                        "denominatorLong": "13",
-                                                        "numeratorLong": "23",
-                                                        "formattedOdds": "-130",
-                                                        "__typename": "Odds"
-                                                    },
-                                                    "participant": null,
-                                                    "points": {
-                                                        "decimalPoints": 4.5,
-                                                        "formattedPoints": "4.5",
-                                                        "__typename": "Points"
-                                                    },
-                                                    "status": "OPEN",
-                                                    "type": "OVER",
-                                                    "probabilityEncrypted": null,
-                                                    "__typename": "MarketSelection"
-                                                },
-                                                {
-                                                    "id": "MarketSelection:99ff9266-b847-468a-a877-cf19e527948c",
-                                                    "rawId": "99ff9266-b847-468a-a877-cf19e527948c",
-                                                    "name": {
-                                                        "cleanName": "Under",
-                                                        "defaultName": "U 4.5",
-                                                        "fullName": "Under 4.5",
-                                                        "minimalName": "U 4.5",
-                                                        "__typename": "SelectionName"
-                                                    },
-                                                    "odds": {
-                                                        "denominatorLong": "1",
-                                                        "numeratorLong": "2",
-                                                        "formattedOdds": "Even",
-                                                        "__typename": "Odds"
-                                                    },
-                                                    "participant": null,
-                                                    "points": {
-                                                        "decimalPoints": 4.5,
-                                                        "formattedPoints": "4.5",
-                                                        "__typename": "Points"
-                                                    },
-                                                    "status": "OPEN",
-                                                    "type": "UNDER",
-                                                    "probabilityEncrypted": null,
-                                                    "__typename": "MarketSelection"
-                                                }
-                                            ]
-                                        },
-                                        {
-                                            "id": "Market:55b98ccb-1411-49a4-a181-74866c8ae627",
-                                            "name": "Travis Kelce Total Receiving TDs",
-                                            "status": "OPEN",
-                                            "type": "TOTAL",
-                                            "extraInformation": null,
-                                            "startTime": "2026-09-10T00:15:00.000000Z",
-                                            "statisticAccrued": null,
-                                            "updatedAtTime": "2026-06-03T20:24:37.359280Z",
-                                            "__typename": "Market",
-                                            "selections": [
-                                                {
-                                                    "id": "MarketSelection:ad76761d-f081-4f17-b6f4-df105d63a51b",
-                                                    "rawId": "ad76761d-f081-4f17-b6f4-df105d63a51b",
-                                                    "name": {
-                                                        "cleanName": "Over",
-                                                        "defaultName": "O 4.5",
-                                                        "fullName": "Over 4.5",
-                                                        "minimalName": "O 4.5",
-                                                        "__typename": "SelectionName"
-                                                    },
-                                                    "odds": {
-                                                        "denominatorLong": "10",
-                                                        "numeratorLong": "21",
-                                                        "formattedOdds": "+110",
-                                                        "__typename": "Odds"
-                                                    },
-                                                    "participant": null,
-                                                    "points": {
-                                                        "decimalPoints": 4.5,
-                                                        "formattedPoints": "4.5",
-                                                        "__typename": "Points"
-                                                    },
-                                                    "status": "OPEN",
-                                                    "type": "OVER",
-                                                    "probabilityEncrypted": null,
-                                                    "__typename": "MarketSelection"
-                                                },
-                                                {
-                                                    "id": "MarketSelection:ced4c2dc-6a01-4bda-96ff-2f49ad2b8938",
-                                                    "rawId": "ced4c2dc-6a01-4bda-96ff-2f49ad2b8938",
-                                                    "name": {
-                                                        "cleanName": "Under",
-                                                        "defaultName": "U 4.5",
-                                                        "fullName": "Under 4.5",
-                                                        "minimalName": "U 4.5",
-                                                        "__typename": "SelectionName"
-                                                    },
-                                                    "odds": {
-                                                        "denominatorLong": "7",
-                                                        "numeratorLong": "12",
-                                                        "formattedOdds": "-140",
-                                                        "__typename": "Odds"
-                                                    },
-                                                    "participant": null,
-                                                    "points": {
-                                                        "decimalPoints": 4.5,
-                                                        "formattedPoints": "4.5",
-                                                        "__typename": "Points"
-                                                    },
-                                                    "status": "OPEN",
-                                                    "type": "UNDER",
-                                                    "probabilityEncrypted": null,
-                                                    "__typename": "MarketSelection"
-                                                }
-                                            ]
-                                        },
-                                        {
-                                            "id": "Market:c98ce5b0-7be3-4e6a-b087-96e879c8cc8f",
-                                            "name": "Chris Olave Total Receiving TDs",
-                                            "status": "OPEN",
-                                            "type": "TOTAL",
-                                            "extraInformation": null,
-                                            "startTime": "2026-09-10T00:15:00.000000Z",
-                                            "statisticAccrued": null,
-                                            "updatedAtTime": "2026-06-03T20:23:13.073552Z",
-                                            "__typename": "Market",
-                                            "selections": [
-                                                {
-                                                    "id": "MarketSelection:68b89e68-0693-4c86-81f3-53db65b4afeb",
-                                                    "rawId": "68b89e68-0693-4c86-81f3-53db65b4afeb",
-                                                    "name": {
-                                                        "cleanName": "Over",
-                                                        "defaultName": "O 5.5",
-                                                        "fullName": "Over 5.5",
-                                                        "minimalName": "O 5.5",
-                                                        "__typename": "SelectionName"
-                                                    },
-                                                    "odds": {
-                                                        "denominatorLong": "10",
-                                                        "numeratorLong": "21",
-                                                        "formattedOdds": "+110",
-                                                        "__typename": "Odds"
-                                                    },
-                                                    "participant": null,
-                                                    "points": {
-                                                        "decimalPoints": 5.5,
-                                                        "formattedPoints": "5.5",
-                                                        "__typename": "Points"
-                                                    },
-                                                    "status": "OPEN",
-                                                    "type": "OVER",
-                                                    "probabilityEncrypted": null,
-                                                    "__typename": "MarketSelection"
-                                                },
-                                                {
-                                                    "id": "MarketSelection:ca67e9f2-0315-4346-9d6c-d1f526853c1f",
-                                                    "rawId": "ca67e9f2-0315-4346-9d6c-d1f526853c1f",
-                                                    "name": {
-                                                        "cleanName": "Under",
-                                                        "defaultName": "U 5.5",
-                                                        "fullName": "Under 5.5",
-                                                        "minimalName": "U 5.5",
-                                                        "__typename": "SelectionName"
-                                                    },
-                                                    "odds": {
-                                                        "denominatorLong": "7",
-                                                        "numeratorLong": "12",
-                                                        "formattedOdds": "-140",
-                                                        "__typename": "Odds"
-                                                    },
-                                                    "participant": null,
-                                                    "points": {
-                                                        "decimalPoints": 5.5,
-                                                        "formattedPoints": "5.5",
-                                                        "__typename": "Points"
-                                                    },
-                                                    "status": "OPEN",
-                                                    "type": "UNDER",
-                                                    "probabilityEncrypted": null,
-                                                    "__typename": "MarketSelection"
-                                                }
-                                            ]
-                                        },
-                                        {
-                                            "id": "Market:56fe8935-9aae-4774-ad99-109c3bceabf9",
-                                            "name": "Christian Watson Total Receiving TDs",
-                                            "status": "OPEN",
-                                            "type": "TOTAL",
-                                            "extraInformation": null,
-                                            "startTime": "2026-09-10T00:15:00.000000Z",
-                                            "statisticAccrued": null,
-                                            "updatedAtTime": "2026-06-03T20:23:16.807665Z",
-                                            "__typename": "Market",
-                                            "selections": [
-                                                {
-                                                    "id": "MarketSelection:b9408a52-4083-4539-8239-ee601e04dc93",
-                                                    "rawId": "b9408a52-4083-4539-8239-ee601e04dc93",
-                                                    "name": {
-                                                        "cleanName": "Over",
-                                                        "defaultName": "O 5.5",
-                                                        "fullName": "Over 5.5",
-                                                        "minimalName": "O 5.5",
-                                                        "__typename": "SelectionName"
-                                                    },
-                                                    "odds": {
-                                                        "denominatorLong": "27",
-                                                        "numeratorLong": "47",
-                                                        "formattedOdds": "-135",
-                                                        "__typename": "Odds"
-                                                    },
-                                                    "participant": null,
-                                                    "points": {
-                                                        "decimalPoints": 5.5,
-                                                        "formattedPoints": "5.5",
-                                                        "__typename": "Points"
-                                                    },
-                                                    "status": "OPEN",
-                                                    "type": "OVER",
-                                                    "probabilityEncrypted": null,
-                                                    "__typename": "MarketSelection"
-                                                },
-                                                {
-                                                    "id": "MarketSelection:d444000d-0d03-45de-8f70-76e0f0ac8662",
-                                                    "rawId": "d444000d-0d03-45de-8f70-76e0f0ac8662",
-                                                    "name": {
-                                                        "cleanName": "Under",
-                                                        "defaultName": "U 5.5",
-                                                        "fullName": "Under 5.5",
-                                                        "minimalName": "U 5.5",
-                                                        "__typename": "SelectionName"
-                                                    },
-                                                    "odds": {
-                                                        "denominatorLong": "20",
-                                                        "numeratorLong": "41",
-                                                        "formattedOdds": "+105",
-                                                        "__typename": "Odds"
-                                                    },
-                                                    "participant": null,
-                                                    "points": {
-                                                        "decimalPoints": 5.5,
-                                                        "formattedPoints": "5.5",
-                                                        "__typename": "Points"
-                                                    },
-                                                    "status": "OPEN",
-                                                    "type": "UNDER",
-                                                    "probabilityEncrypted": null,
-                                                    "__typename": "MarketSelection"
-                                                }
-                                            ]
-                                        },
-                                        {
-                                            "id": "Market:efb0550d-784d-4b12-9d1b-bc1fb6ed9e45",
-                                            "name": "D.J. Moore Total Receiving TDs",
-                                            "status": "OPEN",
-                                            "type": "TOTAL",
-                                            "extraInformation": null,
-                                            "startTime": "2026-09-10T00:15:00.000000Z",
-                                            "statisticAccrued": null,
-                                            "updatedAtTime": "2026-06-03T20:24:22.360625Z",
-                                            "__typename": "Market",
-                                            "selections": [
-                                                {
-                                                    "id": "MarketSelection:897c0653-7e0c-41a6-aaa8-c585b1dd963b",
-                                                    "rawId": "897c0653-7e0c-41a6-aaa8-c585b1dd963b",
-                                                    "name": {
-                                                        "cleanName": "Over",
-                                                        "defaultName": "O 5.5",
-                                                        "fullName": "Over 5.5",
-                                                        "minimalName": "O 5.5",
-                                                        "__typename": "SelectionName"
-                                                    },
-                                                    "odds": {
-                                                        "denominatorLong": "5",
-                                                        "numeratorLong": "9",
-                                                        "formattedOdds": "-125",
-                                                        "__typename": "Odds"
-                                                    },
-                                                    "participant": null,
-                                                    "points": {
-                                                        "decimalPoints": 5.5,
-                                                        "formattedPoints": "5.5",
-                                                        "__typename": "Points"
-                                                    },
-                                                    "status": "OPEN",
-                                                    "type": "OVER",
-                                                    "probabilityEncrypted": null,
-                                                    "__typename": "MarketSelection"
-                                                },
-                                                {
-                                                    "id": "MarketSelection:e41b5708-2803-44e4-acbd-d10f7fff416a",
-                                                    "rawId": "e41b5708-2803-44e4-acbd-d10f7fff416a",
-                                                    "name": {
-                                                        "cleanName": "Under",
-                                                        "defaultName": "U 5.5",
-                                                        "fullName": "Under 5.5",
-                                                        "minimalName": "U 5.5",
-                                                        "__typename": "SelectionName"
-                                                    },
-                                                    "odds": {
-                                                        "denominatorLong": "21",
-                                                        "numeratorLong": "41",
-                                                        "formattedOdds": "-105",
-                                                        "__typename": "Odds"
-                                                    },
-                                                    "participant": null,
-                                                    "points": {
-                                                        "decimalPoints": 5.5,
-                                                        "formattedPoints": "5.5",
-                                                        "__typename": "Points"
-                                                    },
-                                                    "status": "OPEN",
-                                                    "type": "UNDER",
-                                                    "probabilityEncrypted": null,
-                                                    "__typename": "MarketSelection"
-                                                }
-                                            ]
-                                        },
-                                        {
-                                            "id": "Market:1267a006-c327-4617-9629-b5392877dd09",
-                                            "name": "Mike Evans Total Receiving TDs",
-                                            "status": "OPEN",
-                                            "type": "TOTAL",
-                                            "extraInformation": null,
-                                            "startTime": "2026-09-10T00:15:00.000000Z",
-                                            "statisticAccrued": null,
-                                            "updatedAtTime": "2026-06-03T20:24:22.361664Z",
-                                            "__typename": "Market",
-                                            "selections": [
-                                                {
-                                                    "id": "MarketSelection:7c25ed57-9d5a-4bf2-a625-12b23da3778a",
-                                                    "rawId": "7c25ed57-9d5a-4bf2-a625-12b23da3778a",
-                                                    "name": {
-                                                        "cleanName": "Over",
-                                                        "defaultName": "O 5.5",
-                                                        "fullName": "Over 5.5",
-                                                        "minimalName": "O 5.5",
-                                                        "__typename": "SelectionName"
-                                                    },
-                                                    "odds": {
-                                                        "denominatorLong": "23",
-                                                        "numeratorLong": "43",
-                                                        "formattedOdds": "-115",
-                                                        "__typename": "Odds"
-                                                    },
-                                                    "participant": null,
-                                                    "points": {
-                                                        "decimalPoints": 5.5,
-                                                        "formattedPoints": "5.5",
-                                                        "__typename": "Points"
-                                                    },
-                                                    "status": "OPEN",
-                                                    "type": "OVER",
-                                                    "probabilityEncrypted": null,
-                                                    "__typename": "MarketSelection"
-                                                },
-                                                {
-                                                    "id": "MarketSelection:a3e2cdaa-579b-4ebe-bf29-59984e377a25",
-                                                    "rawId": "a3e2cdaa-579b-4ebe-bf29-59984e377a25",
-                                                    "name": {
-                                                        "cleanName": "Under",
-                                                        "defaultName": "U 5.5",
-                                                        "fullName": "Under 5.5",
-                                                        "minimalName": "U 5.5",
-                                                        "__typename": "SelectionName"
-                                                    },
-                                                    "odds": {
-                                                        "denominatorLong": "23",
-                                                        "numeratorLong": "43",
-                                                        "formattedOdds": "-115",
-                                                        "__typename": "Odds"
-                                                    },
-                                                    "participant": null,
-                                                    "points": {
-                                                        "decimalPoints": 5.5,
-                                                        "formattedPoints": "5.5",
-                                                        "__typename": "Points"
-                                                    },
-                                                    "status": "OPEN",
-                                                    "type": "UNDER",
-                                                    "probabilityEncrypted": null,
-                                                    "__typename": "MarketSelection"
-                                                }
-                                            ]
-                                        },
-                                        {
-                                            "id": "Market:89ac5768-5321-4e52-8929-3dee55712ff4",
-                                            "name": "Rome Odunze Total Receiving TDs",
-                                            "status": "OPEN",
-                                            "type": "TOTAL",
-                                            "extraInformation": null,
-                                            "startTime": "2026-09-10T00:15:00.000000Z",
-                                            "statisticAccrued": null,
-                                            "updatedAtTime": "2026-06-03T20:24:27.200999Z",
-                                            "__typename": "Market",
-                                            "selections": [
-                                                {
-                                                    "id": "MarketSelection:12c5d231-0455-4b99-8ee4-7f7aeef026e6",
-                                                    "rawId": "12c5d231-0455-4b99-8ee4-7f7aeef026e6",
-                                                    "name": {
-                                                        "cleanName": "Over",
-                                                        "defaultName": "O 5.5",
-                                                        "fullName": "Over 5.5",
-                                                        "minimalName": "O 5.5",
-                                                        "__typename": "SelectionName"
-                                                    },
-                                                    "odds": {
-                                                        "denominatorLong": "7",
-                                                        "numeratorLong": "12",
-                                                        "formattedOdds": "-140",
-                                                        "__typename": "Odds"
-                                                    },
-                                                    "participant": null,
-                                                    "points": {
-                                                        "decimalPoints": 5.5,
-                                                        "formattedPoints": "5.5",
-                                                        "__typename": "Points"
-                                                    },
-                                                    "status": "OPEN",
-                                                    "type": "OVER",
-                                                    "probabilityEncrypted": null,
-                                                    "__typename": "MarketSelection"
-                                                },
-                                                {
-                                                    "id": "MarketSelection:6f4f5370-042f-4d1f-ac32-fb6ac8df8c3b",
-                                                    "rawId": "6f4f5370-042f-4d1f-ac32-fb6ac8df8c3b",
-                                                    "name": {
-                                                        "cleanName": "Under",
-                                                        "defaultName": "U 5.5",
-                                                        "fullName": "Under 5.5",
-                                                        "minimalName": "U 5.5",
-                                                        "__typename": "SelectionName"
-                                                    },
-                                                    "odds": {
-                                                        "denominatorLong": "10",
-                                                        "numeratorLong": "21",
-                                                        "formattedOdds": "+110",
-                                                        "__typename": "Odds"
-                                                    },
-                                                    "participant": null,
-                                                    "points": {
-                                                        "decimalPoints": 5.5,
-                                                        "formattedPoints": "5.5",
-                                                        "__typename": "Points"
-                                                    },
-                                                    "status": "OPEN",
-                                                    "type": "UNDER",
-                                                    "probabilityEncrypted": null,
-                                                    "__typename": "MarketSelection"
-                                                }
-                                            ]
-                                        },
-                                        {
-                                            "id": "Market:00e291df-e925-4879-8e84-5ff95dad0022",
-                                            "name": "Trey McBride Total Receiving TDs",
-                                            "status": "OPEN",
-                                            "type": "TOTAL",
-                                            "extraInformation": null,
-                                            "startTime": "2026-09-10T00:15:00.000000Z",
-                                            "statisticAccrued": null,
-                                            "updatedAtTime": "2026-06-03T20:24:42.997817Z",
-                                            "__typename": "Market",
-                                            "selections": [
-                                                {
-                                                    "id": "MarketSelection:b40e297d-1b79-4a7b-83d1-30e6063e5d72",
-                                                    "rawId": "b40e297d-1b79-4a7b-83d1-30e6063e5d72",
-                                                    "name": {
-                                                        "cleanName": "Over",
-                                                        "defaultName": "O 5.5",
-                                                        "fullName": "Over 5.5",
-                                                        "minimalName": "O 5.5",
-                                                        "__typename": "SelectionName"
-                                                    },
-                                                    "odds": {
-                                                        "denominatorLong": "13",
-                                                        "numeratorLong": "23",
-                                                        "formattedOdds": "-130",
-                                                        "__typename": "Odds"
-                                                    },
-                                                    "participant": null,
-                                                    "points": {
-                                                        "decimalPoints": 5.5,
-                                                        "formattedPoints": "5.5",
-                                                        "__typename": "Points"
-                                                    },
-                                                    "status": "OPEN",
-                                                    "type": "OVER",
-                                                    "probabilityEncrypted": null,
-                                                    "__typename": "MarketSelection"
-                                                },
-                                                {
-                                                    "id": "MarketSelection:bfb3aa78-ee45-4d9c-a36a-06f3d530a08f",
-                                                    "rawId": "bfb3aa78-ee45-4d9c-a36a-06f3d530a08f",
-                                                    "name": {
-                                                        "cleanName": "Under",
-                                                        "defaultName": "U 5.5",
-                                                        "fullName": "Under 5.5",
-                                                        "minimalName": "U 5.5",
-                                                        "__typename": "SelectionName"
-                                                    },
-                                                    "odds": {
-                                                        "denominatorLong": "1",
-                                                        "numeratorLong": "2",
-                                                        "formattedOdds": "Even",
-                                                        "__typename": "Odds"
-                                                    },
-                                                    "participant": null,
-                                                    "points": {
-                                                        "decimalPoints": 5.5,
-                                                        "formattedPoints": "5.5",
-                                                        "__typename": "Points"
-                                                    },
-                                                    "status": "OPEN",
-                                                    "type": "UNDER",
-                                                    "probabilityEncrypted": null,
-                                                    "__typename": "MarketSelection"
-                                                }
-                                            ]
-                                        },
-                                        {
-                                            "id": "Market:129db7d6-7c65-4f19-ae9b-8d976872fdec",
-                                            "name": "Brock Bowers Total Receiving TDs",
-                                            "status": "OPEN",
-                                            "type": "TOTAL",
-                                            "extraInformation": null,
-                                            "startTime": "2026-09-10T00:15:00.000000Z",
-                                            "statisticAccrued": null,
-                                            "updatedAtTime": "2026-06-03T20:23:10.286772Z",
-                                            "__typename": "Market",
-                                            "selections": [
-                                                {
-                                                    "id": "MarketSelection:88244a88-7ed2-497d-9f3a-8c6124dfaa4a",
-                                                    "rawId": "88244a88-7ed2-497d-9f3a-8c6124dfaa4a",
-                                                    "name": {
-                                                        "cleanName": "Over",
-                                                        "defaultName": "O 6.5",
-                                                        "fullName": "Over 6.5",
-                                                        "minimalName": "O 6.5",
-                                                        "__typename": "SelectionName"
-                                                    },
-                                                    "odds": {
-                                                        "denominatorLong": "13",
-                                                        "numeratorLong": "23",
-                                                        "formattedOdds": "-130",
-                                                        "__typename": "Odds"
-                                                    },
-                                                    "participant": null,
-                                                    "points": {
-                                                        "decimalPoints": 6.5,
-                                                        "formattedPoints": "6.5",
-                                                        "__typename": "Points"
-                                                    },
-                                                    "status": "OPEN",
-                                                    "type": "OVER",
-                                                    "probabilityEncrypted": null,
-                                                    "__typename": "MarketSelection"
-                                                },
-                                                {
-                                                    "id": "MarketSelection:7c8ac07f-369b-4005-9072-277a5efa0d09",
-                                                    "rawId": "7c8ac07f-369b-4005-9072-277a5efa0d09",
-                                                    "name": {
-                                                        "cleanName": "Under",
-                                                        "defaultName": "U 6.5",
-                                                        "fullName": "Under 6.5",
-                                                        "minimalName": "U 6.5",
-                                                        "__typename": "SelectionName"
-                                                    },
-                                                    "odds": {
-                                                        "denominatorLong": "1",
-                                                        "numeratorLong": "2",
-                                                        "formattedOdds": "Even",
-                                                        "__typename": "Odds"
-                                                    },
-                                                    "participant": null,
-                                                    "points": {
-                                                        "decimalPoints": 6.5,
-                                                        "formattedPoints": "6.5",
-                                                        "__typename": "Points"
-                                                    },
-                                                    "status": "OPEN",
-                                                    "type": "UNDER",
-                                                    "probabilityEncrypted": null,
-                                                    "__typename": "MarketSelection"
-                                                }
-                                            ]
-                                        },
-                                        {
-                                            "id": "Market:9d8179b3-1531-49b2-8488-32dc3ea04fad",
-                                            "name": "Drake London Total Receiving TDs",
-                                            "status": "OPEN",
-                                            "type": "TOTAL",
-                                            "extraInformation": null,
-                                            "startTime": "2026-09-10T00:15:00.000000Z",
-                                            "statisticAccrued": null,
-                                            "updatedAtTime": "2026-06-03T20:23:26.152598Z",
-                                            "__typename": "Market",
-                                            "selections": [
-                                                {
-                                                    "id": "MarketSelection:486f278a-79f0-425f-b2a1-1de6d4c4e944",
-                                                    "rawId": "486f278a-79f0-425f-b2a1-1de6d4c4e944",
-                                                    "name": {
-                                                        "cleanName": "Over",
-                                                        "defaultName": "O 6.5",
-                                                        "fullName": "Over 6.5",
-                                                        "minimalName": "O 6.5",
-                                                        "__typename": "SelectionName"
-                                                    },
-                                                    "odds": {
-                                                        "denominatorLong": "13",
-                                                        "numeratorLong": "23",
-                                                        "formattedOdds": "-130",
-                                                        "__typename": "Odds"
-                                                    },
-                                                    "participant": null,
-                                                    "points": {
-                                                        "decimalPoints": 6.5,
-                                                        "formattedPoints": "6.5",
-                                                        "__typename": "Points"
-                                                    },
-                                                    "status": "OPEN",
-                                                    "type": "OVER",
-                                                    "probabilityEncrypted": null,
-                                                    "__typename": "MarketSelection"
-                                                },
-                                                {
-                                                    "id": "MarketSelection:c4e48563-207f-40a6-8be4-bdbcd23f283a",
-                                                    "rawId": "c4e48563-207f-40a6-8be4-bdbcd23f283a",
-                                                    "name": {
-                                                        "cleanName": "Under",
-                                                        "defaultName": "U 6.5",
-                                                        "fullName": "Under 6.5",
-                                                        "minimalName": "U 6.5",
-                                                        "__typename": "SelectionName"
-                                                    },
-                                                    "odds": {
-                                                        "denominatorLong": "1",
-                                                        "numeratorLong": "2",
-                                                        "formattedOdds": "Even",
-                                                        "__typename": "Odds"
-                                                    },
-                                                    "participant": null,
-                                                    "points": {
-                                                        "decimalPoints": 6.5,
-                                                        "formattedPoints": "6.5",
-                                                        "__typename": "Points"
-                                                    },
-                                                    "status": "OPEN",
-                                                    "type": "UNDER",
-                                                    "probabilityEncrypted": null,
-                                                    "__typename": "MarketSelection"
-                                                }
-                                            ]
-                                        },
-                                        {
-                                            "id": "Market:6298b86a-ad08-4989-9801-b13874425003",
-                                            "name": "George Pickens Total Receiving TDs",
-                                            "status": "OPEN",
-                                            "type": "TOTAL",
-                                            "extraInformation": null,
-                                            "startTime": "2026-09-10T00:15:00.000000Z",
-                                            "statisticAccrued": null,
-                                            "updatedAtTime": "2026-06-03T20:23:30.918345Z",
-                                            "__typename": "Market",
-                                            "selections": [
-                                                {
-                                                    "id": "MarketSelection:b9456ae7-0f4f-4b2a-9608-a1fa085d93d0",
-                                                    "rawId": "b9456ae7-0f4f-4b2a-9608-a1fa085d93d0",
-                                                    "name": {
-                                                        "cleanName": "Over",
-                                                        "defaultName": "O 6.5",
-                                                        "fullName": "Over 6.5",
-                                                        "minimalName": "O 6.5",
-                                                        "__typename": "SelectionName"
-                                                    },
-                                                    "odds": {
-                                                        "denominatorLong": "21",
-                                                        "numeratorLong": "41",
-                                                        "formattedOdds": "-105",
-                                                        "__typename": "Odds"
-                                                    },
-                                                    "participant": null,
-                                                    "points": {
-                                                        "decimalPoints": 6.5,
-                                                        "formattedPoints": "6.5",
-                                                        "__typename": "Points"
-                                                    },
-                                                    "status": "OPEN",
-                                                    "type": "OVER",
-                                                    "probabilityEncrypted": null,
-                                                    "__typename": "MarketSelection"
-                                                },
-                                                {
-                                                    "id": "MarketSelection:050c0bc8-899d-420b-a3d2-f3d364c8dca6",
-                                                    "rawId": "050c0bc8-899d-420b-a3d2-f3d364c8dca6",
-                                                    "name": {
-                                                        "cleanName": "Under",
-                                                        "defaultName": "U 6.5",
-                                                        "fullName": "Under 6.5",
-                                                        "minimalName": "U 6.5",
-                                                        "__typename": "SelectionName"
-                                                    },
-                                                    "odds": {
-                                                        "denominatorLong": "5",
-                                                        "numeratorLong": "9",
-                                                        "formattedOdds": "-125",
-                                                        "__typename": "Odds"
-                                                    },
-                                                    "participant": null,
-                                                    "points": {
-                                                        "decimalPoints": 6.5,
-                                                        "formattedPoints": "6.5",
-                                                        "__typename": "Points"
-                                                    },
-                                                    "status": "OPEN",
-                                                    "type": "UNDER",
-                                                    "probabilityEncrypted": null,
-                                                    "__typename": "MarketSelection"
-                                                }
-                                            ]
-                                        },
-                                        {
-                                            "id": "Market:748d247a-138f-4485-b643-58e1c3257597",
-                                            "name": "Justin Jefferson Total Receiving TDs",
-                                            "status": "OPEN",
-                                            "type": "TOTAL",
-                                            "extraInformation": null,
-                                            "startTime": "2026-09-10T00:15:00.000000Z",
-                                            "statisticAccrued": null,
-                                            "updatedAtTime": "2026-06-03T20:24:18.416165Z",
-                                            "__typename": "Market",
-                                            "selections": [
-                                                {
-                                                    "id": "MarketSelection:e89b1272-3991-474f-ac45-dd2300f3ef10",
-                                                    "rawId": "e89b1272-3991-474f-ac45-dd2300f3ef10",
-                                                    "name": {
-                                                        "cleanName": "Over",
-                                                        "defaultName": "O 6.5",
-                                                        "fullName": "Over 6.5",
-                                                        "minimalName": "O 6.5",
-                                                        "__typename": "SelectionName"
-                                                    },
-                                                    "odds": {
-                                                        "denominatorLong": "21",
-                                                        "numeratorLong": "41",
-                                                        "formattedOdds": "-105",
-                                                        "__typename": "Odds"
-                                                    },
-                                                    "participant": null,
-                                                    "points": {
-                                                        "decimalPoints": 6.5,
-                                                        "formattedPoints": "6.5",
-                                                        "__typename": "Points"
-                                                    },
-                                                    "status": "OPEN",
-                                                    "type": "OVER",
-                                                    "probabilityEncrypted": null,
-                                                    "__typename": "MarketSelection"
-                                                },
-                                                {
-                                                    "id": "MarketSelection:406fa32e-0682-4d53-9006-41af9b45c6ab",
-                                                    "rawId": "406fa32e-0682-4d53-9006-41af9b45c6ab",
-                                                    "name": {
-                                                        "cleanName": "Under",
-                                                        "defaultName": "U 6.5",
-                                                        "fullName": "Under 6.5",
-                                                        "minimalName": "U 6.5",
-                                                        "__typename": "SelectionName"
-                                                    },
-                                                    "odds": {
-                                                        "denominatorLong": "5",
-                                                        "numeratorLong": "9",
-                                                        "formattedOdds": "-125",
-                                                        "__typename": "Odds"
-                                                    },
-                                                    "participant": null,
-                                                    "points": {
-                                                        "decimalPoints": 6.5,
-                                                        "formattedPoints": "6.5",
-                                                        "__typename": "Points"
-                                                    },
-                                                    "status": "OPEN",
-                                                    "type": "UNDER",
-                                                    "probabilityEncrypted": null,
-                                                    "__typename": "MarketSelection"
-                                                }
-                                            ]
-                                        },
-                                        {
-                                            "id": "Market:d4336edd-c7d6-44c1-9c6d-f7e5b4b9a422",
-                                            "name": "Nico Collins Total Receiving TDs",
-                                            "status": "OPEN",
-                                            "type": "TOTAL",
-                                            "extraInformation": null,
-                                            "startTime": "2026-09-10T00:15:00.000000Z",
-                                            "statisticAccrued": null,
-                                            "updatedAtTime": "2026-06-03T20:24:25.124944Z",
-                                            "__typename": "Market",
-                                            "selections": [
-                                                {
-                                                    "id": "MarketSelection:14de13c8-5a13-444b-a714-8813719a8236",
-                                                    "rawId": "14de13c8-5a13-444b-a714-8813719a8236",
-                                                    "name": {
-                                                        "cleanName": "Over",
-                                                        "defaultName": "O 6.5",
-                                                        "fullName": "Over 6.5",
-                                                        "minimalName": "O 6.5",
-                                                        "__typename": "SelectionName"
-                                                    },
-                                                    "odds": {
-                                                        "denominatorLong": "5",
-                                                        "numeratorLong": "11",
-                                                        "formattedOdds": "+120",
-                                                        "__typename": "Odds"
-                                                    },
-                                                    "participant": null,
-                                                    "points": {
-                                                        "decimalPoints": 6.5,
-                                                        "formattedPoints": "6.5",
-                                                        "__typename": "Points"
-                                                    },
-                                                    "status": "OPEN",
-                                                    "type": "OVER",
-                                                    "probabilityEncrypted": null,
-                                                    "__typename": "MarketSelection"
-                                                },
-                                                {
-                                                    "id": "MarketSelection:ca59c3ac-6fbf-4ff8-83e4-70209a1700e0",
-                                                    "rawId": "ca59c3ac-6fbf-4ff8-83e4-70209a1700e0",
-                                                    "name": {
-                                                        "cleanName": "Under",
-                                                        "defaultName": "U 6.5",
-                                                        "fullName": "Under 6.5",
-                                                        "minimalName": "U 6.5",
-                                                        "__typename": "SelectionName"
-                                                    },
-                                                    "odds": {
-                                                        "denominatorLong": "3",
-                                                        "numeratorLong": "5",
-                                                        "formattedOdds": "-150",
-                                                        "__typename": "Odds"
-                                                    },
-                                                    "participant": null,
-                                                    "points": {
-                                                        "decimalPoints": 6.5,
-                                                        "formattedPoints": "6.5",
-                                                        "__typename": "Points"
-                                                    },
-                                                    "status": "OPEN",
-                                                    "type": "UNDER",
-                                                    "probabilityEncrypted": null,
-                                                    "__typename": "MarketSelection"
-                                                }
-                                            ]
-                                        },
-                                        {
-                                            "id": "Market:664e1f81-9b8a-475d-aa17-b0392c340ccc",
-                                            "name": "Tetairoa McMillan Total Receiving TDs",
-                                            "status": "OPEN",
-                                            "type": "TOTAL",
-                                            "extraInformation": null,
-                                            "startTime": "2026-09-10T00:15:00.000000Z",
-                                            "statisticAccrued": null,
-                                            "updatedAtTime": "2026-06-03T20:24:35.323889Z",
-                                            "__typename": "Market",
-                                            "selections": [
-                                                {
-                                                    "id": "MarketSelection:e2490623-64d9-43f4-bc29-26edc24047a2",
-                                                    "rawId": "e2490623-64d9-43f4-bc29-26edc24047a2",
-                                                    "name": {
-                                                        "cleanName": "Over",
-                                                        "defaultName": "O 6.5",
-                                                        "fullName": "Over 6.5",
-                                                        "minimalName": "O 6.5",
-                                                        "__typename": "SelectionName"
-                                                    },
-                                                    "odds": {
-                                                        "denominatorLong": "20",
-                                                        "numeratorLong": "43",
-                                                        "formattedOdds": "+115",
-                                                        "__typename": "Odds"
-                                                    },
-                                                    "participant": null,
-                                                    "points": {
-                                                        "decimalPoints": 6.5,
-                                                        "formattedPoints": "6.5",
-                                                        "__typename": "Points"
-                                                    },
-                                                    "status": "OPEN",
-                                                    "type": "OVER",
-                                                    "probabilityEncrypted": null,
-                                                    "__typename": "MarketSelection"
-                                                },
-                                                {
-                                                    "id": "MarketSelection:e59f6d69-8659-448f-8d05-cd275355efea",
-                                                    "rawId": "e59f6d69-8659-448f-8d05-cd275355efea",
-                                                    "name": {
-                                                        "cleanName": "Under",
-                                                        "defaultName": "U 6.5",
-                                                        "fullName": "Under 6.5",
-                                                        "minimalName": "U 6.5",
-                                                        "__typename": "SelectionName"
-                                                    },
-                                                    "odds": {
-                                                        "denominatorLong": "29",
-                                                        "numeratorLong": "49",
-                                                        "formattedOdds": "-145",
-                                                        "__typename": "Odds"
-                                                    },
-                                                    "participant": null,
-                                                    "points": {
-                                                        "decimalPoints": 6.5,
-                                                        "formattedPoints": "6.5",
-                                                        "__typename": "Points"
-                                                    },
-                                                    "status": "OPEN",
-                                                    "type": "UNDER",
-                                                    "probabilityEncrypted": null,
-                                                    "__typename": "MarketSelection"
-                                                }
-                                            ]
-                                        },
-                                        {
-                                            "id": "Market:7cd03dbe-7419-484e-9c31-b79009433341",
-                                            "name": "CeeDee Lamb Total Receiving TDs",
-                                            "status": "OPEN",
-                                            "type": "TOTAL",
-                                            "extraInformation": null,
-                                            "startTime": "2026-09-10T00:15:00.000000Z",
-                                            "statisticAccrued": null,
-                                            "updatedAtTime": "2026-06-03T20:23:14.454569Z",
-                                            "__typename": "Market",
-                                            "selections": [
-                                                {
-                                                    "id": "MarketSelection:cb544d2e-270d-4f00-a397-2e021aa99ef3",
-                                                    "rawId": "cb544d2e-270d-4f00-a397-2e021aa99ef3",
-                                                    "name": {
-                                                        "cleanName": "Over",
-                                                        "defaultName": "O 7.5",
-                                                        "fullName": "Over 7.5",
-                                                        "minimalName": "O 7.5",
-                                                        "__typename": "SelectionName"
-                                                    },
-                                                    "odds": {
-                                                        "denominatorLong": "20",
-                                                        "numeratorLong": "43",
-                                                        "formattedOdds": "+115",
-                                                        "__typename": "Odds"
-                                                    },
-                                                    "participant": null,
-                                                    "points": {
-                                                        "decimalPoints": 7.5,
-                                                        "formattedPoints": "7.5",
-                                                        "__typename": "Points"
-                                                    },
-                                                    "status": "OPEN",
-                                                    "type": "OVER",
-                                                    "probabilityEncrypted": null,
-                                                    "__typename": "MarketSelection"
-                                                },
-                                                {
-                                                    "id": "MarketSelection:87fd764f-ec16-4814-b01d-b7a0642bb491",
-                                                    "rawId": "87fd764f-ec16-4814-b01d-b7a0642bb491",
-                                                    "name": {
-                                                        "cleanName": "Under",
-                                                        "defaultName": "U 7.5",
-                                                        "fullName": "Under 7.5",
-                                                        "minimalName": "U 7.5",
-                                                        "__typename": "SelectionName"
-                                                    },
-                                                    "odds": {
-                                                        "denominatorLong": "29",
-                                                        "numeratorLong": "49",
-                                                        "formattedOdds": "-145",
-                                                        "__typename": "Odds"
-                                                    },
-                                                    "participant": null,
-                                                    "points": {
-                                                        "decimalPoints": 7.5,
-                                                        "formattedPoints": "7.5",
-                                                        "__typename": "Points"
-                                                    },
-                                                    "status": "OPEN",
-                                                    "type": "UNDER",
-                                                    "probabilityEncrypted": null,
-                                                    "__typename": "MarketSelection"
-                                                }
-                                            ]
-                                        },
-                                        {
-                                            "id": "Market:ddb05a5c-840f-4892-91fb-98f54f9da1fa",
-                                            "name": "Jaxon Smith-Njigba Total Receiving TDs",
-                                            "status": "OPEN",
-                                            "type": "TOTAL",
-                                            "extraInformation": null,
-                                            "startTime": "2026-09-10T00:15:00.000000Z",
-                                            "statisticAccrued": null,
-                                            "updatedAtTime": "2026-06-03T20:24:13.777807Z",
-                                            "__typename": "Market",
-                                            "selections": [
-                                                {
-                                                    "id": "MarketSelection:10a90160-883c-42f3-960f-753f64a8210c",
-                                                    "rawId": "10a90160-883c-42f3-960f-753f64a8210c",
-                                                    "name": {
-                                                        "cleanName": "Over",
-                                                        "defaultName": "O 7.5",
-                                                        "fullName": "Over 7.5",
-                                                        "minimalName": "O 7.5",
-                                                        "__typename": "SelectionName"
-                                                    },
-                                                    "odds": {
-                                                        "denominatorLong": "13",
-                                                        "numeratorLong": "23",
-                                                        "formattedOdds": "-130",
-                                                        "__typename": "Odds"
-                                                    },
-                                                    "participant": null,
-                                                    "points": {
-                                                        "decimalPoints": 7.5,
-                                                        "formattedPoints": "7.5",
-                                                        "__typename": "Points"
-                                                    },
-                                                    "status": "OPEN",
-                                                    "type": "OVER",
-                                                    "probabilityEncrypted": null,
-                                                    "__typename": "MarketSelection"
-                                                },
-                                                {
-                                                    "id": "MarketSelection:a7538d87-0901-4671-9b7f-d73fd7316de7",
-                                                    "rawId": "a7538d87-0901-4671-9b7f-d73fd7316de7",
-                                                    "name": {
-                                                        "cleanName": "Under",
-                                                        "defaultName": "U 7.5",
-                                                        "fullName": "Under 7.5",
-                                                        "minimalName": "U 7.5",
-                                                        "__typename": "SelectionName"
-                                                    },
-                                                    "odds": {
-                                                        "denominatorLong": "1",
-                                                        "numeratorLong": "2",
-                                                        "formattedOdds": "Even",
-                                                        "__typename": "Odds"
-                                                    },
-                                                    "participant": null,
-                                                    "points": {
-                                                        "decimalPoints": 7.5,
-                                                        "formattedPoints": "7.5",
-                                                        "__typename": "Points"
-                                                    },
-                                                    "status": "OPEN",
-                                                    "type": "UNDER",
-                                                    "probabilityEncrypted": null,
-                                                    "__typename": "MarketSelection"
-                                                }
-                                            ]
-                                        },
-                                        {
-                                            "id": "Market:67cddb43-c2b6-4f8c-8aff-044bf227e094",
-                                            "name": "Tee Higgins Total Receiving TDs",
-                                            "status": "OPEN",
-                                            "type": "TOTAL",
-                                            "extraInformation": null,
-                                            "startTime": "2026-09-10T00:15:00.000000Z",
-                                            "statisticAccrued": null,
-                                            "updatedAtTime": "2026-06-03T20:24:30.051734Z",
-                                            "__typename": "Market",
-                                            "selections": [
-                                                {
-                                                    "id": "MarketSelection:d2433491-ca10-4bbd-aafb-f89a39b33ef5",
-                                                    "rawId": "d2433491-ca10-4bbd-aafb-f89a39b33ef5",
-                                                    "name": {
-                                                        "cleanName": "Over",
-                                                        "defaultName": "O 7.5",
-                                                        "fullName": "Over 7.5",
-                                                        "minimalName": "O 7.5",
-                                                        "__typename": "SelectionName"
-                                                    },
-                                                    "odds": {
-                                                        "denominatorLong": "13",
-                                                        "numeratorLong": "23",
-                                                        "formattedOdds": "-130",
-                                                        "__typename": "Odds"
-                                                    },
-                                                    "participant": null,
-                                                    "points": {
-                                                        "decimalPoints": 7.5,
-                                                        "formattedPoints": "7.5",
-                                                        "__typename": "Points"
-                                                    },
-                                                    "status": "OPEN",
-                                                    "type": "OVER",
-                                                    "probabilityEncrypted": null,
-                                                    "__typename": "MarketSelection"
-                                                },
-                                                {
-                                                    "id": "MarketSelection:236043f3-b9a3-4f08-98bf-0c3e903d5720",
-                                                    "rawId": "236043f3-b9a3-4f08-98bf-0c3e903d5720",
-                                                    "name": {
-                                                        "cleanName": "Under",
-                                                        "defaultName": "U 7.5",
-                                                        "fullName": "Under 7.5",
-                                                        "minimalName": "U 7.5",
-                                                        "__typename": "SelectionName"
-                                                    },
-                                                    "odds": {
-                                                        "denominatorLong": "1",
-                                                        "numeratorLong": "2",
-                                                        "formattedOdds": "Even",
-                                                        "__typename": "Odds"
-                                                    },
-                                                    "participant": null,
-                                                    "points": {
-                                                        "decimalPoints": 7.5,
-                                                        "formattedPoints": "7.5",
-                                                        "__typename": "Points"
-                                                    },
-                                                    "status": "OPEN",
-                                                    "type": "UNDER",
-                                                    "probabilityEncrypted": null,
-                                                    "__typename": "MarketSelection"
-                                                }
-                                            ]
-                                        },
-                                        {
-                                            "id": "Market:9de7e1d2-435a-4a3a-8135-f43b3da6ab3e",
-                                            "name": "Davante Adams Total Receiving TDs",
-                                            "status": "OPEN",
-                                            "type": "TOTAL",
-                                            "extraInformation": null,
-                                            "startTime": "2026-09-10T00:15:00.000000Z",
-                                            "statisticAccrued": null,
-                                            "updatedAtTime": "2026-06-03T20:23:22.880565Z",
-                                            "__typename": "Market",
-                                            "selections": [
-                                                {
-                                                    "id": "MarketSelection:4214c60b-a9cb-4293-bc47-f26b4123d797",
-                                                    "rawId": "4214c60b-a9cb-4293-bc47-f26b4123d797",
-                                                    "name": {
-                                                        "cleanName": "Over",
-                                                        "defaultName": "O 8.5",
-                                                        "fullName": "Over 8.5",
-                                                        "minimalName": "O 8.5",
-                                                        "__typename": "SelectionName"
-                                                    },
-                                                    "odds": {
-                                                        "denominatorLong": "5",
-                                                        "numeratorLong": "9",
-                                                        "formattedOdds": "-125",
-                                                        "__typename": "Odds"
-                                                    },
-                                                    "participant": null,
-                                                    "points": {
-                                                        "decimalPoints": 8.5,
-                                                        "formattedPoints": "8.5",
-                                                        "__typename": "Points"
-                                                    },
-                                                    "status": "OPEN",
-                                                    "type": "OVER",
-                                                    "probabilityEncrypted": null,
-                                                    "__typename": "MarketSelection"
-                                                },
-                                                {
-                                                    "id": "MarketSelection:8d613e9f-f7a4-417c-8a03-56e87862d50a",
-                                                    "rawId": "8d613e9f-f7a4-417c-8a03-56e87862d50a",
-                                                    "name": {
-                                                        "cleanName": "Under",
-                                                        "defaultName": "U 8.5",
-                                                        "fullName": "Under 8.5",
-                                                        "minimalName": "U 8.5",
-                                                        "__typename": "SelectionName"
-                                                    },
-                                                    "odds": {
-                                                        "denominatorLong": "21",
-                                                        "numeratorLong": "41",
-                                                        "formattedOdds": "-105",
-                                                        "__typename": "Odds"
-                                                    },
-                                                    "participant": null,
-                                                    "points": {
-                                                        "decimalPoints": 8.5,
-                                                        "formattedPoints": "8.5",
-                                                        "__typename": "Points"
-                                                    },
-                                                    "status": "OPEN",
-                                                    "type": "UNDER",
-                                                    "probabilityEncrypted": null,
-                                                    "__typename": "MarketSelection"
-                                                }
-                                            ]
-                                        },
-                                        {
-                                            "id": "Market:d321cbf6-b0ed-44ed-939a-dc2656a57baa",
-                                            "name": "Ja'Marr Chase Total Receiving TDs",
-                                            "status": "OPEN",
-                                            "type": "TOTAL",
-                                            "extraInformation": null,
-                                            "startTime": "2026-09-10T00:15:00.000000Z",
-                                            "statisticAccrued": null,
-                                            "updatedAtTime": "2026-06-03T20:24:10.239771Z",
-                                            "__typename": "Market",
-                                            "selections": [
-                                                {
-                                                    "id": "MarketSelection:5c14a422-8674-4108-9beb-248401577883",
-                                                    "rawId": "5c14a422-8674-4108-9beb-248401577883",
-                                                    "name": {
-                                                        "cleanName": "Over",
-                                                        "defaultName": "O 9.5",
-                                                        "fullName": "Over 9.5",
-                                                        "minimalName": "O 9.5",
-                                                        "__typename": "SelectionName"
-                                                    },
-                                                    "odds": {
-                                                        "denominatorLong": "5",
-                                                        "numeratorLong": "9",
-                                                        "formattedOdds": "-125",
-                                                        "__typename": "Odds"
-                                                    },
-                                                    "participant": null,
-                                                    "points": {
-                                                        "decimalPoints": 9.5,
-                                                        "formattedPoints": "9.5",
-                                                        "__typename": "Points"
-                                                    },
-                                                    "status": "OPEN",
-                                                    "type": "OVER",
-                                                    "probabilityEncrypted": null,
-                                                    "__typename": "MarketSelection"
-                                                },
-                                                {
-                                                    "id": "MarketSelection:60087373-fa67-4197-930a-2e8eb84ab4ea",
-                                                    "rawId": "60087373-fa67-4197-930a-2e8eb84ab4ea",
-                                                    "name": {
-                                                        "cleanName": "Under",
-                                                        "defaultName": "U 9.5",
-                                                        "fullName": "Under 9.5",
-                                                        "minimalName": "U 9.5",
-                                                        "__typename": "SelectionName"
-                                                    },
-                                                    "odds": {
-                                                        "denominatorLong": "21",
-                                                        "numeratorLong": "41",
-                                                        "formattedOdds": "-105",
-                                                        "__typename": "Odds"
-                                                    },
-                                                    "participant": null,
-                                                    "points": {
-                                                        "decimalPoints": 9.5,
-                                                        "formattedPoints": "9.5",
-                                                        "__typename": "Points"
-                                                    },
-                                                    "status": "OPEN",
-                                                    "type": "UNDER",
-                                                    "probabilityEncrypted": null,
-                                                    "__typename": "MarketSelection"
-                                                }
-                                            ]
-                                        }
-                                    ],
-                                    "marketTags": [
-                                        "NFL Season Player Totals"
-                                    ],
-                                    "rawId": "a023de6b-be94-4f69-aab6-53ae7480d85a",
-                                    "__typename": "MultipleMarketCard"
-                                }
-                            ],
-                            "__typename": "MarketplaceShelf"
+                          "name": {
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 4.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-130"
+                          }
+                        },
+                        {
+                          "name": {
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 4.5
+                          },
+                          "odds": {
+                            "formattedOdds": "Even"
+                          }
                         }
-                    ],
-                    "fallbackChild": null,
-                    "__typename": "Section"
+                      ]
+                    },
+                    {
+                      "name": "Brock Bowers Total Receiving TDs",
+                      "type": "TOTAL",
+                      "selections": [
+                        {
+                          "name": {
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 6.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-130"
+                          }
+                        },
+                        {
+                          "name": {
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 6.5
+                          },
+                          "odds": {
+                            "formattedOdds": "Even"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "name": "CeeDee Lamb Total Receiving TDs",
+                      "type": "TOTAL",
+                      "selections": [
+                        {
+                          "name": {
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 7.5
+                          },
+                          "odds": {
+                            "formattedOdds": "+115"
+                          }
+                        },
+                        {
+                          "name": {
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 7.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-145"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Chris Olave Total Receiving TDs",
+                      "type": "TOTAL",
+                      "selections": [
+                        {
+                          "name": {
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 5.5
+                          },
+                          "odds": {
+                            "formattedOdds": "+110"
+                          }
+                        },
+                        {
+                          "name": {
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 5.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-140"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Christian Watson Total Receiving TDs",
+                      "type": "TOTAL",
+                      "selections": [
+                        {
+                          "name": {
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 5.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-135"
+                          }
+                        },
+                        {
+                          "name": {
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 5.5
+                          },
+                          "odds": {
+                            "formattedOdds": "+105"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "name": "D.J. Moore Total Receiving TDs",
+                      "type": "TOTAL",
+                      "selections": [
+                        {
+                          "name": {
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 5.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-125"
+                          }
+                        },
+                        {
+                          "name": {
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 5.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-105"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "name": "DK Metcalf Total Receiving TDs",
+                      "type": "TOTAL",
+                      "selections": [
+                        {
+                          "name": {
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 4.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-130"
+                          }
+                        },
+                        {
+                          "name": {
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 4.5
+                          },
+                          "odds": {
+                            "formattedOdds": "Even"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Davante Adams Total Receiving TDs",
+                      "type": "TOTAL",
+                      "selections": [
+                        {
+                          "name": {
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 8.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-125"
+                          }
+                        },
+                        {
+                          "name": {
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 8.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-105"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "name": "DeVonta Smith Total Receiving TDs",
+                      "type": "TOTAL",
+                      "selections": [
+                        {
+                          "name": {
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 4.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-130"
+                          }
+                        },
+                        {
+                          "name": {
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 4.5
+                          },
+                          "odds": {
+                            "formattedOdds": "Even"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Drake London Total Receiving TDs",
+                      "type": "TOTAL",
+                      "selections": [
+                        {
+                          "name": {
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 6.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-130"
+                          }
+                        },
+                        {
+                          "name": {
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 6.5
+                          },
+                          "odds": {
+                            "formattedOdds": "Even"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Garrett Wilson Total Receiving TDs",
+                      "type": "TOTAL",
+                      "selections": [
+                        {
+                          "name": {
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 4.5
+                          },
+                          "odds": {
+                            "formattedOdds": "+115"
+                          }
+                        },
+                        {
+                          "name": {
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 4.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-145"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "name": "George Pickens Total Receiving TDs",
+                      "type": "TOTAL",
+                      "selections": [
+                        {
+                          "name": {
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 6.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-105"
+                          }
+                        },
+                        {
+                          "name": {
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 6.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-125"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Ja'Marr Chase Total Receiving TDs",
+                      "type": "TOTAL",
+                      "selections": [
+                        {
+                          "name": {
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 9.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-125"
+                          }
+                        },
+                        {
+                          "name": {
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 9.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-105"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Jake Ferguson Total Receiving TDs",
+                      "type": "TOTAL",
+                      "selections": [
+                        {
+                          "name": {
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 4.5
+                          },
+                          "odds": {
+                            "formattedOdds": "Even"
+                          }
+                        },
+                        {
+                          "name": {
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 4.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-130"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Jaxon Smith-Njigba Total Receiving TDs",
+                      "type": "TOTAL",
+                      "selections": [
+                        {
+                          "name": {
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 7.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-130"
+                          }
+                        },
+                        {
+                          "name": {
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 7.5
+                          },
+                          "odds": {
+                            "formattedOdds": "Even"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Jaylen Waddle Total Receiving TDs",
+                      "type": "TOTAL",
+                      "selections": [
+                        {
+                          "name": {
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 4.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-125"
+                          }
+                        },
+                        {
+                          "name": {
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 4.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-105"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Justin Jefferson Total Receiving TDs",
+                      "type": "TOTAL",
+                      "selections": [
+                        {
+                          "name": {
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 6.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-105"
+                          }
+                        },
+                        {
+                          "name": {
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 6.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-125"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Ladd McConkey Total Receiving TDs",
+                      "type": "TOTAL",
+                      "selections": [
+                        {
+                          "name": {
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 4.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-140"
+                          }
+                        },
+                        {
+                          "name": {
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 4.5
+                          },
+                          "odds": {
+                            "formattedOdds": "+110"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Mike Evans Total Receiving TDs",
+                      "type": "TOTAL",
+                      "selections": [
+                        {
+                          "name": {
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 5.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-115"
+                          }
+                        },
+                        {
+                          "name": {
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 5.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-115"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Nico Collins Total Receiving TDs",
+                      "type": "TOTAL",
+                      "selections": [
+                        {
+                          "name": {
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 6.5
+                          },
+                          "odds": {
+                            "formattedOdds": "+120"
+                          }
+                        },
+                        {
+                          "name": {
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 6.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-150"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Rome Odunze Total Receiving TDs",
+                      "type": "TOTAL",
+                      "selections": [
+                        {
+                          "name": {
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 5.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-140"
+                          }
+                        },
+                        {
+                          "name": {
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 5.5
+                          },
+                          "odds": {
+                            "formattedOdds": "+110"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Tee Higgins Total Receiving TDs",
+                      "type": "TOTAL",
+                      "selections": [
+                        {
+                          "name": {
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 7.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-130"
+                          }
+                        },
+                        {
+                          "name": {
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 7.5
+                          },
+                          "odds": {
+                            "formattedOdds": "Even"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Terry McLaurin Total Receiving TDs",
+                      "type": "TOTAL",
+                      "selections": [
+                        {
+                          "name": {
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 4.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-130"
+                          }
+                        },
+                        {
+                          "name": {
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 4.5
+                          },
+                          "odds": {
+                            "formattedOdds": "Even"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Tetairoa McMillan Total Receiving TDs",
+                      "type": "TOTAL",
+                      "selections": [
+                        {
+                          "name": {
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 6.5
+                          },
+                          "odds": {
+                            "formattedOdds": "+115"
+                          }
+                        },
+                        {
+                          "name": {
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 6.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-145"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Travis Kelce Total Receiving TDs",
+                      "type": "TOTAL",
+                      "selections": [
+                        {
+                          "name": {
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 4.5
+                          },
+                          "odds": {
+                            "formattedOdds": "+110"
+                          }
+                        },
+                        {
+                          "name": {
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 4.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-140"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Trey McBride Total Receiving TDs",
+                      "type": "TOTAL",
+                      "selections": [
+                        {
+                          "name": {
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 5.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-130"
+                          }
+                        },
+                        {
+                          "name": {
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 5.5
+                          },
+                          "odds": {
+                            "formattedOdds": "Even"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Xavier Worthy Total Receiving TDs",
+                      "type": "TOTAL",
+                      "selections": [
+                        {
+                          "name": {
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 3.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-140"
+                          }
+                        },
+                        {
+                          "name": {
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 3.5
+                          },
+                          "odds": {
+                            "formattedOdds": "+110"
+                          }
+                        }
+                      ]
+                    }
+                  ]
                 }
-            ],
-            "__typename": "Page"
+              ]
+            }
+          ]
         }
+      ]
     }
+  }
 }

@@ -236,6 +236,10 @@
       text-align: center;
       font-weight: 700;
     }
+    /* In a heading row each column holds only its col-head; center it vertically
+       in the column so it lines up with the (vertically-centered) name label. */
+    .odds-ou-head .odds-col,
+    .odds-outright-head .odds-col { justify-content: center; }
     /* In the OU layout the label is the badge and the odds sit small inside it.
        Every badge is the same size: full column width (box-sizing keeps padding
        inside that width) and a shared min-height with its content centered, so a
@@ -281,6 +285,31 @@
       text-transform: uppercase;
       letter-spacing: 1px;
     }
+
+    /* Outright (Awards & Futures / Milestones) tables reuse the OU coupon look:
+       one is-ou strip per candidate — a pinned name column, then hairline-divided
+       borderless badge columns (FMV + each book) — under a single heading row.
+       The strips share .odds-coupon.is-ou with player props, so the column
+       widths, dividers and badge styling line up identically. */
+    .odds-outright-head { border-bottom: 1px solid var(--nb-ink); overflow: hidden; }
+    /* The heading's left cell carries the sortable Player/Team label, sized like
+       a column head rather than a candidate name (override the is-ou 14px name). */
+    .odds-coupon.is-ou .odds-coupon-header.odds-name-head {
+      font-family: var(--nb-display);
+      font-size: 11px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--nb-muted);
+      font-weight: 700;
+    }
+    /* The FMV badge reads as a derived value; the shortest (best) book price is
+       highlighted for line-shopping at a glance. */
+    .odds-coupon.is-ou .odds-book-label.odds-fmv { color: var(--nb-muted); }
+    .odds-coupon.is-ou .odds-book-label.odds-best { color: var(--nb-up); font-weight: 700; }
+    /* Clickable column headers (name + FMV) that sort the candidate table. */
+    .odds-sort { cursor: pointer; user-select: none; }
+    .odds-sort:hover { color: var(--nb-accent); }
+    .odds-sort-arrow { font-size: 9px; }
 
     @media (max-width: 600px) {
       .odds-tab { font-size: 12px; }
@@ -339,6 +368,17 @@
     let MARKETS = null;
     let DK_BY_PLAYER = {};   // normalized player name -> { name, Over:{line,odds}, Under:{line,odds} }
     let SCORE_BY_PLAYER = {}; // same shape, sourced from ESPN ("SCORE") /data/score/*.json
+    let OUTRIGHTS = null;     // /data/outrights.json — { markets:{key:{...}}, milestones:{stat:{...}} }
+    let MS_BY_PLAYER = {};    // "<norm>|<stat>" -> { name, list:[{line, odds}] } from DK milestones
+
+    // The order the outright groups are shown in, and their section labels.
+    const OUTRIGHT_GROUPS = [
+      ['awards', 'Awards'],
+      ['futures', 'Team Futures'],
+      ['leaders', 'Statistical Leaders']
+    ];
+    // The three price columns an outright row can carry (plus a derived FMV).
+    const OUTRIGHT_BOOKS = [['fd', 'FD'], ['dk', 'DK'], ['score', 'SCORE']];
 
     // Drop the trailing season label (e.g. " 2026-27") from any display string.
     function stripYear(s) {
@@ -544,6 +584,23 @@
       });
 
       active.forEach(addTab);
+
+      // Outright markets aren't part of FanDuel's tab layout — they come from
+      // /data/outrights.json — so add their entry points here.
+      const addCustom = (label, hash) => {
+        const btn = document.createElement('button');
+        btn.className = 'odds-tab';
+        btn.textContent = label;
+        btn.onclick = () => { location.hash = hash; };
+        tabsEl.appendChild(btn);
+      };
+      if (OUTRIGHTS && OUTRIGHTS.markets && Object.keys(OUTRIGHTS.markets).length) {
+        addCustom('Awards & Futures', '#/awards');
+      }
+      if (OUTRIGHTS && OUTRIGHTS.milestones && Object.keys(OUTRIGHTS.milestones).length) {
+        addCustom('Milestones', '#/milestones');
+      }
+
       if (inactive.length) {
         const section = document.createElement('div');
         section.className = 'odds-section';
@@ -607,24 +664,33 @@
     }
 
     // The single FD/DK heading row, pinned above an OU card's coupons. Mirrors a
-    // coupon's is-ou layout (0.7 header spacer + body columns) so it lines up.
+    // coupon's is-ou layout (header spacer + body columns) so it lines up. The
+    // spacer doubles as a sortable Player label and the FMV head is sortable too;
+    // renderCard wires their click handlers and reads back wrap._nameHead/_fmvHead.
     function buildOuHead(showDk) {
       const wrap = document.createElement('div');
       wrap.className = 'odds-coupon is-ou odds-ou-head';
-      const spacer = document.createElement('div');
-      spacer.className = 'odds-coupon-header';
+      const nameHead = document.createElement('div');
+      nameHead.className = 'odds-coupon-header odds-name-head odds-sort';
       const body = document.createElement('div');
       body.className = 'odds-coupon-body';
       (showDk ? ['FMV', 'FD', 'DK', 'SCORE'] : ['FMV', 'FD']).forEach(label => {
         const col = ouColumn();
         const head = document.createElement('div');
-        head.className = 'odds-col-head';
+        head.className = 'odds-col-head' + (label === 'FMV' ? ' odds-sort' : '');
         head.textContent = label;
         col.appendChild(head);
         body.appendChild(col);
+        if (label === 'FMV') wrap._fmvHead = head;
       });
-      wrap.append(spacer, body);
+      wrap._nameHead = nameHead;
+      wrap.append(nameHead, body);
       return wrap;
+    }
+
+    // A small ▲/▼ sort-direction marker shared by the OU + outright sort headers.
+    function sortArrowHtml(dir) {
+      return '<span class="odds-sort-arrow">' + (dir === 'asc' ? ' ▲' : ' ▼') + '</span>';
     }
 
     // Renders a single coupon: title + its market's runners.
@@ -662,7 +728,13 @@
       if (isOU) {
         // Match DraftKings prices only within this card's stat (e.g. passing
         // yards), so a player's price never leaks across to a different stat.
-        buildOuBody(body, runners, showDk, statKey(cardTitle));
+        const info = buildOuBody(body, runners, showDk, statKey(cardTitle));
+        // Stash the coupon's sort keys for renderCard (one player per coupon
+        // here; if a coupon ever groups several, the first is representative).
+        if (info && info.length) {
+          wrap._sortName = info[0].player;
+          wrap._sortFmv = info[0].fmv;
+        }
       } else {
         buildFieldBody(body, runners, coupon.title, showDk);
       }
@@ -719,6 +791,12 @@
       return Number.isInteger(r) ? String(r) : r.toFixed(1);
     }
 
+    // FMV is a computed consensus, always shown to exactly one decimal place so
+    // the derived column reads consistently (e.g. "4075.0" alongside "3966.8").
+    function fmtFmv(n) {
+      return (n == null || isNaN(n)) ? '' : n.toFixed(1);
+    }
+
     // A book's line, plus an up/down arrow when it sits >=2% off fair value.
     function lineWithArrow(lineStr, lineNum, fmv) {
       let arrow = '';
@@ -753,6 +831,9 @@
         byPlayer[parsed.player][parsed.dir.charAt(0)] = fmtAmerican(odds);
       });
 
+      // Each player's consensus line, returned so renderCard can sort coupons.
+      const info = [];
+
       order.forEach(player => {
         const row = byPlayer[player];
         // FanDuel contributes a line/price only when it actually priced the player.
@@ -761,19 +842,8 @@
         const hasFd = (row.O && row.O !== '—') || (row.U && row.U !== '—');
         const fdLine = hasFd && row.line != null ? Number(row.line) : null;
 
-        // DraftKings line/prices for the same player + stat.
-        let dkLineStr = null, dkLineNum = null, dkOdds = null;
-        if (showDk) {
-          const dkPlayer = findDkPlayer(player, stat);
-          const side = dkPlayer && (dkPlayer.Over || dkPlayer.Under);
-          if (side) {
-            dkLineStr = side.line;
-            dkLineNum = side.line != null ? Number(side.line) : null;
-            dkOdds = ouOddsText(dkPlayer.Over && dkPlayer.Over.odds, dkPlayer.Under && dkPlayer.Under.odds);
-          }
-        }
-
-        // ESPN ("SCORE") line/prices for the same player + stat.
+        // ESPN ("SCORE") line/prices for the same player + stat. Computed before
+        // DK so a milestone fallback can aim at the SCORE line when FD is absent.
         let scLineStr = null, scLineNum = null, scOdds = null;
         if (showDk) {
           const scPlayer = findScorePlayer(player, stat);
@@ -785,14 +855,42 @@
           }
         }
 
-        // FMV = average of whichever book lines are present.
+        // DraftKings line/prices for the same player + stat.
+        let dkLineStr = null, dkLineNum = null, dkOdds = null, dkIsMilestone = false;
+        if (showDk) {
+          const dkPlayer = findDkPlayer(player, stat);
+          const side = dkPlayer && (dkPlayer.Over || dkPlayer.Under);
+          if (side) {
+            dkLineStr = side.line;
+            dkLineNum = side.line != null ? Number(side.line) : null;
+            dkOdds = ouOddsText(dkPlayer.Over && dkPlayer.Over.odds, dkPlayer.Under && dkPlayer.Under.odds);
+          } else {
+            // DK carries no Over/Under for this stat (only Passing Yards), but it
+            // may have a "Player to Have X+" milestone — surface the threshold
+            // nearest the player's FD/SCORE line as an over-only DK cell (no
+            // "O "/"U" prefix, since a milestone is a single yes-price).
+            const target = fdLine != null ? fdLine : scLineNum;
+            const ms = findMilestone(player, stat, target);
+            if (ms) {
+              dkLineStr = String(ms.line);
+              dkLineNum = ms.line;
+              dkOdds = ms.odds;
+              dkIsMilestone = true;
+            }
+          }
+        }
+
+        // FMV = average of whichever book O/U lines are present. A milestone
+        // threshold is a yes-price, not an O/U line, so it's excluded from FMV
+        // (but its arrow still compares the threshold to the FMV line).
         const lines = [];
         if (fdLine != null && !isNaN(fdLine)) lines.push(fdLine);
-        if (dkLineNum != null && !isNaN(dkLineNum)) lines.push(dkLineNum);
+        if (dkLineNum != null && !isNaN(dkLineNum) && !dkIsMilestone) lines.push(dkLineNum);
         if (scLineNum != null && !isNaN(scLineNum)) lines.push(scLineNum);
         const fmv = lines.length ? lines.reduce((a, b) => a + b, 0) / lines.length : null;
+        info.push({ player: player, fmv: fmv });
 
-        fmvCol.appendChild(ouCell(fmv != null ? fmtLine(fmv) : '—', ''));
+        fmvCol.appendChild(ouCell(fmv != null ? fmtFmv(fmv) : '—', ''));
         fdCol.appendChild(hasFd
           ? ouCell(lineWithArrow(row.line, fdLine, fmv), ouOddsText(row.O, row.U))
           : ouCell('', '—'));
@@ -810,6 +908,7 @@
       body.appendChild(fdCol);
       if (showDk) body.appendChild(dkCol);
       if (showDk) body.appendChild(scoreCol);
+      return info;
     }
 
     function ouColumn() {
@@ -864,12 +963,56 @@
         content.appendChild(ouScroll);
       }
 
+      // Build coupons; OU ones are collected so they can be re-ordered by the
+      // sort headers, field ones append straight to the page.
+      const ouEls = [];
       (card.coupons || []).forEach(c => {
         const el = buildCoupon(c, card.title, showDk);
         if (!el) return;
-        if (ouScroll && isOuCoupon(c)) ouScroll.appendChild(el);
+        if (ouScroll && isOuCoupon(c)) ouEls.push(el);
         else content.appendChild(el);
       });
+
+      // Sortable OU coupons: same model as the outright tables — default by FMV
+      // (highest consensus line first; missing FMV last), FMV head toggles the
+      // direction, the Player head cycles asc -> desc -> none (back to FMV).
+      if (ouScroll && ouEls.length) {
+        const state = { mode: 'fmv', fmvDir: 'desc', nameDir: 'asc' };
+        const sorted = () => {
+          const r = ouEls.slice();
+          if (state.mode === 'name') {
+            r.sort((a, b) => (a._sortName || '').localeCompare(b._sortName || ''));
+            if (state.nameDir === 'desc') r.reverse();
+          } else {
+            r.sort((a, b) => {
+              const ap = a._sortFmv, bp = b._sortFmv;
+              if (ap == null && bp == null) return 0;
+              if (ap == null) return 1;
+              if (bp == null) return -1;
+              return state.fmvDir === 'desc' ? bp - ap : ap - bp;
+            });
+          }
+          return r;
+        };
+        const renderHead = () => {
+          ouHead._nameHead.innerHTML = 'Player' + (state.mode === 'name' ? sortArrowHtml(state.nameDir) : '');
+          ouHead._fmvHead.innerHTML = 'FMV' + (state.mode === 'fmv' ? sortArrowHtml(state.fmvDir) : '');
+        };
+        const renderOrder = () => { sorted().forEach(el => ouScroll.appendChild(el)); };
+        ouHead._nameHead.onclick = () => {
+          if (state.mode !== 'name') { state.mode = 'name'; state.nameDir = 'asc'; }
+          else if (state.nameDir === 'asc') { state.nameDir = 'desc'; }
+          else { state.mode = 'fmv'; }            // third click -> back to FMV
+          renderHead(); renderOrder();
+        };
+        ouHead._fmvHead.onclick = () => {
+          if (state.mode !== 'fmv') { state.mode = 'fmv'; }
+          else { state.fmvDir = state.fmvDir === 'desc' ? 'asc' : 'desc'; }
+          renderHead(); renderOrder();
+        };
+        renderHead();
+        renderOrder();
+      }
 
       applyStickyTops();
     }
@@ -921,6 +1064,8 @@
     function route() {
       const parts = location.hash.replace(/^#\/?/, '').split('/').filter(Boolean);
       const [tabId, cardId] = parts;
+      if (tabId === 'awards') { cardId ? renderOutrightCard(cardId) : renderOutrightList(); return; }
+      if (tabId === 'milestones') { cardId ? renderMilestoneStat(cardId) : renderMilestoneList(); return; }
       if (tabId && cardId) renderCard(tabId, cardId);
       else if (tabId) renderTab(tabId);
       else renderTabList();
@@ -968,6 +1113,327 @@
       return (s || '').toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
     }
 
+    // ---- Outright odds math -------------------------------------------------
+    // American odds -> implied probability (vig included).
+    function americanToProb(american) {
+      if (american == null || american === '') return null;
+      const n = parseInt(String(american).replace('−', '-'), 10);
+      if (isNaN(n) || n === 0) return null;
+      return n < 0 ? (-n) / (-n + 100) : 100 / (n + 100);
+    }
+    // Implied probability -> American odds string.
+    function probToAmerican(p) {
+      if (p == null || p <= 0 || p >= 1) return null;
+      return p >= 0.5 ? '-' + Math.round(100 * p / (1 - p))
+                      : '+' + Math.round(100 * (1 - p) / p);
+    }
+    // FMV consensus = the average of the books' implied probabilities, converted
+    // back to American. (A plain average works across every market shape here —
+    // mutually-exclusive winners and independent yes/no markets alike.)
+    function consensusAmerican(prices) {
+      const probs = OUTRIGHT_BOOKS
+        .map(([k]) => americanToProb(prices[k]))
+        .filter(p => p != null);
+      if (!probs.length) return null;
+      return probToAmerican(probs.reduce((a, b) => a + b, 0) / probs.length);
+    }
+    // Prefer the fullest/cleanest display name across books (FD spells team and
+    // player names out most completely; fall back to SCORE then DK).
+    function outrightName(cand) {
+      const n = cand.names || {};
+      return n.fd || n.score || n.dk || cand.key || '';
+    }
+    // The book key with the shortest (best) price in a row, for highlighting.
+    function bestBookKey(prices) {
+      let best = null, bestP = -1;
+      OUTRIGHT_BOOKS.forEach(([k]) => {
+        const p = americanToProb(prices[k]);
+        if (p != null && p > bestP) { bestP = p; best = k; }
+      });
+      return best;
+    }
+
+    // ---- Milestone index (DK-only "Player to Have X+" lists) ----------------
+    // Keyed "<norm name>|<stat>" (stat like "rushing yards") so it matches the
+    // player-prop indexes; each player keeps every threshold's over price.
+    function buildMilestoneIndex() {
+      if (!OUTRIGHTS || !OUTRIGHTS.milestones) return;
+      Object.entries(OUTRIGHTS.milestones).forEach(([statFile, m]) => {
+        const stat = statFile.replace(/_/g, ' ');     // "rushing_yards" -> "rushing yards"
+        Object.entries(m.thresholds || {}).forEach(([th, t]) => {
+          (t.candidates || []).forEach(c => {
+            const odds = c.prices && c.prices.dk;
+            if (!odds) return;
+            const name = (c.names && (c.names.dk || c.names.fd || c.names.score)) || '';
+            if (!name) return;
+            const key = normName(name) + '|' + stat;
+            if (!MS_BY_PLAYER[key]) MS_BY_PLAYER[key] = { name: name, list: [] };
+            MS_BY_PLAYER[key].list.push({ line: Number(th), odds: fmtDk(odds) });
+          });
+        });
+      });
+      Object.values(MS_BY_PLAYER).forEach(e => e.list.sort((a, b) => a.line - b.line));
+    }
+    // The milestone threshold for a player nearest a target line (the player's
+    // FD/SCORE line). Falls back to the median threshold when there's no target.
+    function findMilestone(player, stat, target) {
+      const e = findIndexedPlayer(MS_BY_PLAYER, player, stat);
+      if (!e || !e.list.length) return null;
+      if (target == null || isNaN(target)) return e.list[Math.floor(e.list.length / 2)];
+      return e.list.reduce((best, x) =>
+        Math.abs(x.line - target) < Math.abs(best.line - target) ? x : best);
+    }
+    // Every milestone player for a stat (with the median threshold as the line)
+    // so synthesizeUnion adds rows for players FD/SCORE don't carry.
+    function indexMilestonePlayers(stat) {
+      const out = [];
+      for (const k in MS_BY_PLAYER) {
+        if (k.slice(k.lastIndexOf('|') + 1) !== stat) continue;
+        const e = MS_BY_PLAYER[k];
+        out.push({ name: e.name, line: e.list[Math.floor(e.list.length / 2)].line });
+      }
+      return out;
+    }
+
+    // ---- Outright views -----------------------------------------------------
+    // Level 1 — the Awards & Futures landing: market buttons grouped by section.
+    function renderOutrightList() {
+      renderCrumbs([
+        { label: 'Markets', hash: '#/' },
+        { label: 'Awards & Futures', hash: null }
+      ]);
+      const content = document.getElementById('odds-content');
+      content.innerHTML = '';
+      if (!OUTRIGHTS || !OUTRIGHTS.markets) {
+        content.innerHTML = '<div class="odds-status">No outright markets available.</div>';
+        return;
+      }
+      const entries = Object.entries(OUTRIGHTS.markets);
+      OUTRIGHT_GROUPS.forEach(([group, label]) => {
+        const inGroup = entries.filter(([, m]) => m.group === group);
+        if (!inGroup.length) return;
+        const section = document.createElement('div');
+        section.className = 'odds-section';
+        section.textContent = label;
+        content.appendChild(section);
+        const list = document.createElement('div');
+        list.className = 'odds-tabs';
+        inGroup.forEach(([key, m]) => {
+          const btn = document.createElement('button');
+          btn.className = 'odds-tab';
+          btn.textContent = m.title;
+          btn.onclick = () => { location.hash = '#/awards/' + key; };
+          list.appendChild(btn);
+        });
+        content.appendChild(list);
+      });
+      applyStickyTops();
+    }
+
+    // Level 2 — one outright market: a candidate table with FMV + book columns.
+    function renderOutrightCard(key) {
+      const market = OUTRIGHTS && OUTRIGHTS.markets && OUTRIGHTS.markets[key];
+      renderCrumbs([
+        { label: 'Markets', hash: '#/' },
+        { label: 'Awards & Futures', hash: '#/awards' },
+        { label: market ? market.title : 'Unknown', hash: null }
+      ]);
+      const content = document.getElementById('odds-content');
+      content.innerHTML = '';
+      if (!market) {
+        content.innerHTML = '<div class="odds-status">Market not found.</div>';
+        return;
+      }
+      content.appendChild(buildOutrightTable(
+        market.title, market.candidates, market.kind === 'team' ? 'Team' : 'Player'));
+      applyStickyTops();
+    }
+
+    // Level 1 — the Milestones landing: one button per stat.
+    function renderMilestoneList() {
+      renderCrumbs([
+        { label: 'Markets', hash: '#/' },
+        { label: 'Milestones', hash: null }
+      ]);
+      const content = document.getElementById('odds-content');
+      content.innerHTML = '';
+      const ms = OUTRIGHTS && OUTRIGHTS.milestones;
+      if (!ms || !Object.keys(ms).length) {
+        content.innerHTML = '<div class="odds-status">No milestone markets available.</div>';
+        return;
+      }
+      const list = document.createElement('div');
+      list.className = 'odds-tabs';
+      Object.entries(ms).forEach(([stat, m]) => {
+        const btn = document.createElement('button');
+        btn.className = 'odds-tab';
+        btn.textContent = m.title;
+        btn.onclick = () => { location.hash = '#/milestones/' + stat; };
+        list.appendChild(btn);
+      });
+      content.appendChild(list);
+      applyStickyTops();
+    }
+
+    // Level 2 — one stat's milestones: a candidate table per threshold.
+    function renderMilestoneStat(stat) {
+      const m = OUTRIGHTS && OUTRIGHTS.milestones && OUTRIGHTS.milestones[stat];
+      renderCrumbs([
+        { label: 'Markets', hash: '#/' },
+        { label: 'Milestones', hash: '#/milestones' },
+        { label: m ? m.title : 'Unknown', hash: null }
+      ]);
+      const content = document.getElementById('odds-content');
+      content.innerHTML = '';
+      if (!m) {
+        content.innerHTML = '<div class="odds-status">Milestone not found.</div>';
+        return;
+      }
+      const unit = stat.indexOf('tds') !== -1 ? ' TDs' : ' yds';
+      Object.keys(m.thresholds)
+        .sort((a, b) => Number(a) - Number(b))
+        .forEach(th => {
+          content.appendChild(buildOutrightTable(
+            th + '+' + unit, m.thresholds[th].candidates, 'Player'));
+        });
+      applyStickyTops();
+    }
+
+    // The shared candidate table: market title, a header row of the columns
+    // actually present (FMV + whichever books priced this market), then one row
+    // per candidate, best price highlighted.
+    //
+    // Sorting: the default is by FMV (favorites first). Clicking the FMV header
+    // flips that direction. Clicking the name header cycles alphabetical
+    // asc -> desc -> none, where "none" reverts to the FMV default.
+    function buildOutrightTable(title, candidates, nameLabel) {
+      nameLabel = nameLabel || 'Player';
+      const frag = document.createDocumentFragment();
+
+      // Market/threshold title, styled like an OU card's section heading.
+      const section = document.createElement('div');
+      section.className = 'odds-section';
+      section.textContent = title;
+      frag.appendChild(section);
+
+      // Only show book columns some candidate actually carries.
+      const present = OUTRIGHT_BOOKS.filter(([k]) =>
+        candidates.some(c => c.prices && c.prices[k]));
+      const cols = [['fmv', 'FMV']].concat(present);
+
+      // Precompute each row's FMV probability (the sort key) and display name.
+      const rows = candidates.map(c => {
+        const fmv = consensusAmerican(c.prices || {});
+        return { c: c, fmv: fmv, prob: fmv != null ? americanToProb(fmv) : null,
+                 name: outrightName(c) };
+      });
+
+      // mode 'fmv': sort by prob (fmvDir). mode 'name': alphabetical (nameDir).
+      const state = { mode: 'fmv', fmvDir: 'desc', nameDir: 'asc' };
+
+      // The single heading row (FMV/FD/DK/SCORE), mirroring an OU card's is-ou
+      // head: a name spacer (here the sortable Player/Team label) + column heads.
+      const headWrap = document.createElement('div');
+      headWrap.className = 'odds-coupon is-ou odds-outright-head';
+      const nameHead = document.createElement('div');
+      nameHead.className = 'odds-coupon-header odds-name-head odds-sort';
+      const headBody = document.createElement('div');
+      headBody.className = 'odds-coupon-body';
+      const fmvHeadEls = {};
+      cols.forEach(([k, l]) => {
+        const col = ouColumn();
+        const ch = document.createElement('div');
+        ch.className = 'odds-col-head' + (k === 'fmv' ? ' odds-sort' : '');
+        ch.textContent = l;
+        col.appendChild(ch);
+        headBody.appendChild(col);
+        if (k === 'fmv') fmvHeadEls.fmv = ch;
+      });
+      headWrap.append(nameHead, headBody);
+      frag.appendChild(headWrap);
+
+      // The candidate strips scroll horizontally as a group; the heading row
+      // above is kept in horizontal sync (and clipped) the same way OU cards do.
+      const scroll = document.createElement('div');
+      scroll.className = 'odds-ou-scroll';
+      scroll.addEventListener('scroll', () => { headWrap.scrollLeft = scroll.scrollLeft; });
+      frag.appendChild(scroll);
+
+      function sortedRows() {
+        const r = rows.slice();
+        if (state.mode === 'name') {
+          r.sort((a, b) => a.name.localeCompare(b.name));
+          if (state.nameDir === 'desc') r.reverse();
+        } else {
+          // Favorites (highest implied prob) first by default; missing FMV last.
+          r.sort((a, b) => {
+            if (a.prob == null && b.prob == null) return 0;
+            if (a.prob == null) return 1;
+            if (b.prob == null) return -1;
+            return state.fmvDir === 'desc' ? b.prob - a.prob : a.prob - b.prob;
+          });
+        }
+        return r;
+      }
+
+      function arrow(dir) {
+        return '<span class="odds-sort-arrow">' + (dir === 'asc' ? ' ▲' : ' ▼') + '</span>';
+      }
+      function renderHead() {
+        nameHead.innerHTML = nameLabel + (state.mode === 'name' ? arrow(state.nameDir) : '');
+        fmvHeadEls.fmv.innerHTML = 'FMV' + (state.mode === 'fmv' ? arrow(state.fmvDir) : '');
+      }
+
+      // One is-ou strip per candidate: pinned name + a single borderless badge
+      // per column (best book price highlighted, FMV muted).
+      function renderRows() {
+        scroll.innerHTML = '';
+        sortedRows().forEach(rec => {
+          const prices = rec.c.prices || {};
+          const best = bestBookKey(prices);
+          const strip = document.createElement('div');
+          strip.className = 'odds-coupon is-ou';
+          const name = document.createElement('div');
+          name.className = 'odds-coupon-header';
+          name.textContent = rec.name;
+          const body = document.createElement('div');
+          body.className = 'odds-coupon-body';
+          cols.forEach(([k]) => {
+            const col = ouColumn();
+            const cell = document.createElement('div');
+            if (k === 'fmv') {
+              cell.className = 'odds-book-label odds-fmv';
+              cell.textContent = rec.fmv || '—';
+            } else {
+              const val = prices[k];
+              cell.className = 'odds-book-label' + (val && k === best ? ' odds-best' : '');
+              cell.textContent = val ? fmtDk(val) : '—';
+            }
+            col.appendChild(cell);
+            body.appendChild(col);
+          });
+          strip.append(name, body);
+          scroll.appendChild(strip);
+        });
+      }
+
+      nameHead.onclick = () => {
+        if (state.mode !== 'name') { state.mode = 'name'; state.nameDir = 'asc'; }
+        else if (state.nameDir === 'asc') { state.nameDir = 'desc'; }
+        else { state.mode = 'fmv'; }              // third click -> back to FMV
+        renderHead(); renderRows();
+      };
+      fmvHeadEls.fmv.onclick = () => {
+        if (state.mode !== 'fmv') { state.mode = 'fmv'; }
+        else { state.fmvDir = state.fmvDir === 'desc' ? 'asc' : 'desc'; }
+        renderHead(); renderRows();
+      };
+
+      renderHead();
+      renderRows();
+      return frag;
+    }
+
     // Make the player-prop markets the union of FD, DK and SCORE. For each stat:
     // reuse FanDuel's card if it has one, else synthesize a card under Player
     // Props; then add a synthetic FD-shaped coupon for every player some other
@@ -1005,7 +1471,8 @@
         // other, appended as synthetic FD coupons.
         const candidates = [].concat(
           indexPlayers(DK_BY_PLAYER, stat),
-          indexPlayers(SCORE_BY_PLAYER, stat)
+          indexPlayers(SCORE_BY_PLAYER, stat),
+          indexMilestonePlayers(stat)
         );
         candidates.forEach(cand => {
           if (cand.line == null || cand.line === '') return;
@@ -1026,9 +1493,10 @@
       // ESPN ("SCORE") odds: one file per stat under /data/score.
       const SCORE_FILES = ['passing_yards', 'passing_tds', 'receiving_yards', 'receiving_tds', 'rushing_yards', 'wins'];
       try {
-        const [fdRes, dkRes] = await Promise.all([
+        const [fdRes, dkRes, outrightsRes] = await Promise.all([
           fetch('/data/fd.json'),
-          fetch('/data/dk.json')
+          fetch('/data/dk.json'),
+          fetch('/data/outrights.json')
         ]);
         const scorePromises = SCORE_FILES.map(n =>
           fetch('/data/score/' + n + '.json').then(r => r.json()).catch(() => null));
@@ -1048,6 +1516,16 @@
           buildScoreIndex(scoreData);
         } catch (e) {
           console.warn('ESPN (SCORE) data unavailable.', e);
+        }
+
+        // Outright / award / futures markets + DK milestone lists. The milestone
+        // index must be built before synthesizeUnion, which folds milestone-only
+        // players into the player-prop union.
+        try {
+          OUTRIGHTS = await outrightsRes.json();
+          buildMilestoneIndex();
+        } catch (e) {
+          console.warn('Outright/milestone data unavailable.', e);
         }
 
         // Make the player-prop markets the union of FD, DK and SCORE: add cards for
