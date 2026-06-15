@@ -58,9 +58,12 @@ Then the agent does:
    PUT → show the returned skip report).
 
 ## Still-open data gaps (from the audit, unrelated to plumbing)
-- theScore is still missing ORoY/DRoY/CoY/CPoY/Make-Miss-Playoffs — needs those
-  shelves *recorded* (not a mapping issue yet). If a future Score bundle shows
-  them under names `SCORE_MARKETS` doesn't have, add them there (mirror the DK fix).
+- theScore awards/futures are now mapped: a 06/15 Score bundle revealed they were
+  *named differently* (like DK), so `SCORE_MARKETS` gained ORoY/DRoY/CoY/CPoY,
+  conference winners, and the 8 division winners — all now populated (all three
+  books). Remaining Score gap: **Make/Miss Playoffs**, not present in any recorded
+  Score bundle yet — record that shelf, then (if needed) add its name to
+  `SCORE_MARKETS`.
 - `data/fd.json` is ~3 MB shipped per load — trim unused FD fields in
   `parse_fd_import.py`, or rely on the cached GET once on Path B.
 

@@ -160,1811 +160,812 @@
                       ]
                     },
                     {
-                      "id": "Market:3d4edbaa-768f-484f-a851-bb9d3b027ed6",
                       "name": "CHI Bears Regular Season Wins",
-                      "status": "OPEN",
                       "type": "TOTAL",
-                      "extraInformation": null,
-                      "startTime": "2026-09-11T00:00:00.000000Z",
-                      "statisticAccrued": null,
-                      "updatedAtTime": "2026-06-04T12:06:33.953808Z",
-                      "__typename": "Market",
                       "selections": [
                         {
-                          "id": "MarketSelection:86b0c362-3435-4ab8-9062-fea1aef11585",
-                          "rawId": "86b0c362-3435-4ab8-9062-fea1aef11585",
                           "name": {
-                            "cleanName": "Over",
-                            "defaultName": "O 9.5",
-                            "fullName": "Over 9.5",
-                            "minimalName": "O 9.5",
-                            "__typename": "SelectionName"
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 9.5
                           },
                           "odds": {
-                            "denominatorLong": "10",
-                            "numeratorLong": "21",
-                            "formattedOdds": "+110",
-                            "__typename": "Odds"
-                          },
-                          "participant": null,
-                          "points": {
-                            "decimalPoints": 9.5,
-                            "formattedPoints": "9.5",
-                            "__typename": "Points"
-                          },
-                          "status": "OPEN",
-                          "type": "OVER",
-                          "probabilityEncrypted": null,
-                          "__typename": "MarketSelection"
+                            "formattedOdds": "+110"
+                          }
                         },
                         {
-                          "id": "MarketSelection:b3227214-f5b5-4ded-bfcd-c67684507ea6",
-                          "rawId": "b3227214-f5b5-4ded-bfcd-c67684507ea6",
                           "name": {
-                            "cleanName": "Under",
-                            "defaultName": "U 9.5",
-                            "fullName": "Under 9.5",
-                            "minimalName": "U 9.5",
-                            "__typename": "SelectionName"
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 9.5
                           },
                           "odds": {
-                            "denominatorLong": "13",
-                            "numeratorLong": "23",
-                            "formattedOdds": "-130",
-                            "__typename": "Odds"
-                          },
-                          "participant": null,
-                          "points": {
-                            "decimalPoints": 9.5,
-                            "formattedPoints": "9.5",
-                            "__typename": "Points"
-                          },
-                          "status": "OPEN",
-                          "type": "UNDER",
-                          "probabilityEncrypted": null,
-                          "__typename": "MarketSelection"
+                            "formattedOdds": "-130"
+                          }
                         }
                       ]
                     },
                     {
-                      "id": "Market:b87b68e8-c5b5-4e72-a989-43ab3d566c1a",
                       "name": "CIN Bengals Regular Season Wins",
-                      "status": "OPEN",
                       "type": "TOTAL",
-                      "extraInformation": null,
-                      "startTime": "2026-09-11T00:00:00.000000Z",
-                      "statisticAccrued": null,
-                      "updatedAtTime": "2026-06-04T12:06:33.882976Z",
-                      "__typename": "Market",
                       "selections": [
                         {
-                          "id": "MarketSelection:2a679d35-4fa2-4ae5-891c-eff22fb0d121",
-                          "rawId": "2a679d35-4fa2-4ae5-891c-eff22fb0d121",
                           "name": {
-                            "cleanName": "Over",
-                            "defaultName": "O 9.5",
-                            "fullName": "Over 9.5",
-                            "minimalName": "O 9.5",
-                            "__typename": "SelectionName"
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 9.5
                           },
                           "odds": {
-                            "denominatorLong": "7",
-                            "numeratorLong": "12",
-                            "formattedOdds": "-140",
-                            "__typename": "Odds"
-                          },
-                          "participant": null,
-                          "points": {
-                            "decimalPoints": 9.5,
-                            "formattedPoints": "9.5",
-                            "__typename": "Points"
-                          },
-                          "status": "OPEN",
-                          "type": "OVER",
-                          "probabilityEncrypted": null,
-                          "__typename": "MarketSelection"
+                            "formattedOdds": "-140"
+                          }
                         },
                         {
-                          "id": "MarketSelection:eb1f5fbe-1b72-48d7-941c-2026b8996b92",
-                          "rawId": "eb1f5fbe-1b72-48d7-941c-2026b8996b92",
                           "name": {
-                            "cleanName": "Under",
-                            "defaultName": "U 9.5",
-                            "fullName": "Under 9.5",
-                            "minimalName": "U 9.5",
-                            "__typename": "SelectionName"
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 9.5
                           },
                           "odds": {
-                            "denominatorLong": "5",
-                            "numeratorLong": "11",
-                            "formattedOdds": "+120",
-                            "__typename": "Odds"
-                          },
-                          "participant": null,
-                          "points": {
-                            "decimalPoints": 9.5,
-                            "formattedPoints": "9.5",
-                            "__typename": "Points"
-                          },
-                          "status": "OPEN",
-                          "type": "UNDER",
-                          "probabilityEncrypted": null,
-                          "__typename": "MarketSelection"
+                            "formattedOdds": "+120"
+                          }
                         }
                       ]
                     },
                     {
-                      "id": "Market:80a72a39-05d2-42ff-b1c1-b5404a001534",
                       "name": "CLE Browns Regular Season Wins",
-                      "status": "OPEN",
                       "type": "TOTAL",
-                      "extraInformation": null,
-                      "startTime": "2026-09-11T00:00:00.000000Z",
-                      "statisticAccrued": null,
-                      "updatedAtTime": "2026-06-04T12:06:34.054069Z",
-                      "__typename": "Market",
                       "selections": [
                         {
-                          "id": "MarketSelection:80f9dbeb-fc5c-494c-bd1a-9627cbc6450a",
-                          "rawId": "80f9dbeb-fc5c-494c-bd1a-9627cbc6450a",
                           "name": {
-                            "cleanName": "Over",
-                            "defaultName": "O 5.5",
-                            "fullName": "Over 5.5",
-                            "minimalName": "O 5.5",
-                            "__typename": "SelectionName"
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 5.5
                           },
                           "odds": {
-                            "denominatorLong": "11",
-                            "numeratorLong": "21",
-                            "formattedOdds": "-110",
-                            "__typename": "Odds"
-                          },
-                          "participant": null,
-                          "points": {
-                            "decimalPoints": 5.5,
-                            "formattedPoints": "5.5",
-                            "__typename": "Points"
-                          },
-                          "status": "OPEN",
-                          "type": "OVER",
-                          "probabilityEncrypted": null,
-                          "__typename": "MarketSelection"
+                            "formattedOdds": "-110"
+                          }
                         },
                         {
-                          "id": "MarketSelection:ac777688-e67f-46da-9f3e-4551af074c20",
-                          "rawId": "ac777688-e67f-46da-9f3e-4551af074c20",
                           "name": {
-                            "cleanName": "Under",
-                            "defaultName": "U 5.5",
-                            "fullName": "Under 5.5",
-                            "minimalName": "U 5.5",
-                            "__typename": "SelectionName"
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 5.5
                           },
                           "odds": {
-                            "denominatorLong": "11",
-                            "numeratorLong": "21",
-                            "formattedOdds": "-110",
-                            "__typename": "Odds"
-                          },
-                          "participant": null,
-                          "points": {
-                            "decimalPoints": 5.5,
-                            "formattedPoints": "5.5",
-                            "__typename": "Points"
-                          },
-                          "status": "OPEN",
-                          "type": "UNDER",
-                          "probabilityEncrypted": null,
-                          "__typename": "MarketSelection"
+                            "formattedOdds": "-110"
+                          }
                         }
                       ]
                     },
                     {
-                      "id": "Market:b92d30ac-84d5-4c64-84ce-0f7e9bc0427f",
                       "name": "DAL Cowboys Regular Season Wins",
-                      "status": "OPEN",
                       "type": "TOTAL",
-                      "extraInformation": null,
-                      "startTime": "2026-09-11T00:00:00.000000Z",
-                      "statisticAccrued": null,
-                      "updatedAtTime": "2026-06-04T12:06:33.830849Z",
-                      "__typename": "Market",
                       "selections": [
                         {
-                          "id": "MarketSelection:7a5a96a8-91a0-4d1e-a838-080437340101",
-                          "rawId": "7a5a96a8-91a0-4d1e-a838-080437340101",
                           "name": {
-                            "cleanName": "Over",
-                            "defaultName": "O 8.5",
-                            "fullName": "Over 8.5",
-                            "minimalName": "O 8.5",
-                            "__typename": "SelectionName"
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 8.5
                           },
                           "odds": {
-                            "denominatorLong": "3",
-                            "numeratorLong": "5",
-                            "formattedOdds": "-150",
-                            "__typename": "Odds"
-                          },
-                          "participant": null,
-                          "points": {
-                            "decimalPoints": 8.5,
-                            "formattedPoints": "8.5",
-                            "__typename": "Points"
-                          },
-                          "status": "OPEN",
-                          "type": "OVER",
-                          "probabilityEncrypted": null,
-                          "__typename": "MarketSelection"
+                            "formattedOdds": "-150"
+                          }
                         },
                         {
-                          "id": "MarketSelection:5c038f66-9791-456c-976c-3539da106f63",
-                          "rawId": "5c038f66-9791-456c-976c-3539da106f63",
                           "name": {
-                            "cleanName": "Under",
-                            "defaultName": "U 8.5",
-                            "fullName": "Under 8.5",
-                            "minimalName": "U 8.5",
-                            "__typename": "SelectionName"
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 8.5
                           },
                           "odds": {
-                            "denominatorLong": "10",
-                            "numeratorLong": "23",
-                            "formattedOdds": "+130",
-                            "__typename": "Odds"
-                          },
-                          "participant": null,
-                          "points": {
-                            "decimalPoints": 8.5,
-                            "formattedPoints": "8.5",
-                            "__typename": "Points"
-                          },
-                          "status": "OPEN",
-                          "type": "UNDER",
-                          "probabilityEncrypted": null,
-                          "__typename": "MarketSelection"
+                            "formattedOdds": "+130"
+                          }
                         }
                       ]
                     },
                     {
-                      "id": "Market:7c0610f6-2cb6-43e4-a9f2-837c89c2ccd7",
                       "name": "DEN Broncos Regular Season Wins",
-                      "status": "OPEN",
                       "type": "TOTAL",
-                      "extraInformation": null,
-                      "startTime": "2026-09-11T00:00:00.000000Z",
-                      "statisticAccrued": null,
-                      "updatedAtTime": "2026-06-04T12:06:34.036063Z",
-                      "__typename": "Market",
                       "selections": [
                         {
-                          "id": "MarketSelection:739cc0ec-f568-4db2-8d9c-32262a2a76cf",
-                          "rawId": "739cc0ec-f568-4db2-8d9c-32262a2a76cf",
                           "name": {
-                            "cleanName": "Over",
-                            "defaultName": "O 9.5",
-                            "fullName": "Over 9.5",
-                            "minimalName": "O 9.5",
-                            "__typename": "SelectionName"
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 9.5
                           },
                           "odds": {
-                            "denominatorLong": "23",
-                            "numeratorLong": "43",
-                            "formattedOdds": "-115",
-                            "__typename": "Odds"
-                          },
-                          "participant": null,
-                          "points": {
-                            "decimalPoints": 9.5,
-                            "formattedPoints": "9.5",
-                            "__typename": "Points"
-                          },
-                          "status": "OPEN",
-                          "type": "OVER",
-                          "probabilityEncrypted": null,
-                          "__typename": "MarketSelection"
+                            "formattedOdds": "-115"
+                          }
                         },
                         {
-                          "id": "MarketSelection:64ee0416-ed46-42bc-bb04-6c926723bed0",
-                          "rawId": "64ee0416-ed46-42bc-bb04-6c926723bed0",
                           "name": {
-                            "cleanName": "Under",
-                            "defaultName": "U 9.5",
-                            "fullName": "Under 9.5",
-                            "minimalName": "U 9.5",
-                            "__typename": "SelectionName"
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 9.5
                           },
                           "odds": {
-                            "denominatorLong": "21",
-                            "numeratorLong": "41",
-                            "formattedOdds": "-105",
-                            "__typename": "Odds"
-                          },
-                          "participant": null,
-                          "points": {
-                            "decimalPoints": 9.5,
-                            "formattedPoints": "9.5",
-                            "__typename": "Points"
-                          },
-                          "status": "OPEN",
-                          "type": "UNDER",
-                          "probabilityEncrypted": null,
-                          "__typename": "MarketSelection"
+                            "formattedOdds": "-105"
+                          }
                         }
                       ]
                     },
                     {
-                      "id": "Market:c0368e33-b4fe-4c3e-a8f1-be5afb67e036",
                       "name": "DET Lions Regular Season Wins",
-                      "status": "OPEN",
                       "type": "TOTAL",
-                      "extraInformation": null,
-                      "startTime": "2026-09-11T00:00:00.000000Z",
-                      "statisticAccrued": null,
-                      "updatedAtTime": "2026-06-04T12:06:33.984253Z",
-                      "__typename": "Market",
                       "selections": [
                         {
-                          "id": "MarketSelection:a782ca7e-b46d-43e6-9ae7-cb8392dc8097",
-                          "rawId": "a782ca7e-b46d-43e6-9ae7-cb8392dc8097",
                           "name": {
-                            "cleanName": "Over",
-                            "defaultName": "O 10.5",
-                            "fullName": "Over 10.5",
-                            "minimalName": "O 10.5",
-                            "__typename": "SelectionName"
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 10.5
                           },
                           "odds": {
-                            "denominatorLong": "5",
-                            "numeratorLong": "9",
-                            "formattedOdds": "-125",
-                            "__typename": "Odds"
-                          },
-                          "participant": null,
-                          "points": {
-                            "decimalPoints": 10.5,
-                            "formattedPoints": "10.5",
-                            "__typename": "Points"
-                          },
-                          "status": "OPEN",
-                          "type": "OVER",
-                          "probabilityEncrypted": null,
-                          "__typename": "MarketSelection"
+                            "formattedOdds": "-125"
+                          }
                         },
                         {
-                          "id": "MarketSelection:29f9add7-56b9-479c-a0c0-02ef8043018b",
-                          "rawId": "29f9add7-56b9-479c-a0c0-02ef8043018b",
                           "name": {
-                            "cleanName": "Under",
-                            "defaultName": "U 10.5",
-                            "fullName": "Under 10.5",
-                            "minimalName": "U 10.5",
-                            "__typename": "SelectionName"
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 10.5
                           },
                           "odds": {
-                            "denominatorLong": "20",
-                            "numeratorLong": "41",
-                            "formattedOdds": "+105",
-                            "__typename": "Odds"
-                          },
-                          "participant": null,
-                          "points": {
-                            "decimalPoints": 10.5,
-                            "formattedPoints": "10.5",
-                            "__typename": "Points"
-                          },
-                          "status": "OPEN",
-                          "type": "UNDER",
-                          "probabilityEncrypted": null,
-                          "__typename": "MarketSelection"
+                            "formattedOdds": "+105"
+                          }
                         }
                       ]
                     },
                     {
-                      "id": "Market:0c9a5249-1d1c-461b-b4f5-e62ca66c28e6",
                       "name": "GB Packers Regular Season Wins",
-                      "status": "OPEN",
                       "type": "TOTAL",
-                      "extraInformation": null,
-                      "startTime": "2026-09-11T00:00:00.000000Z",
-                      "statisticAccrued": null,
-                      "updatedAtTime": "2026-06-04T12:06:33.834990Z",
-                      "__typename": "Market",
                       "selections": [
                         {
-                          "id": "MarketSelection:40e66600-5de5-4fb5-affd-f3824f02bf94",
-                          "rawId": "40e66600-5de5-4fb5-affd-f3824f02bf94",
                           "name": {
-                            "cleanName": "Over",
-                            "defaultName": "O 10.5",
-                            "fullName": "Over 10.5",
-                            "minimalName": "O 10.5",
-                            "__typename": "SelectionName"
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 10.5
                           },
                           "odds": {
-                            "denominatorLong": "4",
-                            "numeratorLong": "9",
-                            "formattedOdds": "+125",
-                            "__typename": "Odds"
-                          },
-                          "participant": null,
-                          "points": {
-                            "decimalPoints": 10.5,
-                            "formattedPoints": "10.5",
-                            "__typename": "Points"
-                          },
-                          "status": "OPEN",
-                          "type": "OVER",
-                          "probabilityEncrypted": null,
-                          "__typename": "MarketSelection"
+                            "formattedOdds": "+125"
+                          }
                         },
                         {
-                          "id": "MarketSelection:fd87f21d-601a-4d5d-962c-c63043663e83",
-                          "rawId": "fd87f21d-601a-4d5d-962c-c63043663e83",
                           "name": {
-                            "cleanName": "Under",
-                            "defaultName": "U 10.5",
-                            "fullName": "Under 10.5",
-                            "minimalName": "U 10.5",
-                            "__typename": "SelectionName"
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 10.5
                           },
                           "odds": {
-                            "denominatorLong": "29",
-                            "numeratorLong": "49",
-                            "formattedOdds": "-145",
-                            "__typename": "Odds"
-                          },
-                          "participant": null,
-                          "points": {
-                            "decimalPoints": 10.5,
-                            "formattedPoints": "10.5",
-                            "__typename": "Points"
-                          },
-                          "status": "OPEN",
-                          "type": "UNDER",
-                          "probabilityEncrypted": null,
-                          "__typename": "MarketSelection"
+                            "formattedOdds": "-145"
+                          }
                         }
                       ]
                     },
                     {
-                      "id": "Market:78c6b827-4db1-434d-b815-719a85d805ca",
                       "name": "HOU Texans Regular Season Wins",
-                      "status": "OPEN",
                       "type": "TOTAL",
-                      "extraInformation": null,
-                      "startTime": "2026-09-11T00:00:00.000000Z",
-                      "statisticAccrued": null,
-                      "updatedAtTime": "2026-06-04T12:06:33.983705Z",
-                      "__typename": "Market",
                       "selections": [
                         {
-                          "id": "MarketSelection:3eb3796a-c371-4bc9-bfb9-c109ba40601c",
-                          "rawId": "3eb3796a-c371-4bc9-bfb9-c109ba40601c",
                           "name": {
-                            "cleanName": "Over",
-                            "defaultName": "O 9.5",
-                            "fullName": "Over 9.5",
-                            "minimalName": "O 9.5",
-                            "__typename": "SelectionName"
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 9.5
                           },
                           "odds": {
-                            "denominatorLong": "13",
-                            "numeratorLong": "23",
-                            "formattedOdds": "-130",
-                            "__typename": "Odds"
-                          },
-                          "participant": null,
-                          "points": {
-                            "decimalPoints": 9.5,
-                            "formattedPoints": "9.5",
-                            "__typename": "Points"
-                          },
-                          "status": "OPEN",
-                          "type": "OVER",
-                          "probabilityEncrypted": null,
-                          "__typename": "MarketSelection"
+                            "formattedOdds": "-130"
+                          }
                         },
                         {
-                          "id": "MarketSelection:8908816d-2138-4947-b8bf-4ba998a22595",
-                          "rawId": "8908816d-2138-4947-b8bf-4ba998a22595",
                           "name": {
-                            "cleanName": "Under",
-                            "defaultName": "U 9.5",
-                            "fullName": "Under 9.5",
-                            "minimalName": "U 9.5",
-                            "__typename": "SelectionName"
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 9.5
                           },
                           "odds": {
-                            "denominatorLong": "10",
-                            "numeratorLong": "21",
-                            "formattedOdds": "+110",
-                            "__typename": "Odds"
-                          },
-                          "participant": null,
-                          "points": {
-                            "decimalPoints": 9.5,
-                            "formattedPoints": "9.5",
-                            "__typename": "Points"
-                          },
-                          "status": "OPEN",
-                          "type": "UNDER",
-                          "probabilityEncrypted": null,
-                          "__typename": "MarketSelection"
+                            "formattedOdds": "+110"
+                          }
                         }
                       ]
                     },
                     {
-                      "id": "Market:270139d1-ddf6-4164-aadf-68e3a493524c",
                       "name": "IND Colts Regular Season Wins",
-                      "status": "OPEN",
                       "type": "TOTAL",
-                      "extraInformation": null,
-                      "startTime": "2026-09-11T00:00:00.000000Z",
-                      "statisticAccrued": null,
-                      "updatedAtTime": "2026-06-04T12:06:33.859301Z",
-                      "__typename": "Market",
                       "selections": [
                         {
-                          "id": "MarketSelection:ef721e2d-d582-46a2-b228-752766f3655c",
-                          "rawId": "ef721e2d-d582-46a2-b228-752766f3655c",
                           "name": {
-                            "cleanName": "Over",
-                            "defaultName": "O 8.5",
-                            "fullName": "Over 8.5",
-                            "minimalName": "O 8.5",
-                            "__typename": "SelectionName"
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 8.5
                           },
                           "odds": {
-                            "denominatorLong": "4",
-                            "numeratorLong": "9",
-                            "formattedOdds": "+125",
-                            "__typename": "Odds"
-                          },
-                          "participant": null,
-                          "points": {
-                            "decimalPoints": 8.5,
-                            "formattedPoints": "8.5",
-                            "__typename": "Points"
-                          },
-                          "status": "OPEN",
-                          "type": "OVER",
-                          "probabilityEncrypted": null,
-                          "__typename": "MarketSelection"
+                            "formattedOdds": "+125"
+                          }
                         },
                         {
-                          "id": "MarketSelection:7fcd2459-905f-4c8c-bfba-e83a4317f808",
-                          "rawId": "7fcd2459-905f-4c8c-bfba-e83a4317f808",
                           "name": {
-                            "cleanName": "Under",
-                            "defaultName": "U 8.5",
-                            "fullName": "Under 8.5",
-                            "minimalName": "U 8.5",
-                            "__typename": "SelectionName"
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 8.5
                           },
                           "odds": {
-                            "denominatorLong": "29",
-                            "numeratorLong": "49",
-                            "formattedOdds": "-145",
-                            "__typename": "Odds"
-                          },
-                          "participant": null,
-                          "points": {
-                            "decimalPoints": 8.5,
-                            "formattedPoints": "8.5",
-                            "__typename": "Points"
-                          },
-                          "status": "OPEN",
-                          "type": "UNDER",
-                          "probabilityEncrypted": null,
-                          "__typename": "MarketSelection"
+                            "formattedOdds": "-145"
+                          }
                         }
                       ]
                     },
                     {
-                      "id": "Market:d25db5ef-cc5c-4a72-8c50-2c3d12961093",
                       "name": "JAX Jaguars Regular Season Wins",
-                      "status": "OPEN",
                       "type": "TOTAL",
-                      "extraInformation": null,
-                      "startTime": "2026-09-11T00:00:00.000000Z",
-                      "statisticAccrued": null,
-                      "updatedAtTime": "2026-06-04T12:06:33.975815Z",
-                      "__typename": "Market",
                       "selections": [
                         {
-                          "id": "MarketSelection:b150954f-83e0-427c-8a1a-aacf4f8c9f2a",
-                          "rawId": "b150954f-83e0-427c-8a1a-aacf4f8c9f2a",
                           "name": {
-                            "cleanName": "Over",
-                            "defaultName": "O 9.5",
-                            "fullName": "Over 9.5",
-                            "minimalName": "O 9.5",
-                            "__typename": "SelectionName"
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 9.5
                           },
                           "odds": {
-                            "denominatorLong": "10",
-                            "numeratorLong": "21",
-                            "formattedOdds": "+110",
-                            "__typename": "Odds"
-                          },
-                          "participant": null,
-                          "points": {
-                            "decimalPoints": 9.5,
-                            "formattedPoints": "9.5",
-                            "__typename": "Points"
-                          },
-                          "status": "OPEN",
-                          "type": "OVER",
-                          "probabilityEncrypted": null,
-                          "__typename": "MarketSelection"
+                            "formattedOdds": "+110"
+                          }
                         },
                         {
-                          "id": "MarketSelection:3574cf1a-acfc-4663-9f76-72ae50cc3d85",
-                          "rawId": "3574cf1a-acfc-4663-9f76-72ae50cc3d85",
                           "name": {
-                            "cleanName": "Under",
-                            "defaultName": "U 9.5",
-                            "fullName": "Under 9.5",
-                            "minimalName": "U 9.5",
-                            "__typename": "SelectionName"
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 9.5
                           },
                           "odds": {
-                            "denominatorLong": "13",
-                            "numeratorLong": "23",
-                            "formattedOdds": "-130",
-                            "__typename": "Odds"
-                          },
-                          "participant": null,
-                          "points": {
-                            "decimalPoints": 9.5,
-                            "formattedPoints": "9.5",
-                            "__typename": "Points"
-                          },
-                          "status": "OPEN",
-                          "type": "UNDER",
-                          "probabilityEncrypted": null,
-                          "__typename": "MarketSelection"
+                            "formattedOdds": "-130"
+                          }
                         }
                       ]
                     },
                     {
-                      "id": "Market:e251b90b-a9a6-4199-8e7b-168929e50ca0",
                       "name": "KC Chiefs Regular Season Wins",
-                      "status": "OPEN",
                       "type": "TOTAL",
-                      "extraInformation": null,
-                      "startTime": "2026-09-11T00:00:00.000000Z",
-                      "statisticAccrued": null,
-                      "updatedAtTime": "2026-06-04T12:06:33.863464Z",
-                      "__typename": "Market",
                       "selections": [
                         {
-                          "id": "MarketSelection:93fc3818-2675-4559-88d8-965482b6c662",
-                          "rawId": "93fc3818-2675-4559-88d8-965482b6c662",
                           "name": {
-                            "cleanName": "Over",
-                            "defaultName": "O 10.5",
-                            "fullName": "Over 10.5",
-                            "minimalName": "O 10.5",
-                            "__typename": "SelectionName"
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 10.5
                           },
                           "odds": {
-                            "denominatorLong": "5",
-                            "numeratorLong": "11",
-                            "formattedOdds": "+120",
-                            "__typename": "Odds"
-                          },
-                          "participant": null,
-                          "points": {
-                            "decimalPoints": 10.5,
-                            "formattedPoints": "10.5",
-                            "__typename": "Points"
-                          },
-                          "status": "OPEN",
-                          "type": "OVER",
-                          "probabilityEncrypted": null,
-                          "__typename": "MarketSelection"
+                            "formattedOdds": "+120"
+                          }
                         },
                         {
-                          "id": "MarketSelection:f18bcd3f-21a9-4ddb-ae58-3b685567f32c",
-                          "rawId": "f18bcd3f-21a9-4ddb-ae58-3b685567f32c",
                           "name": {
-                            "cleanName": "Under",
-                            "defaultName": "U 10.5",
-                            "fullName": "Under 10.5",
-                            "minimalName": "U 10.5",
-                            "__typename": "SelectionName"
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 10.5
                           },
                           "odds": {
-                            "denominatorLong": "7",
-                            "numeratorLong": "12",
-                            "formattedOdds": "-140",
-                            "__typename": "Odds"
-                          },
-                          "participant": null,
-                          "points": {
-                            "decimalPoints": 10.5,
-                            "formattedPoints": "10.5",
-                            "__typename": "Points"
-                          },
-                          "status": "OPEN",
-                          "type": "UNDER",
-                          "probabilityEncrypted": null,
-                          "__typename": "MarketSelection"
+                            "formattedOdds": "-140"
+                          }
                         }
                       ]
                     },
                     {
-                      "id": "Market:3958ebd8-989e-4777-aa49-5fc7b6e23c7c",
                       "name": "LA Chargers Regular Season Wins",
-                      "status": "OPEN",
                       "type": "TOTAL",
-                      "extraInformation": null,
-                      "startTime": "2026-09-11T00:00:00.000000Z",
-                      "statisticAccrued": null,
-                      "updatedAtTime": "2026-06-04T12:06:33.917556Z",
-                      "__typename": "Market",
                       "selections": [
                         {
-                          "id": "MarketSelection:bed8ac86-1a91-4715-a522-97c4adb49c10",
-                          "rawId": "bed8ac86-1a91-4715-a522-97c4adb49c10",
                           "name": {
-                            "cleanName": "Over",
-                            "defaultName": "O 9.5",
-                            "fullName": "Over 9.5",
-                            "minimalName": "O 9.5",
-                            "__typename": "SelectionName"
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 9.5
                           },
                           "odds": {
-                            "denominatorLong": "27",
-                            "numeratorLong": "47",
-                            "formattedOdds": "-135",
-                            "__typename": "Odds"
-                          },
-                          "participant": null,
-                          "points": {
-                            "decimalPoints": 9.5,
-                            "formattedPoints": "9.5",
-                            "__typename": "Points"
-                          },
-                          "status": "OPEN",
-                          "type": "OVER",
-                          "probabilityEncrypted": null,
-                          "__typename": "MarketSelection"
+                            "formattedOdds": "-135"
+                          }
                         },
                         {
-                          "id": "MarketSelection:b18ed688-0e4b-4f38-a8f4-055e91f50f3f",
-                          "rawId": "b18ed688-0e4b-4f38-a8f4-055e91f50f3f",
                           "name": {
-                            "cleanName": "Under",
-                            "defaultName": "U 9.5",
-                            "fullName": "Under 9.5",
-                            "minimalName": "U 9.5",
-                            "__typename": "SelectionName"
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 9.5
                           },
                           "odds": {
-                            "denominatorLong": "20",
-                            "numeratorLong": "43",
-                            "formattedOdds": "+115",
-                            "__typename": "Odds"
-                          },
-                          "participant": null,
-                          "points": {
-                            "decimalPoints": 9.5,
-                            "formattedPoints": "9.5",
-                            "__typename": "Points"
-                          },
-                          "status": "OPEN",
-                          "type": "UNDER",
-                          "probabilityEncrypted": null,
-                          "__typename": "MarketSelection"
+                            "formattedOdds": "+115"
+                          }
                         }
                       ]
                     },
                     {
-                      "id": "Market:cd4bba37-e909-4781-90d0-aa03df84a1f9",
                       "name": "LA Rams Regular Season Wins",
-                      "status": "OPEN",
                       "type": "TOTAL",
-                      "extraInformation": null,
-                      "startTime": "2026-09-11T00:00:00.000000Z",
-                      "statisticAccrued": null,
-                      "updatedAtTime": "2026-06-04T12:06:34.008366Z",
-                      "__typename": "Market",
                       "selections": [
                         {
-                          "id": "MarketSelection:6e98094f-824b-4e78-b6ec-e7a41b4355f3",
-                          "rawId": "6e98094f-824b-4e78-b6ec-e7a41b4355f3",
                           "name": {
-                            "cleanName": "Over",
-                            "defaultName": "O 11.5",
-                            "fullName": "Over 11.5",
-                            "minimalName": "O 11.5",
-                            "__typename": "SelectionName"
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 11.5
                           },
                           "odds": {
-                            "denominatorLong": "6",
-                            "numeratorLong": "11",
-                            "formattedOdds": "-120",
-                            "__typename": "Odds"
-                          },
-                          "participant": null,
-                          "points": {
-                            "decimalPoints": 11.5,
-                            "formattedPoints": "11.5",
-                            "__typename": "Points"
-                          },
-                          "status": "OPEN",
-                          "type": "OVER",
-                          "probabilityEncrypted": null,
-                          "__typename": "MarketSelection"
+                            "formattedOdds": "-120"
+                          }
                         },
                         {
-                          "id": "MarketSelection:8e9c5db1-b6a8-4362-ba4a-f3311cb0eb94",
-                          "rawId": "8e9c5db1-b6a8-4362-ba4a-f3311cb0eb94",
                           "name": {
-                            "cleanName": "Under",
-                            "defaultName": "U 11.5",
-                            "fullName": "Under 11.5",
-                            "minimalName": "U 11.5",
-                            "__typename": "SelectionName"
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 11.5
                           },
                           "odds": {
-                            "denominatorLong": "1",
-                            "numeratorLong": "2",
-                            "formattedOdds": "Even",
-                            "__typename": "Odds"
-                          },
-                          "participant": null,
-                          "points": {
-                            "decimalPoints": 11.5,
-                            "formattedPoints": "11.5",
-                            "__typename": "Points"
-                          },
-                          "status": "OPEN",
-                          "type": "UNDER",
-                          "probabilityEncrypted": null,
-                          "__typename": "MarketSelection"
+                            "formattedOdds": "Even"
+                          }
                         }
                       ]
                     },
                     {
-                      "id": "Market:e7f6955c-e9f5-4cf5-b19d-4617f2b908e8",
                       "name": "LV Raiders Regular Season Wins",
-                      "status": "OPEN",
                       "type": "TOTAL",
-                      "extraInformation": null,
-                      "startTime": "2026-09-11T00:00:00.000000Z",
-                      "statisticAccrued": null,
-                      "updatedAtTime": "2026-06-04T12:06:33.887637Z",
-                      "__typename": "Market",
                       "selections": [
                         {
-                          "id": "MarketSelection:d9734c98-50a4-46fc-a6db-af97d985a975",
-                          "rawId": "d9734c98-50a4-46fc-a6db-af97d985a975",
                           "name": {
-                            "cleanName": "Over",
-                            "defaultName": "O 5.5",
-                            "fullName": "Over 5.5",
-                            "minimalName": "O 5.5",
-                            "__typename": "SelectionName"
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 5.5
                           },
                           "odds": {
-                            "denominatorLong": "7",
-                            "numeratorLong": "12",
-                            "formattedOdds": "-140",
-                            "__typename": "Odds"
-                          },
-                          "participant": null,
-                          "points": {
-                            "decimalPoints": 5.5,
-                            "formattedPoints": "5.5",
-                            "__typename": "Points"
-                          },
-                          "status": "OPEN",
-                          "type": "OVER",
-                          "probabilityEncrypted": null,
-                          "__typename": "MarketSelection"
+                            "formattedOdds": "-140"
+                          }
                         },
                         {
-                          "id": "MarketSelection:1638b1b6-48dc-4403-9760-efd14b70906e",
-                          "rawId": "1638b1b6-48dc-4403-9760-efd14b70906e",
                           "name": {
-                            "cleanName": "Under",
-                            "defaultName": "U 5.5",
-                            "fullName": "Under 5.5",
-                            "minimalName": "U 5.5",
-                            "__typename": "SelectionName"
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 5.5
                           },
                           "odds": {
-                            "denominatorLong": "5",
-                            "numeratorLong": "11",
-                            "formattedOdds": "+120",
-                            "__typename": "Odds"
-                          },
-                          "participant": null,
-                          "points": {
-                            "decimalPoints": 5.5,
-                            "formattedPoints": "5.5",
-                            "__typename": "Points"
-                          },
-                          "status": "OPEN",
-                          "type": "UNDER",
-                          "probabilityEncrypted": null,
-                          "__typename": "MarketSelection"
+                            "formattedOdds": "+120"
+                          }
                         }
                       ]
                     },
                     {
-                      "id": "Market:6a108e97-23e5-42e1-b077-2b59f405a908",
                       "name": "MIA Dolphins Regular Season Wins",
-                      "status": "OPEN",
                       "type": "TOTAL",
-                      "extraInformation": null,
-                      "startTime": "2026-09-11T00:00:00.000000Z",
-                      "statisticAccrued": null,
-                      "updatedAtTime": "2026-06-04T12:06:33.998392Z",
-                      "__typename": "Market",
                       "selections": [
                         {
-                          "id": "MarketSelection:ec00e740-59c0-47fb-a9f4-73ff68b74036",
-                          "rawId": "ec00e740-59c0-47fb-a9f4-73ff68b74036",
                           "name": {
-                            "cleanName": "Over",
-                            "defaultName": "O 4.5",
-                            "fullName": "Over 4.5",
-                            "minimalName": "O 4.5",
-                            "__typename": "SelectionName"
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 4.5
                           },
                           "odds": {
-                            "denominatorLong": "20",
-                            "numeratorLong": "41",
-                            "formattedOdds": "+105",
-                            "__typename": "Odds"
-                          },
-                          "participant": null,
-                          "points": {
-                            "decimalPoints": 4.5,
-                            "formattedPoints": "4.5",
-                            "__typename": "Points"
-                          },
-                          "status": "OPEN",
-                          "type": "OVER",
-                          "probabilityEncrypted": null,
-                          "__typename": "MarketSelection"
+                            "formattedOdds": "+105"
+                          }
                         },
                         {
-                          "id": "MarketSelection:0b21a3c2-4395-4c4a-868b-7db23363be6e",
-                          "rawId": "0b21a3c2-4395-4c4a-868b-7db23363be6e",
                           "name": {
-                            "cleanName": "Under",
-                            "defaultName": "U 4.5",
-                            "fullName": "Under 4.5",
-                            "minimalName": "U 4.5",
-                            "__typename": "SelectionName"
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 4.5
                           },
                           "odds": {
-                            "denominatorLong": "5",
-                            "numeratorLong": "9",
-                            "formattedOdds": "-125",
-                            "__typename": "Odds"
-                          },
-                          "participant": null,
-                          "points": {
-                            "decimalPoints": 4.5,
-                            "formattedPoints": "4.5",
-                            "__typename": "Points"
-                          },
-                          "status": "OPEN",
-                          "type": "UNDER",
-                          "probabilityEncrypted": null,
-                          "__typename": "MarketSelection"
+                            "formattedOdds": "-125"
+                          }
                         }
                       ]
                     },
                     {
-                      "id": "Market:c1c0d29e-8311-4046-ac17-18fb1e310699",
                       "name": "MIN Vikings Regular Season Wins",
-                      "status": "OPEN",
                       "type": "TOTAL",
-                      "extraInformation": null,
-                      "startTime": "2026-09-11T00:00:00.000000Z",
-                      "statisticAccrued": null,
-                      "updatedAtTime": "2026-06-04T12:06:34.028773Z",
-                      "__typename": "Market",
                       "selections": [
                         {
-                          "id": "MarketSelection:e76a3e17-f635-48fa-986c-0c0ee3b6d1bf",
-                          "rawId": "e76a3e17-f635-48fa-986c-0c0ee3b6d1bf",
                           "name": {
-                            "cleanName": "Over",
-                            "defaultName": "O 8.5",
-                            "fullName": "Over 8.5",
-                            "minimalName": "O 8.5",
-                            "__typename": "SelectionName"
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 8.5
                           },
                           "odds": {
-                            "denominatorLong": "21",
-                            "numeratorLong": "41",
-                            "formattedOdds": "-105",
-                            "__typename": "Odds"
-                          },
-                          "participant": null,
-                          "points": {
-                            "decimalPoints": 8.5,
-                            "formattedPoints": "8.5",
-                            "__typename": "Points"
-                          },
-                          "status": "OPEN",
-                          "type": "OVER",
-                          "probabilityEncrypted": null,
-                          "__typename": "MarketSelection"
+                            "formattedOdds": "-105"
+                          }
                         },
                         {
-                          "id": "MarketSelection:9aadcd34-5dc2-4eeb-a7e8-e33e2e2b1f13",
-                          "rawId": "9aadcd34-5dc2-4eeb-a7e8-e33e2e2b1f13",
                           "name": {
-                            "cleanName": "Under",
-                            "defaultName": "U 8.5",
-                            "fullName": "Under 8.5",
-                            "minimalName": "U 8.5",
-                            "__typename": "SelectionName"
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 8.5
                           },
                           "odds": {
-                            "denominatorLong": "23",
-                            "numeratorLong": "43",
-                            "formattedOdds": "-115",
-                            "__typename": "Odds"
-                          },
-                          "participant": null,
-                          "points": {
-                            "decimalPoints": 8.5,
-                            "formattedPoints": "8.5",
-                            "__typename": "Points"
-                          },
-                          "status": "OPEN",
-                          "type": "UNDER",
-                          "probabilityEncrypted": null,
-                          "__typename": "MarketSelection"
+                            "formattedOdds": "-115"
+                          }
                         }
                       ]
                     },
                     {
-                      "id": "Market:5026f663-3fc1-42f0-9c49-dde2d2705a2a",
                       "name": "NE Patriots Regular Season Wins",
-                      "status": "OPEN",
                       "type": "TOTAL",
-                      "extraInformation": null,
-                      "startTime": "2026-09-11T00:00:00.000000Z",
-                      "statisticAccrued": null,
-                      "updatedAtTime": "2026-06-04T12:06:33.907168Z",
-                      "__typename": "Market",
                       "selections": [
                         {
-                          "id": "MarketSelection:c770a749-c8b0-44d8-95a2-9658d0f1e23c",
-                          "rawId": "c770a749-c8b0-44d8-95a2-9658d0f1e23c",
                           "name": {
-                            "cleanName": "Over",
-                            "defaultName": "O 9.5",
-                            "fullName": "Over 9.5",
-                            "minimalName": "O 9.5",
-                            "__typename": "SelectionName"
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 9.5
                           },
                           "odds": {
-                            "denominatorLong": "27",
-                            "numeratorLong": "47",
-                            "formattedOdds": "-135",
-                            "__typename": "Odds"
-                          },
-                          "participant": null,
-                          "points": {
-                            "decimalPoints": 9.5,
-                            "formattedPoints": "9.5",
-                            "__typename": "Points"
-                          },
-                          "status": "OPEN",
-                          "type": "OVER",
-                          "probabilityEncrypted": null,
-                          "__typename": "MarketSelection"
+                            "formattedOdds": "-135"
+                          }
                         },
                         {
-                          "id": "MarketSelection:1de1e8f5-a9c9-41a6-82d1-37e0b5789965",
-                          "rawId": "1de1e8f5-a9c9-41a6-82d1-37e0b5789965",
                           "name": {
-                            "cleanName": "Under",
-                            "defaultName": "U 9.5",
-                            "fullName": "Under 9.5",
-                            "minimalName": "U 9.5",
-                            "__typename": "SelectionName"
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 9.5
                           },
                           "odds": {
-                            "denominatorLong": "20",
-                            "numeratorLong": "43",
-                            "formattedOdds": "+115",
-                            "__typename": "Odds"
-                          },
-                          "participant": null,
-                          "points": {
-                            "decimalPoints": 9.5,
-                            "formattedPoints": "9.5",
-                            "__typename": "Points"
-                          },
-                          "status": "OPEN",
-                          "type": "UNDER",
-                          "probabilityEncrypted": null,
-                          "__typename": "MarketSelection"
+                            "formattedOdds": "+115"
+                          }
                         }
                       ]
                     },
                     {
-                      "id": "Market:c6d22936-325f-4c30-a044-770f2430faba",
                       "name": "NO Saints Regular Season Wins",
-                      "status": "OPEN",
                       "type": "TOTAL",
-                      "extraInformation": null,
-                      "startTime": "2026-09-11T00:00:00.000000Z",
-                      "statisticAccrued": null,
-                      "updatedAtTime": "2026-06-04T12:06:34.052564Z",
-                      "__typename": "Market",
                       "selections": [
                         {
-                          "id": "MarketSelection:26e442ab-e5e9-4cf5-88a6-210b4fb9615e",
-                          "rawId": "26e442ab-e5e9-4cf5-88a6-210b4fb9615e",
                           "name": {
-                            "cleanName": "Over",
-                            "defaultName": "O 7.5",
-                            "fullName": "Over 7.5",
-                            "minimalName": "O 7.5",
-                            "__typename": "SelectionName"
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 7.5
                           },
                           "odds": {
-                            "denominatorLong": "11",
-                            "numeratorLong": "21",
-                            "formattedOdds": "-110",
-                            "__typename": "Odds"
-                          },
-                          "participant": null,
-                          "points": {
-                            "decimalPoints": 7.5,
-                            "formattedPoints": "7.5",
-                            "__typename": "Points"
-                          },
-                          "status": "OPEN",
-                          "type": "OVER",
-                          "probabilityEncrypted": null,
-                          "__typename": "MarketSelection"
+                            "formattedOdds": "-110"
+                          }
                         },
                         {
-                          "id": "MarketSelection:03f4664c-9a40-48e8-aca3-82c364f9ae98",
-                          "rawId": "03f4664c-9a40-48e8-aca3-82c364f9ae98",
                           "name": {
-                            "cleanName": "Under",
-                            "defaultName": "U 7.5",
-                            "fullName": "Under 7.5",
-                            "minimalName": "U 7.5",
-                            "__typename": "SelectionName"
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 7.5
                           },
                           "odds": {
-                            "denominatorLong": "11",
-                            "numeratorLong": "21",
-                            "formattedOdds": "-110",
-                            "__typename": "Odds"
-                          },
-                          "participant": null,
-                          "points": {
-                            "decimalPoints": 7.5,
-                            "formattedPoints": "7.5",
-                            "__typename": "Points"
-                          },
-                          "status": "OPEN",
-                          "type": "UNDER",
-                          "probabilityEncrypted": null,
-                          "__typename": "MarketSelection"
+                            "formattedOdds": "-110"
+                          }
                         }
                       ]
                     },
                     {
-                      "id": "Market:5c4de5c8-db87-4918-88b0-4c24263a3fbe",
                       "name": "NY Giants Regular Season Wins",
-                      "status": "OPEN",
                       "type": "TOTAL",
-                      "extraInformation": null,
-                      "startTime": "2026-09-11T00:00:00.000000Z",
-                      "statisticAccrued": null,
-                      "updatedAtTime": "2026-06-04T12:06:34.032774Z",
-                      "__typename": "Market",
                       "selections": [
                         {
-                          "id": "MarketSelection:86bc8652-42c9-4880-b483-db472bb9fbc5",
-                          "rawId": "86bc8652-42c9-4880-b483-db472bb9fbc5",
                           "name": {
-                            "cleanName": "Over",
-                            "defaultName": "O 7.5",
-                            "fullName": "Over 7.5",
-                            "minimalName": "O 7.5",
-                            "__typename": "SelectionName"
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 7.5
                           },
                           "odds": {
-                            "denominatorLong": "11",
-                            "numeratorLong": "21",
-                            "formattedOdds": "-110",
-                            "__typename": "Odds"
-                          },
-                          "participant": null,
-                          "points": {
-                            "decimalPoints": 7.5,
-                            "formattedPoints": "7.5",
-                            "__typename": "Points"
-                          },
-                          "status": "OPEN",
-                          "type": "OVER",
-                          "probabilityEncrypted": null,
-                          "__typename": "MarketSelection"
+                            "formattedOdds": "-110"
+                          }
                         },
                         {
-                          "id": "MarketSelection:da31ef31-de37-4128-be65-2ff576689696",
-                          "rawId": "da31ef31-de37-4128-be65-2ff576689696",
                           "name": {
-                            "cleanName": "Under",
-                            "defaultName": "U 7.5",
-                            "fullName": "Under 7.5",
-                            "minimalName": "U 7.5",
-                            "__typename": "SelectionName"
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 7.5
                           },
                           "odds": {
-                            "denominatorLong": "11",
-                            "numeratorLong": "21",
-                            "formattedOdds": "-110",
-                            "__typename": "Odds"
-                          },
-                          "participant": null,
-                          "points": {
-                            "decimalPoints": 7.5,
-                            "formattedPoints": "7.5",
-                            "__typename": "Points"
-                          },
-                          "status": "OPEN",
-                          "type": "UNDER",
-                          "probabilityEncrypted": null,
-                          "__typename": "MarketSelection"
+                            "formattedOdds": "-110"
+                          }
                         }
                       ]
                     },
                     {
-                      "id": "Market:05c0cde8-775b-4193-be23-0339712eef6f",
                       "name": "NY Jets Regular Season Wins",
-                      "status": "OPEN",
                       "type": "TOTAL",
-                      "extraInformation": null,
-                      "startTime": "2026-09-11T00:00:00.000000Z",
-                      "statisticAccrued": null,
-                      "updatedAtTime": "2026-06-04T12:06:34.006241Z",
-                      "__typename": "Market",
                       "selections": [
                         {
-                          "id": "MarketSelection:a46fbe2b-a982-431a-aab5-f2f84adcec31",
-                          "rawId": "a46fbe2b-a982-431a-aab5-f2f84adcec31",
                           "name": {
-                            "cleanName": "Over",
-                            "defaultName": "O 5.5",
-                            "fullName": "Over 5.5",
-                            "minimalName": "O 5.5",
-                            "__typename": "SelectionName"
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 5.5
                           },
                           "odds": {
-                            "denominatorLong": "1",
-                            "numeratorLong": "2",
-                            "formattedOdds": "Even",
-                            "__typename": "Odds"
-                          },
-                          "participant": null,
-                          "points": {
-                            "decimalPoints": 5.5,
-                            "formattedPoints": "5.5",
-                            "__typename": "Points"
-                          },
-                          "status": "OPEN",
-                          "type": "OVER",
-                          "probabilityEncrypted": null,
-                          "__typename": "MarketSelection"
+                            "formattedOdds": "Even"
+                          }
                         },
                         {
-                          "id": "MarketSelection:4ab0c2d9-730c-4552-9cde-b0d454e7026b",
-                          "rawId": "4ab0c2d9-730c-4552-9cde-b0d454e7026b",
                           "name": {
-                            "cleanName": "Under",
-                            "defaultName": "U 5.5",
-                            "fullName": "Under 5.5",
-                            "minimalName": "U 5.5",
-                            "__typename": "SelectionName"
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 5.5
                           },
                           "odds": {
-                            "denominatorLong": "6",
-                            "numeratorLong": "11",
-                            "formattedOdds": "-120",
-                            "__typename": "Odds"
-                          },
-                          "participant": null,
-                          "points": {
-                            "decimalPoints": 5.5,
-                            "formattedPoints": "5.5",
-                            "__typename": "Points"
-                          },
-                          "status": "OPEN",
-                          "type": "UNDER",
-                          "probabilityEncrypted": null,
-                          "__typename": "MarketSelection"
+                            "formattedOdds": "-120"
+                          }
                         }
                       ]
                     },
                     {
-                      "id": "Market:3ede3f5e-7a3a-434d-90a7-ecab5b242384",
                       "name": "PHI Eagles Regular Season Wins",
-                      "status": "OPEN",
                       "type": "TOTAL",
-                      "extraInformation": null,
-                      "startTime": "2026-09-11T00:00:00.000000Z",
-                      "statisticAccrued": null,
-                      "updatedAtTime": "2026-06-04T12:06:33.965002Z",
-                      "__typename": "Market",
                       "selections": [
                         {
-                          "id": "MarketSelection:82571b34-0266-4b71-80dd-9d82fbcd96e9",
-                          "rawId": "82571b34-0266-4b71-80dd-9d82fbcd96e9",
                           "name": {
-                            "cleanName": "Over",
-                            "defaultName": "O 10.5",
-                            "fullName": "Over 10.5",
-                            "minimalName": "O 10.5",
-                            "__typename": "SelectionName"
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 10.5
                           },
                           "odds": {
-                            "denominatorLong": "10",
-                            "numeratorLong": "21",
-                            "formattedOdds": "+110",
-                            "__typename": "Odds"
-                          },
-                          "participant": null,
-                          "points": {
-                            "decimalPoints": 10.5,
-                            "formattedPoints": "10.5",
-                            "__typename": "Points"
-                          },
-                          "status": "OPEN",
-                          "type": "OVER",
-                          "probabilityEncrypted": null,
-                          "__typename": "MarketSelection"
+                            "formattedOdds": "+110"
+                          }
                         },
                         {
-                          "id": "MarketSelection:0d2e2d02-7f36-42c7-ae30-52e9f87305bf",
-                          "rawId": "0d2e2d02-7f36-42c7-ae30-52e9f87305bf",
                           "name": {
-                            "cleanName": "Under",
-                            "defaultName": "U 10.5",
-                            "fullName": "Under 10.5",
-                            "minimalName": "U 10.5",
-                            "__typename": "SelectionName"
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 10.5
                           },
                           "odds": {
-                            "denominatorLong": "13",
-                            "numeratorLong": "23",
-                            "formattedOdds": "-130",
-                            "__typename": "Odds"
-                          },
-                          "participant": null,
-                          "points": {
-                            "decimalPoints": 10.5,
-                            "formattedPoints": "10.5",
-                            "__typename": "Points"
-                          },
-                          "status": "OPEN",
-                          "type": "UNDER",
-                          "probabilityEncrypted": null,
-                          "__typename": "MarketSelection"
+                            "formattedOdds": "-130"
+                          }
                         }
                       ]
                     },
                     {
-                      "id": "Market:a5e5b23d-d897-4ae7-8385-cd02fedb17fc",
                       "name": "PIT Steelers Regular Season Wins",
-                      "status": "OPEN",
                       "type": "TOTAL",
-                      "extraInformation": null,
-                      "startTime": "2026-09-11T00:00:00.000000Z",
-                      "statisticAccrued": null,
-                      "updatedAtTime": "2026-06-04T12:06:33.929210Z",
-                      "__typename": "Market",
                       "selections": [
                         {
-                          "id": "MarketSelection:ac054004-f38a-4411-8b42-9c4e8f73de33",
-                          "rawId": "ac054004-f38a-4411-8b42-9c4e8f73de33",
                           "name": {
-                            "cleanName": "Over",
-                            "defaultName": "O 7.5",
-                            "fullName": "Over 7.5",
-                            "minimalName": "O 7.5",
-                            "__typename": "SelectionName"
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 7.5
                           },
                           "odds": {
-                            "denominatorLong": "27",
-                            "numeratorLong": "47",
-                            "formattedOdds": "-135",
-                            "__typename": "Odds"
-                          },
-                          "participant": null,
-                          "points": {
-                            "decimalPoints": 7.5,
-                            "formattedPoints": "7.5",
-                            "__typename": "Points"
-                          },
-                          "status": "OPEN",
-                          "type": "OVER",
-                          "probabilityEncrypted": null,
-                          "__typename": "MarketSelection"
+                            "formattedOdds": "-135"
+                          }
                         },
                         {
-                          "id": "MarketSelection:56ee5882-5342-43c1-9777-584717402da9",
-                          "rawId": "56ee5882-5342-43c1-9777-584717402da9",
                           "name": {
-                            "cleanName": "Under",
-                            "defaultName": "U 7.5",
-                            "fullName": "Under 7.5",
-                            "minimalName": "U 7.5",
-                            "__typename": "SelectionName"
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 7.5
                           },
                           "odds": {
-                            "denominatorLong": "20",
-                            "numeratorLong": "43",
-                            "formattedOdds": "+115",
-                            "__typename": "Odds"
-                          },
-                          "participant": null,
-                          "points": {
-                            "decimalPoints": 7.5,
-                            "formattedPoints": "7.5",
-                            "__typename": "Points"
-                          },
-                          "status": "OPEN",
-                          "type": "UNDER",
-                          "probabilityEncrypted": null,
-                          "__typename": "MarketSelection"
+                            "formattedOdds": "+115"
+                          }
                         }
                       ]
                     },
                     {
-                      "id": "Market:237803a3-2451-44f8-bb3e-a8410262cceb",
                       "name": "SEA Seahawks Regular Season Wins",
-                      "status": "OPEN",
                       "type": "TOTAL",
-                      "extraInformation": null,
-                      "startTime": "2026-09-06T17:00:00.000000Z",
-                      "statisticAccrued": null,
-                      "updatedAtTime": "2026-06-04T12:06:33.961656Z",
-                      "__typename": "Market",
                       "selections": [
                         {
-                          "id": "MarketSelection:afdd837e-9265-423d-8e5b-0b387b7b466a",
-                          "rawId": "afdd837e-9265-423d-8e5b-0b387b7b466a",
                           "name": {
-                            "cleanName": "Over",
-                            "defaultName": "O 10.5",
-                            "fullName": "Over 10.5",
-                            "minimalName": "O 10.5",
-                            "__typename": "SelectionName"
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 10.5
                           },
                           "odds": {
-                            "denominatorLong": "13",
-                            "numeratorLong": "23",
-                            "formattedOdds": "-130",
-                            "__typename": "Odds"
-                          },
-                          "participant": null,
-                          "points": {
-                            "decimalPoints": 10.5,
-                            "formattedPoints": "10.5",
-                            "__typename": "Points"
-                          },
-                          "status": "OPEN",
-                          "type": "OVER",
-                          "probabilityEncrypted": null,
-                          "__typename": "MarketSelection"
+                            "formattedOdds": "-130"
+                          }
                         },
                         {
-                          "id": "MarketSelection:9af3f005-9ca4-4e4f-b5e4-b7463db08d10",
-                          "rawId": "9af3f005-9ca4-4e4f-b5e4-b7463db08d10",
                           "name": {
-                            "cleanName": "Under",
-                            "defaultName": "U 10.5",
-                            "fullName": "Under 10.5",
-                            "minimalName": "U 10.5",
-                            "__typename": "SelectionName"
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 10.5
                           },
                           "odds": {
-                            "denominatorLong": "10",
-                            "numeratorLong": "21",
-                            "formattedOdds": "+110",
-                            "__typename": "Odds"
-                          },
-                          "participant": null,
-                          "points": {
-                            "decimalPoints": 10.5,
-                            "formattedPoints": "10.5",
-                            "__typename": "Points"
-                          },
-                          "status": "OPEN",
-                          "type": "UNDER",
-                          "probabilityEncrypted": null,
-                          "__typename": "MarketSelection"
+                            "formattedOdds": "+110"
+                          }
                         }
                       ]
                     },
                     {
-                      "id": "Market:6f21a38d-f0ae-4602-a6c7-d4eff8cd428c",
                       "name": "SF 49ers Regular Season Wins",
-                      "status": "OPEN",
                       "type": "TOTAL",
-                      "extraInformation": null,
-                      "startTime": "2026-09-11T00:00:00.000000Z",
-                      "statisticAccrued": null,
-                      "updatedAtTime": "2026-06-04T12:06:33.862307Z",
-                      "__typename": "Market",
                       "selections": [
                         {
-                          "id": "MarketSelection:ab03e3c0-dd6b-4779-985e-7ab098b93a7d",
-                          "rawId": "ab03e3c0-dd6b-4779-985e-7ab098b93a7d",
                           "name": {
-                            "cleanName": "Over",
-                            "defaultName": "O 10.5",
-                            "fullName": "Over 10.5",
-                            "minimalName": "O 10.5",
-                            "__typename": "SelectionName"
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 10.5
                           },
                           "odds": {
-                            "denominatorLong": "5",
-                            "numeratorLong": "11",
-                            "formattedOdds": "+120",
-                            "__typename": "Odds"
-                          },
-                          "participant": null,
-                          "points": {
-                            "decimalPoints": 10.5,
-                            "formattedPoints": "10.5",
-                            "__typename": "Points"
-                          },
-                          "status": "OPEN",
-                          "type": "OVER",
-                          "probabilityEncrypted": null,
-                          "__typename": "MarketSelection"
+                            "formattedOdds": "+120"
+                          }
                         },
                         {
-                          "id": "MarketSelection:38909b11-8fcd-453d-8ba1-384f999587ae",
-                          "rawId": "38909b11-8fcd-453d-8ba1-384f999587ae",
                           "name": {
-                            "cleanName": "Under",
-                            "defaultName": "U 10.5",
-                            "fullName": "Under 10.5",
-                            "minimalName": "U 10.5",
-                            "__typename": "SelectionName"
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 10.5
                           },
                           "odds": {
-                            "denominatorLong": "7",
-                            "numeratorLong": "12",
-                            "formattedOdds": "-140",
-                            "__typename": "Odds"
-                          },
-                          "participant": null,
-                          "points": {
-                            "decimalPoints": 10.5,
-                            "formattedPoints": "10.5",
-                            "__typename": "Points"
-                          },
-                          "status": "OPEN",
-                          "type": "UNDER",
-                          "probabilityEncrypted": null,
-                          "__typename": "MarketSelection"
+                            "formattedOdds": "-140"
+                          }
                         }
                       ]
                     },
                     {
-                      "id": "Market:46a2ea9a-e239-48ab-a219-26bf49d07920",
                       "name": "TB Buccaneers Regular Season Wins",
-                      "status": "OPEN",
                       "type": "TOTAL",
-                      "extraInformation": null,
-                      "startTime": "2026-09-11T00:00:00.000000Z",
-                      "statisticAccrued": null,
-                      "updatedAtTime": "2026-06-04T12:06:33.942090Z",
-                      "__typename": "Market",
                       "selections": [
                         {
-                          "id": "MarketSelection:4333a172-583e-4269-b894-2cfad18fa33b",
-                          "rawId": "4333a172-583e-4269-b894-2cfad18fa33b",
                           "name": {
-                            "cleanName": "Over",
-                            "defaultName": "O 8.5",
-                            "fullName": "Over 8.5",
-                            "minimalName": "O 8.5",
-                            "__typename": "SelectionName"
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 8.5
                           },
                           "odds": {
-                            "denominatorLong": "20",
-                            "numeratorLong": "43",
-                            "formattedOdds": "+115",
-                            "__typename": "Odds"
-                          },
-                          "participant": null,
-                          "points": {
-                            "decimalPoints": 8.5,
-                            "formattedPoints": "8.5",
-                            "__typename": "Points"
-                          },
-                          "status": "OPEN",
-                          "type": "OVER",
-                          "probabilityEncrypted": null,
-                          "__typename": "MarketSelection"
+                            "formattedOdds": "+115"
+                          }
                         },
                         {
-                          "id": "MarketSelection:ba6ec3ec-6928-4058-b368-c41f3df48436",
-                          "rawId": "ba6ec3ec-6928-4058-b368-c41f3df48436",
                           "name": {
-                            "cleanName": "Under",
-                            "defaultName": "U 8.5",
-                            "fullName": "Under 8.5",
-                            "minimalName": "U 8.5",
-                            "__typename": "SelectionName"
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 8.5
                           },
                           "odds": {
-                            "denominatorLong": "27",
-                            "numeratorLong": "47",
-                            "formattedOdds": "-135",
-                            "__typename": "Odds"
-                          },
-                          "participant": null,
-                          "points": {
-                            "decimalPoints": 8.5,
-                            "formattedPoints": "8.5",
-                            "__typename": "Points"
-                          },
-                          "status": "OPEN",
-                          "type": "UNDER",
-                          "probabilityEncrypted": null,
-                          "__typename": "MarketSelection"
+                            "formattedOdds": "-135"
+                          }
                         }
                       ]
                     },
                     {
-                      "id": "Market:bfe4afc6-5fb0-4c17-b88f-c957fbcfa96c",
                       "name": "TEN Titans Regular Season Wins",
-                      "status": "OPEN",
                       "type": "TOTAL",
-                      "extraInformation": null,
-                      "startTime": "2026-09-11T00:00:00.000000Z",
-                      "statisticAccrued": null,
-                      "updatedAtTime": "2026-06-04T12:06:34.023892Z",
-                      "__typename": "Market",
                       "selections": [
                         {
-                          "id": "MarketSelection:4a1e95b0-84c5-4755-9382-e250737f922a",
-                          "rawId": "4a1e95b0-84c5-4755-9382-e250737f922a",
                           "name": {
-                            "cleanName": "Over",
-                            "defaultName": "O 6.5",
-                            "fullName": "Over 6.5",
-                            "minimalName": "O 6.5",
-                            "__typename": "SelectionName"
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 6.5
                           },
                           "odds": {
-                            "denominatorLong": "21",
-                            "numeratorLong": "41",
-                            "formattedOdds": "-105",
-                            "__typename": "Odds"
-                          },
-                          "participant": null,
-                          "points": {
-                            "decimalPoints": 6.5,
-                            "formattedPoints": "6.5",
-                            "__typename": "Points"
-                          },
-                          "status": "OPEN",
-                          "type": "OVER",
-                          "probabilityEncrypted": null,
-                          "__typename": "MarketSelection"
+                            "formattedOdds": "-105"
+                          }
                         },
                         {
-                          "id": "MarketSelection:5e5c88d2-d4cb-4dec-adf7-fe472b1ee208",
-                          "rawId": "5e5c88d2-d4cb-4dec-adf7-fe472b1ee208",
                           "name": {
-                            "cleanName": "Under",
-                            "defaultName": "U 6.5",
-                            "fullName": "Under 6.5",
-                            "minimalName": "U 6.5",
-                            "__typename": "SelectionName"
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 6.5
                           },
                           "odds": {
-                            "denominatorLong": "23",
-                            "numeratorLong": "43",
-                            "formattedOdds": "-115",
-                            "__typename": "Odds"
-                          },
-                          "participant": null,
-                          "points": {
-                            "decimalPoints": 6.5,
-                            "formattedPoints": "6.5",
-                            "__typename": "Points"
-                          },
-                          "status": "OPEN",
-                          "type": "UNDER",
-                          "probabilityEncrypted": null,
-                          "__typename": "MarketSelection"
+                            "formattedOdds": "-115"
+                          }
                         }
                       ]
                     },
                     {
-                      "id": "Market:c52c0b9a-f99a-4d86-b3fe-b0f0dd0fbd7e",
                       "name": "WSH Commanders Regular Season Wins",
-                      "status": "OPEN",
                       "type": "TOTAL",
-                      "extraInformation": null,
-                      "startTime": "2026-09-11T00:00:00.000000Z",
-                      "statisticAccrued": null,
-                      "updatedAtTime": "2026-06-04T12:06:33.959021Z",
-                      "__typename": "Market",
                       "selections": [
                         {
-                          "id": "MarketSelection:8a1acee8-4199-4a1c-8cd3-5ef6a8e0d18b",
-                          "rawId": "8a1acee8-4199-4a1c-8cd3-5ef6a8e0d18b",
                           "name": {
-                            "cleanName": "Over",
-                            "defaultName": "O 7.5",
-                            "fullName": "Over 7.5",
-                            "minimalName": "O 7.5",
-                            "__typename": "SelectionName"
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 7.5
                           },
                           "odds": {
-                            "denominatorLong": "13",
-                            "numeratorLong": "23",
-                            "formattedOdds": "-130",
-                            "__typename": "Odds"
-                          },
-                          "participant": null,
-                          "points": {
-                            "decimalPoints": 7.5,
-                            "formattedPoints": "7.5",
-                            "__typename": "Points"
-                          },
-                          "status": "OPEN",
-                          "type": "OVER",
-                          "probabilityEncrypted": null,
-                          "__typename": "MarketSelection"
+                            "formattedOdds": "-130"
+                          }
                         },
                         {
-                          "id": "MarketSelection:7722cec1-0a1b-47c6-b547-477b04ce3043",
-                          "rawId": "7722cec1-0a1b-47c6-b547-477b04ce3043",
                           "name": {
-                            "cleanName": "Under",
-                            "defaultName": "U 7.5",
-                            "fullName": "Under 7.5",
-                            "minimalName": "U 7.5",
-                            "__typename": "SelectionName"
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 7.5
                           },
                           "odds": {
-                            "denominatorLong": "10",
-                            "numeratorLong": "21",
-                            "formattedOdds": "+110",
-                            "__typename": "Odds"
-                          },
-                          "participant": null,
-                          "points": {
-                            "decimalPoints": 7.5,
-                            "formattedPoints": "7.5",
-                            "__typename": "Points"
-                          },
-                          "status": "OPEN",
-                          "type": "UNDER",
-                          "probabilityEncrypted": null,
-                          "__typename": "MarketSelection"
+                            "formattedOdds": "+110"
+                          }
                         }
                       ]
                     }

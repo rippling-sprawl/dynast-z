@@ -29,7 +29,8 @@ from outright_common import (  # noqa: E402
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 IMPORT_PATH = os.path.join(ROOT, "data", "imports", "dk.json")
-MARKET_PATH = "leagueSubcategory/v1/markets"
+# Same {markets, selections} shape comes from both DK market endpoints; accept both.
+MARKET_PATHS = ("leagueSubcategory/v1/markets", "marketType/v1/markets")
 
 # DK market name -> canonical key. DK names are inconsistent across pages: some
 # carry a leading "NFL 2026/27 - " prefix and/or a trailing season, and divisions
@@ -122,7 +123,7 @@ def apply_dk_outrights(doc, captures):
         if blocked(url):
             dropped += 1
             continue
-        if MARKET_PATH not in url:
+        if not any(p in url for p in MARKET_PATHS):
             continue
         body = c.get("body")
         if not isinstance(body, dict):

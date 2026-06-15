@@ -40,8 +40,10 @@ OUT_PATH = os.path.join(ROOT, "data", "dk.json")
 # time too. Keep in sync with BLOCK in scripts/odds-recorder.js.
 BLOCK = ["datadoghq.com", "launchdarkly.com"]
 
-# Only these DK endpoints carry the markets+selections we want.
-MARKET_PATH = "leagueSubcategory/v1/markets"
+# DK serves the same {markets, selections, events} shape from a few endpoints:
+# leagueSubcategory (a category's markets) and marketType (specific markets by id,
+# e.g. the per-team "Regular Season Wins" O/U totals). Accept both.
+MARKET_PATHS = ("leagueSubcategory/v1/markets", "marketType/v1/markets")
 
 
 def host_of(url):
@@ -105,7 +107,7 @@ def merge_dk_props(existing, captures):
         if blocked(url):
             dropped += 1
             continue
-        if MARKET_PATH not in url:
+        if not any(p in url for p in MARKET_PATHS):
             continue
         body = c.get("body")
         if not isinstance(body, dict):

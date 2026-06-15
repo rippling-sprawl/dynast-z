@@ -13,22 +13,44 @@ the team code we use to merge teams across books.
 """
 import json
 import os
+import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from outright_common import (  # noqa: E402
-    CANON, blocked, host_of, team_key, norm_name, norm_american,
-    load_outrights, save_outrights, upsert_market,
+    CANON, FULL_NAME, blocked, host_of, team_key, norm_name, norm_american,
+    load_outrights, save_outrights, upsert_market, upsert_milestone,
 )
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 IMPORT_PATH = os.path.join(ROOT, "data", "imports", "score.json")
 
+# "<Team> Regular Season Milestone Wins" — a per-team win-total ladder (1+ .. 16+),
+# the team analog of DK's "Player to Have X+ ..." milestones. Folded into the
+# shared milestones tree under the "wins" stat (threshold -> teams), so they show
+# in the Milestones view and the wins card's per-team ladder.
+MILESTONE_WINS_RE = re.compile(r"\bRegular Season Milestone Wins$")
+MILESTONE_WINS_TITLE = "Regular Season Wins Milestones"
+
 SCORE_MARKETS = {
     "Regular Season MVP": "mvp",
     "Offensive Player Of The Year": "opoy",
     "Defensive Player Of The Year": "dpoy",
+    "Offensive Rookie Of The Year": "oroy",
+    "Defensive Rookie Of The Year": "droy",
+    "Coach Of The Year": "coy",
+    "Comeback Player Of The Year": "cpoy",
     "Super Bowl Winner": "super_bowl_winner",
+    "AFC Conference Winner": "afc_winner",
+    "NFC Conference Winner": "nfc_winner",
+    "AFC East Winner": "afc_east_winner",
+    "AFC North Winner": "afc_north_winner",
+    "AFC South Winner": "afc_south_winner",
+    "AFC West Winner": "afc_west_winner",
+    "NFC East Winner": "nfc_east_winner",
+    "NFC North Winner": "nfc_north_winner",
+    "NFC South Winner": "nfc_south_winner",
+    "NFC West Winner": "nfc_west_winner",
     "Most Regular Season Wins": "most_wins",
 }
 
@@ -62,6 +84,7 @@ def apply_score_outrights(doc, captures):
     never clobbers FD/DK."""
     kept_hosts, dropped = set(), 0
     markets = {}        # canon key -> {cand_key: (disp, american)}
+    win_ms = {}         # threshold -> {abbr: (full_name, american)}
     skipped = {}
 
     for c in captures:
@@ -77,6 +100,22 @@ def apply_score_outrights(doc, captures):
             if m.get("type") != "LIST":
                 continue
             name = (m.get("name") or "").strip()
+
+            # Per-team win-total ladder -> milestones["wins"][threshold] = teams.
+            if MILESTONE_WINS_RE.search(name):
+                abbr = team_key(name)
+                if not abbr:
+                    continue
+                disp = FULL_NAME.get(abbr, name)
+                for s in m.get("selections", []):
+                    thn = ((s.get("name") or {}).get("cleanName") or "").strip()
+                    mth = re.match(r"(\d+)\+?$", thn)
+                    american = norm_american((s.get("odds") or {}).get("formattedOdds"))
+                    if not mth or american is None:
+                        continue
+                    win_ms.setdefault(int(mth.group(1)), {})[abbr] = (disp, american)
+                continue
+
             key = SCORE_MARKETS.get(name)
             if key is None:
                 if name:
@@ -92,12 +131,16 @@ def apply_score_outrights(doc, captures):
     for key, bucket in markets.items():
         cands = [(k, disp, am) for k, (disp, am) in bucket.items()]
         upsert_market(doc, key, "score", cands)
+    for threshold, bucket in win_ms.items():
+        cands = [(k, disp, am) for k, (disp, am) in bucket.items()]
+        upsert_milestone(doc, "wins", MILESTONE_WINS_TITLE, threshold, "score", cands)
 
     return {
         "captures": len(captures),
         "dropped": dropped,
         "kept_hosts": sorted(h for h in kept_hosts if h),
         "markets": {k: len(v) for k, v in markets.items()},
+        "win_milestones": {th: len(b) for th, b in win_ms.items()},
         "skipped": skipped,
     }
 
@@ -117,6 +160,10 @@ def main():
     print("\nCanonical markets written (SCORE column):")
     for key in sorted(s["markets"]):
         print("  %-24s %3d candidates" % (key, s["markets"][key]))
+    if s["win_milestones"]:
+        print("\nWins milestone thresholds written (SCORE column):")
+        for th in sorted(s["win_milestones"]):
+            print("  %2d+  %3d teams" % (th, s["win_milestones"][th]))
     if s["skipped"]:
         print("\nUnmapped SCORE LIST markets (not written):")
         for n in sorted(s["skipped"]):

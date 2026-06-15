@@ -202,12 +202,21 @@
     .odds-ou-scroll .odds-coupon.is-ou { width: max-content; min-width: 100%; }
     /* The single FD/DK/SCORE heading row pinned above the coupons (top set in JS).
        overflow:hidden makes it a scroll box the JS can pan in sync with the body. */
-    .odds-ou-head {
+    .odds-ou-head,
+    .odds-outright-head {
       position: sticky;
       z-index: 49;
       background: var(--nb-bg);
       border-bottom: 1px solid var(--nb-ink);
       overflow: hidden;
+    }
+    /* An outright/field table's title pins just above its column-head row (sits
+       one layer higher so it cleanly covers the head as the next table arrives).
+       Both tops are set in applyStickyTops. */
+    .odds-table-title {
+      position: sticky;
+      z-index: 50;
+      background: var(--nb-bg);
     }
     /* Fixed-width book columns: they keep their width and scroll rather than
        shrinking, so FMV/FD/DK/SCORE stay readable however many books there are. */
@@ -240,6 +249,7 @@
        in the column so it lines up with the (vertically-centered) name label. */
     .odds-ou-head .odds-col,
     .odds-outright-head .odds-col { justify-content: center; }
+    /* sticky positioning shared with .odds-ou-head above; top is set in JS */
     /* In the OU layout the label is the badge and the odds sit small inside it.
        Every badge is the same size: full column width (box-sizing keeps padding
        inside that width) and a shared min-height with its content centered, so a
@@ -300,16 +310,23 @@
       transition: opacity .15s ease, filter .15s ease;
     }
     .odds-ms-toggle:hover, .odds-ms-toggle.is-open { opacity: 1; filter: none; }
-    .odds-ms-panel {
-      flex: 1 0 100%;
+    .odds-ms-panel { flex: 1 0 100%; border-top: 1px solid var(--nb-line); }
+    .odds-ms-panel[hidden] { display: none; }
+    /* The milestone row scrolls horizontally on its own, pinned to the viewport's
+       left edge; overscroll-behavior keeps that scroll from panning the odds
+       table. Its width is set in JS to the OU scroll container's visible width. */
+    .odds-ms-scroll {
+      position: sticky;
+      left: 0;
+      box-sizing: border-box;
       display: flex;
-      flex-wrap: wrap;
+      flex-wrap: nowrap;
       align-items: center;
       gap: 8px 16px;
       padding: 10px 8px 12px calc(var(--nb-name-w) * 1.15 + 12px);
-      border-top: 1px solid var(--nb-line);
+      overflow-x: auto;
+      overscroll-behavior-x: contain;
     }
-    .odds-ms-panel[hidden] { display: none; }
     .odds-ms-cap {
       font-family: var(--nb-display);
       font-size: 10px;
@@ -339,8 +356,8 @@
        one is-ou strip per candidate — a pinned name column, then hairline-divided
        borderless badge columns (FMV + each book) — under a single heading row.
        The strips share .odds-coupon.is-ou with player props, so the column
-       widths, dividers and badge styling line up identically. */
-    .odds-outright-head { border-bottom: 1px solid var(--nb-ink); overflow: hidden; }
+       widths, dividers and badge styling line up identically. The heading row's
+       sticky positioning is shared with .odds-ou-head (top set in applyStickyTops). */
     /* The heading's left cell carries the sortable Player/Team label, sized like
        a column head rather than a candidate name (override the is-ou 14px name). */
     .odds-coupon.is-ou .odds-coupon-header.odds-name-head {
@@ -354,7 +371,6 @@
     /* The FMV badge reads as a derived value; the shortest (best) book price is
        highlighted for line-shopping at a glance. */
     .odds-coupon.is-ou .odds-book-label.odds-fmv { color: var(--nb-muted); }
-    .odds-coupon.is-ou .odds-book-label.odds-best { color: var(--nb-up); font-weight: 700; }
     /* Clickable column headers (name + FMV) that sort the candidate table. */
     .odds-sort { cursor: pointer; user-select: none; }
     .odds-sort:hover { color: var(--nb-accent); }
@@ -395,7 +411,7 @@
       .odds-coupon.is-ou .odds-coupon-header { font-size: 13px; }
 
       /* Narrower name column + 6px coupon gap on mobile; realign the panel. */
-      .odds-ms-panel { padding-left: calc(var(--nb-name-w) * 1.15 + 6px); gap: 6px 12px; }
+      .odds-ms-scroll { padding-left: calc(var(--nb-name-w) * 1.15 + 6px); gap: 6px 12px; }
       .odds-ms-toggle { font-size: 12px; right: 4px; }
     }
   </style>
@@ -422,7 +438,7 @@
     let DK_BY_PLAYER = {};   // normalized player name -> { name, Over:{line,odds}, Under:{line,odds} }
     let SCORE_BY_PLAYER = {}; // same shape, sourced from ESPN ("SCORE") /data/score/*.json
     let OUTRIGHTS = null;     // /data/outrights.json — { markets:{key:{...}}, milestones:{stat:{...}} }
-    let MS_BY_PLAYER = {};    // "<norm>|<stat>" -> { name, list:[{line, odds}] } from DK milestones
+    let MS_BY_PLAYER = {};    // "<norm>|<stat>" -> { name, list:[{line, odds}] } from DK/SCORE milestones
 
     // The order the outright groups are shown in, and their section labels.
     const OUTRIGHT_GROUPS = [
@@ -505,9 +521,21 @@
         .trim();
     }
 
+    // Every NFL club's nickname (the last word), unique across all 32, so a team
+    // collapses by nickname even when the city is written differently across books
+    // — "Arizona Cardinals" vs "ARI Cardinals", "Kansas City Chiefs" vs "KC Chiefs".
+    // (normName strips digits, so the 49ers' nickname reduces to "ers".)
+    const NFL_NICKS = new Set([
+      'cardinals', 'falcons', 'ravens', 'bills', 'panthers', 'bears', 'bengals',
+      'browns', 'cowboys', 'broncos', 'lions', 'packers', 'texans', 'colts',
+      'jaguars', 'chiefs', 'raiders', 'chargers', 'rams', 'dolphins', 'vikings',
+      'patriots', 'saints', 'giants', 'jets', 'eagles', 'steelers', 'ers',
+      'seahawks', 'buccaneers', 'titans', 'commanders']);
+
     // A book index is keyed "<normalized name>|<stat>". Names don't match exactly
     // across books (e.g. "Cam Ward" vs "Cameron Ward"), so within the requested
-    // stat fall back to a last-name match with a first-name prefix.
+    // stat fall back to a last-name match with a first-name prefix. Teams match on
+    // the nickname alone (it's unique), since their cities differ wildly by book.
     function findIndexedPlayer(index, player, stat) {
       const want = stat || '';
       const exact = normName(player) + '|' + want;
@@ -515,13 +543,14 @@
       const parts = normName(player).split(' ');
       const last = parts[parts.length - 1];
       const first = parts[0];
+      const isTeam = NFL_NICKS.has(last);
       for (const k in index) {
         const sep = k.lastIndexOf('|');
         if (k.slice(sep + 1) !== want) continue;
         const kp = k.slice(0, sep).split(' ');
         const kLast = kp[kp.length - 1];
         const kFirst = kp[0];
-        if (kLast === last && (kFirst.startsWith(first) || first.startsWith(kFirst))) {
+        if (kLast === last && (isTeam || kFirst.startsWith(first) || first.startsWith(kFirst))) {
           return index[k];
         }
       }
@@ -541,18 +570,40 @@
           .trim();
         marketInfo[m.id] = { player, stat: statKey(name) };
       });
+      // DK lists alternate lines per market — props put the line in the label
+      // ("Over 3199.5"); team win totals use a bare "Over"/"Under" label with the
+      // number in points (2.5..6.5). Gather every line, then keep the "main" one:
+      // the paired O/U whose implied odds are most balanced (DK's featured line),
+      // so a team shows its default total rather than the last longshot alt.
+      const acc = {};   // key -> { name, lines: { line: { Over, Under } } }
       (dk.selections || []).forEach(s => {
         const info = marketInfo[s.marketId];
         if (!info || !info.player) return;
         const dir = s.outcomeType;               // "Over" / "Under"
         if (dir !== 'Over' && dir !== 'Under') return;
+        // DK points is a flat number (2.5); guard for an object form too.
+        const pts = typeof s.points === 'number' ? s.points
+                  : (s.points && s.points.decimalPoints);
         const lineMatch = (s.label || '').match(/([\d.]+)/);
+        const line = pts != null ? fmtLine(pts) : (lineMatch ? lineMatch[1] : null);
         const key = normName(info.player) + '|' + info.stat;
-        if (!DK_BY_PLAYER[key]) DK_BY_PLAYER[key] = { name: info.player };
-        DK_BY_PLAYER[key][dir] = {
-          line: lineMatch ? lineMatch[1] : null,
-          odds: fmtDk((s.displayOdds || {}).american)
-        };
+        if (!acc[key]) acc[key] = { name: info.player, lines: {} };
+        (acc[key].lines[line] = acc[key].lines[line] || {})[dir] =
+          { line: line, odds: fmtDk((s.displayOdds || {}).american) };
+      });
+      Object.keys(acc).forEach(key => {
+        const lines = acc[key].lines;
+        let best = null, bestScore = Infinity;
+        Object.keys(lines).forEach(ln => {
+          const L = lines[ln];
+          const po = L.Over && americanToProb(L.Over.odds);
+          const pu = L.Under && americanToProb(L.Under.odds);
+          const score = (po != null && pu != null) ? Math.abs(po - pu) : 9;
+          if (score < bestScore) { bestScore = score; best = L; }
+        });
+        DK_BY_PLAYER[key] = { name: acc[key].name };
+        if (best && best.Over) DK_BY_PLAYER[key].Over = best.Over;
+        if (best && best.Under) DK_BY_PLAYER[key].Under = best.Under;
       });
     }
 
@@ -601,9 +652,12 @@
       });
     }
 
-    // Parse an fd runner like "Lamar Jackson Over 3200.5" into player + direction.
+    // Parse an fd runner like "Lamar Jackson Over 3200.5" or "Arizona Cardinals
+    // Over 2.5 Wins" into player + direction. A trailing unit after the line
+    // (e.g. " Wins") is ignored, so team win-total coupons parse as OU markets
+    // (and match DK/SCORE by team + stat) instead of falling back to field rows.
     function parseRunner(runnerName) {
-      const m = (runnerName || '').match(/^(.*?)\s+(Over|Under)\s+([\d.]+)\s*$/);
+      const m = (runnerName || '').match(/^(.*?)\s+(Over|Under)\s+([\d.]+)(?:\s+.*)?$/);
       if (!m) return null;
       return { player: m[1], dir: m[2], line: m[3] };
     }
@@ -759,8 +813,16 @@
       // field markets list entities (e.g. "Buffalo Bills"). They render differently.
       const isOU = isOuCoupon(couponRef);
 
+      // Field market (awards/futures): render through the shared outright table so
+      // it matches the Awards & Futures view — FMV column, hairline columns, arrows.
+      if (!isOU) {
+        const title = stripSectionTitle(coupon.title, cardTitle);
+        return buildOutrightTable(title, fieldCandidates(runners, coupon.title),
+                                  fieldNameLabel(coupon.title));
+      }
+
       const wrap = document.createElement('div');
-      wrap.className = 'odds-coupon' + (isOU ? ' is-ou' : '');
+      wrap.className = 'odds-coupon is-ou';
 
       const header = document.createElement('div');
       header.className = 'odds-coupon-header';
@@ -779,20 +841,16 @@
       body.className = 'odds-coupon-body';
 
       let ouMilestones = null;
-      if (isOU) {
-        // Match DraftKings prices only within this card's stat (e.g. passing
-        // yards), so a player's price never leaks across to a different stat.
-        const info = buildOuBody(body, runners, showDk, statKey(cardTitle));
-        // Stash the coupon's sort keys for renderCard (one player per coupon
-        // here; if a coupon ever groups several, the first is representative).
-        if (info && info.length) {
-          wrap._sortName = info[0].player;
-          wrap._sortFmv = info[0].fmv;
-          ouMilestones = (info[0].milestones && info[0].milestones.length)
-            ? info[0].milestones : null;
-        }
-      } else {
-        buildFieldBody(body, runners, coupon.title, showDk);
+      // Match DraftKings prices only within this card's stat (e.g. passing
+      // yards), so a player's price never leaks across to a different stat.
+      const info = buildOuBody(body, runners, showDk, statKey(cardTitle));
+      // Stash the coupon's sort keys for renderCard (one player per coupon
+      // here; if a coupon ever groups several, the first is representative).
+      if (info && info.length) {
+        wrap._sortName = info[0].player;
+        wrap._sortFmv = info[0].fmv;
+        ouMilestones = (info[0].milestones && info[0].milestones.length)
+          ? info[0].milestones : null;
       }
 
       wrap.appendChild(body);
@@ -844,40 +902,35 @@
       return out;
     }
 
-    // Field-based market: one row per entity — team name on the left, then FD plus
-    // (when showDk) DK and SCORE price columns under a shared header. DK/SCORE come
-    // from the matching outright market via fieldBookPrices; a team a book hasn't
-    // priced shows a dash.
-    function buildFieldBody(body, runners, couponTitle, showDk) {
-      const head = document.createElement('div');
-      head.className = 'odds-runner odds-field-head';
-      head.innerHTML =
-        '<span class="odds-runner-name"></span>' +
-        '<div class="odds-books">' +
-          (showDk ? ['FD', 'DK', 'SCORE'] : ['FD'])
-            .map(l => '<div class="odds-book"><div class="odds-col-head">' + l + '</div></div>')
-            .join('') +
-        '</div>';
-      body.appendChild(head);
-
-      const bookPrices = showDk ? fieldBookPrices(couponTitle) : {};
-
-      runners.forEach(r => {
-        let odds = null;
-        try { odds = r.winRunnerOdds.americanDisplayOdds.americanOdds; } catch (e) {}
-        const bp = bookPrices[normName(stripYear(r.runnerName))] || {};
-
-        const row = document.createElement('div');
-        row.className = 'odds-runner';
-        row.innerHTML =
-          '<span class="odds-runner-name">' + stripMarketTitle(r.runnerName, couponTitle) + '</span>' +
-          '<div class="odds-books">' +
-            '<div class="odds-book"><div class="odds-odds">' + fmtAmerican(odds) + '</div></div>' +
-            (showDk ? '<div class="odds-book"><div class="odds-odds">' + fmtDk(bp.dk) + '</div></div>' : '') +
-            (showDk ? '<div class="odds-book"><div class="odds-odds">' + fmtDk(bp.score) + '</div></div>' : '') +
-          '</div>';
-        body.appendChild(row);
+    // Field-based market (Super Bowl, Division/Conference Winners, #1 Seed, MVP
+    // and the other awards): a list of entities, not Over/Under runners. We build
+    // outright-table candidates from the FD runners — FD price from the runner,
+    // DK/SCORE borrowed from the matching outright market — so buildCoupon can
+    // render field markets through the SAME table as the Awards & Futures view
+    // (FMV column, hairline columns, FMV-relative arrows).
+    function fieldCandidates(runners, couponTitle) {
+      const bp = fieldBookPrices(couponTitle);     // normName(entity) -> {dk, score}
+      return runners.map(r => {
+        let fd = null;
+        try { fd = r.winRunnerOdds.americanDisplayOdds.americanOdds; } catch (e) {}
+        // FD layout odds are signed ints; normalize to the "+550"/"-130" strings
+        // the table's formatters and FMV math expect (matching outrights.json).
+        const fdStr = fd == null ? null : (fd > 0 ? '+' + fd : String(fd));
+        const key = normName(stripYear(r.runnerName));
+        const books = bp[key] || {};
+        return {
+          key: key,
+          names: { fd: stripMarketTitle(r.runnerName, couponTitle) },
+          prices: { fd: fdStr, dk: books.dk || null, score: books.score || null },
+        };
       });
+    }
+
+    // Field coupons are mostly teams; awards (MVP, POY, RoY, CoY, CPoY) are players.
+    function fieldNameLabel(couponTitle) {
+      const key = outrightKeyForFieldCoupon(couponTitle);
+      const m = key && OUTRIGHTS && OUTRIGHTS.markets && OUTRIGHTS.markets[key];
+      return m && m.kind === 'player' ? 'Player' : 'Team';
     }
 
     // The Over and Under of a market share the same line, so "O <over> / U <under>"
@@ -902,12 +955,12 @@
       return (n == null || isNaN(n)) ? '' : n.toFixed(1);
     }
 
-    // A book's line, plus an up/down arrow when it sits >=2% off fair value.
+    // A book's line, plus an up/down arrow when it sits >=3% off fair value.
     function lineWithArrow(lineStr, lineNum, fmv) {
       let arrow = '';
       if (lineNum != null && !isNaN(lineNum) && fmv != null && fmv > 0) {
-        if (lineNum >= fmv * 1.02) arrow = '<span class="odds-arrow up">▲</span>';
-        else if (lineNum <= fmv * 0.98) arrow = '<span class="odds-arrow down">▼</span>';
+        if (lineNum >= fmv * 1.03) arrow = '<span class="odds-arrow up">▲</span>';
+        else if (lineNum <= fmv * 0.97) arrow = '<span class="odds-arrow down">▼</span>';
       }
       return '<span class="odds-line">' + (lineStr || '') + arrow + '</span>';
     }
@@ -923,27 +976,43 @@
       const dkCol = ouColumn();
       const scoreCol = ouColumn();
 
-      // Collapse runners to one row per player: Over and Under share a line, so
-      // the line is per player and the two prices become the cell's subtext.
+      // Collapse runners per player, grouping FanDuel's alternate totals by line
+      // (a team's wins coupon lists several). Over and Under share a line.
       const order = [];
-      const byPlayer = {};
+      const byPlayer = {};   // player -> { <line>: { O, U } }
       runners.forEach(r => {
         const parsed = parseRunner(r.runnerName);
         if (!parsed) return;
         let odds = null;
         try { odds = r.winRunnerOdds.americanDisplayOdds.americanOdds; } catch (e) {}
-        if (!byPlayer[parsed.player]) { byPlayer[parsed.player] = { line: parsed.line }; order.push(parsed.player); }
-        byPlayer[parsed.player][parsed.dir.charAt(0)] = fmtAmerican(odds);
+        if (!byPlayer[parsed.player]) { byPlayer[parsed.player] = {}; order.push(parsed.player); }
+        const L = (byPlayer[parsed.player][parsed.line] = byPlayer[parsed.player][parsed.line] || {});
+        L[parsed.dir.charAt(0)] = fmtAmerican(odds);
       });
 
       // Each player's consensus line, returned so renderCard can sort coupons.
       const info = [];
 
       order.forEach(player => {
-        const row = byPlayer[player];
+        // FanDuel's main line = the paired O/U closest to balanced (-110/+110);
+        // every other total becomes a milestone entry (fdMilestones).
+        const fdLines = byPlayer[player];
+        let row = { line: null }, bestScore = Infinity;
+        const fdMilestones = [];
+        Object.keys(fdLines).forEach(ln => {
+          const L = fdLines[ln];
+          const po = (L.O && L.O !== '—') ? americanToProb(L.O) : null;
+          const pu = (L.U && L.U !== '—') ? americanToProb(L.U) : null;
+          const score = (po != null && pu != null) ? Math.abs(po - pu) : 9;
+          if (score < bestScore) { bestScore = score; row = { line: ln, O: L.O, U: L.U }; }
+        });
+        Object.keys(fdLines).forEach(ln => {
+          if (ln === row.line) return;
+          const over = fdLines[ln].O;
+          if (over && over !== '—') fdMilestones.push({ line: Number(ln), odds: over });
+        });
         // FanDuel contributes a line/price only when it actually priced the player.
-        // A synthesized union row (a player FD doesn't carry, sourced from DK/SCORE)
-        // has no odds, so FD shows '—' and is left out of the FMV average.
+        // A synthesized union row (sourced from DK/SCORE) has no FD odds.
         const hasFd = (row.O && row.O !== '—') || (row.U && row.U !== '—');
         const fdLine = hasFd && row.line != null ? Number(row.line) : null;
 
@@ -988,7 +1057,11 @@
         const fmv = lines.length ? lines.reduce((a, b) => a + b, 0) / lines.length : null;
         // Milestones aren't shown in the book columns — they live in a collapsible
         // panel (built by buildCoupon from this info entry), hidden by default.
-        info.push({ player: player, fmv: fmv, milestones: dkMilestones });
+        // FanDuel's non-main totals join the DK/SCORE milestone ladder.
+        const milestones = fdMilestones.length
+          ? dkMilestones.concat(fdMilestones).sort((a, b) => a.line - b.line)
+          : dkMilestones;
+        info.push({ player: player, fmv: fmv, milestones: milestones });
 
         fmvCol.appendChild(ouCell(fmv != null ? fmtFmv(fmv) : '—', ''));
         fdCol.appendChild(hasFd
@@ -1032,18 +1105,23 @@
       const panel = document.createElement('div');
       panel.className = 'odds-ms-panel';
       panel.hidden = true;
+      // Inner scroller holds the row; it owns the horizontal scroll (sized in JS
+      // to the OU viewport) so panning it never moves the odds table behind it.
+      const scroll = document.createElement('div');
+      scroll.className = 'odds-ms-scroll';
       const cap = document.createElement('span');
       cap.className = 'odds-ms-cap';
-      cap.textContent = 'DK milestones';
-      panel.appendChild(cap);
+      cap.textContent = 'Milestones';
+      scroll.appendChild(cap);
       milestones.forEach(ms => {
         const item = document.createElement('div');
         item.className = 'odds-ms-item';
         item.innerHTML =
           '<span class="odds-ms-line">' + ms.line + '+</span>' +
           '<span class="odds-ms-odds">' + ms.odds + '</span>';
-        panel.appendChild(item);
+        scroll.appendChild(item);
       });
+      panel.appendChild(scroll);
 
       const toggle = document.createElement('button');
       toggle.type = 'button';
@@ -1057,9 +1135,19 @@
         panel.hidden = !show;
         toggle.classList.toggle('is-open', show);
         toggle.setAttribute('aria-expanded', String(show));
+        if (show) sizeMilestonePanels();   // size now that it's measurable
       };
       header.appendChild(toggle);
       wrap.appendChild(panel);
+    }
+
+    // Pin each milestone scroller to the OU scroll container's visible width, so
+    // it scrolls horizontally within the viewport instead of widening the table.
+    function sizeMilestonePanels() {
+      document.querySelectorAll('.odds-ms-scroll').forEach(s => {
+        const sc = s.closest('.odds-ou-scroll');
+        if (sc) s.style.width = sc.clientWidth + 'px';
+      });
     }
 
     // Renders one card: title + each of its coupons.
@@ -1083,9 +1171,9 @@
         content.innerHTML = '<div class="odds-status">No markets available.</div>';
         return;
       }
-      // Every section shows FD and DK columns. OU cards get one shared, pinned
-      // FD/DK heading above their coupons; field coupons carry their own header
-      // row (built in buildFieldBody) since each lists its own set of entities.
+      // OU cards get one shared, pinned FD/DK/SCORE heading above their coupons;
+      // field coupons render as standalone outright tables (buildCoupon delegates
+      // to buildOutrightTable), each with its own sortable head.
       const showDk = true;
       const ouRefs = (card.coupons || []).filter(isOuCoupon);
       // OU coupons go in one horizontal-scroll container so their fixed-width book
@@ -1153,6 +1241,7 @@
       }
 
       applyStickyTops();
+      sizeMilestonePanels();
     }
 
     // Pin the breadcrumbs below the site header, and the FD/DK head below the
@@ -1162,8 +1251,22 @@
       const crumbs = document.getElementById('odds-tabs');
       const isCrumbs = crumbs.classList.contains('odds-crumbs');
       crumbs.style.top = isCrumbs ? headerH + 'px' : '';
+      // Everything pins just below the breadcrumbs. The shared OU heading pins at
+      // the base offset; each outright/field table pins its title there and stacks
+      // its column-head row directly beneath (offset by the title's height), so
+      // both stay visible while that table is in view — like the OU card's head.
+      const top0 = headerH + (isCrumbs ? crumbs.offsetHeight : 0);
       const ouHead = document.querySelector('.odds-ou-head');
-      if (ouHead) ouHead.style.top = (headerH + (isCrumbs ? crumbs.offsetHeight : 0)) + 'px';
+      if (ouHead) ouHead.style.top = top0 + 'px';
+      document.querySelectorAll('.odds-outright-head').forEach(head => {
+        const title = head.previousElementSibling;
+        let headTop = top0;
+        if (title && title.classList.contains('odds-table-title')) {
+          title.style.top = top0 + 'px';
+          headTop = top0 + title.offsetHeight;
+        }
+        head.style.top = headTop + 'px';
+      });
     }
 
     // Level 1 — a chosen tab: breadcrumbs + a vertical list of its cards, each
@@ -1290,26 +1393,31 @@
       const n = cand.names || {};
       return n.fd || n.score || n.dk || cand.key || '';
     }
-    // The book key with the shortest (best) price in a row, for highlighting.
-    function bestBookKey(prices) {
-      let best = null, bestP = -1;
-      OUTRIGHT_BOOKS.forEach(([k]) => {
-        const p = americanToProb(prices[k]);
-        if (p != null && p > bestP) { bestP = p; best = k; }
-      });
-      return best;
+    // Deviation arrow for an outright/field price vs the row's FMV — the no-line
+    // analog of lineWithArrow. Green ▲ when a book's odds are LONGER than fair
+    // (lower implied probability = better value), red ▼ when shorter. ~3% band,
+    // matching the OU cards. fmvAmerican is the row's consensus price.
+    function priceArrow(american, fmvAmerican) {
+      const p = americanToProb(american), f = americanToProb(fmvAmerican);
+      if (p == null || f == null || f <= 0) return '';
+      if (p <= f * 0.97) return '<span class="odds-arrow up">▲</span>';
+      if (p >= f * 1.03) return '<span class="odds-arrow down">▼</span>';
+      return '';
     }
 
-    // ---- Milestone index (DK-only "Player to Have X+" lists) ----------------
+    // ---- Milestone index ("X+" threshold ladders) ---------------------------
     // Keyed "<norm name>|<stat>" (stat like "rushing yards") so it matches the
-    // player-prop indexes; each player keeps every threshold's over price.
+    // player-prop indexes; each entity keeps every threshold's over price. Sources
+    // are DK's "Player to Have X+" yard/TD lists and theScore's per-team
+    // "Regular Season Milestone Wins" ladder — so we take whichever book priced it.
     function buildMilestoneIndex() {
       if (!OUTRIGHTS || !OUTRIGHTS.milestones) return;
       Object.entries(OUTRIGHTS.milestones).forEach(([statFile, m]) => {
         const stat = statFile.replace(/_/g, ' ');     // "rushing_yards" -> "rushing yards"
         Object.entries(m.thresholds || {}).forEach(([th, t]) => {
           (t.candidates || []).forEach(c => {
-            const odds = c.prices && c.prices.dk;
+            const p = c.prices || {};
+            const odds = p.dk || p.score || p.fd;
             if (!odds) return;
             const name = (c.names && (c.names.dk || c.names.fd || c.names.score)) || '';
             if (!name) return;
@@ -1427,12 +1535,13 @@
         content.innerHTML = '<div class="odds-status">Milestone not found.</div>';
         return;
       }
-      const unit = stat.indexOf('tds') !== -1 ? ' TDs' : ' yds';
+      const isWins = stat.indexOf('wins') !== -1;
+      const unit = stat.indexOf('tds') !== -1 ? ' TDs' : isWins ? ' wins' : ' yds';
       Object.keys(m.thresholds)
         .sort((a, b) => Number(a) - Number(b))
         .forEach(th => {
           content.appendChild(buildOutrightTable(
-            th + '+' + unit, m.thresholds[th].candidates, 'Player'));
+            th + '+' + unit, m.thresholds[th].candidates, isWins ? 'Team' : 'Player'));
         });
       applyStickyTops();
     }
@@ -1448,9 +1557,10 @@
       nameLabel = nameLabel || 'Player';
       const frag = document.createDocumentFragment();
 
-      // Market/threshold title, styled like an OU card's section heading.
+      // Market/threshold title, styled like an OU card's section heading. It pins
+      // (with the column-head row that follows it) while its table is in view.
       const section = document.createElement('div');
-      section.className = 'odds-section';
+      section.className = 'odds-section odds-table-title';
       section.textContent = title;
       frag.appendChild(section);
 
@@ -1523,12 +1633,11 @@
       }
 
       // One is-ou strip per candidate: pinned name + a single borderless badge
-      // per column (best book price highlighted, FMV muted).
+      // per column: FMV muted, each book price carrying a green/red arrow vs FMV.
       function renderRows() {
         scroll.innerHTML = '';
         sortedRows().forEach(rec => {
           const prices = rec.c.prices || {};
-          const best = bestBookKey(prices);
           const strip = document.createElement('div');
           strip.className = 'odds-coupon is-ou';
           const name = document.createElement('div');
@@ -1544,8 +1653,10 @@
               cell.textContent = rec.fmv || '—';
             } else {
               const val = prices[k];
-              cell.className = 'odds-book-label' + (val && k === best ? ' odds-best' : '');
-              cell.textContent = val ? fmtDk(val) : '—';
+              cell.className = 'odds-book-label';
+              cell.innerHTML = val
+                ? '<span class="odds-line">' + fmtDk(val) + priceArrow(val, rec.fmv) + '</span>'
+                : '—';
             }
             col.appendChild(cell);
             body.appendChild(col);
@@ -1675,7 +1786,7 @@
         }
 
         window.addEventListener('hashchange', route);
-        window.addEventListener('resize', applyStickyTops);
+        window.addEventListener('resize', () => { applyStickyTops(); sizeMilestonePanels(); });
         route();
       } catch (err) {
         document.getElementById('odds-content').innerHTML =
