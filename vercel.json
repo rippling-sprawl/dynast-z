@@ -1,8 +1,5 @@
 {
   "buildCommand": "python3 build.py",
-  "functions": {
-    "api/odds-ingest.py": { "includeFiles": "scripts/**" }
-  },
   "redirects": [
     { "source": "/masters", "destination": "/golf/2026/masters", "statusCode": 301 },
     { "source": "/masters/:page", "destination": "/golf/2026/masters/:page", "statusCode": 301 },

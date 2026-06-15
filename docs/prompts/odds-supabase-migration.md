@@ -16,7 +16,18 @@ Already in place (no need to rebuild):
   functions with thin CLI wrappers.
 - `api/odds-ingest.py` — `PUT` (auth'd, additive, idempotent) + `GET`.
 - `scripts/sql/odds_state.sql`, `scripts/seed_odds_state.py`.
-- `vercel.json` bundles `scripts/**` into the function.
+
+⚠️ **vercel.json no longer declares the function.** The
+`functions: {"api/odds-ingest.py": {includeFiles: "scripts/**"}}` block was
+**removed** — it failed the deploy ("pattern doesn't match any Serverless
+Functions") because `api/odds-ingest.py` is untracked and the endpoint is
+dormant. When activating (Path B), you must, in this order: (1) commit
+`api/odds-ingest.py` so it's part of the deploy, (2) re-add the `functions`
+block, (3) verify on a **preview deploy** that the build passes and the endpoint
+can `import odds_merge` (i.e. `scripts/**` actually bundled). If the glob still
+won't match/bundle, fall back to co-locating the lib under `api/` (e.g.
+`api/_odds_merge.py` + `api/_outright_common.py`, imported without sys.path
+games) so no `includeFiles` is needed.
 
 ## Uncommitted working-tree change to be aware of
 
