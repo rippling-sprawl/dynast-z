@@ -16,40 +16,31 @@ Already in place (no need to rebuild):
   functions with thin CLI wrappers.
 - `api/odds-ingest.py` — `PUT` (auth'd, additive, idempotent) + `GET`.
 - `scripts/sql/odds_state.sql`, `scripts/seed_odds_state.py`.
+- `scripts/parse_dk_outrights.py` — `DK_EXACT` + prefix/suffix stripping in
+  `canon_key` maps DK's `Regular Season MVP`, OPoY, DPoY, CoY, CPoY,
+  `To Miss Playoffs`, `Most Regular Season Wins`, AFC/NFC 1-Seed.
+- `views/odds.html` — `outrightKeyForFieldCoupon()` now maps award/playoff coupon
+  titles (not just team futures), so the **FD field-coupon view** of MVP/awards
+  borrows DK/SCORE columns from `outrights.json`. (Without this, only the
+  Awards & Futures *table* view showed DK/SCORE; the FD coupon route showed dashes.)
 
-⚠️ **vercel.json no longer declares the function.** The
+All of the above is **committed to `main`** (`MAJOR | DK data fix`, `vercel fix`,
+and the odds.html field-coupon fix). `data/outrights.json` carries the DK award
+columns (MVP = 121 prices, etc.). The static-file `/odds` path is fully working;
+the Supabase path below is what's left.
+
+⚠️ **vercel.json does NOT declare the function.** The
 `functions: {"api/odds-ingest.py": {includeFiles: "scripts/**"}}` block was
 **removed** — it failed the deploy ("pattern doesn't match any Serverless
-Functions") because `api/odds-ingest.py` is untracked and the endpoint is
-dormant. When activating (Path B), you must, in this order: (1) commit
-`api/odds-ingest.py` so it's part of the deploy, (2) re-add the `functions`
-block, (3) verify on a **preview deploy** that the build passes and the endpoint
-can `import odds_merge` (i.e. `scripts/**` actually bundled). If the glob still
-won't match/bundle, fall back to co-locating the lib under `api/` (e.g.
-`api/_odds_merge.py` + `api/_outright_common.py`, imported without sys.path
+Functions") while the endpoint was dormant. When activating (Path B), in this
+order: (1) confirm `api/odds-ingest.py` is in the deploy, (2) re-add the
+`functions` block, (3) verify on a **preview deploy** that the build passes and
+the endpoint can `import odds_merge` (i.e. `scripts/**` actually bundled). If the
+glob still won't match/bundle, fall back to co-locating the lib under `api/`
+(e.g. `api/_odds_merge.py` + `api/_outright_common.py`, imported without sys.path
 games) so no `includeFiles` is needed.
 
-## Uncommitted working-tree change to be aware of
-
-There is an **uncommitted** DK fix already applied to the working tree (NOT yet
-committed, by request):
-- `scripts/parse_dk_outrights.py` — extended `DK_EXACT` + prefix/suffix stripping
-  in `canon_key` (maps DK's `Regular Season MVP`, OPoY, DPoY, CoY, CPoY,
-  `To Miss Playoffs`, `Most Regular Season Wins`, AFC/NFC 1-Seed).
-- `data/outrights.json` — now carries DK columns for those 9 markets (MVP = 121
-  prices, etc.), ingested from a one-off DraftKings awards bundle that has since
-  been deleted. **This data lives only in the uncommitted `data/outrights.json`** —
-  don't discard the working tree without committing it first.
-
-## Decide which path, then do it
-
-### Path A — just ship the fix (no Supabase)
-1. `git checkout -b odds-dk-awards` (don't commit to main directly).
-2. Commit `scripts/parse_dk_outrights.py` + `data/outrights.json` (+ the rest of
-   the pipeline refactor if not already committed) and push. Vercel redeploys;
-   static files update. Done.
-
-### Path B — actually migrate to Supabase (these need the human's dashboards)
+## Migrate to Supabase (these need the human's dashboards)
 Human does first:
 1. Run `scripts/sql/odds_state.sql` in the Supabase SQL editor.
 2. Seed: `SUPABASE_URL=… SUPABASE_KEY=… python3 scripts/seed_odds_state.py`

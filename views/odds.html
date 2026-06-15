@@ -808,6 +808,7 @@
     // its outright market key to borrow those columns. Returns null if unmatched.
     function outrightKeyForFieldCoupon(title) {
       const t = stripYear(title || '').toLowerCase();
+      // Team futures
       if (/super bowl.*\bwinner\b/.test(t)) return 'super_bowl_winner';
       const div = t.match(/\b(afc|nfc)\s+(east|north|south|west)\s+winner\b/);
       if (div) return div[1] + '_' + div[2] + '_winner';
@@ -815,6 +816,16 @@
       if (champ) return champ[1] + '_winner';
       const seed = t.match(/\b(afc|nfc)\s+number\s*1\s*seed\b/);
       if (seed) return seed[1] + '_1_seed';
+      if (/make the playoffs/.test(t)) return 'make_playoffs';
+      if (/miss the playoffs/.test(t)) return 'miss_playoffs';
+      // Awards (rookie checks precede player-of-the-year; mirrors fd_canon)
+      if (/offensive rookie of the year/.test(t)) return 'oroy';
+      if (/defensive rookie of the year/.test(t)) return 'droy';
+      if (/offensive player of the year/.test(t)) return 'opoy';
+      if (/defensive player of the year/.test(t)) return 'dpoy';
+      if (/coach of the year/.test(t)) return 'coy';
+      if (/comeback player of the year/.test(t)) return 'cpoy';
+      if (/regular season mvp/.test(t) || (/\bmvp\b/.test(t) && !/super bowl/.test(t))) return 'mvp';
       return null;
     }
 
