@@ -77,6 +77,12 @@
   .badge.plan { background: #f3e7cf; color: #9a6a17; }
   .badge.none { background: #f6ddd6; color: #bd3520; }
   .small { color: var(--muted); font-size: 12px; }
+  thead th.fees-toggle { color: var(--accent); }
+  thead th.fees-toggle:hover { color: var(--err); }
+  .fee-grip { color: var(--accent); font-weight: 700; }
+  td.fee-col { background: var(--surface-2); }
+  thead th.fee-col { background: #f3e7cf; }
+  td.fees-cell { text-align: center; color: var(--muted); letter-spacing: 2px; }
   a.site { color: var(--accent); text-decoration: none; font-weight: 600; }
   a.site:hover { text-decoration: underline; }
   .empty-note { padding: 40px; text-align: center; color: var(--muted); }
@@ -123,22 +129,36 @@
 </div>
 
 <script>
+function condenseOutdoor(v) {
+  if (!v) return "—";
+  const t = v.replace(/^\s*yes\s*[—–-]\s*/i, "").trim();
+  return t ? t.charAt(0).toUpperCase() + t.slice(1) : "Yes";
+}
+
 const COLS = [
   { key: "complex",        label: "Complex",   cls: "complex" },
-  { key: "floorplan",      label: "Floorplan" },
+  { key: "floorplan",      label: "Floorplan", disp: r => {
+      const txt = r.floorplan || (r.officialUrl ? "site ↗" : "—");
+      return r.officialUrl ? `<a class="site" target="_blank" rel="noopener" href="${r.officialUrl}">${txt}</a>` : txt;
+    } },
   { key: "unit",           label: "Unit" },
   { key: "beds",           label: "Beds",     num: true },
   { key: "baths",          label: "Baths",    num: true },
   { key: "sqft",           label: "SqFt",     num: true, disp: r => r.sqftText || "—" },
   { key: "price",          label: "Price",    num: true, cls: "price", disp: r => r.priceText },
   { key: "available",      label: "Available" },
+  { fees: true },
+  { key: "outdoor",        label: "Outdoor space", disp: r => condenseOutdoor(r.outdoor) },
+  { key: "washerDryerType",label: "W/D type" },
+];
+
+const FEE_COLS = [
   { key: "petFee",         label: "Pet fee" },
   { key: "parkingFee",     label: "Parking fee" },
   { key: "washerDryerFee", label: "W/D fee" },
-  { key: "outdoor",        label: "Outdoor space" },
-  { key: "washerDryerType",label: "W/D type" },
-  { key: "officialUrl",    label: "Site", sortable: false, disp: r => r.officialUrl ? `<a class="site" target="_blank" rel="noopener" href="${r.officialUrl}">site ↗</a>` : "" },
 ];
+
+let feesExpanded = false;
 
 let DATA = { listings: [], sources: [], generatedAt: null };
 let sort = { key: "price", dir: 1 };
@@ -156,12 +176,29 @@ function fmtAgo(iso) {
 }
 
 function renderHead() {
-  $("head").innerHTML = COLS.map(c => {
+  const ths = [];
+  COLS.forEach(c => {
+    if (c.fees) {
+      if (feesExpanded) {
+        FEE_COLS.forEach((fc, i) => {
+          const lbl = i === 0 ? `<span class="fee-grip">Fees ▾</span> ${fc.label}` : fc.label;
+          ths.push(`<th class="fee-col fees-toggle">${lbl}</th>`);
+        });
+      } else {
+        ths.push(`<th class="fees-toggle">Fees ▸</th>`);
+      }
+      return;
+    }
     const active = sort.key === c.key;
     const ar = active ? `<span class="ar">${sort.dir > 0 ? "▲" : "▼"}</span>` : "";
-    return `<th data-k="${c.key}" ${c.sortable === false ? 'style="cursor:default"' : ""}>${c.label}${ar}</th>`;
-  }).join("");
+    ths.push(`<th data-k="${c.key}" ${c.sortable === false ? 'style="cursor:default"' : ""}>${c.label}${ar}</th>`);
+  });
+  $("head").innerHTML = ths.join("");
   $("head").querySelectorAll("th").forEach(th => {
+    if (th.classList.contains("fees-toggle")) {
+      th.onclick = () => { feesExpanded = !feesExpanded; render(); };
+      return;
+    }
     const k = th.dataset.k;
     const col = COLS.find(c => c.key === k);
     if (col && col.sortable === false) return;
@@ -178,6 +215,8 @@ function renderSources() {
 }
 
 function passesFilter(r) {
+  // Baseline: never show units priced above $1700 (null-price listings stay).
+  if (r.price != null && r.price > 1700) return false;
   const q = $("q").value.trim().toLowerCase();
   if (q) {
     const hay = `${r.complex} ${r.floorplan || ""} ${r.unit || ""}`.toLowerCase();
@@ -217,6 +256,16 @@ function render() {
   });
 
   $("rows").innerHTML = rows.map(r => "<tr>" + COLS.map(c => {
+    if (c.fees) {
+      if (feesExpanded) {
+        return FEE_COLS.map(fc => {
+          let v = r[fc.key];
+          v = (v == null || v === "") ? "—" : v;
+          return `<td class="fee-col">${v}</td>`;
+        }).join("");
+      }
+      return `<td class="fees-cell">···</td>`;
+    }
     let v;
     if (c.disp) v = c.disp(r);
     else if (c.key === "beds") v = r.beds == null ? "—" : (r.beds === 0 ? "Studio" : r.beds);

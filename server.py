@@ -1007,6 +1007,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         elif self.path == "/jane/admin":
             self.path = "/views/jane/admin.html"
             super().do_GET()
+        elif self.path == "/jane/marketing-coordinator":
+            self.path = "/views/jane/marketing-coordinator.html"
+            super().do_GET()
         elif self.path == "/jane/asheville-rentals":
             self.path = "/views/jane/asheville-rentals.html"
             super().do_GET()
