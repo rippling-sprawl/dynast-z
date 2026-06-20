@@ -28,6 +28,10 @@
     { "source": "/golf/:year/:tournament/ev-model", "destination": "/views/golf/ev-model.html" },
     { "source": "/golf/:year/:tournament", "destination": "/views/golf/hub.html" },
     { "source": "/acknowledgements", "destination": "/views/acknowledgements.html" },
+    { "source": "/jane/jobs", "destination": "/views/jane/jobs.html" },
+    { "source": "/jane/admin", "destination": "/views/jane/admin.html" },
+    { "source": "/jane/asheville-rentals", "destination": "/views/jane/asheville-rentals.html" },
+    { "source": "/jane", "destination": "/views/jane.html" },
     { "source": "/api/:path*", "destination": "/api/:path*" }
   ],
   "headers": [

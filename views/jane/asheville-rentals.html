@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Asheville Rentals</title>
+<style>
+  :root {
+    --bg: #f2f1e3;        /* warm cream */
+    --surface: #fffafb;   /* near-white panels */
+    --surface-2: #faf8ec; /* input / header-row fill */
+    --ink: #1b2533;       /* primary text */
+    --ink-soft: #373737;
+    --muted: #857550;     /* warm brown */
+    --accent: #d74229;    /* red-orange */
+    --accent-2: #f68b21;  /* orange */
+    --line: #ddd8c2;
+    --line-soft: #e7e2d0;
+    --ok: #6f8f1f;        /* olive green */
+    --warn: #f68b21;
+    --err: #d74229;
+    --display: "Adso", "Helvetica Neue", Arial, sans-serif;
+    --body: "futura-pt", "Helvetica Neue", Arial, sans-serif;
+    --mono: ui-monospace, "SFMono-Regular", Menlo, "Roboto Mono", "Courier New", monospace;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 14px/1.45 var(--body);
+  }
+  header {
+    padding: 18px 22px; border-bottom: 2px solid var(--ink);
+    display: flex; align-items: center; gap: 18px; flex-wrap: wrap; background: var(--bg);
+  }
+  h1 { font-size: 20px; margin: 0; font-weight: 700; letter-spacing: .2px; font-family: var(--display); }
+  h1 span { color: var(--muted); font-weight: 400; }
+  .grow { flex: 1; }
+  a.back { color: var(--accent); text-decoration: none; font-weight: 700; font-family: var(--display); letter-spacing: .3px; font-size: 13px; }
+  a.back:hover { text-decoration: underline; }
+  .meta { color: var(--muted); font-size: 12.5px; }
+  .wrap { padding: 16px 22px 60px; }
+  .controls {
+    display: flex; gap: 14px; flex-wrap: wrap; align-items: center;
+    margin-bottom: 14px; padding: 12px 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px;
+  }
+  .controls label { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .4px; display: flex; flex-direction: column; gap: 4px; font-family: var(--display); }
+  .controls input, .controls select {
+    background: var(--surface-2); color: var(--ink); border: 1px solid var(--line);
+    border-radius: 4px; padding: 7px 9px; font-size: 13px; min-width: 90px; font-family: var(--body);
+  }
+  .controls input:focus, .controls select:focus { outline: none; border-color: var(--accent); }
+  .controls input[type=text] { min-width: 180px; }
+  .sources { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+  .chip {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 999px;
+    padding: 5px 11px; font-size: 12px; display: flex; gap: 7px; align-items: center;
+  }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+  .dot.ok { background: var(--ok); } .dot.empty { background: var(--warn); } .dot.error { background: var(--err); }
+  .chip .c { color: var(--muted); }
+  .tablebox { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; min-width: 1100px; }
+  thead th {
+    position: sticky; top: 0; background: var(--surface-2); text-align: left;
+    padding: 10px 12px; font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .4px;
+    border-bottom: 2px solid var(--ink); cursor: pointer; white-space: nowrap; user-select: none; font-family: var(--display);
+  }
+  thead th:hover { color: var(--ink); }
+  thead th .ar { color: var(--accent); margin-left: 4px; }
+  tbody td { padding: 9px 12px; border-bottom: 1px solid var(--line-soft); white-space: nowrap; }
+  tbody tr:hover { background: var(--surface-2); }
+  td.complex { font-weight: 600; white-space: normal; min-width: 150px; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; font-family: var(--mono); }
+  td.price { text-align: right; font-variant-numeric: tabular-nums; font-weight: 700; color: var(--ok); font-family: var(--mono); }
+  .badge { font-size: 10px; padding: 1px 6px; border-radius: 3px; background: var(--line-soft); color: var(--muted); margin-left: 6px; text-transform: uppercase; letter-spacing: .3px; }
+  .badge.plan { background: #f3e7cf; color: #9a6a17; }
+  .badge.none { background: #f6ddd6; color: #bd3520; }
+  .small { color: var(--muted); font-size: 12px; }
+  a.site { color: var(--accent); text-decoration: none; font-weight: 600; }
+  a.site:hover { text-decoration: underline; }
+  .empty-note { padding: 40px; text-align: center; color: var(--muted); }
+</style>
+</head>
+<body>
+<header>
+  <a class="back" href="/jane">← Jane</a>
+  <h1>Asheville Rentals <span id="count"></span></h1>
+  <div class="grow"></div>
+  <div class="meta" id="freshness">No data yet</div>
+</header>
+
+<div class="wrap">
+  <div class="controls">
+    <label>Search<input type="text" id="q" placeholder="complex, floorplan, unit…" /></label>
+    <label>Beds
+      <select id="beds">
+        <option value="">Any</option><option value="0">Studio</option>
+        <option value="1">1</option><option value="2">2</option><option value="3">3+</option>
+      </select>
+    </label>
+    <label>Max price<input type="number" id="maxp" placeholder="e.g. 1800" step="50" /></label>
+    <label>Outdoor space
+      <select id="outdoor"><option value="">Any</option><option value="yes">Has patio/balcony</option></select>
+    </label>
+    <label>W/D
+      <select id="wd"><option value="">Any</option><option value="In-unit">In-unit</option><option value="Hookups">Hookups</option><option value="Community">Community</option></select>
+    </label>
+    <label>Show
+      <select id="gran"><option value="">All listings</option><option value="unit">Units only</option><option value="floorplan">Floorplans only</option></select>
+    </label>
+  </div>
+
+  <div class="sources" id="sources"></div>
+
+  <div class="tablebox">
+    <table>
+      <thead><tr id="head"></tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </div>
+  <div class="empty-note" id="emptyNote" style="display:none">No listings match your filters.</div>
+</div>
+
+<script>
+const COLS = [
+  { key: "complex",        label: "Complex",   cls: "complex" },
+  { key: "floorplan",      label: "Floorplan" },
+  { key: "unit",           label: "Unit" },
+  { key: "beds",           label: "Beds",     num: true },
+  { key: "baths",          label: "Baths",    num: true },
+  { key: "sqft",           label: "SqFt",     num: true, disp: r => r.sqftText || "—" },
+  { key: "price",          label: "Price",    num: true, cls: "price", disp: r => r.priceText },
+  { key: "available",      label: "Available" },
+  { key: "petFee",         label: "Pet fee" },
+  { key: "parkingFee",     label: "Parking fee" },
+  { key: "washerDryerFee", label: "W/D fee" },
+  { key: "outdoor",        label: "Outdoor space" },
+  { key: "washerDryerType",label: "W/D type" },
+  { key: "officialUrl",    label: "Site", sortable: false, disp: r => r.officialUrl ? `<a class="site" target="_blank" rel="noopener" href="${r.officialUrl}">site ↗</a>` : "" },
+];
+
+let DATA = { listings: [], sources: [], generatedAt: null };
+let sort = { key: "price", dir: 1 };
+
+const $ = (id) => document.getElementById(id);
+
+function fmtAgo(iso) {
+  if (!iso) return "No data yet";
+  const d = new Date(iso), s = (Date.now() - d) / 1000;
+  let ago = "just now";
+  if (s > 60) ago = Math.round(s / 60) + " min ago";
+  if (s > 3600) ago = Math.round(s / 3600) + " hr ago";
+  if (s > 86400) ago = Math.round(s / 86400) + " d ago";
+  return "Snapshot " + d.toLocaleString() + " · " + ago;
+}
+
+function renderHead() {
+  $("head").innerHTML = COLS.map(c => {
+    const active = sort.key === c.key;
+    const ar = active ? `<span class="ar">${sort.dir > 0 ? "▲" : "▼"}</span>` : "";
+    return `<th data-k="${c.key}" ${c.sortable === false ? 'style="cursor:default"' : ""}>${c.label}${ar}</th>`;
+  }).join("");
+  $("head").querySelectorAll("th").forEach(th => {
+    const k = th.dataset.k;
+    const col = COLS.find(c => c.key === k);
+    if (col && col.sortable === false) return;
+    th.onclick = () => { if (sort.key === k) sort.dir *= -1; else sort = { key: k, dir: k === "price" || k === "beds" || k === "sqft" || k === "baths" ? 1 : 1 }; render(); };
+  });
+}
+
+function renderSources() {
+  $("sources").innerHTML = DATA.sources.map(s => {
+    const label = s.status === "ok" ? `${s.count} live` : s.status === "empty" ? "no live data" : "error";
+    const t = s.error ? ` — ${s.error}` : ` — ${s.method || ""}`;
+    return `<div class="chip" title="${(s.method || "") + t}"><span class="dot ${s.status}"></span>${s.name}<span class="c">${label}</span></div>`;
+  }).join("");
+}
+
+function passesFilter(r) {
+  const q = $("q").value.trim().toLowerCase();
+  if (q) {
+    const hay = `${r.complex} ${r.floorplan || ""} ${r.unit || ""}`.toLowerCase();
+    if (!hay.includes(q)) return false;
+  }
+  const beds = $("beds").value;
+  if (beds !== "") {
+    if (beds === "3") { if (!(r.beds >= 3)) return false; }
+    else if (String(r.beds) !== beds) return false;
+  }
+  const maxp = parseFloat($("maxp").value);
+  if (!isNaN(maxp)) { if (r.price == null || r.price > maxp) return false; }
+  if ($("outdoor").value === "yes" && !/yes/i.test(r.outdoor || "")) return false;
+  const wd = $("wd").value;
+  if (wd && r.washerDryerType !== wd) return false;
+  const g = $("gran").value;
+  if (g && r.granularity !== g) return false;
+  return true;
+}
+
+function render() {
+  renderHead();
+  const rows = DATA.listings.filter(passesFilter);
+  const k = sort.key, dir = sort.dir;
+  const col = COLS.find(c => c.key === k);
+  rows.sort((a, b) => {
+    let x = a[k], y = b[k];
+    if (col && col.num) { // nulls last regardless of direction
+      if (x == null && y == null) return 0;
+      if (x == null) return 1;
+      if (y == null) return -1;
+      return (x - y) * dir;
+    }
+    x = (x ?? "").toString().toLowerCase();
+    y = (y ?? "").toString().toLowerCase();
+    return x < y ? -dir : x > y ? dir : 0;
+  });
+
+  $("rows").innerHTML = rows.map(r => "<tr>" + COLS.map(c => {
+    let v;
+    if (c.disp) v = c.disp(r);
+    else if (c.key === "beds") v = r.beds == null ? "—" : (r.beds === 0 ? "Studio" : r.beds);
+    else if (c.key === "complex") {
+      const b = r.granularity === "floorplan" ? '<span class="badge plan">floorplan</span>'
+              : r.granularity === "none" ? '<span class="badge none">see site</span>' : "";
+      v = `${r.complex}${b}${r.note ? `<div class="small">${r.note}</div>` : ""}`;
+    }
+    else { v = r[c.key]; v = (v == null || v === "") ? "—" : v; }
+    const cls = (c.cls ? c.cls : (c.num ? "num" : ""));
+    return `<td class="${cls}">${v}</td>`;
+  }).join("") + "</tr>").join("");
+
+  $("emptyNote").style.display = rows.length ? "none" : "block";
+  const unitCount = DATA.listings.filter(r => r.granularity !== "none").length;
+  $("count").textContent = `· ${rows.length} shown / ${unitCount} listings`;
+  $("freshness").textContent = fmtAgo(DATA.generatedAt);
+}
+
+async function load() {
+  const r = await fetch("/data/asheville-rentals.json");
+  DATA = await r.json();
+  renderSources();
+  render();
+}
+
+["q", "beds", "maxp", "outdoor", "wd", "gran"].forEach(id => {
+  $(id).addEventListener("input", render);
+});
+load();
+</script>
+</body>
+</html>
