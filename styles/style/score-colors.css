@@ -1,0 +1,18 @@
+/* === Score colors (conditional formatting) ===
+ * Value-driven coloring for golf leaderboards: to-par score classes and
+ * per-hole relative-to-par cells. The class names are produced by
+ * scoreClass()/holeClass() in scripts/primary/golf-utils.js. Split out of the
+ * former styles/masters.css so all conditional formatting lives under style/. */
+
+/* --- To-par score --- */
+.score-under { color: #4ade80; }
+.score-over { color: #f87171; }
+.score-even { color: #aaa; }
+
+/* --- Hole-by-hole relative-to-par --- */
+.hole-cell.birdie { background: rgba(74, 222, 128, 0.25); color: #4ade80; }
+.hole-cell.eagle { background: rgba(74, 222, 128, 0.45); color: #22c55e; }
+.hole-cell.bogey { background: rgba(248, 113, 113, 0.25); color: #f87171; }
+.hole-cell.double-plus { background: rgba(248, 113, 113, 0.4); color: #ef4444; }
+.hole-cell.par { color: #666; }
+.hole-cell.no-score { color: #333; }

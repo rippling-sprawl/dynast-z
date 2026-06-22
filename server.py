@@ -973,10 +973,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             except Exception as e:
                 self.wfile.write(json.dumps({"error": str(e)}).encode())
         elif self.path == "/account":
-            self.path = "/views/account.html"
+            self.path = "/views/home/account.html"
             super().do_GET()
         elif self.path == "/archive":
-            self.path = "/views/archive.html"
+            self.path = "/views/home/archive.html"
             super().do_GET()
         # Redirect old /masters/* URLs to /golf/2026/masters/*
         elif self.path == "/masters":
@@ -990,16 +990,16 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self.end_headers()
         # Hub pages
         elif self.path == "/golf":
-            self.path = "/views/golf-hub.html"
+            self.path = "/views/home/golf-hub.html"
             super().do_GET()
         elif self.path == "/football":
-            self.path = "/views/football.html"
+            self.path = "/views/home/football.html"
             super().do_GET()
         elif self.path == "/odds":
-            self.path = "/views/odds.html"
+            self.path = "/views/odds/index.html"
             super().do_GET()
         elif self.path == "/jane":
-            self.path = "/views/jane.html"
+            self.path = "/views/jane/index.html"
             super().do_GET()
         elif self.path == "/jane/jobs":
             self.path = "/views/jane/jobs.html"
@@ -1045,28 +1045,36 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self.path = "/views/golf/ev-model.html"
             super().do_GET()
         elif re.match(r"/league/[^/]+/team/", self.path):
-            self.path = "/views/team.html"
+            self.path = "/views/league/team.html"
             super().do_GET()
         elif re.match(r"/league/[^/]+/trades", self.path):
-            self.path = "/views/trades.html"
+            self.path = "/views/league/trades.html"
             super().do_GET()
         elif re.match(r"/league/[^/]+/scout", self.path):
-            self.path = "/views/league-scout.html"
+            self.path = "/views/league/scout.html"
             super().do_GET()
         elif re.match(r"/league/[^/]+/power", self.path):
-            self.path = "/views/league-power.html"
+            self.path = "/views/league/power.html"
             super().do_GET()
         elif re.match(r"/league/[^/]+/schedule", self.path):
-            self.path = "/views/league-schedule.html"
+            self.path = "/views/league/schedule.html"
             super().do_GET()
+        elif re.match(r"/league/[^/]+/rosters", self.path):
+            self.path = "/views/league/league.html"
+            super().do_GET()
+        elif re.match(r"/league/[^/]+/?$", self.path):
+            league_id = self.path.split("/league/")[1].strip("/")
+            self.send_response(302)
+            self.send_header("Location", f"/league/{league_id}/scout")
+            self.end_headers()
         elif self.path.startswith("/league/"):
-            self.path = "/views/league.html"
+            self.path = "/views/league/league.html"
             super().do_GET()
         elif self.path == "/acknowledgements":
-            self.path = "/views/acknowledgements.html"
+            self.path = "/views/home/acknowledgements.html"
             super().do_GET()
         elif self.path == "/trade-calculator":
-            self.path = "/views/trade-calculator.html"
+            self.path = "/views/tools/trade-calculator.html"
             super().do_GET()
         elif self.path == "/" or self.path == "":
             self.path = "/views/index.html"

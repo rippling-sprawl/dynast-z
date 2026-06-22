@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <title>Team | Dynast-Z</title>
+  <link rel="stylesheet" href="/styles/base/styles.css?v=abec71e4">
+  <link rel="stylesheet" href="/styles/primary/filters.css?v=5513fe32">
+  <link rel="stylesheet" href="/styles/primary/calculator.css?v=8b0d68c1">
+  <link rel="stylesheet" href="/styles/primary/team.css?v=a367f48d">
+</head>
+<body>
+  <div id="header-mount"></div>
+  <div id="nav-drawer-mount"></div>
+  <script src="/scripts/base/nav.js?v=1447b314"></script>
+  <script>initPage();</script>
+
+  <div class="league-content">
+    <div class="breadcrumbs" id="breadcrumbs"></div>
+    <div id="loading">Loading team...</div>
+    <div class="player-list" id="player-list"></div>
+  </div>
+
+  <script>
+    const pathParts = window.location.pathname.match(/\/league\/([^/]+)\/team\/([^/]+)/);
+    const leagueId = pathParts[1];
+    const rosterId = pathParts[2];
+    let zMax = 1;
+    let zMin = -1;
+
+    function fmtPos(pos) { return pos === 'PICK' ? 'PK' : pos; }
+
+    function fmtZ(z) {
+      if (z == null) return '\u2014';
+      const sign = z >= 0 ? '+' : '';
+      return sign + z.toFixed(2);
+    }
+
+    function zColor(z) {
+      if (z == null) return '';
+      if (z > 0) return `rgba(34, 197, 94, ${Math.min(z / zMax, 1).toFixed(2)})`;
+      if (z < 0) return `rgba(220, 38, 38, ${Math.min(Math.abs(z) / Math.abs(zMin), 1).toFixed(2)})`;
+      return 'transparent';
+    }
+
+    const sourceAbbr = {'keeptradecut.com':'KTC','fantasypros.com':'FP','fantasycalc.com':'FC'};
+    function sourcesTooltip(sources) {
+      if (!sources) return '';
+      return Object.entries(sources)
+        .map(([k, v]) => `${sourceAbbr[k]||k}: ${v.toLocaleString()}`)
+        .join('\n');
+    }
+
+    async function loadTeam() {
+      try {
+        const resp = await fetch(`/api/league/${leagueId}/team/${rosterId}`);
+        const data = await resp.json();
+        if (data.error) throw new Error(data.error);
+
+        document.title = `Dynast-Z - ${data.team_name || data.league_name}`;
+        const crumbs = document.getElementById('breadcrumbs');
+        crumbs.innerHTML = `<a href="/league/${leagueId}">${data.league_name}</a><span class="separator">/</span><span>${data.team_name || 'Team'}</span>`;
+        document.getElementById('loading').style.display = 'none';
+
+        const vals = data.players.filter(p => p.aggregate != null).map(p => p.aggregate);
+        zMax = Math.max(...vals) || 1;
+        zMin = Math.min(...vals) || -1;
+
+        const container = document.getElementById('player-list');
+        const posOrder = ['QB', 'RB', 'WR', 'TE', 'PICK', 'K', 'DEF'];
+        const grouped = {};
+        for (const p of data.players) {
+          const pos = p.position || 'OTHER';
+          if (!grouped[pos]) grouped[pos] = [];
+          grouped[pos].push(p);
+        }
+        // Sort each group: picks by name, others by aggregate desc
+        for (const pos in grouped) {
+          if (pos === 'PICK') grouped[pos].sort((a, b) => a.name.localeCompare(b.name));
+          else grouped[pos].sort((a, b) => (b.aggregate ?? -999) - (a.aggregate ?? -999));
+        }
+        // Render in position order
+        const orderedPositions = posOrder.filter(p => grouped[p]).concat(
+          Object.keys(grouped).filter(p => !posOrder.includes(p))
+        );
+
+        let html = '';
+        for (const pos of orderedPositions) {
+          html += `<div class="starter-divider">${pos}</div>`;
+          html += grouped[pos].map(playerCard).join('');
+        }
+        container.innerHTML = html;
+      } catch (e) {
+        document.getElementById('loading').textContent = 'Error: ' + e.message;
+      }
+    }
+
+    function playerCard(p) {
+      const zClass = p.aggregate != null ? '' : ' no-zscore';
+      const tooltip = sourcesTooltip(p.sources);
+      const taxiLabel = p.taxi ? '<span class="taxi-label">PS</span>' : '';
+      const rookieLabel = p.rookie ? '<span class="taxi-label">R</span>' : '';
+      return `
+        <div class="player-card player-card-${p.position}">
+          <span class="player-pos pos-${p.position}">${fmtPos(p.position)}</span>
+          <div class="player-info">
+            <div class="player-name">${p.name}</div>
+            <div class="player-team">${p.team || ''}${rookieLabel}${taxiLabel}</div>
+          </div>
+          <span class="player-value${zClass}" style="background:${zColor(p.aggregate)}" ${tooltip ? `data-sources="${tooltip}"` : ''}>${fmtZ(p.aggregate)}</span>
+        </div>
+      `;
+    }
+
+    loadTeam();
+  </script>
+</body>
+</html>

@@ -5,14 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <link rel="icon" type="image/png" href="/favicon.png">
   <title>Leaderboard | Dynast-Z</title>
-  <link rel="stylesheet" href="/styles/styles.css?v=df002b71">
-  <link rel="stylesheet" href="/styles/masters.css?v=14d037d9">
+  <link rel="stylesheet" href="/styles/base/styles.css?v=abec71e4">
+  <link rel="stylesheet" href="/styles/base/hub.css?v=2b363e8e">
+  <link rel="stylesheet" href="/styles/primary/golf.css?v=5644a76c">
+  <link rel="stylesheet" href="/styles/style/score-colors.css?v=98513287">
 </head>
 <body class="masters-body">
   <div id="header-mount"></div>
   <div id="nav-drawer-mount"></div>
-  <script src="/scripts/auth.js?v=d20e1128"></script>
-  <script src="/scripts/nav.js?v=cd972c1a"></script>
+  <script src="/scripts/base/auth.js?v=d20e1128"></script>
+  <script src="/scripts/base/nav.js?v=1447b314"></script>
   <script>initPage();</script>
 
   <div class="masters-content" style="padding-top:0;padding-bottom:0">
@@ -41,9 +43,9 @@
     <div id="board" style="display:none"></div>
   </div>
 
-  <script src="/scripts/auth.js?v=d20e1128"></script>
-  <script src="/scripts/sync.js?v=f19ba045"></script>
-  <script src="/scripts/golf-utils.js?v=9ca7c49f"></script>
+  <script src="/scripts/base/auth.js?v=d20e1128"></script>
+  <script src="/scripts/base/sync.js?v=f19ba045"></script>
+  <script src="/scripts/primary/golf-utils.js?v=9ca7c49f"></script>
   <script>
     const info = getTournamentInfo();
     const basePath = '/golf/' + TOURNAMENT_CONTEXT.year + '/' + TOURNAMENT_CONTEXT.tournament;

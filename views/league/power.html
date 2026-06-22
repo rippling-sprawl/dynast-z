@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <title>Power Rankings | Dynast-Z</title>
+  <link rel="stylesheet" href="/styles/base/styles.css?v=abec71e4">
+</head>
+<body>
+  <div id="header-mount"></div>
+  <div id="nav-drawer-mount"></div>
+  <script src="/scripts/base/nav.js?v=1447b314"></script>
+  <script src="/scripts/components/tabs.js?v=fd164a40"></script>
+  <script>initPage();</script>
+
+  <div class="league-content">
+    <div class="tabs" id="tab-bar"></div>
+    <div class="placeholder">Under construction</div>
+  </div>
+
+  <script>
+    const leagueId = window.location.pathname.match(/\/league\/([^/]+)/)[1];
+    initTabBar(leagueId);
+
+  </script>
+</body>
+</html>

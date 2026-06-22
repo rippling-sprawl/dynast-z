@@ -19,7 +19,7 @@ def file_hash(path: Path) -> str:
 def build():
     # Build a map of asset paths to their content hashes
     asset_hashes: dict[str, str] = {}
-    for pattern in ("styles/*.css", "scripts/*.js"):
+    for pattern in ("styles/**/*.css", "scripts/**/*.js"):
         for f in ROOT.glob(pattern):
             rel = "/" + f.relative_to(ROOT).as_posix()
             asset_hashes[rel] = file_hash(f)
