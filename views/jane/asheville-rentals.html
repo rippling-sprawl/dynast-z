@@ -245,6 +245,8 @@ function renderHead() {
 function passesFilter(r) {
   // Baseline: never show units priced above $1700 (null-price listings stay).
   if (r.price != null && r.price > 1700) return false;
+  // Baseline: require at least 650 sqft when sqft is known (unknown stays).
+  if (r.sqft != null && r.sqft < 650) return false;
   const q = $("q").value.trim().toLowerCase();
   if (q) {
     const hay = `${r.complex} ${r.floorplan || ""} ${r.unit || ""}`.toLowerCase();
