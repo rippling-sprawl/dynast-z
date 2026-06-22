@@ -8,6 +8,8 @@ import { dirname, join } from "node:path";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const SOURCES_DIR = join(__dirname, "sources");
 export const DATA_FILE = join(__dirname, "data.json");
+// The site-served copy that /jane/asheville-rentals reads from.
+export const PUBLIC_DATA_FILE = join(__dirname, "..", "data", "asheville-rentals.json");
 
 async function loadSources() {
   const files = (await readdir(SOURCES_DIR)).filter((f) => f.endsWith(".mjs") && !f.startsWith("_"));
@@ -61,7 +63,7 @@ function placeholder(meta, error) {
   };
 }
 
-export async function scrapeAll({ log = () => {} } = {}) {
+export async function scrapeAll({ log = () => {}, write = true } = {}) {
   const mods = await loadSources();
   const sources = [];
   const listings = [];
@@ -96,7 +98,12 @@ export async function scrapeAll({ log = () => {} } = {}) {
 
   sources.sort((a, b) => a.name.localeCompare(b.name));
   const data = { generatedAt: new Date().toISOString(), sources, listings };
-  await writeFile(DATA_FILE, JSON.stringify(data, null, 2));
+  if (write) {
+    const json = JSON.stringify(data, null, 2);
+    await writeFile(DATA_FILE, json);
+    // Mirror to the site-served copy so /jane/asheville-rentals reflects the refresh.
+    await writeFile(PUBLIC_DATA_FILE, json);
+  }
   return data;
 }
 

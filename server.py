@@ -1134,6 +1134,33 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     self._json_response(400, {"error": "Unknown action"})
             except Exception as e:
                 self._json_response(500, {"error": str(e)})
+        elif self.path == "/api/asheville-rentals/refresh":
+            # Local-only: re-scrape every Asheville rental source by running the
+            # Node scraper, which writes both data.json copies. Then return the
+            # fresh site-served file. (This endpoint only exists on the local dev
+            # server; production has no equivalent, so the page hides the button.)
+            root = os.path.dirname(os.path.abspath(__file__))
+            scraper_dir = os.path.join(root, "asheville-rentals")
+            try:
+                proc = subprocess.run(
+                    ["node", "scrape.mjs"],
+                    cwd=scraper_dir, capture_output=True, text=True, timeout=240,
+                )
+                if proc.returncode != 0:
+                    err = (proc.stderr or proc.stdout or "unknown error").strip()
+                    self._json_response(500, {"error": "Scrape failed: " + err[-500:]})
+                    return
+                with open(os.path.join(root, "data", "asheville-rentals.json")) as f:
+                    payload = f.read()
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Access-Control-Allow-Origin", "*")
+                self.end_headers()
+                self.wfile.write(payload.encode())
+            except subprocess.TimeoutExpired:
+                self._json_response(504, {"error": "Scrape timed out after 240s"})
+            except Exception as e:
+                self._json_response(500, {"error": str(e)})
         else:
             self.send_response(404)
             self.end_headers()

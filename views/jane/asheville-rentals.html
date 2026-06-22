@@ -88,6 +88,18 @@
   a.site { color: var(--accent); text-decoration: none; font-weight: 600; }
   a.site:hover { text-decoration: underline; }
   .empty-note { padding: 40px; text-align: center; color: var(--muted); }
+  .refresh {
+    font-family: var(--display); font-size: 12px; font-weight: 700; letter-spacing: .3px;
+    color: #fff; background: var(--accent); border: 1px solid var(--accent);
+    border-radius: 6px; padding: 8px 14px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;
+  }
+  .refresh:hover { background: var(--err); }
+  .refresh:disabled { opacity: .6; cursor: default; }
+  .spin {
+    width: 12px; height: 12px; border: 2px solid rgba(255,255,255,.4); border-top-color: #fff;
+    border-radius: 50%; display: inline-block; animation: spin .7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
 </style>
 </head>
 <body>
@@ -96,6 +108,7 @@
   <h1>Asheville Rentals</h1>
   <div class="grow"></div>
   <div class="meta" id="freshness">No data yet</div>
+  <button class="refresh" id="refreshBtn" hidden>Refresh all sources</button>
 </header>
 
 <div class="wrap">
@@ -301,14 +314,49 @@ function render() {
   $("freshness").textContent = fmtAgo(DATA.generatedAt);
 }
 
-async function load() {
-  const r = await fetch("/data/asheville-rentals.json");
-  DATA = await r.json();
-  DATA.listings.forEach(l => {
+function decorate(d) {
+  (d.listings || []).forEach(l => {
     l.pricePerSqft = (l.price != null && l.sqft) ? l.price / l.sqft : null;
   });
+  return d;
+}
+
+async function load() {
+  const r = await fetch("/data/asheville-rentals.json");
+  DATA = decorate(await r.json());
   // renderSources();
   render();
+}
+
+// Local-only: re-scrape every source on demand. The refresh endpoint exists only
+// on the local dev server (server.py); in production the button stays hidden.
+async function refresh() {
+  const btn = $("refreshBtn");
+  const label = btn.textContent;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spin"></span>Scraping…';
+  $("freshness").textContent = "Refreshing — re-scraping all sources (~1–2 min)…";
+  try {
+    const r = await fetch("/api/asheville-rentals/refresh", { method: "POST" });
+    if (!r.ok) {
+      const msg = (await r.json().catch(() => ({}))).error || `HTTP ${r.status}`;
+      throw new Error(msg);
+    }
+    DATA = decorate(await r.json());
+    render();
+  } catch (e) {
+    $("freshness").textContent = "Refresh failed: " + (e.message || e);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = label;
+  }
+}
+
+// Reveal the refresh control only on the local dev server.
+if (["localhost", "127.0.0.1", "[::1]"].includes(location.hostname)) {
+  const btn = $("refreshBtn");
+  btn.hidden = false;
+  btn.addEventListener("click", refresh);
 }
 
 ["q", "beds", "maxp", "wd"].forEach(id => {
