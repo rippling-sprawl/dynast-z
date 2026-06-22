@@ -1,0 +1,681 @@
+{
+  "data": {
+    "page": {
+      "title": "Regular Season Passing TDs",
+      "pageChildren": [
+        {
+          "sectionChildren": [
+            {
+              "marketplaceShelfChildren": [
+                {
+                  "markets": [
+                    {
+                      "name": "Aaron Rodgers Total Passing TDs",
+                      "type": "TOTAL",
+                      "selections": [
+                        {
+                          "name": {
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 19.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-115"
+                          }
+                        },
+                        {
+                          "name": {
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 19.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-115"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Baker Mayfield Total Passing TDs",
+                      "type": "TOTAL",
+                      "selections": [
+                        {
+                          "name": {
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 24.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-115"
+                          }
+                        },
+                        {
+                          "name": {
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 24.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-115"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Brock Purdy Total Passing TDs",
+                      "type": "TOTAL",
+                      "selections": [
+                        {
+                          "name": {
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 26.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-115"
+                          }
+                        },
+                        {
+                          "name": {
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 26.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-115"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Bryce Young Total Passing TDs",
+                      "type": "TOTAL",
+                      "selections": [
+                        {
+                          "name": {
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 20.5
+                          },
+                          "odds": {
+                            "formattedOdds": "+115"
+                          }
+                        },
+                        {
+                          "name": {
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 20.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-145"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "name": "C.J. Stroud Total Passing TDs",
+                      "type": "TOTAL",
+                      "selections": [
+                        {
+                          "name": {
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 21.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-115"
+                          }
+                        },
+                        {
+                          "name": {
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 21.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-115"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Caleb Williams Total Passing TDs",
+                      "type": "TOTAL",
+                      "selections": [
+                        {
+                          "name": {
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 23.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-115"
+                          }
+                        },
+                        {
+                          "name": {
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 23.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-115"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Cameron Ward Total Passing TDs",
+                      "type": "TOTAL",
+                      "selections": [
+                        {
+                          "name": {
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 18.5
+                          },
+                          "odds": {
+                            "formattedOdds": "Even"
+                          }
+                        },
+                        {
+                          "name": {
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 18.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-130"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Dak Prescott Total Passing TDs",
+                      "type": "TOTAL",
+                      "selections": [
+                        {
+                          "name": {
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 26.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-115"
+                          }
+                        },
+                        {
+                          "name": {
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 26.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-115"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Drake Maye Total Passing TDs",
+                      "type": "TOTAL",
+                      "selections": [
+                        {
+                          "name": {
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 25.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-110"
+                          }
+                        },
+                        {
+                          "name": {
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 25.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-120"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Fernando Mendoza Total Passing TDs",
+                      "type": "TOTAL",
+                      "selections": [
+                        {
+                          "name": {
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 11.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-125"
+                          }
+                        },
+                        {
+                          "name": {
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 11.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-105"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Jalen Hurts Total Passing TDs",
+                      "type": "TOTAL",
+                      "selections": [
+                        {
+                          "name": {
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 21.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-115"
+                          }
+                        },
+                        {
+                          "name": {
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 21.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-115"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Jared Goff Total Passing TDs",
+                      "type": "TOTAL",
+                      "selections": [
+                        {
+                          "name": {
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 28.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-120"
+                          }
+                        },
+                        {
+                          "name": {
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 28.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-110"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Jaxson Dart Total Passing TDs",
+                      "type": "TOTAL",
+                      "selections": [
+                        {
+                          "name": {
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 18.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-115"
+                          }
+                        },
+                        {
+                          "name": {
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 18.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-115"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Jayden Daniels Total Passing TDs",
+                      "type": "TOTAL",
+                      "selections": [
+                        {
+                          "name": {
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 20.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-115"
+                          }
+                        },
+                        {
+                          "name": {
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 20.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-115"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Joe Burrow Total Passing TDs",
+                      "type": "TOTAL",
+                      "selections": [
+                        {
+                          "name": {
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 31.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-120"
+                          }
+                        },
+                        {
+                          "name": {
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 31.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-110"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Jordan Love Total Passing TDs",
+                      "type": "TOTAL",
+                      "selections": [
+                        {
+                          "name": {
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 23.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-115"
+                          }
+                        },
+                        {
+                          "name": {
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 23.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-115"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Josh Allen Total Passing TDs",
+                      "type": "TOTAL",
+                      "selections": [
+                        {
+                          "name": {
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 23.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-125"
+                          }
+                        },
+                        {
+                          "name": {
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 23.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-105"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Justin Herbert Total Passing TDs",
+                      "type": "TOTAL",
+                      "selections": [
+                        {
+                          "name": {
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 24.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-115"
+                          }
+                        },
+                        {
+                          "name": {
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 24.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-115"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Lamar Jackson Total Passing TDs",
+                      "type": "TOTAL",
+                      "selections": [
+                        {
+                          "name": {
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 23.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-115"
+                          }
+                        },
+                        {
+                          "name": {
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 23.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-115"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Matthew Stafford Total Passing TDs",
+                      "type": "TOTAL",
+                      "selections": [
+                        {
+                          "name": {
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 29.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-115"
+                          }
+                        },
+                        {
+                          "name": {
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 29.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-115"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Sam Darnold Total Passing TDs",
+                      "type": "TOTAL",
+                      "selections": [
+                        {
+                          "name": {
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 22.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-125"
+                          }
+                        },
+                        {
+                          "name": {
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 22.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-105"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Trevor Lawrence Total Passing TDs",
+                      "type": "TOTAL",
+                      "selections": [
+                        {
+                          "name": {
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 25.5
+                          },
+                          "odds": {
+                            "formattedOdds": "+110"
+                          }
+                        },
+                        {
+                          "name": {
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 25.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-140"
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

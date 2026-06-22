@@ -1,0 +1,621 @@
+{
+  "data": {
+    "page": {
+      "title": "Regular Season Rushing Yards",
+      "pageChildren": [
+        {
+          "sectionChildren": [
+            {
+              "marketplaceShelfChildren": [
+                {
+                  "markets": [
+                    {
+                      "name": "Ashton Jeanty Total Rushing Yards",
+                      "type": "TOTAL",
+                      "selections": [
+                        {
+                          "name": {
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 925.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-130"
+                          }
+                        },
+                        {
+                          "name": {
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 925.5
+                          },
+                          "odds": {
+                            "formattedOdds": "Even"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Bijan Robinson Total Rushing Yards",
+                      "type": "TOTAL",
+                      "selections": [
+                        {
+                          "name": {
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 1100.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-115"
+                          }
+                        },
+                        {
+                          "name": {
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 1100.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-115"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Breece Hall Total Rushing Yards",
+                      "type": "TOTAL",
+                      "selections": [
+                        {
+                          "name": {
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 825.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-115"
+                          }
+                        },
+                        {
+                          "name": {
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 825.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-115"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Chase Brown Total Rushing Yards",
+                      "type": "TOTAL",
+                      "selections": [
+                        {
+                          "name": {
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 800.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-115"
+                          }
+                        },
+                        {
+                          "name": {
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 800.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-115"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Christian McCaffrey Total Rushing Yards",
+                      "type": "TOTAL",
+                      "selections": [
+                        {
+                          "name": {
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 900.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-115"
+                          }
+                        },
+                        {
+                          "name": {
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 900.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-115"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "name": "D'Andre Swift Total Rushing Yards",
+                      "type": "TOTAL",
+                      "selections": [
+                        {
+                          "name": {
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 725.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-115"
+                          }
+                        },
+                        {
+                          "name": {
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 725.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-115"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "name": "David Montgomery Total Rushing Yards",
+                      "type": "TOTAL",
+                      "selections": [
+                        {
+                          "name": {
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 800.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-120"
+                          }
+                        },
+                        {
+                          "name": {
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 800.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-110"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "name": "De'Von Achane Total Rushing Yards",
+                      "type": "TOTAL",
+                      "selections": [
+                        {
+                          "name": {
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 950.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-125"
+                          }
+                        },
+                        {
+                          "name": {
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 950.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-105"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Derrick Henry Total Rushing Yards",
+                      "type": "TOTAL",
+                      "selections": [
+                        {
+                          "name": {
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 1200.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-115"
+                          }
+                        },
+                        {
+                          "name": {
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 1200.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-115"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Jahmyr Gibbs Total Rushing Yards",
+                      "type": "TOTAL",
+                      "selections": [
+                        {
+                          "name": {
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 1125.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-115"
+                          }
+                        },
+                        {
+                          "name": {
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 1125.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-115"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "name": "James Cook Total Rushing Yards",
+                      "type": "TOTAL",
+                      "selections": [
+                        {
+                          "name": {
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 1150.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-115"
+                          }
+                        },
+                        {
+                          "name": {
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 1150.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-115"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Javonte Williams Total Rushing Yards",
+                      "type": "TOTAL",
+                      "selections": [
+                        {
+                          "name": {
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 900.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-115"
+                          }
+                        },
+                        {
+                          "name": {
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 900.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-115"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Jeremiyah Love Total Rushing Yards",
+                      "type": "TOTAL",
+                      "selections": [
+                        {
+                          "name": {
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 825.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-115"
+                          }
+                        },
+                        {
+                          "name": {
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 825.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-115"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Jonathan Taylor Total Rushing Yards",
+                      "type": "TOTAL",
+                      "selections": [
+                        {
+                          "name": {
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 1175.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-115"
+                          }
+                        },
+                        {
+                          "name": {
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 1175.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-115"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Josh Allen Total Rushing Yards",
+                      "type": "TOTAL",
+                      "selections": [
+                        {
+                          "name": {
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 450.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-125"
+                          }
+                        },
+                        {
+                          "name": {
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 450.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-105"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Kenneth Walker III Total Rushing Yards",
+                      "type": "TOTAL",
+                      "selections": [
+                        {
+                          "name": {
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 875.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-130"
+                          }
+                        },
+                        {
+                          "name": {
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 875.5
+                          },
+                          "odds": {
+                            "formattedOdds": "Even"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Lamar Jackson Total Rushing Yards",
+                      "type": "TOTAL",
+                      "selections": [
+                        {
+                          "name": {
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 525.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-115"
+                          }
+                        },
+                        {
+                          "name": {
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 525.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-115"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Omarion Hampton Total Rushing Yards",
+                      "type": "TOTAL",
+                      "selections": [
+                        {
+                          "name": {
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 875.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-115"
+                          }
+                        },
+                        {
+                          "name": {
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 875.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-115"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Saquon Barkley Total Rushing Yards",
+                      "type": "TOTAL",
+                      "selections": [
+                        {
+                          "name": {
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 1000.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-130"
+                          }
+                        },
+                        {
+                          "name": {
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 1000.5
+                          },
+                          "odds": {
+                            "formattedOdds": "Even"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Tony Pollard Total Rushing Yards",
+                      "type": "TOTAL",
+                      "selections": [
+                        {
+                          "name": {
+                            "cleanName": "Over"
+                          },
+                          "type": "OVER",
+                          "points": {
+                            "decimalPoints": 750.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-115"
+                          }
+                        },
+                        {
+                          "name": {
+                            "cleanName": "Under"
+                          },
+                          "type": "UNDER",
+                          "points": {
+                            "decimalPoints": 750.5
+                          },
+                          "odds": {
+                            "formattedOdds": "-115"
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

@@ -51,6 +51,11 @@
   }
   .controls input:focus, .controls select:focus { outline: none; border-color: var(--accent); }
   .controls input[type=text] { min-width: 180px; }
+  @media (max-width: 640px) {
+    .controls { flex-direction: column; align-items: stretch; }
+    .controls label { width: 100%; }
+    .controls input, .controls select { width: 100%; }
+  }
   .sources { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
   .chip {
     background: var(--surface); border: 1px solid var(--line); border-radius: 999px;
@@ -72,10 +77,7 @@
   tbody tr:hover { background: var(--surface-2); }
   td.complex { font-weight: 600; white-space: normal; min-width: 150px; }
   td.num { text-align: right; font-variant-numeric: tabular-nums; font-family: var(--mono); }
-  td.price { text-align: right; font-variant-numeric: tabular-nums; font-weight: 700; color: var(--ok); font-family: var(--mono); }
-  .badge { font-size: 10px; padding: 1px 6px; border-radius: 3px; background: var(--line-soft); color: var(--muted); margin-left: 6px; text-transform: uppercase; letter-spacing: .3px; }
-  .badge.plan { background: #f3e7cf; color: #9a6a17; }
-  .badge.none { background: #f6ddd6; color: #bd3520; }
+  td.price { text-align: right; font-variant-numeric: tabular-nums; font-family: var(--mono); }
   .small { color: var(--muted); font-size: 12px; }
   thead th.fees-toggle { color: var(--accent); }
   thead th.fees-toggle:hover { color: var(--err); }
@@ -91,7 +93,7 @@
 <body>
 <header>
   <a class="back" href="/jane">← Jane</a>
-  <h1>Asheville Rentals <span id="count"></span></h1>
+  <h1>Asheville Rentals</h1>
   <div class="grow"></div>
   <div class="meta" id="freshness">No data yet</div>
 </header>
@@ -105,15 +107,9 @@
         <option value="1">1</option><option value="2">2</option><option value="3">3+</option>
       </select>
     </label>
-    <label>Max price<input type="number" id="maxp" placeholder="e.g. 1800" step="50" /></label>
-    <label>Outdoor space
-      <select id="outdoor"><option value="">Any</option><option value="yes">Has patio/balcony</option></select>
-    </label>
+    <label>Max price<input type="number" id="maxp" placeholder="e.g. 1450" step="50" /></label>
     <label>W/D
       <select id="wd"><option value="">Any</option><option value="In-unit">In-unit</option><option value="Hookups">Hookups</option><option value="Community">Community</option></select>
-    </label>
-    <label>Show
-      <select id="gran"><option value="">All listings</option><option value="unit">Units only</option><option value="floorplan">Floorplans only</option></select>
     </label>
   </div>
 
@@ -129,27 +125,46 @@
 </div>
 
 <script>
-function condenseOutdoor(v) {
+function normalizeAvailable(v) {
   if (!v) return "—";
-  const t = v.replace(/^\s*yes\s*[—–-]\s*/i, "").trim();
-  return t ? t.charAt(0).toUpperCase() + t.slice(1) : "Yes";
+  const s = v.trim();
+  if (/^(available\s*now|available|now)$/i.test(s)) return "Now";
+  // Drop a leading "Available " and any trailing year: "Aug 4, 2026" -> "Aug 4".
+  return s.replace(/^available\s+/i, "").replace(/,?\s*\d{4}$/, "");
+}
+
+// Heatmap fill across the visible rows: dark green at the lowest value, dark red
+// at the highest, fading to transparent at the midpoint. Strong poles flip the
+// text to white for contrast.
+function heatStyle(v, min, max) {
+  if (v == null || !isFinite(v) || min === max) return "";
+  const t = (v - min) / (max - min);   // 0 = lowest, 1 = highest
+  const d = (t - 0.5) * 2;             // -1 .. 1, 0 at the midpoint
+  const a = Math.abs(d);               // 0 transparent -> 1 fully tinted
+  const rgb = d < 0 ? "29, 120, 56" : "183, 33, 27"; // green low / red high
+  const text = a >= 0.6 ? "color:#fff;" : "";
+  return ` style="${text}background:rgba(${rgb}, ${a.toFixed(2)})"`;
 }
 
 const COLS = [
-  { key: "complex",        label: "Complex",   cls: "complex" },
-  { key: "floorplan",      label: "Floorplan", disp: r => {
-      const txt = r.floorplan || (r.officialUrl ? "site ↗" : "—");
-      return r.officialUrl ? `<a class="site" target="_blank" rel="noopener" href="${r.officialUrl}">${txt}</a>` : txt;
+  { key: "complex",        label: "Complex", cls: "complex", disp: r => {
+      const fpTxt = r.floorplan || (r.officialUrl ? "site ↗" : "");
+      const fp = r.officialUrl && fpTxt
+        ? `<a class="site" target="_blank" rel="noopener" href="${r.officialUrl}">${fpTxt}</a>` : fpTxt;
+      const sub = [fp, r.unit].filter(Boolean).join(" · ");
+      return `${r.complex}`
+           + (sub ? `<div class="small">${sub}</div>` : "")
+           + (r.note ? `<div class="small">${r.note}</div>` : "");
     } },
-  { key: "unit",           label: "Unit" },
+  { key: "price",          label: "Price",    num: true, cls: "price", disp: r => r.priceText },
   { key: "beds",           label: "Beds",     num: true },
   { key: "baths",          label: "Baths",    num: true },
   { key: "sqft",           label: "SqFt",     num: true, disp: r => r.sqftText || "—" },
-  { key: "price",          label: "Price",    num: true, cls: "price", disp: r => r.priceText },
-  { key: "available",      label: "Available" },
-  { fees: true },
-  { key: "outdoor",        label: "Outdoor space", disp: r => condenseOutdoor(r.outdoor) },
+  { key: "pricePerSqft",   label: "$ / SqFt", num: true, heat: true, disp: r => r.pricePerSqft == null ? "—" : "$" + r.pricePerSqft.toFixed(2) },
+  { key: "available",      label: "Available", disp: r => normalizeAvailable(r.available) },
+  // { key: "outdoor",        label: "Outdoor Space", disp: r => /yes/i.test(r.outdoor || "") ? "✓" : "—" },
   { key: "washerDryerType",label: "W/D type" },
+  { fees: true },
 ];
 
 const FEE_COLS = [
@@ -206,13 +221,13 @@ function renderHead() {
   });
 }
 
-function renderSources() {
-  $("sources").innerHTML = DATA.sources.map(s => {
-    const label = s.status === "ok" ? `${s.count} live` : s.status === "empty" ? "no live data" : "error";
-    const t = s.error ? ` — ${s.error}` : ` — ${s.method || ""}`;
-    return `<div class="chip" title="${(s.method || "") + t}"><span class="dot ${s.status}"></span>${s.name}<span class="c">${label}</span></div>`;
-  }).join("");
-}
+// function renderSources() {
+//   $("sources").innerHTML = DATA.sources.map(s => {
+//     const label = s.status === "ok" ? `${s.count} live` : s.status === "empty" ? "no live data" : "error";
+//     const t = s.error ? ` — ${s.error}` : ` — ${s.method || ""}`;
+//     return `<div class="chip" title="${(s.method || "") + t}"><span class="dot ${s.status}"></span>${s.name}<span class="c">${label}</span></div>`;
+//   }).join("");
+// }
 
 function passesFilter(r) {
   // Baseline: never show units priced above $1700 (null-price listings stay).
@@ -229,11 +244,10 @@ function passesFilter(r) {
   }
   const maxp = parseFloat($("maxp").value);
   if (!isNaN(maxp)) { if (r.price == null || r.price > maxp) return false; }
-  if ($("outdoor").value === "yes" && !/yes/i.test(r.outdoor || "")) return false;
+  // Always require outdoor space: include "yes" and unknown, exclude explicit "no".
+  if (r.outdoor && !/yes/i.test(r.outdoor)) return false;
   const wd = $("wd").value;
   if (wd && r.washerDryerType !== wd) return false;
-  const g = $("gran").value;
-  if (g && r.granularity !== g) return false;
   return true;
 }
 
@@ -255,6 +269,14 @@ function render() {
     return x < y ? -dir : x > y ? dir : 0;
   });
 
+  // Min/max per heatmap column over the currently visible rows.
+  const heatRanges = {};
+  COLS.forEach(c => {
+    if (!c.heat) return;
+    const vals = rows.map(r => r[c.key]).filter(v => v != null && isFinite(v));
+    heatRanges[c.key] = vals.length ? [Math.min(...vals), Math.max(...vals)] : null;
+  });
+
   $("rows").innerHTML = rows.map(r => "<tr>" + COLS.map(c => {
     if (c.fees) {
       if (feesExpanded) {
@@ -269,30 +291,27 @@ function render() {
     let v;
     if (c.disp) v = c.disp(r);
     else if (c.key === "beds") v = r.beds == null ? "—" : (r.beds === 0 ? "Studio" : r.beds);
-    else if (c.key === "complex") {
-      const b = r.granularity === "floorplan" ? '<span class="badge plan">floorplan</span>'
-              : r.granularity === "none" ? '<span class="badge none">see site</span>' : "";
-      v = `${r.complex}${b}${r.note ? `<div class="small">${r.note}</div>` : ""}`;
-    }
     else { v = r[c.key]; v = (v == null || v === "") ? "—" : v; }
     const cls = (c.cls ? c.cls : (c.num ? "num" : ""));
-    return `<td class="${cls}">${v}</td>`;
+    const bg = (c.heat && heatRanges[c.key]) ? heatStyle(r[c.key], heatRanges[c.key][0], heatRanges[c.key][1]) : "";
+    return `<td class="${cls}"${bg}>${v}</td>`;
   }).join("") + "</tr>").join("");
 
   $("emptyNote").style.display = rows.length ? "none" : "block";
-  const unitCount = DATA.listings.filter(r => r.granularity !== "none").length;
-  $("count").textContent = `· ${rows.length} shown / ${unitCount} listings`;
   $("freshness").textContent = fmtAgo(DATA.generatedAt);
 }
 
 async function load() {
   const r = await fetch("/data/asheville-rentals.json");
   DATA = await r.json();
-  renderSources();
+  DATA.listings.forEach(l => {
+    l.pricePerSqft = (l.price != null && l.sqft) ? l.price / l.sqft : null;
+  });
+  // renderSources();
   render();
 }
 
-["q", "beds", "maxp", "outdoor", "wd", "gran"].forEach(id => {
+["q", "beds", "maxp", "wd"].forEach(id => {
   $(id).addEventListener("input", render);
 });
 load();
