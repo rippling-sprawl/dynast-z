@@ -12,6 +12,8 @@ const CURRENT_GOLF_YEAR = 2026;
 function buildNavItems() {
   const items = []
   items.push(
+    { type: 'section', label: 'Betting' },
+    { type: 'link', label: 'Bets', href: '/bets' },
     { type: 'section', label: 'Football' },
     { type: 'link', label: 'Trade Calculator', href: '/trade-calculator' },
     { type: 'link', label: 'JHBC', href: '/league/1314983622930870272' },

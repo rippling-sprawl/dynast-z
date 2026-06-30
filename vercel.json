@@ -9,6 +9,9 @@
   "rewrites": [
     { "source": "/", "destination": "/views/index.html" },
     { "source": "/odds", "destination": "/views/odds/index.html" },
+    { "source": "/bets/place", "destination": "/views/bets/place.html" },
+    { "source": "/bets/history", "destination": "/views/bets/history.html" },
+    { "source": "/bets", "destination": "/views/bets/index.html" },
     { "source": "/football", "destination": "/views/home/football.html" },
     { "source": "/trade-calculator", "destination": "/views/tools/trade-calculator.html" },
     { "source": "/league/:leagueId/team/:rosterId", "destination": "/views/league/team.html" },

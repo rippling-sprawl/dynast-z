@@ -998,6 +998,15 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         elif self.path == "/odds":
             self.path = "/views/odds/index.html"
             super().do_GET()
+        elif self.path.split("?")[0] == "/bets/place":
+            self.path = "/views/bets/place.html"
+            super().do_GET()
+        elif self.path.split("?")[0] == "/bets/history":
+            self.path = "/views/bets/history.html"
+            super().do_GET()
+        elif self.path.split("?")[0] == "/bets":
+            self.path = "/views/bets/index.html"
+            super().do_GET()
         elif self.path == "/jane":
             self.path = "/views/jane/index.html"
             super().do_GET()

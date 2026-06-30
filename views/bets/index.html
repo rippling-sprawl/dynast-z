@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <title>Bets | Dynast-Z</title>
+  <link rel="stylesheet" href="/styles/base/styles.css?v=abec71e4">
+  <link rel="stylesheet" href="/styles/primary/bets.css?v=357142d1">
+</head>
+<body>
+  <div id="header-mount"></div>
+  <div id="nav-drawer-mount"></div>
+  <script src="/scripts/base/auth.js?v=d20e1128"></script>
+  <script src="/scripts/base/nav.js?v=1445a74b"></script>
+  <script>initPage();</script>
+
+  <main class="bets-content">
+    <div class="bets-breadcrumbs"><a href="/">Home</a><span class="sep">/</span><span>Bets</span></div>
+
+    <h2 class="bets-h2">🎯 Bets</h2>
+    <p class="bets-sub">Track your wagers and see how your picks shake out.</p>
+
+    <div class="bets-actions">
+      <a class="bets-action" href="/bets/place">
+        <span class="title">➕ Track</span>
+      </a>
+      <a class="bets-action" href="/bets/history">
+        <span class="title">📜 History</span>
+      </a>
+    </div>
+
+    <div class="bets-section-label">Pending Bets</div>
+    <div id="pending-list" class="bet-list"></div>
+  </main>
+
+  <script src="/scripts/primary/bets.js?v=77344169"></script>
+  <script src="/scripts/primary/bet-tile.js?v=8e44badc"></script>
+  <script>
+    (async function () {
+      await loadTestBets();
+      const pending = pendingBetsWithSeed()
+        .sort((a, b) => (a.event_date || '').localeCompare(b.event_date || ''));
+      const list = document.getElementById('pending-list');
+      if (!pending.length) {
+        list.innerHTML = '<div class="bets-empty">No pending bets. <a href="/bets/place" style="color:#58a6ff">Track one →</a></div>';
+        return;
+      }
+      list.innerHTML = pending.map(renderBetTile).join('');
+    })();
+  </script>
+</body>
+</html>

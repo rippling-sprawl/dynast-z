@@ -1,0 +1,450 @@
+League,Start Time,Game,Pick Desc,Type,Period,Odds,Odds/Spread/Total,Result,Units Wagered,Units Net,Money Wagered,Money Net
+nfl,2019-11-29T01:20:00.000Z,NO @ ATL,NO -315,ml_away,game,-315,-315,win,315,100,315,100
+nba,2021-07-01T01:00:00.000Z,PHX @ LAC,PHX -115,ml_away,game,-115,-115,win,3.83,3.3304,115,100
+nba,2020-10-11T23:30:00.000Z,LAL @ MIA,LAL @ MIA: u214.5 -110,under,game,-110,214.5,win,3.67,3.3364,110,100
+nba,2020-09-23T01:00:00.000Z,LAL @ DEN,DEN +229,ml_home,game,229,229,win,2,4.58,40,91.6
+nfl,2020-12-13T21:25:00.000Z,NO @ PHI,PHI +265,ml_home,game,265,265,win,0.83,2.1995,25,66.25
+nfl,2019-12-30T01:20:00.000Z,SF @ SEA,SF -3 -120,spread_away,game,-120,-3,win,72,60,72,60
+nfl,2019-11-29T01:20:00.000Z,NO @ ATL,NO -6.5 -115,spread_away,game,-115,-6.5,win,69,60,69,60
+nfl,2019-12-08T21:25:00.000Z,TEN @ OAK,TEN -3 +100,spread_away,game,100,-3,win,60,60,60,60
+nfl,2020-12-06T21:25:00.000Z,NE @ LAC,NE +115,ml_away,game,115,115,win,1.67,1.9205,50,57.5
+nba,2021-02-07T01:00:00.000Z,BKN @ PHI,PHI -3 -115,spread_home,game,-115,-3,win,1.92,1.6696,57.5,50
+nfl,2020-11-01T21:25:00.000Z,SF @ SEA,SEA -3 -115,spread_home,game,-115,-3,win,1.92,1.6696,57.5,50
+nba,2021-06-14T00:00:00.000Z,PHX @ DEN,PHX -3 -110,spread_away,game,-110,-3,win,1.83,1.6636,55,50
+nfl,2020-12-13T21:25:00.000Z,NO @ PHI,PHI +7 -110,spread_home,game,-110,7,win,1.83,1.6636,55,50
+nfl,2020-12-06T18:00:00.000Z,CLE @ TEN,CLE @ TEN: o53 -110,over,game,-110,53,win,1.83,1.6636,55,50
+nfl,2020-11-29T18:00:00.000Z,LAC @ BUF,BUF -4 -110,spread_home,game,-110,-4,win,1.83,1.6636,55,50
+nfl,2020-11-08T18:00:00.000Z,BAL @ IND,BAL -1 -110,spread_away,game,-110,-1,win,1.83,1.6636,55,50
+nba,2020-02-12T00:00:00.000Z,LAC @ PHI,PHI -1 -110,spread_home,game,-110,-1,win,2.75,2.5,55,50
+nfl,2020-01-04T21:35:00.000Z,BUF @ HOU,HOU -2.5 -110,spread_home,game,-110,-2.5,win,55,50,55,50
+nba,2021-06-10T01:30:00.000Z,DEN @ PHX,PHX -5 -100,spread_home,game,-100,-5,win,1.67,1.67,50,50
+nfl,2020-09-28T00:20:00.000Z,GB @ NO,GB +165,ml_away,game,165,165,win,1.5,2.475,30,49.5
+nba,2019-12-31T03:00:00.000Z,PHX @ POR,PHX +145,ml_away,game,145,145,win,30,43.5,30,43.5
+nba,2021-03-28T00:00:00.000Z,HOU @ MIN,HOU +170,ml_away,game,170,170,win,0.83,1.411,25,42.5
+nfl,2020-11-08T18:00:00.000Z,DET @ MIN,MIN -3 -135,spread_home,game,-135,-3,win,1.8,1.3333,54,40
+nba,2021-06-11T23:30:00.000Z,PHI @ ATL,PHI -120,ml_away,game,-120,-120,win,1.6,1.3333,48,40
+nfl,2020-01-05T21:40:00.000Z,SEA @ PHI,SEA @ PHI: u45 -120,under,game,-120,45,win,48,40,48,40
+nfl,2019-12-22T18:00:00.000Z,NO @ TEN,NO -2.5 -120,spread_away,game,-120,-2.5,win,48,40,48,40
+nba,2020-12-23T00:00:00.000Z,GSW @ BKN,BKN -7 -115,spread_home,game,-115,-7,win,1.53,1.3304,46,40
+nba,2021-06-10T23:30:00.000Z,BKN @ MIL,BKN +3.5 -110,spread_away,game,-110,3.5,win,1.47,1.3364,44,40
+nba,2021-06-05T23:30:00.000Z,MIL @ BKN,BKN -4 -110,spread_home,game,-110,-4,win,1.47,1.3364,44,40
+nba,2020-12-30T00:00:00.000Z,TOR @ PHI,PHI -1.5 -110,spread_home,game,-110,-1.5,win,1.47,1.3364,44,40
+nfl,2020-12-27T21:25:00.000Z,LA @ SEA,LA @ SEA: u47.5 -110,under,game,-110,47.5,win,1.47,1.3364,44,40
+nfl,2020-12-27T21:05:00.000Z,CAR @ WAS,CAR PK -110,spread_away,game,-110,0,win,1.47,1.3364,44,40
+nfl,2020-12-27T18:00:00.000Z,ATL @ KC,ATL @ KC: u53.5 -110,under,game,-110,53.5,win,1.47,1.3364,44,40
+nfl,2020-12-27T18:00:00.000Z,IND @ PIT,PIT PK -110,spread_home,game,-110,0,win,1.47,1.3364,44,40
+nba,2020-12-26T03:30:00.000Z,LAC @ DEN,LAC @ DEN: o224.5 -110,over,game,-110,224.5,win,1.47,1.3364,44,40
+nba,2020-12-26T01:00:00.000Z,DAL @ LAL,LAL -6 -110,spread_home,game,-110,-6,win,1.47,1.3364,44,40
+nba,2020-12-25T22:00:00.000Z,BKN @ BOS,BKN -3 -110,spread_away,game,-110,-3,win,1.47,1.3364,44,40
+nfl,2020-11-06T01:20:00.000Z,GB @ SF,GB -1 -110,spread_away,game,-110,-1,win,1.47,1.3364,44,40
+nfl,2020-11-01T21:25:00.000Z,SF @ SEA,SEA -1.5 -110,spread_home,game,-110,-1.5,win,1.47,1.3364,44,40
+nba,2020-09-20T00:30:00.000Z,BOS @ MIA,BOS @ MIA: o208.5 -110,over,game,-110,208.5,win,2.2,2,44,40
+nba,2020-08-31T22:30:00.000Z,MIA @ MIL,MIA +5.5 -110,spread_away,game,-110,5.5,win,2.2,2,44,40
+nfl,2019-12-09T01:20:00.000Z,SEA @ LA,LA -1 -110,spread_home,game,-110,-1,win,44,40,44,40
+nba,2021-05-23T02:30:00.000Z,POR @ DEN,POR -105,ml_away,game,-105,-105,win,1.4,1.3333,42,40
+nfl,2020-01-12T23:40:00.000Z,SEA @ GB,GB -4 -105,spread_home,game,-105,-4,win,42,40,42,40
+nfl,2019-12-29T21:25:00.000Z,TEN @ HOU,TEN -3.5 -105,spread_away,game,-105,-3.5,win,42,40,42,40
+nfl,2020-10-25T17:00:00.000Z,PIT @ TEN,PIT +100,ml_away,game,100,100,win,1.33,1.33,40,40
+nba,2021-02-25T00:30:00.000Z,HOU @ CLE,CLE +155,ml_home,game,155,155,win,0.83,1.2865,25,38.75
+nba,2020-08-31T22:30:00.000Z,MIA @ MIL,MIA +190,ml_away,game,190,190,win,1,1.9,20,38
+nba,2019-11-06T01:00:00.000Z,LAL @ CHI,LAL +380,ml_away,game,380,380,win,10,38,10,38
+nfl,2020-11-01T18:00:00.000Z,PIT @ BAL,PIT +170,ml_away,game,170,170,win,0.67,1.139,20,34
+nba,2020-03-06T03:00:00.000Z,PHI @ SAC,PHI +170,ml_away,game,170,170,win,1,1.7,20,34
+nfl,2020-09-29T00:15:00.000Z,KC @ BAL,KC +165,ml_away,game,165,165,win,0.67,1.1055,20,33
+nba,2021-03-17T23:00:00.000Z,SAC @ WAS,SAC +130,ml_away,game,130,130,win,0.83,1.079,25,32.5
+nfl,2020-10-04T17:00:00.000Z,MIN @ HOU,MIN +160,ml_away,game,160,160,win,0.67,1.072,20,32
+nba,2021-01-05T01:00:00.000Z,IND @ NOP,IND +105,ml_away,game,105,105,win,1,1.05,30,31.5
+nfl,2020-10-25T17:00:00.000Z,GB @ HOU,GB -3 -130,spread_away,game,-130,-3,win,1.3,1,39,30
+nfl,2020-09-27T17:00:00.000Z,TEN @ MIN,TEN -125,ml_away,game,-125,-125,win,1.88,1.504,37.5,30
+nba,2021-06-13T19:00:00.000Z,BKN @ MIL,MIL u113 -115,home_under,game,-115,113,win,1.15,1,34.5,30
+nba,2021-05-29T17:30:00.000Z,MIL @ MIA,MIL -4.5 -115,spread_away,game,-115,-4.5,win,1.15,1,34.5,30
+nba,2021-05-28T02:00:00.000Z,PHX @ LAL,LAL -6.5 -115,spread_home,game,-115,-6.5,win,1.15,1,34.5,30
+nba,2021-04-09T01:00:00.000Z,MIL @ DAL,DAL -2 -115,spread_home,game,-115,-2,win,1.15,1,34.5,30
+nba,2021-02-25T00:30:00.000Z,HOU @ CLE,CLE +4.5 -115,spread_home,game,-115,4.5,win,1.15,1,34.5,30
+nba,2021-02-20T00:30:00.000Z,ATL @ BOS,BOS -4 -115,spread_home,game,-115,-4,win,1.15,1,34.5,30
+nba,2021-02-18T01:00:00.000Z,DET @ CHI,CHI -2.5 -115,spread_home,game,-115,-2.5,win,1.15,1,34.5,30
+nba,2020-09-04T22:30:00.000Z,MIL @ MIA,MIA +5.5 -115,spread_home,game,-115,5.5,win,1.73,1.5043,34.5,30
+nba,2021-06-11T23:30:00.000Z,PHI @ ATL,PHI -1.5 -110,spread_away,game,-110,-1.5,win,1.1,1,33,30
+nba,2021-06-03T01:30:00.000Z,MEM @ UTA,MEM @ UTA: o226 -110,over,game,-110,226,win,1.1,1,33,30
+nba,2021-06-02T01:00:00.000Z,POR @ DEN,DEN -1.5 -110,spread_home,game,-110,-1.5,win,1.1,1,33,30
+nba,2021-05-29T23:00:00.000Z,PHI @ WAS,PHI -5.5 -110,spread_away,game,-110,-5.5,win,1.1,1,33,30
+nba,2021-05-27T02:00:00.000Z,MEM @ UTA,UTA -9.5 -110,spread_home,game,-110,-9.5,win,1.1,1,33,30
+nba,2021-05-26T23:30:00.000Z,ATL @ NYK,NYK -2 -110,spread_home,game,-110,-2,win,1.1,1,33,30
+nba,2021-05-26T23:00:00.000Z,WAS @ PHI,PHI -8 -110,spread_home,game,-110,-8,win,1.1,1,33,30
+nba,2021-05-26T02:30:00.000Z,DAL @ LAC,DAL +6 -110,spread_away,game,-110,6,win,1.1,1,33,30
+nba,2021-05-25T23:30:00.000Z,BOS @ BKN,BKN -9.5 -110,spread_home,game,-110,-9.5,win,1.1,1,33,30
+nba,2021-05-23T19:30:00.000Z,LAL @ PHX,PHX -2.5 -110,spread_home,game,-110,-2.5,win,1.1,1,33,30
+nba,2021-04-08T23:30:00.000Z,CHI @ TOR,CHI -4 -110,spread_away,game,-110,-4,win,1.1,1,33,30
+nba,2021-04-04T18:00:00.000Z,BKN @ CHI,BKN @ CHI: u225 -110,under,game,-110,225,win,1.1,1,33,30
+nba,2021-03-28T00:00:00.000Z,HOU @ MIN,HOU +5 -110,spread_away,game,-110,5,win,1.1,1,33,30
+nba,2021-03-24T00:00:00.000Z,PHX @ MIA,PHX -2 -110,spread_away,game,-110,-2,win,1.1,1,33,30
+nba,2021-03-17T23:00:00.000Z,MIL @ PHI,PHI +6 -110,spread_home,game,-110,6,win,1.1,1,33,30
+nba,2021-03-14T00:00:00.000Z,TOR @ CHA,CHA -2.5 -110,spread_home,game,-110,-2.5,win,1.1,1,33,30
+nba,2021-03-04T01:00:00.000Z,CHA @ MIN,CHA -2.5 -110,spread_away,game,-110,-2.5,win,1.1,1,33,30
+nba,2021-03-04T01:00:00.000Z,CHI @ NOP,CHI +6 -110,spread_away,game,-110,6,win,1.1,1,33,30
+nba,2021-03-04T00:00:00.000Z,UTA @ PHI,PHI +3.5 -110,spread_home,game,-110,3.5,win,1.1,1,33,30
+nba,2021-02-25T01:00:00.000Z,MIN @ CHI,CHI -4.5 -110,spread_home,game,-110,-4.5,win,1.1,1,33,30
+nba,2021-02-22T00:00:00.000Z,OKC @ CLE,OKC -3 -110,spread_away,game,-110,-3,win,1.1,1,33,30
+nba,2021-02-22T00:00:00.000Z,MIN @ NYK,NYK -2.5 -110,spread_home,game,-110,-2.5,win,1.1,1,33,30
+nba,2021-02-20T02:00:00.000Z,TOR @ MIN,TOR -3.5 -110,spread_away,game,-110,-3.5,win,1.1,1,33,30
+nba,2021-02-20T01:00:00.000Z,DET @ MEM,MEM -4.5 -110,spread_home,game,-110,-4.5,win,1.1,1,33,30
+nba,2021-02-20T01:00:00.000Z,OKC @ MIL,MIL -10 -110,spread_home,game,-110,-10,win,1.1,1,33,30
+nba,2021-02-20T01:00:00.000Z,PHX @ NOP,PHX -3.5 -110,spread_away,game,-110,-3.5,win,1.1,1,33,30
+nba,2021-02-20T00:00:00.000Z,DEN @ CLE,DEN -9 -110,spread_away,game,-110,-9,win,1.1,1,33,30
+nba,2021-02-18T03:00:00.000Z,MIA @ GSW,GSW -1 -110,spread_home,game,-110,-1,win,1.1,1,33,30
+nba,2021-01-24T02:00:00.000Z,HOU @ DAL,HOU +9 -110,spread_away,game,-110,9,win,1.1,1,33,30
+nba,2021-01-17T00:30:00.000Z,CHA @ TOR,CHA @ TOR: o221 -110,over,game,-110,221,win,1.1,1,33,30
+nba,2021-01-10T01:30:00.000Z,ORL @ DAL,DAL -6 -110,spread_home,game,-110,-6,win,1.1,1,33,30
+nba,2021-01-05T00:30:00.000Z,NYK @ ATL,NYK +7 -110,spread_away,game,-110,7,win,1.1,1,33,30
+nba,2021-01-05T00:30:00.000Z,BOS @ TOR,BOS +6 -110,spread_away,game,-110,6,win,1.1,1,33,30
+nba,2020-12-30T03:00:00.000Z,NOP @ PHX,NOP @ PHX: u222 -110,under,game,-110,222,win,1.1,1,33,30
+nba,2020-12-30T00:30:00.000Z,MIL @ MIA,MIL -5.5 -110,spread_away,game,-110,-5.5,win,1.1,1,33,30
+nfl,2020-12-06T18:00:00.000Z,IND @ HOU,IND -3 -110,spread_away,game,-110,-3,win,1.1,1,33,30
+nfl,2020-11-22T18:00:00.000Z,TEN @ BAL,TEN +6 -110,spread_away,game,-110,6,win,1.1,1,33,30
+nfl,2020-11-15T21:25:00.000Z,SEA @ LA,LA -1.5 -110,spread_home,game,-110,-1.5,win,1.1,1,33,30
+nfl,2020-11-15T21:05:00.000Z,LAC @ MIA,MIA -2.5 -110,spread_home,game,-110,-2.5,win,1.1,1,33,30
+nfl,2020-10-20T00:15:00.000Z,ARI @ DAL,ARI -2.5 -110,spread_away,game,-110,-2.5,win,1.1,1,33,30
+nfl,2020-10-18T17:00:00.000Z,CLE @ PIT,PIT -3 -110,spread_home,game,-110,-3,win,1.1,1,33,30
+nfl,2020-10-12T00:20:00.000Z,MIN @ SEA,MIN +7 -110,spread_away,game,-110,7,win,1.1,1,33,30
+nfl,2020-09-27T17:00:00.000Z,LV @ NE,NE -5 -110,spread_home,game,-110,-5,win,1.1,1,33,30
+nfl,2020-09-29T00:15:00.000Z,KC @ BAL,KC @ BAL: o52 -110,over,game,-110,52,win,1.65,1.5,33,30
+nfl,2020-09-27T20:25:00.000Z,TB @ DEN,TB -6 -110,spread_away,game,-110,-6,win,1.65,1.5,33,30
+nba,2020-09-20T00:30:00.000Z,BOS @ MIA,BOS @ MIA: o208.5 -110,over,game,-110,208.5,win,1.65,1.5,33,30
+nba,2020-09-06T19:30:00.000Z,MIL @ MIA,MIA o109.5 -110,home_over,game,-110,109.5,win,1.65,1.5,33,30
+nba,2020-09-03T01:00:00.000Z,OKC @ HOU,OKC @ HOU: u217 -110,under,game,-110,217,win,1.65,1.5,33,30
+nba,2020-08-21T17:30:00.000Z,TOR @ BKN,TOR -11 -110,spread_away,game,-110,-11,win,1.65,1.5,33,30
+nfl,2020-01-12T20:05:00.000Z,HOU @ KC,KC -9.5 -110,spread_home,game,-110,-9.5,win,33,30,33,30
+nfl,2020-01-11T21:35:00.000Z,MIN @ SF,SF -6.5 -110,spread_home,game,-110,-6.5,win,33,30,33,30
+nfl,2019-12-29T18:00:00.000Z,ATL @ TB,ATL PK -110,spread_away,game,-110,0,win,33,30,33,30
+nba,2019-12-26T03:30:00.000Z,NOP @ DEN,NOP @ DEN: u218 -110,under,game,-110,218,win,33,30,33,30
+nba,2019-12-26T01:00:00.000Z,LAC @ LAL,LAC @ LAL: u222.5 -110,under,game,-110,222.5,win,33,30,33,30
+nba,2019-12-25T22:00:00.000Z,HOU @ GSW,HOU @ GSW: u227.5 -110,under,game,-110,227.5,win,33,30,33,30
+nba,2019-12-25T17:00:00.000Z,BOS @ TOR,BOS -4 -110,spread_away,game,-110,-4,win,33,30,33,30
+nfl,2019-12-15T21:05:00.000Z,MIN @ LAC,MIN -2.5 -110,spread_away,game,-110,-2.5,win,33,30,33,30
+nba,2021-06-08T23:30:00.000Z,ATL @ PHI,ATL @ PHI: u225 -105,under,game,-105,225,win,1.05,1,31.5,30
+nba,2021-03-30T02:00:00.000Z,CHI @ GSW,GSW -105,ml_home,game,-105,-105,win,1.05,1,31.5,30
+nba,2021-02-25T02:00:00.000Z,CHA @ PHX,CHA +9 -105,spread_away,game,-105,9,win,1.05,1,31.5,30
+nba,2021-02-18T02:00:00.000Z,OKC @ MEM,MEM -7 -105,spread_home,game,-105,-7,win,1.05,1,31.5,30
+nba,2021-02-18T01:00:00.000Z,IND @ MIN,IND -5.5 -105,spread_away,game,-105,-5.5,win,1.05,1,31.5,30
+nba,2020-12-27T00:00:00.000Z,OKC @ CHA,OKC +120,ml_away,game,120,120,win,0.83,0.996,25,30
+nfl,2019-11-03T18:00:00.000Z,CHI @ PHI,PHI -4.5 -105,spread_home,game,-105,-4.5,win,30,28.5714,30,28.5714
+nfl,2019-11-03T18:00:00.000Z,IND @ PIT,PIT +175,ml_home,game,175,175,win,15,26.25,15,26.25
+nfl,2019-12-01T18:00:00.000Z,NYJ @ CIN,CIN +130,ml_home,game,130,130,win,20,26,20,26
+nfl,2020-11-22T21:05:00.000Z,NYJ @ LAC,NYJ +10 -120,spread_away,game,-120,10,win,1,0.8333,30,25
+nfl,2020-09-22T00:15:00.000Z,NO @ LV,LV +6 -120,spread_home,game,-120,6,win,1.5,1.25,30,25
+nfl,2020-09-20T17:00:00.000Z,MIN @ IND,IND -3 -120,spread_home,game,-120,-3,win,1.5,1.25,30,25
+nba,2021-07-07T01:00:00.000Z,MIL @ PHX,MIL u107 -115,away_under,game,-115,107,win,0.96,0.8348,28.75,25
+nfl,2020-11-15T21:05:00.000Z,BUF @ ARI,ARI o29.5 -115,home_over,game,-115,29.5,win,0.96,0.8348,28.75,25
+nfl,2019-12-29T21:25:00.000Z,PIT @ BAL,BAL -115,ml_home,game,-115,-115,win,28.75,25,28.75,25
+nba,2021-05-26T23:30:00.000Z,ATL @ NYK,NYK -2 -110,spread_home,game,-110,-2,win,0.92,0.8364,27.5,25
+nfl,2020-10-05T00:20:00.000Z,PHI @ SF,PHI +8.5 -110,spread_away,game,-110,8.5,win,0.92,0.8364,27.5,25
+nfl,2020-10-04T20:25:00.000Z,IND @ CHI,IND @ CHI: u43 -110,under,game,-110,43,win,0.92,0.8364,27.5,25
+nfl,2020-09-27T20:05:00.000Z,NYJ @ IND,NYJ @ IND: u44 -110,under,game,-110,44,win,1.38,1.2545,27.5,25
+nba,2020-09-17T23:00:00.000Z,MIA @ BOS,MIA +3 -110,spread_away,game,-110,3,win,1.38,1.2545,27.5,25
+nfl,2020-09-14T23:10:00.000Z,PIT @ NYG,PIT -6 -110,spread_away,game,-110,-6,win,1.38,1.2545,27.5,25
+nfl,2020-09-13T17:00:00.000Z,GB @ MIN,GB +120,ml_away,game,120,120,win,1,1.2,20,24
+nfl,2019-11-17T18:00:00.000Z,NYJ @ WAS,NYJ +115,ml_away,game,115,115,win,20,23,20,23
+nfl,2019-12-08T21:25:00.000Z,TEN @ OAK,TEN -3 +105,spread_away,game,105,-3,win,20,21,20,21
+nfl,2019-11-24T21:25:00.000Z,DAL @ NE,DAL @ NE: u23.5 -130,under,game,-130,23.5,win,26,20,26,20
+nfl,2020-09-20T17:00:00.000Z,NYG @ CHI,NYG +6 -120,spread_away,game,-120,6,win,1.2,1,24,20
+nfl,2019-12-24T01:15:00.000Z,GB @ MIN,GB +6 -120,spread_away,game,-120,6,win,24,20,24,20
+nfl,2019-12-22T21:25:00.000Z,DAL @ PHI,DAL @ PHI: u47 -120,under,game,-120,47,win,24,20,24,20
+nfl,2019-12-16T01:20:00.000Z,BUF @ PIT,BUF @ PIT: u37 -120,under,game,-120,37,win,24,20,24,20
+nfl,2019-11-28T17:30:00.000Z,CHI @ DET,CHI @ DET: u48.5 -120,under,game,-120,48.5,win,24,20,24,20
+nfl,2019-11-24T21:25:00.000Z,DAL @ NE,DAL @ NE: u41.5 -120,under,game,-120,41.5,win,24,20,24,20
+nfl,2020-09-13T20:25:00.000Z,ARI @ SF,ARI +7 -115,spread_away,game,-115,7,win,1.15,1,23,20
+nba,2020-08-21T17:30:00.000Z,TOR @ BKN,BKN u104 -115,home_under,game,-115,104,win,1.15,1,23,20
+nfl,2019-12-08T21:25:00.000Z,PIT @ ARI,PIT -2.5 -115,spread_away,game,-115,-2.5,win,23,20,23,20
+nfl,2019-11-29T01:20:00.000Z,NO @ ATL,NO -6.5 -115,spread_away,game,-115,-6.5,win,23,20,23,20
+nba,2019-11-28T02:30:00.000Z,LAL @ NOP,LAL -2.5 -115,spread_away,game,-115,-2.5,win,23,20,23,20
+nfl,2019-11-17T18:00:00.000Z,DAL @ DET,DAL -7 -115,spread_away,game,-115,-7,win,23,20,23,20
+nfl,2020-11-08T18:00:00.000Z,CAR @ KC,CAR +10.5 -110,spread_away,game,-110,10.5,win,0.73,0.6636,22,20
+nfl,2020-09-27T20:25:00.000Z,TB @ DEN,TB @ DEN: u42.5 -110,under,game,-110,42.5,win,0.73,0.6636,22,20
+nfl,2020-09-20T17:00:00.000Z,JAC @ TEN,JAC +11 -110,spread_away,game,-110,11,win,1.1,1,22,20
+nfl,2020-09-14T00:20:00.000Z,DAL @ LA,DAL @ LA: u51.5 -110,under,game,-110,51.5,win,1.1,1,22,20
+nfl,2020-09-13T20:25:00.000Z,ARI @ SF,ARI @ SF: u48 -110,under,game,-110,48,win,1.1,1,22,20
+nba,2020-08-23T22:30:00.000Z,TOR @ BKN,TOR -13 -110,spread_away,game,-110,-13,win,1.1,1,22,20
+nba,2020-08-21T01:00:00.000Z,POR @ LAL,LAL -6.5 -110,spread_home,game,-110,-6.5,win,1.1,1,22,20
+nba,2020-08-20T22:00:00.000Z,ORL @ MIL,MIL -12.5 -110,spread_home,game,-110,-12.5,win,1.1,1,22,20
+nba,2020-08-20T19:30:00.000Z,OKC @ HOU,HOU -2 -110,spread_home,game,-110,-2,win,1.1,1,22,20
+nba,2020-08-18T20:00:00.000Z,MIA @ IND,MIA -4 -110,spread_away,game,-110,-4,win,1.1,1,22,20
+nba,2020-08-18T01:00:00.000Z,DAL @ LAC,LAC -6.5 -110,spread_home,game,-110,-6.5,win,1.1,1,22,20
+nba,2020-08-17T20:00:00.000Z,BKN @ TOR,TOR -9.5 -110,spread_home,game,-110,-9.5,win,1.1,1,22,20
+nba,2020-03-08T19:30:00.000Z,LAL @ LAC,LAL @ LAC: u227 -110,under,game,-110,227,win,1.1,1,22,20
+nba,2020-03-07T01:00:00.000Z,IND @ CHI,IND -3 -110,spread_away,game,-110,-3,win,1.1,1,22,20
+nba,2020-03-07T00:30:00.000Z,OKC @ NYK,OKC -7 -110,spread_away,game,-110,-7,win,1.1,1,22,20
+nba,2020-03-06T03:00:00.000Z,PHI @ SAC,PHI +5 -110,spread_away,game,-110,5,win,1.1,1,22,20
+nba,2020-01-14T03:00:00.000Z,CHA @ POR,CHA +9.5 -110,spread_away,game,-110,9.5,win,22,20,22,20
+nba,2020-01-14T01:00:00.000Z,OKC @ MIN,OKC -2 -110,spread_away,game,-110,-2,win,22,20,22,20
+nfl,2020-01-05T18:05:00.000Z,MIN @ NO,MIN @ NO: u50 -110,under,game,-110,50,win,22,20,22,20
+nba,2019-12-31T03:00:00.000Z,PHX @ POR,PHX @ POR: o232.5 -110,over,game,-110,232.5,win,22,20,22,20
+nfl,2019-12-29T18:00:00.000Z,NYJ @ BUF,NYJ @ BUF: u37.5 -110,under,game,-110,37.5,win,22,20,22,20
+nba,2019-12-29T01:00:00.000Z,NYK @ WAS,NYK @ WAS: u229.5 -110,under,game,-110,229.5,win,22,20,22,20
+nba,2019-12-28T22:00:00.000Z,MEM @ DEN,MEM @ DEN: o217 -110,over,game,-110,217,win,22,20,22,20
+nba,2019-12-28T01:00:00.000Z,IND @ MIA,IND @ MIA: o211.5 -110,over,game,-110,211.5,win,22,20,22,20
+nba,2019-12-27T01:00:00.000Z,MEM @ OKC,MEM +6 -110,spread_away,game,-110,6,win,22,20,22,20
+nba,2019-12-22T20:30:00.000Z,DAL @ TOR,TOR -1.5 -110,spread_home,game,-110,-1.5,win,22,20,22,20
+nfl,2019-12-22T18:00:00.000Z,PIT @ NYJ,PIT @ NYJ: u37 -110,under,game,-110,37,win,22,20,22,20
+nba,2019-12-15T23:00:00.000Z,PHI @ BKN,BKN +3.5 -110,spread_home,game,-110,3.5,win,22,20,22,20
+nfl,2019-12-15T21:25:00.000Z,ATL @ SF,ATL @ SF: o47 -110,over,game,-110,47,win,22,20,22,20
+nfl,2019-12-15T18:00:00.000Z,CHI @ GB,GB -4 -110,spread_home,game,-110,-4,win,22,20,22,20
+nfl,2019-12-15T18:00:00.000Z,NE @ CIN,NE -10 -110,spread_away,game,-110,-10,win,22,20,22,20
+nfl,2019-12-10T01:15:00.000Z,NYG @ PHI,NYG @ PHI: u45 -110,under,game,-110,45,win,22,20,22,20
+nfl,2019-12-09T01:20:00.000Z,SEA @ LA,SEA @ LA: u47.5 -110,under,game,-110,47.5,win,22,20,22,20
+nfl,2019-12-09T01:20:00.000Z,SEA @ LA,LA PK -110,spread_home,game,-110,0,win,22,20,22,20
+nfl,2019-12-08T18:00:00.000Z,DET @ MIN,MIN -12 -110,spread_home,game,-110,-12,win,22,20,22,20
+nfl,2019-12-01T18:00:00.000Z,SF @ BAL,SF @ BAL: u45 -110,under,game,-110,45,win,22,20,22,20
+nfl,2019-12-01T18:00:00.000Z,GB @ NYG,GB -6.5 -110,spread_away,game,-110,-6.5,win,22,20,22,20
+nfl,2019-12-01T18:00:00.000Z,NYJ @ CIN,NYJ @ CIN: u43 -110,under,game,-110,43,win,22,20,22,20
+nfl,2019-12-01T18:00:00.000Z,TEN @ IND,TEN -110,ml_away,game,-110,-110,win,22,20,22,20
+nba,2019-12-01T00:00:00.000Z,IND @ PHI,IND @ PHI: o207.5 -110,over,game,-110,207.5,win,22,20,22,20
+nba,2019-11-28T00:00:00.000Z,BKN @ BOS,BOS -7.5 -110,spread_home,game,-110,-7.5,win,22,20,22,20
+nba,2019-11-12T01:00:00.000Z,HOU @ NOP,HOU @ NOP: u243 -110,under,game,-110,243,win,22,20,22,20
+nba,2019-11-12T00:30:00.000Z,MEM @ SAS,MEM @ SAS: u224.5 -110,under,game,-110,224.5,win,22,20,22,20
+nba,2019-11-10T23:00:00.000Z,CHA @ PHI,CHA +13.5 -110,spread_away,game,-110,13.5,win,22,20,22,20
+nba,2020-08-21T20:00:00.000Z,DEN @ UTA,UTA -105,ml_home,game,-105,-105,win,1.05,1,21,20
+nfl,2019-12-13T01:20:00.000Z,NYJ @ BAL,BAL -15 -105,spread_home,game,-105,-15,win,21,20,21,20
+nba,2019-11-28T01:00:00.000Z,ATL @ MIL,MIL -4.5 -105,spread_home,game,-105,-4.5,win,21,20,21,20
+nfl,2019-12-01T21:05:00.000Z,LA @ ARI,LA -3 +100,spread_away,game,100,-3,win,20,20,20,20
+nfl,2019-12-01T18:00:00.000Z,CLE @ PIT,PIT +100,ml_home,game,100,100,win,20,20,20,20
+nfl,2019-11-03T18:00:00.000Z,IND @ PIT,PIT -1 -105,spread_home,game,-105,-1,win,20,19.0476,20,19.0476
+nfl,2019-11-24T18:00:00.000Z,SEA @ PHI,SEA -7.5 -110,spread_away,game,-110,-7.5,win,20,18.1818,20,18.1818
+nfl,2019-11-17T18:00:00.000Z,JAC @ IND,IND -2.5 -110,spread_home,game,-110,-2.5,win,20,18.1818,20,18.1818
+nfl,2019-11-24T18:00:00.000Z,CAR @ NO,CAR +8.5 -115,spread_away,game,-115,8.5,win,20,17.3913,20,17.3913
+nfl,2019-11-10T18:00:00.000Z,NYG @ NYJ,NYG +8.5 -115,spread_away,game,-115,8.5,win,20,17.3913,20,17.3913
+nba,2019-11-01T23:00:00.000Z,HOU @ BKN,HOU +8.5 -125,spread_away,game,-125,8.5,win,20,16,20,16
+nba,2019-11-28T00:30:00.000Z,NYK @ TOR,TOR -4.5 -120,spread_home,game,-120,-4.5,win,18,15,18,15
+nba,2019-11-28T01:00:00.000Z,LAC @ MEM,LAC +145,ml_away,game,145,145,win,10,14.5,10,14.5
+nba,2019-11-04T00:00:00.000Z,LAL @ SAS,LAL -2 -115,spread_away,game,-115,-2,win,15,13.0435,15,13.0435
+nfl,2019-11-03T18:00:00.000Z,WAS @ BUF,WAS @ BUF: u41.5 -115,under,game,-115,41.5,win,15,13.0435,15,13.0435
+nba,2019-11-03T23:00:00.000Z,SAC @ NYK,SAC PK -105,spread_away,game,-105,0,win,10,9.5238,10,9.5238
+nfl,2019-11-03T18:00:00.000Z,IND @ PIT,PIT +4.5 -120,spread_home,game,-120,4.5,win,10,8.3333,10,8.3333
+nfl,2020-12-20T21:25:00.000Z,KC @ NO,KC -3 -105,spread_away,game,-105,-3,push,5.25,0,157.5,0
+nfl,2019-12-08T18:00:00.000Z,IND @ TB,TB -3 -120,spread_home,game,-120,-3,push,60,0,60,0
+nba,2020-08-26T22:30:00.000Z,OKC @ HOU,HOU -3.5 -110,spread_home,game,-110,-3.5,cancelled,2.2,0,44,0
+nba,2020-08-27T22:30:00.000Z,BOS @ TOR,TOR -125,ml_home,game,-125,-125,push,1.88,0,37.5,0
+nfl,2020-11-15T18:00:00.000Z,HOU @ CLE,CLE -3 -115,spread_home,game,-115,-3,push,1.15,0,34.5,0
+nba,2021-06-09T02:00:00.000Z,LAC @ UTA,LAC +3 -110,spread_away,game,-110,3,push,1.1,0,33,0
+nba,2021-03-04T01:00:00.000Z,ATL @ ORL,ATL -3 -110,spread_away,game,-110,-3,push,1.1,0,33,0
+nba,2020-10-03T01:00:00.000Z,MIA @ LAL,LAL -10 -110,spread_home,game,-110,-10,push,1.1,0,33,0
+nfl,2020-09-20T17:00:00.000Z,BUF @ MIA,BUF -3 -135,spread_away,game,-135,-3,push,1.35,0,27,0
+nfl,2019-11-17T21:05:00.000Z,ARI @ SF,ARI +10 -115,spread_away,game,-115,10,push,23,0,23,0
+nba,2020-08-26T20:00:00.000Z,ORL @ MIL,ORL @ MIL: u227.5 -110,under,game,-110,227.5,cancelled,1.1,0,22,0
+nfl,2019-12-21T18:00:00.000Z,HOU @ TB,HOU -3 -105,spread_away,game,-105,-3,push,21,0,21,0
+nfl,2019-11-10T18:00:00.000Z,BUF @ CLE,CLE -3 -105,spread_home,game,-105,-3,push,21,0,21,0
+nfl,2019-12-08T18:00:00.000Z,IND @ TB,TB -3 +100,spread_home,game,100,-3,push,20,0,20,0
+nfl,2019-11-26T01:15:00.000Z,BAL @ LA,LA +600,ml_home,game,600,600,loss,5,-5,5,-5
+nba,2019-11-03T00:00:00.000Z,TOR @ MIL,TOR +400,ml_away,game,400,400,loss,5,-5,5,-5
+nba,2019-11-01T23:00:00.000Z,HOU @ BKN,HOU +1100,ml_away,game,1100,1100,loss,5,-5,5,-5
+nba,2019-11-03T00:00:00.000Z,TOR @ MIL,TOR +6.5 -115,spread_away,game,-115,6.5,loss,10,-10,10,-10
+nba,2019-11-01T23:00:00.000Z,HOU @ BKN,HOU +500,ml_away,game,500,500,loss,10,-10,10,-10
+nba,2019-11-28T02:00:00.000Z,WAS @ PHX,PHX +5.5 -105,spread_home,game,-105,5.5,loss,10.5,-10.5,10.5,-10.5
+nba,2019-11-03T22:00:00.000Z,CHI @ IND,CHI +110,ml_away,game,110,110,loss,15,-15,15,-15
+nfl,2019-11-03T21:25:00.000Z,CLE @ DEN,CLE +4.5 -110,spread_away,game,-110,4.5,loss,15,-15,15,-15
+nba,2020-01-14T03:00:00.000Z,CHA @ POR,CHA +380,ml_away,game,380,380,loss,20,-20,20,-20
+nba,2020-01-14T00:00:00.000Z,PHI @ IND,PHI +145,ml_away,game,145,145,loss,20,-20,20,-20
+nfl,2019-12-22T21:05:00.000Z,OAK @ LAC,LAC -13.5 +160,spread_home,game,160,-13.5,loss,20,-20,20,-20
+nfl,2019-12-15T18:00:00.000Z,TB @ DET,DET +170,ml_home,game,170,170,loss,20,-20,20,-20
+nfl,2019-12-08T21:05:00.000Z,LAC @ JAC,JAC +130,ml_home,game,130,130,loss,20,-20,20,-20
+nfl,2019-11-24T18:00:00.000Z,OAK @ NYJ,OAK +7.5 -115,spread_away,game,-115,7.5,loss,20,-20,20,-20
+nfl,2019-11-10T18:00:00.000Z,ATL @ NO,NO +7.5 +121,spread_home,game,121,7.5,loss,20,-20,20,-20
+nfl,2019-11-10T18:00:00.000Z,ATL @ NO,NO -5.5 -120,spread_home,game,-120,-5.5,loss,20,-20,20,-20
+nfl,2019-11-10T18:00:00.000Z,ARI @ TB,TB -5 -115,spread_home,game,-115,-5,loss,20,-20,20,-20
+nfl,2019-11-10T18:00:00.000Z,BAL @ CIN,CIN +10.5 -110,spread_home,game,-110,10.5,loss,20,-20,20,-20
+nba,2019-11-05T02:00:00.000Z,PHI @ PHX,PHI -2 -110,spread_away,game,-110,-2,loss,20,-20,20,-20
+nfl,2019-11-05T01:15:00.000Z,DAL @ NYG,NYG +7 -110,spread_home,game,-110,7,loss,20,-20,20,-20
+nba,2019-11-04T02:00:00.000Z,UTA @ LAC,UTA +4.5 -110,spread_away,game,-110,4.5,loss,20,-20,20,-20
+nba,2019-11-03T23:00:00.000Z,HOU @ MIA,HOU -3 -110,spread_away,game,-110,-3,loss,20,-20,20,-20
+nfl,2019-11-03T21:25:00.000Z,GB @ LAC,GB +3.5 -115,spread_away,game,-115,3.5,loss,20,-20,20,-20
+nfl,2019-11-03T21:25:00.000Z,GB @ LAC,GB +1.5 -110,spread_away,game,-110,1.5,loss,20,-20,20,-20
+nfl,2019-11-03T18:00:00.000Z,CHI @ PHI,PHI -10.5 -115,spread_home,game,-115,-10.5,loss,20,-20,20,-20
+nba,2020-09-02T00:30:00.000Z,UTA @ DEN,UTA +100,ml_away,game,100,100,loss,1,-1,20,-20
+nba,2020-08-19T22:30:00.000Z,PHI @ BOS,PHI +165,ml_away,game,165,165,loss,1,-1,20,-20
+nba,2020-03-11T00:00:00.000Z,CLE @ CHI,CLE +150,ml_away,game,150,150,loss,1,-1,20,-20
+nba,2020-02-02T01:30:00.000Z,ATL @ DAL,ATL +160,ml_away,game,160,160,loss,1,-1,20,-20
+nba,2020-01-27T02:00:00.000Z,IND @ POR,IND +130,ml_away,game,130,130,loss,1,-1,20,-20
+nfl,2020-11-08T18:00:00.000Z,DEN @ ATL,DEN +175,ml_away,game,175,175,loss,0.67,-0.67,20,-20
+nfl,2020-09-27T17:00:00.000Z,SF @ NYG,NYG +155,ml_home,game,155,155,loss,0.67,-0.67,20,-20
+nfl,2019-12-22T18:00:00.000Z,PIT @ NYJ,PIT -3 -105,spread_away,game,-105,-3,loss,21,-21,21,-21
+nfl,2019-12-15T18:00:00.000Z,PHI @ WAS,WAS +6 -105,spread_home,game,-105,6,loss,21,-21,21,-21
+nba,2020-08-17T22:30:00.000Z,PHI @ BOS,PHI +6.5 -110,spread_away,game,-110,6.5,loss,22,-22,22,-22
+nba,2020-01-14T03:00:00.000Z,CHA @ POR,CHA @ POR: u215 -110,under,game,-110,215,loss,22,-22,22,-22
+nba,2020-01-12T23:00:00.000Z,GSW @ MEM,GSW @ MEM: o227 -110,over,game,-110,227,loss,22,-22,22,-22
+nba,2020-01-12T23:00:00.000Z,SAS @ TOR,TOR -3.5 -110,spread_home,game,-110,-3.5,loss,22,-22,22,-22
+nba,2020-01-05T00:30:00.000Z,IND @ ATL,IND @ ATL: u221.5 -110,under,game,-110,221.5,loss,22,-22,22,-22
+nba,2019-12-31T02:00:00.000Z,DET @ UTA,DET +10 -110,spread_away,game,-110,10,loss,22,-22,22,-22
+nfl,2019-12-30T01:20:00.000Z,SF @ SEA,SF @ SEA: u45.5 -110,under,game,-110,45.5,loss,22,-22,22,-22
+nfl,2019-12-29T21:25:00.000Z,ARI @ LA,ARI @ LA: u45 -110,under,game,-110,45,loss,22,-22,22,-22
+nfl,2019-12-29T21:25:00.000Z,WAS @ DAL,WAS @ DAL: u45.5 -110,under,game,-110,45.5,loss,22,-22,22,-22
+nfl,2019-12-29T21:25:00.000Z,PHI @ NYG,PHI @ NYG: u45 -110,under,game,-110,45,loss,22,-22,22,-22
+nfl,2019-12-29T21:25:00.000Z,IND @ JAC,IND @ JAC: u42 -110,under,game,-110,42,loss,22,-22,22,-22
+nfl,2019-12-29T18:00:00.000Z,NO @ CAR,NO @ CAR: u45 -110,under,game,-110,45,loss,22,-22,22,-22
+nfl,2019-12-29T18:00:00.000Z,MIA @ NE,MIA @ NE: u44.5 -110,under,game,-110,44.5,loss,22,-22,22,-22
+nfl,2019-12-29T18:00:00.000Z,ATL @ TB,ATL @ TB: u47.5 -110,under,game,-110,47.5,loss,22,-22,22,-22
+nba,2019-12-28T00:00:00.000Z,OKC @ CHA,CHA PK -110,spread_home,game,-110,0,loss,22,-22,22,-22
+nba,2019-12-22T23:00:00.000Z,CHA @ BOS,CHA +13 -110,spread_away,game,-110,13,loss,22,-22,22,-22
+nfl,2019-12-22T18:00:00.000Z,BAL @ CLE,CLE +10 -110,spread_home,game,-110,10,loss,22,-22,22,-22
+nfl,2019-12-21T21:30:00.000Z,BUF @ NE,BUF +6 -110,spread_away,game,-110,6,loss,22,-22,22,-22
+nfl,2019-12-15T21:25:00.000Z,ATL @ SF,SF -10.5 -110,spread_home,game,-110,-10.5,loss,22,-22,22,-22
+nfl,2019-12-15T18:00:00.000Z,HOU @ TEN,TEN -3 -110,spread_home,game,-110,-3,loss,22,-22,22,-22
+nfl,2019-12-08T21:25:00.000Z,TEN @ OAK,TEN @ OAK: u47 -110,under,game,-110,47,loss,22,-22,22,-22
+nfl,2019-12-08T18:00:00.000Z,CAR @ ATL,CAR @ ATL: u48 -110,under,game,-110,48,loss,22,-22,22,-22
+nfl,2019-12-08T18:00:00.000Z,SF @ NO,SF @ NO: u44 -110,under,game,-110,44,loss,22,-22,22,-22
+nba,2019-12-04T00:00:00.000Z,ORL @ WAS,WAS -2 -110,spread_home,game,-110,-2,loss,22,-22,22,-22
+nfl,2019-11-28T17:30:00.000Z,CHI @ DET,CHI @ DET: u37 -110,under,game,-110,37,loss,22,-22,22,-22
+nba,2019-11-28T02:30:00.000Z,LAL @ NOP,LAL -6 -110,spread_away,game,-110,-6,loss,22,-22,22,-22
+nba,2019-11-28T00:00:00.000Z,BKN @ BOS,BKN @ BOS: u214 -110,under,game,-110,214,loss,22,-22,22,-22
+nfl,2019-11-24T21:05:00.000Z,JAC @ TEN,JAC +4 -110,spread_away,game,-110,4,loss,22,-22,22,-22
+nfl,2019-11-24T18:00:00.000Z,TB @ ATL,TB @ ATL: u51.5 -110,under,game,-110,51.5,loss,22,-22,22,-22
+nfl,2019-11-24T18:00:00.000Z,DEN @ BUF,DEN +3.5 -110,spread_away,game,-110,3.5,loss,22,-22,22,-22
+nfl,2019-11-17T18:00:00.000Z,BUF @ MIA,BUF @ MIA: u41 -110,under,game,-110,41,loss,22,-22,22,-22
+nba,2019-11-07T00:30:00.000Z,CHI @ ATL,CHI @ ATL: o221.5 -110,over,game,-110,221.5,loss,22,-22,22,-22
+nba,2019-11-07T00:30:00.000Z,GSW @ HOU,GSW @ HOU: u229 -110,under,game,-110,229,loss,22,-22,22,-22
+nfl,2020-09-20T17:00:00.000Z,SF @ NYJ,SF @ NYJ: u42.5 -110,under,game,-110,42.5,loss,1.1,-1.1,22,-22
+nba,2020-09-04T01:00:00.000Z,DEN @ LAC,DEN +8.5 -110,spread_away,game,-110,8.5,loss,1.1,-1.1,22,-22
+nba,2020-08-24T01:00:00.000Z,DEN @ UTA,UTA -3 -110,spread_home,game,-110,-3,loss,1.1,-1.1,22,-22
+nba,2020-08-23T19:30:00.000Z,LAC @ DAL,LAC -8.5 -110,spread_away,game,-110,-8.5,loss,1.1,-1.1,22,-22
+nba,2020-08-19T01:00:00.000Z,POR @ LAL,LAL -5.5 -110,spread_home,game,-110,-5.5,loss,1.1,-1.1,22,-22
+nba,2020-08-18T17:30:00.000Z,ORL @ MIL,MIL -12 -110,spread_home,game,-110,-12,loss,1.1,-1.1,22,-22
+nba,2020-03-11T23:00:00.000Z,DET @ PHI,DET @ PHI: u211.5 -110,under,game,-110,211.5,loss,1.1,-1.1,22,-22
+nba,2020-02-02T02:00:00.000Z,CHA @ SAS,CHA +8.5 -110,spread_away,game,-110,8.5,loss,1.1,-1.1,22,-22
+nba,2020-01-13T01:00:00.000Z,LAC @ DEN,LAC -1 -115,spread_away,game,-115,-1,loss,23,-23,23,-23
+nfl,2019-12-29T21:25:00.000Z,PIT @ BAL,PIT @ BAL: u37 -115,under,game,-115,37,loss,23,-23,23,-23
+nfl,2019-12-29T21:25:00.000Z,TEN @ HOU,TEN @ HOU: u44.5 -115,under,game,-115,44.5,loss,23,-23,23,-23
+nba,2019-12-25T22:00:00.000Z,HOU @ GSW,GSW u109.5 -115,home_under,game,-115,109.5,loss,23,-23,23,-23
+nfl,2019-12-23T01:20:00.000Z,KC @ CHI,CHI +7 -115,spread_home,game,-115,7,loss,23,-23,23,-23
+nfl,2019-12-15T21:05:00.000Z,JAC @ OAK,OAK -6.5 -115,spread_home,game,-115,-6.5,loss,23,-23,23,-23
+nba,2019-11-28T01:00:00.000Z,LAC @ MEM,LAC -4.5 -115,spread_away,game,-115,-4.5,loss,23,-23,23,-23
+nba,2020-08-18T17:30:00.000Z,ORL @ MIL,ORL u106 -115,away_under,game,-115,106,loss,1.15,-1.15,23,-23
+nfl,2019-12-29T21:25:00.000Z,WAS @ DAL,WAS +13 -120,spread_away,game,-120,13,loss,24,-24,24,-24
+nfl,2019-12-15T18:00:00.000Z,TB @ DET,DET +6 -120,spread_home,game,-120,6,loss,24,-24,24,-24
+nfl,2019-12-02T01:20:00.000Z,NE @ HOU,NE -3 -120,spread_away,game,-120,-3,loss,24,-24,24,-24
+nfl,2019-11-26T01:15:00.000Z,BAL @ LA,LA +14.5 -120,spread_home,game,-120,14.5,loss,24,-24,24,-24
+nfl,2020-09-20T20:25:00.000Z,KC @ LAC,KC -6 -120,spread_away,game,-120,-6,loss,1.2,-1.2,24,-24
+nfl,2019-11-17T18:00:00.000Z,HOU @ BAL,HOU +5 -125,spread_away,game,-125,5,loss,25,-25,25,-25
+nfl,2019-11-10T18:00:00.000Z,ATL @ NO,NO -13 -115,spread_home,game,-115,-13,loss,25,-25,25,-25
+nfl,2019-11-03T21:25:00.000Z,GB @ LAC,GB +11.5 -115,spread_away,game,-115,11.5,loss,25,-25,25,-25
+nfl,2020-09-20T17:00:00.000Z,NYG @ CHI,NYG +200,ml_away,game,200,200,loss,1.25,-1.25,25,-25
+nfl,2020-01-19T23:40:00.000Z,GB @ SF,GB +290,ml_away,game,290,290,loss,1.25,-1.25,25,-25
+nba,2021-07-15T01:00:00.000Z,PHX @ MIL,PHX +174,ml_away,game,174,174,loss,0.83,-0.83,25,-25
+nba,2021-07-12T00:00:00.000Z,PHX @ MIL,PHX +174,ml_away,game,174,174,loss,0.83,-0.83,25,-25
+nba,2021-06-08T02:00:00.000Z,DEN @ PHX,DEN +175,ml_away,game,175,175,loss,0.83,-0.83,25,-25
+nba,2021-06-06T19:30:00.000Z,DAL @ LAC,DAL +224,ml_away,game,224,224,loss,0.83,-0.83,25,-25
+nba,2021-05-28T23:00:00.000Z,NYK @ ATL,NYK +170,ml_away,game,170,170,loss,0.83,-0.83,25,-25
+nba,2021-01-02T22:00:00.000Z,SAC @ HOU,SAC +165,ml_away,game,165,165,loss,0.83,-0.83,25,-25
+nfl,2020-11-17T01:15:00.000Z,MIN @ CHI,CHI +155,ml_home,game,155,155,loss,0.83,-0.83,25,-25
+nfl,2020-11-15T18:00:00.000Z,WAS @ DET,WAS +130,ml_away,game,130,130,loss,0.83,-0.83,25,-25
+nfl,2020-10-04T20:25:00.000Z,BUF @ LV,LV +155,ml_home,game,155,155,loss,0.83,-0.83,25,-25
+nfl,2020-10-04T17:00:00.000Z,NO @ DET,DET +130,ml_home,game,130,130,loss,0.83,-0.83,25,-25
+nfl,2020-09-27T20:25:00.000Z,DAL @ SEA,DAL +190,ml_away,game,190,190,loss,0.83,-0.83,25,-25
+nba,2020-09-27T01:00:00.000Z,DEN @ LAL,DEN +200,ml_away,game,200,200,loss,0.83,-0.83,25,-25
+nfl,2019-11-17T18:00:00.000Z,ATL @ CAR,CAR -3 -135,spread_home,game,-135,-3,loss,27,-27,27,-27
+nfl,2020-09-20T20:25:00.000Z,KC @ LAC,KC -8.5 -110,spread_away,game,-110,-8.5,loss,1.38,-1.38,27.5,-27.5
+nfl,2020-09-20T17:00:00.000Z,ATL @ DAL,DAL -3.5 -110,spread_home,game,-110,-3.5,loss,1.38,-1.38,27.5,-27.5
+nfl,2020-09-20T17:00:00.000Z,LA @ PHI,PHI PK -110,spread_home,game,-110,0,loss,1.38,-1.38,27.5,-27.5
+nba,2021-06-26T00:30:00.000Z,ATL @ MIL,ATL +8.5 -110,spread_away,game,-110,8.5,loss,0.92,-0.92,27.5,-27.5
+nba,2021-01-02T00:00:00.000Z,MIA @ DAL,MIA -1 -110,spread_away,game,-110,-1,loss,0.92,-0.92,27.5,-27.5
+nfl,2020-11-08T18:00:00.000Z,DEN @ ATL,DEN +4 -110,spread_away,game,-110,4,loss,0.92,-0.92,27.5,-27.5
+nfl,2020-10-11T20:25:00.000Z,IND @ CLE,IND PK -110,spread_away,game,-110,0,loss,0.92,-0.92,27.5,-27.5
+nfl,2020-10-11T17:00:00.000Z,JAC @ HOU,JAC +5.5 -110,spread_away,game,-110,5.5,loss,0.92,-0.92,27.5,-27.5
+nfl,2020-10-04T17:00:00.000Z,ARI @ CAR,ARI -3 -110,spread_away,game,-110,-3,loss,0.92,-0.92,27.5,-27.5
+nfl,2020-10-04T17:00:00.000Z,LAC @ TB,LAC @ TB: u42.5 -110,under,game,-110,42.5,loss,0.92,-0.92,27.5,-27.5
+nfl,2020-10-04T17:00:00.000Z,MIN @ HOU,MIN @ HOU: u53.5 -110,under,game,-110,53.5,loss,0.92,-0.92,27.5,-27.5
+nfl,2020-09-27T17:00:00.000Z,CHI @ ATL,ATL -3 -110,spread_home,game,-110,-3,loss,0.92,-0.92,27.5,-27.5
+nfl,2020-09-20T17:00:00.000Z,CAR @ TB,CAR o19.5 -115,away_over,game,-115,19.5,loss,1.44,-1.44,28.75,-28.75
+nfl,2020-11-17T01:15:00.000Z,MIN @ CHI,CHI +3.5 -115,spread_home,game,-115,3.5,loss,0.96,-0.96,28.75,-28.75
+nba,2021-02-25T01:00:00.000Z,TOR @ MIA,TOR +105,ml_away,game,105,105,loss,0.97,-0.97,29,-29
+nfl,2020-01-05T21:40:00.000Z,SEA @ PHI,PHI +110,ml_home,game,110,110,loss,30,-30,30,-30
+nfl,2019-11-03T21:25:00.000Z,GB @ LAC,GB -1.5 -115,spread_away,game,-115,-1.5,loss,30,-30,30,-30
+nba,2020-09-20T00:30:00.000Z,BOS @ MIA,MIA +125,ml_home,game,125,125,loss,1.5,-1.5,30,-30
+nba,2021-05-29T01:30:00.000Z,LAC @ DAL,DAL +120,ml_home,game,120,120,loss,1,-1,30,-30
+nba,2021-05-27T23:30:00.000Z,MIL @ MIA,MIA +100,ml_home,game,100,100,loss,1,-1,30,-30
+nba,2021-03-30T02:00:00.000Z,MIL @ LAC,MIL +115,ml_away,game,115,115,loss,1,-1,30,-30
+nba,2021-02-06T01:00:00.000Z,WAS @ MIA,WAS +270,ml_away,game,270,270,loss,1,-1,30,-30
+nba,2021-01-17T01:00:00.000Z,PHI @ MEM,PHI +105,ml_away,game,105,105,loss,1,-1,30,-30
+nfl,2020-11-22T18:00:00.000Z,PHI @ CLE,PHI +135,ml_away,game,135,135,loss,1,-1,30,-30
+nfl,2020-11-20T01:20:00.000Z,ARI @ SEA,ARI +135,ml_away,game,135,135,loss,1,-1,30,-30
+nfl,2020-11-08T21:05:00.000Z,LV @ LAC,LAC +105,ml_home,game,105,105,loss,1,-1,30,-30
+nba,2021-06-26T00:30:00.000Z,ATL @ MIL,ATL +7.5 -105,spread_away,game,-105,7.5,loss,1.05,-1.05,31.5,-31.5
+nba,2021-05-28T02:30:00.000Z,DEN @ POR,POR -4 -105,spread_home,game,-105,-4,loss,1.05,-1.05,31.5,-31.5
+nba,2021-02-25T03:00:00.000Z,LAL @ UTA,LAL +8.5 -105,spread_away,game,-105,8.5,loss,1.05,-1.05,31.5,-31.5
+nfl,2020-10-11T17:00:00.000Z,LA @ WAS,WAS +7 -105,spread_home,game,-105,7,loss,1.05,-1.05,31.5,-31.5
+nba,2019-12-26T01:00:00.000Z,LAC @ LAL,LAL -2.5 -110,spread_home,game,-110,-2.5,loss,33,-33,33,-33
+nba,2019-12-25T19:30:00.000Z,MIL @ PHI,MIL @ PHI: u221 -110,under,game,-110,221,loss,33,-33,33,-33
+nba,2019-12-25T17:00:00.000Z,BOS @ TOR,BOS @ TOR: u214 -110,under,game,-110,214,loss,33,-33,33,-33
+nfl,2019-12-15T21:25:00.000Z,LA @ DAL,LA -110,ml_away,game,-110,-110,loss,33,-33,33,-33
+nfl,2019-12-08T18:00:00.000Z,SF @ NO,NO -2.5 -110,spread_home,game,-110,-2.5,loss,33,-33,33,-33
+nfl,2020-09-27T20:25:00.000Z,DAL @ SEA,DAL +5 -110,spread_away,game,-110,5,loss,1.65,-1.65,33,-33
+nfl,2020-09-27T20:05:00.000Z,NYJ @ IND,NYJ +11 -110,spread_away,game,-110,11,loss,1.65,-1.65,33,-33
+nfl,2020-09-27T17:00:00.000Z,CIN @ PHI,PHI -4.5 -110,spread_home,game,-110,-4.5,loss,1.65,-1.65,33,-33
+nfl,2020-09-25T00:20:00.000Z,MIA @ JAC,JAC -3 -110,spread_home,game,-110,-3,loss,1.65,-1.65,33,-33
+nba,2020-09-20T00:30:00.000Z,BOS @ MIA,MIA +3 -110,spread_home,game,-110,3,loss,1.65,-1.65,33,-33
+nfl,2020-09-15T02:20:00.000Z,TEN @ DEN,TEN -2.5 -110,spread_away,game,-110,-2.5,loss,1.65,-1.65,33,-33
+nba,2020-09-07T00:30:00.000Z,HOU @ LAL,HOU +5.5 -110,spread_away,game,-110,5.5,loss,1.65,-1.65,33,-33
+nba,2020-09-01T21:30:00.000Z,BOS @ TOR,TOR -1.5 -110,spread_home,game,-110,-1.5,loss,1.65,-1.65,33,-33
+nba,2020-08-22T22:00:00.000Z,HOU @ OKC,HOU -2 -110,spread_away,game,-110,-2,loss,1.65,-1.65,33,-33
+nba,2020-02-02T01:30:00.000Z,PHI @ BOS,PHI -1.5 -110,spread_away,game,-110,-1.5,loss,1.65,-1.65,33,-33
+nba,2021-06-12T02:00:00.000Z,PHX @ DEN,DEN -2 -110,spread_home,game,-110,-2,loss,1.1,-1.1,33,-33
+nba,2021-06-09T02:00:00.000Z,LAC @ UTA,LAC @ UTA: o221.5 -110,over,game,-110,221.5,loss,1.1,-1.1,33,-33
+nba,2021-06-03T02:00:00.000Z,DAL @ LAC,LAC -7 -110,spread_home,game,-110,-7,loss,1.1,-1.1,33,-33
+nba,2021-06-02T23:30:00.000Z,ATL @ NYK,NYK -1.5 -110,spread_home,game,-110,-1.5,loss,1.1,-1.1,33,-33
+nba,2021-05-29T00:30:00.000Z,BKN @ BOS,BKN -7 -110,spread_away,game,-110,-7,loss,1.1,-1.1,33,-33
+nba,2021-05-23T23:00:00.000Z,ATL @ NYK,NYK -1.5 -110,spread_home,game,-110,-1.5,loss,1.1,-1.1,33,-33
+nba,2021-05-03T00:00:00.000Z,MIA @ CHA,CHA +5.5 -110,spread_home,game,-110,5.5,loss,1.1,-1.1,33,-33
+nba,2021-04-19T23:30:00.000Z,CHI @ BOS,BOS -6 -110,spread_home,game,-110,-6,loss,1.1,-1.1,33,-33
+nba,2021-04-13T02:00:00.000Z,DEN @ GSW,DEN -4.5 -110,spread_away,game,-110,-4.5,loss,1.1,-1.1,33,-33
+nba,2021-03-28T01:00:00.000Z,BOS @ OKC,OKC +8.5 -110,spread_home,game,-110,8.5,loss,1.1,-1.1,33,-33
+nba,2021-03-02T01:00:00.000Z,UTA @ NOP,UTA -7 -110,spread_away,game,-110,-7,loss,1.1,-1.1,33,-33
+nba,2021-02-25T01:00:00.000Z,SAS @ OKC,SAS -1 -110,spread_away,game,-110,-1,loss,1.1,-1.1,33,-33
+nba,2021-02-25T00:30:00.000Z,BOS @ ATL,BOS -2.5 -110,spread_away,game,-110,-2.5,loss,1.1,-1.1,33,-33
+nba,2021-02-25T00:30:00.000Z,GSW @ IND,IND -2 -110,spread_home,game,-110,-2,loss,1.1,-1.1,33,-33
+nba,2021-02-22T00:30:00.000Z,DEN @ ATL,DEN -2.5 -110,spread_away,game,-110,-2.5,loss,1.1,-1.1,33,-33
+nba,2021-02-22T00:00:00.000Z,PHI @ TOR,PHI -3 -110,spread_away,game,-110,-3,loss,1.1,-1.1,33,-33
+nba,2021-02-20T03:00:00.000Z,UTA @ LAC,UTA -5 -110,spread_away,game,-110,-5,loss,1.1,-1.1,33,-33
+nba,2021-02-20T00:30:00.000Z,CHI @ PHI,PHI -8 -110,spread_home,game,-110,-8,loss,1.1,-1.1,33,-33
+nba,2021-02-20T00:00:00.000Z,GSW @ ORL,GSW -4 -110,spread_away,game,-110,-4,loss,1.1,-1.1,33,-33
+nba,2021-02-18T01:00:00.000Z,DEN @ WAS,DEN -3.5 -110,spread_away,game,-110,-3.5,loss,1.1,-1.1,33,-33
+nba,2021-02-18T00:30:00.000Z,ATL @ BOS,BOS -2 -110,spread_home,game,-110,-2,loss,1.1,-1.1,33,-33
+nba,2021-02-18T00:00:00.000Z,NYK @ ORL,NYK -3.5 -110,spread_away,game,-110,-3.5,loss,1.1,-1.1,33,-33
+nba,2021-02-15T03:00:00.000Z,LAL @ DEN,LAL @ DEN: u217 -110,under,game,-110,217,loss,1.1,-1.1,33,-33
+nba,2021-02-10T03:00:00.000Z,BOS @ UTA,BOS +6 -110,spread_away,game,-110,6,loss,1.1,-1.1,33,-33
+nba,2021-01-24T02:00:00.000Z,GSW @ UTA,GSW @ UTA: u226 -110,under,game,-110,226,loss,1.1,-1.1,33,-33
+nfl,2021-01-09T21:40:00.000Z,LA @ SEA,LA @ SEA: u43 -110,under,game,-110,43,loss,1.1,-1.1,33,-33
+nba,2021-01-03T00:00:00.000Z,NYK @ IND,IND -9 -110,spread_home,game,-110,-9,loss,1.1,-1.1,33,-33
+nba,2020-12-30T00:00:00.000Z,BOS @ IND,IND -1.5 -110,spread_home,game,-110,-1.5,loss,1.1,-1.1,33,-33
+nba,2020-12-27T01:30:00.000Z,TOR @ SAS,TOR -2 -110,spread_away,game,-110,-2,loss,1.1,-1.1,33,-33
+nfl,2020-12-13T21:25:00.000Z,GB @ DET,GB -8.5 -110,spread_away,game,-110,-8.5,loss,1.1,-1.1,33,-33
+nfl,2020-12-13T18:00:00.000Z,DEN @ CAR,CAR -4 -110,spread_home,game,-110,-4,loss,1.1,-1.1,33,-33
+nfl,2020-11-24T01:15:00.000Z,LA @ TB,TB -4 -110,spread_home,game,-110,-4,loss,1.1,-1.1,33,-33
+nfl,2020-11-22T18:00:00.000Z,NE @ HOU,NE -1 -110,spread_away,game,-110,-1,loss,1.1,-1.1,33,-33
+nfl,2020-11-20T01:20:00.000Z,ARI @ SEA,ARI +3.5 -110,spread_away,game,-110,3.5,loss,1.1,-1.1,33,-33
+nfl,2020-11-15T18:00:00.000Z,PHI @ NYG,PHI -3.5 -110,spread_away,game,-110,-3.5,loss,1.1,-1.1,33,-33
+nfl,2020-11-13T01:20:00.000Z,IND @ TEN,IND @ TEN: u49 -110,under,game,-110,49,loss,1.1,-1.1,33,-33
+nfl,2020-11-01T18:00:00.000Z,NE @ BUF,BUF -4 -110,spread_home,game,-110,-4,loss,1.1,-1.1,33,-33
+nfl,2020-11-01T18:00:00.000Z,LV @ CLE,CLE -2.5 -110,spread_home,game,-110,-2.5,loss,1.1,-1.1,33,-33
+nfl,2020-10-30T00:20:00.000Z,ATL @ CAR,CAR -2.5 -110,spread_home,game,-110,-2.5,loss,1.1,-1.1,33,-33
+nfl,2020-10-25T17:00:00.000Z,DET @ ATL,DET @ ATL: o54.5 -110,over,game,-110,54.5,loss,1.1,-1.1,33,-33
+nfl,2020-10-25T17:00:00.000Z,DAL @ WAS,DAL PK -110,spread_away,game,-110,0,loss,1.1,-1.1,33,-33
+nfl,2020-10-20T00:15:00.000Z,ARI @ DAL,ARI @ DAL: o56 -110,over,game,-110,56,loss,1.1,-1.1,33,-33
+nfl,2020-10-19T00:20:00.000Z,LA @ SF,LA -3 -110,spread_away,game,-110,-3,loss,1.1,-1.1,33,-33
+nfl,2019-11-28T21:30:00.000Z,BUF @ DAL,DAL -6.5 -115,spread_home,game,-115,-6.5,loss,34.5,-34.5,34.5,-34.5
+nba,2020-08-22T22:00:00.000Z,HOU @ OKC,HOU o112.5 -115,away_over,game,-115,112.5,loss,1.73,-1.73,34.5,-34.5
+nba,2020-08-20T17:00:00.000Z,MIA @ IND,IND +4.5 -115,spread_home,game,-115,4.5,loss,1.73,-1.73,34.5,-34.5
+nba,2021-06-30T00:30:00.000Z,MIL @ ATL,ATL u106.5 -115,home_under,game,-115,106.5,loss,1.15,-1.15,34.5,-34.5
+nfl,2020-11-15T21:05:00.000Z,BUF @ ARI,ARI -3 -110,spread_home,game,-110,-3,loss,1.47,-1.47,44,-44
+nfl,2020-10-25T20:25:00.000Z,SF @ NE,NE -4 -110,spread_home,game,-110,-4,loss,1.47,-1.47,44,-44
+nba,2021-06-30T00:30:00.000Z,MIL @ ATL,MIL -8.5 -115,spread_away,game,-115,-8.5,loss,1.53,-1.53,46,-46
+nba,2021-06-20T00:30:00.000Z,MIL @ BKN,MIL u107.5 -115,away_under,game,-115,107.5,loss,1.53,-1.53,46,-46
+nba,2021-02-06T00:30:00.000Z,MIL @ CLE,CLE +11 -115,spread_home,game,-115,11,loss,1.53,-1.53,46,-46
+nfl,2020-12-27T21:25:00.000Z,PHI @ DAL,PHI @ DAL: u51 -120,under,game,-120,51,loss,1.6,-1.6,48,-48
+nfl,2020-10-04T17:00:00.000Z,JAC @ CIN,JAC +100,ml_away,game,100,100,loss,1.67,-1.67,50,-50
+nfl,2019-12-08T21:25:00.000Z,KC @ NE,NE -3 -110,spread_home,game,-110,-3,loss,2.75,-2.75,55,-55
+nba,2021-06-29T01:00:00.000Z,LAC @ PHX,PHX -6 -110,spread_home,game,-110,-6,loss,1.83,-1.83,55,-55
+nba,2021-06-08T02:00:00.000Z,DEN @ PHX,DEN +5 -110,spread_away,game,-110,5,loss,1.83,-1.83,55,-55
+nba,2021-06-06T17:00:00.000Z,ATL @ PHI,PHI -2.5 -110,spread_home,game,-110,-2.5,loss,1.83,-1.83,55,-55
+nfl,2021-01-11T01:15:00.000Z,CLE @ PIT,PIT -3.5 -110,spread_home,game,-110,-3.5,loss,1.83,-1.83,55,-55
+nfl,2020-12-27T21:25:00.000Z,PHI @ DAL,PHI -1.5 -110,spread_away,game,-110,-1.5,loss,1.83,-1.83,55,-55
+nba,2021-07-15T01:00:00.000Z,PHX @ MIL,PHX +5 -115,spread_away,game,-115,5,loss,1.92,-1.92,57.5,-57.5
+nba,2021-07-12T00:00:00.000Z,PHX @ MIL,PHX +5 -115,spread_away,game,-115,5,loss,1.92,-1.92,57.5,-57.5
+nba,2021-06-13T19:00:00.000Z,BKN @ MIL,BKN -120,ml_away,game,-120,-120,loss,2,-2,60,-60
+nfl,2020-11-29T18:00:00.000Z,ARI @ NE,ARI -120,ml_away,game,-120,-120,loss,2,-2,60,-60
