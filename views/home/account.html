@@ -161,7 +161,7 @@
         const ball = await syncPull('masters', '3ball');
         if (ball) localStorage.setItem('masters_3ball', JSON.stringify(ball));
 
-        showState();
+        window.location.replace('/');
       } catch (e) {
         errEl.textContent = e.message;
         errEl.style.display = 'block';
