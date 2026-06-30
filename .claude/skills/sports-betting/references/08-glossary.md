@@ -1,0 +1,58 @@
+# Glossary
+
+Quick A–Z. Deep dives are in the numbered reference files.
+
+- **Action** — A bet that has "live" (counts). "No action" = void/refunded.
+- **Against the spread (ATS)** — Record measured by covering the spread, not by winning (e.g. `4-2-1`).
+- **Alternate line** — Same market at a different number with adjusted odds.
+- **American odds** — `-110` / `+150`. Negative = risk to win $100; positive = profit on $100.
+- **Bankroll** — Total money set aside for betting.
+- **Break-even %** — Minimum win rate to profit at a price = its implied probability (`-110` → 52.38%).
+- **Cash out** — Settle a bet early for a book-discounted amount from live odds.
+- **Chalk** — The favorite.
+- **Closing line** — The final price just before the event starts (the sharpest price).
+- **CLV (closing line value)** — How much better your price was than the close; key skill indicator.
+- **Cover** — Beat the point spread.
+- **Decimal odds** — `1.91` / `2.50`. Total return per $1 incl. stake (`payout = stake × decimal`).
+- **De-vig / no-vig** — Removing the book's margin to get fair probability (normalize implied probs).
+- **Even money** — Pays 1:1 (`+100` / `2.00` / `1/1`).
+- **Expected value (EV)** — Average long-run profit per bet; `P_win × profit − P_loss × stake`.
+- **Favorite** — Side more likely to win (negative odds; decimal < 2.00).
+- **Fractional odds** — `10/11` / `3/2`. Net profit per stake.
+- **Futures** — Bet on a later-decided outcome (title, MVP, win totals).
+- **Half-win / half-loss** — Asian quarter-line split outcome (one half settles, one pushes).
+- **Handle** — Total money wagered (industry term); = turnover.
+- **Hedge** — Bet the other side to lock profit or limit loss.
+- **Hold** — % of handle the book keeps; overround expressed on turnover.
+- **Hook** — A half-point (`.5`) on a line; eliminates pushes.
+- **Implied probability** — Win probability encoded by the price.
+- **Juice / vig(orish)** — The book's built-in commission (why coin flips are `-110/-110`).
+- **Kelly criterion** — Optimal bet fraction `f* = (bp−q)/b`; use fractional Kelly in practice.
+- **Key numbers** — Most common margins (football: 3 and 7).
+- **Line** — The posted number (usually the spread).
+- **Line movement** — Shift between opening and closing lines.
+- **Live / in-play betting** — Betting a game in progress.
+- **Moneyline** — Bet on who wins straight up.
+- **Off the board (OTB)** — Market temporarily unavailable for betting.
+- **Overround** — Sum of all outcomes' implied probabilities − 100%.
+- **Parlay** — Multi-leg bet; all legs must win; decimal odds multiply.
+- **Pick'em (PK)** — No favorite; spread 0, moneyline near even.
+- **Pleaser** — Reverse teaser (move line against you for a bigger payout; −EV).
+- **Prop (proposition bet)** — Bet not tied to the final outcome/score.
+- **Push** — Exact tie on the number; stake refunded.
+- **Reverse line movement (RLM)** — Line moves toward the minority-bet side (sharp signal).
+- **ROI / yield** — `net_profit / total_staked`.
+- **Round robin** — Auto-generated set of smaller parlays from your selections.
+- **Same-game parlay (SGP)** — Parlay of correlated legs from one game; specially priced.
+- **Sharp / square** — Sharp = sophisticated/respected bettor; square = casual/public.
+- **Spread (point spread)** — Handicap on margin of victory.
+- **Stake** — Amount wagered.
+- **Steam** — Rapid, widespread line movement from heavy money.
+- **Teaser** — Parlay with spreads/totals moved in your favor for lower payout.
+- **To-win** — Profit above stake; `payout = stake + to-win`.
+- **Total (over/under, O/U)** — Bet on combined score vs a number.
+- **Turnover** — Total amount staked (bettor's term for handle).
+- **Underdog (dog)** — Side less likely to win (positive odds; decimal > 2.00).
+- **Unit** — Standardized bet size, ~1% of bankroll.
+- **Void / no action** — Cancelled bet; stake refunded.
+- **Wong teaser** — 6-point football teaser crossing key numbers 3 and 7.
