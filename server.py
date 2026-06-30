@@ -1004,6 +1004,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         elif self.path.split("?")[0] == "/bets/history":
             self.path = "/views/bets/history.html"
             super().do_GET()
+        elif self.path.split("?")[0] == "/bets/settle":
+            self.path = "/views/bets/settle.html"
+            super().do_GET()
         elif self.path.split("?")[0] == "/bets":
             self.path = "/views/bets/index.html"
             super().do_GET()

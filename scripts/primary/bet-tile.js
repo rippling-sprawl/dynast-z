@@ -19,7 +19,7 @@ function renderBetTile(bet, opts) {
   const matchText = bet.match ? escapeHtml(bet.match)
     : (bet.opponent ? 'vs ' + escapeHtml(bet.opponent) : '');
   let matchLine = '';
-  if (matchText || bet.event_date) {
+  if (bet.side && bet.opponent) {
     matchLine =
       '<div class="bet-match-line">' +
         '<span class="bet-match">' + matchText + '</span>' +

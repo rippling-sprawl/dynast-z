@@ -9,7 +9,21 @@ const BETS_KEY = 'dz_bets_v1';
 const BETS_INDEX_URL = '/data/bets-index.json';
 const TEST_DATA_URL = '/data/test_data.json';
 
+// Config flag: when false, the read-only demo seed (test_data.json) is never
+// fetched or merged into reads — the tracker shows only the user's real bets.
+// Flip to true to re-enable the seed for viewing/designing the history UI.
+const ENABLE_TEST_DATA = false;
+
 const SPORT_BY_LEAGUE = { NFL: 'Football', NBA: 'Basketball', Other: '' };
+
+// Two independent status axes (disambiguated — see /bets/settle):
+//   event_status  — how the underlying event/bet resolved (stored as bet.status)
+//   wager_status  — where the money stands (stored as bet.wager_status)
+const EVENT_STATUSES = ['pending', 'win', 'loss', 'push', 'void'];
+const WAGER_STATUSES = ['unpaid', 'paid', 'settled'];
+
+// Bets with no wager_status are grouped under this label in the Settle Up view.
+const WAGER_STATUS_MISSING = 'Missing';
 
 // ---- storage ---------------------------------------------------------------
 
@@ -47,6 +61,10 @@ let _seedCache = null;
 
 async function loadTestBets() {
   if (_seedCache) return _seedCache;
+  if (!ENABLE_TEST_DATA) {
+    _seedCache = [];
+    return _seedCache;
+  }
   try {
     const res = await fetch(TEST_DATA_URL);
     const arr = await res.json();

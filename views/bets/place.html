@@ -6,7 +6,7 @@
   <link rel="icon" type="image/png" href="/favicon.png">
   <title>Track a Bet | Dynast-Z</title>
   <link rel="stylesheet" href="/styles/base/styles.css?v=abec71e4">
-  <link rel="stylesheet" href="/styles/primary/bets.css?v=357142d1">
+  <link rel="stylesheet" href="/styles/primary/bets.css?v=cd26ef36">
 </head>
 <body>
   <div id="header-mount"></div>
@@ -22,9 +22,15 @@
     <p class="bets-sub">Enter your pick. Only league, your side, and stake are required.</p>
 
     <form class="bet-form" id="bet-form" autocomplete="off">
-      <div class="bet-field">
-        <label for="f-league">League</label>
-        <input id="f-league" placeholder="Select league">
+      <div class="bet-row">
+        <div class="bet-field">
+          <label for="f-league">League</label>
+          <input id="f-league" placeholder="Select league">
+        </div>
+        <div class="bet-field">
+          <label for="f-event-date">Event Date</label>
+          <input id="f-event-date" type="date">
+        </div>
       </div>
 
       <div class="bet-field">
@@ -38,7 +44,7 @@
       </div>
 
       <div class="bet-field">
-        <label for="f-selection">Selection <span class="hint">— e.g. "-3.5", "o27.5 pts", "ML"</span></label>
+        <label for="f-selection">The Bet <span class="hint">— e.g. "-3.5", "o27.5 pts", "ML"</span></label>
         <input id="f-selection" placeholder="e.g. Moneyline">
       </div>
 
@@ -59,12 +65,12 @@
 
       <div class="bet-row">
         <div class="bet-field">
-          <label for="f-event-date">Event Date</label>
-          <input id="f-event-date" type="date">
+          <label for="f-status">Event Status</label>
+          <input id="f-status" placeholder="Status">
         </div>
         <div class="bet-field">
-          <label for="f-status">Status</label>
-          <input id="f-status" placeholder="Status">
+          <label for="f-wager-status">Wager Status</label>
+          <input id="f-wager-status" placeholder="Unpaid">
         </div>
       </div>
 
@@ -83,13 +89,13 @@
     </form>
   </main>
 
-  <script src="/scripts/primary/bets.js?v=77344169"></script>
+  <script src="/scripts/primary/bets.js?v=f3c5be28"></script>
   <script src="/scripts/primary/combobox.js?v=882d6542"></script>
-  <script src="/scripts/primary/bet-tile.js?v=8e44badc"></script>
+  <script src="/scripts/primary/bet-tile.js?v=2100e385"></script>
   <script>
     (async function () {
       const LEAGUES = ['NFL', 'NBA', 'Other'];
-      const STATUSES = ['pending', 'win', 'loss', 'push', 'void'];
+      // Status options come from bets.js (EVENT_STATUSES / WAGER_STATUSES).
 
       const params = new URLSearchParams(location.search);
       const editId = params.get('id');
@@ -103,11 +109,13 @@
         selection: el('f-selection'),
         stake: el('f-stake'), odds: el('f-odds'), towin: el('f-towin'),
         eventDate: el('f-event-date'), status: el('f-status'),
+        wagerStatus: el('f-wager-status'),
       };
 
       // Defaults (overridden below in edit mode).
       fields.league.value = 'NFL';
       fields.status.value = 'pending';
+      fields.wagerStatus.value = 'unpaid';
 
       if (existing) {
         el('form-title').textContent = 'Edit Bet';
@@ -124,12 +132,14 @@
         fields.towin.value = existing.to_win != null ? existing.to_win : '';
         fields.eventDate.value = existing.event_date || '';
         fields.status.value = existing.status || 'pending';
+        fields.wagerStatus.value = existing.wager_status || '';
       }
 
       // Custom dropdowns (same UI for all four).
       const index = await loadIndex();
       attachCombobox(fields.league, () => LEAGUES, { selectOnly: true });
-      attachCombobox(fields.status, () => STATUSES, { selectOnly: true, capitalize: true });
+      attachCombobox(fields.status, () => EVENT_STATUSES, { selectOnly: true, capitalize: true });
+      attachCombobox(fields.wagerStatus, () => WAGER_STATUSES, { selectOnly: true, capitalize: true });
       attachCombobox(fields.side, () => sideSuggestions(index, fields.league.value));
       attachCombobox(fields.opponent, () => teamSuggestions(index, fields.league.value));
 
@@ -153,6 +163,7 @@
           to_win: fields.towin.value ? Number(fields.towin.value) : null,
           event_date: fields.eventDate.value || '',
           status: fields.status.value,
+          wager_status: fields.wagerStatus.value || null,
         };
       }
       function updatePreview() {
@@ -216,6 +227,7 @@
           to_win: fields.towin.value ? Number(fields.towin.value) : toWinFromOdds(stake, odds),
           event_date: fields.eventDate.value || '',
           status: fields.status.value,
+          wager_status: fields.wagerStatus.value || null,
         });
 
         upsertBet(bet);
