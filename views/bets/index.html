@@ -6,12 +6,12 @@
   <link rel="icon" type="image/png" href="/favicon.png">
   <title>Bets | Dynast-Z</title>
   <link rel="stylesheet" href="/styles/base/styles.css?v=abec71e4">
-  <link rel="stylesheet" href="/styles/primary/bets.css?v=cd26ef36">
+  <link rel="stylesheet" href="/styles/primary/bets.css?v=bf3a91c2">
 </head>
 <body>
   <div id="header-mount"></div>
   <div id="nav-drawer-mount"></div>
-  <script src="/scripts/base/auth.js?v=a1b2c3d4"></script>
+  <script src="/scripts/base/auth.js?v=e9f1a2b3"></script>
   <script src="/scripts/base/nav.js?v=e5f6a7b8"></script>
   <script>initPage();</script>
 
@@ -37,10 +37,25 @@
     <div id="pending-list" class="bet-list"></div>
   </main>
 
-  <script src="/scripts/primary/bets.js?v=f3c5be28"></script>
+  <script src="/scripts/primary/bets-api.js?v=c2e5f8b3"></script>
+  <script src="/scripts/primary/bets.js?v=a4d6cf39"></script>
   <script src="/scripts/primary/bet-tile.js?v=2100e385"></script>
   <script>
     (async function () {
+      if (!isLoggedIn()) { location.href = '/account'; return; }
+      // Admin-only Audit entry: manage any user's bets.
+      if (isAdmin()) {
+        const actions = document.querySelector('.bets-actions');
+        if (actions) {
+          const card = document.createElement('a');
+          card.className = 'bets-action';
+          card.href = '/bets/audit';
+          card.innerHTML = '<span class="title">🛡️ Audit</span>';
+          actions.appendChild(card);
+        }
+      }
+      mountAuditBanner();
+      await initBets();
       await loadTestBets();
       const pending = pendingBetsWithSeed()
         .sort((a, b) => (a.event_date || '').localeCompare(b.event_date || ''));

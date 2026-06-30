@@ -7,6 +7,18 @@
 
 const BETS_KEY = 'dz_bets_v1';
 const BETS_INDEX_URL = '/data/bets-index.json';
+
+// localStorage cache key for the bets currently being viewed. Normally the
+// signed-in user's own cache; when an admin is managing another user (see
+// auth.js audit session) it's namespaced per target so the admin's own cache is
+// never clobbered. Writes are still mirrored to the server via the API layer.
+function betsKey() {
+  const target = typeof getAuditTarget === 'function' ? getAuditTarget() : null;
+  if (target && typeof isAdmin === 'function' && isAdmin()) {
+    return 'dz_bets_audit_' + target.user_id;
+  }
+  return BETS_KEY;
+}
 const TEST_DATA_URL = '/data/test_data.json';
 
 // Config flag: when false, the read-only demo seed (test_data.json) is never
@@ -29,7 +41,7 @@ const WAGER_STATUS_MISSING = 'Missing';
 
 function loadBets() {
   try {
-    const raw = localStorage.getItem(BETS_KEY);
+    const raw = localStorage.getItem(betsKey());
     const arr = raw ? JSON.parse(raw) : [];
     return Array.isArray(arr) ? arr : [];
   } catch (e) {
@@ -38,7 +50,18 @@ function loadBets() {
 }
 
 function saveBets(arr) {
-  localStorage.setItem(BETS_KEY, JSON.stringify(arr || []));
+  localStorage.setItem(betsKey(), JSON.stringify(arr || []));
+}
+
+// Hydrate the localStorage cache from the server (the source of truth). Call
+// once per page before rendering. No-op when logged out — the views gate on
+// login, but this stays safe either way. The synchronous read accessors below
+// then read the cache this populates. Mirrors loadWithSync in base/sync.js.
+async function initBets() {
+  if (typeof isLoggedIn !== 'function' || !isLoggedIn()) return loadBets();
+  const remote = await betsApiList();
+  saveBets(remote);
+  return remote;
 }
 
 function getBet(id) {
@@ -48,6 +71,7 @@ function getBet(id) {
 
 function deleteBet(id) {
   saveBets(loadBets().filter(b => b.id !== id));
+  betsApiDelete(id);
 }
 
 // ---- read-only test seed ---------------------------------------------------
@@ -106,6 +130,7 @@ function upsertBet(bet) {
   }
   if (bet.status === 'pending') bet.settled_at = null;
   saveBets(bets);
+  betsApiUpsert(bet);
   return bet;
 }
 
@@ -233,4 +258,36 @@ function fmtDateShort(s) {
   const dd = String(d.getDate()).padStart(2, '0');
   const yy = String(d.getFullYear()).slice(-2);
   return `${mm}.${dd}.${yy}`;
+}
+
+// ---- "Managing {username}" banner ------------------------------------------
+// Persistent callout shown across the bets section while an admin is managing
+// another user. Injects itself at the top of <main.bets-content>, so pages only
+// need to call mountAuditBanner() — no markup changes. Exit clears the audit
+// target, drops its cache key, and reloads back to the admin's own view.
+function mountAuditBanner() {
+  if (typeof getAuditTarget !== 'function') return;
+  const target = getAuditTarget();
+  const admin = typeof isAdmin === 'function' && isAdmin();
+  document.querySelectorAll('.audit-banner').forEach(n => n.remove());
+  if (!target || !admin) return;
+
+  const main = document.querySelector('main.bets-content') || document.body;
+  const bar = document.createElement('div');
+  bar.className = 'audit-banner';
+  const label = document.createElement('span');
+  label.className = 'audit-banner-label';
+  label.textContent = 'Managing ' + target.username;
+  const exit = document.createElement('button');
+  exit.type = 'button';
+  exit.className = 'audit-banner-exit';
+  exit.textContent = 'Exit';
+  exit.addEventListener('click', () => {
+    localStorage.removeItem(betsKey());
+    clearAuditTarget();
+    location.href = '/bets';
+  });
+  bar.appendChild(label);
+  bar.appendChild(exit);
+  main.insertBefore(bar, main.firstChild);
 }

@@ -6,16 +6,17 @@
   <link rel="icon" type="image/png" href="/favicon.png">
   <title>Track a Bet | Dynast-Z</title>
   <link rel="stylesheet" href="/styles/base/styles.css?v=abec71e4">
-  <link rel="stylesheet" href="/styles/primary/bets.css?v=cd26ef36">
+  <link rel="stylesheet" href="/styles/primary/bets.css?v=d4e7a1c9">
 </head>
 <body>
   <div id="header-mount"></div>
   <div id="nav-drawer-mount"></div>
-  <script src="/scripts/base/auth.js?v=a1b2c3d4"></script>
+  <script src="/scripts/base/auth.js?v=e9f1a2b3"></script>
   <script src="/scripts/base/nav.js?v=e5f6a7b8"></script>
   <script>initPage();</script>
 
   <main class="bets-content">
+    <div class="dupe-toast" id="dupe-toast" role="status">Dupe Created</div>
     <div class="bets-breadcrumbs"><a href="/">Home</a><span class="sep">/</span><a href="/bets">Bets</a><span class="sep">/</span><span id="crumb-leaf">Track a Bet</span></div>
 
     <h2 class="bets-h2" id="form-title">Track a Bet</h2>
@@ -84,24 +85,30 @@
         <a class="bet-btn secondary" href="/bets" style="text-align:center;text-decoration:none;line-height:1.4">Cancel</a>
       </div>
       <div class="bet-form-actions" id="delete-row" style="display:none">
+        <button type="button" class="bet-btn secondary" id="duplicate-btn">Duplicate</button>
         <button type="button" class="bet-btn danger" id="delete-btn">Delete this bet</button>
       </div>
     </form>
   </main>
 
-  <script src="/scripts/primary/bets.js?v=f3c5be28"></script>
+  <script src="/scripts/primary/bets-api.js?v=c2e5f8b3"></script>
+  <script src="/scripts/primary/bets.js?v=a4d6cf39"></script>
   <script src="/scripts/primary/combobox.js?v=882d6542"></script>
   <script src="/scripts/primary/bet-tile.js?v=2100e385"></script>
   <script>
     (async function () {
+      if (!isLoggedIn()) { location.href = '/account'; return; }
+      mountAuditBanner();
       const LEAGUES = ['NFL', 'NBA', 'Other'];
       // Status options come from bets.js (EVENT_STATUSES / WAGER_STATUSES).
 
       const params = new URLSearchParams(location.search);
       const editId = params.get('id');
-      // Load the seed first so editing a test bet (id "t_...") populates the form.
+      // Pull the user's bets so editing an existing bet finds it; load the seed
+      // too so editing a test bet (id "t_...") still populates the form.
+      await initBets();
       await loadTestBets();
-      const existing = editId ? getBet(editId) : null;
+      let existing = editId ? getBet(editId) : null;
 
       const el = id => document.getElementById(id);
       const fields = {
@@ -232,6 +239,30 @@
 
         upsertBet(bet);
         location.href = '/bets';
+      });
+
+      // Fixed "Dupe Created" toast at the top of the form. It stays until the
+      // user edits any field (not on a timer), so the {once:true} input listener
+      // fades it on the first change after duplicating.
+      function showDupeToast() {
+        el('dupe-toast').classList.add('visible');
+        el('bet-form').addEventListener('input', hideDupeToast, { once: true });
+      }
+      function hideDupeToast() { el('dupe-toast').classList.remove('visible'); }
+
+      // Duplicate: turn the edit form into a pre-filled new-bet form. Clearing
+      // `existing` means the next save has no id, so upsertBet inserts a new row
+      // (and only the explicit "Save Bet" submit writes to Supabase).
+      el('duplicate-btn').addEventListener('click', () => {
+        existing = null;
+        el('form-title').textContent = 'Track a Bet';
+        el('crumb-leaf').textContent = 'Track a Bet';
+        el('save-btn').textContent = 'Save Bet';
+        el('delete-row').style.display = 'none';
+        el('form-error').textContent = '';
+        document.title = 'Track a Bet | Dynast-Z';
+        history.replaceState(null, '', '/bets/place');
+        showDupeToast();
       });
 
       el('delete-btn').addEventListener('click', () => {

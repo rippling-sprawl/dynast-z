@@ -10,6 +10,7 @@ function escapeHtml(s) {
 function renderBetTile(bet, opts) {
   const showActions = !opts || opts.actions !== false;
   const status = bet.status || 'pending';
+  const wagerStatus = bet.wager_status || '';
   const pl = profitLoss(bet);
 
   const pick = escapeHtml(bet.side || 'Bet') +
@@ -59,7 +60,8 @@ function renderBetTile(bet, opts) {
         '<span class="bet-pick">' + pick + '</span>' +
         '<span class="bet-status-group">' +
           (bet._test ? '<span class="bet-test-badge" title="Seeded demo bet — not saved to your history">TEST</span>' : '') +
-          '<span class="bet-status status-' + status + '">' + escapeHtml(status) + '</span>' +
+          '<span class="bet-status status-' + status + '" title="Event status — how the bet resolved">' + escapeHtml(status) + '</span>' +
+          (wagerStatus ? '<span class="bet-wager-status wager-' + escapeHtml(wagerStatus) + '" title="Wager status — where the money stands">' + escapeHtml(wagerStatus) + '</span>' : '') +
         '</span>' +
       '</div>' +
       matchLine +

@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <title>Audit | Dynast-Z</title>
+  <link rel="stylesheet" href="/styles/base/styles.css?v=abec71e4">
+  <link rel="stylesheet" href="/styles/primary/bets.css?v=bf3a91c2">
+</head>
+<body>
+  <div id="header-mount"></div>
+  <div id="nav-drawer-mount"></div>
+  <script src="/scripts/base/auth.js?v=e9f1a2b3"></script>
+  <script src="/scripts/base/nav.js?v=e5f6a7b8"></script>
+  <script>initPage();</script>
+
+  <main class="bets-content">
+    <div class="bets-breadcrumbs"><a href="/">Home</a><span class="sep">/</span><a href="/bets">Bets</a><span class="sep">/</span><span>Audit</span></div>
+
+    <h2 class="bets-h2">🛡️ Audit</h2>
+    <p class="bets-sub">View and manage any user's bets. Pick a user to begin.</p>
+
+    <div class="audit-picker">
+      <label for="user-select">User</label>
+      <select id="user-select" aria-label="Select a user to manage">
+        <option value="">Loading users…</option>
+      </select>
+      <a class="bet-btn" id="add-bet-btn" href="/bets/place" style="display:none;text-decoration:none">➕ Add bet</a>
+    </div>
+
+    <div id="audit-body" style="display:none">
+      <div class="bets-section-label">Recent Performance</div>
+      <div class="perf-grid" id="perf-grid"></div>
+
+      <div class="bets-section-label">All Time</div>
+      <p class="bets-sub" id="history-sub">All saved picks, pending and resolved.</p>
+
+      <div class="bets-filters">
+        <div class="filter-row" id="league-chips"></div>
+        <div class="filter-row" id="range-chips"></div>
+        <div class="filter-row range-custom">
+          <input type="date" id="range-from" aria-label="From date">
+          <span class="range-to-sep">to</span>
+          <input type="date" id="range-to" aria-label="To date">
+        </div>
+      </div>
+
+      <div class="pl-graph" id="pl-graph"></div>
+
+      <div id="history-list" class="bet-list"></div>
+    </div>
+  </main>
+
+  <script src="/scripts/primary/bets-api.js?v=c2e5f8b3"></script>
+  <script src="/scripts/primary/bets.js?v=a4d6cf39"></script>
+  <script src="/scripts/primary/bet-tile.js?v=2100e385"></script>
+  <script src="/scripts/primary/bets-history.js?v=1a2b3c4d"></script>
+  <script>
+    (async function () {
+      // Admin-only.
+      if (!isLoggedIn() || !isAdmin()) { location.href = '/bets'; return; }
+
+      mountAuditBanner();
+      const sel = document.getElementById('user-select');
+      const addBtn = document.getElementById('add-bet-btn');
+      const body = document.getElementById('audit-body');
+      const me = getUser();
+
+      // Load the user list (admin-gated endpoint).
+      let users = [];
+      try {
+        const resp = await fetch('/api/users', { headers: { 'X-User-Id': me.user_id } });
+        if (resp.ok) users = await resp.json();
+      } catch {}
+
+      const target = getAuditTarget();
+      sel.innerHTML = '<option value="">Select a user…</option>' +
+        users.map(u =>
+          '<option value="' + u.id + '"' + (target && target.user_id === u.id ? ' selected' : '') + '>' +
+            u.username + '</option>'
+        ).join('');
+
+      // Switching users sets the audit target and reloads, so the whole bets
+      // section (and a single clean history render) reflects the new user.
+      sel.addEventListener('change', () => {
+        const id = sel.value;
+        if (!id) { clearAuditTarget(); location.reload(); return; }
+        const u = users.find(x => x.id === id);
+        setAuditTarget(id, u ? u.username : id);
+        location.reload();
+      });
+
+      // If a user is already selected, show their history.
+      if (target) {
+        addBtn.style.display = '';
+        addBtn.textContent = '➕ Add bet for ' + target.username;
+        body.style.display = '';
+        await initBets();
+        await loadTestBets();
+        const els = {
+          list: document.getElementById('history-list'),
+          sub: document.getElementById('history-sub'),
+          perf: document.getElementById('perf-grid'),
+          leagueChips: document.getElementById('league-chips'),
+          rangeChips: document.getElementById('range-chips'),
+          from: document.getElementById('range-from'),
+          to: document.getElementById('range-to'),
+          graph: document.getElementById('pl-graph'),
+        };
+        renderBetsHistory(els, allBetsWithSeedNewestFirst());
+      }
+    })();
+  </script>
+</body>
+</html>

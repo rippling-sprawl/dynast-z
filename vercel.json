@@ -9,6 +9,7 @@
   "rewrites": [
     { "source": "/", "destination": "/views/index.html" },
     { "source": "/odds", "destination": "/views/odds/index.html" },
+    { "source": "/bets/audit", "destination": "/views/bets/audit.html" },
     { "source": "/bets/place", "destination": "/views/bets/place.html" },
     { "source": "/bets/history", "destination": "/views/bets/history.html" },
     { "source": "/bets/settle", "destination": "/views/bets/settle.html" },

@@ -73,6 +73,18 @@
 .bet-status.status-win { color: #2ea043; }
 .bet-status.status-loss { color: #f85149; }
 
+/* Wager status: outlined pill (vs the filled event-status pill) so the two
+   never read as one thing — event status = how the bet resolved, wager
+   status = where the money stands. */
+.bet-wager-status {
+  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
+  padding: 1px 6px; border-radius: 999px; white-space: nowrap;
+  background: transparent; border: 1px solid #30363d; color: #8b949e;
+}
+.bet-wager-status.wager-unpaid { color: #d29922; border-color: #6b4f1a; }
+.bet-wager-status.wager-paid { color: #2ea043; border-color: #1f6f33; }
+.bet-wager-status.wager-settled { color: #58a6ff; border-color: #1f4068; }
+
 .bet-status-group { display: inline-flex; align-items: center; gap: 6px; flex: 0 0 auto; }
 .bet-test-badge {
   font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
@@ -288,4 +300,52 @@
 .pl-graph-empty {
   height: 160px; display: flex; align-items: center; justify-content: center;
   color: #6e7681; font-size: 13px; text-align: center;
+}
+
+/* Admin "Managing {username}" banner — persists across the bets section */
+.audit-banner {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  background: #2d2410; border: 1px solid #9e7b1f; border-radius: 8px;
+  padding: 8px 14px; margin-bottom: 16px;
+}
+.audit-banner-label { color: #f0d98c; font-size: 13px; font-weight: 600; }
+.audit-banner-exit {
+  background: #21262d; border: 1px solid #9e7b1f; color: #f0d98c;
+  border-radius: 6px; padding: 4px 12px; font-size: 12px; font-weight: 600;
+  cursor: pointer;
+}
+.audit-banner-exit:hover { background: #30363d; }
+
+/* Audit view user picker */
+.audit-picker {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+.audit-picker label { color: #8b949e; font-size: 13px; }
+.audit-picker select {
+  background: #0d1117; border: 1px solid #30363d; color: #f0f6fc;
+  border-radius: 6px; padding: 8px 10px; font-size: 14px; min-width: 200px;
+}
+.audit-picker .bet-btn { width: auto; padding: 8px 14px; margin-left: auto; }
+
+/* "Dupe Created" toast — fixed at the top of the place form, fades on first edit */
+.dupe-toast {
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-8px);
+  background: #1f6f43;
+  color: #f0f6fc;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  z-index: 1000;
+  opacity: 0;
+  transition: opacity 0.3s, transform 0.3s;
+  pointer-events: none;
+}
+.dupe-toast.visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
 }

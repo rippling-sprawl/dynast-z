@@ -99,6 +99,29 @@ def fetch_user(user_id):
     return rows[0] if rows else None
 
 
+def resolve_bets_user(headers, require_active):
+    """Resolve the user_id a /api/bets operation acts on. Normally the X-User-Id
+    requester; when X-Audit-User-Id is present (an admin managing another user),
+    verify the requester is an active admin and act on the target's rows. For
+    normal writes, require_active gates the requester's own status. Returns
+    (effective_user_id, error) where error is None or a (status, body) tuple."""
+    user_id = headers.get("X-User-Id")
+    if not user_id:
+        return None, (401, {"error": "Not authenticated"})
+    audit_id = headers.get("X-Audit-User-Id")
+    if audit_id and audit_id != user_id:
+        actor = fetch_user(user_id)
+        if (not actor or actor.get("status") is not True
+                or actor.get("role") != "admin"):
+            return None, (403, {"error": "Admin access required"})
+        return audit_id, None
+    if require_active:
+        user = fetch_user(user_id)
+        if not user or user.get("status") is not True:
+            return None, (403, {"error": "Account is inactive"})
+    return user_id, None
+
+
 def read_cache(name, ttl=None):
     path = os.path.join(CACHE_DIR, name)
     if not os.path.exists(path):
@@ -940,6 +963,35 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     self._json_response(200, {r["data_key"]: r["data"] for r in rows})
             except Exception as e:
                 self._json_response(500, {"error": str(e)})
+        elif self.path.startswith("/api/bets"):
+            eff, err = resolve_bets_user(self.headers, require_active=False)
+            if err:
+                self._json_response(*err)
+                return
+            try:
+                rows = supabase_request(
+                    f"bets?user_id=eq.{urllib.request.quote(eff)}"
+                    f"&select=data&order=created_at"
+                )
+                self._json_response(200, [r["data"] for r in (rows or [])])
+            except Exception as e:
+                self._json_response(500, {"error": str(e)})
+        elif self.path.startswith("/api/users"):
+            # Admin-only: list all users for the /bets/audit dropdown.
+            user_id = self.headers.get("X-User-Id")
+            if not user_id:
+                self._json_response(401, {"error": "Not authenticated"})
+                return
+            try:
+                actor = fetch_user(user_id)
+                if (not actor or actor.get("status") is not True
+                        or actor.get("role") != "admin"):
+                    self._json_response(403, {"error": "Admin access required"})
+                    return
+                rows = supabase_request("users?select=id,username&order=username.asc")
+                self._json_response(200, rows or [])
+            except Exception as e:
+                self._json_response(500, {"error": str(e)})
         elif self.path.startswith("/api/lookup"):
             parsed = urlparse(self.path)
             params = parse_qs(parsed.query)
@@ -1026,6 +1078,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             super().do_GET()
         elif self.path == "/odds":
             self.path = "/views/odds/index.html"
+            super().do_GET()
+        elif self.path.split("?")[0] == "/bets/audit":
+            self.path = "/views/bets/audit.html"
             super().do_GET()
         elif self.path.split("?")[0] == "/bets/place":
             self.path = "/views/bets/place.html"
@@ -1234,6 +1289,55 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 self._json_response(200, {"ok": True})
             except Exception as e:
                 self._json_response(500, {"error": str(e)})
+        elif self.path == "/api/bets":
+            eff, err = resolve_bets_user(self.headers, require_active=True)
+            if err:
+                self._json_response(*err)
+                return
+            try:
+                length = int(self.headers.get("Content-Length", 0))
+                bet = json.loads(self.rfile.read(length)) if length else {}
+                bet_id = bet.get("id")
+                if not bet_id:
+                    self._json_response(400, {"error": "bet id is required"})
+                    return
+                # Upsert on (user_id, id) — a client can never touch another
+                # user's row even by supplying someone else's bet id.
+                supabase_request(
+                    "bets?on_conflict=user_id,id",
+                    method="POST", body={
+                        "user_id": eff, "id": bet_id,
+                        "data": bet, "updated_at": "now()",
+                    }, extra_headers={"Prefer": "resolution=merge-duplicates,return=representation"},
+                )
+                self._json_response(200, {"ok": True})
+            except Exception as e:
+                self._json_response(500, {"error": str(e)})
+        else:
+            self.send_response(404)
+            self.end_headers()
+
+    def do_DELETE(self):
+        if self.path.startswith("/api/bets"):
+            eff, err = resolve_bets_user(self.headers, require_active=True)
+            if err:
+                self._json_response(*err)
+                return
+            try:
+                params = parse_qs(urlparse(self.path).query)
+                bet_id = params.get("id", [None])[0]
+                if not bet_id:
+                    self._json_response(400, {"error": "id parameter is required"})
+                    return
+                supabase_request(
+                    f"bets?user_id=eq.{urllib.request.quote(eff)}"
+                    f"&id=eq.{urllib.request.quote(bet_id)}",
+                    method="DELETE",
+                    extra_headers={"Prefer": "return=representation"},
+                )
+                self._json_response(200, {"ok": True})
+            except Exception as e:
+                self._json_response(500, {"error": str(e)})
         else:
             self.send_response(404)
             self.end_headers()
@@ -1241,15 +1345,15 @@ class Handler(http.server.SimpleHTTPRequestHandler):
     def do_OPTIONS(self):
         self.send_response(204)
         self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Methods", "GET, POST, PUT, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type, X-User-Id")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type, X-User-Id, X-Audit-User-Id")
         self.end_headers()
 
     def _json_response(self, status, data):
         self.send_response(status)
         self.send_header("Content-Type", "application/json")
         self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type, X-User-Id")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type, X-User-Id, X-Audit-User-Id")
         self.end_headers()
         self.wfile.write(json.dumps(data).encode())
 
