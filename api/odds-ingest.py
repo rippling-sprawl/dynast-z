@@ -6,8 +6,7 @@ PUT : body is a raw Recorder bundle (or {"bundle": <bundle>}). The book is
       state from Supabase, merge the bundle in via scripts/odds_merge.ingest
       (additive — never deletes other books/markets/candidates), and write back
       only the keys this bundle touched. Idempotent: re-pasting the same bundle
-      is a no-op. Auth: X-User-Id header; if ODDS_ADMIN_USER_IDS is set, the id
-      must be in it.
+      is a no-op. Auth: X-User-Id header; the user must be active with role 'admin'.
 GET : returns the merged state for the page. ?key=fd|dk|score|outrights for one
       artifact, otherwise all four. Public (these were public static files).
 
@@ -28,9 +27,6 @@ import odds_merge  # noqa: E402
 
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "")
-# Optional allowlist of user ids permitted to write. Empty => any authenticated
-# user (set this in prod to lock ingest down to yourself).
-ADMIN_IDS = [x.strip() for x in os.environ.get("ODDS_ADMIN_USER_IDS", "").split(",") if x.strip()]
 
 STATE_KEYS = ("fd", "dk", "score", "outrights")
 
@@ -47,6 +43,12 @@ def supabase_request(path, method="GET", body=None, headers=None):
     with urllib.request.urlopen(req) as resp:
         raw = resp.read()
         return json.loads(raw) if raw else None
+
+
+def fetch_user(user_id):
+    rows = supabase_request(
+        f"users?id=eq.{urllib.parse.quote(user_id)}&select=role,status")
+    return rows[0] if rows else None
 
 
 def load_state():
@@ -110,7 +112,8 @@ class handler(BaseHTTPRequestHandler):
         if not user_id:
             self._json(401, {"error": "Not authenticated"})
             return
-        if ADMIN_IDS and user_id not in ADMIN_IDS:
+        user = fetch_user(user_id)
+        if not user or user.get("status") is not True or user.get("role") != "admin":
             self._json(403, {"error": "Not authorized to update odds"})
             return
 

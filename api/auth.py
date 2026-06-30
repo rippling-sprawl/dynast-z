@@ -1,12 +1,15 @@
 from http.server import BaseHTTPRequestHandler
 import json
 import os
+import hashlib
+import hmac
 import secrets
 import urllib.request
 
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "")
-CODE_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+PBKDF2_ITERATIONS = 200_000
+MIN_PASSWORD_LEN = 8
 
 
 def supabase_request(path, method="GET", body=None):
@@ -22,8 +25,23 @@ def supabase_request(path, method="GET", body=None):
         return json.loads(resp.read())
 
 
-def generate_code():
-    return "".join(secrets.choice(CODE_CHARS) for _ in range(6))
+def hash_password(password):
+    salt = secrets.token_bytes(16)
+    digest = hashlib.pbkdf2_hmac("sha256", password.encode(), salt, PBKDF2_ITERATIONS)
+    return f"pbkdf2_sha256${PBKDF2_ITERATIONS}${salt.hex()}${digest.hex()}"
+
+
+def verify_password(password, stored):
+    try:
+        algo, iters, salt_hex, hash_hex = stored.split("$")
+        if algo != "pbkdf2_sha256":
+            return False
+        digest = hashlib.pbkdf2_hmac(
+            "sha256", password.encode(), bytes.fromhex(salt_hex), int(iters)
+        )
+        return hmac.compare_digest(digest.hex(), hash_hex)
+    except (ValueError, AttributeError):
+        return False
 
 
 class handler(BaseHTTPRequestHandler):
@@ -34,60 +52,54 @@ class handler(BaseHTTPRequestHandler):
             action = body.get("action")
 
             if action == "register":
-                display_name = (body.get("display_name") or "").strip()
-                if not display_name:
-                    self._json(400, {"error": "Display name is required"})
+                username = (body.get("username") or "").strip()
+                password = body.get("password") or ""
+                if not username:
+                    self._json(400, {"error": "Username is required"})
+                    return
+                if len(password) < MIN_PASSWORD_LEN:
+                    self._json(400, {"error": f"Password must be at least {MIN_PASSWORD_LEN} characters"})
                     return
 
-                # Check if name is taken
+                # Check if username is taken
                 existing = supabase_request(
-                    f"users?display_name=eq.{urllib.request.quote(display_name)}&select=id"
+                    f"users?username=eq.{urllib.request.quote(username)}&select=id"
                 )
                 if existing:
-                    self._json(409, {"error": "That name is already taken"})
-                    return
-
-                # Generate unique claim code
-                for _ in range(10):
-                    code = generate_code()
-                    taken = supabase_request(f"users?claim_code=eq.{code}&select=id")
-                    if not taken:
-                        break
-                else:
-                    self._json(500, {"error": "Could not generate unique code"})
+                    self._json(409, {"error": "That username is already taken"})
                     return
 
                 result = supabase_request("users", method="POST", body={
-                    "display_name": display_name,
-                    "claim_code": code,
+                    "username": username,
+                    "password_hash": hash_password(password),
                 })
                 user = result[0]
                 self._json(200, {
                     "user_id": user["id"],
-                    "display_name": user["display_name"],
-                    "claim_code": user["claim_code"],
+                    "username": user["username"],
+                    "role": user["role"],
                 })
 
             elif action == "login":
-                display_name = (body.get("display_name") or "").strip()
-                claim_code = (body.get("claim_code") or "").strip().upper()
-                if not display_name or not claim_code:
-                    self._json(400, {"error": "Display name and code are required"})
+                username = (body.get("username") or "").strip()
+                password = body.get("password") or ""
+                if not username or not password:
+                    self._json(400, {"error": "Username and password are required"})
                     return
 
                 users = supabase_request(
-                    f"users?display_name=eq.{urllib.request.quote(display_name)}"
-                    f"&claim_code=eq.{urllib.request.quote(claim_code)}&select=id,display_name,claim_code"
+                    f"users?username=eq.{urllib.request.quote(username)}"
+                    f"&select=id,username,password_hash,role,status"
                 )
-                if not users:
-                    self._json(401, {"error": "Invalid name or code"})
+                if not users or not verify_password(password, users[0].get("password_hash") or ""):
+                    self._json(401, {"error": "Invalid username or password"})
                     return
 
                 user = users[0]
                 self._json(200, {
                     "user_id": user["id"],
-                    "display_name": user["display_name"],
-                    "claim_code": user["claim_code"],
+                    "username": user["username"],
+                    "role": user["role"],
                 })
 
             else:

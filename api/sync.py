@@ -22,6 +22,13 @@ def supabase_request(path, method="GET", body=None, headers=None):
         return json.loads(resp.read())
 
 
+def fetch_user(user_id):
+    rows = supabase_request(
+        f"users?id=eq.{urllib.request.quote(user_id)}&select=role,status"
+    )
+    return rows[0] if rows else None
+
+
 class handler(BaseHTTPRequestHandler):
     def do_GET(self):
         user_id = self.headers.get("X-User-Id")
@@ -69,6 +76,11 @@ class handler(BaseHTTPRequestHandler):
             return
 
         try:
+            user = fetch_user(user_id)
+            if not user or user.get("status") is not True:
+                self._json(403, {"error": "Account is inactive"})
+                return
+
             length = int(self.headers.get("Content-Length", 0))
             body = json.loads(self.rfile.read(length)) if length else {}
 

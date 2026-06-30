@@ -31,7 +31,7 @@ class handler(BaseHTTPRequestHandler):
 
         try:
             users = supabase_request(
-                f"users?display_name=eq.{urllib.request.quote(username)}&select=id,display_name"
+                f"users?username=eq.{urllib.request.quote(username)}&select=id,username"
             )
             if not users:
                 self._json(404, {"error": "no username found"})
@@ -48,7 +48,7 @@ class handler(BaseHTTPRequestHandler):
             )
 
             data = rows[0]["data"] if rows else {"rounds": {}}
-            self._json(200, {"username": users[0]["display_name"], "threeBall": data})
+            self._json(200, {"username": users[0]["username"], "threeBall": data})
 
         except Exception as e:
             self._json(500, {"error": str(e)})

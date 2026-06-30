@@ -9,11 +9,46 @@
   <link rel="stylesheet" href="/styles/base/hub.css?v=2b363e8e">
   <link rel="stylesheet" href="/styles/primary/golf.css?v=5644a76c">
   <link rel="stylesheet" href="/styles/style/score-colors.css?v=98513287">
+  <style>
+    /* Lighter, higher-contrast treatment scoped to the account page only. */
+    body.account-page { background: #1c2027; }
+
+    .account-page .masters-content h2 { color: #f7f9fc; }
+    .account-page .masters-content .subtitle { color: #9aa4b2; }
+    .account-page .masters-breadcrumbs { color: #8a93a3; }
+
+    .account-page .group-form {
+      background: #252b35;
+      border: 1px solid #3a424f;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+    }
+    /* "CREATE ACCOUNT" / "SIGN IN" eyebrow labels */
+    .account-page .group-form > span { color: #9aa4b2 !important; }
+    .account-page .group-form label { color: #aeb6c2; }
+
+    .account-page .masters-search {
+      background: #2e3640;
+      border-color: #444d5b;
+      color: #f0f2f5;
+    }
+    .account-page .masters-search::placeholder { color: #7c8595; }
+    .account-page .masters-search:focus { border-color: #60a5fa; }
+
+    .account-page .masters-btn:not(.danger) {
+      background: #60a5fa;
+      border-color: #60a5fa;
+      color: #0f1117;
+    }
+    .account-page .masters-btn:not(.danger):hover { background: #7cb6fb; border-color: #7cb6fb; }
+    .account-page .masters-btn:disabled { opacity: 0.55; cursor: default; }
+
+    .account-page #acct-name { color: #f7f9fc !important; }
+  </style>
 </head>
-<body class="masters-body">
+<body class="masters-body account-page">
   <div id="header-mount"></div>
   <div id="nav-drawer-mount"></div>
-  <script src="/scripts/base/nav.js?v=1445a74b"></script>
+  <script src="/scripts/base/nav.js?v=e5f6a7b8"></script>
   <script>initPage();</script>
 
   <div class="masters-content" style="max-width:420px">
@@ -24,17 +59,6 @@
       <h2>Your Account</h2>
       <p class="subtitle">Signed in as <strong id="acct-name" style="color:#f0f0f0"></strong></p>
 
-      <div class="group-form" style="margin-top:16px">
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <div>
-            <label style="font-size:10px;color:#444;font-family:monospace;display:block;margin-bottom:4px">YOUR SYNC CODE</label>
-            <span id="acct-code" style="font-size:20px;font-weight:700;font-family:monospace;letter-spacing:3px;color:#60a5fa"></span>
-          </div>
-          <button class="masters-btn" id="copy-code" style="font-size:11px">Copy</button>
-        </div>
-        <p style="font-size:11px;color:#555;margin-top:8px;font-family:monospace">Use this name + code to sign in on other devices</p>
-      </div>
-
       <button class="masters-btn danger" id="sign-out" style="margin-top:16px;width:100%;padding:10px">Sign Out</button>
     </div>
 
@@ -43,42 +67,40 @@
       <h2>Account</h2>
       <p class="subtitle">Sync your selections across devices</p>
 
-      <!-- Create account -->
-      <div class="group-form" style="margin-top:16px">
-        <span style="font-size:11px;color:#555;font-family:monospace;display:block;margin-bottom:8px">CREATE ACCOUNT</span>
-        <div class="form-row">
-          <label>NAME</label>
-          <input type="text" class="masters-search" id="reg-name" placeholder="Your name" autocomplete="off" style="margin:0;max-width:none;flex:1">
-        </div>
-        <button class="masters-btn" id="reg-btn" style="width:100%;padding:8px;margin-top:4px">Create Account</button>
-        <div id="reg-error" style="color:#f87171;font-size:11px;font-family:monospace;margin-top:6px;display:none"></div>
-
-        <!-- Show code after registration -->
-        <div id="reg-success" style="display:none;margin-top:12px;text-align:center;padding:12px;background:#111;border-radius:6px;border:1px solid #2a2a2a">
-          <p style="font-size:11px;color:#555;font-family:monospace;margin-bottom:6px">YOUR SYNC CODE</p>
-          <span id="reg-code" style="font-size:24px;font-weight:700;font-family:monospace;letter-spacing:4px;color:#60a5fa"></span>
-          <p style="font-size:11px;color:#555;font-family:monospace;margin-top:8px">Save this code to sign in on other devices</p>
-        </div>
-      </div>
-
       <!-- Sign in -->
       <div class="group-form" style="margin-top:12px">
         <span style="font-size:11px;color:#555;font-family:monospace;display:block;margin-bottom:8px">SIGN IN</span>
         <div class="form-row">
-          <label>NAME</label>
-          <input type="text" class="masters-search" id="login-name" placeholder="Your name" autocomplete="off" style="margin:0;max-width:none;flex:1">
+          <label>USERNAME</label>
+          <input type="text" class="masters-search" id="login-name" placeholder="Username" autocomplete="username" style="margin:0;max-width:none;flex:1">
         </div>
         <div class="form-row">
-          <label>CODE</label>
-          <input type="text" class="masters-search" id="login-code" placeholder="e.g. K7X2M9" autocomplete="off" maxlength="6" style="margin:0;max-width:none;flex:1;text-transform:uppercase;letter-spacing:2px;font-family:monospace">
+          <label>PASSWORD</label>
+          <input type="password" class="masters-search" id="login-password" placeholder="Password" autocomplete="current-password" style="margin:0;max-width:none;flex:1">
         </div>
         <button class="masters-btn" id="login-btn" style="width:100%;padding:8px;margin-top:4px">Sign In</button>
         <div id="login-error" style="color:#f87171;font-size:11px;font-family:monospace;margin-top:6px;display:none"></div>
       </div>
+
+      <!-- Create account -->
+      <div class="group-form" style="margin-top:16px">
+        <span style="font-size:11px;color:#555;font-family:monospace;display:block;margin-bottom:8px">CREATE ACCOUNT</span>
+        <div class="form-row">
+          <label>USERNAME</label>
+          <input type="text" class="masters-search" id="reg-name" placeholder="Username" autocomplete="username" style="margin:0;max-width:none;flex:1">
+        </div>
+        <div class="form-row">
+          <label>PASSWORD</label>
+          <input type="password" class="masters-search" id="reg-password" placeholder="At least 8 characters" autocomplete="new-password" style="margin:0;max-width:none;flex:1">
+        </div>
+        <button class="masters-btn" id="reg-btn" style="width:100%;padding:8px;margin-top:4px">Create Account</button>
+        <div id="reg-error" style="color:#f87171;font-size:11px;font-family:monospace;margin-top:6px;display:none"></div>
+      </div>
+
     </div>
   </div>
 
-  <script src="/scripts/base/auth.js?v=d20e1128"></script>
+  <script src="/scripts/base/auth.js?v=a1b2c3d4"></script>
   <script src="/scripts/base/sync.js?v=f19ba045"></script>
   <script src="/scripts/primary/golf-utils.js?v=9ca7c49f"></script>
   <script>
@@ -87,8 +109,7 @@
       if (user) {
         document.getElementById('logged-out').style.display = 'none';
         document.getElementById('logged-in').style.display = 'block';
-        document.getElementById('acct-name').textContent = user.display_name;
-        document.getElementById('acct-code').textContent = user.claim_code || '------';
+        document.getElementById('acct-name').textContent = user.username;
       } else {
         document.getElementById('logged-in').style.display = 'none';
         document.getElementById('logged-out').style.display = 'block';
@@ -98,15 +119,15 @@
     // Create account
     document.getElementById('reg-btn').addEventListener('click', async () => {
       const name = document.getElementById('reg-name').value.trim();
+      const password = document.getElementById('reg-password').value;
       const errEl = document.getElementById('reg-error');
       errEl.style.display = 'none';
-      if (!name) { errEl.textContent = 'Enter a name'; errEl.style.display = 'block'; return; }
+      if (!name) { errEl.textContent = 'Enter a username'; errEl.style.display = 'block'; return; }
+      if (password.length < 8) { errEl.textContent = 'Password must be at least 8 characters'; errEl.style.display = 'block'; return; }
 
       try {
         document.getElementById('reg-btn').disabled = true;
-        const result = await register(name);
-        document.getElementById('reg-code').textContent = result.claim_code;
-        document.getElementById('reg-success').style.display = 'block';
+        await register(name, password);
 
         // Auto-migrate existing localStorage data to server
         const sel = getSelections();
@@ -114,8 +135,7 @@
         const ball = get3BallGroups();
         if (ball && ball.rounds && Object.keys(ball.rounds).length > 0) syncPush('masters', '3ball', ball);
 
-        // Show logged-in state after a moment so user can see the code
-        setTimeout(showState, 2000);
+        showState();
       } catch (e) {
         errEl.textContent = e.message;
         errEl.style.display = 'block';
@@ -126,14 +146,14 @@
     // Sign in
     document.getElementById('login-btn').addEventListener('click', async () => {
       const name = document.getElementById('login-name').value.trim();
-      const code = document.getElementById('login-code').value.trim();
+      const password = document.getElementById('login-password').value;
       const errEl = document.getElementById('login-error');
       errEl.style.display = 'none';
-      if (!name || !code) { errEl.textContent = 'Enter name and code'; errEl.style.display = 'block'; return; }
+      if (!name || !password) { errEl.textContent = 'Enter username and password'; errEl.style.display = 'block'; return; }
 
       try {
         document.getElementById('login-btn').disabled = true;
-        await login(name, code);
+        await login(name, password);
 
         // Pull server data into localStorage
         const sel = await syncPull('masters', 'selections');
@@ -147,15 +167,6 @@
         errEl.style.display = 'block';
         document.getElementById('login-btn').disabled = false;
       }
-    });
-
-    // Copy code
-    document.getElementById('copy-code').addEventListener('click', () => {
-      const code = document.getElementById('acct-code').textContent;
-      navigator.clipboard.writeText(code).then(() => {
-        document.getElementById('copy-code').textContent = 'Copied!';
-        setTimeout(() => { document.getElementById('copy-code').textContent = 'Copy'; }, 1500);
-      });
     });
 
     // Sign out
