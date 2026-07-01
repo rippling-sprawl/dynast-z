@@ -84,6 +84,7 @@
 .bet-wager-status.wager-unpaid { color: #d29922; border-color: #6b4f1a; }
 .bet-wager-status.wager-paid { color: #2ea043; border-color: #1f6f33; }
 .bet-wager-status.wager-settled { color: #58a6ff; border-color: #1f4068; }
+.bet-wager-status.wager-assumed-unpaid { color: #d29922; border-color: #6b4f1a; border-style: dashed; }
 
 .bet-status-group { display: inline-flex; align-items: center; gap: 6px; flex: 0 0 auto; }
 .bet-test-badge {
@@ -180,6 +181,13 @@
   cursor: pointer;
 }
 .bet-btn:hover { background: #2ea043; }
+.bet-btn:disabled {
+  background: #21262d;
+  border-color: #30363d;
+  color: #6e7681;
+  cursor: not-allowed;
+}
+.bet-btn:disabled:hover { background: #21262d; }
 .bet-btn.secondary { background: #21262d; border-color: #30363d; color: #c9d1d9; }
 .bet-btn.secondary:hover { background: #30363d; }
 .bet-btn.danger { background: #21262d; border-color: #6e2a2a; color: #f85149; }
@@ -252,7 +260,105 @@
 .perf-table .perf-pl.pos, .perf-table .perf-roi.pos { color: #2ea043; }
 .perf-table .perf-pl.neg, .perf-table .perf-roi.neg { color: #f85149; }
 
-/* Settle Up totals row */
+/* Settle Up */
+.settle-card-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.settle-card {
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 10px;
+  padding: 16px;
+}
+.settle-card-label {
+  font-size: 11px;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: #8b949e;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.settle-card-value {
+  color: #f0f6fc;
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1.1;
+}
+.settle-card-value.pos { color: #2ea043; }
+.settle-card-value.neg { color: #f85149; }
+.settle-history-link {
+  margin: 18px 0 24px;
+  font-size: 13px;
+}
+.settle-history-link a {
+  color: #58a6ff;
+  text-decoration: none;
+}
+.settle-history-link a:hover { text-decoration: underline; }
+.settle-footer {
+  border-top: 1px solid #30363d;
+  margin-top: 28px;
+  padding-top: 16px;
+}
+.settle-footer .bet-btn { width: 100%; }
+.settle-note {
+  color: #8b949e;
+  font-size: 12px;
+  margin: 10px 0 0;
+  text-align: center;
+}
+.settle-feedback {
+  padding: 10px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  margin: 12px 0 0;
+  text-align: center;
+}
+.settle-feedback.success { color: #56d364; background: #12261a; border: 1px solid #1f6f33; }
+.settle-feedback.error { color: #ff7b72; background: #2d1517; border: 1px solid #6e2a2a; }
+.settle-confirm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(1, 4, 9, 0.76);
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+}
+.settle-confirm-card {
+  width: min(100%, 420px);
+  box-sizing: border-box;
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 10px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
+  padding: 24px;
+  text-align: center;
+}
+.settle-confirm-icon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  margin: 0 auto 14px;
+  border: 1px solid #2ea043;
+  border-radius: 50%;
+  color: #56d364;
+  background: #12261a;
+  font-size: 20px;
+  font-weight: 800;
+}
+.settle-confirm-card h3 { margin: 0 0 8px; color: #f0f6fc; font-size: 18px; }
+.settle-confirm-card p { margin: 0; color: #8b949e; font-size: 13px; line-height: 1.5; }
+.settle-confirm-actions { display: flex; gap: 10px; margin-top: 20px; }
+.settle-confirm-actions .bet-btn { flex: 1; }
+.settle-bet-list { margin-bottom: 0; }
 .settle-table tfoot th, .settle-table tfoot td {
   border-top: 1px solid #30363d; padding: 9px 10px; color: #f0f6fc;
 }
@@ -449,3 +555,7 @@
 .bet-modal-icon-btn:hover { background: #30363d; border-color: #58a6ff; }
 .bet-modal-icon-btn.danger { color: #f85149; border-color: #6e2a2a; }
 .bet-modal-icon-btn.danger:hover { background: #3d1d1d; border-color: #8e3a3a; }
+
+@media (max-width: 520px) {
+  .settle-card-grid { grid-template-columns: 1fr; }
+}
