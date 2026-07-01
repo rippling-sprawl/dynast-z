@@ -6,7 +6,7 @@
   <link rel="icon" type="image/png" href="/favicon.png">
   <title>Settle Up | Dynast-Z</title>
   <link rel="stylesheet" href="/styles/base/styles.css?v=abec71e4">
-  <link rel="stylesheet" href="/styles/primary/bets.css?v=c04ba2e1">
+  <link rel="stylesheet" href="/styles/primary/bets.css?v=settle20260701">
 </head>
 <body>
   <div id="header-mount"></div>
@@ -19,87 +19,212 @@
     <div class="bets-breadcrumbs"><a href="/">Home</a><span class="sep">/</span><a href="/bets">Bets</a><span class="sep">/</span><span>Settle Up</span></div>
 
     <h2 class="bets-h2">💰 Settle Up</h2>
-    <p class="bets-sub">Where the money stands across all your bets, grouped by wager status.</p>
+    <p class="bets-sub">Where the money stands across unsettled bets.</p>
 
-    <div class="bets-section-label">Wager Status Summary</div>
-    <div id="settle-table"></div>
+    <div class="bets-section-label">Settlement Summary</div>
+    <div id="settle-summary"></div>
   </main>
 
-  <script src="/scripts/primary/bets-api.js?v=c2e5f8b3"></script>
+  <script src="/scripts/primary/bets-api.js?v=settle20260701"></script>
   <script src="/scripts/primary/bets.js?v=b5e7d150"></script>
+  <script src="/scripts/primary/bet-tile.js?v=settle20260701"></script>
   <script>
     (async function () {
-      if (!isLoggedIn()) { location.href = '/account'; return; }
+      const params = new URLSearchParams(location.search);
+      const demoMode = params.get('demo') === '1' && location.hostname === 'localhost';
+      if (!demoMode && !isLoggedIn()) { location.href = '/account'; return; }
       mountAuditBanner();
-      await initBets();
-      await loadTestBets();
-      const ALL = allBetsWithSeedNewestFirst();
-      const box = document.getElementById('settle-table');
-
-      if (!ALL.length) {
-        box.innerHTML = '<div class="bets-empty">No bets yet. <a href="/bets/place" style="color:#58a6ff">Track your first →</a></div>';
-        return;
+      if (demoMode) {
+        saveBets([
+          { id: 'demo-unpaid-win', side: 'Unpaid Win', stake: 100, to_win: 90, status: 'win', wager_status: 'unpaid', placed_at: '2026-07-01T12:00:00Z' },
+          { id: 'demo-unpaid-loss', side: 'Unpaid Loss', stake: 100, to_win: 90, status: 'loss', wager_status: 'unpaid', placed_at: '2026-07-01T12:01:00Z' },
+          { id: 'demo-unpaid-pending', side: 'Unpaid Pending', stake: 100, to_win: 90, status: 'pending', wager_status: 'unpaid', placed_at: '2026-07-01T12:02:00Z' },
+          { id: 'demo-unpaid-push', side: 'Unpaid Push', stake: 100, to_win: 90, status: 'push', wager_status: 'unpaid', placed_at: '2026-07-01T12:03:00Z' },
+          { id: 'demo-unpaid-void', side: 'Unpaid Void', stake: 100, to_win: 90, status: 'void', wager_status: 'unpaid', placed_at: '2026-07-01T12:04:00Z' },
+          { id: 'demo-paid-win', side: 'Paid Win', stake: 100, to_win: 90, status: 'win', wager_status: 'paid', placed_at: '2026-07-01T12:05:00Z' },
+          { id: 'demo-paid-loss', side: 'Paid Loss', stake: 100, to_win: 90, status: 'loss', wager_status: 'paid', placed_at: '2026-07-01T12:06:00Z' },
+          { id: 'demo-paid-pending', side: 'Paid Pending', stake: 100, to_win: 90, status: 'pending', wager_status: 'paid', placed_at: '2026-07-01T12:07:00Z' },
+          { id: 'demo-paid-push', side: 'Paid Push', stake: 100, to_win: 90, status: 'push', wager_status: 'paid', placed_at: '2026-07-01T12:08:00Z' },
+          { id: 'demo-paid-void', side: 'Paid Void', stake: 100, to_win: 90, status: 'void', wager_status: 'paid', placed_at: '2026-07-01T12:09:00Z' },
+        ]);
+      } else {
+        await initBets();
+        await loadTestBets();
       }
+      const box = document.getElementById('settle-summary');
+      const viewedUser = (typeof getAuditTarget === 'function' && getAuditTarget()) ||
+        (typeof getUser === 'function' && getUser()) || { username: 'user' };
+      const payoutLabel = 'Amount owed to ' + viewedUser.username + ' (Net P/L)';
+      let feedback = null;
+
+      const FINAL_EVENT_STATUSES = ['win', 'loss', 'push', 'void'];
 
       function plClass(n) { return n > 0 ? 'pos' : (n < 0 ? 'neg' : ''); }
       function signMoney(n) { return (n > 0 ? '+' : '') + fmtMoney(n); }
+      function normalizedWagerStatus(bet) { return bet.wager_status || 'unpaid'; }
+      function isUnsettled(bet) { return normalizedWagerStatus(bet) !== 'settled'; }
+      function isFinalOutcome(bet) { return FINAL_EVENT_STATUSES.includes(bet.status); }
 
-      // One summary row per wager_status, with null/empty grouped as "Missing".
-      function blank() { return { bets: 0, staked: 0, toWin: 0, net: 0 }; }
-      const groups = {};
-      WAGER_STATUSES.forEach(s => { groups[s] = blank(); });
-      groups[WAGER_STATUS_MISSING] = blank();
+      function settlementImpact(bet) {
+        const wagerStatus = normalizedWagerStatus(bet);
+        const eventStatus = bet.status || 'pending';
+        const stake = Number(bet.stake) || 0;
+        const toWin = Number(bet.to_win) || 0;
 
-      for (const b of ALL) {
-        const key = b.wager_status || WAGER_STATUS_MISSING;
-        const g = groups[key] || (groups[key] = blank());
-        g.bets += 1;
-        g.staked += Number(b.stake) || 0;
-        g.toWin += Number(b.to_win) || 0;
-        const pl = profitLoss(b);
-        if (pl !== null) g.net += pl;
+        if (wagerStatus === 'unpaid') {
+          if (eventStatus === 'win') return { net: toWin, unpaidStakes: 0 };
+          if (eventStatus === 'loss') return { net: -stake, unpaidStakes: 0 };
+          if (eventStatus === 'pending') return { net: 0, unpaidStakes: stake };
+          return { net: 0, unpaidStakes: 0 };
+        }
+
+        if (wagerStatus === 'paid') {
+          if (eventStatus === 'win') return { net: stake + toWin, unpaidStakes: 0 };
+          if (eventStatus === 'push' || eventStatus === 'void') return { net: stake, unpaidStakes: 0 };
+          return { net: 0, unpaidStakes: 0 };
+        }
+
+        return { net: 0, unpaidStakes: 0 };
       }
 
-      // Display order: defined statuses first, then Missing, then any stragglers.
-      const order = WAGER_STATUSES.concat([WAGER_STATUS_MISSING]);
-      Object.keys(groups).forEach(k => { if (!order.includes(k)) order.push(k); });
+      function confirmSettlement(count) {
+        return new Promise(resolve => {
+          const overlay = document.createElement('div');
+          overlay.className = 'settle-confirm-overlay';
+          overlay.setAttribute('role', 'presentation');
+          overlay.innerHTML =
+            '<div class="settle-confirm-card" role="dialog" aria-modal="true" aria-labelledby="settle-confirm-title">' +
+              '<div class="settle-confirm-icon" aria-hidden="true">✓</div>' +
+              '<h3 id="settle-confirm-title">Settle final outcomes?</h3>' +
+              '<p>This will mark ' + count + ' final outcome' + (count === 1 ? '' : 's') + ' as settled. Pending bets will remain unsettled.</p>' +
+              '<div class="settle-confirm-actions">' +
+                '<button type="button" class="bet-btn secondary" data-settle-cancel>Cancel</button>' +
+                '<button type="button" class="bet-btn" data-settle-confirm>Settle Outcomes</button>' +
+              '</div>' +
+            '</div>';
 
-      const totals = blank();
-      const rows = order.map(key => {
-        const g = groups[key];
-        totals.bets += g.bets; totals.staked += g.staked;
-        totals.toWin += g.toWin; totals.net += g.net;
-        const label = key === WAGER_STATUS_MISSING
-          ? key
-          : key.charAt(0).toUpperCase() + key.slice(1);
-        return '<tr>' +
-            '<th scope="row">' + label + '</th>' +
-            '<td class="perf-rec">' + g.bets + '</td>' +
-            '<td>' + fmtMoney(g.staked) + '</td>' +
-            '<td>' + fmtMoney(g.toWin) + '</td>' +
-            '<td class="perf-pl ' + plClass(g.net) + '">' + signMoney(g.net) + '</td>' +
-          '</tr>';
-      }).join('');
+          function close(confirmed) {
+            document.removeEventListener('keydown', onKeydown);
+            overlay.remove();
+            resolve(confirmed);
+          }
+          function onKeydown(event) {
+            if (event.key === 'Escape') close(false);
+          }
+          overlay.addEventListener('click', event => {
+            if (event.target === overlay || event.target.hasAttribute('data-settle-cancel')) close(false);
+            if (event.target.hasAttribute('data-settle-confirm')) close(true);
+          });
+          document.addEventListener('keydown', onKeydown);
+          document.body.appendChild(overlay);
+          overlay.querySelector('[data-settle-confirm]').focus();
+        });
+      }
 
-      const totalRow =
-        '<tr class="settle-total">' +
-          '<th scope="row">All Bets</th>' +
-          '<td class="perf-rec">' + totals.bets + '</td>' +
-          '<td>' + fmtMoney(totals.staked) + '</td>' +
-          '<td>' + fmtMoney(totals.toWin) + '</td>' +
-          '<td class="perf-pl ' + plClass(totals.net) + '">' + signMoney(totals.net) + '</td>' +
-        '</tr>';
+      function render() {
+        const all = allBetsWithSeedNewestFirst();
+        const unsettled = all.filter(isUnsettled);
 
-      box.innerHTML =
-        '<table class="perf-table settle-table">' +
-          '<thead><tr>' +
-            '<th scope="col">Wager Status</th><th scope="col">Bets</th>' +
-            '<th scope="col">Staked</th><th scope="col">To Win</th>' +
-            '<th scope="col">Net P/L</th>' +
-          '</tr></thead>' +
-          '<tbody>' + rows + '</tbody>' +
-          '<tfoot>' + totalRow + '</tfoot>' +
-        '</table>';
+        if (!all.length) {
+          box.innerHTML = '<div class="bets-empty">No bets yet. <a href="/bets/place" style="color:#58a6ff">Track your first →</a></div>';
+          return;
+        }
+
+        if (!unsettled.length) {
+          box.innerHTML =
+            '<div class="settle-card-grid">' +
+              '<div class="settle-card"><div class="settle-card-label">' + escapeHtml(payoutLabel) + '</div><div class="settle-card-value">' + signMoney(0) + '</div></div>' +
+              '<div class="settle-card"><div class="settle-card-label">Unpaid Stakes Balance</div><div class="settle-card-value">' + fmtMoney(0) + '</div></div>' +
+            '</div>' +
+            (feedback ? '<div class="settle-feedback ' + feedback.type + '" role="status">' + escapeHtml(feedback.message) + '</div>' : '') +
+            '<p class="settle-history-link"><a href="/bets/history">View bet history for the full breakdown →</a></p>' +
+            '<div class="bets-empty">All bets are settled.</div>';
+          return;
+        }
+
+        const totals = unsettled.reduce((acc, bet) => {
+          const impact = settlementImpact(bet);
+          acc.net += impact.net;
+          acc.unpaidStakes += impact.unpaidStakes;
+          return acc;
+        }, { net: 0, unpaidStakes: 0 });
+        const finalCount = unsettled.filter(isFinalOutcome).length;
+
+        box.innerHTML =
+          '<div class="settle-card-grid">' +
+            '<div class="settle-card">' +
+              '<div class="settle-card-label">' + escapeHtml(payoutLabel) + '</div>' +
+              '<div class="settle-card-value ' + plClass(totals.net) + '">' + signMoney(totals.net) + '</div>' +
+            '</div>' +
+            '<div class="settle-card">' +
+              '<div class="settle-card-label">Unpaid Stakes Balance</div>' +
+              '<div class="settle-card-value">' + fmtMoney(totals.unpaidStakes) + '</div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="settle-footer">' +
+            '<button type="button" class="bet-btn" id="settle-final-btn"' + (finalCount ? '' : ' disabled') + '>Settle Final Outcomes</button>' +
+            '<p class="settle-note">' +
+              (finalCount
+                ? finalCount + ' final outcome' + (finalCount === 1 ? '' : 's') + ' ready to mark settled.'
+                : 'No final outcomes are ready to settle.') +
+            '</p>' +
+            (feedback ? '<div class="settle-feedback ' + feedback.type + '" role="status">' + escapeHtml(feedback.message) + '</div>' : '') +
+          '</div>' +
+          '<div class="bets-section-label">Unsettled Bets</div>' +
+          '<div class="bet-list settle-bet-list">' +
+            unsettled.map(bet => renderBetTile(bet, {
+              actions: false,
+              assumedUnpaid: true,
+              forceWagerStatus: true,
+              paymentAmount: settlementImpact(bet).net,
+            })).join('') +
+          '</div>' +
+          '<p class="settle-history-link"><a href="/bets/history">View bet history for the full breakdown →</a></p>';
+
+        const btn = document.getElementById('settle-final-btn');
+        if (btn) btn.addEventListener('click', settleFinalOutcomes);
+      }
+
+      async function settleFinalOutcomes() {
+        const bets = loadBets();
+        const candidates = bets.filter(bet => isUnsettled(bet) && isFinalOutcome(bet));
+        if (!candidates.length) return;
+        if (!await confirmSettlement(candidates.length)) return;
+
+        const btn = document.getElementById('settle-final-btn');
+        if (btn) { btn.disabled = true; btn.textContent = 'Settling…'; }
+        feedback = null;
+
+        if (demoMode) {
+          const ids = new Set(candidates.map(bet => bet.id));
+          bets.forEach(bet => { if (ids.has(bet.id)) bet.wager_status = 'settled'; });
+          saveBets(bets);
+          feedback = { type: 'success', message: candidates.length + ' final outcome' + (candidates.length === 1 ? '' : 's') + ' settled. Pending bets remain open.' };
+          render();
+          return;
+        }
+
+        const results = await Promise.all(candidates.map(async bet => {
+          const updated = Object.assign({}, bet, { wager_status: 'settled' });
+          try {
+            await betsApiUpsertAwaited(updated);
+            return { id: bet.id, ok: true };
+          } catch (error) {
+            return { id: bet.id, ok: false, error: error.message };
+          }
+        }));
+        const succeeded = new Set(results.filter(result => result.ok).map(result => result.id));
+        bets.forEach(bet => { if (succeeded.has(bet.id)) bet.wager_status = 'settled'; });
+        if (succeeded.size) saveBets(bets);
+
+        const failed = results.length - succeeded.size;
+        feedback = failed
+          ? { type: 'error', message: succeeded.size + ' settled; ' + failed + ' failed and remain unsettled. Try again.' }
+          : { type: 'success', message: succeeded.size + ' final outcome' + (succeeded.size === 1 ? '' : 's') + ' settled. Pending bets remain open.' };
+        render();
+      }
+
+      render();
     })();
   </script>
 </body>

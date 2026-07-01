@@ -15,7 +15,11 @@ function renderBetTile(bet, opts) {
   // still shows it.
   const adminSelf = (typeof isAdmin === 'function' && isAdmin())
     && !(typeof getAuditTarget === 'function' && getAuditTarget());
-  const wagerStatus = adminSelf ? '' : (bet.wager_status || '');
+  const assumedUnpaid = opts && opts.assumedUnpaid && !bet.wager_status;
+  const forceWagerStatus = opts && opts.forceWagerStatus;
+  const wagerStatus = adminSelf && !assumedUnpaid && !forceWagerStatus
+    ? ''
+    : (bet.wager_status || (assumedUnpaid ? 'assumed-unpaid' : ''));
   const pl = profitLoss(bet);
 
   const pick = escapeHtml(bet.side || 'Bet') +
@@ -48,6 +52,12 @@ function renderBetTile(bet, opts) {
     meta.push('<span class="k">P/L:</span> <span class="bet-pl ' + cls + '">' +
       escapeHtml((pl > 0 ? '+' : '') + fmtMoney(pl)) + '</span>');
   }
+  if (opts && typeof opts.paymentAmount === 'number') {
+    const amount = opts.paymentAmount;
+    const cls = amount > 0 ? 'pos' : (amount < 0 ? 'neg' : '');
+    meta.push('<span class="k">Payment Amount:</span> <span class="bet-pl ' + cls + '">' +
+      escapeHtml((amount > 0 ? '+' : '') + fmtMoney(amount)) + '</span>');
+  }
 
   const metaLine = meta.length ? '<div class="bet-meta">' + meta.join(' &middot; ') + '</div>' : '';
 
@@ -70,7 +80,7 @@ function renderBetTile(bet, opts) {
         '<span class="bet-status-group">' +
           (bet._test ? '<span class="bet-test-badge" title="Seeded demo bet — not saved to your history">TEST</span>' : '') +
           '<span class="bet-status status-' + status + '" title="Event status — how the bet resolved">' + escapeHtml(status) + '</span>' +
-          (wagerStatus ? '<span class="bet-wager-status wager-' + escapeHtml(wagerStatus) + '" title="Wager status — where the money stands">' + escapeHtml(wagerStatus) + '</span>' : '') +
+          (wagerStatus ? '<span class="bet-wager-status wager-' + escapeHtml(wagerStatus) + '" title="Wager status — where the money stands">' + escapeHtml(wagerStatus === 'assumed-unpaid' ? 'Assumed Unpaid' : wagerStatus) + '</span>' : '') +
         '</span>' +
       '</div>' +
       matchLine +
