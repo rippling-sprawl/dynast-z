@@ -10,7 +10,12 @@ function escapeHtml(s) {
 function renderBetTile(bet, opts) {
   const showActions = !opts || opts.actions !== false;
   const status = bet.status || 'pending';
-  const wagerStatus = bet.wager_status || '';
+  // Hide the wager-status chip when an admin is viewing their own bets (they
+  // settle their own wagers, so "paid/unpaid" is noise). Auditing another user
+  // still shows it.
+  const adminSelf = (typeof isAdmin === 'function' && isAdmin())
+    && !(typeof getAuditTarget === 'function' && getAuditTarget());
+  const wagerStatus = adminSelf ? '' : (bet.wager_status || '');
   const pl = profitLoss(bet);
 
   const pick = escapeHtml(bet.side || 'Bet') +
@@ -47,15 +52,19 @@ function renderBetTile(bet, opts) {
   const metaLine = meta.length ? '<div class="bet-meta">' + meta.join(' &middot; ') + '</div>' : '';
 
   const leagueChip = bet.league ? '<span class="bet-league-chip">' + escapeHtml(bet.league) + '</span>' : '';
+  const betTypeChip = bet.bet_type ? '<span class="bet-type-chip">' + escapeHtml(bet.bet_type) + '</span>' : '';
+  // Edit opens the quick-action modal (see bet-edit-modal.js), falling back to
+  // the full /place form via the href if that module isn't loaded / JS is off.
   const editLink = showActions
-    ? '<a class="bet-edit" href="/bets/place?id=' + encodeURIComponent(bet.id) + '">Edit</a>'
+    ? '<a class="bet-edit" href="/bets/place?id=' + encodeURIComponent(bet.id) + '" data-bet-edit>Edit</a>'
     : '';
-  const bottom = (leagueChip || editLink)
-    ? '<div class="bet-tile-bottom">' + leagueChip + editLink + '</div>'
+  const bottom = (leagueChip || betTypeChip || editLink)
+    ? '<div class="bet-tile-bottom">' + leagueChip + betTypeChip + editLink + '</div>'
     : '';
 
   return (
-    '<div class="bet-tile status-' + status + '">' +
+    '<div class="bet-tile status-' + status + '"' +
+      (bet.id ? ' data-bet-id="' + escapeHtml(bet.id) + '"' : '') + '>' +
       '<div class="bet-tile-top">' +
         '<span class="bet-pick">' + pick + '</span>' +
         '<span class="bet-status-group">' +

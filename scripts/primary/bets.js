@@ -33,6 +33,7 @@ const SPORT_BY_LEAGUE = { NFL: 'Football', NBA: 'Basketball', Other: '' };
 //   wager_status  — where the money stands (stored as bet.wager_status)
 const EVENT_STATUSES = ['pending', 'win', 'loss', 'push', 'void'];
 const WAGER_STATUSES = ['unpaid', 'paid', 'settled'];
+const BET_TYPES = ['Spread', 'ML', 'Prop'];
 
 // Bets with no wager_status are grouped under this label in the Settle Up view.
 const WAGER_STATUS_MISSING = 'Missing';

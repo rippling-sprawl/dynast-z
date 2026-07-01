@@ -129,6 +129,11 @@
   padding: 2px 8px; border-radius: 999px; white-space: nowrap;
   background: #21262d; color: #8b949e; border: 1px solid #30363d;
 }
+.bet-type-chip {
+  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px;
+  padding: 2px 8px; border-radius: 999px; white-space: nowrap;
+  background: #1f2d3d; color: #58a6ff; border: 1px solid #2f4574;
+}
 .bet-edit { font-size: 12px; color: #58a6ff; text-decoration: none; margin-left: auto; }
 
 .bets-empty {
@@ -154,6 +159,7 @@
   padding: 9px 10px;
   width: 100%;
 }
+.bet-form input[type="date"] { color-scheme: dark; box-sizing: border-box; }
 .bet-form input:focus,
 .bet-form select:focus,
 .bet-form textarea:focus { outline: none; border-color: #58a6ff; }
@@ -181,6 +187,7 @@
 
 .bet-form-actions { display: flex; gap: 10px; margin-top: 6px; }
 .bet-form-actions .bet-btn { flex: 1; }
+.bet-btn-icon { display: block; margin: 0 auto; vertical-align: middle; }
 
 .bet-error { color: #f85149; font-size: 12px; min-height: 16px; }
 
@@ -349,3 +356,96 @@
   opacity: 1;
   transform: translateX(-50%) translateY(0);
 }
+
+/* ---- Bet quick-action modal (opened from a tile's Edit link) -------------- */
+.bet-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(1, 4, 9, 0.72);
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+}
+.bet-modal-overlay[hidden] { display: none; }
+
+/* Raised card that visibly sits above the dimmed page */
+.bet-modal {
+  position: relative;
+  width: 100%;
+  max-width: 380px;
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 12px;
+  padding: 20px 18px 18px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6);
+}
+.bet-modal-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  background: #21262d;
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  color: #8b949e;
+  cursor: pointer;
+}
+.bet-modal-close:hover { background: #30363d; color: #f0f6fc; }
+
+.bet-modal-title { font-size: 16px; font-weight: 600; color: #f0f6fc; padding-right: 36px; }
+.bet-modal-sub { font-size: 12px; color: #8b949e; margin-top: 4px; }
+.bet-modal-label {
+  font-size: 11px; letter-spacing: 1px; text-transform: uppercase;
+  color: #8b949e; font-weight: 600; margin: 18px 0 8px;
+}
+
+.bet-modal-status { display: flex; flex-wrap: wrap; gap: 6px; }
+.bet-modal-chip {
+  background: #21262d;
+  border: 1px solid #30363d;
+  color: #8b949e;
+  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
+  font-family: inherit;
+  padding: 5px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.1s, color 0.1s, border-color 0.1s;
+}
+.bet-modal-chip:hover { color: #f0f6fc; border-color: #58a6ff; }
+/* Active chip echoes the tile's status palette so the selection reads clearly */
+.bet-modal-chip.active.status-pending { color: #d29922; border-color: #6b4f1a; background: #2d2410; }
+.bet-modal-chip.active.status-win { color: #2ea043; border-color: #1f6f33; background: #10251a; }
+.bet-modal-chip.active.status-loss { color: #f85149; border-color: #6e2a2a; background: #2a1516; }
+.bet-modal-chip.active.status-push,
+.bet-modal-chip.active.status-void { color: #c9d1d9; border-color: #484f58; background: #21262d; }
+
+.bet-modal-actions { display: flex; gap: 10px; }
+.bet-modal-icon-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 11px 8px;
+  background: #21262d;
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  color: #c9d1d9;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.1s, border-color 0.1s;
+}
+.bet-modal-icon-btn:hover { background: #30363d; border-color: #58a6ff; }
+.bet-modal-icon-btn.danger { color: #f85149; border-color: #6e2a2a; }
+.bet-modal-icon-btn.danger:hover { background: #3d1d1d; border-color: #8e3a3a; }

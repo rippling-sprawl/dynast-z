@@ -6,7 +6,7 @@
   <link rel="icon" type="image/png" href="/favicon.png">
   <title>Track a Bet | Dynast-Z</title>
   <link rel="stylesheet" href="/styles/base/styles.css?v=abec71e4">
-  <link rel="stylesheet" href="/styles/primary/bets.css?v=d4e7a1c9">
+  <link rel="stylesheet" href="/styles/primary/bets.css?v=e5f8b2d3">
 </head>
 <body>
   <div id="header-mount"></div>
@@ -44,9 +44,15 @@
         <input id="f-opponent" placeholder="e.g. Chiefs">
       </div>
 
-      <div class="bet-field">
-        <label for="f-selection">The Bet <span class="hint">— e.g. "-3.5", "o27.5 pts", "ML"</span></label>
-        <input id="f-selection" placeholder="e.g. Moneyline">
+      <div class="bet-row" id="bet-type-row">
+        <div class="bet-field">
+          <label for="f-bet-type">Bet Type</label>
+          <input id="f-bet-type" placeholder="Type">
+        </div>
+        <div class="bet-field" id="selection-field" style="flex:2">
+          <label for="f-selection">The Bet <span class="hint">— e.g. "-3.5", "o27.5 pts"</span></label>
+          <input id="f-selection" placeholder="e.g. -3.5">
+        </div>
       </div>
 
       <div class="bet-row">
@@ -85,21 +91,34 @@
         <a class="bet-btn secondary" href="/bets" style="text-align:center;text-decoration:none;line-height:1.4">Cancel</a>
       </div>
       <div class="bet-form-actions" id="delete-row" style="display:none">
-        <button type="button" class="bet-btn secondary" id="duplicate-btn">Duplicate</button>
-        <button type="button" class="bet-btn danger" id="delete-btn">Delete this bet</button>
+        <button type="button" class="bet-btn secondary" id="duplicate-btn" title="Duplicate" aria-label="Duplicate">
+          <svg class="bet-btn-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="9" y="9" width="11" height="11" rx="2"></rect>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+          </svg>
+        </button>
+        <button type="button" class="bet-btn danger" id="delete-btn" title="Delete this bet" aria-label="Delete this bet">
+          <svg class="bet-btn-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 6h18"></path>
+            <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path>
+            <line x1="10" y1="11" x2="10" y2="17"></line>
+            <line x1="14" y1="11" x2="14" y2="17"></line>
+          </svg>
+        </button>
       </div>
     </form>
   </main>
 
   <script src="/scripts/primary/bets-api.js?v=c2e5f8b3"></script>
-  <script src="/scripts/primary/bets.js?v=a4d6cf39"></script>
+  <script src="/scripts/primary/bets.js?v=b5e7d150"></script>
   <script src="/scripts/primary/combobox.js?v=882d6542"></script>
-  <script src="/scripts/primary/bet-tile.js?v=2100e385"></script>
+  <script src="/scripts/primary/bet-tile.js?v=3f21a640"></script>
   <script>
     (async function () {
       if (!isLoggedIn()) { location.href = '/account'; return; }
       mountAuditBanner();
-      const LEAGUES = ['NFL', 'NBA', 'Other'];
+      const LEAGUES = ['World Cup', 'NFL', 'NBA', 'Other'];
       // Status options come from bets.js (EVENT_STATUSES / WAGER_STATUSES).
 
       const params = new URLSearchParams(location.search);
@@ -113,16 +132,28 @@
       const el = id => document.getElementById(id);
       const fields = {
         league: el('f-league'), side: el('f-side'), opponent: el('f-opponent'),
-        selection: el('f-selection'),
+        betType: el('f-bet-type'), selection: el('f-selection'),
         stake: el('f-stake'), odds: el('f-odds'), towin: el('f-towin'),
         eventDate: el('f-event-date'), status: el('f-status'),
         wagerStatus: el('f-wager-status'),
       };
 
-      // Defaults (overridden below in edit mode).
-      fields.league.value = 'NFL';
+      // Defaults (overridden below in edit mode). League defaults to the last
+      // league the user submitted, persisted in local storage.
+      const LEAGUE_KEY = 'bets:lastLeague';
+      const savedLeague = localStorage.getItem(LEAGUE_KEY);
+      fields.league.value = (savedLeague && LEAGUES.includes(savedLeague)) ? savedLeague : 'NFL';
       fields.status.value = 'pending';
-      fields.wagerStatus.value = 'unpaid';
+      fields.betType.value = 'Spread';
+      // Admins paying out their own bets settle immediately; auditing another
+      // user (or being a normal user) keeps the standard 'unpaid' default.
+      const adminSelf = (typeof isAdmin === 'function' && isAdmin())
+        && !(typeof getAuditTarget === 'function' && getAuditTarget());
+      fields.wagerStatus.value = adminSelf ? 'paid' : 'unpaid';
+      // Default the event date to today (local parts to avoid a UTC off-by-one).
+      const today = new Date();
+      fields.eventDate.value =
+        `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
       if (existing) {
         el('form-title').textContent = 'Edit Bet';
@@ -133,6 +164,7 @@
         fields.league.value = existing.league || 'NFL';
         fields.side.value = existing.side || '';
         fields.opponent.value = existing.opponent || '';
+        fields.betType.value = existing.bet_type || 'Spread';
         fields.selection.value = existing.selection || '';
         fields.stake.value = existing.stake != null ? existing.stake : '';
         fields.odds.value = existing.odds_american != null ? existing.odds_american : '';
@@ -147,8 +179,20 @@
       attachCombobox(fields.league, () => LEAGUES, { selectOnly: true });
       attachCombobox(fields.status, () => EVENT_STATUSES, { selectOnly: true, capitalize: true });
       attachCombobox(fields.wagerStatus, () => WAGER_STATUSES, { selectOnly: true, capitalize: true });
+      // No capitalize: option labels ("ML") are already correctly cased.
+      attachCombobox(fields.betType, () => BET_TYPES, { selectOnly: true });
       attachCombobox(fields.side, () => sideSuggestions(index, fields.league.value));
       attachCombobox(fields.opponent, () => teamSuggestions(index, fields.league.value));
+
+      // "The Bet" is redundant for a moneyline pick — hide it (and drop any stale
+      // text) whenever the bet type is ML.
+      function syncBetTypeUI() {
+        const isML = fields.betType.value === 'ML';
+        el('selection-field').style.display = isML ? 'none' : '';
+        if (isML) fields.selection.value = '';
+      }
+      fields.betType.addEventListener('change', () => { syncBetTypeUI(); updatePreview(); });
+      syncBetTypeUI();
 
       // Match is derived (Side vs Opponent), not an input — shown in the preview.
       function matchString() {
@@ -164,6 +208,7 @@
           side: fields.side.value.trim(),
           opponent: fields.opponent.value.trim(),
           match: matchString(),
+          bet_type: fields.betType.value,
           selection: fields.selection.value.trim(),
           stake: fields.stake.value ? Number(fields.stake.value) : '',
           odds_american: odds ? Number(odds) : null,
@@ -227,6 +272,7 @@
           side: side,
           opponent: fields.opponent.value.trim(),
           match: matchString(),
+          bet_type: fields.betType.value,
           selection: fields.selection.value.trim(),
           stake: Number(stake),
           odds_american: odds ? Number(odds) : null,
@@ -236,6 +282,9 @@
           status: fields.status.value,
           wager_status: fields.wagerStatus.value || null,
         });
+
+        // Remember this league as the default for the next bet.
+        localStorage.setItem(LEAGUE_KEY, fields.league.value);
 
         upsertBet(bet);
         location.href = '/bets';
@@ -272,6 +321,10 @@
           location.href = '/bets';
         }
       });
+
+      // Arriving with ?duplicate=1 (from a tile's quick-action modal) pre-fills
+      // from the source bet, then runs the same Duplicate flow as the button.
+      if (existing && params.get('duplicate')) el('duplicate-btn').click();
 
       updatePreview();
     })();
