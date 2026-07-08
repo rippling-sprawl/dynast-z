@@ -1,0 +1,176 @@
+<meta charset="utf-8">
+<title>Office Jobs in Home Construction &amp; Renovation — Western NC / Blue Ridge</title>
+<style>
+  :root {
+    --ink: #1c2530;
+    --muted: #5b6672;
+    --line: #e2e6ea;
+    --accent: #b5651d;
+    --accent-soft: #f4ede4;
+    --bg: #f7f8f9;
+    --card: #ffffff;
+    --careers: #1f7a4d;
+    --website: #6b7683;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: var(--ink);
+    background: var(--bg);
+    padding: 32px 20px 64px;
+  }
+  .wrap { max-width: 1140px; margin: 0 auto; }
+  header h1 { font-size: 26px; margin: 0 0 6px; letter-spacing: -0.01em; }
+  header p.sub { margin: 0 0 4px; color: var(--muted); font-size: 15px; }
+  .meta { color: var(--muted); font-size: 13px; margin: 10px 0 0; }
+  .note {
+    background: var(--accent-soft);
+    border: 1px solid #ecdcc7;
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: 13px;
+    color: #6a5233;
+    margin: 20px 0 24px;
+  }
+  .note b { color: #5a4526; }
+  .controls { margin: 0 0 14px; }
+  #q {
+    width: 100%;
+    max-width: 360px;
+    padding: 9px 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    font-size: 14px;
+  }
+  .tablewrap {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    overflow-x: auto;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+  }
+  table { border-collapse: collapse; width: 100%; min-width: 720px; }
+  thead th {
+    text-align: left;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--line);
+    background: #fbfcfc;
+    position: sticky;
+    top: 0;
+  }
+  tbody td { padding: 14px 16px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: #fafbfb; }
+  .name { font-weight: 600; font-size: 15px; white-space: nowrap; }
+  .name small { display: block; font-weight: 400; color: var(--muted); font-size: 12px; margin-top: 3px; white-space: normal; max-width: 190px; }
+  .desc { color: #34404c; max-width: 420px; }
+  .roles { display: block; margin-top: 6px; font-size: 12px; color: var(--muted); }
+  .roles b { color: #566; font-weight: 600; }
+  .salary { white-space: nowrap; font-variant-numeric: tabular-nums; font-weight: 600; color: #2c3844; }
+  a.cta {
+    display: inline-block;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 6px 11px;
+    border-radius: 7px;
+    white-space: nowrap;
+    border: 1px solid transparent;
+  }
+  a.careers { color: #fff; background: var(--careers); }
+  a.careers:hover { background: #196340; }
+  a.website { color: var(--website); background: #fff; border-color: var(--line); }
+  a.website:hover { border-color: #c4ccd3; }
+  .tag { font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); display:block; margin-top:4px; }
+  footer { color: var(--muted); font-size: 12px; margin-top: 22px; line-height: 1.6; }
+  footer a { color: var(--accent); }
+  .count { color: var(--muted); font-size: 13px; margin-left: 8px; }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Office Jobs in Home Construction &amp; Renovation</h1>
+    <p class="sub">Western North Carolina / Blue Ridge Mountains region — companies that hire for <b>office &amp; professional roles</b> (project management, estimating, design, administration, accounting, sales, purchasing). Manual-labor trades excluded.</p>
+    <p class="meta">Starting point: <a href="https://bablueridge.com/">Builders Association of the Blue Ridge Mountains</a> member community. Compiled July 2026.</p>
+  </header>
+
+  <div class="note">
+    <b>About the salary column:</b> Companies don't publish office salaries, so these are <b>2025–26 typical ranges for office/professional roles in Western NC</b>, scaled to each firm's role mix (low end = coordinator/admin; high end = project manager, estimator, or controller). Treat them as ballpark guidance, not offers. Benchmarks:
+    project manager ~$68k–$124k, estimator ~$67k–$120k, construction/office administrator ~$45k–$82k
+    (<a href="https://www.ziprecruiter.com/Salaries/Construction-Project-Managers-Salary--in-North-Carolina">ZipRecruiter</a>, <a href="https://www.salary.com/research/salary/recruiting/construction-project-estimator-salary/nc">Salary.com</a>, <a href="https://www.indeed.com/career/construction-project-manager/salaries/NC">Indeed</a>).
+  </div>
+
+  <div class="controls">
+    <input id="q" type="text" placeholder="Filter by name, service, or role…" oninput="filt()">
+    <span class="count" id="count"></span>
+  </div>
+
+  <div class="tablewrap">
+    <table id="tbl">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Description</th>
+          <th>Salary (office roles)</th>
+          <th>Careers</th>
+        </tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </div>
+
+  <footer>
+    24 companies spanning custom home building, remodeling/renovation, design-build, architecture, and building-materials supply. Careers-page links verified to resolve; where a firm has no dedicated jobs page, its main website is linked as a fallback (tagged <b>Website</b>). The <a href="https://members.bablueridge.com/list/">BABRM member directory</a> lists 1,200+ additional regional members worth browsing.
+  </footer>
+</div>
+
+<script>
+const DATA = [
+  {n:"HomeSource Builders & Construction", d:"Asheville custom home builder and remodeler offering residential and light-commercial general contracting.", r:"Project manager, estimator, office/admin manager, designer, accounting", s:"$45k – $110k", u:"https://www.homesourcebuilders.com/careers", t:"careers"},
+  {n:"Morgan-Keefe Builders", d:"Arden-based luxury custom home builder, 40+ years building high-end homes across Western NC and Upstate SC.", r:"Project manager, estimator, superintendent, controller, office manager", s:"$48k – $120k", u:"https://www.morgankeefe.com/careers/", t:"careers"},
+  {n:"Living Stone Design + Build", d:"Award-winning Asheville design-build firm: custom homes, renovations, and commercial projects from design through construction.", r:"Junior/senior estimator, project manager, designer, sales, accounting", s:"$48k – $115k", u:"https://www.livingstoneconstruction.com/join-us", t:"careers"},
+  {n:"Scroggs Construction Services", d:"Asheville general contractor specializing in custom homes, remodeling, and additions.", r:"PM assistant, selections coordinator, project supervisor, office/admin", s:"$42k – $95k", u:"https://scroggsconstruction.com/careers/", t:"careers"},
+  {n:"Dillard-Jones Builders", d:"Luxury custom home builder serving Asheville, Cashiers, and Greenville, with an Arden office.", r:"Project manager, estimator, purchasing, accounting, marketing, designer, sales", s:"$48k – $120k", u:"https://dillardjones.isolvedhire.com/jobs/", t:"careers"},
+  {n:"Jade Mountain Builders", d:"Asheville green/sustainable custom home builder with in-house crews building high-end homes.", r:"Project manager, estimator, office/admin", s:"$45k – $105k", u:"https://jademountainbuilders.com/contact-us/employment/", t:"careers"},
+  {n:"Modern Mountain Builders", d:"Asheville general contractor building custom homes plus commercial and civil projects across Western NC.", r:"Office manager, office assistant, construction/project manager, admin", s:"$40k – $100k", u:"https://modernmountainbuilders.com/employment-and-subcontracting/", t:"careers"},
+  {n:"Brown Haven Homes", d:"Southeastern design-build custom home builder with an Asheville Design Studio.", r:"New-home sales specialist, design specialist, architectural designer, accounting", s:"$45k – $110k", u:"https://job-boards.greenhouse.io/brownhavenhomes", t:"careers"},
+  {n:"Builders FirstSource", d:"National building-materials supplier and component manufacturer with an Asheville branch serving pro builders.", r:"Office administrator, dispatcher, project manager, design manager, purchasing, sales, accounting", s:"$40k – $100k", u:"https://careers.bldr.com/", t:"careers"},
+  {n:"Judd Builders", d:"Family-owned Asheville/Arden builder specializing in luxury custom homes, upscale remodels, and commercial work.", r:"Project manager, estimator, office/admin manager, designer", s:"$45k – $115k", u:"https://www.juddbuilders.net/", t:"website"},
+  {n:"Osada Construction", d:"Award-winning Asheville luxury custom home builder and renovator, operating since 2008.", r:"Project manager, designer, site superintendent, office/admin", s:"$45k – $110k", u:"https://www.osadaconstruction.com/", t:"website"},
+  {n:"Assembly Architecture & Build", d:"Asheville design-build firm integrating architecture and construction for sustainable custom homes.", r:"Architect, residential designer, project manager, office/admin", s:"$50k – $120k", u:"https://www.assemblyab.com/", t:"website"},
+  {n:"Looking Glass Builders", d:"Asheville/Fairview builder providing custom homes and full-home remodeling and renovation.", r:"Project manager, estimator, office/admin", s:"$42k – $100k", u:"https://lookingglassbuildersnc.com/", t:"website"},
+  {n:"Innovex Renovations", d:"Asheville luxury remodeler focused on live-in residential renovations and commercial/high-rise condo work.", r:"Project manager, estimator, office/admin", s:"$45k – $105k", u:"https://innovexrenovations.com/", t:"website"},
+  {n:"Cason Builders Supply", d:"Long-established Western NC supplier of brick, stone, masonry, and hardscape/landscape materials.", r:"Inside/outside sales, purchasing, dispatch, accounting, office manager", s:"$38k – $78k", u:"https://www.casonbuildersupply.com/", t:"website"},
+  {n:"WNC Floor & Home", d:"Candler, NC flooring and home-design retailer (Carpet One) with a kitchen and bath remodeling studio.", r:"Sales/flooring consultant, kitchen & bath designer, office/admin, accounting", s:"$38k – $75k", u:"https://www.wncfloorandhome.com/", t:"website"},
+  {n:"Hawk Design Build", d:"Asheville licensed general contractor specializing in custom home design, additions, and remodeling.", r:"Designer, project manager, estimator, office/admin", s:"$45k – $105k", u:"https://www.hawkdesignbuild.com/", t:"website"},
+  {n:"Asheville Home Design Build", d:"Asheville design-build remodeler: kitchens, baths, whole-home renovations, and additions with an in-house design team.", r:"Designer, project/construction manager, office/admin, estimator", s:"$45k – $100k", u:"https://ashevillehomeremodel.com/", t:"website"},
+  {n:"Black Rock Construction", d:"Asheville unlimited-licensed general contractor specializing in custom residential new construction.", r:"Project manager, estimator, office/admin", s:"$45k – $105k", u:"https://www.blackrockasheville.com/", t:"website"},
+  {n:"DC Design Build", d:"Asheville design-build firm delivering integrated home renovations and custom construction.", r:"Designer, project manager, office/admin, estimator", s:"$45k – $110k", u:"https://www.designbuildavl.com/", t:"website"},
+  {n:"Herrington Homes", d:"Arden/Asheville-area custom home builder focused on design and construction of mountain homes.", r:"Project manager, estimator, designer, office/admin", s:"$45k – $105k", u:"https://www.herringtonhomesllc.com/", t:"website"},
+  {n:"Asheville Design Company", d:"Architect-led design-build firm in Mills River (Asheville area): residential design, builds, and renovations.", r:"Architect, designer, project manager, office/admin", s:"$50k – $118k", u:"https://www.ashevilledesignco.com/", t:"website"},
+  {n:"ProSource Supply", d:"Carolinas plumbing/lighting/hardware showroom supplier with an Asheville branch serving builders and remodelers.", r:"Showroom sales/design consultant, purchasing, office/admin, accounting", s:"$40k – $80k", u:"https://www.prosourcesupply.com/", t:"website"},
+  {n:"BUILD (Build-GH)", d:"Asheville-based builder of bespoke luxury custom homes and high-end commercial spaces, including renovations.", r:"Project manager, estimator, designer, office/admin", s:"$48k – $115k", u:"https://www.build-gh.com/asheville-custom-home-builder/", t:"website"}
+];
+
+const rows = document.getElementById('rows');
+function render(list){
+  rows.innerHTML = list.map(c => `
+    <tr>
+      <td class="name">${c.n}</td>
+      <td class="desc">${c.d}<span class="roles"><b>Office roles:</b> ${c.r}</span></td>
+      <td class="salary">${c.s}</td>
+      <td><a class="cta ${c.t}" href="${c.u}" target="_blank" rel="noopener">${c.t === 'careers' ? 'Careers page →' : 'Website →'}</a>${c.t==='website'?'<span class="tag">no jobs page</span>':''}</td>
+    </tr>`).join('');
+  document.getElementById('count').textContent = list.length + ' of ' + DATA.length + ' shown';
+}
+function filt(){
+  const q = document.getElementById('q').value.toLowerCase();
+  render(DATA.filter(c => (c.n+' '+c.d+' '+c.r).toLowerCase().includes(q)));
+}
+render(DATA);
+</script>
