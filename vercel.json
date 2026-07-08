@@ -41,6 +41,8 @@
     { "source": "/jane/jobs", "destination": "/views/jane/jobs.html" },
     { "source": "/jane/admin", "destination": "/views/jane/admin.html" },
     { "source": "/jane/asheville-rentals", "destination": "/views/jane/asheville-rentals.html" },
+    { "source": "/jane/builders-claude", "destination": "/views/jane/builders-claude.html" },
+    { "source": "/jane/builders-chatgpt", "destination": "/views/jane/builders-chatgpt.html" },
     { "source": "/jane", "destination": "/views/jane/index.html" },
     { "source": "/api/:path*", "destination": "/api/:path*" }
   ],

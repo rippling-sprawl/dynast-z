@@ -1109,6 +1109,12 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         elif self.path == "/jane/asheville-rentals":
             self.path = "/views/jane/asheville-rentals.html"
             super().do_GET()
+        elif self.path == "/jane/builders-claude":
+            self.path = "/views/jane/builders-claude.html"
+            super().do_GET()
+        elif self.path == "/jane/builders-chatgpt":
+            self.path = "/views/jane/builders-chatgpt.html"
+            super().do_GET()
         # Golf routes: /golf/:year/:tournament/:page
         elif re.match(r"/golf/\d{4}$", self.path) or re.match(r"/season/\d{4}$", self.path):
             self.path = "/views/golf/season.html"
