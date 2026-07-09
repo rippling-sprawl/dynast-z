@@ -27,21 +27,17 @@
     const leagueId = pathParts[1];
     const rosterId = pathParts[2];
     let zMax = 1;
-    let zMin = -1;
 
     function fmtPos(pos) { return pos === 'PICK' ? 'PK' : pos; }
 
     function fmtZ(z) {
       if (z == null) return '\u2014';
-      const sign = z >= 0 ? '+' : '';
-      return sign + z.toFixed(2);
+      return Math.round(z).toString();
     }
 
     function zColor(z) {
       if (z == null) return '';
-      if (z > 0) return `rgba(34, 197, 94, ${Math.min(z / zMax, 1).toFixed(2)})`;
-      if (z < 0) return `rgba(220, 38, 38, ${Math.min(Math.abs(z) / Math.abs(zMin), 1).toFixed(2)})`;
-      return 'transparent';
+      return `rgba(34, 197, 94, ${Math.min(z / zMax, 1).toFixed(2)})`;
     }
 
     const sourceAbbr = {'keeptradecut.com':'KTC','fantasypros.com':'FP','fantasycalc.com':'FC'};
@@ -65,7 +61,6 @@
 
         const vals = data.players.filter(p => p.aggregate != null).map(p => p.aggregate);
         zMax = Math.max(...vals) || 1;
-        zMin = Math.min(...vals) || -1;
 
         const container = document.getElementById('player-list');
         const posOrder = ['QB', 'RB', 'WR', 'TE', 'PICK', 'K', 'DEF'];

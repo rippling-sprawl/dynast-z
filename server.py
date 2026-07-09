@@ -15,6 +15,7 @@ except ImportError:
 
 import http.server
 import json
+import math
 import os
 import re
 import hashlib
@@ -30,6 +31,18 @@ PORT = 8000
 IS_VERCEL = os.environ.get("VERCEL") == "1"
 CACHE_DIR = "/tmp/dynast-z-cache" if IS_VERCEL else os.path.join(os.path.dirname(os.path.abspath(__file__)), "cache")
 CACHE_TTL = 129600  # 36 hours in seconds
+
+# Player-value curve. Each source's players are ranked by value and turned into
+# a percentile position p in [0, 1] (0 = best, 1 = worst); the percentiles a
+# player appears in are averaged, and the blended p is mapped onto a 0-VALUE_SCALE
+# grade via  value = SCALE * exp(-(TOP_DECAY * p + TAIL_DECAY * p**4)).
+#   - TOP_DECAY is a gentle, whole-field slope that sets how separated the top is.
+#   - TAIL_DECAY is a quartic term: negligible near the top, but it accelerates
+#     hard over the bottom third so those players collapse toward zero.
+# Together they keep elite players ahead while thoroughly de-emphasizing the tail.
+VALUE_SCALE = 100
+VALUE_TOP_DECAY = 5.5
+VALUE_TAIL_DECAY = 6.0
 
 KTC_URL = "https://keeptradecut.com/dynasty-rankings"
 FANTASYCALC_URL = "https://api.fantasycalc.com/values/current?isDynasty=true&numQbs=2&numTeams=12&ppr=1"
@@ -290,17 +303,14 @@ def normalize_fp(raw):
     return players
 
 
-def compute_z_scores(players_dict):
-    """Convert raw values to z-scores for a single source's player dict."""
-    values = [p["value"] for p in players_dict.values()]
-    if len(values) < 2:
-        return {name: 0.0 for name in players_dict}
-    mean = sum(values) / len(values)
-    variance = sum((v - mean) ** 2 for v in values) / len(values)
-    std = variance ** 0.5
-    if std == 0:
-        return {name: 0.0 for name in players_dict}
-    return {name: (p["value"] - mean) / std for name, p in players_dict.items()}
+def compute_percentiles(players_dict):
+    """Rank a single source's players by value and return each player's
+    percentile position in [0, 1] (0 = best, 1 = worst)."""
+    order = sorted(players_dict.items(), key=lambda kv: -kv[1]["value"])
+    n = len(order)
+    if n == 1:
+        return {order[0][0]: 0.0}
+    return {name: i / (n - 1) for i, (name, _) in enumerate(order)}
 
 
 def fetch_sleeper_players():
@@ -727,7 +737,7 @@ def build_team_roster(league_id, roster_id):
     rosters, users, league = fetch_league_data(league_id)
     sleeper_players = fetch_sleeper_players()
 
-    # Build z-score lookup from trade calculator data
+    # Build value lookup from trade calculator data
     z_lookup = {}
     try:
         ktc_raw = fetch_ktc()
@@ -743,7 +753,7 @@ def build_team_roster(league_id, roster_id):
         ):
             z_lookup[p["name"]] = p
     except Exception:
-        pass  # z-scores are a bonus, not required
+        pass  # values are a bonus, not required
 
     # Find the roster by roster_id
     target_roster = None
@@ -813,14 +823,14 @@ def merge_players(*source_pairs):
 
     Each source_pair is ("source_name", {name: {name, position, team, value}}).
     """
-    # Compute z-scores per source
-    z_maps = []
+    # Turn each source's raw values into percentiles (0 = best, 1 = worst)
+    pct_maps = []
     for label, players_dict in source_pairs:
-        z_maps.append((label, players_dict, compute_z_scores(players_dict)))
+        pct_maps.append((label, players_dict, compute_percentiles(players_dict)))
 
     # Collect all player names
     all_names = set()
-    for _, players_dict, _ in z_maps:
+    for _, players_dict, _ in pct_maps:
         all_names |= players_dict.keys()
 
     merged = []
@@ -828,16 +838,20 @@ def merge_players(*source_pairs):
         position = None
         team = None
         sources = {}
-        z_scores = []
-        for label, players_dict, z_dict in z_maps:
+        pcts = []
+        for label, players_dict, pct_dict in pct_maps:
             p = players_dict.get(name)
             if p:
                 if position is None:
                     position = p["position"]
                     team = p["team"]
                 sources[label] = p["value"]
-                z_scores.append(z_dict[name])
-        aggregate = round(sum(z_scores) / len(z_scores), 3)
+                pcts.append(pct_dict[name])
+        # Average the percentiles a player appears in, then map onto the value curve
+        pct = sum(pcts) / len(pcts)
+        aggregate = round(
+            VALUE_SCALE * math.exp(-(VALUE_TOP_DECAY * pct + VALUE_TAIL_DECAY * pct ** 4)), 2
+        )
         merged.append({
             "name": name,
             "position": position,
@@ -1075,6 +1089,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             super().do_GET()
         elif self.path == "/football":
             self.path = "/views/home/football.html"
+            super().do_GET()
+        elif self.path == "/football/grading-system":
+            self.path = "/views/home/grading-system.html"
             super().do_GET()
         elif self.path == "/odds":
             self.path = "/views/odds/index.html"

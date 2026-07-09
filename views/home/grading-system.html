@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <title>Grading System | Dynast-Z</title>
+  <link rel="stylesheet" href="/styles/base/styles.css?v=abec71e4">
+  <link rel="stylesheet" href="/styles/base/hub.css?v=2b363e8e">
+</head>
+<body class="masters-body">
+  <div id="header-mount"></div>
+  <div id="nav-drawer-mount"></div>
+  <script src="/scripts/base/auth.js?v=a1b2c3d4"></script>
+  <script src="/scripts/base/nav.js?v=e5f6a7b8"></script>
+  <script>initPage();</script>
+
+  <div class="masters-content grading">
+    <div class="crumbs"><a href="/football">Football</a> <span>/</span> Grading System</div>
+
+    <h1>Grading System</h1>
+    <p class="lede">How every player and draft pick earns a single number.</p>
+
+    <!-- ABSTRACT -->
+    <section class="abstract">
+      <h2 class="abstract-h">The Short Version</h2>
+      <p>Every player and every draft pick on this site gets one number: a grade from
+        <strong>0 to 100</strong>. Higher is better. The best asset in dynasty football sits right up
+        near 100. A dart-throw bench stash sits near 0.</p>
+
+      <p>We ask three of the most respected dynasty sources what they think every player is worth, line their opinions up,
+        and blend them into a single grade. Three heads are better than one.</p>
+
+      <p>Two rules the grade always obeys:</p>
+      <ul>
+        <li><strong>Nobody is ever negative.</strong> A player can't be worth less than nothing. (Yes,
+          even that guy buried on Jeff's taxi squad.)</li>
+        <li><strong>The top matters most &mdash; the bottom barely counts.</strong> Elite players are
+          rare, so they sit high on the scale and stay fairly close together up top. Everyone else slides
+          down steadily, and the bottom third of the league is worth almost nothing. Studs win
+          championships; deep-bench fliers are lottery tickets.</li>
+      </ul>
+
+      <p class="kicker">That's it. If you stopped reading here, you'd already know more than Jeff.</p>
+    </section>
+
+    <!-- DETAIL -->
+    <h2>The Longer Version</h2>
+
+    <h3>The three sources</h3>
+    <p>Each grade blends three independent, well-respected dynasty valuations:</p>
+    <ul>
+      <li><strong>KeepTradeCut (KTC)</strong> &mdash; <em>crowdsourced.</em> Thousands of people vote in
+        "keep / trade / cut" matchups, and an ELO-style algorithm turns those votes into values.</li>
+      <li><strong>FantasyCalc</strong> &mdash; <em>market-based.</em> It watches hundreds of thousands of
+        real trades and reverse-engineers what the market actually pays.</li>
+      <li><strong>FantasyPros</strong> &mdash; <em>expert consensus.</em> A panel of analysts publishes a
+        dynasty trade-value chart.</li>
+    </ul>
+    <p>Each source is excellent, and each is a little different. More importantly, each publishes numbers
+      on a completely different scale &mdash; FantasyPros runs 1&ndash;100, while KTC and FantasyCalc climb
+      all the way to ~10,000. You can't just average those together; that'd be like averaging a golf score,
+      a bowling score, and a credit score.</p>
+
+    <h3>Step 1 &mdash; put everyone on equal footing (percentiles)</h3>
+    <p>Instead of wrestling three different scales into agreement, we ignore the raw numbers and use each
+      player's <strong>position</strong> in the list. Within each source we sort everyone best-to-worst and
+      note where they land as a <strong>percentile</strong> &mdash; the very best sits at the top (0%), the
+      very worst at the bottom (100%). A percentile means the same thing everywhere, whether the source
+      counts to 100 or to 10,000.</p>
+    <p>For each player we <strong>average</strong> the percentiles from every source they appear in. Show up
+      in all three? We blend all three. Listed in only one? We use the one we've got. This keeps the system
+      sturdy &mdash; one source having a weird outlier can't blow up a player's grade.</p>
+
+    <h3>Step 2 &mdash; turn position into a grade (the curve)</h3>
+    <p>Now we bend that blended percentile (call it <em>p</em>, running from 0 at the top to 1 at the
+      bottom) into a 0&ndash;100 grade with an <strong>exponential curve</strong>:</p>
+
+    <div class="formula">
+      value = 100 &times; <span class="e">e</span><sup>&minus;(5.5<i>p</i> + 6<i>p</i>&#8308;)</sup>
+    </div>
+    <p class="formula-note"><em>p</em> = how far down the list a player sits (0 = best, 1 = worst).</p>
+
+    <p>Two pieces do two jobs. The gentle <strong>5.5<i>p</i></strong> term spreads the whole field out from
+      top to bottom. The <strong>6<i>p</i>&#8308;</strong> term stays asleep near the top and then wakes up
+      violently toward the bottom &mdash; that's what drops the deep end of the list into the dirt. The net
+      effect: the top is separated but not obscene, the upper-middle slides down gradually, and the bottom
+      third falls off a cliff.</p>
+
+    <p>Here's that curve &mdash; grade on the way down as you move from the best player (left) to the worst
+      (right):</p>
+
+    <div class="curve-graph" id="curve-graph" role="img" aria-label="Curve of grade versus player ranking: high and gently sloped at the top, then dropping off a cliff so the bottom third of players is crushed near zero."></div>
+    <script>
+      (function () {
+        // Same curve the server uses: value = 100 * e^-(A*p + B*p^4), p in [0,1]
+        var A = 5.5, B = 6.0;
+        var grade = function (p) { return 100 * Math.exp(-(A * p + B * Math.pow(p, 4))); };
+        var W = 720, H = 380, mL = 48, mR = 18, mT = 20, mB = 50;
+        var x0 = mL, x1 = W - mR, y0 = H - mB, y1 = mT;
+        var px = function (p) { return x0 + (x1 - x0) * p; };
+        var py = function (g) { return y0 + (y1 - y0) * (g / 100); };
+        var line = '', i, p, X, Y;
+        for (i = 0; i <= 240; i++) { p = i / 240; X = px(p); Y = py(grade(p)); line += (i ? 'L' : 'M') + X.toFixed(1) + ' ' + Y.toFixed(1); }
+        var area = line + 'L' + px(1).toFixed(1) + ' ' + py(0).toFixed(1) + 'L' + px(0).toFixed(1) + ' ' + py(0).toFixed(1) + 'Z';
+        var grid = '';
+        [0, 25, 50, 75, 100].forEach(function (g) {
+          var yy = py(g);
+          grid += '<line x1="' + x0 + '" y1="' + yy + '" x2="' + x1 + '" y2="' + yy + '" class="cg-grid"/>'
+                + '<text x="' + (x0 - 8) + '" y="' + (yy + 4) + '" class="cg-ylab">' + g + '</text>';
+        });
+        var xlab = '';
+        [[0, 'Best'], [0.25, 'Top 25%'], [0.5, 'Middle'], [1, 'Worst']].forEach(function (t) {
+          var xx = px(t[0]);
+          xlab += '<line x1="' + xx + '" y1="' + y0 + '" x2="' + xx + '" y2="' + (y0 + 5) + '" class="cg-grid"/>'
+                + '<text x="' + xx + '" y="' + (y0 + 20) + '" class="cg-xlab">' + t[1] + '</text>';
+        });
+        var bx = px(0.70), mid = (bx + x1) / 2;
+        var band = '<rect x="' + bx + '" y="' + y1 + '" width="' + (x1 - bx) + '" height="' + (y0 - y1) + '" class="cg-band"/>'
+                 + '<text x="' + mid + '" y="' + (y1 + 16) + '" class="cg-bandlab">bottom 30%</text>'
+                 + '<text x="' + mid + '" y="' + (y1 + 30) + '" class="cg-bandlab">crushed</text>';
+        var anno = '<text x="' + px(0.05) + '" y="' + (py(grade(0.05)) - 12) + '" class="cg-anno">gentle at the top</text>';
+        var svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="xMidYMid meet">'
+          + '<defs><linearGradient id="cgFill" x1="0" y1="0" x2="0" y2="1">'
+          + '<stop offset="0" stop-color="rgba(34,197,94,0.35)"/><stop offset="1" stop-color="rgba(34,197,94,0)"/>'
+          + '</linearGradient></defs>'
+          + band + grid + xlab
+          + '<path d="' + area + '" fill="url(#cgFill)"/>'
+          + '<path d="' + line + '" class="cg-line"/>'
+          + '<text x="' + ((x0 + x1) / 2) + '" y="' + (H - 8) + '" class="cg-axistitle">Player ranking  (best → worst)</text>'
+          + '<text transform="translate(14 ' + ((y0 + y1) / 2) + ') rotate(-90)" class="cg-axistitle">Grade</text>'
+          + anno + '</svg>';
+        document.getElementById('curve-graph').innerHTML = svg;
+      })();
+    </script>
+
+    <p>Same thing as concrete numbers, this time by where a player falls in the pack:</p>
+
+    <table class="curve">
+      <thead><tr><th>Where they rank</th><th>Grade</th></tr></thead>
+      <tbody>
+        <tr><td>Best in football</td><td><span class="g" style="--g:1.00">100</span></td></tr>
+        <tr><td>Top 1%</td><td><span class="g" style="--g:0.95">95</span></td></tr>
+        <tr><td>Top 5%</td><td><span class="g" style="--g:0.76">76</span></td></tr>
+        <tr><td>Top 10%</td><td><span class="g" style="--g:0.58">58</span></td></tr>
+        <tr><td>Top 20%</td><td><span class="g" style="--g:0.33">33</span></td></tr>
+        <tr><td>Top 30%</td><td><span class="g" style="--g:0.18">18</span></td></tr>
+        <tr><td>Middle of the pack</td><td><span class="g" style="--g:0.04">4</span></td></tr>
+        <tr><td>Bottom 30% &darr;</td><td><span class="g" style="--g:0.01">&lt;1</span></td></tr>
+        <tr><td>Dead last</td><td><span class="g" style="--g:0.00">0</span></td></tr>
+      </tbody>
+    </table>
+
+    <p>This shape is deliberate. The top of the board is still where championships are won &mdash; but we
+      eased off up there so your studs aren't <em>absurdly</em> far ahead of your merely-very-good players.
+      The real teeth are at the other end: the bottom third of the league is pushed to basically zero,
+      because a deep-bench dart throw isn't a trade chip. (Something to mention to Jeff the next time he
+      counters your stud with four of them.)</p>
+
+    <h3>Why not just use z-scores? (the old way)</h3>
+    <p>The previous version of this system used <strong>z-scores</strong> &mdash; a statistics tool that
+      measures how far above or below average each player is. It worked, but it had one fatal flaw:
+      <strong>half of all players came out negative.</strong> A z-score is centered on the average, so
+      everyone below average scored below zero.</p>
+    <p>That's mathematically tidy and practically nonsense. A bench player is worth <em>a little</em>, not
+      <em>negative something</em>. Negative grades made trades confusing (adding a player could somehow
+      <em>lower</em> your total) and made the whole board harder to read. Ranking-plus-a-curve fixes all of
+      it: everyone lands between 0 and 100, the elite are properly rewarded, and the numbers finally read
+      like real trade values.</p>
+
+    <h3>Two dials to shape the curve</h3>
+    <p>The whole shape is controlled by the two numbers in the formula. The <code>5.5</code> sets how gently
+      the grade slopes across the field &mdash; smaller bunches the top together even more. The <code>6</code>
+      controls the tail &mdash; larger drives the bottom third harder into the ground. We've set them so the
+      elite stay clearly ahead while the deep end is worth next to nothing.</p>
+
+    <p class="footnote">Grades blend KeepTradeCut, FantasyCalc, and FantasyPros. No Jeffs were consulted in
+      the making of this system.</p>
+  </div>
+
+  <style>
+    .grading { max-width: 760px; line-height: 1.6; color: #d5d9df; }
+    .grading .crumbs {
+      font-family: monospace; font-size: 12px; color: #666; margin-bottom: 18px;
+    }
+    .grading .crumbs a { color: #8b949e; text-decoration: none; }
+    .grading .crumbs a:hover { color: #22c55e; }
+    .grading .crumbs span { margin: 0 4px; color: #444; }
+    .grading h1 {
+      font-size: 30px; font-weight: 800; color: #f0f6fc; margin: 0 0 4px; letter-spacing: -0.3px;
+    }
+    .grading .lede { color: #8b949e; font-size: 15px; margin: 0 0 28px; }
+    .grading h2 {
+      font-size: 21px; font-weight: 700; color: #f0f6fc; margin: 34px 0 10px;
+    }
+    .grading h3 {
+      font-size: 16px; font-weight: 700; color: #22c55e; margin: 26px 0 8px;
+      text-transform: uppercase; letter-spacing: 0.4px;
+    }
+    .grading p { margin: 0 0 14px; }
+    .grading ul { margin: 0 0 16px; padding-left: 20px; }
+    .grading li { margin-bottom: 8px; }
+    .grading strong { color: #f0f6fc; }
+    .grading em { color: #c9d1d9; font-style: italic; }
+    .grading code {
+      font-family: monospace; background: #1b2029; border: 1px solid #2a2f3a;
+      border-radius: 4px; padding: 1px 5px; color: #22c55e; font-size: 13px;
+    }
+
+    /* Abstract callout */
+    .abstract {
+      background: linear-gradient(180deg, rgba(34,197,94,0.07), rgba(34,197,94,0.02));
+      border: 1px solid rgba(34,197,94,0.28); border-left-width: 4px;
+      border-radius: 10px; padding: 18px 22px; margin: 0 0 20px;
+    }
+    .abstract-h {
+      font-size: 12px !important; text-transform: uppercase; letter-spacing: 1px;
+      color: #22c55e !important; margin: 0 0 12px !important; font-family: monospace; font-weight: 700;
+    }
+    .abstract .kicker {
+      margin: 14px 0 0; font-style: italic; color: #8b949e; font-size: 14px;
+    }
+
+    /* Formula block */
+    .formula {
+      font-family: "SF Mono", ui-monospace, monospace; font-size: 19px; color: #f0f6fc;
+      background: #12161d; border: 1px solid #2a2f3a; border-radius: 10px;
+      padding: 20px; text-align: center; margin: 4px 0 8px; overflow-x: auto;
+    }
+    .formula .e { font-style: italic; }
+    .formula i { font-style: italic; color: #d5d9df; }
+    .formula sup { font-size: 12px; color: #22c55e; }
+    .formula sup i { color: #22c55e; }
+    .formula-note {
+      text-align: center; font-size: 13px; color: #8b949e; margin: 0 0 18px !important;
+    }
+
+    /* Curve graph */
+    .curve-graph {
+      background: #12161d; border: 1px solid #2a2f3a; border-radius: 10px;
+      padding: 10px 8px 4px; margin: 6px 0 20px;
+    }
+    .curve-graph svg { width: 100%; height: auto; display: block; }
+    .cg-grid { stroke: #242a33; stroke-width: 1; }
+    .cg-ylab { fill: #6e7681; font-size: 11px; text-anchor: end; font-family: monospace; }
+    .cg-xlab { fill: #8b949e; font-size: 11px; text-anchor: middle; font-family: monospace; }
+    .cg-line { fill: none; stroke: #22c55e; stroke-width: 2.5; stroke-linejoin: round; }
+    .cg-band { fill: rgba(220, 70, 70, 0.09); }
+    .cg-bandlab {
+      fill: #cd7b7b; font-size: 11px; text-anchor: middle; font-family: monospace;
+      text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .cg-anno { fill: #9aa4af; font-size: 12px; text-anchor: start; font-style: italic; }
+    .cg-axistitle { fill: #6e7681; font-size: 11px; text-anchor: middle; font-family: monospace; }
+
+    /* Curve table */
+    table.curve {
+      border-collapse: collapse; margin: 4px 0 18px; width: 100%; max-width: 340px;
+      font-variant-numeric: tabular-nums;
+    }
+    table.curve th, table.curve td {
+      padding: 8px 14px; text-align: left; border-bottom: 1px solid #22272e;
+    }
+    table.curve th {
+      font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;
+      color: #8b949e; font-weight: 700;
+    }
+    table.curve td:first-child { font-family: monospace; color: #c9d1d9; }
+    table.curve .g {
+      display: inline-block; min-width: 42px; text-align: center; font-weight: 700;
+      color: #0f1117; border-radius: 5px; padding: 2px 8px;
+      background: rgba(34, 197, 94, calc(0.15 + var(--g) * 0.85));
+    }
+
+    .grading .footnote {
+      margin-top: 30px; padding-top: 16px; border-top: 1px solid #22272e;
+      font-size: 13px; color: #6e7681; font-style: italic;
+    }
+
+    @media (max-width: 500px) {
+      .grading h1 { font-size: 24px; }
+      .formula { font-size: 16px; padding: 16px 12px; }
+    }
+  </style>
+</body>
+</html>

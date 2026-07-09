@@ -16,7 +16,7 @@
   <script src="/scripts/base/nav.js?v=e5f6a7b8"></script>
   <script src="/scripts/primary/share-trade.js?v=d6e07501"></script>
   <script>initPage();</script>
-  <p class="intro">While lesser tools rely on a single source and call it a day, this calculator pulls from <a href="https://keeptradecut.com" target="_blank">KeepTradeCut</a>, <a href="https://fantasypros.com" target="_blank">FantasyPros</a>, and <a href="https://fantasycalc.com" target="_blank">FantasyCalc</a>, normalizes their values into z-scores, and merges them into a single aggregate ranking that is, frankly, superior to anything else you'll find. You're welcome.</p>
+  <p class="intro">While lesser tools rely on a single source and call it a day, this calculator pulls from <a href="https://keeptradecut.com" target="_blank">KeepTradeCut</a>, <a href="https://fantasypros.com" target="_blank">FantasyPros</a>, and <a href="https://fantasycalc.com" target="_blank">FantasyCalc</a>, ranks every player across all three, and maps them onto a single 0&ndash;100 dynasty value curve where elite players are worth exponentially more &mdash; a ranking that is, frankly, superior to anything else you'll find. You're welcome.</p>
   <div class="app">
     <div class="player-pool">
       <div class="panel-header">
@@ -70,7 +70,6 @@
     let searchQuery = '';
     let posFilter = 'ALL';
     let zMax = 1;
-    let zMin = -1;
 
     // Fetch players from our proxy API
     async function loadPlayers() {
@@ -80,7 +79,6 @@
         if (data.error) throw new Error(data.error);
         allPlayers = data;
         zMax = Math.max(...allPlayers.map(p => p.aggregate)) || 1;
-        zMin = Math.min(...allPlayers.map(p => p.aggregate)) || -1;
         renderPlayerList();
       } catch (e) {
         console.error('Error loading: ' + e.message);
@@ -108,15 +106,12 @@
     function fmtPos(pos) { return pos === 'PICK' ? 'PK' : pos; }
 
     function fmtZ(z) {
-      const sign = z >= 0 ? '+' : '';
-      return sign + z.toFixed(1);
+      return Math.round(z).toString();
     }
 
     function zColor(z) {
       if (z == null) return '';
-      if (z > 0) return `rgba(34, 197, 94, ${Math.min(z / zMax, 1).toFixed(2)})`;
-      if (z < 0) return `rgba(220, 38, 38, ${Math.min(Math.abs(z) / Math.abs(zMin), 1).toFixed(2)})`;
-      return 'transparent';
+      return `rgba(34, 197, 94, ${Math.min(z / zMax, 1).toFixed(2)})`;
     }
 
     const sourceAbbr = {'keeptradecut.com':'KTC','fantasypros.com':'FP','fantasycalc.com':'FC'};

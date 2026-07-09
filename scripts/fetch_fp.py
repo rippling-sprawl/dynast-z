@@ -18,14 +18,14 @@ import sys
 
 UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 
-ARTICLE_URL = "https://www.fantasypros.com/2026/04/fantasy-football-rankings-dynasty-trade-value-chart-april-2026-update/"
+ARTICLE_URL = "https://www.fantasypros.com/2026/07/fantasy-football-rankings-dynasty-trade-value-chart-july-2026-update/"
 
 # Datawrapper CSV endpoints for each position group
 POSITION_CSVS = {
-    "QB": "https://datawrapper.dwcdn.net/yqKj2/1/dataset.csv",
-    "RB": "https://datawrapper.dwcdn.net/ZVpNh/1/dataset.csv",
-    "WR": "https://datawrapper.dwcdn.net/yuwfA/1/dataset.csv",
-    "TE": "https://datawrapper.dwcdn.net/GFqDz/1/dataset.csv",
+    "QB": "https://datawrapper.dwcdn.net/yu3Xc/1/dataset.csv",
+    "RB": "https://datawrapper.dwcdn.net/6AbA7/1/dataset.csv",
+    "WR": "https://datawrapper.dwcdn.net/CPGMD/1/dataset.csv",
+    "TE": "https://datawrapper.dwcdn.net/ZBVic/1/dataset.csv",
 }
 
 
@@ -79,7 +79,7 @@ def parse_pick_tables(html):
 
     # Find all tables within mobile-table divs
     table_pattern = re.compile(r'<div class="mobile-table">\s*<table[^>]*>(.*?)</table>', re.DOTALL)
-    row_pattern = re.compile(r'<tr>(.*?)</tr>', re.DOTALL)
+    row_pattern = re.compile(r'<tr[^>]*>(.*?)</tr>', re.DOTALL)
     cell_pattern = re.compile(r'<td[^>]*>(.*?)</td>', re.DOTALL)
 
     for match in table_pattern.finditer(html_joined):
@@ -173,6 +173,29 @@ def normalize_pick_name(label, year):
     return None
 
 
+MONTHS = {
+    "january": 1, "february": 2, "march": 3, "april": 4, "may": 5, "june": 6,
+    "july": 7, "august": 8, "september": 9, "october": 10, "november": 11,
+    "december": 12,
+}
+
+
+def parse_article_month(url):
+    """Extract (month_number, year, label) from the article URL slug, e.g.
+    '...dynasty-trade-value-chart-july-2026-update/' -> (7, 2026, 'July 2026').
+
+    The /football route uses this to warn when the served FP data is older than
+    the current real-life month. Returns None if the slug can't be parsed."""
+    match = re.search(
+        r"(" + "|".join(MONTHS) + r")-(\d{4})-update", url, re.IGNORECASE
+    )
+    if not match:
+        return None
+    month_name = match.group(1).lower()
+    year = int(match.group(2))
+    return MONTHS[month_name], year, f"{month_name.capitalize()} {year}"
+
+
 def main():
     all_players = []
 
@@ -194,13 +217,13 @@ def main():
     # Verify expected values
     by_name = {p["name"]: p for p in all_players}
     checks = [
-        ("Josh Allen", 101),
-        ("Bo Nix", 70),
-        ("2026 Pick 1.01", 68),
+        ("Josh Allen", 100),
+        ("Bo Nix", 67),
+        ("2026 Pick 1.01", 69),
         ("2027 Early 1st", 68),
         ("2027 Late 1st", 47),
         ("2027 Late 2nd", 29),
-        ("2026 Early 2nd", 37),
+        ("2026 Early 2nd", 34),
     ]
     print("\nVerification:")
     for name, expected in checks:
@@ -209,11 +232,28 @@ def main():
         print(f"  {name}: expected {expected} -> {status}")
 
     # Write output
-    out_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data", "fp.json")
-    os.makedirs(os.path.dirname(out_path), exist_ok=True)
+    data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data")
+    os.makedirs(data_dir, exist_ok=True)
+    out_path = os.path.join(data_dir, "fp.json")
     with open(out_path, "w") as f:
         json.dump(all_players, f, indent=2)
     print(f"\nWrote {len(all_players)} entries to {os.path.abspath(out_path)}")
+
+    # Write metadata (article month) so /football can flag stale data
+    parsed = parse_article_month(ARTICLE_URL)
+    if not parsed:
+        print(f"WARNING: could not parse month from ARTICLE_URL: {ARTICLE_URL}")
+    else:
+        month, year, label = parsed
+        meta_path = os.path.join(data_dir, "fp_meta.json")
+        with open(meta_path, "w") as f:
+            json.dump({
+                "month": month,
+                "year": year,
+                "label": label,
+                "articleUrl": ARTICLE_URL,
+            }, f, indent=2)
+        print(f"Wrote metadata ({label}) to {os.path.abspath(meta_path)}")
 
 
 if __name__ == "__main__":

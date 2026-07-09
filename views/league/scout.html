@@ -90,7 +90,6 @@
     const leagueId = window.location.pathname.match(/\/league\/([^/]+)/)[1];
     let teamsData = [];
     let globalZMax = 1;
-    let globalZMin = -1;
 
     initTabBar(leagueId);
 
@@ -98,15 +97,12 @@
 
     function fmtZ(z) {
       if (z == null) return '\u2014';
-      const sign = z >= 0 ? '+' : '';
-      return sign + z.toFixed(2);
+      return Math.round(z).toString();
     }
 
     function zColor(z) {
       if (z == null) return '';
-      if (z > 0) return `rgba(34, 197, 94, ${Math.min(z / globalZMax, 1).toFixed(2)})`;
-      if (z < 0) return `rgba(220, 38, 38, ${Math.min(Math.abs(z) / Math.abs(globalZMin), 1).toFixed(2)})`;
-      return 'transparent';
+      return `rgba(34, 197, 94, ${Math.min(z / globalZMax, 1).toFixed(2)})`;
     }
 
     const sourceAbbr = {'keeptradecut.com':'KTC','fantasypros.com':'FP','fantasycalc.com':'FC'};
@@ -264,7 +260,6 @@
       const teamAData = await loadTeamRoster(team.roster_id);
       const allVals = teamAData.players.filter(p => p.aggregate != null).map(p => p.aggregate);
       globalZMax = Math.max(...allVals) || 1;
-      globalZMin = Math.min(...allVals) || -1;
 
       allTeamData.push({ team, grouped: groupByPosition(teamAData.players) });
       renderCompareView();
@@ -287,7 +282,6 @@
           const vals = data.players.filter(p => p.aggregate != null).map(p => p.aggregate);
           if (vals.length) {
             globalZMax = Math.max(globalZMax, ...vals);
-            globalZMin = Math.min(globalZMin, ...vals);
           }
           allTeamData.push({ team: t, grouped: groupByPosition(data.players) });
         } catch (e) {

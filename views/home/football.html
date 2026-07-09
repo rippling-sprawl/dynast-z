@@ -19,9 +19,12 @@
     <h2>Football</h2>
     <p class="subtitle">Dynasty Tools &amp; Leagues</p>
 
+    <div id="fp-stale-banner" class="fp-stale-banner" hidden></div>
+
     <h3 class="hub-section">Tools</h3>
     <div class="hub-grid">
       <a class="hub-card" href="/trade-calculator"><h3>Trade Calculator</h3><p>Value any dynasty trade with blended rankings</p></a>
+      <a class="hub-card" href="/football/grading-system"><h3>Grading System</h3><p>How player &amp; pick values are calculated</p></a>
     </div>
 
     <h3 class="hub-section">Leagues</h3>
@@ -41,6 +44,47 @@
       font-weight: 700;
       margin: 28px 0 0;
     }
+    .fp-stale-banner {
+      margin: 16px 0 4px;
+      padding: 10px 14px;
+      border: 1px solid #b8860b;
+      border-left-width: 4px;
+      border-radius: 6px;
+      background: rgba(184, 134, 11, 0.12);
+      color: #b8860b;
+      font-size: 13px;
+      line-height: 1.4;
+    }
   </style>
+
+  <script>
+    // Warn when the served FantasyPros data is from an article older than the
+    // current real-life month (per Date.now()). Refreshing the data (running
+    // scripts/fetch_fp.py against the latest article) rewrites data/fp_meta.json
+    // and clears this banner once its month matches the current month.
+    (function () {
+      const MONTHS = ["January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"];
+      fetch("/data/fp_meta.json", { cache: "no-store" })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((meta) => {
+          if (!meta || !meta.month || !meta.year) return;
+          const now = new Date();
+          const curYear = now.getFullYear();
+          const curMonth = now.getMonth() + 1; // 1-12
+          const isStale =
+            meta.year < curYear ||
+            (meta.year === curYear && meta.month < curMonth);
+          if (!isStale) return;
+          const banner = document.getElementById("fp-stale-banner");
+          const label = meta.label || `${MONTHS[meta.month - 1]} ${meta.year}`;
+          banner.textContent =
+            `⚠️ FantasyPros values were last refreshed for the ${label} update. ` +
+            `A newer chart is available — values may be out of date until the data is refreshed.`;
+          banner.hidden = false;
+        })
+        .catch(() => {});
+    })();
+  </script>
 </body>
 </html>
