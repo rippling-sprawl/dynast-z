@@ -286,6 +286,37 @@ def load_fp():
         return json.load(f)
 
 
+_PICK_TIER_RE = re.compile(r"^(\d{4})\s+(Early|Mid|Late)\s+(\d+(?:st|nd|rd|th))$")
+
+
+def _fill_missing_mid_picks(players):
+    """FantasyPros publishes 2nd/3rd-round picks in only two tiers (Early/Late),
+    while KTC and our internal model use three (Early/Mid/Late). Left alone, an
+    Early pick present in FP is blended across a different set of sources than the
+    Mid pick FP omits, which can invert their ranking (e.g. Mid 2nd scoring above
+    Early 2nd). Synthesize the missing Mid tier by interpolating between Early and
+    Late so every tier is covered by every source and the merge stays monotonic."""
+    grouped = {}  # (year, ordinal) -> {tier: key}
+    for key, p in players.items():
+        m = _PICK_TIER_RE.match(key)
+        if m:
+            year, tier, ordinal = m.groups()
+            grouped.setdefault((year, ordinal), {})[tier] = key
+    for (year, ordinal), tiers in grouped.items():
+        if "Mid" in tiers or "Early" not in tiers or "Late" not in tiers:
+            continue
+        early = players[tiers["Early"]]
+        late = players[tiers["Late"]]
+        key = f"{year} Mid {ordinal}"
+        players[key] = {
+            "name": key,
+            "position": early["position"],
+            "team": early["team"],
+            "value": (early["value"] + late["value"]) / 2,
+        }
+    return players
+
+
 def normalize_fp(raw):
     """Normalize FantasyPros data into {name: {name, position, team, value}} dict."""
     players = {}
@@ -300,7 +331,7 @@ def normalize_fp(raw):
                 "team": p.get("team", ""),
                 "value": value,
             }
-    return players
+    return _fill_missing_mid_picks(players)
 
 
 def compute_percentiles(players_dict):
