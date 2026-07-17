@@ -232,6 +232,23 @@ def norm_pos(pos):
     return "PICK" if pos == "RDP" else pos
 
 
+# Value sources use their own team codes; canonicalize to Sleeper's convention
+# (Sleeper is what player resolution joins against).
+_TEAM_ALIASES = {
+    "GBP": "GB", "JAC": "JAX", "KCC": "KC", "LVR": "LV",
+    "NEP": "NE", "NOS": "NO", "SFO": "SF", "TBB": "TB",
+}
+
+
+def normalize_team(team):
+    """Canonicalize a team code to Sleeper's convention. Empty/None and 'FA'
+    both mean free agent -> 'FA'. Not for picks (they have no team)."""
+    t = (team or "").strip().upper()
+    if not t or t == "FA":
+        return "FA"
+    return _TEAM_ALIASES.get(t, t)
+
+
 _SUFFIXES = re.compile(r"\s+(Jr\.?|Sr\.?|III|II|IV|V)$", re.IGNORECASE)
 _DOTTED_INITIALS = re.compile(r"\b([A-Z])\.")
 
@@ -251,10 +268,11 @@ def normalize_ktc(raw):
         value = sf.get("value", 0)
         if name and value:
             key = norm_name(name)
+            pos = norm_pos(p.get("position", ""))
             players[key] = {
                 "name": key,
-                "position": norm_pos(p.get("position", "")),
-                "team": p.get("team", ""),
+                "position": pos,
+                "team": "" if pos == "PICK" else normalize_team(p.get("team", "")),
                 "value": value,
             }
     return players
@@ -268,10 +286,11 @@ def normalize_fc(raw):
         value = entry.get("value", 0)
         if name and value:
             key = norm_name(name)
+            pos = norm_pos(p.get("position", ""))
             players[key] = {
                 "name": key,
-                "position": norm_pos(p.get("position", "")),
-                "team": p.get("maybeTeam", ""),
+                "position": pos,
+                "team": "" if pos == "PICK" else normalize_team(p.get("maybeTeam", "")),
                 "value": value,
             }
     return players
@@ -325,10 +344,11 @@ def normalize_fp(raw):
         value = p.get("value", 0)
         if name and value:
             key = norm_name(name)
+            pos = p.get("position", "")
             players[key] = {
                 "name": key,
-                "position": p.get("position", ""),
-                "team": p.get("team", ""),
+                "position": pos,
+                "team": "" if pos == "PICK" else normalize_team(p.get("team", "")),
                 "value": value,
             }
     return _fill_missing_mid_picks(players)
@@ -398,31 +418,63 @@ def fetch_league_picks(league_id):
 
 
 _ORDINALS = {1: "1st", 2: "2nd", 3: "3rd", 4: "4th", 5: "5th", 6: "6th", 7: "7th"}
+_ORDINAL_TO_ROUND = {v: k for k, v in _ORDINALS.items()}
+
+
+def canonical_pick_key(season, rd, tier):
+    """One canonical identifier for a rookie draft pick, e.g. '2026|1|Early'.
+
+    Shared by the value pool and the roster views so both sides match picks the
+    same way instead of via two different name-variant heuristics. `tier` is
+    'Early' | 'Mid' | 'Late'.
+    """
+    return f"{int(season)}|{int(rd)}|{tier}"
+
+
+def pick_tier_from_slot(slot, total_rosters):
+    """Bucket a draft slot (1-based) into Early/Mid/Late by thirds, or None if
+    the slot is unknown (e.g. a future season whose draft order isn't set)."""
+    if not slot:
+        return None
+    third = max(total_rosters // 3, 1)
+    if slot <= third:
+        return "Early"
+    if slot <= third * 2:
+        return "Mid"
+    return "Late"
+
+
+def parse_pick_name(name):
+    """Parse a value-source pick name like '2026 Early 1st' into a canonical
+    pick key, or None if it isn't a tiered pick. Lets the pool index its picks
+    under the same keys the roster views look them up by."""
+    m = _PICK_TIER_RE.match(name)
+    if not m:
+        return None
+    season, tier, ordinal = m.groups()
+    rd = _ORDINAL_TO_ROUND.get(ordinal)
+    if not rd:
+        return None
+    return canonical_pick_key(season, rd, tier)
 
 
 def _pick_name_variants(season, rd, slot, total_rosters):
-    """Return a list of name variants to try matching against z_lookup, best first."""
+    """Return a list of name variants to try matching against z_lookup, best first.
+
+    Legacy fallback for picks the canonical-key lookup misses.
+    """
     ordinal = _ORDINALS.get(rd, f"{rd}th")
     names = []
     if slot:
         names.append(f"{season} Pick {rd}.{slot:02d}")
-    third = max(total_rosters // 3, 1)
-    if slot:
-        if slot <= third:
-            tier = "Early"
-        elif slot <= third * 2:
-            tier = "Mid"
-        else:
-            tier = "Late"
-        names.append(f"{season} {tier} {ordinal}")
-    else:
-        names.append(f"{season} Mid {ordinal}")
+    tier = pick_tier_from_slot(slot, total_rosters)
+    names.append(f"{season} {tier or 'Mid'} {ordinal}")
     names.append(f"{season} {ordinal}")
     return names
 
 
 def build_picks_for_roster(roster_id, rosters, users, league, traded_picks, draft_order, z_lookup,
-                           completed_seasons=()):
+                           completed_seasons=(), pick_lookup=None):
     """Compute all draft picks owned by a roster and return as player-like dicts.
 
     Seasons whose draft is already complete are skipped — those picks have become
@@ -467,19 +519,21 @@ def build_picks_for_roster(roster_id, rosters, users, league, traded_picks, draf
                 owner_uid = roster_owner.get(orig_rid)
                 slot = user_slot.get(owner_uid) if owner_uid else None
                 pick_slot = slot if season == current_season else None
-                variants = _pick_name_variants(str(season), rd, pick_slot, total_rosters)
                 # Display name: include original team label if traded
                 ordinal = _ORDINALS.get(rd, f"{rd}th")
                 if orig_rid != roster_id:
                     display = f"{season} {ordinal} ({roster_label(orig_rid)})"
                 else:
                     display = f"{season} {ordinal}"
-                # Try to match z_lookup
-                z = None
-                for v in variants:
-                    z = z_lookup.get(norm_name(v))
-                    if z:
-                        break
+                # Match values by canonical pick key (same key the pool indexes
+                # under); fall back to legacy name-variant matching on a miss.
+                tier = pick_tier_from_slot(pick_slot, total_rosters) or "Mid"
+                z = (pick_lookup or {}).get(canonical_pick_key(season, rd, tier))
+                if z is None:
+                    for v in _pick_name_variants(str(season), rd, pick_slot, total_rosters):
+                        z = z_lookup.get(norm_name(v))
+                        if z:
+                            break
                 pick_data = {
                     "name": display,
                     "position": "PICK",
@@ -768,8 +822,10 @@ def build_team_roster(league_id, roster_id):
     rosters, users, league = fetch_league_data(league_id)
     sleeper_players = fetch_sleeper_players()
 
-    # Build value lookup from trade calculator data
+    # Build value lookups from trade calculator data: z_lookup keyed by
+    # normalized name (players), pick_lookup keyed by canonical pick key (picks).
     z_lookup = {}
+    pick_lookup = {}
     try:
         ktc_raw = fetch_ktc()
         fc_raw = fetch_fc()
@@ -783,6 +839,10 @@ def build_team_roster(league_id, roster_id):
             ("fantasypros.com", fp),
         ):
             z_lookup[p["name"]] = p
+            if p["position"] == "PICK":
+                key = parse_pick_name(p["name"])
+                if key:
+                    pick_lookup[key] = p
     except Exception:
         pass  # values are a bonus, not required
 
@@ -814,8 +874,9 @@ def build_team_roster(league_id, roster_id):
             continue
         name = f"{sp.get('first_name', '')} {sp.get('last_name', '')}".strip()
         position = norm_pos(sp.get("position", ""))
-        team = sp.get("team", "") or ""
+        team = normalize_team(sp.get("team"))
         player_data = {
+            "player_id": pid,
             "name": name,
             "position": position,
             "team": team,
@@ -834,7 +895,7 @@ def build_team_roster(league_id, roster_id):
         traded_picks, draft_order, completed_seasons = fetch_league_picks(league_id)
         picks = build_picks_for_roster(
             int(roster_id), rosters, users, league, traded_picks, draft_order, z_lookup,
-            completed_seasons,
+            completed_seasons, pick_lookup,
         )
         players.extend(picks)
     except Exception:
@@ -894,24 +955,81 @@ def merge_players(*source_pairs):
     return merged
 
 
-def build_rookie_keys():
-    """Return a set of 'normname|POS' keys for current NFL rookies.
+FANTASY_POSITIONS = {"QB", "RB", "WR", "TE", "K"}
 
-    Mirrors how the league subviews flag rookies (Sleeper years_exp == 0), but
-    keyed by name+position so it can be matched against the value pool, which has
-    no Sleeper IDs. Returns an empty set if Sleeper data is unavailable.
+
+def build_player_resolver():
+    """Build a name -> Sleeper player index for resolving value-pool entries to
+    stable player_ids.
+
+    The value sources (KTC/FantasyCalc/FantasyPros) identify players by name
+    only, so resolving to a Sleeper player_id is still a name lookup at its core
+    — but doing it once here lets everything downstream (rookie flag, dedup,
+    roster cross-referencing) key on the ID instead of on name+position.
+
+    Returns (index, ok) where index maps norm_name -> list of compact Sleeper
+    records; ok is False if Sleeper data was unavailable. Restricted to fantasy
+    positions to cut collisions with the DB's thousands of inactive/IDP entries.
     """
     try:
         sleeper_players = fetch_sleeper_players()
     except Exception:
-        return set()
-    keys = set()
-    for sp in sleeper_players.values():
-        if not isinstance(sp, dict) or sp.get("years_exp") != 0:
+        return {}, False
+    index = {}
+    for pid, sp in sleeper_players.items():
+        if not isinstance(sp, dict):
+            continue
+        pos = norm_pos(sp.get("position", "") or "")
+        if pos not in FANTASY_POSITIONS:
             continue
         name = f"{sp.get('first_name', '')} {sp.get('last_name', '')}".strip()
-        if name:
-            keys.add(f"{norm_name(name)}|{norm_pos(sp.get('position', ''))}")
+        if not name:
+            continue
+        index.setdefault(norm_name(name), []).append({
+            "player_id": pid,
+            "position": pos,
+            "team": normalize_team(sp.get("team")),
+            "years_exp": sp.get("years_exp"),
+            "active": bool(sp.get("active")),
+        })
+    return index, True
+
+
+def resolve_player(index, name, position, team):
+    """Resolve a value-pool entry to a single Sleeper record, or None if there's
+    no unambiguous match. Disambiguates same-name players by position, then team
+    (the only signals the value sources carry); a genuinely ambiguous entry —
+    same name, position, and team — stays unresolved rather than guess."""
+    candidates = index.get(norm_name(name))
+    if not candidates:
+        return None
+    if len(candidates) == 1:
+        return candidates[0]
+    pos = norm_pos(position or "")
+    pool = [c for c in candidates if c["position"] == pos] or candidates
+    if len(pool) == 1:
+        return pool[0]
+    team_c = normalize_team(team)
+    if team_c != "FA":
+        by_team = [c for c in pool if c["team"] == team_c]
+        if len(by_team) == 1:
+            return by_team[0]
+        if by_team:
+            pool = by_team
+    # Last resort: a single active candidate breaks the remaining tie.
+    active = [c for c in pool if c["active"]]
+    return active[0] if len(active) == 1 else None
+
+
+def rookie_keys_from_resolver(index):
+    """Fallback rookie set ('normname|POS') derived from the resolver index, for
+    pool entries that don't resolve to a unique player_id. One DB pass, same
+    name+position signal the pool used before IDs."""
+    keys = set()
+    for norm, candidates in index.items():
+        for c in candidates:
+            if c.get("years_exp") == 0:
+                keys.add(f"{norm}|{c['position']}")
     return keys
 
 
@@ -936,9 +1054,19 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     ("fantasycalc.com", fc),
                     ("fantasypros.com", fp),
                 )
-                rookie_keys = build_rookie_keys()
+                resolver, resolver_ok = build_player_resolver()
+                rookie_fallback = rookie_keys_from_resolver(resolver) if resolver_ok else set()
                 for p in players:
-                    p["rookie"] = f"{p['name']}|{p['position']}" in rookie_keys
+                    match = resolve_player(resolver, p["name"], p["position"], p["team"])
+                    if match:
+                        # Resolved to a stable Sleeper player_id: flag rookies the
+                        # same ID-based way the roster views do (years_exp == 0).
+                        p["player_id"] = match["player_id"]
+                        p["rookie"] = match.get("years_exp") == 0
+                    else:
+                        # Unresolved (ambiguous name or Sleeper down): fall back to
+                        # the name+position rookie signal so it isn't lost.
+                        p["rookie"] = f"{p['name']}|{p['position']}" in rookie_fallback
                 self.wfile.write(json.dumps(players).encode())
             except Exception as e:
                 self.wfile.write(json.dumps({"error": str(e)}).encode())
