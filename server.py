@@ -894,6 +894,27 @@ def merge_players(*source_pairs):
     return merged
 
 
+def build_rookie_keys():
+    """Return a set of 'normname|POS' keys for current NFL rookies.
+
+    Mirrors how the league subviews flag rookies (Sleeper years_exp == 0), but
+    keyed by name+position so it can be matched against the value pool, which has
+    no Sleeper IDs. Returns an empty set if Sleeper data is unavailable.
+    """
+    try:
+        sleeper_players = fetch_sleeper_players()
+    except Exception:
+        return set()
+    keys = set()
+    for sp in sleeper_players.values():
+        if not isinstance(sp, dict) or sp.get("years_exp") != 0:
+            continue
+        name = f"{sp.get('first_name', '')} {sp.get('last_name', '')}".strip()
+        if name:
+            keys.add(f"{norm_name(name)}|{norm_pos(sp.get('position', ''))}")
+    return keys
+
+
 class Handler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
         if self.path == "/api/players":
@@ -915,6 +936,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     ("fantasycalc.com", fc),
                     ("fantasypros.com", fp),
                 )
+                rookie_keys = build_rookie_keys()
+                for p in players:
+                    p["rookie"] = f"{p['name']}|{p['position']}" in rookie_keys
                 self.wfile.write(json.dumps(players).encode())
             except Exception as e:
                 self.wfile.write(json.dumps({"error": str(e)}).encode())
