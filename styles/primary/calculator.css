@@ -26,7 +26,7 @@ body {
 
 .app {
   display: flex;
-  height: calc(100vh - 49px);
+  height: calc(100vh - var(--header-h, 55px));
 }
 
 /* Player List (left panel) */
@@ -431,7 +431,7 @@ input {
     order: 1;
     flex-shrink: 0;
     position: sticky;
-    top: 46px;
+    top: var(--header-h, 55px);
     z-index: 99;
     background: #0d1117;
   }
@@ -445,11 +445,12 @@ input {
   }
 
   /* Pin the pool controls directly beneath the sticky trade summary so they
-     stay visible while the player list scrolls underneath. --trade-h is the
-     live height of the trade summary, published by the page's ResizeObserver. */
+     stay visible while the player list scrolls underneath. --header-h and
+     --trade-h are the live heights of the header and trade summary, published
+     by the page's ResizeObservers. */
   .pool-controls {
     position: sticky;
-    top: calc(46px + var(--trade-h, 0px));
+    top: calc(var(--header-h, 55px) + var(--trade-h, 0px));
     z-index: 98;
   }
 

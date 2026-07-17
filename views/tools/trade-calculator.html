@@ -7,7 +7,7 @@
   <title>Trade Calculator | Dynast-Z</title>
   <link rel="stylesheet" href="/styles/base/styles.css?v=abec71e4">
   <link rel="stylesheet" href="/styles/primary/filters.css?v=5513fe32">
-  <link rel="stylesheet" href="/styles/primary/calculator.css?v=a3f1c9d0">
+  <link rel="stylesheet" href="/styles/primary/calculator.css?v=b7e2d4f1">
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 </head>
 <body>
@@ -339,6 +339,17 @@
           }
         }, { passive: true });
       }
+    }
+
+    // Publish the live header height so the .app viewport calc and the mobile
+    // sticky offsets stay exact — the injected header's height is content- and
+    // font-dependent, so hardcoding it left rows tucked behind the filter bar.
+    const headerEl = document.querySelector('header');
+    if (window.ResizeObserver && headerEl) {
+      const hro = new ResizeObserver(() => {
+        document.documentElement.style.setProperty('--header-h', headerEl.offsetHeight + 'px');
+      });
+      hro.observe(headerEl);
     }
 
     // On mobile the trade summary is pinned at the top of the page; publish its
