@@ -7,7 +7,7 @@
   <title>Trade Calculator | Dynast-Z</title>
   <link rel="stylesheet" href="/styles/base/styles.css?v=abec71e4">
   <link rel="stylesheet" href="/styles/primary/filters.css?v=5513fe32">
-  <link rel="stylesheet" href="/styles/primary/calculator.css?v=cd2b8449">
+  <link rel="stylesheet" href="/styles/primary/calculator.css?v=a3f1c9d0">
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 </head>
 <body>
@@ -23,9 +23,7 @@
           <h2>Players & Draft Picks Pool</h2>
           <span class="count" id="player-count">0</span>
         </div>
-        <div class="filter-bar"><input type="text" id="search" placeholder="Search..."></div>
-        <div class="filter-bar">
-
+        <div class="filter-bar pool-filter-bar">
           <div class="position-filters">
             <button class="pos-filter active" data-pos="ALL">All</button>
             <button class="pos-filter" data-pos="QB">QB</button>
@@ -34,6 +32,14 @@
             <button class="pos-filter" data-pos="TE">TE</button>
             <button class="pos-filter" data-pos="PICK">PK</button>
             <button class="pos-filter" data-pos="RK">RK</button>
+          </div>
+          <button class="search-toggle" id="search-toggle" aria-label="Search players">
+            <svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="7" cy="7" r="4.5"/><line x1="10.6" y1="10.6" x2="14" y2="14"/></svg>
+          </button>
+          <div class="search-overlay" id="search-overlay">
+            <svg class="search-overlay-icon" viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="7" cy="7" r="4.5"/><line x1="10.6" y1="10.6" x2="14" y2="14"/></svg>
+            <input type="text" id="search" placeholder="Search players...">
+            <button class="search-close" id="search-close" aria-label="Close search">&times;</button>
           </div>
         </div>
       </div>
@@ -282,10 +288,33 @@
       });
     });
 
-    // Search (commented out until functional)
-    document.getElementById('search').addEventListener('input', e => {
+    // Search: a magnifying-glass toggle reveals a search bar that slides over
+    // the position filters; the "x" closes it and clears the query.
+    const searchOverlay = document.getElementById('search-overlay');
+    const searchInput = document.getElementById('search');
+
+    searchInput.addEventListener('input', e => {
       searchQuery = e.target.value;
       renderPlayerList();
+    });
+
+    document.getElementById('search-toggle').addEventListener('click', () => {
+      searchOverlay.classList.add('active');
+      searchInput.focus();
+    });
+
+    function closeSearch() {
+      searchOverlay.classList.remove('active');
+      if (searchQuery) {
+        searchQuery = '';
+        searchInput.value = '';
+        renderPlayerList();
+      }
+    }
+
+    document.getElementById('search-close').addEventListener('click', closeSearch);
+    searchInput.addEventListener('keydown', e => {
+      if (e.key === 'Escape') closeSearch();
     });
 
     // Position filters

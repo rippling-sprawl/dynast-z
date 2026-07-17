@@ -72,6 +72,96 @@ input {
   padding: 4px;
 }
 
+/* === Pool filter bar with slide-over search === */
+.filter-bar.pool-filter-bar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow: hidden;
+}
+
+.pool-filter-bar .position-filters {
+  flex: 1;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.pool-filter-bar .position-filters::-webkit-scrollbar { display: none; }
+
+.search-toggle {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 26px;
+  padding: 0;
+  background: #21262d;
+  border: 1px solid #30363d;
+  border-radius: 4px;
+  color: #8b949e;
+  cursor: pointer;
+}
+.search-toggle:hover { color: #e1e4e8; border-color: #58a6ff; }
+
+/* Slides in from the right, over the top of the position filters. */
+.search-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 16px;
+  background: #0d1117;
+  transform: translateX(100%);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 0.22s ease, opacity 0.22s ease;
+}
+.search-overlay.active {
+  transform: translateX(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.search-overlay-icon {
+  flex-shrink: 0;
+  color: #8b949e;
+}
+
+.search-overlay input#search {
+  flex: 1;
+  min-width: 0;
+  background: #21262d;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  color: #e1e4e8;
+  font-size: 13px;
+  padding: 6px 10px;
+}
+.search-overlay input#search:focus {
+  outline: none;
+  border-color: #58a6ff;
+}
+.search-overlay input#search::placeholder { color: #6e7681; }
+
+.search-close {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  background: none;
+  border: none;
+  color: #8b949e;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+.search-close:hover { color: #e1e4e8; }
+
 .player-list {
   flex: 1;
   overflow-y: auto;
