@@ -93,10 +93,13 @@ Not a bottleneck by roughly three orders of magnitude.
 | `scripts/primary/oven-leagues.js` | `window.OvenLeagues` — saved leagues, Sleeper metadata, every storage key |
 | `scripts/primary/oven-csv.js` | `window.OvenCSV` — RFC-4180 parser, template, export |
 | `scripts/primary/oven-draft.js` | `window.OvenDraft` — Sleeper client, pick math, poller |
-| `scripts/primary/oven-board.js` | `window.OvenBoard` — merge, heat, render, patch |
-| `scripts/primary/oven-targets.js` | `window.OvenTargets` — mountable Targets & Projections drawer |
+| `scripts/primary/oven-board.js` | `window.OvenBoard` — merge, render, patch, re-rank |
+| `scripts/primary/oven-targets.js` | `window.OvenTargets` — mountable Targets / Projections / Team drawer |
+| `scripts/primary/oven-weekly.js` | `window.OvenWeekly` — last season's finishes, scored by this league |
 | `scripts/fetch_fp_redraft.py` | Offline FantasyPros half-PPR scrape |
 | `data/fp_redraft.json` · `data/fp_redraft_meta.json` | Generated, committed |
+| `scripts/fetch_nfl_weekly.py` | Offline Sleeper weekly stat-line pull |
+| `data/nfl_weekly_2025.json` · `data/nfl_weekly_2025_meta.json` | Generated, committed |
 
 Modified: `vercel.json` (rewrites), `server.py` (3 view branches + `/api/football/resolve` +
 a `log_message` fix), `scripts/base/auth.js` (`requireLogin`, the `clearUser` sweep),
@@ -197,7 +200,7 @@ preserved on the row and ignored — you can keep your own working columns.
 | `Team` | `Tm`, `NFLTeam` | Same |
 | `Tier` | — | Your tier band; falls back to FantasyPros' tier |
 | `MyRank` | `Rank`, `RK` | Board order; falls back to row order |
-| `Grade` | `Like`, `Opinion` | `love` / `like` / `fade` / `avoid` (`hate` → `avoid`) |
+| `Grade` | `Like`, `Opinion` | `like` / `fade`. The retired `love` and `avoid` are read as `like` and `fade` (`OVEN.GRADE_LEGACY`), as are the usual synonyms (`hate` → `fade`, `++` → `like`). Also settable on the board — see [Setting a grade](#setting-a-grade) |
 | `Note` | `Notes`, `Comment` | Free text, shown on the row |
 
 The parser is a real RFC-4180 state machine, not `split(',')` — quoted commas, embedded
@@ -208,31 +211,104 @@ starter file from the current FantasyPros top 250, so the first upload is one ed
 
 The console's filter block is two rows: positions (a radio group — one at a time, `All` clears),
 then **Hide:** `Drafted` and `Fade`, which are independent toggles reading `S.filters.hideDrafted`
-and `S.filters.hideFade`. `Fade` hides *both* negative grades, `fade` and `avoid` — they are the
-two ways of writing "not for me", and hiding one while leaving the other on the board is never
-what you meant. Filtering happens in `visibleRows()` and forces a full `render()`, not a patch.
+and `S.filters.hideFade`. Filtering happens in `visibleRows()` and forces a full `render()`, not a
+patch.
 
-A graded player also wears a badge, so a saturated rail on a row the market agrees with doesn't
-read as a bug: `love` → ❤️ and `like` → 🩷 (`OVEN.GRADE_ICON`), `avoid` stays the word, and `fade` gets no
-badge at all — a fade is your disinterest, not a fact about the player, so the row recedes
-instead. `OvenBoard.gradeChip()` owns the markup and the Targets drawer calls it, so the two
-surfaces can't drift. The emoji carry `role="img"` + `aria-label`, since a glyph has no
-accessible name of its own.
+A graded player states his grade in a mark, never in color — the two surfaces state it
+differently, on purpose. **The board row** shows it
+on its grade control (below), which is editable and sits at the end of the row; there is no badge
+on the name line, because the control is already right there saying it. **The Targets drawer** is
+read-only over the board and has no control, so in all three of its views the badge is the only
+thing carrying the grade: `like` → ❤️ and `fade` → ❌ (`OVEN.GRADE_ICON`). A faded row also recedes,
+which is the older half of the same statement: the badge names the grade, the opacity is what lets
+you skip the row without reading it. `OvenBoard.gradeChip()` owns that markup and the drawer is its
+only caller. The emoji carry `role="img"` + `aria-label`, since a glyph has no accessible name of
+its own.
 
-An explicit `Grade` wins. Without one, heat is `fpRank - myRank` — positive means you're higher
-on him than consensus. It renders through `window.Heatmap.diverging` in two channels: a
-full-saturation 3 px left rail (the per-player signal) and a low-alpha row wash from a 5-row
-rolling mean (the *region*, so a run of your guys reads as one continuous band).
+#### There is no heat model
 
-The ramp is **thermal**, not the source spreadsheet's green/salmon: `--oven-frost` `#6AA9D0`
-(the market is higher than you) to `--oven-flame` `#FF7A18` (you are higher than the market).
-Endpoints live in `oven-config.js` and must stay in sync with `bakers-oven.css`.
+There was one, and it is worth knowing what it did, because two things on the board are its
+survivors. `computeHeat()` blended a grade (`OVEN.GRADE_HEAT`) and the rank-vs-consensus delta
+into **one number per row**, smoothed it over a 5-row window, and pushed the result through
+`window.Heatmap.diverging` into two channels: a full-saturation 3 px left rail (the per-player
+reading) and a low-alpha background wash (the *region*, so a run of your guys read as one band).
 
-Two reasons the sheet's `#57BB8A` / `#EB9891` did not survive. They were alpha-over-white, so
-they composite muddy on a near-black page. And green/red is the single hue pair that collapses
-under deuteranopia — on the one screen where color *is* the judgment. Blue↔orange is the
-standard safe substitute, and it happens to be what a board called The Baker's Oven should have
-been measuring in all along.
+All of it is gone — the function, the export, the `heat` / `heatRegion` / `heatSource` fields, the
+`HEAT_*` constants, and the `heatmap.js` include on the board page. Nothing on a board row is
+tinted now. A row background means *hovered*, or nothing.
+
+The blend was the flaw. "I have him 24 spots above consensus" and "I clicked Like" produced
+**identical color**, and the board could not tell you which one you were looking at — on the one
+screen where the color was the judgment. Both facts survive, stated separately and in a form that
+can't be confused for the other: the **Δ column** is the market disagreement, as a number, and the
+**grade control** is your opinion, as a mark. `GRADE_HEAT` outlived the model it was named for and
+is now purely the Targets projection's scoring weight (`adjRank` in `oven-targets.js`).
+
+Flame/frost stayed as the Δ column's two states, and the reasoning that picked them still holds:
+the source sheet's `#57BB8A` / `#EB9891` were alpha-over-white, so they composite muddy on a
+near-black page, and green/red is the single hue pair that collapses under deuteranopia. Blue↔orange
+is the standard safe substitute, and it happens to be what a board called The Baker's Oven should
+have been measuring in all along. The two values live in `bakers-oven.css` only — `oven-config.js`
+no longer carries color constants, because nothing interpolates a ramp any more.
+
+### Setting a grade
+
+The grade used to be a CSV column and nothing else: changing your mind about a player meant
+leaving the board, editing a spreadsheet and re-importing it — during a draft. It's now a control
+on the row, sitting immediately left of the pin, showing the current grade and opening a three-item
+menu: **Like · No grade · Fade** (`OVEN.GRADE_MENU`, `OVEN.GRADE_MARK`).
+
+It was a five-item menu — **Love · Like · No grade · Fade · Avoid** — and the two pairs were near
+synonyms whose distinction never survived contact with a live board: mid-draft you know whether you
+want him, not whether you want him at strength 1 or 2. `love` merged into `like` and `avoid` into
+`fade`. Old boards and old CSVs still carry the retired values, so `normGrade()` in `oven-board.js`
+maps them through `OVEN.GRADE_LEGACY` as rows are built, and `OvenCSV.cleanGrade()` does the same on
+import. Nothing rewrites storage: a board is normalized as it's read, so a device still running the
+old code can't fight it over the same synced key, and the next save persists the merged value.
+
+A menu rather than three inline buttons, because 860 rows × 3 controls is a board you can no longer
+scan, which is the board's only job. It stays a menu rather than a click-to-cycle button now that
+there are only three states, because cycling makes "fade him" a two-click gesture whose intermediate
+state is a wrong grade briefly written to a synced board.
+
+The control is `OvenBoard`'s, not the drawer's — `grade` is a field on `state.rows`, and the
+drawer's whole contract is that it reads the board and never writes to it. It's opt-in through
+`enableGrading({ onGrade })`, exactly like `enableReorder`, and the board page hands both the
+same `saveBoardOrder` writer. That's why grading needed no storage key of its own: it's the same
+per-league blob, so a grade set on the board shows up in **Export My Rankings** and follows you to
+your phone through sync. It also works on iOS Safari, where drag-to-reorder doesn't fire at all.
+
+**One menu element for the whole board**, parked on `document.body`. Per-row menus would be
+4,300 more nodes to rebuild on every render. It can't live inside the row: `.oven-row` sets
+`content-visibility`, whose paint containment would clip the menu to the 32 px row, and
+`.faded`/`.gone` set `opacity < 1`, which would dim it and trap its `z-index` in the row's
+stacking context. It's positioned `absolute` in *document* coordinates, so it travels with its
+row and page scroll needs no listener. A poll re-anchors it (`placeMarkers()` shifts every row
+below the horizon); a `render()` and a `dragstart` close it.
+
+**Choosing a grade re-renders the whole board rather than patching the row**, which is the one
+non-obvious decision here. It used to be justified by the heat wash — grading one player re-tinted
+his neighbors, so nothing about it was local. With the wash gone a grade is very nearly a one-row
+fact, but not quite: `.faded` moves with it, and under **Hide: Fade** grading someone `fade`
+drops him out of `visibleRows()` entirely, which can orphan the tier header he was the only
+visible member of. A patch path would therefore still have to know about the filter and about tier
+headers — which is to say, restate `render()`. The Δ column does *not* move on a grade; it reads
+the two ranks directly. `render()` restores `scrollY`, so the board doesn't jump, and the rebuild
+has never been the thing worth optimizing here.
+
+That last case is worth stating plainly: **with `Hide: Fade` on, grading someone `fade`
+makes his row disappear.** That's the filter doing exactly what it says — setting the
+grade *is* writing him off. Nothing is lost; the grade is saved before the render, and turning
+the chip off brings him back with it set.
+
+Grading also refreshes the drawer, because grade weights the projection (`adjRank`) — an open
+Projections view has to move him now, not at the next poll. The same call was missing from the
+drag-reorder path, which reads `myRank`; it's there now too.
+
+The control stays visible and live on a **drafted** row, unlike the pin, which hides. The pin
+hides because it would queue a target that can never come up — an action with no outcome. A grade
+isn't an action, it's a fact, and the drafted-row treatment already commits to keeping those
+(struck on the name only; the team, grade and note are still true about him).
 
 ### Expected-pick markers — the horizon
 
@@ -254,7 +330,7 @@ background without darkening the glyphs: these rows are exactly what you read wh
 
 ---
 
-## Targets & Projections
+## Targets, Projections & Team
 
 A right-edge drawer (`scripts/primary/oven-targets.js`), mounted on both the index and the board.
 It is a **component, not a page**: it injects its own tab, panel and listeners into `<body>` and
@@ -262,7 +338,7 @@ reads everything through one accessor the host supplies.
 
 ```js
 OvenTargets.mount({ getState: function () { return {
-  rows, drafted, picks, plan, teamsCount, rounds, myRosterId
+  rows, drafted, picks, plan, teamsCount, rounds, myRosterId, rosterPositions
 }; } });
 OvenTargets.refresh();   // after every poll
 ```
@@ -322,6 +398,30 @@ recommendations.
 
 The model is exported as `OvenTargets.project(state)` so it can be exercised without mounting.
 
+### View 3 — team
+
+The lineup as **the league** defines it. Slots come from Sleeper's `league.roster_positions`
+verbatim — never a default guessed from the draft's round count — so a superflex or a
+second-flex league renders its own shape without a code change. `BN` becomes the bench section;
+`IR` and `TAXI` are dropped, because a slot nobody drafts into would read as a lineup hole.
+
+Filling is greedy, one player at a time, **keepers first and then picks in draft order**, into
+the most specific empty slot he's eligible for. Specificity is the whole trick: `FLEX` accepts
+three positions and `RB` accepts one, so the first RB lands at RB and the flex spots go to
+whoever is left over. Filling in pick order alone would drop RB1 into FLEX and spill RB2 onto
+the bench.
+
+Ownership of a pick is `pick.roster_id` when Sleeper sets it, and the pick plan (which already
+honors traded picks) when it doesn't — mock drafts leave `roster_id` null.
+
+A rostered player carries his board row's grade badge and positional rank when he's on the CSV,
+and renders from `pick.metadata` alone when he isn't — a keeper need not be on your board at
+all, same as in projections. Made picks are chipped with their `R.PP`; keepers say `kept`.
+Bench overflow past the declared `BN` count still renders: a lineup that quietly dropped a
+player you drafted would be worse than one that runs long.
+
+Exported as `OvenTargets.team(state)` for the same reason `project` is.
+
 ---
 
 ## Pick math
@@ -349,22 +449,43 @@ picks: 12, 13, 36, 37, 60, 61, 85, 108, 109, 132, 151, 156, 157, 162, 180, 181
 
 ## Rendering
 
-A board row is one line: heat rail · your rank · position badge · name · taken tag · pin. The
+A board row is one line: your rank · position badge · name · Δ · taken tag · pin. The
 position badge carries the **positional rank** (`RB7`, not `RB`) — it names the position on the
 way past, so one colored cell does both jobs — and the NFL team rides the name line as a dim
-annotation. There is no sub-line under the name; the same shape is used in the Targets and
+annotation. That rank is **yours**, derived from board order rather than copied off FantasyPros:
+the seventh running back down your board is `RB7` whoever the market has there. FP's `pos_rank`
+only ever seeded the first ordering, and every drag renumbers the badges along with the ranks —
+promoting one WR past four others changes five badges, not one. It counts drafted players too, so
+a badge never moves because someone else came off the board. There is no sub-line under the name; the same shape is used in the Targets and
 Projections drawer. Once a player is drafted or kept (`.gone`), his pin goes `display: none` — it
 would queue a target that can never come up, and it's last in the row so it takes nothing with
 it.
 
-Neither FantasyPros number has a column. ECR is still loaded and still drives everything that
-matters — the heat rail, the row wash, and the projection's market order — but reading a
-consensus rank off a row was never the decision, and the printed Δ that replaced it wasn't
-either: the heat rail already says *how far apart you and the market are* in a form you can read
-at a scroll, and a number restating it in the same row is the same claim charged twice.
+**ECR itself has no column; the Δ against it does.** Those are different facts and only one of
+them is a decision. A consensus rank of 41 tells you nothing on its own — you'd have to find your
+own rank on the same row and subtract. `Δ +12` is the subtraction already done: *you are twelve
+spots higher on this man than the market is*, which is the reach-or-wait question stated in one
+number. So ECR stays loaded — it is the Δ's other operand and the projection's market order — and
+stays off the row, and the Δ is printed.
+
+The Δ is computed in `rowHTML()` from `fpRank - myRank`, and a grade never touches it: "I graded
+him Like" is not a claim about where the market has him, so a liked player the market also likes is
+Δ 0 and the column says so. Flame when you're higher, frost when you're lower, dim at zero; `—`
+means no consensus rank for him at all. It is the row's only colored element (see *There is no heat
+model*), so a hue on a board row always means this and only this.
+
+**A drafted or kept player has no Δ.** The number is an argument for a decision — reach, or wait —
+and once he is off the table there is no decision left to argue for; a flame `+40` on a player
+nobody can pick is the board pulling your eye toward a pick that cannot happen, mid-draft, which is
+the worst possible moment for it. The rule is one line of CSS on `.gone` and it's `visibility:
+hidden` rather than `display: none`: the 40px slot stays, so a live row's Δ holds the same column
+as the rows around it cross off. A column that reflows on someone else's pick would be worse than
+one with gaps. Hiding also drops it from the accessibility tree, so nothing reads out a number the
+board isn't showing. `.gone` is applied by `applyDraftState()` on every poll and reapplied by
+`render()`, so the single rule covers the surgical patch, a full rebuild, and an undone pick.
 
 The crossed-off rule targets `.oven-name-text`, not the whole name line: `text-decoration`
-propagates to descendants and a child cannot opt out, so the team, grade and note sit outside the
+propagates to descendants and a child cannot opt out, so the team and note sit outside the
 struck span rather than being un-struck inside it.
 
 ### One order, no sorting
@@ -399,9 +520,9 @@ seam above or below another row moves that player there. On drop:
    sits in front of). Carrying his old tier along would emit a stray `Tier 6` header in the middle
    of tier 2 — headers fire on first appearance — and would claim something the move just
    contradicted.
-4. **Recompute heat and re-render.** Heat is `fpRank - myRank`, so moving a player necessarily
-   changes his rail and the smoothed wash around him. That is the point: drag someone up and watch
-   him go flame.
+4. **Re-render.** The Δ column is `fpRank - myRank` computed at render time, so moving a player
+   necessarily restates it — his and everyone he displaced. That is the point: drag someone up and
+   watch the number climb into flame.
 5. **Hand the rows to the host.** `onReorder(rows)` receives them in the exact shape a CSV import
    writes, and `/the-bakers-oven/{leagueId}/{rosterId}` writes them straight back into the same
    per-league blob under `oven_board:{leagueId}`. A board still seeded from FantasyPros (nothing
@@ -448,6 +569,116 @@ consumer downstream has to remember the difference. Fails loudly if the blob mov
 The board shows the snapshot date and warns past 3 days. **Re-run it the morning of the draft
 (2026-08-31).** Committed and CDN-served, matching how `data/fp.json` works; scraping at request
 time would likely get a Vercel IP blocked.
+
+---
+
+## Last season's weekly finishes
+
+The **`2025 weeks`** chip opens a small table under each player: how many weeks he finished top
+**12 / 24 / 36** at his position last season, each cutoff a heading over its own count.
+
+```
+Bijan Robinson  ATL
+T12  T24  T36
+ 11   13   15
+```
+
+This is the one number on the board computed under **your league's scoring**. Everything else is
+FantasyPros half-PPR ECR: a projection of the coming season, averaged, under someone else's
+rules. Four WR8 weeks and twelve WR60 weeks produce the same ECR as a steady WR15, and the two
+are not the same pick.
+
+**Under the name, not beside it.** As a right-hand column the three numbers read as a second
+ranking to scan down the board — the one thing the board refuses to have a second of (see *One
+order, no sorting*). Under the player they annotate him instead.
+
+The cell is a two-row CSS grid with `grid-auto-flow: column`, and each tier emits its heading
+immediately followed by its value. Flowing by column means the heading/value pairing is
+structural, so a position showing one cutoff instead of three needs no column count handed to
+CSS. Fixed `grid-auto-columns` keeps every row's table aligned with the row above it.
+
+Rows grow by a line only while the chip is on, so `.oven-list.show-weekly` also widens
+`contain-intrinsic-size` — a stale virtualization estimate on 860 rows makes the scrollbar jump
+as they render in.
+
+**TE, K and DEF show `T12` alone** (`OVEN.WEEKLY_SINGLE_TIER_POS`). Every league starts one of
+each, so nobody is ever choosing between TE20 and TE30; "top 24 at TE" describes a player you
+would not have started in any week of any league, which makes it decoration rather than
+information. QB/RB/WR keep all three, because their starter depth actually reaches that far.
+
+There is no games-played denominator. `/16` on every row restated the same fact on every row,
+and the counts are already read against each other.
+
+### There is no endpoint for this — don't go looking
+
+Sleeper serves exactly three rank formats: `pos_rank_ppr`, `pos_rank_half_ppr`, `pos_rank_std`.
+No league-scored rank exists. Their GraphQL endpoint (`POST https://sleeper.com/graphql`) is open
+and introspectable, and **all 56 schema fields that accept a `league_id` were enumerated — not one
+returns stats or scoring**. The weekly rank on Sleeper's own player card is computed client-side
+by their app. We do the same thing.
+
+It's exact, not an estimate. `scoring_settings` keys are the same vocabulary as the stat keys, so
+a player's week is the dot product of the two — verified to the cent against Sleeper's own
+`pts_std`.
+
+### How it's split
+
+`scripts/fetch_nfl_weekly.py` ships the raw component stats; `oven-weekly.js` does the dot product
+in the browser, where `scoring_settings` already sits in memory (`loadLeague` has always returned
+the whole league object — nothing had used that field before). A finished season's stats never
+change, so they commit and cache; the scoring is per-league and can't be precomputed. No
+`server.py` endpoint and no TTL that could go stale mid-draft.
+
+```bash
+python3 scripts/fetch_nfl_weekly.py                 # previous season, weeks 1-17
+python3 scripts/fetch_nfl_weekly.py --season 2024
+```
+
+Run it once per new season. 704 players, 2.0 MB on disk, ~0.3 MB gzipped on the wire; the whole
+computation is ~10 ms. Week 18 is excluded by default — starters rest, and a resting stud's zero
+would read as a failed week rather than one he was never asked to play.
+
+Three things in that script are load-bearing:
+
+- **The stats endpoint needs a browser User-Agent.** `urllib`'s default gets a 403 where curl gets
+  a 200.
+- **`DENY_KEYS` must stay a literal list, never a prefix match.** A `^pts_` filter looks equivalent
+  and silently destroys `pts_allow` / `pts_allow_0…35p` — real DST stats that leagues score. A
+  dropped key is points that go missing with no error. `verify()` canaries the likely casualties.
+- **`TEAM_*` aggregate rows must not survive.** They ride alongside real players carrying inflated
+  points and `pos_rank_* = 999`; left in, they sit atop every weekly ranking and push real players
+  out of the top 12. They're dropped by not appearing in the players dump's fantasy positions, and
+  `verify()` fails the build if any leak through.
+
+### Joining to the board
+
+The file is keyed by `OvenBoard.playerKey()` (`RB|jahmyr gibbs`, `DEF|BUF`), **not by
+`player_id`** — `player_id` is `null` on every FantasyPros-seeded row, since only CSV-imported
+rows carry one. `norm_name()`/`player_key()` in the Python must stay byte-for-byte equivalent to
+`normName()`/`playerKey()` in `oven-board.js`; if they drift, the join returns nothing and every
+row renders a dash. Checked at build time: **zero key collisions** among 2025-active players.
+
+A row with no data shows `—`, never `0`. A 2026 rookie and a healthy veteran who never cracked the
+top 36 are opposite facts, and a zero would state the second about the first.
+
+### Nothing is emphasized
+
+Headings and values share one color and one weight; no cutoff is singled out. An earlier version
+bolded whichever cutoff `starterDepth()` computed as the league's real starter line — QB24 in a
+superflex, and so on. It was removed along with the function and `OVEN.FLEX_WEIGHTS` that fed it.
+
+Bolding one column pushed the other two into the background, and the shape *across* the three is
+the signal: `11 13 15` and `11 13 14` are a every-week starter and a boom-bust dart, and neither
+is legible if one column shouts. Which cutoff matters also varies by position and by league, so
+the choice was never as authoritative as its visual weight implied.
+
+`OVEN.WEEKLY_SINGLE_TIER_POS` outlived that removal — it decides which cutoffs a position shows
+at all, which is a different question from which one to stress.
+
+**Display only.** No effect on the Δ, on `myRank`, on ordering, or on the Targets projection — the
+board's one-order invariant is untouched. The chip toggles a class on the list rather than
+re-rendering, so your scroll position survives; it stays hidden entirely until the file has loaded
+and been scored, and a 404 on the data file degrades to no column rather than a broken board.
 
 ---
 
@@ -498,7 +729,8 @@ Run `python3 server.py`, open `http://localhost:8000`.
 16. A misspelled name is **kept** on the board and listed as unmatched, never dropped.
 
 **Draft data** (league is `pre_draft` until 2026-08-31, so this is testable now)
-17. All **7** keepers render struck through with a `KEPT · owner` tag.
+17. All **7** keepers render struck through with a `KEPT · owner` tag, and **their Δ cells are
+    blank** — the column stays aligned on the live rows above and below them.
 18. `computeClock().onTheClock` is **1**, not 8 — proving first-unfilled, not `length + 1`. (No
    longer visible in the console; check it from the devtools console via `OvenBoard.state.clock`.)
 19. Console reads **Your pick / 2.01 / 10 away** (pick 12 is a keeper; 9 and 12 are filled), and
@@ -507,9 +739,10 @@ Run `python3 server.py`, open `http://localhost:8000`.
 20. Board pick list matches the fixture above.
 
 **Live behavior**
-21. When picks land: rows cross off with a flash, the tag shows `R.PP · owner`, **scroll position
-    holds**, and the marker's "N away" count drops.
-22. A commissioner undo restores the row and hides its tag.
+21. When picks land: rows cross off with a flash, the tag shows `R.PP · owner`, **the Δ blanks in
+    place without the column shifting**, **scroll position holds**, and the marker's "N away"
+    count drops.
+22. A commissioner undo restores the row, hides its tag, and brings the Δ back.
 23. DevTools Network: a ~1.2 KB `/draft/{id}` call per tick and **no** `/picks` call until
     `last_picked` changes. Background the tab → polling stops. Foreground → immediate poll.
 24. Offline → "Reconnecting (n) · last update Nm ago", backoff widens; online → recovers.
@@ -522,6 +755,37 @@ Run `python3 server.py`, open `http://localhost:8000`.
     and he appears in the queue. Pin again (or `×` in the drawer) removes him. Same on a phone —
     the pin is the only route in, on every device.
 27. Dragging a board row does **not** touch the queue: it re-ranks him (checks 32–36).
+
+**Grades**
+
+27a. The grade control sits immediately left of the pin on every row and reads `·` on an ungraded
+     board. Click it → a three-item menu opens under it (Like · No grade · Fade), with the current
+     grade carrying a flame inner rail.
+27b. Pick **Like** → the menu closes and the button shows ❤️. **Nothing else on the row changes
+     color** — no background tint, and his **Δ does not move**: it's rank-vs-ECR, and a grade isn't
+     a claim about the market. Neighboring rows are untouched. Scroll position holds.
+27c. Reload → the grade is still there. **Export My Rankings** on the league page shows `like` in
+     the `Grade` column for him; re-importing that file puts it back.
+27d. Set **Fade** → the row dims and the button shows ❌. Set **No grade** → the dimming
+     clears and the button returns to `·`. The Δ read the same value through all three.
+27e. With **Hide: Fade** on, grading someone `fade` removes his row immediately — that is the
+     filter doing what it says. Turn the chip off: he's back, still ❌. Nothing was lost.
+27f. Open the drawer's **Projections**, then grade a mid-board player **Like**: he moves up in the
+     simulated rounds without waiting for a poll. **Fade** moves him down. The drawer's own rows
+     still wear the ❤️/❌ badge; the board row does not, because its control already says it.
+27g. Keyboard: Tab to the control, Enter opens, ↑/↓/Home/End move, Enter picks, Escape closes and
+     returns focus to the control. A **second** Escape closes the drawer — not the first.
+     VoiceOver reads "Grade for {player}: none, menu button, collapsed."
+27h. Open the menu and wait out a poll (8 s while `drafting`): it stays anchored to its row even
+     when a horizon marker is inserted above it. Start a drag with the menu open → it closes and
+     the drag proceeds normally.
+27i. Grade a drafted (struck-through) row → the control is still there and still works; the pin is
+     not. A grade is a fact about him, and being drafted doesn't make it untrue.
+27j. Never imported a CSV for this league → grade anyone → the league page's summary flips from
+     "No rankings uploaded" to a saved board, same as a drag does (check 36).
+27k. A board saved before the merge — or a CSV carrying `love`/`avoid` — loads with those rows
+     reading **Like** and **Fade**: `normGrade()` maps them on the way in and the next save writes
+     the merged value. `hate`, `++`, `-` and the rest of the synonyms still import.
 28. Projections lists **16** rounds. Roster 1's R14 keeper fills round 14 with a `kept` chip;
     made picks show `picked`; the traded-away R7 and R12 read "No pick this round".
 29. Round 2 does not recommend the same player round 1 already took — that is the look-ahead.
@@ -530,10 +794,22 @@ Run `python3 server.py`, open `http://localhost:8000`.
 31. Filter the board → re-render → targeted rows are still marked, and the surviving rows are
     still in ascending personal-rank order.
 
+**Team**
+31a. The **Team** tab renders the league's own slots — for `1384025526670233600` that is
+     `QB · RB · RB · WR · WR · TE · FLEX · K · DEF` plus the bench, matching Sleeper's league
+     settings exactly. `IR`/`TAXI` slots never appear.
+31b. Roster 1's keepers are placed before any drafted pick, each in his own position —
+     verified live: Caleb Williams → `QB`, Javonte Williams → `RB`, Puka Nacua → `WR`, the
+     other six slots `Open`, bench `0 of 7`. A keeper who isn't on the imported CSV still
+     renders (name and team from `pick.metadata`).
+31c. Draft a third RB with both RB slots full → he takes `FLEX`, not the bench, and `WR`/`TE`
+     stay `Open`. A fourth goes to the bench.
+31d. Unfilled slots read `Open` on a hatched row; the section headers count `n of N`.
+
 **Re-ranking**
 32. Drag the #40 row up onto the seam above #8: he lands at 8, everyone from 8 down shifts one,
-    the `RK` column renumbers 1..N with no gaps, and his heat rail goes flame (he is now 30+ spots
-    ahead of consensus). The drawer does not open and the queue is unchanged.
+    the `RK` column renumbers 1..N with no gaps, and his Δ jumps to roughly `+32` in flame (he is
+    now 30+ spots ahead of consensus). The drawer does not open and the queue is unchanged.
 33. He shows the tier of the band he landed in, and no stray `Tier N` header appears mid-board.
 34. Reload the page → the new order is still there. `Export My Rankings` on the league page
     matches what the board shows.
@@ -547,7 +823,7 @@ Run `python3 server.py`, open `http://localhost:8000`.
     queue. (Signed out there is nothing to show: every Oven page requires an identity now.)
 
 **Degraded**
-38. Rename `data/fp_redraft.json` → board still renders from CSV, with no heat rail or row wash
+38. Rename `data/fp_redraft.json` → board still renders from CSV, with every Δ reading `—`
     (nothing to disagree with).
 39. No CSV at all → board seeds from FantasyPros ranks with an import prompt.
 40. Import a new CSV that drops a queued player: he vanishes from the drawer but stays in storage,

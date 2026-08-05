@@ -6,7 +6,7 @@
   <link rel="icon" type="image/png" href="/favicon.png">
   <title>The Baker's Oven | Dynast-Z</title>
   <link rel="stylesheet" href="/styles/base/styles.css?v=abec71e4">
-  <link rel="stylesheet" href="/styles/primary/bakers-oven.css?v=fe5affc2">
+  <link rel="stylesheet" href="/styles/primary/bakers-oven.css?v=d8215fe7">
 </head>
 <body>
   <div id="header-mount"></div>
@@ -14,12 +14,12 @@
   <script src="/scripts/base/auth.js?v=8f2b460f"></script>
   <script src="/scripts/base/nav.js?v=d80ba5fd"></script>
   <script src="/scripts/base/sync.js?v=1b85ffb1"></script>
-  <script src="/scripts/primary/oven-config.js?v=52db5b4e"></script>
-  <script src="/scripts/primary/oven-csv.js?v=6d188388"></script>
+  <script src="/scripts/primary/oven-config.js?v=9ade0897"></script>
+  <script src="/scripts/primary/oven-csv.js?v=03725b67"></script>
   <script src="/scripts/primary/oven-draft.js?v=6d611264"></script>
   <script src="/scripts/primary/oven-leagues.js?v=3332aa1a"></script>
-  <script src="/scripts/primary/oven-board.js?v=64413710"></script>
-  <script src="/scripts/primary/oven-targets.js?v=72f2d635"></script>
+  <script src="/scripts/primary/oven-board.js?v=7d05fe86"></script>
+  <script src="/scripts/primary/oven-targets.js?v=ca7f071d"></script>
   <script>initPage();</script>
 
   <main class="oven-content">
@@ -66,9 +66,10 @@
           Rankings are private to your account and saved per league.
           Columns: <code>Player</code> (required), <code>Pos</code>, <code>Team</code>,
           <code>Tier</code>, <code>MyRank</code>, <code>Grade</code>, <code>Note</code>.
-          <code>Grade</code> accepts <code>love</code>, <code>like</code>, <code>fade</code>, <code>avoid</code>
-          and drives the hot/cold coloring; without it, color comes from how far your rank sits
-          from FantasyPros consensus. Any extra columns you keep are preserved and ignored.
+          <code>Grade</code> accepts <code>like</code> or <code>fade</code> — older sheets'
+          <code>love</code> and <code>avoid</code> are read as those. You can also set it on the
+          board itself, and it weights the Targets projection. Any extra columns you keep are
+          preserved and ignored.
         </p>
       </div>
     </div>
@@ -91,16 +92,20 @@
     // component, same synced queue, different host view. myRosterId is filled in
     // from the saved league inside boot(), never at IIFE scope: mount before it
     // resolves and the drawer projects rounds for roster `undefined`.
-    var tp = { rows: [], drafted: {}, picks: [], plan: [], teamsCount: 12, rounds: 16, myRosterId: null };
+    var tp = { rows: [], drafted: {}, picks: [], plan: [], teamsCount: 12, rounds: 16,
+      myRosterId: null, rosterPositions: [] };
 
     function rebuildTargetState(draft, picks) {
-      tp.rows = OvenBoard.computeHeat(OvenBoard.buildBoard(board && board.rows, fp));
+      tp.rows = OvenBoard.buildBoard(board && board.rows, fp);
       tp.picks = picks || tp.picks;
       tp.drafted = OvenBoard.indexPicks(tp.picks, tp.rows);
       tp.plan = OvenDraft.buildPickPlan(draft, ctx.tradedPicks);
       tp.teamsCount = draft.settings.teams;
       tp.rounds = draft.settings.rounds;
       tp.myRosterId = myRosterId;
+      // The Team view's lineup shape. From the league, not the draft —
+      // roster_positions is where the starting slots are defined.
+      tp.rosterPositions = (ctx.league && ctx.league.roster_positions) || [];
       OvenTargets.refresh();
     }
 

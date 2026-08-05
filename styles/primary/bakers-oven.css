@@ -10,12 +10,11 @@
  * Everything else is kiln, brick, mortar, ash, bone. If a new state needs a
  * color, it is one of those two — do not introduce a third hue.
  *
- * Heat note: the source spreadsheet's fills were #57BB8A/#EB9891 (green/red,
- * alpha over WHITE). Both facts made them wrong here — they composite dark over
- * a near-black page, and green/red is the one pair that fails for the most
- * common color blindness. The ramp is now thermal (frost -> flame), which is
- * both colorblind-safe and literally what the product is named after.
- * Endpoints live in scripts/primary/oven-config.js.
+ * Heat note: the board once painted rank-vs-consensus as color — a saturated left
+ * rail per row and a smoothed background wash under runs of rows. Both are gone.
+ * The signal is a number now (.oven-delta), and flame/frost are the two states it
+ * can be in. Nothing on a board row is tinted, which is the point: a row's
+ * background means "hovered" or "nothing", never "he's 12 spots off consensus".
  *
  * Typography: no web fonts, deliberately. This is the most latency-sensitive
  * page in the app and it is used exactly once a year, live, on a phone. Three
@@ -402,6 +401,9 @@ button.oven-team-card {
   color: var(--oven-ash-dim);
   margin-right: 1px;
 }
+/* Show adds a column where Hide removes rows. They share the row to save a band
+ * of vertical chrome, so the gap has to carry the distinction on its own. */
+.oven-filter-sep { margin-left: 10px; }
 .oven-chip {
   font-family: var(--oven-data);
   background: transparent;
@@ -465,7 +467,7 @@ button.oven-team-card {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 0 10px 5px 0;
+  padding: 0 10px 5px;
   border-bottom: 1px solid var(--oven-mortar);
   font-family: var(--oven-data);
   font-size: 9px;
@@ -479,7 +481,7 @@ button.oven-team-card {
   display: flex;
   align-items: center;
   gap: 9px;
-  padding: 7px 10px 7px 0;
+  padding: 7px 10px;
   border-bottom: 1px solid rgba(58, 44, 36, .5);
   position: relative;
   font-size: 13px;
@@ -489,10 +491,6 @@ button.oven-team-card {
 }
 .oven-row:last-child { border-bottom: none; }
 .oven-row:hover { background: var(--oven-brick-hi); }
-
-/* The per-player heat signal. Full saturation, thin — the row wash carries the
- * neighborhood reading, this carries the individual one. */
-.oven-rail { width: 3px; align-self: stretch; flex-shrink: 0; background: transparent; }
 
 .oven-rk {
   width: 32px; flex-shrink: 0; text-align: right;
@@ -509,9 +507,9 @@ button.oven-team-card {
  * Only geometry is set here — no background or color, so the global fills win
  * rather than being overridden by this more specific selector. Sizing tracks
  * calculator.css (11px/700, radius 3, min-width 30) tightened for board
- * density. .pos-TE #e65100 does sit near --oven-flame; the heat rail is the
- * far-left 3px edge and the badge is a filled block, so they read as different
- * objects rather than the same signal.
+ * density. .pos-TE #e65100 does sit near --oven-flame; the flame appears on this
+ * row only as bare right-aligned Δ digits, and the badge is a small filled block,
+ * so they read as different objects rather than the same signal.
  *
  * The badge reads "RB7", not "RB" — the positional rank is the fact you act on
  * and it names the position on the way past, so one element carries both and
@@ -566,35 +564,193 @@ button.oven-team-card {
 }
 .oven-tp-team { font-size: 9px; margin-left: 6px; }
 
-/* Names the explicit CSV grade, so a saturated rail on a Δ 0 row is legible.
- * This is the word treatment, still worn by `avoid`. */
+/* The grade badge: a heart for `like`, a red X for `fade`.
+ *
+ * The Targets drawer's badge only — the big board states its grade through the
+ * control (.oven-grade-btn, below), which is editable and sits at the end of the
+ * row. Nothing on .oven-row wears this any more.
+ *
+ * No pill. A glyph in a pill is a badge wearing a badge, so the chrome comes off
+ * entirely and the emoji is the whole mark — which is what makes it survivable
+ * 250 rows deep. Both marks carry their own color, so nothing is set here. */
 .oven-grade {
-  font-family: var(--oven-data);
-  font-size: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: .14em;
-  border-radius: 2px; padding: 2px 5px; margin-left: 6px; vertical-align: 1px;
-}
-.oven-grade.avoid { background: rgba(106, 169, 208, .22); color: var(--oven-frost); }
-
-/* love and like are hearts. A glyph in a pill is a badge wearing a badge, so
- * the chrome comes off entirely and the heart is the whole mark — which is what
- * makes it survivable 250 rows deep. Color lives in the emoji, so no fill here
- * and the pair reads as one scale: deep red over pink. */
-.oven-grade.love,
-.oven-grade.like {
-  background: none;
-  padding: 0;
+  margin-left: 6px;
   font-size: 11px;
-  letter-spacing: 0;
   line-height: 1;
   vertical-align: -1px;
 }
 
-/* A `fade` grade has no badge. It recedes the row instead — the same gesture as
- * being drafted, one stop short of it: no line-through, and lighter than .34, so
- * a faded player still reads as available if the run comes back around to him. */
+/* A faded row also recedes — the same gesture as being drafted, one stop short
+ * of it: no line-through, and lighter than .34, so a faded player still reads as
+ * available if the run comes back around to him. */
 .oven-row.faded,
 .oven-tp-row.faded { opacity: .52; }
 
+
+/* ---------- the grade control ----------
+ *
+ * The button that sets the grade, sitting beside the pin at the end of the row.
+ * It matches .oven-pin's 22x22 footprint exactly, because they are a pair: two
+ * small controls on the same edge, and any difference in size between them would
+ * read as one of them mattering more.
+ *
+ * Both are legible at rest: ash on the glyph, mortar on the border, no hover
+ * required. The pair used to hide until you hovered the row, which cost you the
+ * one thing a live board needs — knowing where the controls are without probing
+ * for them. The hairline border is what keeps them reading as controls at that
+ * brightness rather than as another column of data. */
+.oven-grade-btn {
+  flex-shrink: 0;
+  width: 22px; height: 22px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--oven-data);
+  font-size: 13px; line-height: 1;
+  background: transparent;
+  border: 1px solid var(--oven-mortar);
+  border-radius: 2px;
+  color: var(--oven-ash);
+  cursor: pointer;
+  transition: color .12s, border-color .12s, background .12s;
+}
+.oven-grade-btn:hover,
+.oven-grade-btn[aria-expanded="true"] { color: var(--oven-flame); border-color: var(--oven-ember); }
+
+/* Both grades carry their color inside the emoji, so no `color` is set here —
+ * same reason .oven-grade sets none either. Just the size, which an emoji needs
+ * a step down from the `none` dot to sit at. */
+.oven-grade-btn.like,
+.oven-grade-btn.fade { font-size: 11px; }
+
+/* Hidden on a drafted row, same as the pin — see the pulled-from-the-oven block.
+ * Both are controls for a player you can still act on, and once he is off the
+ * table neither has an outcome; leaving them lit is two live-looking targets on
+ * a dead row. The grade itself is not lost, only its control: it still rides the
+ * record into the export. */
+
+/* One menu for the whole board, parked on document.body. It cannot live in the
+ * row: .oven-row sets content-visibility, whose paint containment would clip the
+ * menu to the 32px row, and .faded/.gone set opacity < 1, which would dim it and
+ * trap its z-index in the row's stacking context. Positioned from JS in document
+ * coordinates, so it scrolls with the row it belongs to.
+ *
+ * z-index sits above the sticky console (20) and below the Targets tab (140) and
+ * panel (150): an open drawer still wins, which is right — it is the bigger
+ * surface and the one you deliberately opened. */
+.oven-grade-menu {
+  position: absolute; z-index: 130;
+  min-width: 132px; padding: 3px;
+  background: var(--oven-brick);
+  border: 1px solid var(--oven-mortar);
+  border-radius: 3px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, .6);
+}
+.oven-grade-menu button {
+  display: flex; align-items: center; gap: 9px;
+  width: 100%; padding: 6px 9px;
+  background: transparent; border: 0; border-radius: 2px;
+  font-family: var(--oven-data);
+  font-size: 11px; letter-spacing: .06em;
+  color: var(--oven-ash);
+  text-align: left; cursor: pointer;
+}
+.oven-grade-menu button:hover,
+.oven-grade-menu button:focus-visible { background: var(--oven-brick-hi); color: var(--oven-bone); }
+
+/* The grade he already has wears the same inner flame rail a targeted row does.
+ * One idiom for "this one is mine", spent twice rather than inventing a second. */
+.oven-grade-menu button[aria-checked="true"] {
+  color: var(--oven-bone);
+  box-shadow: inset 2px 0 0 var(--oven-flame);
+}
+/* Fixed width so the three labels start on one line down the menu. The color is
+ * for the `none` dot alone — the other two marks are emoji and bring their own. */
+.oven-grade-menu .gm-mark { width: 14px; flex-shrink: 0; text-align: center; color: var(--oven-ash-dim); }
+
+
+/* ---------- last season's weekly finishes ---------- */
+
+/* Top 12 / 24 / 36 positional finishes, scored by this league's settings.
+ *
+ * Off by default. The board's one job is to hold your order, and three more
+ * numbers on 860 rows compete with the Δ column for the same glance — so this
+ * is opt-in, revealed by toggling .show-weekly on the list rather than by
+ * re-rendering, which would cost your scroll position. Hidden means display:
+ * none, not visibility: hidden: it's a block under the name, and a collapsed
+ * one would still leave the row taller than it needs to be.
+ *
+ * A nested table under the name, not a right-hand column. As a column the three
+ * numbers read as another ranking to scan down the board — the exact thing the
+ * board refuses to have a second of. Under the player they annotate him, and
+ * the cutoff sits as a heading over its own value rather than beside it, so the
+ * three counts form one readable row instead of three label-value pairs the eye
+ * has to separate. */
+.oven-weekly { display: none; }
+.oven-list.show-weekly .oven-weekly {
+  /* Two rows, flowing by column: each tier emits its heading then its value, so
+   * a position showing one cutoff instead of three needs no column count handed
+   * to CSS. Fixed auto-columns keep the headings aligned with their values and
+   * every row's table aligned with the row above it. */
+  display: grid;
+  grid-template-rows: auto auto;
+  grid-auto-flow: column;
+  grid-auto-columns: 22px;
+  justify-content: start;
+  gap: 1px 12px;
+  margin-top: 3px;
+  font-family: var(--oven-data);
+  /* Tabular, so the counts line up down the board and a run of strong weeks
+   * reads as a shape without being read number by number. */
+  font-variant-numeric: tabular-nums;
+  color: var(--oven-ash-dim);
+}
+
+/* Heading and value share one color. No cutoff is emphasized: which one is
+ * startable depends on the position and the league, and bolding a single column
+ * pushed the other two into the background — when the point of showing three is
+ * the shape across them, none of them can be allowed to shout. Size and weight
+ * carry the heading/value distinction instead, which the column already implies. */
+.oven-weekly .ow-t {
+  font-style: normal;
+  font-size: 8px; font-weight: 700; letter-spacing: .08em;
+}
+.oven-weekly .ow-n { font-size: 10.5px; }
+
+/* No 2025 for him at all — a rookie, or a season lost to injury. Distinct from
+ * a zero, which would be a claim about how he played. */
+.oven-weekly.is-empty { color: var(--oven-mortar); }
+
+/* The row grows by a line when the sub-line is on, so the virtualization hint
+ * has to grow with it — a stale estimate on 860 rows makes the scrollbar jump
+ * as rows render in. */
+.oven-list.show-weekly .oven-row { contain-intrinsic-size: 0 48px; }
+
+/* ---------- rank vs consensus ----------
+ * How far you are from FantasyPros, printed, in board positions. The row's ONLY
+ * colored element — there is no heat rail and no row wash any more, so when
+ * something on a board row is flame or frost it is this, and it means exactly one
+ * thing: you and the market disagree, by this much, in this direction.
+ *
+ * Frost -> flame, and that pair is load-bearing. The source spreadsheet used
+ * green/salmon (#57BB8A / #EB9891); both halves were wrong here. The fills were
+ * alpha-over-white, so they composite muddy on a near-black page, and green/red
+ * is the one pair that collapses under deuteranopia — on the one screen where the
+ * color IS the signal. Frost/flame survives that, and is what a board called The
+ * Baker's Oven should have measured in from the start.
+ *
+ * Right-aligned and tabular so the column reads as a shape on the way down — a
+ * stack of +2 +1 −3 is you and the market agreeing, and you can see that without
+ * reading a single value. Fixed width so a "+100" doesn't shove the taken tag. */
+.oven-delta {
+  width: 40px; flex-shrink: 0; text-align: right;
+  font-family: var(--oven-data);
+  font-size: 11px; font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.oven-delta.pos  { color: var(--oven-flame); }
+.oven-delta.neg  { color: var(--oven-frost); }
+/* Agreement is the boring case and by far the most common one. Dim, so 860 rows
+ * of near-zero don't read as a column of alarms. */
+.oven-delta.zero { color: var(--oven-ash-dim); }
 
 .oven-taken {
   font-family: var(--oven-data);
@@ -610,14 +766,31 @@ button.oven-team-card {
 .oven-row.gone { opacity: .34; }
 /* Struck on the name only — the team, grade and note are still true about him. */
 .oven-row.gone .oven-name-text { text-decoration: line-through; text-decoration-thickness: 1px; }
-.oven-row.gone .oven-rail { background: var(--oven-mortar) !important; }
+/* The Δ goes away entirely once he is drafted or kept. It is an argument for a
+ * decision — reach for him, or wait — and the decision has been made by someone.
+ * A flame +40 on a player who is off the table is the board arguing for a pick
+ * that cannot happen, and mid-draft that is exactly the row your eye stops on.
+ *
+ * `visibility: hidden`, not `display: none` and not a JS branch in rowHTML():
+ *   - the 40px slot stays, so every live row's Δ holds the same column as rows
+ *     cross off around it — a column that reflows on someone else's pick is
+ *     worse than one with gaps;
+ *   - it leaves the accessibility tree too, so a screen reader doesn't read a
+ *     number the sighted board isn't showing;
+ *   - .gone is toggled by applyDraftState() on every poll and render() reapplies
+ *     it, so one rule covers both the surgical patch and a full rebuild — and it
+ *     reverses for free if a pick is ever undone. */
+.oven-row.gone .oven-delta { visibility: hidden; }
 
 /* Drafted or kept, both routes to .gone. The pin would queue a target that can
- * never come up; it's last in the row and takes nothing with it when it goes. */
-.oven-row.gone .oven-pin { display: none; }
+ * never come up and the grade control would edit an opinion that no longer has
+ * anywhere to go; both are last in the row and take nothing with them. */
+.oven-row.gone .oven-pin,
+.oven-row.gone .oven-grade-btn { display: none; }
 
-/* Overlay, not `background` — the row carries its heat wash as an inline style,
- * and animating background directly would blink the wash out and snap it back. */
+/* Overlay, not `background` — animating the row's own background would fight
+ * :hover for the same property, and a cross-off that cancels when the cursor
+ * happens to be resting on the row is the one place you'd notice. */
 .oven-row.just-gone::before {
   content: '';
   position: absolute; inset: 0;
@@ -645,13 +818,15 @@ button.oven-team-card {
 .oven-row.is-dragging { opacity: .3; }
 .oven-row.drop-before { box-shadow: inset 0 2px 0 var(--oven-flame); }
 .oven-row.drop-after  { box-shadow: inset 0 -2px 0 var(--oven-flame); }
-/* A targeted row already spends its inset shadow on the intent rail, and the two
- * are different claims — carry both rather than letting one silently win. */
+/* A targeted row already spends its inset shadow on the intent rail, and "where
+ * he lands" is a different claim from "he's mine" — carry both rather than
+ * letting one silently win. */
 .oven-row.is-target.drop-before { box-shadow: inset 3px 0 0 var(--oven-flame), inset 0 2px 0 var(--oven-flame); }
 .oven-row.is-target.drop-after  { box-shadow: inset 3px 0 0 var(--oven-flame), inset 0 -2px 0 var(--oven-flame); }
-/* The pin is a click target sitting inside a drag source; mid-drag it can only
- * be passed over, never meant, so it stops lighting up. */
-body.oven-reordering .oven-pin { pointer-events: none; }
+/* The pin and the grade control are click targets sitting inside a drag source;
+ * mid-drag they can only be passed over, never meant, so they stop lighting up. */
+body.oven-reordering .oven-pin,
+body.oven-reordering .oven-grade-btn { pointer-events: none; }
 
 /* ================= THE HORIZON =================
  * The signature. `placeMarkers()` computes, live, where you will actually be
@@ -757,14 +932,16 @@ body.oven-reordering .oven-pin { pointer-events: none; }
  * never by dimming text under threshold. These rows are still the ones you read
  * when the board does NOT go chalk, so they stay legible. */
 .oven-row.atrisk .oven-name-main { color: var(--oven-ash); font-weight: 500; }
-.oven-row.atrisk .oven-rail { opacity: .35; }
+/* The Δ keeps its full color here — unlike a .gone row, an at-risk player is
+ * exactly the one you are deciding about, and how far he is from consensus is the
+ * argument for reaching. Only the hatch says "he may not last". */
 .oven-row.atrisk::after {
   content: '';
   position: absolute; inset: 0;
   pointer-events: none;
-  /* Behind the text, above the heat wash. A hatch painted over the content
-   * would darken the glyphs and cancel out the contrast floor above; at -1 it
-   * only knocks back the background, which raises text contrast if anything. */
+  /* Behind the text. A hatch painted over the content would darken the glyphs
+   * and cancel out the contrast floor above; at -1 it only knocks back the
+   * background, which raises text contrast if anything. */
   z-index: -1;
   background: repeating-linear-gradient(
     -45deg,
@@ -814,21 +991,22 @@ body.oven-reordering .oven-pin { pointer-events: none; }
   font-family: var(--oven-data);
   font-size: 13px; line-height: 1;
   background: transparent;
-  border: 1px solid transparent;
+  /* Legible at rest, like its partner .oven-grade-btn: ash glyph inside a mortar
+   * hairline, no hover needed to find it. */
+  border: 1px solid var(--oven-mortar);
   border-radius: 2px;
-  color: var(--oven-mortar);
+  color: var(--oven-ash);
   cursor: pointer;
   transition: color .12s, border-color .12s, background .12s;
 }
-.oven-row:hover .oven-pin { color: var(--oven-ash-dim); border-color: var(--oven-mortar); }
 .oven-pin:hover { color: var(--oven-flame) !important; border-color: var(--oven-ember) !important; }
 .oven-row.is-target .oven-pin {
   color: var(--oven-flame);
   border-color: var(--oven-ember);
   background: rgba(255, 122, 24, .1);
 }
-/* Targeted rows carry a second, inner rail. The outer one is heat; this one is
- * intent, and they are different claims — keep them visually separate. */
+/* Targeted rows carry a left rail. It is the row's only one — heat used to own
+ * this edge and no longer exists — so it means exactly one thing: intent. */
 .oven-row.is-target { box-shadow: inset 3px 0 0 var(--oven-flame); }
 .oven-row.is-target.gone { box-shadow: none; }
 
@@ -889,9 +1067,9 @@ body.oven-tp-open .oven-tp { transform: translateX(0); visibility: visible; }
   border-bottom: 1px solid var(--oven-mortar);
   flex-shrink: 0;
 }
-/* The two sub-views are links, not tabs with chrome — the drawer is small and a
+/* The sub-views are links, not tabs with chrome — the drawer is small and a
  * pill row would spend a fifth of its width restating where you already are. */
-.oven-tp-nav { display: flex; gap: 16px; }
+.oven-tp-nav { display: flex; gap: 14px; }
 .oven-tp-nav a {
   display: block;
   font-family: var(--oven-sign);
@@ -973,6 +1151,30 @@ body.oven-tp-open .oven-tp { transform: translateX(0); visibility: visible; }
 /* Positional floor rows are there for completeness, not because the board
    argues for them — they read one step back from the rank-order picks. */
 .oven-tp-row.is-floor .oven-tp-name { color: var(--oven-ash); font-weight: 500; }
+
+/* ---------- team ---------- */
+
+/* The slot name is the row's subject — "this is your FLEX" — so it leads the
+ * row left-aligned, where the other two views put a rank. Same 30px gutter plus
+ * the gap, so the position badges still line up down all three views. */
+.oven-tm-slot {
+  width: 39px; flex-shrink: 0;
+  font-family: var(--oven-data);
+  font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em;
+  color: var(--oven-ash);
+}
+/* An unfilled slot is a fact about the roster, not an error — it recedes, but
+ * the slot label stays at full strength because that column is the point. */
+.oven-tm-row.is-empty { background: repeating-linear-gradient(
+    -45deg, transparent 0 6px, rgba(230, 222, 210, .022) 6px 12px); }
+.oven-tm-row.is-empty:hover { background: var(--oven-brick-hi); }
+.oven-tm-open { color: var(--oven-ash-dim); font-weight: 400; font-style: italic; }
+.oven-tm-note {
+  margin-left: auto;
+  font-size: 9px; font-weight: 700; letter-spacing: .1em;
+  color: var(--oven-ash-dim);
+  font-variant-numeric: tabular-nums;
+}
 
 .oven-tp-rk {
   width: 30px; flex-shrink: 0; text-align: right;

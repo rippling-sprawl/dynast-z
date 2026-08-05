@@ -23,7 +23,7 @@
     note: ['note', 'notes', 'comment', 'comments'],
   };
 
-  var GRADES = ['love', 'like', 'fade', 'avoid'];
+  var GRADES = ['like', 'fade'];
 
   function normHeader(h) {
     return String(h == null ? '' : h).toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -107,11 +107,15 @@
     var v = String(value == null ? '' : value).trim().toLowerCase();
     if (!v) return null;
     if (GRADES.indexOf(v) !== -1) return v;
+    // `love` and `avoid` were grades of their own until the scale merged to
+    // like/none/fade, so they arrive in every sheet exported before that and in
+    // every hand-kept sheet built from one. Same table the board reads.
+    if (OVEN.GRADE_LEGACY[v]) return OVEN.GRADE_LEGACY[v];
     // Tolerate the obvious synonyms rather than dropping an opinion on a typo.
-    if (v === 'l' || v === 'high' || v === '+' || v === 'target') return 'like';
-    if (v === 'a' || v === 'low' || v === '-' || v === 'no' || v === 'hate') return 'avoid';
-    if (v === 'f' || v === 'down') return 'fade';
-    if (v === 'lv' || v === 'up' || v === '++') return 'love';
+    if (v === 'l' || v === 'lv' || v === 'high' || v === 'up' ||
+        v === '+' || v === '++' || v === 'target') return 'like';
+    if (v === 'f' || v === 'a' || v === 'low' || v === 'down' ||
+        v === '-' || v === 'no' || v === 'hate') return 'fade';
     return null;
   }
 

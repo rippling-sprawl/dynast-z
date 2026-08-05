@@ -7,14 +7,16 @@
  * describe a board and a draft:
  *
  *   OvenTargets.mount({ getState: function () { return {
- *     rows, drafted, picks, plan, teamsCount, rounds, myRosterId
+ *     rows, drafted, picks, plan, teamsCount, rounds, myRosterId, rosterPositions
  *   }; } });
  *   OvenTargets.refresh();   // after any poll
  *
- * Two sub-views:
+ * Three sub-views:
  *   targets     — the queue, grouped by position, in my rank order
  *   projections — rounds 1..N, keepers and made picks filled in, future rounds
  *                 simulated forward
+ *   team        — my lineup as the league defines it (roster_positions), filled
+ *                 from what I've actually kept and drafted
  *
  * The projection model, stated plainly because every number in that view rests
  * on it: other teams draft to consensus (FantasyPros ECR), so between my picks
@@ -43,6 +45,28 @@
   // the last two rounds regardless of who's left, so a "best kicker available"
   // row is noise at every pick that isn't one of those two.
   var FLOOR_POS = ['QB', 'RB', 'WR', 'TE'];
+
+  /* Which players a lineup slot accepts, keyed by Sleeper's `roster_positions`
+   * vocabulary. A single-position slot is its own eligibility list, so an
+   * unrecognized slot ('DL', a league-specific label) still behaves sanely by
+   * only accepting its own name. Slot specificity is `elig.length` — that is
+   * what makes a QB land at QB rather than in the SUPER_FLEX beside it. */
+  var SLOT_ELIGIBLE = {
+    QB: ['QB'], RB: ['RB'], WR: ['WR'], TE: ['TE'], K: ['K'], DEF: ['DEF'],
+    FLEX: ['RB', 'WR', 'TE'],
+    WRRB_FLEX: ['RB', 'WR'],
+    REC_FLEX: ['WR', 'TE'],
+    SUPER_FLEX: ['QB', 'RB', 'WR', 'TE'],
+    IDP_FLEX: ['DL', 'LB', 'DB'],
+  };
+
+  // Sleeper's slot names are wide enough to break the label column; these are
+  // the only ones that need shortening.
+  var SLOT_LABEL = { SUPER_FLEX: 'SFLEX', WRRB_FLEX: 'W/R', REC_FLEX: 'W/T', IDP_FLEX: 'IDP' };
+
+  // Reserve slots exist on the roster but are never drafted into — showing an
+  // always-empty IR row would read as a lineup hole.
+  var RESERVE_SLOTS = { IR: true, TAXI: true };
 
   var state = {
     mounted: false,
@@ -115,6 +139,9 @@
       teamsCount: s.teamsCount || 12,
       rounds: s.rounds || 16,
       myRosterId: s.myRosterId,
+      // Sleeper's league.roster_positions, verbatim. The lineup is the league's
+      // to define — never a default guessed from the draft's round count.
+      rosterPositions: s.rosterPositions || [],
     };
   }
 
@@ -246,9 +273,15 @@
 
   /* ---------- shared row bits ---------- */
 
-  // The board owns the grade badge (heart for love/like, `fade` carried by the
-  // row receding rather than a badge) — same markup here so the two surfaces
-  // can't drift.
+  // The board owns the grade badge markup (a heart for `like`, a red X for
+  // `fade`, on a row that also recedes), and this drawer is its only caller —
+  // all three views below use it.
+  //
+  // The big board doesn't. Its rows carry a grade CONTROL that already shows the
+  // grade, so a badge there would say it twice; this drawer is read-only over
+  // the board and the badge is the only thing carrying the grade at all. The two
+  // surfaces differing is the design, not drift — see gradeChip() in
+  // oven-board.js.
   function gradeChip(r) { return global.OvenBoard.gradeChip(r); }
 
   function fadedCls(r) { return r && r.grade === 'fade' ? ' faded' : ''; }
@@ -298,7 +331,7 @@
     return '<div class="oven-tp-row' + (drafted ? ' is-gone' : '') + fadedCls(r) +
       '" data-key="' + esc(r.key) + '">' +
       '<div class="oven-tp-rk">' + (r.myRank == null ? '—' : r.myRank) + '</div>' +
-      posBadge(r.pos, r.fpPosRank) +
+      posBadge(r.pos, r.myPosRank) +
       '<div class="oven-tp-main">' +
         '<div class="oven-tp-name">' + nameText(r.name) + teamTag(r.team) + gradeChip(r) + '</div>' +
       '</div>' +
@@ -354,7 +387,7 @@
     return '<div class="oven-tp-row compact' + (e.tgt ? ' is-target' : '') +
       (e.floor ? ' is-floor' : '') + fadedCls(e.row) + '" data-key="' + esc(e.row.key) + '">' +
       '<div class="oven-tp-rk">' + (e.row.myRank == null ? '—' : e.row.myRank) + '</div>' +
-      posBadge(e.row.pos, e.row.fpPosRank) +
+      posBadge(e.row.pos, e.row.myPosRank) +
       '<div class="oven-tp-main">' +
         '<div class="oven-tp-name">' + nameText(e.row.name) + teamTag(e.row.team) + gradeChip(e.row) + '</div>' +
       '</div>' +
@@ -422,6 +455,137 @@
     return html.join('');
   }
 
+  /* ---------- view 3: team ---------- */
+
+  function slotLabel(pos) { return SLOT_LABEL[pos] || pos; }
+
+  /* Every pick that ended up on my roster, keepers first and then in draft
+   * order — which is exactly the fill order the lineup wants.
+   *
+   * `roster_id` on a pick is the authority when Sleeper sets it; mock drafts
+   * and some pre-draft keeper rows leave it null, so the pick plan (which
+   * already honors traded picks) is the fallback. */
+  function myPicks(s) {
+    var planOwner = {};
+    (s.plan || []).forEach(function (p) { planOwner[p.pick_no] = p.owner; });
+
+    return (s.picks || []).filter(function (p) {
+      var owner = p.roster_id != null ? p.roster_id : planOwner[p.pick_no];
+      return owner != null && owner === s.myRosterId;
+    }).sort(function (a, b) {
+      return ((a.is_keeper ? 0 : 1) - (b.is_keeper ? 0 : 1)) || (a.pick_no - b.pick_no);
+    });
+  }
+
+  /* Fill the league's lineup from my picks.
+   *
+   * Greedy, one player at a time in keeper-then-draft order, into the most
+   * specific empty slot he's eligible for. Specificity is what stops the first
+   * RB drafted from landing in FLEX and leaving RB2 to spill onto the bench —
+   * the flex slots are deliberately filled last, by whoever is left over. */
+  function buildTeam(s) {
+    var starters = [], benchSlots = 0, declared = false;
+
+    (s.rosterPositions || []).forEach(function (raw) {
+      var v = String(raw || '').toUpperCase();
+      if (!v) return;
+      declared = true;
+      if (v === 'BN') { benchSlots++; return; }
+      if (RESERVE_SLOTS[v]) return;
+      starters.push({ pos: v, elig: SLOT_ELIGIBLE[v] || [v], player: null });
+    });
+    if (!declared) return null;
+
+    // The board row, when the player is on it, so a rostered player carries the
+    // same grade badge and personal rank he wears everywhere else. A keeper
+    // need not be on my CSV at all, hence the null-tolerant lookup.
+    var map = rowsByKey(s.rows), rowByPick = {};
+    Object.keys(s.drafted).forEach(function (k) {
+      var p = s.drafted[k];
+      if (p && p.pick_no != null) rowByPick[p.pick_no] = map[k];
+    });
+
+    var bench = [];
+    myPicks(s).forEach(function (p) {
+      var m = p.metadata || {};
+      var player = {
+        pick: p,
+        row: rowByPick[p.pick_no] || null,
+        name: pickName(p),
+        pos: global.OvenBoard.normPos(m.position),
+        team: m.team || '',
+      };
+
+      var best = -1;
+      starters.forEach(function (sl, i) {
+        if (sl.player || sl.elig.indexOf(player.pos) === -1) return;
+        if (best === -1 || sl.elig.length < starters[best].elig.length) best = i;
+      });
+
+      if (best !== -1) starters[best].player = player;
+      else bench.push(player);
+    });
+
+    return { starters: starters, bench: bench, benchSlots: benchSlots };
+  }
+
+  function teamSlotHTML(slotPos, player, s) {
+    if (!player) {
+      return '<div class="oven-tp-row compact oven-tm-row is-empty">' +
+        '<div class="oven-tm-slot">' + esc(slotLabel(slotPos)) + '</div>' +
+        '<div class="oven-tp-main"><div class="oven-tp-name oven-tm-open">Open</div></div>' +
+      '</div>';
+    }
+
+    var r = player.row;
+    var chip = player.pick.is_keeper
+      ? '<span class="oven-tp-chip kept">kept</span>'
+      : '<span class="oven-tp-chip">' +
+          esc(global.OvenDraft.roundPickLabel(player.pick.pick_no, s.teamsCount)) + '</span>';
+
+    return '<div class="oven-tp-row compact oven-tm-row">' +
+      '<div class="oven-tm-slot">' + esc(slotLabel(slotPos)) + '</div>' +
+      posBadge(player.pos, r ? r.myPosRank : null) +
+      '<div class="oven-tp-main">' +
+        '<div class="oven-tp-name">' + nameText(player.name) + teamTag(player.team) +
+          (r ? gradeChip(r) : '') + '</div>' +
+      '</div>' +
+      chip +
+    '</div>';
+  }
+
+  function renderTeam(s) {
+    var t = buildTeam(s);
+    if (!t) {
+      return '<div class="oven-tp-empty"><strong>No roster settings.</strong>' +
+        '<p>The lineup comes from the league’s own starting positions. They’ll fill in ' +
+        'once the league loads.</p></div>';
+    }
+
+    var html = [];
+    var filled = t.starters.filter(function (sl) { return sl.player; }).length;
+
+    html.push('<div class="oven-tp-group">Starters' +
+      '<span class="oven-tm-note">' + filled + ' of ' + t.starters.length + '</span></div>');
+    if (!t.starters.length) {
+      html.push('<div class="oven-tp-none">This league starts no one — every slot is bench.</div>');
+    }
+    t.starters.forEach(function (sl) { html.push(teamSlotHTML(sl.pos, sl.player, s)); });
+
+    // Overflow past the declared bench still renders: a lineup that quietly
+    // dropped a player you drafted would be worse than one that runs long.
+    var benchRows = Math.max(t.benchSlots, t.bench.length);
+    if (benchRows) {
+      html.push('<div class="oven-tp-group">Bench' +
+        '<span class="oven-tm-note">' + t.bench.length + ' of ' + t.benchSlots + '</span></div>');
+      for (var i = 0; i < benchRows; i++) {
+        html.push(teamSlotHTML('BN', t.bench[i] || null, s));
+      }
+    }
+
+    return html.join('');
+  }
+
   /* ---------- shell ---------- */
 
   function render() {
@@ -436,8 +600,8 @@
     state.els.tabCount.textContent = live;
     state.els.tabCount.hidden = !live;
 
-    state.els.body.innerHTML = state.view === 'targets'
-      ? renderTargets(s, proj)
+    state.els.body.innerHTML = state.view === 'targets' ? renderTargets(s, proj)
+      : state.view === 'team' ? renderTeam(s)
       : renderProjections(s, proj);
     state.els.body.scrollTop = 0;
 
@@ -446,9 +610,13 @@
           ? '<button class="oven-tp-link" type="button" id="oven-tp-clear">Clear all</button>' +
             '<span>Add with + on the board.</span>'
           : '<span>Add with + on the board.</span>')
-      : '<span>Assumes the room drafts to consensus and you take your projected ' +
-        'player each round. Grades and targets pull a player forward. Every pick also ' +
-        'lists the best QB, RB, WR and TE left.</span>';
+      : state.view === 'team'
+        ? '<span>Your league’s starting lineup, filled with your keepers first and then ' +
+          'your picks in draft order. Each player takes the tightest slot he fits; the ' +
+          'flex spots go to whoever is left.</span>'
+        : '<span>Assumes the room drafts to consensus and you take your projected ' +
+          'player each round. Grades and targets pull a player forward. Every pick also ' +
+          'lists the best QB, RB, WR and TE left.</span>';
 
     var clr = D.getElementById('oven-tp-clear');
     if (clr) clr.addEventListener('click', clear);
@@ -547,6 +715,7 @@
           '<nav class="oven-tp-nav">' +
             '<a href="#" data-view="targets" class="active">Targets<span class="oven-tp-count" hidden>0</span></a>' +
             '<a href="#" data-view="projections">Projections</a>' +
+            '<a href="#" data-view="team">Team</a>' +
           '</nav>' +
           '<button class="oven-tp-close" type="button" aria-label="Close targets">&times;</button>' +
         '</div>' +
@@ -610,6 +779,9 @@
     // The model, callable without the drawer: takes an explicit host state (or
     // the mounted one) so it can be exercised headless and read by other views.
     project: function (s) { return buildProjection(s ? normalize(s) : snapshot()); },
+    // Same deal for the lineup fill — the slot assignment is worth exercising
+    // against a fixture without a drawer on the page.
+    team: function (s) { return buildTeam(s ? normalize(s) : snapshot()); },
     markBoard: markBoard,
     open: open,
     close: close,

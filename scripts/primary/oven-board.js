@@ -68,6 +68,26 @@
 
   /* ---------- board construction ---------- */
 
+  /* The board once had five grades (love/like/fade/avoid); it has three. Every
+   * row that reaches the board passes through here, which is the whole migration
+   * — a saved board is normalized as it is read, not rewritten in storage, so a
+   * board synced from a device still running the old code lands correctly rather
+   * than fighting over the same key. The next save persists the merged value.
+   *
+   * Unknown strings become null. A grade is a class name on the row and a lookup
+   * into GRADE_MARK; letting a stray one through paints an unstyled row and a
+   * blank control. */
+  function normGrade(grade) {
+    if (!grade) return null;
+    var g = String(grade).toLowerCase();
+    // GRADE_LABEL (built from GRADE_MENU, further down) is the list of grades
+    // that still exist — the menu is what you can set, so it is also what a row
+    // is allowed to hold. Declared later in the file, populated at load; this
+    // only ever runs from buildBoard(), long after.
+    if (GRADE_LABEL[g]) return g;
+    return C.GRADE_LEGACY[g] || null;
+  }
+
   /* Merge CSV rows with the FantasyPros snapshot.
    * FP wins for ECR/tier metadata; the CSV owns rank, tier override, and grade.
    * With no CSV at all the board seeds entirely from FP, so the page is useful
@@ -91,11 +111,14 @@
           team: r.team || (fp ? fp.team : ''),
           myRank: r.myRank,
           tier: r.tier != null ? r.tier : (fp ? fp.tier : null),
-          grade: r.grade,
+          grade: normGrade(r.grade),
           note: r.note,
           extra: r.extra || {},
+          // No fpPosRank: the badge shows my positional rank, and FP's would be
+          // a second, contradictory "RB7" sitting on the row waiting to be read.
+          // ECR (fpRank) stays — the Δ column and the wash are about the market
+          // by design.
           fpRank: fp ? fp.rank : null,
-          fpPosRank: fp ? fp.pos_rank : null,
           onMyBoard: true,
         };
       });
@@ -106,7 +129,7 @@
           player_id: null,
           name: p.name, pos: p.position, team: p.team,
           myRank: i + 1, tier: p.tier, grade: null, note: '', extra: {},
-          fpRank: p.rank, fpPosRank: p.pos_rank,
+          fpRank: p.rank,
           onMyBoard: false,
         };
       });
@@ -118,43 +141,51 @@
       return ar - br;
     });
     rows.forEach(function (r, i) { r.boardIndex = i; });
+    computePosRanks(rows);
     return rows;
   }
 
-  /* Heat: an explicit CSV grade wins; otherwise how far my rank sits from
-   * FantasyPros consensus. Positive = I'm higher on him than the market. */
-  function computeHeat(rows) {
+  /* "RB7" means the seventh running back on MY board, not FantasyPros' seventh.
+   * FP's pos_rank seeds the initial order and then stops being true the moment
+   * you drag anything — a row promoted forty spots that still wears RB19 is
+   * stating the market's opinion in the one column you'd read as your own.
+   *
+   * Derived, never stored: it falls straight out of the order rows are already
+   * in, so anything that changes the order recomputes it (buildBoard on
+   * boot/import, renumber() on every drop) and exportRows() doesn't persist it.
+   *
+   * Counted over ALL rows, drafted included. Positional rank is a statement
+   * about the player, not about what's left — decrementing "RB7" to "RB5"
+   * because two backs came off the board would make the badge move for reasons
+   * that have nothing to do with him. */
+  function computePosRanks(rows) {
+    var n = {};
     rows.forEach(function (r) {
-      if (r.grade && C.GRADE_HEAT[r.grade] != null) {
-        r.heat = C.GRADE_HEAT[r.grade];
-        r.heatSource = 'grade';
-      } else if (r.fpRank != null && r.myRank != null) {
-        r.heat = r.fpRank - r.myRank;
-        r.heatSource = 'delta';
-      } else {
-        r.heat = null;
-        r.heatSource = null;
-      }
-    });
-
-    // Smooth into visible *regions* — a run of liked players should read as one
-    // continuous bar, not a scatter of individually tinted rows.
-    var w = C.HEAT_WINDOW;
-    rows.forEach(function (r, i) {
-      var sum = 0, n = 0;
-      for (var j = Math.max(0, i - (w >> 1)); j <= Math.min(rows.length - 1, i + (w >> 1)); j++) {
-        if (rows[j].heat != null) { sum += rows[j].heat; n++; }
-      }
-      r.heatRegion = n ? sum / n : null;
+      var pos = r.pos || '';
+      if (!pos) { r.myPosRank = null; return; }
+      n[pos] = (n[pos] || 0) + 1;
+      r.myPosRank = pos + n[pos];
     });
     return rows;
   }
+
+  /* THERE IS NO HEAT MODEL ANY MORE. A `computeHeat()` used to run here and turn
+   * two things — an explicit grade, or `fpRank - myRank` — into one blended
+   * number per row, which then painted a saturated left rail and a smoothed
+   * background wash. Both are gone, and the model went with them rather than
+   * being left computing values nothing reads.
+   *
+   * What replaced it says the same things, separately, because they were never
+   * one fact: the **Δ column** states rank-vs-consensus as a number (rowHTML),
+   * and the **grade control** states what you think of him (gradeButton). The
+   * blend was the problem — a Like on a player the market also likes and a
+   * genuine 24-spot disagreement produced identical color, and the board could
+   * not tell you which one you were looking at.
+   *
+   * `OVEN.GRADE_HEAT` survives, but only as the Targets projection's scoring
+   * weight (adjRank in oven-targets.js). It is no longer a display scale. */
 
   /* ---------- rendering ---------- */
-
-  // What the "Hide: Fade" chip removes. `avoid` is the stronger of the two —
-  // the CSV also accepts "hate" for it — so it goes wherever `fade` goes.
-  var FADED_GRADES = { fade: true, avoid: true };
 
   /* The board has exactly one order: yours, ascending. There is no column
    * sorting and no sort state. Re-SORTING the board mid-draft is the one
@@ -174,21 +205,21 @@
     filters: { pos: null, hideDrafted: false, hideFade: false },
     clock: null, teamsCount: 12, myRosterId: null,
     onReorder: null, reorderWired: false,
+    // The grade control. Same opt-in shape as reordering — the host owns
+    // persistence — plus the key of the row whose menu is open, which is how a
+    // poll knows to re-anchor a menu the markers just shifted out from under.
+    onGrade: null, gradeWired: false, gradeOpenKey: null,
+    // Last season's top-12/24/36 counts, keyed the same way rows are. Held on
+    // state rather than threaded through buildBoard() because the board is
+    // rebuilt on CSV import and on every reorder — a parameter would have to be
+    // re-passed at each of those call sites, and the one that got missed would
+    // blank the column with no error.
+    weekly: null,         // key -> {t12, t24, t36, games, pos}
   };
 
-  function railFn() {
-    return global.Heatmap.diverging({
-      posMax: C.HEAT_MAX, negMax: C.HEAT_MAX,
-      posColor: C.HEAT_POS_RGB, negColor: C.HEAT_NEG_RGB, nullColor: '',
-    });
-  }
-  function washFn() {
-    // Same ramp, scaled so alpha tops out around 0.26 — signal without hurting
-    // text contrast on a dark background.
-    return global.Heatmap.diverging({
-      posMax: C.HEAT_MAX / 0.26, negMax: C.HEAT_MAX / 0.26,
-      posColor: C.HEAT_POS_RGB, negColor: C.HEAT_NEG_RGB, nullColor: '',
-    });
+  /* Set once at boot, after the league's scoring settings are known. */
+  function setWeekly(counts) {
+    state.weekly = counts || null;
   }
 
   function visibleRows() {
@@ -196,10 +227,7 @@
     var out = state.rows.filter(function (r) {
       if (f.pos && r.pos !== f.pos) return false;
       if (f.hideDrafted && state.drafted[r.key]) return false;
-      // Both negative grades, not just the one named on the chip: `fade` and
-      // `avoid` are the two ways of saying "not for me", and hiding one while
-      // leaving the other on the board is never what you meant.
-      if (f.hideFade && FADED_GRADES[r.grade]) return false;
+      if (f.hideFade && r.grade === 'fade') return false;
       return true;
     });
     // No re-sort: `state.rows` is already in personal-rank order from
@@ -207,62 +235,443 @@
     return out;
   }
 
-  /* A graded row is colored by the grade, not by the rank delta, so name the
-   * grade — otherwise a saturated rail on an unremarkable row reads as a bug.
-   * Except `fade`: a fade isn't a fact about the player worth a badge, it's my
-   * disinterest, so the row itself recedes instead (see .oven-row.faded).
+  /* ---------- grade badge (read-only surfaces: the Targets drawer) ---------- */
+
+  /* Both grades wear an emoji: a heart for `like`, a red X for `fade`. An emoji
+   * is an image to a screen reader with no accessible name of its own, so the
+   * word it replaced moves to aria-label — and to title, so a hover still says
+   * which one it is.
    *
-   * love/like wear a heart. An emoji is an image to a screen reader with no
-   * accessible name of its own, so the word it replaced moves to aria-label —
-   * and to title, so a hover still says which one it is. Shared with the
-   * Targets drawer so both surfaces can never drift apart. */
+   * A faded row also recedes (see .oven-row.faded), which is the older half of
+   * the same statement and stays: the badge names the grade, the opacity is what
+   * lets you skip the row without reading it at all.
+   *
+   * THE BIG BOARD NO LONGER CALLS THIS. Its rows carry an editable grade control
+   * (see the next section), and that control already shows the current grade —
+   * a badge beside it would state the same fact twice on the one screen where
+   * vertical space is the whole game. The Targets drawer has no such control: it
+   * is a read-only view of the board in three places (targets, projections,
+   * team), and there this badge is the only thing carrying the grade at all. So
+   * it stays, and stays exported, for those three.
+   *
+   * That is the line, and the two surfaces differing is not an accident:
+   * anything that EDITS a grade uses the control, anything that only DISPLAYS a
+   * row uses this. */
   function gradeChip(r) {
-    if (!r || !r.grade || r.grade === 'fade') return '';
-    var icon = C.GRADE_ICON[r.grade];
-    if (!icon) return '<span class="oven-grade ' + esc(r.grade) + '">' + esc(r.grade) + '</span>';
+    var icon = r && r.grade && C.GRADE_ICON[r.grade];
+    if (!icon) return '';
     return '<span class="oven-grade ' + esc(r.grade) + '" role="img" aria-label="' +
       esc(r.grade) + '" title="' + esc(r.grade) + '">' + icon + '</span>';
   }
 
-  function rowHTML(r, rail, wash) {
-    var heat = r.heat;
-    var railC = heat == null ? '' : rail(heat);
-    var washC = r.heatRegion == null ? '' : wash(r.heatRegion);
+  /* ---------- grade control (the board row) ----------
+   *
+   * Setting a grade used to mean leaving the board, editing the CSV and
+   * re-importing it — the one opinion the board holds about a player, and the
+   * only one you couldn't change while looking at him. Now it's a button in the
+   * row, next to the pin, showing the current grade and opening a three-item
+   * menu: like, none, fade.
+   *
+   * A menu, not three inline buttons: 860 rows x 3 controls is a board you can
+   * no longer scan, which is the board's only job. It stays a menu rather than a
+   * click-to-cycle button now that there are only three states, because cycling
+   * makes "fade him" a two-click gesture whose intermediate state is a wrong
+   * grade briefly written to a synced board.
+   */
+
+  var GRADE_LABEL = {};
+  C.GRADE_MENU.forEach(function (g) { if (g.value) GRADE_LABEL[g.value] = g.label; });
+
+  /* The menu item reads "No grade" — it's a thing you choose. The button reads
+   * "none", because it's the tail of a sentence: "Grade for Bijan Robinson:
+   * none". Same state, two readings, and neither one is right in both places. */
+  function gradeLabel(grade) { return grade ? (GRADE_LABEL[grade] || grade) : 'none'; }
+
+  /* The collapsed control. The glyph is aria-hidden and the accessible name is
+   * the label alone — same rule the heart badge follows, for the same reason: an
+   * emoji is an image with no name of its own. The player's name is in there
+   * because 860 buttons all called "Grade" is a screen reader reading a wall. */
+  function gradeButton(r) {
+    var label = gradeLabel(r.grade);
+    return '<button class="oven-grade-btn' + (r.grade ? ' ' + esc(r.grade) : '') +
+      '" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="oven-grade-menu"' +
+      ' aria-label="Grade for ' + esc(r.name) + ': ' + esc(label) + '"' +
+      ' title="Grade: ' + esc(label) + '">' +
+      '<span aria-hidden="true">' + (C.GRADE_MARK[r.grade || 'none'] || C.GRADE_MARK.none) +
+      '</span></button>';
+  }
+
+  var menuEl = null;
+
+  /* ONE menu for the whole board, built on first use and moved from row to row.
+   * Per-row menus would be 860 x 5 more nodes to rebuild on every render and
+   * every filter click, on the page whose whole render strategy exists to avoid
+   * exactly that.
+   *
+   * It lives on document.body, not in the row. Three independent reasons, any
+   * one of them fatal: .oven-row sets content-visibility: auto, which applies
+   * paint containment and would CLIP the menu to the 32px row; .faded and .gone
+   * set opacity < 1, which would dim the menu and trap its z-index in the row's
+   * stacking context; and .oven-list is no better, because render() replaces its
+   * innerHTML wholesale. */
+  function ensureGradeMenu() {
+    if (menuEl) return menuEl;
+    menuEl = document.createElement('div');
+    menuEl.className = 'oven-grade-menu';
+    menuEl.id = 'oven-grade-menu';
+    menuEl.setAttribute('role', 'menu');
+    menuEl.setAttribute('aria-label', 'Set grade');
+    menuEl.hidden = true;
+    menuEl.innerHTML = C.GRADE_MENU.map(function (g) {
+      return '<button type="button" role="menuitemradio" data-grade="' +
+        esc(g.value == null ? '' : g.value) + '" aria-checked="false" tabindex="-1">' +
+        '<span class="gm-mark" aria-hidden="true">' +
+        (C.GRADE_MARK[g.value || 'none'] || '') + '</span>' + esc(g.label) + '</button>';
+    }).join('');
+    document.body.appendChild(menuEl);
+    return menuEl;
+  }
+
+  /* Absolute in DOCUMENT coordinates, not fixed in viewport ones: the page is
+   * what scrolls here (render() restores global.scrollY), so anchoring in
+   * document space means scrolling needs no listener at all — the menu simply
+   * travels with the row it belongs to. Right-aligned to the button, which sits
+   * at the row's right edge, so it can't run off the side. */
+  function positionGradeMenu() {
+    if (!menuEl || menuEl.hidden || !state.gradeOpenKey) return;
+    var row = state.rowEls && state.rowEls.get(state.gradeOpenKey);
+    var btn = row && row.querySelector('.oven-grade-btn');
+    if (!btn) { closeGradeMenu(false); return; }
+
+    var b = btn.getBoundingClientRect();
+    var h = menuEl.offsetHeight, w = menuEl.offsetWidth;
+    var below = b.bottom + 4 + h <= global.innerHeight;
+    menuEl.style.top = ((below ? b.bottom + 4 : b.top - h - 4) + global.scrollY) + 'px';
+    menuEl.style.left = (Math.max(4, b.right - w) + global.scrollX) + 'px';
+  }
+
+  function openGradeMenu(btn, key) {
+    var row = rowByKey(key);
+    if (!row) return;
+    var menu = ensureGradeMenu();
+    var cur = row.grade || '';
+    var items = menu.querySelectorAll('[data-grade]');
+    var focusEl = null;
+    for (var i = 0; i < items.length; i++) {
+      var on = items[i].getAttribute('data-grade') === cur;
+      items[i].setAttribute('aria-checked', on ? 'true' : 'false');
+      items[i].tabIndex = on ? 0 : -1;
+      if (on) focusEl = items[i];
+    }
+    state.gradeOpenKey = key;
+    btn.setAttribute('aria-expanded', 'true');
+    menu.hidden = false;
+    positionGradeMenu();
+    // preventScroll: positionGradeMenu() has already placed the menu inside the
+    // viewport, so there is nothing to reveal, and the menu is absolute in
+    // DOCUMENT coordinates — a browser scroll to "reach" it would slide the menu
+    // along with the page and leave the button it belongs to behind.
+    (focusEl || items[0]).focus({ preventScroll: true });
+  }
+
+  function closeGradeMenu(refocus) {
+    if (!menuEl || menuEl.hidden) { state.gradeOpenKey = null; return; }
+    var key = state.gradeOpenKey;
+    menuEl.hidden = true;
+    state.gradeOpenKey = null;
+    var row = key && state.rowEls && state.rowEls.get(key);
+    var btn = row && row.querySelector('.oven-grade-btn');
+    if (!btn) return;
+    btn.setAttribute('aria-expanded', 'false');
+    if (refocus) btn.focus();
+  }
+
+  function rowByKey(key) {
+    for (var i = 0; i < state.rows.length; i++) {
+      if (state.rows[i].key === key) return state.rows[i];
+    }
+    return null;
+  }
+
+  /* The row-local half of a grade change: the exact inverse of what gradeButton()
+   * and rowHTML() write for the same state. Anything either of them starts saying
+   * about a grade has to be said here too, or a patched row will disagree with
+   * the same row after the next full render. Returns the button, which setGrade
+   * needs to put focus back on. */
+  function paintGrade(key, r) {
+    var el = state.rowEls && state.rowEls.get(key);
+    if (!el) return null;
+    el.classList.toggle('faded', r.grade === 'fade');
+    var btn = el.querySelector('.oven-grade-btn');
+    if (!btn) return null;
+    var label = gradeLabel(r.grade);
+    btn.className = 'oven-grade-btn' + (r.grade ? ' ' + r.grade : '');
+    btn.setAttribute('aria-label', 'Grade for ' + r.name + ': ' + label);
+    btn.title = 'Grade: ' + label;
+    var mark = btn.firstElementChild;
+    if (mark) mark.textContent = C.GRADE_MARK[r.grade || 'none'] || C.GRADE_MARK.none;
+    return btn;
+  }
+
+  /* Two paths, chosen on one question: does this grade change WHICH rows are on
+   * the board? Almost never. A grade doesn't reorder (state.rows is already in
+   * personal-rank order and filtering only removes from it), doesn't move the Δ
+   * column (that reads the two ranks directly), doesn't touch tier counts (those
+   * read `drafted`), and says nothing about any other row — the heat wash that
+   * once made a grade re-tint its neighbours is gone.
+   *
+   * The one exception is Hide: Fade, where grading someone `fade` is
+   * precisely the instruction to take him off the board, and can orphan the tier
+   * header he was the only visible member of. That case still rebuilds.
+   *
+   * Everything else patches the one row in place, because the rebuild was a
+   * visible jump: innerHTML drops all ~860 rows at once, every off-screen row
+   * falls back to its contain-intrinsic-size estimate, and for that beat the
+   * document is shorter than the scrollY we are about to restore — so scrollTo()
+   * clamps and the board lands somewhere other than where you were looking.
+   * Grading a run of players is the most repetitive thing you do live, which
+   * makes it the last place that can afford to move the page under you. */
+  function setGrade(key, grade) {
+    var row = rowByKey(key);
+    var next = grade || null;
+    if (!row || (row.grade || null) === next) return false;
+    var wasHidden = !!(state.filters.hideFade && row.grade === 'fade');
+    var nowHidden = !!(state.filters.hideFade && next === 'fade');
+    row.grade = next;
+
+    var btn;
+    if (wasHidden !== nowHidden) {
+      render();
+      // render() rebuilt the button we were standing on. Below, focus goes back
+      // to it — unless the row just filtered itself away, in which case there is
+      // no button and body is the honest place for focus. Landing a keyboard
+      // user on an unrelated player's grade control would be worse than a reset.
+      var el = state.rowEls.get(key);
+      btn = el && el.querySelector('.oven-grade-btn');
+    } else {
+      // Nothing here closes the menu the way render() does, and a menu left open
+      // over a row whose grade just moved is showing a stale aria-checked. Harmless
+      // when it is already hidden, which is the case on the click path.
+      closeGradeMenu(false);
+      btn = paintGrade(key, row);
+    }
+
+    if (state.onGrade) state.onGrade(exportRows());
+    // Grade weights the drawer's round projection (see adjRank in oven-targets),
+    // so a graded player has to move in an open Projections view now, not at
+    // whatever poll happens to come next.
+    if (global.OvenTargets) global.OvenTargets.refresh();
+
+    // preventScroll: the button is already where it belongs on both paths — the
+    // patch never moved it and render() restored scrollY — so any scrolling the
+    // browser does to "reveal" it is the jump we just spent this function avoiding.
+    if (btn) btn.focus({ preventScroll: true });
+    return true;
+  }
+
+  function wireGrading(listEl) {
+    /* One delegated listener for all three concerns, in order: open, choose,
+     * dismiss. Splitting them — "open" on the list, "close on outside click" on
+     * the document — would open the menu and then immediately close it again as
+     * the same click bubbled up.
+     *
+     * OvenTargets' pin handler is on this same node and cannot interfere: it
+     * early-returns when the click isn't on a .oven-pin, and its
+     * stopPropagation() only holds back ANCESTORS, never a sibling listener
+     * registered on document itself. */
+    document.addEventListener('click', function (e) {
+      var t = e.target;
+      if (!t || !t.closest) return;
+
+      var btn = t.closest('.oven-grade-btn');
+      if (btn && listEl.contains(btn)) {
+        var row = btn.closest('.oven-row[data-key]');
+        if (!row) return;
+        e.preventDefault();
+        e.stopPropagation();
+        var key = row.getAttribute('data-key');
+        // Clicking the open row's own control closes it, so the button is a
+        // toggle rather than a thing you can only escape from.
+        if (state.gradeOpenKey === key) { closeGradeMenu(true); return; }
+        closeGradeMenu(false);
+        openGradeMenu(btn, key);
+        return;
+      }
+
+      var item = t.closest('#oven-grade-menu [data-grade]');
+      if (item) {
+        e.preventDefault();
+        e.stopPropagation();
+        var openKey = state.gradeOpenKey;
+        closeGradeMenu(false);
+        // Re-picking the grade he already has is a no-op, and setGrade says so
+        // by returning false — but focus still has to come back off the menu
+        // element we just hid.
+        if (openKey && !setGrade(openKey, item.getAttribute('data-grade'))) {
+          var el = state.rowEls && state.rowEls.get(openKey);
+          var b = el && el.querySelector('.oven-grade-btn');
+          if (b) b.focus({ preventScroll: true });
+        }
+        return;
+      }
+
+      if (state.gradeOpenKey) closeGradeMenu(false);
+    });
+
+    /* Escape IS order-sensitive, unlike the click path above: OvenTargets closes
+     * the drawer on Escape from this same node, and stopPropagation can't hold
+     * back a sibling listener. Hence stopImmediatePropagation, plus the host
+     * calling enableGrading() before OvenTargets.mount() so this one runs first.
+     * One Escape closes the menu; a second closes the drawer. */
+    document.addEventListener('keydown', function (e) {
+      if (!state.gradeOpenKey) return;
+
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        closeGradeMenu(true);
+        return;
+      }
+      // Not prevented: focus moves to the button here, and the browser's own Tab
+      // then carries on from there to the pin — which is where you were headed.
+      if (e.key === 'Tab') { closeGradeMenu(true); return; }
+
+      if (!menuEl || !menuEl.contains(e.target)) return;
+      var nav = { ArrowDown: 1, ArrowUp: -1, Home: 0, End: 0 };
+      if (!(e.key in nav)) return;
+      e.preventDefault();
+
+      var items = menuEl.querySelectorAll('[data-grade]');
+      var cur = -1, i;
+      for (i = 0; i < items.length; i++) if (items[i] === e.target) cur = i;
+      var next = e.key === 'Home' ? 0
+        : e.key === 'End' ? items.length - 1
+        : (cur + nav[e.key] + items.length) % items.length;
+      for (i = 0; i < items.length; i++) items[i].tabIndex = i === next ? 0 : -1;
+      items[next].focus();
+    });
+  }
+
+  /* Opt-in for the same reason enableReorder is: the host owns persistence, and
+   * a board that silently forgets a grade on reload is worse than one that can't
+   * be graded at all. Kept as its own switch rather than folded into
+   * enableReorder because the two are genuinely independent — grading works on
+   * iOS Safari, where HTML5 drag events never fire. `onGrade` receives the same
+   * full row list `onReorder` does, so a host can hand both the same writer. */
+  function enableGrading(opts) {
+    state.onGrade = (opts && opts.onGrade) || null;
+    if (state.gradeWired || !state.listEl) return;
+    wireGrading(state.listEl);
+    state.gradeWired = true;
+  }
+
+  /* Last season's finishes: top 12 / 24 / 36 at his position, under this
+   * league's scoring. Emitted on every row and hidden by CSS unless the list
+   * carries .show-weekly — toggling a class beats re-rendering 860 rows, which
+   * would reset the scroll position mid-board.
+   *
+   * It sits UNDER the name rather than in a right-hand column. Three numbers in
+   * their own column were reading as a fourth ranking to scan down; on their own
+   * line they read as an annotation on the player they describe, and each one
+   * can carry its own `T12` label instead of relying on column position to say
+   * which cutoff it is.
+   *
+   * A dash, never a zero, when he has no data: a 2026 rookie and a healthy
+   * veteran who never once cracked the top 36 are opposite facts, and "0" would
+   * state the second about the first. */
+  function weeklyTiers(pos) {
+    return C.WEEKLY_SINGLE_TIER_POS.indexOf(pos) === -1
+      ? C.WEEKLY_TIERS
+      : C.WEEKLY_TIERS.slice(0, 1);
+  }
+
+  function weeklyCell(r) {
+    var w = state.weekly && state.weekly[r.key];
+    if (!w) return '<div class="oven-weekly is-empty">—</div>';
+
+    var tiers = weeklyTiers(r.pos);
+
+    // Heading over value, one pair per column — a small table under the name.
+    // Emitted heading-then-value per tier rather than all headings then all
+    // values: the grid flows by column, so the pairing is structural and the
+    // markup survives a position showing one cutoff instead of three without
+    // needing a column count passed to CSS.
+    //
+    // No cutoff is emphasized. Which one is "startable" varies by position and
+    // by league, and picking one of the three to bold made the other two read
+    // as background — but the whole point of showing three is that the shape
+    // across them is the signal, and a shape can't be read if one column shouts.
+    var cells = [], label = [];
+    for (var i = 0; i < tiers.length; i++) {
+      var t = tiers[i];
+      cells.push('<i class="ow-t">T' + t + '</i><span class="ow-n">' + w['t' + t] + '</span>');
+      label.push('top ' + t + ': ' + w['t' + t]);
+    }
+    var title = C.WEEKLY_SEASON + ' weeks 1–17 · ' + label.join(' · ') +
+      ' — in ' + w.games + ' game' + (w.games === 1 ? '' : 's') + ', your league\'s scoring';
+    return '<div class="oven-weekly" title="' + esc(title) + '">' + cells.join('') + '</div>';
+  }
+
+  /* Every row is the same flat markup — no inline styles at all now that the heat
+   * wash is gone, which is why applyDraftState() can patch a row by touching
+   * classes and never has to reason about what color it was. */
+  function rowHTML(r) {
+    // Rank vs consensus, printed — the whole of the board's market signal, in one
+    // column. Straight from the two ranks: a grade is what *I* think of him and
+    // has no business moving a number that reports what the market thinks.
+    var d = r.fpRank != null && r.myRank != null ? r.fpRank - r.myRank : null;
+    var dCls = d == null ? 'zero' : (d > 0 ? 'pos' : (d < 0 ? 'neg' : 'zero'));
+    var dTxt = d == null ? '—' : (d > 0 ? '+' + d : String(d));
     // The position column carries the positional rank — same badge, same color,
     // one more fact. "RB7" states the position too, so nothing is lost by
-    // spending the cell on it, and the row keeps a single line.
-    var posLabel = r.fpPosRank || r.pos || '—';
+    // spending the cell on it, and the row keeps a single line. It's MY pos rank
+    // (see computePosRanks), so it moves with every drag.
+    var posLabel = r.myPosRank || r.pos || '—';
 
     // No per-row tier chip: the full-width tier band already states it, and
-    // repeating it 250 times competes with the heat rail for the same glance.
+    // repeating it 250 times competes with the Δ column for the same glance.
     //
-    // Two separate affordances on the row, and they do not overlap: the row is
-    // draggable to RE-RANK him (see enableReorder below), and the pin queues him
-    // as a target. The pin is OvenTargets' handler and is inert on a page that
-    // doesn't mount the drawer.
+    // Three affordances on the row, and they do not overlap: the row is
+    // draggable to RE-RANK him (enableReorder), the grade control records what I
+    // think of him (enableGrading), and the pin queues him as a target. The
+    // first two are the board's own — grade is a field on the row — and the pin
+    // is OvenTargets' handler, inert on a page that doesn't mount the drawer.
+    //
+    // The grade is stated once, by its control, and no longer by a badge on the
+    // name line: the control is right there showing it. See gradeChip() above
+    // for why the Targets drawer still wears the badge.
     return '<div class="oven-row' + (r.grade === 'fade' ? ' faded' : '') +
-      '" draggable="true" data-key="' + esc(r.key) + '"' +
-      (washC ? ' style="background:' + washC + '"' : '') + '>' +
-      '<div class="oven-rail" style="background:' + railC + '"></div>' +
+      '" draggable="true" data-key="' + esc(r.key) + '">' +
       '<div class="oven-rk">' + (r.myRank == null ? '' : r.myRank) + '</div>' +
       '<span class="player-pos pos-' + esc(r.pos || 'OTHER') + '">' + esc(posLabel) + '</span>' +
       '<div class="oven-name">' +
         // The name is its own element so the crossed-off treatment lands on it
         // alone — text-decoration propagates to descendants and a child can't
-        // opt out, so the team, grade and note have to sit outside the struck
-        // span rather than be un-struck inside it.
+        // opt out, so the team and note have to sit outside the struck span
+        // rather than be un-struck inside it.
         '<div class="oven-name-main"><span class="oven-name-text">' + esc(r.name) + '</span>' +
-          (r.team ? '<span class="oven-name-team">' + esc(r.team) + '</span>' : '') + gradeChip(r) +
+          (r.team ? '<span class="oven-name-team">' + esc(r.team) + '</span>' : '') +
           (r.note ? ' <span class="oven-name-note">· ' + esc(r.note) + '</span>' : '') + '</div>' +
+        // Second line of the name column, not a column of its own — so it grows
+        // the row downward when it's on and costs nothing when it's off.
+        weeklyCell(r) +
       '</div>' +
+      '<div class="oven-delta ' + dCls + '" title="' +
+        (d == null ? 'no consensus rank' : 'ECR ' + r.fpRank + ' · you have him ' +
+          (d === 0 ? 'there too' : Math.abs(d) + ' spot' + (Math.abs(d) === 1 ? '' : 's') +
+            (d > 0 ? ' higher' : ' lower'))) + '">' + dTxt + '</div>' +
       '<div class="oven-taken" hidden></div>' +
+      gradeButton(r) +
       '<button class="oven-pin" type="button" aria-pressed="false" aria-label="Add to targets">+</button>' +
     '</div>';
   }
 
   function render(listEl) {
+    // A rebuild destroys the row the grade menu is anchored to. Closing here
+    // covers every route into a render at once — the filter chips, a CSV import,
+    // the drop handler, and setGrade itself.
+    closeGradeMenu(false);
     state.listEl = listEl || state.listEl;
-    var rail = railFn(), wash = washFn();
     var rows = visibleRows();
     var scrollY = global.scrollY;
 
@@ -286,7 +695,7 @@
         html.push('<div class="oven-tiersep" data-tier="' + esc(r.tier) + '">' +
           'Tier ' + esc(r.tier) + ' <span class="tier-count"></span></div>');
       }
-      html.push(rowHTML(r, rail, wash));
+      html.push(rowHTML(r));
     }
 
     state.listEl.innerHTML = html.join('');
@@ -334,6 +743,11 @@
 
     placeMarkers();
     updateTierCounts();
+    // A poll is otherwise surgical, but placeMarkers() inserts and removes
+    // marker rows, which shifts every row below the horizon — and with it the
+    // button an open menu is pinned to. Re-anchor rather than leave it floating
+    // over the wrong player.
+    if (state.gradeOpenKey) positionGradeMenu();
   }
 
   /* The spreadsheet's pick-marker column, recomputed live.
@@ -425,8 +839,8 @@
    *
    * The board has exactly one order and it is mine, so the only thing a drag on
    * a row can mean is "he belongs here instead". Dropping renumbers every
-   * `myRank` from the top, recomputes heat against consensus, re-renders, and
-   * hands the new rows to the host to persist — into the same per-league blob a
+   * `myRank` from the top, re-renders — which is what refreshes his Δ against
+   * consensus and his positional rank — and hands the new rows to the host to persist — into the same per-league blob a
    * CSV import writes, so exporting after a drag session gives you the board
    * you are actually looking at.
    *
@@ -464,6 +878,10 @@
    * "unranked, sorts to the bottom" tail to preserve. */
   function renumber() {
     state.rows.forEach(function (r, i) { r.myRank = i + 1; r.boardIndex = i; });
+    // Positional rank is a reading of that same order, so it is renumbered with
+    // it — a drop that moved a WR past four other WRs has changed five badges,
+    // not one, and the next render is where they all have to be right.
+    computePosRanks(state.rows);
   }
 
   /* Move by KEY, not by on-screen index: a filter can be active, so the row
@@ -517,6 +935,9 @@
     listEl.addEventListener('dragstart', function (e) {
       var row = rowUnder(e);
       if (!row) return;
+      // A menu left open would float over a board that is about to reorder
+      // under it.
+      closeGradeMenu(false);
       drag.key = row.getAttribute('data-key');
       try {
         // Firefox refuses to start a drag with an empty dataTransfer.
@@ -556,9 +977,11 @@
       endDrag();
       if (!refKey || !moveRow(key, refKey, after)) return;
 
-      computeHeat(state.rows);
       render();
       if (state.onReorder) state.onReorder(exportRows());
+      // The projection reads myRank, so a move that doesn't refresh leaves an
+      // open drawer describing the board as it was until the next poll.
+      if (global.OvenTargets) global.OvenTargets.refresh();
     });
 
     // Fires on the source row wherever the drag ended, including a cancel.
@@ -605,11 +1028,13 @@
     normPos: normPos,
     playerKey: playerKey,
     buildBoard: buildBoard,
-    computeHeat: computeHeat,
+    setWeekly: setWeekly,
     indexPicks: indexPicks,
     render: render,
     applyDraftState: applyDraftState,
     enableReorder: enableReorder,
+    enableGrading: enableGrading,
+    setGrade: setGrade,
     exportRows: exportRows,
     state: state,
   };
