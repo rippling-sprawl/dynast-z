@@ -1,305 +1,1002 @@
 /* The Baker's Oven — live draft companion.
  *
- * Palette follows styles/base/styles.css (#0f1117 / #161b22 / #30363d /
- * #58a6ff). Position badges (.pos-QB etc.) come from the global stylesheet and
- * are deliberately not redefined here.
+ * This page does NOT inherit the app's GitHub-dark palette. It is a kiln:
+ * warm charcoal, one ember accent, one cold counter-accent. The name was
+ * always doing work the design wasn't.
  *
- * Hot/cold note: the source spreadsheet's fills (#57BB8A .. #EB9891) are alpha
- * over WHITE. Over this app's near-black background the same hues composite
- * dark, so the rail carries full saturation and the row wash carries a low
- * alpha. Hue and ordering stay faithful; luminance is inverted for dark mode.
+ * Color system — two axes, never mixed:
+ *   flame  = mine / hot / now      (my pick, my markers, players I'm high on)
+ *   frost  = cold / stale / market (offline, stale data, players I'm low on)
+ * Everything else is kiln, brick, mortar, ash, bone. If a new state needs a
+ * color, it is one of those two — do not introduce a third hue.
+ *
+ * Heat note: the source spreadsheet's fills were #57BB8A/#EB9891 (green/red,
+ * alpha over WHITE). Both facts made them wrong here — they composite dark over
+ * a near-black page, and green/red is the one pair that fails for the most
+ * common color blindness. The ramp is now thermal (frost -> flame), which is
+ * both colorblind-safe and literally what the product is named after.
+ * Endpoints live in scripts/primary/oven-config.js.
+ *
+ * Typography: no web fonts, deliberately. This is the most latency-sensitive
+ * page in the app and it is used exactly once a year, live, on a phone. Three
+ * roles come out of the system stack instead.
  */
 
-.oven-content { max-width: 940px; margin: 0 auto; padding: 0 12px 80px; }
+:root {
+  --oven-kiln:     #14100E;  /* page */
+  --oven-brick:    #1E1815;  /* raised surfaces */
+  --oven-brick-hi: #2A211C;  /* hover */
+  --oven-mortar:   #3A2C24;  /* hairlines */
+  --oven-ash:      #B3A192;  /* secondary text — 7.6:1 on kiln */
+  /* Metadata: rank numbers, "HOU WR8 BYE 6", chip labels. All real content at
+   * 10-11px, so this is held at 4.5:1 against BRICK (the harder of the two
+   * surfaces it sits on), not just against the page. */
+  --oven-ash-dim:  #918174;  /* 5.0:1 on kiln, 4.7:1 on brick */
+  --oven-bone:     #F7F1EA;  /* primary text */
+
+  --oven-flame:    #FF7A18;  /* the accent — mine, hot, now */
+  --oven-ember:    #C2410C;  /* flame, load-bearing (borders, fills) */
+  --oven-frost:    #6AA9D0;  /* counter-accent — cold, stale, offline */
+
+  /* Data first: the chrome of a draft board is numbers, so mono is the default
+   * and the sans face is reserved for the one thing that is not a number. */
+  --oven-data: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  --oven-name: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --oven-sign: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+}
+
+.oven-content {
+  max-width: 940px;
+  margin: 0 auto;
+  padding: 0 12px 80px;
+  background: var(--oven-kiln);
+}
+
+/* The board owns the whole viewport background, not just its column. The site
+ * header is shared and blue-grey (#161b22); left alone it reads as a seam above
+ * a brown-black page. Scoped to Oven pages only — nothing else is touched. */
+body:has(.oven-content) { background: var(--oven-kiln); }
+body:has(.oven-content) header {
+  background: var(--oven-brick);
+  border-bottom-color: var(--oven-mortar);
+}
+
+.oven-content ::selection { background: rgba(255, 122, 24, .28); color: var(--oven-bone); }
+
+/* Focus is never removed, only restyled — this page is keyboard-navigable at
+ * 250 rows and the accent is the clearest thing on it. */
+.oven-content :focus-visible,
+.oven-console :focus-visible {
+  outline: 2px solid var(--oven-flame);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
 
 /* ---------- index page ---------- */
 
-.oven-breadcrumbs { font-size: 12px; color: #8b949e; margin: 16px 0 10px; }
-.oven-breadcrumbs a { color: #58a6ff; text-decoration: none; }
-.oven-breadcrumbs a:hover { text-decoration: underline; }
-.oven-breadcrumbs .sep { margin: 0 6px; color: #30363d; }
+.oven-breadcrumbs {
+  font-family: var(--oven-data);
+  font-size: 11px;
+  letter-spacing: .04em;
+  color: var(--oven-ash-dim);
+  margin: 16px 0 14px;
+}
+.oven-breadcrumbs a { color: var(--oven-ash); text-decoration: none; }
+.oven-breadcrumbs a:hover { color: var(--oven-flame); }
+.oven-breadcrumbs .sep { margin: 0 7px; color: var(--oven-mortar); }
 
-.oven-h2 { font-size: 20px; font-weight: 700; color: #f0f6fc; margin: 0 0 4px; }
-.oven-sub { font-size: 13px; color: #8b949e; margin: 0 0 20px; line-height: 1.5; }
+.oven-h2 {
+  font-family: var(--oven-sign);
+  font-size: 30px;
+  font-weight: 600;
+  letter-spacing: -.01em;
+  color: var(--oven-bone);
+  margin: 0 0 6px;
+}
+.oven-sub {
+  font-size: 13px;
+  color: var(--oven-ash);
+  margin: 0 0 24px;
+  line-height: 1.55;
+  max-width: 60ch;
+}
 
 .oven-card {
-  background: #161b22; border: 1px solid #30363d; border-radius: 10px;
-  padding: 16px; margin-bottom: 16px;
+  background: var(--oven-brick);
+  border: 1px solid var(--oven-mortar);
+  border-radius: 4px;
+  padding: 18px;
+  margin-bottom: 14px;
 }
 .oven-card h3 {
-  font-size: 12px; text-transform: uppercase; letter-spacing: .5px;
-  color: #8b949e; font-weight: 700; margin: 0 0 12px;
+  font-family: var(--oven-data);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: .18em;
+  color: var(--oven-ash-dim);
+  font-weight: 700;
+  margin: 0 0 14px;
 }
 
 .oven-status-grid {
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 14px;
 }
 .oven-stat-label {
-  font-size: 10px; text-transform: uppercase; letter-spacing: .5px; color: #6e7681;
-  font-weight: 700; margin-bottom: 3px;
+  font-family: var(--oven-data);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: .16em;
+  color: var(--oven-ash-dim);
+  font-weight: 700;
+  margin-bottom: 4px;
 }
-.oven-stat-value { font-size: 15px; color: #f0f6fc; font-weight: 600; }
-.oven-stat-value.mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.oven-stat-value { font-size: 15px; color: var(--oven-bone); font-weight: 600; }
+.oven-stat-value.mono { font-family: var(--oven-data); font-variant-numeric: tabular-nums; }
 
 .oven-pill {
-  display: inline-block; font-size: 10px; font-weight: 700; text-transform: uppercase;
-  letter-spacing: .5px; padding: 3px 8px; border-radius: 999px; border: 1px solid;
+  display: inline-block;
+  font-family: var(--oven-data);
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .16em;
+  padding: 4px 9px;
+  border-radius: 2px;
+  border: 1px solid;
 }
-.oven-pill.pre_draft { color: #d29922; border-color: #d29922; background: rgba(210,153,34,.12); }
-.oven-pill.drafting  { color: #2ea043; border-color: #2ea043; background: rgba(46,160,67,.12); }
-.oven-pill.paused    { color: #8b949e; border-color: #8b949e; background: rgba(139,148,158,.12); }
-.oven-pill.complete  { color: #58a6ff; border-color: #58a6ff; background: rgba(88,166,255,.12); }
+.oven-pill.pre_draft { color: var(--oven-ash);   border-color: var(--oven-mortar); background: var(--oven-brick); }
+.oven-pill.drafting  { color: var(--oven-flame); border-color: var(--oven-ember);  background: rgba(255, 122, 24, .12); }
+.oven-pill.paused    { color: var(--oven-ash-dim); border-color: var(--oven-mortar); background: transparent; }
+.oven-pill.complete  { color: var(--oven-frost); border-color: rgba(106, 169, 208, .45); background: rgba(106, 169, 208, .1); }
 
-.oven-team-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.oven-team-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .oven-team-card {
-  display: flex; align-items: center; gap: 10px; padding: 10px 12px;
-  background: #161b22; border: 1px solid #30363d; border-radius: 8px;
-  text-decoration: none; transition: border-color .15s, background .15s;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 12px;
+  background: var(--oven-brick);
+  border: 1px solid var(--oven-mortar);
+  border-left: 2px solid var(--oven-mortar);
+  border-radius: 3px;
+  text-decoration: none;
+  transition: border-color .15s, background .15s;
 }
-.oven-team-card:hover { border-color: #58a6ff; background: #1c2128; }
-.oven-team-card.is-me { border-color: #58a6ff; background: #1f2d3d; }
+.oven-team-card:hover { border-color: var(--oven-ember); background: var(--oven-brick-hi); }
+.oven-team-card.is-me { border-left-color: var(--oven-flame); background: var(--oven-brick-hi); }
 .oven-team-avatar {
-  width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
-  background: #21262d; object-fit: cover;
+  width: 30px; height: 30px; border-radius: 2px; flex-shrink: 0;
+  background: var(--oven-mortar); object-fit: cover;
 }
 .oven-team-meta { min-width: 0; flex: 1; }
 .oven-team-name {
-  font-size: 13px; font-weight: 600; color: #f0f6fc;
+  font-family: var(--oven-name);
+  font-size: 13px; font-weight: 600; color: var(--oven-bone);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .oven-team-sub {
-  font-size: 11px; color: #6e7681;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: var(--oven-data);
+  font-size: 10px; color: var(--oven-ash-dim); letter-spacing: .04em;
 }
 .oven-you-tag {
-  font-size: 9px; font-weight: 700; color: #58a6ff; text-transform: uppercase;
-  letter-spacing: .5px; border: 1px solid #58a6ff; border-radius: 3px; padding: 1px 4px;
+  font-family: var(--oven-data);
+  font-size: 8px; font-weight: 700; color: var(--oven-flame);
+  text-transform: uppercase; letter-spacing: .16em;
+  border: 1px solid var(--oven-ember); border-radius: 2px; padding: 2px 5px;
 }
 
 /* ---------- import ---------- */
 
 .oven-drop {
-  border: 1px dashed #30363d; border-radius: 8px; padding: 20px; text-align: center;
-  color: #8b949e; font-size: 13px; transition: border-color .15s, background .15s;
-  cursor: pointer;
+  border: 1px dashed var(--oven-mortar); border-radius: 4px; padding: 24px;
+  text-align: center; color: var(--oven-ash); font-size: 13px;
+  transition: border-color .15s, background .15s, color .15s; cursor: pointer;
 }
-.oven-drop:hover, .oven-drop.dragover { border-color: #58a6ff; background: #1c2128; color: #f0f6fc; }
+.oven-drop:hover, .oven-drop.dragover {
+  border-color: var(--oven-flame); background: rgba(255, 122, 24, .05); color: var(--oven-bone);
+}
 .oven-drop input[type=file] { display: none; }
 
 .oven-btn {
-  display: inline-block; background: #21262d; border: 1px solid #30363d; color: #c9d1d9;
-  font-size: 12px; font-weight: 600; padding: 6px 12px; border-radius: 6px;
-  cursor: pointer; text-decoration: none; transition: border-color .15s, color .15s, background .15s;
+  display: inline-block;
+  font-family: var(--oven-data);
+  background: transparent; border: 1px solid var(--oven-mortar); color: var(--oven-ash);
+  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em;
+  padding: 7px 13px; border-radius: 2px; cursor: pointer; text-decoration: none;
+  transition: border-color .15s, color .15s, background .15s;
 }
-.oven-btn:hover { border-color: #58a6ff; color: #f0f6fc; }
-.oven-btn.primary { background: #238636; border-color: #2ea043; color: #fff; }
-.oven-btn.primary:hover { background: #2ea043; }
-.oven-btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+.oven-btn:hover { border-color: var(--oven-ember); color: var(--oven-bone); background: rgba(255, 122, 24, .07); }
+.oven-btn.primary { background: var(--oven-ember); border-color: var(--oven-ember); color: var(--oven-bone); }
+.oven-btn.primary:hover { background: var(--oven-flame); border-color: var(--oven-flame); color: #1A0D03; }
+.oven-btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
 
-.oven-note { font-size: 12px; color: #8b949e; line-height: 1.5; margin: 10px 0 0; }
+.oven-note { font-size: 12px; color: var(--oven-ash-dim); line-height: 1.6; margin: 14px 0 0; }
+.oven-note a { color: var(--oven-flame); }
+.oven-note strong { color: var(--oven-ash); font-weight: 600; }
 .oven-note code {
-  background: #21262d; padding: 1px 5px; border-radius: 3px;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; color: #c9d1d9;
+  background: var(--oven-brick); padding: 2px 5px; border-radius: 2px;
+  font-family: var(--oven-data); font-size: 11px; color: var(--oven-ash);
+}
+.oven-note .stale { color: var(--oven-frost); }
+
+.oven-msg {
+  font-size: 12px; border-radius: 3px; padding: 9px 12px; margin-top: 10px;
+  line-height: 1.55; border-left: 2px solid;
+}
+.oven-msg.ok   { color: var(--oven-bone);  background: var(--oven-brick); border-color: var(--oven-flame); }
+.oven-msg.warn { color: var(--oven-ash);   background: var(--oven-brick); border-color: var(--oven-frost); }
+.oven-msg.err  { color: var(--oven-bone);  background: rgba(194, 65, 12, .15); border-color: var(--oven-ember); }
+
+/* ================= THE CONSOLE =================
+ * Status and controls were two stacked sticky bars. On a phone that is two
+ * bands of chrome above any content, on the one page where vertical space is
+ * the whole game. They are one element now, pinned once.
+ */
+
+.oven-console {
+  position: sticky;
+  z-index: 20;
+  background: var(--oven-kiln);
+  border-bottom: 1px solid var(--oven-mortar);
+  padding: 10px 0 0;
 }
 
-.oven-msg { font-size: 12px; border-radius: 6px; padding: 8px 12px; margin-top: 10px; line-height: 1.5; }
-.oven-msg.ok   { color: #2ea043; background: rgba(46,160,67,.1);  border: 1px solid rgba(46,160,67,.35); }
-.oven-msg.warn { color: #d29922; background: rgba(210,153,34,.1); border: 1px solid rgba(210,153,34,.35); }
-.oven-msg.err  { color: #f85149; background: rgba(248,81,73,.1);  border: 1px solid rgba(248,81,73,.35); }
+.oven-console-top {
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+  flex-wrap: wrap;
+}
 
-/* ---------- board: sticky status bar ---------- */
+.oven-eyebrow {
+  display: block;
+  font-family: var(--oven-data);
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .2em;
+  color: var(--oven-ash-dim);
+  margin-bottom: 3px;
+}
 
-.oven-statusbar {
-  position: sticky; z-index: 20; background: #0f1117;
-  border-bottom: 1px solid #30363d; padding: 8px 0; margin-bottom: 0;
+/* The one number that matters. Mono, big, tight — this page has never let the
+ * data face be the loud thing and that was the whole problem. */
+.oven-next { min-width: 0; }
+.oven-pick-label {
+  font-family: var(--oven-data);
+  font-size: 34px;
+  font-weight: 700;
+  letter-spacing: -.035em;
+  line-height: .95;
+  color: var(--oven-bone);
+  font-variant-numeric: tabular-nums;
 }
-.oven-statusbar-inner { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-.oven-clock {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 12px; color: #8b949e;
+.oven-pick-away {
+  font-family: var(--oven-data);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--oven-ash-dim);
+  margin-left: 10px;
+  white-space: nowrap;
 }
-.oven-clock strong { color: #f0f6fc; }
-.oven-next {
-  font-size: 12px; font-weight: 700; color: #58a6ff;
-  border: 1px solid #58a6ff; border-radius: 6px; padding: 4px 10px;
-  background: rgba(88,166,255,.1);
-}
-.oven-next.imminent { color: #2ea043; border-color: #2ea043; background: rgba(46,160,67,.14); }
-.oven-next.onclock {
-  color: #fff; background: #238636; border-color: #2ea043;
-  animation: ovenPulse 1.4s ease-in-out infinite;
-}
-@keyframes ovenPulse { 0%,100% { opacity: 1; } 50% { opacity: .55; } }
 
-.oven-degraded {
-  font-size: 11px; color: #d29922; border: 1px solid #d29922;
-  background: rgba(210,153,34,.12); border-radius: 999px; padding: 2px 9px;
+.oven-next.imminent .oven-pick-label { color: var(--oven-flame); }
+.oven-next.imminent .oven-pick-away  { color: var(--oven-flame); }
+.oven-next.imminent .oven-eyebrow    { color: var(--oven-ash); }
+
+/* On the clock: the serif signboard. Used here and on the horizon labels, and
+ * nowhere else on the page. */
+.oven-next.onclock .oven-eyebrow {
+  font-family: var(--oven-sign);
+  font-size: 15px;
+  font-weight: 600;
+  font-style: italic;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--oven-flame);
+  animation: ovenBreathe 1.6s ease-in-out infinite;
 }
+.oven-next.onclock .oven-pick-label { color: var(--oven-flame); }
+.oven-console.is-live { box-shadow: inset 0 2px 0 var(--oven-flame); }
+
+@keyframes ovenBreathe { 0%, 100% { opacity: 1; } 50% { opacity: .45; } }
+
+.oven-tally {
+  flex: 1;
+  font-family: var(--oven-data);
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--oven-ash-dim);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  min-width: 140px;
+}
+.oven-tally strong { color: var(--oven-ash); font-weight: 700; }
+
+.oven-conn { flex-shrink: 0; }
 .oven-live-dot {
-  width: 7px; height: 7px; border-radius: 50%; background: #2ea043; display: inline-block;
-  animation: ovenPulse 2s ease-in-out infinite;
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--oven-flame); display: inline-block;
+  animation: ovenBreathe 2.4s ease-in-out infinite;
+}
+/* Cold, not red. In a kiln, losing the fire IS the alarm state. */
+.oven-degraded {
+  font-family: var(--oven-data);
+  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .12em;
+  color: var(--oven-frost);
+  border: 1px solid rgba(106, 169, 208, .4);
+  background: rgba(106, 169, 208, .1);
+  border-radius: 2px; padding: 3px 8px;
 }
 
-/* ---------- board: controls ---------- */
+/* ---------- controls ---------- */
 
 .oven-controls {
-  position: sticky; z-index: 19; background: #0f1117;
-  padding: 8px 0; border-bottom: 1px solid #21262d;
-  display: flex; gap: 6px; flex-wrap: wrap; align-items: center;
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+  align-items: center;
+  padding: 10px 0;
 }
 .oven-chip {
-  background: #21262d; border: 1px solid #30363d; color: #8b949e; font-size: 10px;
-  font-weight: 600; text-transform: uppercase; letter-spacing: .4px;
-  padding: 3px 7px; border-radius: 4px; cursor: pointer;
+  font-family: var(--oven-data);
+  background: transparent;
+  border: 1px solid var(--oven-mortar);
+  color: var(--oven-ash-dim);
+  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em;
+  padding: 5px 9px; border-radius: 2px; cursor: pointer;
   transition: color .15s, border-color .15s, background .15s;
 }
-.oven-chip:hover { color: #f0f6fc; border-color: #58a6ff; }
-.oven-chip.active { background: #1f2d3d; color: #f0f6fc; border-color: #58a6ff; }
+.oven-chip:hover { color: var(--oven-bone); border-color: var(--oven-ash-dim); }
+.oven-chip.active {
+  background: var(--oven-flame);
+  border-color: var(--oven-flame);
+  color: #1A0D03;
+}
+/* Text-input shell. The board's player search is gone; the only thing still
+ * wearing this is the CSV paste box on the setup page, which sizes itself. */
 .oven-search {
-  background: #0f1117; border: 1px solid #30363d; color: #f0f6fc; font-size: 12px;
-  padding: 4px 9px; border-radius: 6px; min-width: 130px; flex: 1;
+  font-family: var(--oven-name);
+  background: var(--oven-brick);
+  border: 1px solid var(--oven-mortar);
+  color: var(--oven-bone);
+  font-size: 12px; padding: 6px 10px; border-radius: 2px;
 }
-.oven-search:focus { outline: none; border-color: #58a6ff; }
+.oven-search::placeholder { color: var(--oven-ash-dim); }
+.oven-search:focus { outline: none; border-color: var(--oven-flame); background: var(--oven-kiln); }
 
-/* ---------- board: rows ---------- */
+/* ================= THE BOARD ================= */
 
-.oven-list { border: 1px solid #30363d; border-top: none; border-radius: 0 0 8px 8px; overflow: hidden; }
-
-.oven-row {
-  display: flex; align-items: center; gap: 8px;
-  padding: 6px 10px 6px 0; border-bottom: 1px solid #21262d;
-  position: relative; font-size: 13px;
-  /* Most of virtualization's benefit for one CSS line; ignored where unsupported. */
-  content-visibility: auto; contain-intrinsic-size: 0 40px;
-}
-.oven-row:last-child { border-bottom: none; }
-.oven-row:hover { background: #161b22; }
-
-.oven-rail { width: 4px; align-self: stretch; flex-shrink: 0; background: transparent; }
-.oven-rk {
-  width: 34px; flex-shrink: 0; text-align: right; font-size: 11px; color: #6e7681;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-}
-.oven-mark { width: 30px; flex-shrink: 0; font-size: 9px; }
-.oven-row .player-pos {
-  font-size: 10px; font-weight: 700; padding: 2px 5px; border-radius: 3px;
-  min-width: 28px; text-align: center; flex-shrink: 0;
-}
-.oven-name { flex: 1; min-width: 0; }
-.oven-name-main {
-  font-size: 13px; color: #f0f6fc; white-space: nowrap;
-  overflow: hidden; text-overflow: ellipsis;
-}
-.oven-name-sub {
-  font-size: 10px; color: #6e7681;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-}
-.oven-tier {
-  font-size: 10px; font-weight: 700; color: #8b949e; background: #21262d;
-  border-radius: 3px; padding: 2px 6px; flex-shrink: 0;
-}
-
-/* Names the explicit CSV grade, so a colored rail on a Δ 0 row is legible. */
-.oven-grade {
-  font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px;
-  border-radius: 3px; padding: 1px 5px; margin-left: 4px; vertical-align: 1px;
-}
-.oven-grade.love  { background: rgba(87,187,138,.22);  color: #7ee0ab; }
-.oven-grade.like  { background: rgba(87,187,138,.13);  color: #63c294; }
-.oven-grade.fade  { background: rgba(235,152,145,.13); color: #e0938d; }
-.oven-grade.avoid { background: rgba(235,152,145,.22); color: #f0a49e; }
-.oven-delta {
-  width: 42px; flex-shrink: 0; text-align: right; font-size: 11px; font-weight: 600;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-}
-.oven-delta.pos { color: #2ea043; }
-.oven-delta.neg { color: #f85149; }
-.oven-delta.zero { color: #6e7681; }
-.oven-ecr {
-  width: 34px; flex-shrink: 0; text-align: right; font-size: 11px; color: #8b949e;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-}
-.oven-taken {
-  font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px;
-  border-radius: 3px; padding: 2px 5px; flex-shrink: 0; white-space: nowrap;
-  background: #21262d; color: #6e7681;
-}
-.oven-taken.keeper { background: #2d2410; color: #d29922; }
-.oven-taken.mine { background: #1f2d3d; color: #58a6ff; }
-
-/* drafted */
-.oven-row.gone { opacity: .38; }
-.oven-row.gone .oven-name-main { text-decoration: line-through; }
-.oven-row.gone .oven-rail { background: #30363d !important; }
-.oven-row.just-gone { animation: ovenFlash 2.4s ease-out; }
-@keyframes ovenFlash {
-  0%   { background: rgba(248,81,73,.28); }
-  100% { background: transparent; }
-}
-
-/* players I've pushed off my board */
-.oven-row.off .oven-name-main { color: #6e7681; text-decoration: line-through; }
-
-/* likely gone before my next pick */
-.oven-row.atrisk .oven-rk { color: #484f58; }
-.oven-row.atrisk::after {
-  content: ''; position: absolute; left: 0; right: 0; top: 0; bottom: 0;
-  pointer-events: none;
-  background: repeating-linear-gradient(45deg, transparent, transparent 6px,
-              rgba(139,148,158,.045) 6px, rgba(139,148,158,.045) 12px);
-}
-
-/* my expected pick markers */
-.oven-marker {
-  display: flex; align-items: center; gap: 8px;
-  padding: 5px 10px; background: #0d1117;
-  border-top: 1px solid #30363d; border-bottom: 1px solid #30363d;
-  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px;
-  color: #8b949e;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-}
-.oven-marker.next {
-  color: #58a6ff; background: rgba(88,166,255,.1);
-  border-color: #58a6ff; border-left: 3px solid #58a6ff;
-}
-.oven-marker-line { flex: 1; height: 1px; background: #30363d; }
-.oven-marker.next .oven-marker-line { background: rgba(88,166,255,.4); }
-
-/* tier separators */
-.oven-tiersep {
-  display: flex; align-items: center; gap: 8px; padding: 4px 10px;
-  background: #161b22; border-bottom: 1px solid #21262d;
-  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px;
-  color: #6e7681; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-}
-.oven-tiersep .cliff { color: #f85149; }
+.oven-list { border-bottom: 1px solid var(--oven-mortar); }
 
 .oven-thead {
-  display: flex; align-items: center; gap: 8px; padding: 6px 10px 6px 0;
-  background: #161b22; border: 1px solid #30363d; border-bottom: none;
-  border-radius: 8px 8px 0 0;
-  font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .4px;
-  color: #8b949e;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px 5px 0;
+  border-bottom: 1px solid var(--oven-mortar);
+  font-family: var(--oven-data);
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .16em;
+  color: var(--oven-ash-dim);
 }
-.oven-thead .sortable { cursor: pointer; }
-.oven-thead .sortable:hover { color: #f0f6fc; }
+.oven-thead .sortable { cursor: pointer; transition: color .12s; }
+.oven-thead .sortable:hover { color: var(--oven-flame); }
 
-.oven-empty { padding: 32px 16px; text-align: center; color: #6e7681; font-size: 13px; }
+.oven-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 10px 7px 0;
+  border-bottom: 1px solid rgba(58, 44, 36, .5);
+  position: relative;
+  font-size: 13px;
+  /* Most of virtualization's benefit for one CSS line; ignored where unsupported. */
+  content-visibility: auto;
+  contain-intrinsic-size: 0 42px;
+}
+.oven-row:last-child { border-bottom: none; }
+.oven-row:hover { background: var(--oven-brick-hi); }
+
+/* The per-player heat signal. Full saturation, thin — the row wash carries the
+ * neighborhood reading, this carries the individual one. */
+.oven-rail { width: 3px; align-self: stretch; flex-shrink: 0; background: transparent; }
+
+.oven-rk {
+  width: 32px; flex-shrink: 0; text-align: right;
+  font-family: var(--oven-data);
+  font-size: 11px; color: var(--oven-ash-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Position badges match /trade-calculator: the global .pos-* fills from
+ * styles/base/styles.css (#c2185b QB, #1565c0 RB, #2e7d32 WR, #e65100 TE,
+ * #6a1b9a K, #4e342e DEF). Same coding across both player surfaces, so a
+ * position reads the same wherever you meet it in the app.
+ *
+ * Only geometry is set here — no background or color, so the global fills win
+ * rather than being overridden by this more specific selector. Sizing tracks
+ * calculator.css (11px/700, radius 3, min-width 30) tightened for board
+ * density. .pos-TE #e65100 does sit near --oven-flame; the heat rail is the
+ * far-left 3px edge and the badge is a filled block, so they read as different
+ * objects rather than the same signal. */
+.oven-row .player-pos,
+.oven-thead .player-pos {
+  font-family: var(--oven-data);
+  font-size: 10px; font-weight: 700; letter-spacing: .04em;
+  padding: 2px 5px; border-radius: 3px;
+  min-width: 30px; text-align: center; flex-shrink: 0;
+}
+/* The header cell carries .player-pos as a layout hook but no .pos-* fill, so
+ * it needs the column's label treatment, not a badge's. */
+.oven-thead .player-pos {
+  background: transparent;
+  color: var(--oven-ash-dim);
+  font-size: 9px; letter-spacing: .16em;
+  padding-left: 0; padding-right: 0;
+}
+.oven-thead .player-pos.sortable:hover { color: var(--oven-flame); }
+
+/* Fallback fill. The board emits pos-OTHER for a blank position, and the CSV's
+ * Pos column is free text, so pos-FLEX / pos-HB / anything can reach the DOM
+ * with no global rule behind it — which would render as bare text in a row of
+ * filled badges. Zero specificity via :where() so all six real .pos-* fills
+ * still win; a plain .oven-row .player-pos here would outrank them instead. */
+:where(.oven-row) :where(.player-pos) {
+  background: var(--oven-mortar);
+  color: var(--oven-bone);
+}
+
+.oven-name { flex: 1; min-width: 0; }
+.oven-name-main {
+  font-family: var(--oven-name);
+  font-size: 13.5px; font-weight: 600; letter-spacing: -.005em;
+  color: var(--oven-bone);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.oven-name-note { color: var(--oven-ash-dim); font-weight: 400; }
+.oven-name-sub {
+  font-family: var(--oven-data);
+  font-size: 10px; color: var(--oven-ash-dim); letter-spacing: .04em;
+  margin-top: 1px;
+}
+
+/* Names the explicit CSV grade, so a saturated rail on a Δ 0 row is legible. */
+.oven-grade {
+  font-family: var(--oven-data);
+  font-size: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: .14em;
+  border-radius: 2px; padding: 2px 5px; margin-left: 6px; vertical-align: 1px;
+}
+.oven-grade.love  { background: rgba(255, 122, 24, .22); color: var(--oven-flame); }
+.oven-grade.like  { background: rgba(255, 122, 24, .11); color: #E08A46; }
+.oven-grade.avoid { background: rgba(106, 169, 208, .22); color: var(--oven-frost); }
+
+/* A `fade` grade has no badge. It recedes the row instead — the same gesture as
+ * being drafted, one stop short of it: no line-through, and lighter than .34, so
+ * a faded player still reads as available if the run comes back around to him. */
+.oven-row.faded,
+.oven-tp-row.faded { opacity: .52; }
+
+.oven-ecr {
+  width: 32px; flex-shrink: 0; text-align: right;
+  font-family: var(--oven-data);
+  font-size: 11px; color: var(--oven-ash-dim);
+  font-variant-numeric: tabular-nums;
+}
+.oven-delta {
+  width: 40px; flex-shrink: 0; text-align: right;
+  font-family: var(--oven-data);
+  font-size: 11px; font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.oven-delta.pos  { color: var(--oven-flame); }
+.oven-delta.neg  { color: var(--oven-frost); }
+.oven-delta.zero { color: var(--oven-ash-dim); }
+
+.oven-taken {
+  font-family: var(--oven-data);
+  font-size: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: .12em;
+  border-radius: 2px; padding: 3px 6px; flex-shrink: 0; white-space: nowrap;
+  background: var(--oven-brick); color: var(--oven-ash-dim);
+}
+.oven-taken.keeper { background: transparent; color: var(--oven-ash-dim); border: 1px solid var(--oven-mortar); }
+.oven-taken.mine   { background: var(--oven-flame); color: #1A0D03; }
+
+/* ---------- pulled from the oven ---------- */
+
+.oven-row.gone { opacity: .34; }
+.oven-row.gone .oven-name-main { text-decoration: line-through; text-decoration-thickness: 1px; }
+.oven-row.gone .oven-rail { background: var(--oven-mortar) !important; }
+
+/* Overlay, not `background` — the row carries its heat wash as an inline style,
+ * and animating background directly would blink the wash out and snap it back. */
+.oven-row.just-gone::before {
+  content: '';
+  position: absolute; inset: 0;
+  pointer-events: none;
+  background: var(--oven-flame);
+  animation: ovenCool 2.4s ease-out forwards;
+}
+@keyframes ovenCool {
+  0%   { opacity: .32; }
+  55%  { opacity: .10; }
+  100% { opacity: 0; }
+}
+
+/* players pushed off my board */
+.oven-row.off .oven-name-main { color: var(--oven-ash-dim); text-decoration: line-through; }
+
+/* ================= THE HORIZON =================
+ * The signature. `placeMarkers()` computes, live, where you will actually be
+ * choosing from if the board goes chalk — honoring keepers, traded picks, and
+ * every pick made. That number is the most useful thing on the page and it used
+ * to render at the same weight as a tier rule. It is a horizon now: full-bleed,
+ * flame, serif, and it climbs the board as players come off.
+ */
+
+.oven-marker {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 10px;
+  border-top: 1px solid var(--oven-mortar);
+  border-bottom: 1px solid var(--oven-mortar);
+  font-family: var(--oven-data);
+  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .16em;
+  color: var(--oven-ash-dim);
+  background: var(--oven-kiln);
+}
+.oven-marker-line { flex: 1; height: 1px; background: var(--oven-mortar); }
+
+/* Every later pick of mine, in the horizon's language but a step down: same
+ * serif italic and same pick numeral, smaller, ash instead of bone, a thinner
+ * ember wash. It should register on a scroll-by without competing with the one
+ * horizon that actually matters.
+ *
+ * The margin is deliberately 2:1 top-to-bottom. A marker sits *above* the run of
+ * players it wins you, so the larger gap belongs overhead — it breaks the
+ * preceding block and lets the marker read as the cap on the group beneath it,
+ * not as a rule floating between two equal neighbors. */
+.oven-marker:not(.next) {
+  margin: 22px 0 11px;
+  background: linear-gradient(90deg, rgba(255, 122, 24, .09), rgba(255, 122, 24, .02) 70%);
+  border-top: 2px solid rgba(194, 65, 12, .6);
+  border-bottom: 1px solid rgba(194, 65, 12, .3);
+}
+.oven-marker:not(.next) .oven-marker-line {
+  background: linear-gradient(90deg, rgba(194, 65, 12, .55), rgba(194, 65, 12, 0));
+}
+.oven-marker:not(.next) .oven-marker-label {
+  font-family: var(--oven-sign);
+  font-size: 13px;
+  font-weight: 500;
+  font-style: italic;
+  text-transform: none;
+  letter-spacing: -.01em;
+  color: var(--oven-ash);
+}
+.oven-marker:not(.next) .oven-marker-pick {
+  font-family: var(--oven-data);
+  font-size: 12px; font-weight: 700; letter-spacing: .02em;
+  /* Damped flame, not ash — the numeral is the one thing on the rule you'd
+   * actually go looking for, and it ties back to the ember border. */
+  color: #E08A46;
+  font-variant-numeric: tabular-nums;
+}
+
+.oven-marker.next {
+  padding: 13px 10px;
+  color: var(--oven-flame);
+  background: linear-gradient(90deg, rgba(255, 122, 24, .14), rgba(255, 122, 24, 0) 70%);
+  border-top: 1px solid var(--oven-ember);
+  border-bottom: 1px solid var(--oven-ember);
+}
+.oven-marker.next .oven-marker-label {
+  font-family: var(--oven-sign);
+  font-size: 17px;
+  font-weight: 600;
+  font-style: italic;
+  text-transform: none;
+  letter-spacing: -.01em;
+  color: var(--oven-bone);
+}
+.oven-marker.next .oven-marker-pick {
+  font-family: var(--oven-data);
+  font-size: 17px; font-weight: 700; letter-spacing: -.02em;
+  color: var(--oven-flame);
+  font-variant-numeric: tabular-nums;
+}
+.oven-marker.next .oven-marker-line { background: linear-gradient(90deg, var(--oven-ember), rgba(194, 65, 12, 0)); }
+
+/* ---------- The Chalk ----------
+ * The territory above your first horizon: players who will almost certainly be
+ * gone before you choose. Naming it as a zone is the point — it used to be an
+ * 0.045-alpha hatch that nobody could see.
+ */
+
+.oven-zone {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 7px 10px;
+  font-family: var(--oven-data);
+  font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .2em;
+  color: var(--oven-ash-dim);
+  border-bottom: 1px solid var(--oven-mortar);
+}
+.oven-zone-line { flex: 1; height: 1px; background: var(--oven-mortar); }
+
+/* Recession is carried by texture and by the zone header naming the band —
+ * never by dimming text under threshold. These rows are still the ones you read
+ * when the board does NOT go chalk, so they stay legible. */
+.oven-row.atrisk .oven-name-main { color: var(--oven-ash); font-weight: 500; }
+.oven-row.atrisk .oven-rail { opacity: .35; }
+.oven-row.atrisk::after {
+  content: '';
+  position: absolute; inset: 0;
+  pointer-events: none;
+  /* Behind the text, above the heat wash. A hatch painted over the content
+   * would darken the glyphs and cancel out the contrast floor above; at -1 it
+   * only knocks back the background, which raises text contrast if anything. */
+  z-index: -1;
+  background: repeating-linear-gradient(
+    -45deg,
+    transparent, transparent 6px,
+    rgba(20, 16, 14, .7) 6px, rgba(20, 16, 14, .7) 9px
+  );
+}
+
+/* ---------- tiers ---------- */
+
+.oven-tiersep {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 14px 10px 5px;
+  font-family: var(--oven-data);
+  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .18em;
+  color: var(--oven-ash);
+  border-bottom: 1px solid var(--oven-mortar);
+}
+.oven-tiersep .tier-count { color: var(--oven-ash-dim); letter-spacing: .1em; font-weight: 400; }
+.oven-tiersep .cliff {
+  color: var(--oven-flame);
+  border-bottom: 1px solid var(--oven-ember);
+  padding-bottom: 1px;
+}
+
+.oven-empty {
+  padding: 48px 16px; text-align: center;
+  color: var(--oven-ash-dim); font-size: 13px;
+}
+
+/* ================= TARGETS & PROJECTIONS =================
+ * A right-edge drawer, mounted by scripts/primary/oven-targets.js onto whatever
+ * view includes it. Deliberately NOT modal on a wide screen: the whole point is
+ * dragging players off the board while it's open, so no scrim may eat pointer
+ * events over the board. Narrow screens get the scrim, because there drag isn't
+ * available at all and the drawer is doing a full-screen job.
+ *
+ * Same two-hue rule as the board — flame for mine/urgent, frost for the market.
+ */
+
+.oven-pin {
+  flex-shrink: 0;
+  width: 22px; height: 22px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--oven-data);
+  font-size: 13px; line-height: 1;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  color: var(--oven-mortar);
+  cursor: pointer;
+  transition: color .12s, border-color .12s, background .12s;
+}
+.oven-row:hover .oven-pin { color: var(--oven-ash-dim); border-color: var(--oven-mortar); }
+.oven-pin:hover { color: var(--oven-flame) !important; border-color: var(--oven-ember) !important; }
+.oven-row.is-target .oven-pin {
+  color: var(--oven-flame);
+  border-color: var(--oven-ember);
+  background: rgba(255, 122, 24, .1);
+}
+/* Targeted rows carry a second, inner rail. The outer one is heat; this one is
+ * intent, and they are different claims — keep them visually separate. */
+.oven-row.is-target { box-shadow: inset 3px 0 0 var(--oven-flame); }
+.oven-row.is-target.gone { box-shadow: none; }
+.oven-row[draggable="true"] { cursor: grab; }
+.oven-row:active { cursor: grabbing; }
+
+/* ---------- the tab ---------- */
+
+.oven-tp-tab {
+  position: fixed;
+  right: 0; top: 50%;
+  transform: translateY(-50%);
+  z-index: 140;
+  display: flex; align-items: center; gap: 7px;
+  padding: 14px 6px;
+  background: var(--oven-brick);
+  border: 1px solid var(--oven-mortar);
+  border-right: none;
+  border-radius: 3px 0 0 3px;
+  color: var(--oven-ash);
+  cursor: pointer;
+  transition: color .15s, border-color .15s, background .15s;
+}
+.oven-tp-tab:hover { color: var(--oven-bone); border-color: var(--oven-ember); background: var(--oven-brick-hi); }
+.oven-tp-tab-text {
+  writing-mode: vertical-rl;
+  font-family: var(--oven-data);
+  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .22em;
+}
+.oven-tp-tab-count {
+  writing-mode: vertical-rl;
+  font-family: var(--oven-data);
+  font-size: 10px; font-weight: 700;
+  color: #1A0D03; background: var(--oven-flame);
+  border-radius: 2px; padding: 4px 2px;
+  font-variant-numeric: tabular-nums;
+}
+body.oven-tp-open .oven-tp-tab { opacity: 0; pointer-events: none; }
+/* Mid-drag the tab is a drop target of last resort, so it must stay reachable. */
+body.oven-tp-dragging .oven-tp-tab { opacity: 1; pointer-events: auto; border-color: var(--oven-flame); }
+
+/* ---------- the drawer ---------- */
+
+.oven-tp {
+  position: fixed;
+  top: 0; right: 0; bottom: 0;
+  z-index: 150;
+  width: min(94vw, 390px);
+  display: flex; flex-direction: column;
+  background: var(--oven-brick);
+  border-left: 1px solid var(--oven-mortar);
+  box-shadow: -18px 0 40px rgba(0, 0, 0, .45);
+  transform: translateX(100%);
+  transition: transform .22s ease;
+  visibility: hidden;
+}
+body.oven-tp-open .oven-tp { transform: translateX(0); visibility: visible; }
+.oven-tp.is-over { border-left-color: var(--oven-flame); box-shadow: -18px 0 40px rgba(0, 0, 0, .45), inset 0 0 0 1px var(--oven-ember); }
+
+.oven-tp-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 10px;
+  padding: 14px 12px 0;
+  border-bottom: 1px solid var(--oven-mortar);
+  flex-shrink: 0;
+}
+/* The two sub-views are links, not tabs with chrome — the drawer is small and a
+ * pill row would spend a fifth of its width restating where you already are. */
+.oven-tp-nav { display: flex; gap: 16px; }
+.oven-tp-nav a {
+  display: block;
+  font-family: var(--oven-sign);
+  font-size: 16px; font-weight: 600; font-style: italic;
+  color: var(--oven-ash-dim);
+  text-decoration: none;
+  padding-bottom: 9px;
+  border-bottom: 2px solid transparent;
+  transition: color .15s, border-color .15s;
+}
+.oven-tp-nav a:hover { color: var(--oven-ash); }
+.oven-tp-nav a.active { color: var(--oven-bone); border-bottom-color: var(--oven-flame); }
+.oven-tp-count {
+  font-family: var(--oven-data);
+  font-size: 10px; font-weight: 700; font-style: normal;
+  color: var(--oven-flame);
+  margin-left: 5px;
+  font-variant-numeric: tabular-nums;
+}
+.oven-tp-close {
+  background: transparent; border: none; cursor: pointer;
+  color: var(--oven-ash-dim); font-size: 22px; line-height: 1;
+  padding: 0 2px 9px;
+  transition: color .15s;
+}
+.oven-tp-close:hover { color: var(--oven-flame); }
+
+.oven-tp-body { flex: 1; overflow-y: auto; overscroll-behavior: contain; }
+
+.oven-tp-foot {
+  flex-shrink: 0;
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 12px;
+  border-top: 1px solid var(--oven-mortar);
+  background: var(--oven-kiln);
+  font-family: var(--oven-data);
+  font-size: 9px; line-height: 1.5; letter-spacing: .04em;
+  color: var(--oven-ash-dim);
+}
+.oven-tp-link {
+  background: transparent; border: none; padding: 0; cursor: pointer;
+  font-family: var(--oven-data);
+  font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .14em;
+  color: var(--oven-frost);
+  flex-shrink: 0;
+}
+.oven-tp-link:hover { color: var(--oven-flame); }
+
+/* ---------- rows ---------- */
+
+.oven-tp-group {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 8px;
+  padding: 13px 12px 5px;
+  font-family: var(--oven-data);
+  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .18em;
+  color: var(--oven-ash);
+  border-bottom: 1px solid var(--oven-mortar);
+  position: sticky; top: 0;
+  background: var(--oven-brick);
+  z-index: 1;
+}
+.oven-tp-group-count { font-weight: 400; letter-spacing: .08em; color: var(--oven-ash-dim); }
+
+.oven-tp-row {
+  display: flex; align-items: center; gap: 9px;
+  padding: 8px 12px;
+  border-bottom: 1px solid rgba(58, 44, 36, .5);
+}
+.oven-tp-row:hover { background: var(--oven-brick-hi); }
+.oven-tp-row.compact { padding: 6px 12px; }
+.oven-tp-row.is-gone { opacity: .4; }
+.oven-tp-row.is-gone .oven-tp-name { text-decoration: line-through; text-decoration-thickness: 1px; }
+.oven-tp-row.is-target { box-shadow: inset 2px 0 0 var(--oven-flame); }
+.oven-tp-row.filled { background: rgba(20, 16, 14, .5); }
+/* Positional-floor rows answer "and if the room runs my position?" — they are
+ * fallbacks, not recommendations, so they recede by weight rather than by
+ * dimming the name below contrast. */
+.oven-tp-row.is-floor .oven-tp-name { font-weight: 400; color: var(--oven-ash); }
+.oven-tp-row.is-floor .oven-tp-rk { opacity: .7; }
+/* Positional floor rows are there for completeness, not because the board
+   argues for them — they read one step back from the rank-order picks. */
+.oven-tp-row.is-floor .oven-tp-name { color: var(--oven-ash); font-weight: 500; }
+
+.oven-tp-rk {
+  width: 30px; flex-shrink: 0; text-align: right;
+  font-family: var(--oven-data);
+  font-size: 10px; color: var(--oven-ash-dim);
+  font-variant-numeric: tabular-nums;
+}
+.oven-tp-main { flex: 1; min-width: 0; }
+.oven-tp-name {
+  font-family: var(--oven-name);
+  font-size: 12.5px; font-weight: 600; color: var(--oven-bone);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.oven-tp-sub {
+  font-family: var(--oven-data);
+  font-size: 9px; color: var(--oven-ash-dim); letter-spacing: .04em;
+  margin-top: 1px;
+}
+.oven-tp-chips { display: flex; flex-wrap: wrap; gap: 3px; justify-content: flex-end; max-width: 44%; }
+
+.oven-tp-chip {
+  font-family: var(--oven-data);
+  font-size: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: .12em;
+  white-space: nowrap; flex-shrink: 0;
+  padding: 3px 5px; border-radius: 2px;
+  background: transparent;
+  border: 1px solid var(--oven-mortar);
+  color: var(--oven-ash-dim);
+}
+/* flame = mine or urgent; frost = the market's business; bare = neutral fact */
+.oven-tp-chip.tgt    { border-color: var(--oven-ember); color: var(--oven-flame); }
+.oven-tp-chip.proj   { border-color: transparent; background: rgba(106, 169, 208, .14); color: var(--oven-frost); }
+.oven-tp-chip.pos    { border-color: transparent; background: rgba(230, 222, 210, .07); color: var(--oven-ash); }
+.oven-tp-chip.hot    { border-color: var(--oven-ember); background: rgba(255, 122, 24, .16); color: var(--oven-flame); }
+.oven-tp-chip.warn   { border-color: rgba(255, 122, 24, .4); color: #E08A46; }
+/* "top RB" is a fact about the pool, not a judgment about the player — so it
+ * stays on the neutral border and never borrows either accent. */
+.oven-tp-chip.pos    { border-color: var(--oven-mortar); color: var(--oven-ash); letter-spacing: .1em; }
+.oven-tp-chip.gone   { border-color: transparent; color: var(--oven-ash-dim); }
+.oven-tp-chip.kept   { border-color: var(--oven-mortar); color: var(--oven-ash); }
+.oven-tp-chip.picked { border-color: transparent; background: var(--oven-flame); color: #1A0D03; }
+
+.oven-tp-x {
+  flex-shrink: 0;
+  background: transparent; border: none; cursor: pointer;
+  color: var(--oven-mortar); font-size: 16px; line-height: 1; padding: 2px 4px;
+  transition: color .12s;
+}
+.oven-tp-row:hover .oven-tp-x { color: var(--oven-ash-dim); }
+.oven-tp-x:hover { color: var(--oven-flame) !important; }
+
+.oven-tp-empty {
+  padding: 34px 18px; color: var(--oven-ash-dim);
+  font-size: 12.5px; line-height: 1.6;
+}
+.oven-tp-empty strong {
+  display: block;
+  font-family: var(--oven-sign);
+  font-size: 17px; font-style: italic; font-weight: 600;
+  color: var(--oven-bone);
+  margin-bottom: 8px;
+}
+.oven-tp-empty p { margin: 0 0 8px; }
+.oven-tp-kbd {
+  font-family: var(--oven-data);
+  border: 1px solid var(--oven-mortar); border-radius: 2px;
+  padding: 1px 5px; color: var(--oven-ash);
+}
+
+/* ---------- rounds ---------- */
+
+.oven-tp-round { border-bottom: 1px solid var(--oven-mortar); }
+.oven-tp-round.is-done { opacity: .55; }
+.oven-tp-round.is-now { box-shadow: inset 2px 0 0 var(--oven-flame); }
+
+.oven-tp-round-head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 8px;
+  padding: 11px 12px 6px;
+  font-family: var(--oven-data);
+  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .18em;
+  color: var(--oven-ash);
+  position: sticky; top: 0;
+  background: var(--oven-brick);
+  z-index: 1;
+}
+.oven-tp-round.is-now .oven-tp-round-no { color: var(--oven-flame); }
+.oven-tp-round-prog { font-weight: 400; letter-spacing: .08em; color: var(--oven-ash-dim); }
+
+.oven-tp-slot {
+  display: flex; align-items: center; gap: 9px;
+  padding: 4px 12px 5px;
+  font-family: var(--oven-data);
+  font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .14em;
+  color: var(--oven-ash-dim);
+}
+.oven-tp-slot-pick { color: var(--oven-bone); font-size: 11px; letter-spacing: -.01em; font-variant-numeric: tabular-nums; }
+.oven-tp-slot-line { flex: 1; height: 1px; background: var(--oven-mortar); }
+
+.oven-tp-none {
+  padding: 8px 12px 11px;
+  font-size: 11px; color: var(--oven-ash-dim); font-style: italic;
+}
+
+/* ---------- mobile ---------- */
+
+@media (max-width: 720px) {
+  /* Below the drag threshold the drawer is doing a full-screen job, so it gets
+   * a scrim — there is no board interaction left to protect. */
+  body.oven-tp-open::after {
+    content: '';
+    position: fixed; inset: 0; z-index: 149;
+    background: rgba(0, 0, 0, .55);
+  }
+  .oven-tp-tab { top: auto; bottom: 76px; transform: none; }
+  .oven-tp-chips { max-width: 50%; }
+}
 
 /* ---------- mobile ---------- */
 
 @media (max-width: 560px) {
   .oven-team-grid { grid-template-columns: 1fr; }
-  .oven-ecr, .oven-tier { display: none; }
-  .oven-rk { width: 26px; font-size: 10px; }
-  .oven-mark { width: 24px; }
-  .oven-name-main { font-size: 12px; }
-  .oven-row { gap: 6px; }
-  .oven-statusbar-inner { gap: 8px; }
-  .oven-clock { font-size: 11px; }
+  .oven-ecr { display: none; }
+  .oven-thead .oven-ecr { display: none; }
+  .oven-pick-label { font-size: 27px; }
+  .oven-tally { text-align: left; flex-basis: 100%; min-width: 0; }
+  .oven-rk { width: 25px; font-size: 10px; }
+  .oven-name-main { font-size: 12.5px; }
+  .oven-row { gap: 7px; }
+  .oven-marker.next .oven-marker-label,
+  .oven-marker.next .oven-marker-pick { font-size: 15px; }
+  .oven-h2 { font-size: 25px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .oven-row.just-gone { animation: none; }
-  .oven-next.onclock, .oven-live-dot { animation: none; }
+  .oven-row.just-gone::before { animation: none; opacity: 0; }
+  .oven-next.onclock .oven-eyebrow,
+  .oven-live-dot { animation: none; }
+  .oven-content *, .oven-console *, .oven-tp * { transition: none !important; }
+  .oven-tp { transition: none !important; }
 }

@@ -6,18 +6,19 @@
   <link rel="icon" type="image/png" href="/favicon.png">
   <title>The Baker's Oven | Dynast-Z</title>
   <link rel="stylesheet" href="/styles/base/styles.css?v=abec71e4">
-  <link rel="stylesheet" href="/styles/primary/bakers-oven.css?v=333dcb72">
+  <link rel="stylesheet" href="/styles/primary/bakers-oven.css?v=8c059e28">
 </head>
 <body>
   <div id="header-mount"></div>
   <div id="nav-drawer-mount"></div>
-  <script src="/scripts/base/auth.js?v=2ce11c2d"></script>
-  <script src="/scripts/base/nav.js?v=4d9c3196"></script>
+  <script src="/scripts/base/auth.js?v=55c2cb8e"></script>
+  <script src="/scripts/base/nav.js?v=e4a37bf6"></script>
   <script src="/scripts/base/sync.js?v=f19ba045"></script>
-  <script src="/scripts/primary/oven-config.js?v=016f04fc"></script>
+  <script src="/scripts/primary/oven-config.js?v=65a566dc"></script>
   <script src="/scripts/primary/oven-csv.js?v=9d72dad8"></script>
   <script src="/scripts/primary/oven-draft.js?v=5f15d9b3"></script>
-  <script src="/scripts/primary/oven-board.js?v=4a6bd872"></script>
+  <script src="/scripts/primary/oven-board.js?v=d29f107b"></script>
+  <script src="/scripts/primary/oven-targets.js?v=bcc4ade7"></script>
   <script>initPage();</script>
 
   <main class="oven-content">
@@ -70,9 +71,27 @@
 
   <script>
   (function () {
+    // Admin-only.
+    if (!requireAdmin('/football')) return;
+
     var loading = document.getElementById('loading');
     var sections = document.getElementById('sections');
-    var ctx = null, board = null, fp = [];
+    var ctx = null, board = null, fp = [], draft = null;
+
+    // The Targets & Projections drawer mounts here too — the queue and the round
+    // plan are worth reading before draft night, not only during it. Same
+    // component, same synced queue, different host view.
+    var tp = { rows: [], drafted: {}, picks: [], plan: [], teamsCount: 12, rounds: 16, myRosterId: OVEN.MY_ROSTER_ID };
+
+    function rebuildTargetState(draft, picks) {
+      tp.rows = OvenBoard.computeHeat(OvenBoard.buildBoard(board && board.rows, fp));
+      tp.picks = picks || tp.picks;
+      tp.drafted = OvenBoard.indexPicks(tp.picks, tp.rows);
+      tp.plan = OvenDraft.buildPickPlan(draft, ctx.tradedPicks);
+      tp.teamsCount = draft.settings.teams;
+      tp.rounds = draft.settings.rounds;
+      OvenTargets.refresh();
+    }
 
     function fmtStart(ms) {
       if (!ms) return '—';
@@ -216,6 +235,7 @@
       parsed.warnings.forEach(function (w) { lines.push('<br>' + OvenBoard.esc(w)); });
       msg(unmatched.length ? 'warn' : 'ok', lines.join(' '));
       renderBoardSummary();
+      if (draft) rebuildTargetState(draft, null);
     }
 
     function wireImport() {
@@ -268,13 +288,16 @@
         fp = results[1] || [];
         board = results[2];
 
-        var draft = await OvenDraft.loadDraft(ctx.draftId);
+        draft = await OvenDraft.loadDraft(ctx.draftId);
         var picks = await OvenDraft.loadPicks(ctx.draftId, draft.last_picked || draft.status);
 
         renderStatus(draft, picks);
         renderTeams(draft);
         renderBoardSummary();
         wireImport();
+
+        rebuildTargetState(draft, picks);
+        OvenTargets.mount({ getState: function () { return tp; } });
 
         loading.style.display = 'none';
         sections.style.display = '';

@@ -11,9 +11,16 @@
 <body class="masters-body">
   <div id="header-mount"></div>
   <div id="nav-drawer-mount"></div>
-  <script src="/scripts/base/auth.js?v=2ce11c2d"></script>
-  <script src="/scripts/base/nav.js?v=4d9c3196"></script>
-  <script>initPage();</script>
+  <script src="/scripts/base/auth.js?v=55c2cb8e"></script>
+  <script src="/scripts/base/nav.js?v=e4a37bf6"></script>
+  <script>
+    initPage();
+    // The Baker's Oven is admin-only (see requireAdmin in auth.js). The card is
+    // below this script, so reveal it once the document has parsed.
+    document.addEventListener('DOMContentLoaded', function () {
+      if (isAdmin()) document.getElementById('oven-card').hidden = false;
+    });
+  </script>
 
   <div class="masters-content">
     <h2>Football</h2>
@@ -23,7 +30,7 @@
 
     <h3 class="hub-section">Tools</h3>
     <div class="hub-grid">
-      <a class="hub-card" href="/the-bakers-oven"><h3>The Baker&rsquo;s Oven</h3><p>Live draft companion &mdash; big board, tiers &amp; your next pick</p></a>
+      <a class="hub-card" href="/the-bakers-oven" id="oven-card" hidden><h3>The Baker&rsquo;s Oven</h3><p>Live draft companion &mdash; big board, tiers &amp; your next pick</p></a>
       <a class="hub-card" href="/trade-calculator"><h3>Trade Calculator</h3><p>Value any dynasty trade with blended rankings</p></a>
       <a class="hub-card" href="/football/grading-system"><h3>Grading System</h3><p>How player &amp; pick values are calculated</p></a>
     </div>

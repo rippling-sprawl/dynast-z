@@ -157,7 +157,7 @@
     rows: [], rowEls: null, listEl: null, teams: {},
     drafted: {},          // key -> pick
     sort: { key: 'myRank', dir: 'asc' },
-    filters: { pos: null, q: '', hideDrafted: false },
+    filters: { pos: null, hideDrafted: false },
     clock: null, teamsCount: 12, myRosterId: null,
   };
 
@@ -178,11 +178,9 @@
 
   function visibleRows() {
     var f = state.filters;
-    var q = f.q.trim().toLowerCase();
     var out = state.rows.filter(function (r) {
       if (f.pos && r.pos !== f.pos) return false;
       if (f.hideDrafted && state.drafted[r.key]) return false;
-      if (q && r.name.toLowerCase().indexOf(q) === -1) return false;
       return true;
     });
     var s = state.sort;
@@ -206,25 +204,33 @@
     var sub = [r.team, r.fpPosRank, r.bye ? 'BYE ' + r.bye : ''].filter(Boolean).join(' · ');
     // A graded row is colored by the grade, not by the rank delta, so name the
     // grade — otherwise a strong green rail next to "Δ 0" reads as a bug.
-    var gradeChip = r.grade
+    // Except `fade`: a fade isn't a fact about the player worth a badge, it's my
+    // disinterest, so the row itself recedes instead (see .oven-row.faded).
+    var gradeChip = r.grade && r.grade !== 'fade'
       ? ' <span class="oven-grade ' + esc(r.grade) + '">' + esc(r.grade) + '</span>'
       : '';
 
-    return '<div class="oven-row" data-key="' + esc(r.key) + '"' +
+    // No per-row tier chip: the full-width tier band already states it, and
+    // repeating it 250 times competes with the heat rail for the same glance.
+    //
+    // draggable + the pin button are the two routes into the targets queue —
+    // OvenTargets owns both handlers, and both are inert on a page that doesn't
+    // mount it. Drag is desktop-only by nature; the pin is what works on a phone.
+    return '<div class="oven-row' + (r.grade === 'fade' ? ' faded' : '') +
+      '" draggable="true" data-key="' + esc(r.key) + '"' +
       (washC ? ' style="background:' + washC + '"' : '') + '>' +
       '<div class="oven-rail" style="background:' + railC + '"></div>' +
       '<div class="oven-rk">' + (r.myRank == null ? '' : r.myRank) + '</div>' +
-      '<div class="oven-mark"></div>' +
       '<span class="player-pos pos-' + esc(r.pos || 'OTHER') + '">' + esc(r.pos || '—') + '</span>' +
       '<div class="oven-name">' +
         '<div class="oven-name-main">' + esc(r.name) + gradeChip +
-          (r.note ? ' <span style="color:#6e7681">· ' + esc(r.note) + '</span>' : '') + '</div>' +
+          (r.note ? ' <span class="oven-name-note">· ' + esc(r.note) + '</span>' : '') + '</div>' +
         (sub ? '<div class="oven-name-sub">' + esc(sub) + '</div>' : '') +
       '</div>' +
-      '<div class="oven-tier">' + (r.tier == null ? '—' : 'T' + r.tier) + '</div>' +
       '<div class="oven-ecr">' + (r.fpRank == null ? '—' : r.fpRank) + '</div>' +
       '<div class="oven-delta ' + dCls + '">' + dTxt + '</div>' +
       '<div class="oven-taken" hidden></div>' +
+      '<button class="oven-pin" type="button" aria-pressed="false" aria-label="Add to targets">+</button>' +
     '</div>';
   }
 
@@ -264,6 +270,8 @@
 
     global.scrollTo(0, scrollY);
     applyDraftState(null, true);
+    // A rebuild drops the targeted state off every row; the panel repaints it.
+    if (global.OvenTargets) global.OvenTargets.markBoard();
   }
 
   /* Surgical patch — the only thing that runs on a poll. */
@@ -310,7 +318,7 @@
    * every pick actually made, and it rises up the board as players come off. */
   function placeMarkers() {
     if (!state.listEl) return;
-    var old = state.listEl.querySelectorAll('.oven-marker');
+    var old = state.listEl.querySelectorAll('.oven-marker, .oven-zone');
     for (var i = 0; i < old.length; i++) old[i].remove();
     state.listEl.querySelectorAll('.oven-row.atrisk').forEach(function (e) {
       e.classList.remove('atrisk');
@@ -326,8 +334,12 @@
       function (el) { return !state.drafted[el.getAttribute('data-key')]; }
     );
 
+    // Every remaining pick of mine gets a horizon, not just the next few — the
+    // loop runs out on its own once a marker would land past the bottom of the
+    // board. The first is the signature; the rest are quiet rules that say the
+    // same thing, so a scroll down the board reads as "mine, mine, mine".
     var filled = clock.filled;
-    for (var m = 0; m < Math.min(clock.myUpcoming.length, 4); m++) {
+    for (var m = 0; m < clock.myUpcoming.length; m++) {
       var pickNo = clock.myUpcoming[m];
       var ahead = 0;
       for (var n = clock.onTheClock; n < pickNo; n++) if (!filled[n]) ahead++;
@@ -337,13 +349,30 @@
       var label = global.OvenDraft.roundPickLabel(pickNo, state.teamsCount);
       var div = document.createElement('div');
       div.className = 'oven-marker' + (m === 0 ? ' next' : '');
-      div.innerHTML = (m === 0 ? 'Your pick · ' : 'Pick ' + (m + 1) + ' · ') + esc(label) +
-        (m === 0 ? ' · ' + ahead + ' away' : '') +
-        '<span class="oven-marker-line"></span>';
+      // The horizon's job is position, not count — the console carries "N away"
+      // and is pinned, so both are on screen at once. Stating it twice is noise.
+      div.innerHTML = m === 0
+        ? '<span class="oven-marker-label">You choose from here</span>' +
+          '<span class="oven-marker-pick">' + esc(label) + '</span>' +
+          '<span class="oven-marker-line"></span>'
+        : '<span class="oven-marker-label">Then you choose</span>' +
+          '<span class="oven-marker-pick">' + esc(label) + '</span>' +
+          '<span class="oven-marker-line"></span>';
       target.parentNode.insertBefore(div, target);
 
+      // The territory above the first horizon is a named zone, not a texture.
+      // These are the players who go before you choose — saying how many is the
+      // whole point of computing the marker in the first place.
       if (m === 0) {
         for (var a = 0; a < ahead && a < avail.length; a++) avail[a].classList.add('atrisk');
+        if (ahead > 0) {
+          var zone = document.createElement('div');
+          zone.className = 'oven-zone';
+          zone.innerHTML = '<span>The chalk</span>' +
+            '<span class="oven-zone-line"></span>' +
+            '<span>' + ahead + ' gone before you’re up</span>';
+          avail[0].parentNode.insertBefore(zone, avail[0]);
+        }
       }
     }
   }

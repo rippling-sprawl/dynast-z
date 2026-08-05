@@ -6,21 +6,22 @@
   <link rel="icon" type="image/png" href="/favicon.png">
   <title>Big Board | The Baker's Oven</title>
   <link rel="stylesheet" href="/styles/base/styles.css?v=abec71e4">
-  <link rel="stylesheet" href="/styles/primary/bakers-oven.css?v=333dcb72">
+  <link rel="stylesheet" href="/styles/primary/bakers-oven.css?v=8c059e28">
 </head>
 <body>
   <div id="header-mount"></div>
   <div id="nav-drawer-mount"></div>
-  <script src="/scripts/base/auth.js?v=2ce11c2d"></script>
-  <script src="/scripts/base/nav.js?v=4d9c3196"></script>
+  <script src="/scripts/base/auth.js?v=55c2cb8e"></script>
+  <script src="/scripts/base/nav.js?v=e4a37bf6"></script>
   <script src="/scripts/base/sync.js?v=f19ba045"></script>
   <script src="/scripts/components/table-sort.js?v=c892311f"></script>
   <script src="/scripts/components/sticky-headers.js?v=43c9432d"></script>
   <script src="/scripts/style/heatmap.js?v=80458313"></script>
-  <script src="/scripts/primary/oven-config.js?v=016f04fc"></script>
+  <script src="/scripts/primary/oven-config.js?v=65a566dc"></script>
   <script src="/scripts/primary/oven-csv.js?v=9d72dad8"></script>
   <script src="/scripts/primary/oven-draft.js?v=5f15d9b3"></script>
-  <script src="/scripts/primary/oven-board.js?v=4a6bd872"></script>
+  <script src="/scripts/primary/oven-board.js?v=d29f107b"></script>
+  <script src="/scripts/primary/oven-targets.js?v=bcc4ade7"></script>
   <script>initPage();</script>
 
   <main class="oven-content">
@@ -31,34 +32,36 @@
     <div id="loading">Loading draft board…</div>
 
     <div id="sections" style="display:none;">
-      <div class="oven-statusbar" id="statusbar">
-        <div class="oven-statusbar-inner">
-          <span class="oven-next" id="next-pick">—</span>
-          <span class="oven-clock" id="clock"></span>
-          <span style="flex:1"></span>
-          <span id="conn"></span>
+      <!-- Status and filters are one pinned element. Two stacked sticky bars
+           cost two bands of chrome on the screen where vertical space is the
+           entire game. -->
+      <div class="oven-console" id="statusbar">
+        <div class="oven-console-top">
+          <div class="oven-next" id="next-pick">
+            <span class="oven-eyebrow">Your pick</span>
+            <span class="oven-pick-label">—</span>
+          </div>
+          <div class="oven-tally" id="clock"></div>
+          <div class="oven-conn" id="conn"></div>
         </div>
-      </div>
 
-      <div class="oven-controls" id="controls">
-        <input class="oven-search" id="search" type="search" placeholder="Search players…" autocomplete="off">
-        <button class="oven-chip" data-pos="">All</button>
-        <button class="oven-chip" data-pos="QB">QB</button>
-        <button class="oven-chip" data-pos="RB">RB</button>
-        <button class="oven-chip" data-pos="WR">WR</button>
-        <button class="oven-chip" data-pos="TE">TE</button>
-        <button class="oven-chip" data-pos="K">K</button>
-        <button class="oven-chip" data-pos="DEF">DEF</button>
-        <button class="oven-chip" id="hide-drafted">Hide drafted</button>
+        <div class="oven-controls" id="controls">
+          <button class="oven-chip" data-pos="">All</button>
+          <button class="oven-chip" data-pos="QB">QB</button>
+          <button class="oven-chip" data-pos="RB">RB</button>
+          <button class="oven-chip" data-pos="WR">WR</button>
+          <button class="oven-chip" data-pos="TE">TE</button>
+          <button class="oven-chip" data-pos="K">K</button>
+          <button class="oven-chip" data-pos="DEF">DEF</button>
+          <button class="oven-chip" id="hide-drafted">Hide drafted</button>
+        </div>
       </div>
 
       <div class="oven-thead">
         <div class="oven-rail"></div>
         <div class="oven-rk sortable" data-sort="myRank">RK</div>
-        <div class="oven-mark"></div>
-        <span class="player-pos sortable" data-sort="pos" style="background:transparent;color:#8b949e">POS</span>
+        <span class="player-pos sortable" data-sort="pos">POS</span>
         <div class="oven-name sortable" data-sort="name">Player</div>
-        <div class="oven-tier sortable" data-sort="tier" style="background:transparent">Tier</div>
         <div class="oven-ecr sortable" data-sort="fpRank">ECR</div>
         <div class="oven-delta sortable" data-sort="heat">Δ</div>
         <div class="oven-taken" style="visibility:hidden">x</div>
@@ -71,6 +74,9 @@
 
   <script>
   (function () {
+    // Admin-only.
+    if (!requireAdmin('/football')) return;
+
     var loading = document.getElementById('loading');
     var sections = document.getElementById('sections');
     var listEl = document.getElementById('list');
@@ -82,6 +88,10 @@
     var ctx = null, draft = null, poller = null;
     var prevDrafted = {};
     var lastUpdate = null;
+    // Kept for the Targets & Projections drawer, which needs the raw picks
+    // (keepers carry their player in metadata, not on my board) and the pick
+    // plan (which rounds I actually own after trades).
+    var latestPicks = [], plan = [];
 
     function setConn(html) { document.getElementById('conn').innerHTML = html; }
 
@@ -89,24 +99,34 @@
       var c = S.clock;
       var nextEl = document.getElementById('next-pick');
       var clockEl = document.getElementById('clock');
+      var consoleEl = document.getElementById('statusbar');
       if (!c) return;
 
       if (c.myNext == null) {
-        nextEl.textContent = 'No picks left';
         nextEl.className = 'oven-next';
+        nextEl.innerHTML = '<span class="oven-eyebrow">Your draft</span>' +
+          '<span class="oven-pick-label">Done</span>';
+        consoleEl.classList.remove('is-live');
       } else {
         var label = OvenDraft.roundPickLabel(c.myNext, S.teamsCount);
         var away = c.untilMyTurn;
-        nextEl.textContent = away === 0 ? 'ON THE CLOCK · ' + label : 'Your pick ' + label + ' · ' + away + ' away';
-        nextEl.className = 'oven-next' + (away === 0 ? ' onclock' : (away <= 3 ? ' imminent' : ''));
+        var onClock = away === 0;
+        nextEl.className = 'oven-next' + (onClock ? ' onclock' : (away <= 3 ? ' imminent' : ''));
+        nextEl.innerHTML =
+          '<span class="oven-eyebrow">' + (onClock ? 'You’re on the clock' : 'Your pick') + '</span>' +
+          '<span class="oven-pick-label">' + label + '</span>' +
+          (onClock ? '' : '<span class="oven-pick-away">' + away + ' away</span>');
+        consoleEl.classList.toggle('is-live', onClock);
         var base = "The Baker's Oven";
-        document.title = away === 0 ? 'ON THE CLOCK — ' + base
+        document.title = onClock ? 'ON THE CLOCK — ' + base
           : (away <= 5 ? '(' + away + ') ' + base : 'Big Board | ' + base);
       }
 
       var avail = S.rows.filter(function (r) { return !S.drafted[r.key]; }).length;
-      clockEl.innerHTML = 'Pick <strong>' + (c.onTheClock || '—') + '</strong> of ' + (S.teamsCount * draft.settings.rounds) +
-        ' · <strong>' + c.madeCount + '</strong> off the board · <strong>' + avail + '</strong> left on yours';
+      clockEl.innerHTML =
+        'Pick <strong>' + (c.onTheClock || '—') + '</strong> of ' + (S.teamsCount * draft.settings.rounds) +
+        ' · <strong>' + c.madeCount + '</strong> off the board' +
+        '<br><strong>' + avail + '</strong> left on your board';
     }
 
     function onPicks(picks) {
@@ -114,23 +134,18 @@
       var newly = {};
       Object.keys(drafted).forEach(function (k) { if (!prevDrafted[k]) newly[k] = true; });
       S.drafted = drafted;
-      var plan = OvenDraft.buildPickPlan(draft, ctx.tradedPicks);
+      latestPicks = picks || [];
+      plan = OvenDraft.buildPickPlan(draft, ctx.tradedPicks);
       S.clock = OvenDraft.computeClock(plan, picks, rosterId, S.teamsCount * draft.settings.rounds);
       OvenBoard.applyDraftState(newly, Object.keys(prevDrafted).length === 0);
       prevDrafted = drafted;
       lastUpdate = Date.now();
       renderClock();
+      OvenTargets.refresh();
       setConn('<span class="oven-live-dot"></span>');
     }
 
     function wireControls() {
-      var search = document.getElementById('search');
-      var t = null;
-      search.addEventListener('input', function () {
-        clearTimeout(t);
-        t = setTimeout(function () { S.filters.q = search.value; OvenBoard.render(listEl); renderClock(); }, 150);
-      });
-
       document.querySelectorAll('.oven-chip[data-pos]').forEach(function (btn) {
         btn.addEventListener('click', function () {
           var pos = btn.getAttribute('data-pos');
@@ -184,27 +199,43 @@
         wireControls();
         OvenBoard.render(listEl);
 
+        // One accessor is the whole contract with the drawer — it reads, it
+        // never writes to the board.
+        OvenTargets.mount({
+          getState: function () {
+            return {
+              rows: S.rows,
+              drafted: S.drafted,
+              picks: latestPicks,
+              plan: plan,
+              teamsCount: S.teamsCount,
+              rounds: draft.settings.rounds,
+              myRosterId: rosterId,
+            };
+          },
+        });
+
         var picks = await OvenDraft.loadPicks(ctx.draftId, draft.last_picked || draft.status);
         onPicks(picks);
 
         // Freshness + provenance note.
         var notes = [];
         if (!board || !board.rows || !board.rows.length) {
-          notes.push('Showing <strong>FantasyPros half-PPR ranks</strong> — <a href="/the-bakers-oven" style="color:#58a6ff">import your CSV</a> to use your own board.');
+          notes.push('Showing <strong>FantasyPros half-PPR ranks</strong> — <a href="/the-bakers-oven">import your CSV</a> to use your own board.');
         }
         if (fpMeta) {
           var ageDays = (Date.now() / 1000 - (fpMeta.fetched_ts || 0)) / 86400;
           notes.push('FantasyPros ECR updated ' + OvenBoard.esc(fpMeta.last_updated || '?') +
             ', fetched ' + Math.floor(ageDays) + 'd ago' +
-            (ageDays > OVEN.FP_STALE_DAYS ? ' — <span style="color:#d29922">stale, re-run scripts/fetch_fp_redraft.py</span>' : '') + '.');
+            (ageDays > OVEN.FP_STALE_DAYS ? ' — <span class="stale">stale, re-run scripts/fetch_fp_redraft.py</span>' : '') + '.');
         }
         document.getElementById('footnote').innerHTML = notes.join(' ');
 
         loading.style.display = 'none';
         sections.style.display = '';
 
+        // One pinned element now — status and filters live in the same console.
         Sticky.pinBelow(document.getElementById('statusbar'), [document.querySelector('header')]);
-        Sticky.pinBelow(document.getElementById('controls'), [document.querySelector('header'), document.getElementById('statusbar')]);
 
         poller = OvenDraft.createPoller({
           draftId: ctx.draftId,

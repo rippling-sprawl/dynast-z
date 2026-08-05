@@ -34,6 +34,12 @@
     SYNC_SPORT: 'football',
     SYNC_KEY: 'oven_board',
 
+    // Targets & Projections keeps its own synced slice — a list of board keys,
+    // nothing else. Queuing a player must never rewrite the imported CSV, and
+    // the queue should follow you from the index to the board to your phone.
+    TARGETS_STORAGE_KEY: 'dz_oven_targets_v1',
+    TARGETS_SYNC_KEY: 'oven_targets',
+
     // Rank-vs-consensus delta (in board positions) that saturates the hot/cold
     // scale, and the window used to smooth per-row heat into visible regions.
     HEAT_MAX: 24,
@@ -43,9 +49,27 @@
     // graded row and a computed row are directly comparable.
     GRADE_HEAT: { love: 24, like: 10, fade: -10, avoid: -24 },
 
-    // Endpoint colors lifted from the source spreadsheet's conditional format.
-    HEAT_POS_RGB: [87, 187, 138],   // #57BB8A
-    HEAT_NEG_RGB: [235, 152, 145],  // #EB9891
+    // Round projections. Both weights are in board positions, on the same scale
+    // as GRADE_HEAT: queuing a player is worth ~8 spots when the simulation
+    // decides who I'd actually take, and a `love` grade is worth 12 (24 × 0.5).
+    // Halving the grade keeps an opinion from outranking two full rounds of
+    // rank — the CSV column is a thumb on the scale, not a replacement for it.
+    PROJ_TARGET_BONUS: 8,
+    PROJ_GRADE_WEIGHT: 0.5,
+    PROJ_PROJECTED_SHOWN: 3,   // best-available rows offered per future pick
+    PROJ_MAX_ENTRIES: 6,       // ceiling once targets are merged in
+
+    // Thermal ramp endpoints. The source spreadsheet used green/salmon
+    // (#57BB8A / #EB9891) and both halves of that were wrong here: the fills
+    // were alpha-over-white so they composite muddy on a near-black page, and
+    // green/red is the single pair that collapses under deuteranopia — on the
+    // one screen where the color IS the signal.
+    //
+    // Frost -> flame is colorblind-safe, survives the dark background at low
+    // alpha, and is what a board called The Baker's Oven should have measured
+    // in from the start. Must stay in sync with styles/primary/bakers-oven.css.
+    HEAT_POS_RGB: [255, 122, 24],   // --oven-flame  #FF7A18 — I'm higher than consensus
+    HEAT_NEG_RGB: [106, 169, 208],  // --oven-frost  #6AA9D0 — the market's higher than me
 
     FP_DATA: '/data/fp_redraft.json',
     FP_META: '/data/fp_redraft_meta.json',

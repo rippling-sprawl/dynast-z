@@ -11,11 +11,19 @@ const CURRENT_GOLF_YEAR = 2026;
 
 function buildNavItems() {
   const items = []
+  // Mirrors isAdmin() in auth.js, which several pages don't load (and account.html
+  // loads after nav.js), so read the role key directly when it isn't available.
+  const admin = typeof isAdmin === 'function'
+    ? isAdmin()
+    : localStorage.getItem('dz_role') === 'admin';
   items.push(
     { type: 'section', label: 'Betting' },
     { type: 'link', label: 'Bets', href: '/bets' },
     { type: 'section', label: 'Football' },
-    { type: 'link', label: "The Baker's Oven", href: '/the-bakers-oven' },
+  );
+  // The Baker's Oven is admin-only (see requireAdmin in auth.js).
+  if (admin) items.push({ type: 'link', label: "The Baker's Oven", href: '/the-bakers-oven' });
+  items.push(
     { type: 'link', label: 'Trade Calculator', href: '/trade-calculator' },
     { type: 'link', label: 'JHBC', href: '/league/1314983622930870272' },
     { type: 'link', label: 'Drew Dynasty', href: '/league/1312081645817327616' },

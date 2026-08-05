@@ -74,6 +74,7 @@ Not a bottleneck by roughly three orders of magnitude.
 | `scripts/primary/oven-csv.js` | `window.OvenCSV` — RFC-4180 parser, template, export |
 | `scripts/primary/oven-draft.js` | `window.OvenDraft` — Sleeper client, pick math, poller |
 | `scripts/primary/oven-board.js` | `window.OvenBoard` — merge, heat, render, patch |
+| `scripts/primary/oven-targets.js` | `window.OvenTargets` — mountable Targets & Projections drawer |
 | `scripts/fetch_fp_redraft.py` | Offline FantasyPros half-PPR scrape |
 | `data/fp_redraft.json` · `data/fp_redraft_meta.json` | Generated, committed |
 
@@ -107,22 +108,105 @@ starter file from the current FantasyPros top 250, so the first upload is one ed
 ### Hot and cold
 
 An explicit `Grade` wins. Without one, heat is `fpRank - myRank` — positive means you're higher
-on him than consensus. Colors are the source spreadsheet's own endpoints (`#57BB8A` /
-`#EB9891`) via `window.Heatmap.diverging`, in two channels: a full-saturation 4 px left rail
-(the per-player signal) and a low-alpha row wash from a 5-row rolling mean (the *region*, so a
-run of your guys reads as one continuous band).
+on him than consensus. It renders through `window.Heatmap.diverging` in two channels: a
+full-saturation 3 px left rail (the per-player signal) and a low-alpha row wash from a 5-row
+rolling mean (the *region*, so a run of your guys reads as one continuous band).
 
-The sheet's pale mid-tones are alpha-over-white; over this app's `#0f1117` the same hues
-composite dark. Hue and ordering are faithful, luminance is inverted for dark mode — do not try
-to reproduce the light-mode hex values literally.
+The ramp is **thermal**, not the source spreadsheet's green/salmon: `--oven-frost` `#6AA9D0`
+(the market is higher than you) to `--oven-flame` `#FF7A18` (you are higher than the market).
+Endpoints live in `oven-config.js` and must stay in sync with `bakers-oven.css`.
 
-### Expected-pick markers
+Two reasons the sheet's `#57BB8A` / `#EB9891` did not survive. They were alpha-over-white, so
+they composite muddy on a near-black page. And green/red is the single hue pair that collapses
+under deuteranopia — on the one screen where color *is* the judgment. Blue↔orange is the
+standard safe substitute, and it happens to be what a board called The Baker's Oven should have
+been measuring in all along.
+
+### Expected-pick markers — the horizon
 
 The spreadsheet's sparse column-3 markers, recomputed live. For your k-th upcoming pick, the
 marker sits after `pickNo - onTheClock` still-available players — "if the board goes chalk,
 you're choosing from here." Unlike the static column, this honors keepers, traded picks, and
-every pick actually made, and the markers rise up the board as players come off. Rows above the
-first marker get a faint hatch: likely gone before you're up.
+every pick actually made, and the markers rise up the board as players come off.
+
+This is the page's signature element, so it is built as one: the first marker is full-bleed,
+flame, and set in the serif face (used here and on the on-the-clock state, nowhere else). Later
+markers are quiet — `Then · 3.12`. The count of players between you and it lives in the pinned
+console, not on the marker; the console is always on screen, so printing "N away" in both places
+just says it twice.
+
+Rows above the first marker are a **named zone** — a `The chalk · N gone before you're up`
+header, plus a diagonal hatch. The hatch is painted at `z-index: -1` so it knocks back the
+background without darkening the glyphs: these rows are exactly what you read when the board
+*doesn't* go chalk, so recession is carried by texture, never by dimming text below contrast.
+
+---
+
+## Targets & Projections
+
+A right-edge drawer (`scripts/primary/oven-targets.js`), mounted on both the index and the board.
+It is a **component, not a page**: it injects its own tab, panel and listeners into `<body>` and
+reads everything through one accessor the host supplies.
+
+```js
+OvenTargets.mount({ getState: function () { return {
+  rows, drafted, picks, plan, teamsCount, rounds, myRosterId
+}; } });
+OvenTargets.refresh();   // after every poll
+```
+
+It never writes to the board. The only thing it persists is a list of board keys, under its own
+synced slice (`oven_targets` / `dz_oven_targets_v1`) — so queuing a player cannot corrupt the
+imported CSV, and the queue follows you from the index to the board to your phone.
+
+### Getting players in
+
+Board rows are `draggable="true"` and carry a pin button; `OvenTargets` owns both handlers, and
+both are inert on a page that doesn't mount it. Dragging auto-opens the drawer (there is nothing
+to drop onto otherwise) and the tab itself is a drop target. **The pin is not redundant** —
+HTML5 drag-and-drop does not fire on iOS Safari at all, and this page's whole premise is being
+used live on a phone.
+
+The drawer is deliberately **non-modal on wide screens**: a scrim over the board would eat the
+pointer events that dragging depends on. Below 720 px it gets the scrim, because there is no drag
+to protect.
+
+### View 1 — targets
+
+The queue, grouped by position, ordered by your rank. Each row carries the grade chip and a
+window chip fed by the projection below: `R4–R7` (available across that span), `R3 only` (one
+shot at him), `yours R2` (the sim already takes him there), `out of reach`, or `gone 3.05` once
+he's actually off the board.
+
+### View 2 — projections
+
+Rounds 1..N, exactly as the draft is structured. Keepers and made picks fill their own round from
+`pick.metadata` — not from the board, because a keeper need not be on your CSV at all. Rounds you
+traded away say so.
+
+Future picks are simulated forward, and the model is worth stating because every number rests on
+it:
+
+1. **The room drafts to consensus.** Between your picks, the top `gap` of the *market-ordered*
+   (FantasyPros ECR) pool disappears, where `gap` is the count of genuinely unfilled picks
+   between your turns — so keepers and traded picks are honored, same as the horizon markers.
+2. **You draft your board.** At each of your picks the sim takes the best remaining player by
+   adjusted rank: your rank pulled forward by `PROJ_TARGET_BONUS` (queued) and by the CSV grade
+   × `PROJ_GRADE_WEIGHT`. The grade is halved on purpose — an opinion is a thumb on the scale,
+   not a replacement for the ranking.
+3. **That choice is then removed from the pool.** Round 5 is projected against a board where you
+   already took rounds 1–4. This look-ahead is the entire reason the view exists; without it
+   every round would recommend the same player.
+
+Each row is chipped with what it is: `proj` (rank order put him here), `target` (he's in your
+queue — a player can be both), `top RB` (best remaining at his position), and the verdict that
+actually drives a decision — `now or never` vs `can wait`, computed by asking whether his index
+in the current pool survives the *next* gap. Past the rank-order entries, every position with a
+body left contributes its best remaining player as a **floor**, so a run on your position never
+leaves a pick with no answer; those rows are set lighter, since they are fallbacks rather than
+recommendations.
+
+The model is exported as `OvenTargets.project(state)` so it can be exercised without mounting.
 
 ---
 
@@ -203,8 +287,10 @@ Run `python3 server.py`, open `http://localhost:8000`.
 
 **Draft data** (league is `pre_draft` until 2026-08-31, so this is testable now)
 8. All **7** keepers render struck through with a `KEPT · owner` tag.
-9. Status bar reads *Pick 1 of 192 · 7 off the board* — proving first-unfilled, not `length + 1`.
-10. Next pick reads **2.01 · 10 away** (pick 12 is a keeper; 9 and 12 are filled).
+9. Console tally reads *Pick 1 of 192 · 7 off the board* — proving first-unfilled, not `length + 1`.
+10. Console reads **Your pick / 2.01 / 10 away** (pick 12 is a keeper; 9 and 12 are filled), and
+    the board carries a `The chalk · 10 gone before you're up` header above a hatched band that
+    ends at the `You choose from here · 2.01` horizon.
 11. Board pick list matches the fixture above.
 
 **Live behavior**
@@ -215,16 +301,31 @@ Run `python3 server.py`, open `http://localhost:8000`.
     `last_picked` changes. Background the tab → polling stops. Foreground → immediate poll.
 15. Offline → "Reconnecting (n) · last update Nm ago", backoff widens; online → recovers.
 
+**Targets & Projections**
+16. The tab sits on the right edge of both `/the-bakers-oven` and `/the-bakers-oven/1`. Opening it
+    on a wide screen leaves the board fully clickable — no scrim.
+17. Drag a row from the board: the drawer opens itself, the player lands in the queue, his board
+    row gains a flame inner rail and his pin flips to `✓`. Dropping him twice is a no-op.
+18. On a phone, the pin adds and removes him (drag never fires on iOS Safari).
+19. Projections lists **16** rounds. baker28's R14 keeper fills round 14 with a `kept` chip;
+    made picks show `picked`; the traded-away R7 and R12 read "No pick this round".
+20. Round 2 does not recommend the same player round 1 already took — that is the look-ahead.
+21. Queue a player who is 40 spots down: he appears in a later round with a `target` chip, and his
+    targets-view window chip agrees with the round he shows up in.
+22. Sort or filter the board → re-render → targeted rows are still marked.
+
 **Sync**
-16. Signed in, import on one browser → open another → same board. Signed out → localStorage only,
-    still fully functional.
+23. Signed in, import on one browser → open another → same board and the same target queue.
+    Signed out → localStorage only, still fully functional.
 
 **Degraded**
-17. Rename `data/fp_redraft.json` → board still renders from CSV with `—` in ECR.
-18. No CSV at all → board seeds from FantasyPros ranks with an import prompt.
+24. Rename `data/fp_redraft.json` → board still renders from CSV with `—` in ECR.
+25. No CSV at all → board seeds from FantasyPros ranks with an import prompt.
+26. Import a new CSV that drops a queued player: he vanishes from the drawer but stays in storage,
+    and the empty state says how many saved targets aren't on the current board.
 
 **Invariants**
-19. `git status` shows no `package.json`, no lockfile, no new entry in `pyproject.toml`'s
+27. `git status` shows no `package.json`, no lockfile, no new entry in `pyproject.toml`'s
     `dependencies = []`. Zero dependencies is load-bearing in this repo.
 
 ---

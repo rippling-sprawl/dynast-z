@@ -28,6 +28,16 @@ function isAdmin() {
   return localStorage.getItem('dz_role') === 'admin';
 }
 
+// Page gate for admin-only routes. Bounces signed-out visitors to sign-in and
+// signed-in non-admins to `fallback`, and returns false so the caller can stop
+// initializing the page. UI-level gating only — the static pages and their
+// data files are still served to anyone who requests them directly.
+function requireAdmin(fallback) {
+  if (isLoggedIn() && isAdmin()) return true;
+  location.replace(isLoggedIn() ? (fallback || '/') : '/account');
+  return false;
+}
+
 // ---- audit / "manage on behalf" session ------------------------------------
 // When an admin selects a user in /bets/audit, that user becomes the "audit
 // target". Stored in sessionStorage so it auto-clears when the tab closes. The
