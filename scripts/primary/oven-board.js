@@ -157,17 +157,23 @@
   var FADED_GRADES = { fade: true, avoid: true };
 
   /* The board has exactly one order: yours, ascending. There is no column
-   * sorting and no sort state. Re-ordering the board mid-draft is the one
+   * sorting and no sort state. Re-SORTING the board mid-draft is the one
    * interaction that can lose you a pick — the horizon markers, the tier bands
    * and your own muscle memory for where a player sits are all anchored to
    * personal-rank order, and every one of them is meaningless under a different
    * sort. Filtering subtracts rows without moving the survivors, which is why
-   * that stayed. */
+   * that stayed.
+   *
+   * Dragging a row is not a sort: it EDITS that one order, in place and
+   * permanently, and everything anchored to it stays true afterward because
+   * personal rank is still what the board is showing. See the re-ranking
+   * section below. */
   var state = {
     rows: [], rowEls: null, listEl: null, teams: {},
     drafted: {},          // key -> pick
     filters: { pos: null, hideDrafted: false, hideFade: false },
     clock: null, teamsCount: 12, myRosterId: null,
+    onReorder: null, reorderWired: false,
   };
 
   function railFn() {
@@ -230,9 +236,10 @@
     // No per-row tier chip: the full-width tier band already states it, and
     // repeating it 250 times competes with the heat rail for the same glance.
     //
-    // draggable + the pin button are the two routes into the targets queue —
-    // OvenTargets owns both handlers, and both are inert on a page that doesn't
-    // mount it. Drag is desktop-only by nature; the pin is what works on a phone.
+    // Two separate affordances on the row, and they do not overlap: the row is
+    // draggable to RE-RANK him (see enableReorder below), and the pin queues him
+    // as a target. The pin is OvenTargets' handler and is inert on a page that
+    // doesn't mount the drawer.
     return '<div class="oven-row' + (r.grade === 'fade' ? ' faded' : '') +
       '" draggable="true" data-key="' + esc(r.key) + '"' +
       (washC ? ' style="background:' + washC + '"' : '') + '>' +
@@ -414,6 +421,160 @@
     }
   }
 
+  /* ---------- re-ranking (drag a row to move him) ----------
+   *
+   * The board has exactly one order and it is mine, so the only thing a drag on
+   * a row can mean is "he belongs here instead". Dropping renumbers every
+   * `myRank` from the top, recomputes heat against consensus, re-renders, and
+   * hands the new rows to the host to persist — into the same per-league blob a
+   * CSV import writes, so exporting after a drag session gives you the board
+   * you are actually looking at.
+   *
+   * HTML5 DnD never fires on iOS Safari, which is the same bargain the rest of
+   * the page makes: dragging is the fast path on a laptop, and the CSV is how
+   * you author a board anywhere else. Nothing here is the only route to
+   * anything — the ranks still come from the sheet.
+   */
+
+  var drag = { key: null, overEl: null, after: false };
+
+  function rowUnder(e) {
+    var el = e.target && e.target.closest && e.target.closest('.oven-row[data-key]');
+    return el && state.listEl && state.listEl.contains(el) ? el : null;
+  }
+
+  function clearHint() {
+    if (drag.overEl) drag.overEl.classList.remove('drop-before', 'drop-after');
+    drag.overEl = null;
+    drag.after = false;
+  }
+
+  function endDrag() {
+    clearHint();
+    if (state.listEl) {
+      var src = state.listEl.querySelector('.oven-row.is-dragging');
+      if (src) src.classList.remove('is-dragging');
+    }
+    document.body.classList.remove('oven-reordering');
+    drag.key = null;
+  }
+
+  /* One order means one numbering. Rows that arrived without a MyRank get a
+   * number here too — once you have hand-ordered the board there is no longer an
+   * "unranked, sorts to the bottom" tail to preserve. */
+  function renumber() {
+    state.rows.forEach(function (r, i) { r.myRank = i + 1; r.boardIndex = i; });
+  }
+
+  /* Move by KEY, not by on-screen index: a filter can be active, so the row
+   * you dropped onto is a position in `state.rows` that the visible list only
+   * samples. Landing between two visible rows leaves everything hidden between
+   * them exactly where it was. */
+  function moveRow(key, refKey, after) {
+    var i, from = -1, to = -1;
+    for (i = 0; i < state.rows.length; i++) if (state.rows[i].key === key) { from = i; break; }
+    if (from === -1 || key === refKey) return false;
+
+    var row = state.rows.splice(from, 1)[0];
+    for (i = 0; i < state.rows.length; i++) if (state.rows[i].key === refKey) { to = i; break; }
+    if (to === -1) { state.rows.splice(from, 0, row); return false; }
+
+    var at = after ? to + 1 : to;
+    state.rows.splice(at, 0, row);
+
+    /* Tier belongs to the band, not to the player. Carrying his old tier into
+     * his new home would emit a stray "Tier 6" header in the middle of tier 2 —
+     * tier headers fire on first appearance — and would claim something the move
+     * just contradicted. So he adopts the tier of whoever he now sits behind
+     * (or, dropped at the very top, of whoever he now sits in front of). */
+    var neighbor = at > 0 ? state.rows[at - 1] : state.rows[at + 1];
+    if (neighbor) row.tier = neighbor.tier;
+
+    renumber();
+    return true;
+  }
+
+  /* The board blob's rows, in the shape a CSV import writes — same object
+   * either way, so `Export My Rankings` and the next page load both see the
+   * order you dragged. */
+  function exportRows() {
+    return state.rows.map(function (r) {
+      return {
+        name: r.name,
+        pos: r.pos || '',
+        team: r.team || '',
+        tier: r.tier == null ? null : r.tier,
+        myRank: r.myRank,
+        grade: r.grade || null,
+        note: r.note || '',
+        extra: r.extra || {},
+        player_id: r.player_id || null,
+      };
+    });
+  }
+
+  function wireReorder(listEl) {
+    listEl.addEventListener('dragstart', function (e) {
+      var row = rowUnder(e);
+      if (!row) return;
+      drag.key = row.getAttribute('data-key');
+      try {
+        // Firefox refuses to start a drag with an empty dataTransfer.
+        e.dataTransfer.setData('text/plain', drag.key);
+      } catch (err) { /* older Edge rejects setData mid-dragstart */ }
+      e.dataTransfer.effectAllowed = 'move';
+      row.classList.add('is-dragging');
+      document.body.classList.add('oven-reordering');
+    });
+
+    listEl.addEventListener('dragover', function (e) {
+      if (!drag.key) return;
+      // Tier bands and horizon markers are not seams — drop them and nothing
+      // happens, so drop the hint too rather than promising a landing spot.
+      var row = rowUnder(e);
+      if (!row) { clearHint(); return; }
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+
+      // Above the midpoint means "before him", below means "after him" — the
+      // seam under the cursor, not the row, is what you are aiming at.
+      var box = row.getBoundingClientRect();
+      var after = e.clientY > box.top + box.height / 2;
+      if (row === drag.overEl && after === drag.after) return;
+      clearHint();
+      drag.overEl = row;
+      drag.after = after;
+      row.classList.add(after ? 'drop-after' : 'drop-before');
+    });
+
+    listEl.addEventListener('drop', function (e) {
+      if (!drag.key) return;
+      e.preventDefault();
+      var key = drag.key;
+      var refKey = drag.overEl ? drag.overEl.getAttribute('data-key') : null;
+      var after = drag.after;
+      endDrag();
+      if (!refKey || !moveRow(key, refKey, after)) return;
+
+      computeHeat(state.rows);
+      render();
+      if (state.onReorder) state.onReorder(exportRows());
+    });
+
+    // Fires on the source row wherever the drag ended, including a cancel.
+    listEl.addEventListener('dragend', endDrag);
+  }
+
+  /* Opt-in, because the host owns persistence: a board nobody can save is a
+   * board that silently forgets the order on reload. `onReorder` receives the
+   * full row list, already renumbered. */
+  function enableReorder(opts) {
+    state.onReorder = (opts && opts.onReorder) || null;
+    if (state.reorderWired || !state.listEl) return;
+    wireReorder(state.listEl);
+    state.reorderWired = true;
+  }
+
   /* Index drafted picks by board key. Sleeper pick metadata carries the name,
    * so this works without the 5 MB player database. player_id is preferred
    * when the CSV was resolved. */
@@ -448,6 +609,8 @@
     indexPicks: indexPicks,
     render: render,
     applyDraftState: applyDraftState,
+    enableReorder: enableReorder,
+    exportRows: exportRows,
     state: state,
   };
 })(window);

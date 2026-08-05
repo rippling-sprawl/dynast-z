@@ -42,7 +42,12 @@ async function loadWithSync(sport, key, localStorageKey, defaultValue) {
     localStorage.setItem(localStorageKey, JSON.stringify(remote));
     return remote;
   } else if (local && Object.keys(local).length > 0) {
-    // Server empty but localStorage has data — push to server (auto-migration)
+    // Server empty but localStorage has data — push to server (auto-migration).
+    //
+    // INVARIANT: `localStorageKey` must be namespaced per user by the caller
+    // (see OvenLeagues.localKey / betsKey). With a fixed global key, this
+    // branch hands one account's data to the next person who signs in on the
+    // same browser and then writes it to their server row permanently.
     syncPush(sport, key, local);
     return local;
   }

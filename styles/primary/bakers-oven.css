@@ -110,7 +110,7 @@ body:has(.oven-content) header {
 }
 .oven-card h3 {
   font-family: var(--oven-data);
-  font-size: 10px;
+  font-size: 13px;
   text-transform: uppercase;
   letter-spacing: .18em;
   color: var(--oven-ash-dim);
@@ -118,11 +118,31 @@ body:has(.oven-content) header {
   margin: 0 0 14px;
 }
 
+/* The league is the title of the Draft card and its state is a badge on the
+ * same line. Status was a grid cell like any other, which made the one field
+ * that changes minute to minute read like the ones that never change. */
+.oven-draft-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.oven-draft-league {
+  font-family: var(--oven-name);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--oven-bone);
+}
+
 .oven-status-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
   gap: 14px;
 }
+/* Stacked rows, so the pairing (format+scoring, date+keepers) survives the
+ * auto-fit reflow instead of collapsing into one run of six cells. */
+.oven-status-grid + .oven-status-grid { margin-top: 16px; }
 .oven-stat-label {
   font-family: var(--oven-data);
   font-size: 9px;
@@ -132,7 +152,7 @@ body:has(.oven-content) header {
   font-weight: 700;
   margin-bottom: 4px;
 }
-.oven-stat-value { font-size: 15px; color: var(--oven-bone); font-weight: 600; }
+.oven-stat-value { font-size: 13px; color: var(--oven-bone); font-weight: 600; }
 .oven-stat-value.mono { font-family: var(--oven-data); font-variant-numeric: tabular-nums; }
 
 .oven-pill {
@@ -187,6 +207,37 @@ body:has(.oven-content) header {
   border: 1px solid var(--oven-ember); border-radius: 2px; padding: 2px 5px;
 }
 
+/* The roster picker reuses the team card as a <button>, which brings its own
+ * UA styling along. */
+button.oven-team-card {
+  width: 100%; text-align: left; font: inherit; cursor: pointer;
+}
+
+/* League cards carry a third line and read as squeezed in the 2-up grid. */
+.oven-team-grid.one-col { grid-template-columns: 1fr; }
+
+/* A league card needs both a whole-card target and two real buttons, and a
+ * <button> can't live inside an <a> — so the name is the link and its ::after
+ * stretches over the card behind the actions. */
+.oven-team-card.is-league { position: relative; }
+.oven-league-link { text-decoration: none; display: block; }
+.oven-league-link::after { content: ''; position: absolute; inset: 0; }
+.oven-league-actions {
+  position: relative; z-index: 1;
+  display: flex; gap: 6px; margin-left: auto; flex-shrink: 0;
+}
+.oven-league-unclaimed { color: var(--oven-ash-dim); font-style: italic; }
+
+/* The one destination on the league page — it should read as the primary
+ * action, not as one card in a list of twelve. */
+.oven-open-board { border-left-width: 3px; padding: 14px 14px; }
+.oven-open-cta {
+  font-family: var(--oven-data);
+  font-size: 10px; font-weight: 700; color: var(--oven-flame);
+  text-transform: uppercase; letter-spacing: .14em;
+  margin-left: auto; padding-left: 12px; flex-shrink: 0;
+}
+
 /* ---------- import ---------- */
 
 .oven-drop {
@@ -211,6 +262,11 @@ body:has(.oven-content) header {
 .oven-btn.primary { background: var(--oven-ember); border-color: var(--oven-ember); color: var(--oven-bone); }
 .oven-btn.primary:hover { background: var(--oven-flame); border-color: var(--oven-flame); color: #1A0D03; }
 .oven-btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+/* Icon + label buttons — the icon rides at the label's cap height, never larger. */
+.oven-btn.with-icon { display: inline-flex; align-items: center; gap: 7px; }
+.oven-btn.with-icon svg { width: 13px; height: 13px; flex: none; }
+/* Inline with a line of text or tucked into a card — never a primary action. */
+.oven-btn.sm { font-size: 9px; padding: 4px 8px; letter-spacing: .12em; }
 
 .oven-note { font-size: 12px; color: var(--oven-ash-dim); line-height: 1.6; margin: 14px 0 0; }
 .oven-note a { color: var(--oven-flame); }
@@ -372,6 +428,34 @@ body:has(.oven-content) header {
 }
 .oven-search::placeholder { color: var(--oven-ash-dim); }
 .oven-search:focus { outline: none; border-color: var(--oven-flame); background: var(--oven-kiln); }
+
+/* Same shell as .oven-search, minus the platform chrome, plus a caret. */
+.oven-select {
+  font-family: var(--oven-name);
+  background: var(--oven-brick);
+  border: 1px solid var(--oven-mortar);
+  color: var(--oven-bone);
+  font-size: 12px; padding: 6px 28px 6px 10px; border-radius: 2px;
+  appearance: none; -webkit-appearance: none; cursor: pointer;
+  background-image: linear-gradient(45deg, transparent 50%, var(--oven-ash) 50%),
+                    linear-gradient(135deg, var(--oven-ash) 50%, transparent 50%);
+  background-position: calc(100% - 14px) 52%, calc(100% - 9px) 52%;
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+}
+.oven-select:focus { outline: none; border-color: var(--oven-flame); background-color: var(--oven-kiln); }
+
+/* One input, one button. The input takes whatever is left. */
+.oven-field-row { display: flex; gap: 8px; align-items: center; }
+.oven-field-row .oven-search,
+.oven-field-row .oven-select { flex: 1; min-width: 0; }
+
+.oven-picker-label {
+  font-family: var(--oven-data);
+  font-size: 10px; font-weight: 700; color: var(--oven-ash);
+  text-transform: uppercase; letter-spacing: .14em;
+  margin: 16px 0 8px;
+}
 
 /* ================= THE BOARD ================= */
 
@@ -551,6 +635,24 @@ body:has(.oven-content) header {
 .oven-row.off .oven-name-main { color: var(--oven-ash-dim); }
 .oven-row.off .oven-name-text { text-decoration: line-through; }
 
+/* ---------- re-ranking ----------
+ * Dragging a row moves the player, and mid-drag the only open question is which
+ * seam he lands in — so the whole signal is one flame rule on that seam. The row
+ * he came from dims rather than disappearing: it is still the reference for how
+ * far you have moved him. */
+.oven-row[draggable="true"] { cursor: grab; }
+.oven-row:active { cursor: grabbing; }
+.oven-row.is-dragging { opacity: .3; }
+.oven-row.drop-before { box-shadow: inset 0 2px 0 var(--oven-flame); }
+.oven-row.drop-after  { box-shadow: inset 0 -2px 0 var(--oven-flame); }
+/* A targeted row already spends its inset shadow on the intent rail, and the two
+ * are different claims — carry both rather than letting one silently win. */
+.oven-row.is-target.drop-before { box-shadow: inset 3px 0 0 var(--oven-flame), inset 0 2px 0 var(--oven-flame); }
+.oven-row.is-target.drop-after  { box-shadow: inset 3px 0 0 var(--oven-flame), inset 0 -2px 0 var(--oven-flame); }
+/* The pin is a click target sitting inside a drag source; mid-drag it can only
+ * be passed over, never meant, so it stops lighting up. */
+body.oven-reordering .oven-pin { pointer-events: none; }
+
 /* ================= THE HORIZON =================
  * The signature. `placeMarkers()` computes, live, where you will actually be
  * choosing from if the board goes chalk — honoring keepers, traded picks, and
@@ -697,10 +799,10 @@ body:has(.oven-content) header {
 
 /* ================= TARGETS & PROJECTIONS =================
  * A right-edge drawer, mounted by scripts/primary/oven-targets.js onto whatever
- * view includes it. Deliberately NOT modal on a wide screen: the whole point is
- * dragging players off the board while it's open, so no scrim may eat pointer
- * events over the board. Narrow screens get the scrim, because there drag isn't
- * available at all and the drawer is doing a full-screen job.
+ * view includes it. Deliberately NOT modal on a wide screen: you queue players
+ * from the board with the drawer open, and a scrim over the board would eat the
+ * clicks that does. Narrow screens get the scrim, because there the drawer is
+ * doing a full-screen job and the board behind it isn't reachable anyway.
  *
  * Same two-hue rule as the board — flame for mine/urgent, frost for the market.
  */
@@ -729,8 +831,6 @@ body:has(.oven-content) header {
  * intent, and they are different claims — keep them visually separate. */
 .oven-row.is-target { box-shadow: inset 3px 0 0 var(--oven-flame); }
 .oven-row.is-target.gone { box-shadow: none; }
-.oven-row[draggable="true"] { cursor: grab; }
-.oven-row:active { cursor: grabbing; }
 
 /* ---------- the tab ---------- */
 
@@ -764,8 +864,6 @@ body:has(.oven-content) header {
   font-variant-numeric: tabular-nums;
 }
 body.oven-tp-open .oven-tp-tab { opacity: 0; pointer-events: none; }
-/* Mid-drag the tab is a drop target of last resort, so it must stay reachable. */
-body.oven-tp-dragging .oven-tp-tab { opacity: 1; pointer-events: auto; border-color: var(--oven-flame); }
 
 /* ---------- the drawer ---------- */
 
@@ -783,7 +881,6 @@ body.oven-tp-dragging .oven-tp-tab { opacity: 1; pointer-events: auto; border-co
   visibility: hidden;
 }
 body.oven-tp-open .oven-tp { transform: translateX(0); visibility: visible; }
-.oven-tp.is-over { border-left-color: var(--oven-flame); box-shadow: -18px 0 40px rgba(0, 0, 0, .45), inset 0 0 0 1px var(--oven-ember); }
 
 .oven-tp-head {
   display: flex; align-items: center; justify-content: space-between;
@@ -983,8 +1080,8 @@ body.oven-tp-open .oven-tp { transform: translateX(0); visibility: visible; }
 /* ---------- mobile ---------- */
 
 @media (max-width: 720px) {
-  /* Below the drag threshold the drawer is doing a full-screen job, so it gets
-   * a scrim — there is no board interaction left to protect. */
+  /* At this width the drawer covers the board anyway, so it gets a scrim —
+   * there is no board interaction left behind it to protect. */
   body.oven-tp-open::after {
     content: '';
     position: fixed; inset: 0; z-index: 149;

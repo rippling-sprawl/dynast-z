@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <title>The Baker's Oven | Dynast-Z</title>
+  <link rel="stylesheet" href="/styles/base/styles.css?v=abec71e4">
+  <link rel="stylesheet" href="/styles/primary/bakers-oven.css?v=fe5affc2">
+</head>
+<body>
+  <div id="header-mount"></div>
+  <div id="nav-drawer-mount"></div>
+  <script src="/scripts/base/auth.js?v=8f2b460f"></script>
+  <script src="/scripts/base/nav.js?v=d80ba5fd"></script>
+  <script src="/scripts/base/sync.js?v=1b85ffb1"></script>
+  <script src="/scripts/primary/oven-config.js?v=52db5b4e"></script>
+  <script src="/scripts/primary/oven-csv.js?v=6d188388"></script>
+  <script src="/scripts/primary/oven-draft.js?v=6d611264"></script>
+  <script src="/scripts/primary/oven-leagues.js?v=3332aa1a"></script>
+  <script src="/scripts/primary/oven-board.js?v=64413710"></script>
+  <script src="/scripts/primary/oven-targets.js?v=72f2d635"></script>
+  <script>initPage();</script>
+
+  <main class="oven-content">
+    <div class="oven-breadcrumbs">
+      <a href="/">Home</a><span class="sep">/</span><a href="/football">Football</a><span class="sep">/</span><a href="/the-bakers-oven">The Baker's Oven</a><span class="sep">/</span><span id="crumb-league">League</span>
+    </div>
+    <h2 class="oven-h2">🔥 The Baker's Oven</h2>
+    <p class="oven-sub">Your rankings, live against the Sleeper draft. Players cross off as they're picked or kept, and your next pick tracks itself down the board.</p>
+
+    <div id="loading">Loading league…</div>
+
+    <div id="sections" style="display:none;">
+      <div id="claim"></div>
+
+      <div class="oven-card">
+        <h3>Draft</h3>
+        <div id="draft-status"></div>
+      </div>
+
+      <div class="oven-card">
+        <h3>Open Draft Board</h3>
+        <div class="oven-team-grid one-col" id="open-board"></div>
+      </div>
+
+      <div class="oven-card">
+        <h3>My Rankings</h3>
+        <div id="board-summary"></div>
+        <div class="oven-drop" id="drop">
+          <input type="file" id="file" accept=".csv,text/csv">
+          <strong>Drop a CSV here</strong> or click to choose a file
+        </div>
+        <div class="oven-btn-row">
+          <button class="oven-btn with-icon" id="tpl-btn">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2v8"/><path d="M4.5 7 8 10.5 11.5 7"/><path d="M2.5 13h11"/></svg>
+            Rankings Template
+          </button>
+          <button class="oven-btn with-icon" id="export-btn">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2v8"/><path d="M4.5 7 8 10.5 11.5 7"/><path d="M2.5 13h11"/></svg>
+            My Rankings
+          </button>
+        </div>
+        <div id="import-msg"></div>
+        <p class="oven-note">
+          Rankings are private to your account and saved per league.
+          Columns: <code>Player</code> (required), <code>Pos</code>, <code>Team</code>,
+          <code>Tier</code>, <code>MyRank</code>, <code>Grade</code>, <code>Note</code>.
+          <code>Grade</code> accepts <code>love</code>, <code>like</code>, <code>fade</code>, <code>avoid</code>
+          and drives the hot/cold coloring; without it, color comes from how far your rank sits
+          from FantasyPros consensus. Any extra columns you keep are preserved and ignored.
+        </p>
+      </div>
+    </div>
+  </main>
+
+  <script>
+  (function () {
+    // Per-account data — any signed-in user, their own leagues.
+    if (!requireLogin()) return;
+
+    var loading = document.getElementById('loading');
+    var sections = document.getElementById('sections');
+    var ctx = null, board = null, fp = [], draft = null, rec = null;
+    var leagueId = null, myRosterId = null;
+
+    var seg = (location.pathname.match(/\/the-bakers-oven\/([^/?#]+)/) || [])[1] || '';
+
+    // The Targets & Projections drawer mounts here too — the queue and the round
+    // plan are worth reading before draft night, not only during it. Same
+    // component, same synced queue, different host view. myRosterId is filled in
+    // from the saved league inside boot(), never at IIFE scope: mount before it
+    // resolves and the drawer projects rounds for roster `undefined`.
+    var tp = { rows: [], drafted: {}, picks: [], plan: [], teamsCount: 12, rounds: 16, myRosterId: null };
+
+    function rebuildTargetState(draft, picks) {
+      tp.rows = OvenBoard.computeHeat(OvenBoard.buildBoard(board && board.rows, fp));
+      tp.picks = picks || tp.picks;
+      tp.drafted = OvenBoard.indexPicks(tp.picks, tp.rows);
+      tp.plan = OvenDraft.buildPickPlan(draft, ctx.tradedPicks);
+      tp.teamsCount = draft.settings.teams;
+      tp.rounds = draft.settings.rounds;
+      tp.myRosterId = myRosterId;
+      OvenTargets.refresh();
+    }
+
+    function fmtStart(ms) {
+      if (!ms) return '—';
+      var d = new Date(Number(ms));
+      return d.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+    }
+
+    function countdown(ms) {
+      if (!ms) return '';
+      var diff = Number(ms) - Date.now();
+      if (diff <= 0) return 'now';
+      var d = Math.floor(diff / 86400000), h = Math.floor(diff % 86400000 / 3600000);
+      if (d > 0) return 'in ' + d + 'd ' + h + 'h';
+      var m = Math.floor(diff % 3600000 / 60000);
+      return 'in ' + h + 'h ' + m + 'm';
+    }
+
+    function stat(label, value, mono) {
+      return '<div><div class="oven-stat-label">' + label + '</div>' +
+        '<div class="oven-stat-value' + (mono ? ' mono' : '') + '">' + value + '</div></div>';
+    }
+
+    function myTeam() {
+      return (ctx.teams || []).filter(function (t) { return t.roster_id === myRosterId; })[0] || null;
+    }
+
+    // The league is the title and its state is a badge beside it — status is an
+    // attribute of the draft, not another field to scan past in the grid.
+    function head(statusClass, statusText) {
+      return '<div class="oven-draft-head">' +
+        '<span class="oven-draft-league">' + OvenBoard.esc(ctx.league.name) + '</span>' +
+        '<span class="oven-pill ' + statusClass + '">' + statusText + '</span></div>';
+    }
+
+    function row(html) { return '<div class="oven-status-grid">' + html + '</div>'; }
+
+    function renderStatus(draft, picks) {
+      var s = draft.settings;
+      var keepers = picks.filter(function (p) { return p.is_keeper; }).length;
+      document.getElementById('draft-status').innerHTML =
+        head(draft.status, draft.status.replace('_', ' ')) +
+        row(
+          stat('Format', s.teams + '-team · ' + s.rounds + 'rd · ' + draft.type, true) +
+          stat('Scoring', (draft.metadata && draft.metadata.scoring_type || '').replace('_', ' ') || '—', true)
+        ) +
+        row(
+          stat('Draft Date', fmtStart(draft.start_time) + ' <span style="color:#6e7681;font-size:12px">' + countdown(draft.start_time) + '</span>') +
+          stat('Keepers set', keepers + ' league-wide', true)
+        );
+    }
+
+    // A draft-less league still deserves a page: Sleeper doesn't create the
+    // draft object until the commissioner schedules one, but the rosters and
+    // "which team is mine" are useful the moment the league exists.
+    function renderStatusNoDraft() {
+      document.getElementById('draft-status').innerHTML =
+        head('pre_draft', 'no draft yet') +
+        row(
+          stat('Teams', String(ctx.league.total_rosters || ctx.teams.length), true) +
+          stat('Season', OvenBoard.esc(String(ctx.league.season || '—')), true)
+        );
+    }
+
+    /* One destination, not a grid: the board you want is your own. The route
+     * still accepts any roster id — this is the only link that offers one. */
+    function renderOpenBoard(draft) {
+      var el = document.getElementById('open-board');
+      var me = myTeam();
+
+      if (!me) {
+        el.innerHTML = '<div class="oven-msg warn">Pick your team above to open your draft board.</div>';
+        return;
+      }
+
+      var sub = '@' + OvenBoard.esc(me.username);
+      if (draft) {
+        var slot = null;
+        Object.keys(draft.slot_to_roster_id || {}).forEach(function (s) {
+          if (draft.slot_to_roster_id[s] === myRosterId) slot = Number(s);
+        });
+        var mine = OvenDraft.buildPickPlan(draft, ctx.tradedPicks)
+          .filter(function (p) { return p.owner === myRosterId; });
+        if (slot) sub += ' · slot ' + slot;
+        if (mine.length) sub += ' · 1st at ' + OvenDraft.roundPickLabel(mine[0].pick_no, draft.settings.teams);
+      }
+
+      el.innerHTML = '<a class="oven-team-card is-me oven-open-board" href="/the-bakers-oven/' + leagueId + '/' + myRosterId + '">' +
+        (me.avatar
+          ? '<img class="oven-team-avatar" src="' + OvenBoard.esc(me.avatar) + '" alt="" referrerpolicy="no-referrer">'
+          : '<div class="oven-team-avatar"></div>') +
+        '<div class="oven-team-meta">' +
+          '<div class="oven-team-name">' + OvenBoard.esc(me.teamName) + '</div>' +
+          '<div class="oven-team-sub">' + sub + '</div>' +
+        '</div>' +
+        '<span class="oven-open-cta">Open →</span></a>';
+    }
+
+    function renderBoardSummary() {
+      var el = document.getElementById('board-summary');
+      if (!board || !board.rows || !board.rows.length) {
+        el.innerHTML = '<div class="oven-msg warn">No rankings uploaded for this league — the draft board will fall back to FantasyPros half-PPR ranks until you import a CSV.</div>';
+        return;
+      }
+      var matched = board.rows.filter(function (r) { return r.player_id; }).length;
+      var when = board.importedAt ? new Date(board.importedAt).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : 'unknown';
+      el.innerHTML = '<div class="oven-msg ok">' + board.rows.length + ' players · ' +
+        matched + ' matched to Sleeper · imported ' + OvenBoard.esc(when) +
+        (board.filename ? ' from ' + OvenBoard.esc(board.filename) : '') + '</div>';
+    }
+
+    /* An unsaved league still renders — you can follow a shared link into any
+     * league you're in. It just can't know which team is yours until you say. */
+    function renderClaim() {
+      var el = document.getElementById('claim');
+      if (rec && rec.my_roster_id != null) { el.innerHTML = ''; return; }
+
+      var opts = ctx.teams.map(function (t) {
+        return '<option value="' + t.roster_id + '">' + OvenBoard.esc(t.teamName) + ' (@' + OvenBoard.esc(t.username) + ')</option>';
+      }).join('');
+
+      el.innerHTML = '<div class="oven-card">' +
+        '<div class="oven-msg warn">' + (rec
+          ? 'Pick your team in this league to get a next-pick clock and round projections.'
+          : "This league isn't saved to your account yet.") + '</div>' +
+        '<div class="oven-field-row" style="margin-top:10px">' +
+          '<select class="oven-select" id="claim-team">' + opts + '</select>' +
+          '<button class="oven-btn primary" id="claim-save">' + (rec ? "That's me" : 'Save league') + '</button>' +
+        '</div></div>';
+
+      document.getElementById('claim-save').addEventListener('click', function () {
+        var id = Number(document.getElementById('claim-team').value);
+        var team = ctx.teams.filter(function (t) { return t.roster_id === id; })[0];
+        if (!team) return;
+        rec = rec ? OvenLeagues.setMyTeam(leagueId, team) : OvenLeagues.add(ctx.league, team);
+        myRosterId = rec.my_roster_id;
+        renderClaim();
+        renderOpenBoard(draft);
+        if (draft) { renderStatus(draft, tp.picks); rebuildTargetState(draft, null); }
+        else renderStatusNoDraft();
+      });
+    }
+
+    /* ---------- rankings import ---------- */
+
+    function msg(cls, text) {
+      document.getElementById('import-msg').innerHTML =
+        '<div class="oven-msg ' + cls + '">' + text + '</div>';
+    }
+
+    async function importText(text, filename) {
+      var parsed;
+      try {
+        parsed = OvenCSV.parseBoard(text);
+      } catch (e) {
+        msg('err', OvenBoard.esc(e.message));
+        return;
+      }
+      msg('warn', 'Matching ' + parsed.rows.length + ' players to Sleeper…');
+
+      var resolved = null;
+      try {
+        var resp = await fetch('/api/football/resolve', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            players: parsed.rows.map(function (r) { return { name: r.name, pos: r.pos, team: r.team }; }),
+          }),
+        });
+        var data = await resp.json();
+        if (data.error) throw new Error(data.error);
+        resolved = data;
+      } catch (e) {
+        // Resolution is an optimization, not a requirement — the board still
+        // crosses players off by name key. Import rather than block.
+        msg('warn', 'Imported ' + parsed.rows.length + ' players, but Sleeper ID matching failed (' +
+          OvenBoard.esc(e.message) + '). Cross-off will fall back to name matching.');
+      }
+
+      if (resolved) {
+        resolved.players.forEach(function (m, i) {
+          if (parsed.rows[i]) {
+            parsed.rows[i].player_id = m.player_id;
+            if (!parsed.rows[i].pos && m.position) parsed.rows[i].pos = m.position;
+            if (!parsed.rows[i].team && m.team) parsed.rows[i].team = m.team;
+          }
+        });
+      }
+
+      board = {
+        rows: parsed.rows, filename: filename || 'pasted.csv',
+        importedAt: Date.now(), warnings: parsed.warnings,
+      };
+      var bk = OvenLeagues.boardKeys(leagueId);
+      saveWithSync(bk.sport, bk.syncKey, bk.storageKey, board);
+
+      var unmatched = parsed.rows.filter(function (r) { return !r.player_id; });
+      var lines = [];
+      lines.push('<strong>Imported ' + parsed.rows.length + ' players.</strong>');
+      if (resolved) lines.push(resolved.matched + ' matched to Sleeper.');
+      if (unmatched.length) {
+        lines.push('<br>' + unmatched.length + ' unmatched (kept in your rankings, will cross off by name): ' +
+          unmatched.slice(0, 12).map(function (r) { return OvenBoard.esc(r.name); }).join(', ') +
+          (unmatched.length > 12 ? ', …' : ''));
+      }
+      parsed.warnings.forEach(function (w) { lines.push('<br>' + OvenBoard.esc(w)); });
+      msg(unmatched.length ? 'warn' : 'ok', lines.join(' '));
+      renderBoardSummary();
+      if (draft) rebuildTargetState(draft, null);
+    }
+
+    function wireImport() {
+      var drop = document.getElementById('drop');
+      var file = document.getElementById('file');
+      drop.addEventListener('click', function () { file.click(); });
+      file.addEventListener('change', function () {
+        if (file.files && file.files[0]) file.files[0].text().then(function (t) { importText(t, file.files[0].name); });
+      });
+      ['dragenter', 'dragover'].forEach(function (ev) {
+        drop.addEventListener(ev, function (e) { e.preventDefault(); drop.classList.add('dragover'); });
+      });
+      ['dragleave', 'drop'].forEach(function (ev) {
+        drop.addEventListener(ev, function (e) { e.preventDefault(); drop.classList.remove('dragover'); });
+      });
+      drop.addEventListener('drop', function (e) {
+        var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+        if (f) f.text().then(function (t) { importText(t, f.name); });
+      });
+
+      document.getElementById('tpl-btn').addEventListener('click', function () {
+        if (!fp.length) { msg('err', 'FantasyPros data unavailable — cannot build a template.'); return; }
+        OvenCSV.download('bakers-oven-template.csv', OvenCSV.buildTemplate(fp, 250));
+      });
+      document.getElementById('export-btn').addEventListener('click', function () {
+        if (!board || !board.rows.length) { msg('err', 'No rankings to export yet.'); return; }
+        OvenCSV.download('bakers-oven-rankings.csv', OvenCSV.boardToCSV(board.rows));
+      });
+    }
+
+    /* One-time bridge for rankings imported before they were per-league. The
+     * old `oven_board` row can't be auto-assigned — nothing in it says which
+     * league it was for — so it's offered, not migrated. */
+    async function offerLegacyBoard() {
+      if (board && board.rows && board.rows.length) return;
+      var legacy = await syncPull(OVEN.SYNC_SPORT, 'oven_board');
+      if (!legacy || !legacy.rows || !legacy.rows.length) return;
+
+      msg('warn', 'You have rankings saved from before they were split per league (' +
+        legacy.rows.length + ' players). Use them for ' + OvenBoard.esc(ctx.league.name) + '? ' +
+        '<button class="oven-btn sm" id="adopt-legacy">Import them</button>');
+
+      document.getElementById('adopt-legacy').addEventListener('click', function () {
+        board = legacy;
+        var bk = OvenLeagues.boardKeys(leagueId);
+        saveWithSync(bk.sport, bk.syncKey, bk.storageKey, board);
+        msg('ok', 'Imported ' + legacy.rows.length + ' players into ' + OvenBoard.esc(ctx.league.name) + '.');
+        renderBoardSummary();
+        if (draft) rebuildTargetState(draft, null);
+      });
+    }
+
+    /* Legacy /the-bakers-oven/{rosterId} links, from before leagues existed.
+     * League ids are 18-19 digits and roster ids are one or two, so the shape
+     * disambiguates. The server can't do this redirect — which league a bare
+     * roster id belongs to is per-account data it never sees. */
+    function handleLegacySegment() {
+      var saved = OvenLeagues.list();
+      location.replace(saved.length === 1
+        ? '/the-bakers-oven/' + saved[0].league_id + '/' + seg
+        : '/the-bakers-oven');
+    }
+
+    async function boot() {
+      try {
+        await OvenLeagues.load();
+
+        if (/^\d{1,5}$/.test(seg)) { handleLegacySegment(); return; }
+        if (!/^\d{6,25}$/.test(seg)) { loading.textContent = "That isn't a Sleeper league ID."; return; }
+        leagueId = seg;
+
+        rec = OvenLeagues.get(leagueId);
+        myRosterId = rec ? rec.my_roster_id : null;
+        if (rec) document.getElementById('crumb-league').textContent = rec.name;
+
+        var bk = OvenLeagues.boardKeys(leagueId);
+        var results = await Promise.all([
+          OvenDraft.loadLeague(leagueId).catch(function (e) { return { error: e }; }),
+          fetch(OVEN.FP_DATA, { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : []; }).catch(function () { return []; }),
+          loadWithSync(bk.sport, bk.syncKey, bk.storageKey, null),
+        ]);
+        fp = results[1] || [];
+        board = results[2];
+
+        // loadLeague throws when the league has no draft scheduled. Rebuild the
+        // context from the league and rosters alone rather than failing the page.
+        if (results[0] && results[0].error) {
+          var meta = await OvenLeagues.fetchMeta(leagueId);
+          ctx = { league: meta.league, teams: meta.teams, tradedPicks: [], draftId: null };
+        } else {
+          ctx = results[0];
+        }
+
+        OvenLeagues.refreshFromCtx(leagueId, ctx);
+        OvenLeagues.setLastLeagueId(leagueId);
+        rec = OvenLeagues.get(leagueId);
+        document.getElementById('crumb-league').textContent = ctx.league.name;
+        document.title = ctx.league.name + " | The Baker's Oven";
+
+        if (ctx.draftId) {
+          draft = await OvenDraft.loadDraft(ctx.draftId);
+          var picks = await OvenDraft.loadPicks(ctx.draftId, draft.last_picked || draft.status);
+          renderStatus(draft, picks);
+          rebuildTargetState(draft, picks);
+          OvenTargets.mount({ getState: function () { return tp; }, leagueId: leagueId });
+        } else {
+          renderStatusNoDraft();
+        }
+
+        renderClaim();
+        renderOpenBoard(draft);
+        renderBoardSummary();
+        wireImport();
+
+        loading.style.display = 'none';
+        sections.style.display = '';
+
+        offerLegacyBoard();
+      } catch (e) {
+        loading.textContent = 'Error: ' + e.message;
+      }
+    }
+
+    boot();
+  })();
+  </script>
+</body>
+</html>

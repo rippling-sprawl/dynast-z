@@ -18,6 +18,18 @@ function clearUser() {
   localStorage.removeItem('dz_user_id');
   localStorage.removeItem('dz_username');
   localStorage.removeItem('dz_role');
+
+  // Per-user caches must not outlive the session on a shared browser. The Oven
+  // keys are namespaced per user id (see OvenLeagues.localKey), so a stale one
+  // can no longer be read by the next account — but sweeping them also clears
+  // the pre-namespacing globals dz_oven_board_v1 / dz_oven_targets_v1, which
+  // loadWithSync would otherwise migrate into whoever signs in next.
+  // Iterate downwards: removeItem reindexes localStorage.key(i).
+  for (let i = localStorage.length - 1; i >= 0; i--) {
+    const k = localStorage.key(i);
+    if (k && k.indexOf('dz_oven_') === 0) localStorage.removeItem(k);
+  }
+  if (typeof clearAuditTarget === 'function') clearAuditTarget();
 }
 
 function isLoggedIn() {
@@ -35,6 +47,16 @@ function isAdmin() {
 function requireAdmin(fallback) {
   if (isLoggedIn() && isAdmin()) return true;
   location.replace(isLoggedIn() ? (fallback || '/') : '/account');
+  return false;
+}
+
+// Page gate for account-scoped routes — anything whose data is stored per user
+// and is meaningless without an identity (The Baker's Oven). Same UI-level
+// caveat as requireAdmin: the real enforcement is the X-User-Id check in the
+// Python endpoints.
+function requireLogin() {
+  if (isLoggedIn()) return true;
+  location.replace('/account');
   return false;
 }
 

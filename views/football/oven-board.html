@@ -6,26 +6,27 @@
   <link rel="icon" type="image/png" href="/favicon.png">
   <title>Big Board | The Baker's Oven</title>
   <link rel="stylesheet" href="/styles/base/styles.css?v=abec71e4">
-  <link rel="stylesheet" href="/styles/primary/bakers-oven.css?v=9dfb50a0">
+  <link rel="stylesheet" href="/styles/primary/bakers-oven.css?v=fe5affc2">
 </head>
 <body>
   <div id="header-mount"></div>
   <div id="nav-drawer-mount"></div>
-  <script src="/scripts/base/auth.js?v=55c2cb8e"></script>
-  <script src="/scripts/base/nav.js?v=e4a37bf6"></script>
-  <script src="/scripts/base/sync.js?v=f19ba045"></script>
+  <script src="/scripts/base/auth.js?v=8f2b460f"></script>
+  <script src="/scripts/base/nav.js?v=d80ba5fd"></script>
+  <script src="/scripts/base/sync.js?v=1b85ffb1"></script>
   <script src="/scripts/components/sticky-headers.js?v=43c9432d"></script>
   <script src="/scripts/style/heatmap.js?v=80458313"></script>
-  <script src="/scripts/primary/oven-config.js?v=6c60e214"></script>
+  <script src="/scripts/primary/oven-config.js?v=52db5b4e"></script>
   <script src="/scripts/primary/oven-csv.js?v=6d188388"></script>
-  <script src="/scripts/primary/oven-draft.js?v=5f15d9b3"></script>
-  <script src="/scripts/primary/oven-board.js?v=7a137c72"></script>
-  <script src="/scripts/primary/oven-targets.js?v=9dd5afec"></script>
+  <script src="/scripts/primary/oven-draft.js?v=6d611264"></script>
+  <script src="/scripts/primary/oven-leagues.js?v=3332aa1a"></script>
+  <script src="/scripts/primary/oven-board.js?v=64413710"></script>
+  <script src="/scripts/primary/oven-targets.js?v=72f2d635"></script>
   <script>initPage();</script>
 
   <main class="oven-content">
     <div class="oven-breadcrumbs">
-      <a href="/football">Football</a><span class="sep">/</span><a href="/the-bakers-oven">The Baker's Oven</a><span class="sep">/</span><span id="crumb-team">Board</span>
+      <a href="/football">Football</a><span class="sep">/</span><a href="/the-bakers-oven">The Baker's Oven</a><span class="sep">/</span><a id="crumb-league" href="/the-bakers-oven">League</a><span class="sep">/</span><span id="crumb-team">Board</span>
     </div>
 
     <div id="loading">Loading draft board…</div>
@@ -81,18 +82,25 @@
 
   <script>
   (function () {
-    // Admin-only.
-    if (!requireAdmin('/football')) return;
+    // Per-account data — any signed-in user, their own leagues.
+    if (!requireLogin()) return;
 
     var loading = document.getElementById('loading');
     var sections = document.getElementById('sections');
     var listEl = document.getElementById('list');
     var S = OvenBoard.state;
 
-    var rosterId = parseInt((location.pathname.match(/\/the-bakers-oven\/([^/?#]+)/) || [])[1], 10);
-    if (!rosterId || isNaN(rosterId)) rosterId = OVEN.MY_ROSTER_ID;
+    // Both segments come from the route, which only matches digits — no
+    // fallback roster, because there is no longer a "my" roster to fall back to.
+    var seg = location.pathname.match(/\/the-bakers-oven\/(\d+)\/(\d+)/) || [];
+    var leagueId = seg[1];
+    var rosterId = parseInt(seg[2], 10);
 
     var ctx = null, draft = null, poller = null;
+    // The per-league rankings blob and its storage keys, held at page scope so a
+    // drag-reorder can write the new order back into the same object the CSV
+    // import wrote.
+    var board = null, bk = null;
     var prevDrafted = {};
     var lastUpdate = null;
     // Kept for the Targets & Projections drawer, which needs the raw picks
@@ -145,6 +153,21 @@
       setConn('<span class="oven-live-dot"></span>');
     }
 
+    /* Dragging a row re-ranks him, so the board has to persist — otherwise the
+     * new order lives until reload. It writes the same per-league blob the CSV
+     * import writes, so the league page's summary and the CSV export both see
+     * it, and it survives to your phone through sync.
+     *
+     * A board still seeded from FantasyPros (nothing imported for this league
+     * yet) becomes a real saved board on the first move: dragging a player IS
+     * authoring your rankings, and refusing to save that would be the surprise. */
+    function saveBoardOrder(rows) {
+      if (!board) board = { filename: null, importedAt: Date.now(), warnings: [] };
+      board.rows = rows;
+      board.updatedAt = Date.now();
+      saveWithSync(bk.sport, bk.syncKey, bk.storageKey, board);
+    }
+
     function wireControls() {
       document.querySelectorAll('.oven-chip[data-pos]').forEach(function (btn) {
         btn.addEventListener('click', function () {
@@ -172,14 +195,31 @@
 
     async function boot() {
       try {
+        if (!leagueId || !rosterId || isNaN(rosterId)) {
+          loading.innerHTML = 'Not a board URL. <a href="/the-bakers-oven">Pick a league →</a>';
+          return;
+        }
+
+        await OvenLeagues.load();
+
+        // Paint the league crumb from the saved record before any network call;
+        // ctx.league.name replaces it below if the league was renamed.
+        var rec = OvenLeagues.get(leagueId);
+        var leagueCrumb = document.getElementById('crumb-league');
+        leagueCrumb.href = '/the-bakers-oven/' + leagueId;
+        if (rec) leagueCrumb.textContent = rec.name;
+
+        bk = OvenLeagues.boardKeys(leagueId);
         var results = await Promise.all([
-          OvenDraft.loadLeague(OVEN.LEAGUE_ID),
+          OvenDraft.loadLeague(leagueId),
           fetch(OVEN.FP_DATA, { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : []; }).catch(function () { return []; }),
           fetch(OVEN.FP_META, { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }),
-          loadWithSync(OVEN.SYNC_SPORT, OVEN.SYNC_KEY, OVEN.STORAGE_KEY, null),
+          loadWithSync(bk.sport, bk.syncKey, bk.storageKey, null),
         ]);
         ctx = results[0];
-        var fp = results[1] || [], fpMeta = results[2], board = results[3];
+        var fp = results[1] || [], fpMeta = results[2];
+        board = results[3];
+        leagueCrumb.textContent = ctx.league.name;
 
         draft = await OvenDraft.loadDraft(ctx.draftId);
         S.teamsCount = draft.settings.teams;
@@ -195,6 +235,7 @@
 
         wireControls();
         OvenBoard.render(listEl);
+        OvenBoard.enableReorder({ onReorder: saveBoardOrder });
 
         // One accessor is the whole contract with the drawer — it reads, it
         // never writes to the board.
@@ -210,6 +251,7 @@
               myRosterId: rosterId,
             };
           },
+          leagueId: leagueId,
         });
 
         var picks = await OvenDraft.loadPicks(ctx.draftId, draft.last_picked || draft.status);
@@ -218,7 +260,7 @@
         // Freshness + provenance note.
         var notes = [];
         if (!board || !board.rows || !board.rows.length) {
-          notes.push('Showing <strong>FantasyPros half-PPR ranks</strong> — <a href="/the-bakers-oven">import your CSV</a> to use your own board.');
+          notes.push('Showing <strong>FantasyPros half-PPR ranks</strong> — <a href="/the-bakers-oven/' + leagueId + '">import your rankings for this league</a> to use your own board.');
         }
         if (fpMeta) {
           var ageDays = (Date.now() / 1000 - (fpMeta.fetched_ts || 0)) / 86400;

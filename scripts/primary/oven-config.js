@@ -1,20 +1,14 @@
 /* The Baker's Oven — feature configuration (window.OVEN).
  *
- * Single source of truth for the league, the identity of "my" team, and the
- * polling/tuning constants. The draft_id is deliberately NOT here: it's derived
- * at runtime from /league/{id}/drafts so a new season or a redraft doesn't
- * require a code change.
+ * Tuning constants only. The league, the draft and the identity of "my" team
+ * are NOT here: leagues are per-account data (see oven-leagues.js), the league
+ * id comes from the URL, and draft_id is derived at runtime from the league
+ * object so a new season or a redraft doesn't require a code change.
  */
 (function (global) {
   'use strict';
 
   global.OVEN = {
-    // Keepers & Weepers — 12 team, 16 round, half-PPR snake with keepers.
-    LEAGUE_ID: '1384025526670233600',
-    MY_USERNAME: 'baker28',
-    MY_USER_ID: '631654820146761728',
-    MY_ROSTER_ID: 1,
-
     // Sleeper sends `access-control-allow-origin: *`, so the browser polls it
     // directly — no proxy, and the rate limit applies per client IP.
     SLEEPER_API: 'https://api.sleeper.app/v1',
@@ -27,18 +21,36 @@
     BACKOFF_START_MS: 8000,
     BACKOFF_MAX_MS: 60000,
 
-    // Board persistence: localStorage first, reconciled with Supabase through
-    // scripts/base/sync.js when logged in, so the board follows you to your
+    // Persistence: localStorage first, reconciled with Supabase through
+    // scripts/base/sync.js when logged in, so your board follows you to your
     // phone on draft night.
-    STORAGE_KEY: 'dz_oven_board_v1',
+    //
+    // These are KEY BASES, not keys. Every localStorage key is built by
+    // OvenLeagues.localKey(), which suffixes `:{user_id}` and — for the
+    // league-scoped slices — `:{leagueId}`. A fixed global key here leaked one
+    // account's board into the next one to sign in on the same browser (see
+    // the auto-migration branch in scripts/base/sync.js). The v1 -> v2 bump on
+    // the board and targets bases retires those poisoned keys outright.
     SYNC_SPORT: 'football',
-    SYNC_KEY: 'oven_board',
+
+    LEAGUES_STORAGE_BASE: 'dz_oven_leagues_v1',
+    LEAGUES_SYNC_KEY: 'oven_leagues',
+
+    BOARD_STORAGE_BASE: 'dz_oven_board_v2',
+    BOARD_SYNC_KEY: 'oven_board',           // + ':' + leagueId
 
     // Targets & Projections keeps its own synced slice — a list of board keys,
     // nothing else. Queuing a player must never rewrite the imported CSV, and
-    // the queue should follow you from the index to the board to your phone.
-    TARGETS_STORAGE_KEY: 'dz_oven_targets_v1',
-    TARGETS_SYNC_KEY: 'oven_targets',
+    // the queue should follow you from the league page to the board to your
+    // phone. Per-league, because a queued key only resolves against the CSV
+    // imported for that league and the projection is built from that league's
+    // round plan.
+    TARGETS_STORAGE_BASE: 'dz_oven_targets_v2',
+    TARGETS_SYNC_KEY: 'oven_targets',       // + ':' + leagueId
+
+    // Which league you looked at last, so the leagues page can preselect it in
+    // the My board picker. Local-only — not worth a server round trip.
+    LAST_LEAGUE_BASE: 'dz_oven_last_league',
 
     // Rank-vs-consensus delta (in board positions) that saturates the hot/cold
     // scale, and the window used to smooth per-row heat into visible regions.

@@ -1393,13 +1393,21 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         elif self.path == "/football/grading-system":
             self.path = "/views/home/grading-system.html"
             super().do_GET()
-        # The Baker's Oven — live draft companion. /the-bakers-oven is the team
-        # picker; /the-bakers-oven/{rosterId} is that team's big board.
+        # The Baker's Oven — live draft companion. /the-bakers-oven is the
+        # account's saved-league list; /{leagueId} is that league's draft and
+        # team picker; /{leagueId}/{rosterId} is that team's big board. Only
+        # digits match: Sleeper ids are always numeric, and a junk segment
+        # should 404 rather than boot a page that will fail against Sleeper.
+        # A legacy one-segment roster id lands on oven-league.html, which
+        # detects it by length and redirects.
         elif self.path.split("?")[0] == "/the-bakers-oven":
-            self.path = "/views/football/oven-index.html"
+            self.path = "/views/football/oven-leagues.html"
             super().do_GET()
-        elif re.match(r"^/the-bakers-oven/[^/]+/?$", self.path.split("?")[0]):
+        elif re.match(r"^/the-bakers-oven/\d+/\d+/?$", self.path.split("?")[0]):
             self.path = "/views/football/oven-board.html"
+            super().do_GET()
+        elif re.match(r"^/the-bakers-oven/\d+/?$", self.path.split("?")[0]):
+            self.path = "/views/football/oven-league.html"
             super().do_GET()
         elif self.path == "/odds":
             self.path = "/views/odds/index.html"

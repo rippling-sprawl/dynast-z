@@ -51,6 +51,11 @@
     keys: [],          // board keys, insertion order
     getState: null,
     els: {},
+    // Resolved at mount from opts.leagueId. The queue is per-league: a stored
+    // key only resolves against the CSV imported for that league, and the
+    // projection is built from that league's round plan.
+    syncKey: C.TARGETS_SYNC_KEY,
+    storageKey: null,
   };
 
   function esc(s) { return global.OvenBoard.esc(s); }
@@ -62,9 +67,9 @@
   function persist() {
     var payload = { keys: state.keys, updatedAt: Date.now() };
     if (typeof global.saveWithSync === 'function') {
-      global.saveWithSync(C.SYNC_SPORT, C.TARGETS_SYNC_KEY, C.TARGETS_STORAGE_KEY, payload);
+      global.saveWithSync(C.SYNC_SPORT, state.syncKey, state.storageKey, payload);
     } else {
-      try { global.localStorage.setItem(C.TARGETS_STORAGE_KEY, JSON.stringify(payload)); } catch (e) { /* private mode */ }
+      try { global.localStorage.setItem(state.storageKey, JSON.stringify(payload)); } catch (e) { /* private mode */ }
     }
   }
 
@@ -310,8 +315,8 @@
     if (!rows.length) {
       return '<div class="oven-tp-empty">' +
         '<strong>No targets yet.</strong>' +
-        '<p>Drag a player off the big board and drop him here — or tap the <span class="oven-tp-kbd">+</span> ' +
-        'at the end of his row. Targets are grouped by position and ordered by your rank.</p>' +
+        '<p>Tap the <span class="oven-tp-kbd">+</span> at the end of a player’s row on the big ' +
+        'board. Targets are grouped by position and ordered by your rank.</p>' +
         (state.keys.length ? '<p>' + state.keys.length + ' saved target(s) aren’t on the current board.</p>' : '') +
       '</div>';
     }
@@ -439,8 +444,8 @@
     state.els.foot.innerHTML = state.view === 'targets'
       ? (state.keys.length
           ? '<button class="oven-tp-link" type="button" id="oven-tp-clear">Clear all</button>' +
-            '<span>Drag from the board to add.</span>'
-          : '<span>Drag from the board to add.</span>')
+            '<span>Add with + on the board.</span>'
+          : '<span>Add with + on the board.</span>')
       : '<span>Assumes the room drafts to consensus and you take your projected ' +
         'player each round. Grades and targets pull a player forward. Every pick also ' +
         'lists the best QB, RB, WR and TE left.</span>';
@@ -491,59 +496,12 @@
     }
   }
 
-  /* ---------- drag & drop ----------
-   * HTML5 DnD is desktop-only (iOS Safari doesn't fire it at all), so the pin
-   * button is the real affordance on a phone and dragging is the fast path on a
-   * laptop. Both go through add(). */
-  var DND_TYPE = 'application/x-oven-player';
-
-  function wireDrag() {
-    D.addEventListener('dragstart', function (e) {
-      var row = e.target.closest && e.target.closest('.oven-row[data-key]');
-      if (!row) return;
-      var key = row.getAttribute('data-key');
-      try {
-        e.dataTransfer.setData(DND_TYPE, key);
-        e.dataTransfer.setData('text/plain', key);
-      } catch (err) { /* older Edge rejects custom types */ }
-      e.dataTransfer.effectAllowed = 'copy';
-      D.body.classList.add('oven-tp-dragging');
-      // Nothing to drop onto if the drawer is shut.
-      if (!state.open) open();
-      if (state.view !== 'targets') setView('targets');
-    });
-
-    D.addEventListener('dragend', function () {
-      D.body.classList.remove('oven-tp-dragging');
-      state.els.panel.classList.remove('is-over');
-    });
-
-    ['dragenter', 'dragover'].forEach(function (ev) {
-      state.els.panel.addEventListener(ev, function (e) {
-        e.preventDefault();
-        e.dataTransfer.dropEffect = 'copy';
-        state.els.panel.classList.add('is-over');
-      });
-    });
-    state.els.panel.addEventListener('dragleave', function (e) {
-      if (!state.els.panel.contains(e.relatedTarget)) state.els.panel.classList.remove('is-over');
-    });
-    state.els.panel.addEventListener('drop', function (e) {
-      e.preventDefault();
-      state.els.panel.classList.remove('is-over');
-      D.body.classList.remove('oven-tp-dragging');
-      var key = '';
-      try { key = e.dataTransfer.getData(DND_TYPE) || e.dataTransfer.getData('text/plain'); } catch (err) { key = ''; }
-      if (!key) return;
-      if (state.view !== 'targets') setView('targets');
-      add(key);
-    });
-
-    // The tab itself is a drop target — dropping on a closed drawer should work.
-    ['dragenter', 'dragover'].forEach(function (ev) {
-      state.els.tab.addEventListener(ev, function (e) { e.preventDefault(); open(); });
-    });
-  }
+  /* Getting players in is the pin button, and only the pin button. Dragging a
+   * board row used to drop him here; it now re-ranks him on the board, which is
+   * the one gesture that couldn't be expressed any other way. The queue never
+   * needed the drag — it has an explicit toggle in the row (`+` / `✓`) and an
+   * explicit `×` in the drawer, both of which also work on a phone, where HTML5
+   * DnD doesn't fire at all. */
 
   function wire() {
     state.els.tab.addEventListener('click', togglePanel);
@@ -575,8 +533,6 @@
     D.addEventListener('keydown', function (e) {
       if (e.key === 'Escape' && state.open) close();
     });
-
-    wireDrag();
   }
 
   function build() {
@@ -615,12 +571,25 @@
   function mount(opts) {
     if (state.mounted) return;
     state.getState = (opts && opts.getState) || null;
+
+    // Per-league keys when the host names a league (both Oven pages do). The
+    // unscoped fallback keeps the drawer independently mountable.
+    var lid = opts && opts.leagueId;
+    if (lid && global.OvenLeagues) {
+      var tk = global.OvenLeagues.targetKeys(lid);
+      state.syncKey = tk.syncKey;
+      state.storageKey = tk.storageKey;
+    } else {
+      state.syncKey = C.TARGETS_SYNC_KEY;
+      state.storageKey = C.TARGETS_STORAGE_BASE;
+    }
+
     build();
     wire();
     state.mounted = true;
 
     var loader = typeof global.loadWithSync === 'function'
-      ? global.loadWithSync(C.SYNC_SPORT, C.TARGETS_SYNC_KEY, C.TARGETS_STORAGE_KEY, null)
+      ? global.loadWithSync(C.SYNC_SPORT, state.syncKey, state.storageKey, null)
       : Promise.resolve(null);
 
     return Promise.resolve(loader).then(function (saved) {

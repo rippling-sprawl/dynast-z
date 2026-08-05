@@ -131,6 +131,27 @@
 
   /* ---------- league bootstrap ---------- */
 
+  /* Join /rosters with /users into the team shape every Oven surface renders.
+   *
+   * Shared with OvenLeagues.fetchMeta so the "which team is yours?" picker on
+   * the leagues page and the team grid on the league page cannot drift. */
+  function shapeTeams(rosters, users) {
+    var userById = {};
+    (users || []).forEach(function (u) { userById[u.user_id] = u; });
+
+    return (rosters || []).map(function (r) {
+      var u = userById[r.owner_id] || {};
+      return {
+        roster_id: r.roster_id,
+        owner_id: r.owner_id,
+        username: u.display_name || ('Roster ' + r.roster_id),
+        teamName: (u.metadata && u.metadata.team_name) || u.display_name || ('Roster ' + r.roster_id),
+        avatar: u.avatar ? 'https://sleepercdn.com/avatars/thumbs/' + u.avatar : null,
+        keepers: r.keepers || [],
+      };
+    }).sort(function (a, b) { return a.roster_id - b.roster_id; });
+  }
+
   function loadLeague(leagueId) {
     return Promise.all([
       api('/league/' + leagueId),
@@ -138,21 +159,8 @@
       api('/league/' + leagueId + '/users'),
       api('/league/' + leagueId + '/traded_picks'),
     ]).then(function (res) {
-      var league = res[0], rosters = res[1], users = res[2], traded = res[3];
-      var userById = {};
-      users.forEach(function (u) { userById[u.user_id] = u; });
-
-      var teams = rosters.map(function (r) {
-        var u = userById[r.owner_id] || {};
-        return {
-          roster_id: r.roster_id,
-          owner_id: r.owner_id,
-          username: u.display_name || ('Roster ' + r.roster_id),
-          teamName: (u.metadata && u.metadata.team_name) || u.display_name || ('Roster ' + r.roster_id),
-          avatar: u.avatar ? 'https://sleepercdn.com/avatars/thumbs/' + u.avatar : null,
-          keepers: r.keepers || [],
-        };
-      }).sort(function (a, b) { return a.roster_id - b.roster_id; });
+      var league = res[0], traded = res[3];
+      var teams = shapeTeams(res[1], res[2]);
 
       // draft_id is on the league object; fall back to the drafts list.
       var draftId = league.draft_id;
@@ -292,6 +300,7 @@
     buildPickPlan: buildPickPlan,
     computeClock: computeClock,
     roundPickLabel: roundPickLabel,
+    shapeTeams: shapeTeams,
     loadLeague: loadLeague,
     loadDraft: loadDraft,
     loadPicks: loadPicks,
