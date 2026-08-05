@@ -96,7 +96,6 @@
           extra: r.extra || {},
           fpRank: fp ? fp.rank : null,
           fpPosRank: fp ? fp.pos_rank : null,
-          bye: fp ? fp.bye : null,
           onMyBoard: true,
         };
       });
@@ -107,7 +106,7 @@
           player_id: null,
           name: p.name, pos: p.position, team: p.team,
           myRank: i + 1, tier: p.tier, grade: null, note: '', extra: {},
-          fpRank: p.rank, fpPosRank: p.pos_rank, bye: p.bye,
+          fpRank: p.rank, fpPosRank: p.pos_rank,
           onMyBoard: false,
         };
       });
@@ -153,11 +152,21 @@
 
   /* ---------- rendering ---------- */
 
+  // What the "Hide: Fade" chip removes. `avoid` is the stronger of the two —
+  // the CSV also accepts "hate" for it — so it goes wherever `fade` goes.
+  var FADED_GRADES = { fade: true, avoid: true };
+
+  /* The board has exactly one order: yours, ascending. There is no column
+   * sorting and no sort state. Re-ordering the board mid-draft is the one
+   * interaction that can lose you a pick — the horizon markers, the tier bands
+   * and your own muscle memory for where a player sits are all anchored to
+   * personal-rank order, and every one of them is meaningless under a different
+   * sort. Filtering subtracts rows without moving the survivors, which is why
+   * that stayed. */
   var state = {
     rows: [], rowEls: null, listEl: null, teams: {},
     drafted: {},          // key -> pick
-    sort: { key: 'myRank', dir: 'asc' },
-    filters: { pos: null, hideDrafted: false },
+    filters: { pos: null, hideDrafted: false, hideFade: false },
     clock: null, teamsCount: 12, myRosterId: null,
   };
 
@@ -181,34 +190,42 @@
     var out = state.rows.filter(function (r) {
       if (f.pos && r.pos !== f.pos) return false;
       if (f.hideDrafted && state.drafted[r.key]) return false;
+      // Both negative grades, not just the one named on the chip: `fade` and
+      // `avoid` are the two ways of saying "not for me", and hiding one while
+      // leaving the other on the board is never what you meant.
+      if (f.hideFade && FADED_GRADES[r.grade]) return false;
       return true;
     });
-    var s = state.sort;
-    if (s.key !== 'myRank' || s.dir !== 'asc') {
-      out = global.Sort.sortBy(out, s.dir, {
-        accessor: function (r) { return r[s.key]; },
-        numeric: s.key !== 'name' && s.key !== 'pos',
-        nullsLast: true,
-      });
-    }
+    // No re-sort: `state.rows` is already in personal-rank order from
+    // buildBoard(), and filtering only removes rows from it.
     return out;
+  }
+
+  /* A graded row is colored by the grade, not by the rank delta, so name the
+   * grade — otherwise a saturated rail on an unremarkable row reads as a bug.
+   * Except `fade`: a fade isn't a fact about the player worth a badge, it's my
+   * disinterest, so the row itself recedes instead (see .oven-row.faded).
+   *
+   * love/like wear a heart. An emoji is an image to a screen reader with no
+   * accessible name of its own, so the word it replaced moves to aria-label —
+   * and to title, so a hover still says which one it is. Shared with the
+   * Targets drawer so both surfaces can never drift apart. */
+  function gradeChip(r) {
+    if (!r || !r.grade || r.grade === 'fade') return '';
+    var icon = C.GRADE_ICON[r.grade];
+    if (!icon) return '<span class="oven-grade ' + esc(r.grade) + '">' + esc(r.grade) + '</span>';
+    return '<span class="oven-grade ' + esc(r.grade) + '" role="img" aria-label="' +
+      esc(r.grade) + '" title="' + esc(r.grade) + '">' + icon + '</span>';
   }
 
   function rowHTML(r, rail, wash) {
     var heat = r.heat;
     var railC = heat == null ? '' : rail(heat);
     var washC = r.heatRegion == null ? '' : wash(r.heatRegion);
-    var d = r.fpRank != null && r.myRank != null ? r.fpRank - r.myRank : null;
-    var dCls = d == null ? 'zero' : (d > 0 ? 'pos' : (d < 0 ? 'neg' : 'zero'));
-    var dTxt = d == null ? '—' : (d > 0 ? '+' + d : String(d));
-    var sub = [r.team, r.fpPosRank, r.bye ? 'BYE ' + r.bye : ''].filter(Boolean).join(' · ');
-    // A graded row is colored by the grade, not by the rank delta, so name the
-    // grade — otherwise a strong green rail next to "Δ 0" reads as a bug.
-    // Except `fade`: a fade isn't a fact about the player worth a badge, it's my
-    // disinterest, so the row itself recedes instead (see .oven-row.faded).
-    var gradeChip = r.grade && r.grade !== 'fade'
-      ? ' <span class="oven-grade ' + esc(r.grade) + '">' + esc(r.grade) + '</span>'
-      : '';
+    // The position column carries the positional rank — same badge, same color,
+    // one more fact. "RB7" states the position too, so nothing is lost by
+    // spending the cell on it, and the row keeps a single line.
+    var posLabel = r.fpPosRank || r.pos || '—';
 
     // No per-row tier chip: the full-width tier band already states it, and
     // repeating it 250 times competes with the heat rail for the same glance.
@@ -221,14 +238,16 @@
       (washC ? ' style="background:' + washC + '"' : '') + '>' +
       '<div class="oven-rail" style="background:' + railC + '"></div>' +
       '<div class="oven-rk">' + (r.myRank == null ? '' : r.myRank) + '</div>' +
-      '<span class="player-pos pos-' + esc(r.pos || 'OTHER') + '">' + esc(r.pos || '—') + '</span>' +
+      '<span class="player-pos pos-' + esc(r.pos || 'OTHER') + '">' + esc(posLabel) + '</span>' +
       '<div class="oven-name">' +
-        '<div class="oven-name-main">' + esc(r.name) + gradeChip +
+        // The name is its own element so the crossed-off treatment lands on it
+        // alone — text-decoration propagates to descendants and a child can't
+        // opt out, so the team, grade and note have to sit outside the struck
+        // span rather than be un-struck inside it.
+        '<div class="oven-name-main"><span class="oven-name-text">' + esc(r.name) + '</span>' +
+          (r.team ? '<span class="oven-name-team">' + esc(r.team) + '</span>' : '') + gradeChip(r) +
           (r.note ? ' <span class="oven-name-note">· ' + esc(r.note) + '</span>' : '') + '</div>' +
-        (sub ? '<div class="oven-name-sub">' + esc(sub) + '</div>' : '') +
       '</div>' +
-      '<div class="oven-ecr">' + (r.fpRank == null ? '—' : r.fpRank) + '</div>' +
-      '<div class="oven-delta ' + dCls + '">' + dTxt + '</div>' +
       '<div class="oven-taken" hidden></div>' +
       '<button class="oven-pin" type="button" aria-pressed="false" aria-label="Add to targets">+</button>' +
     '</div>';
@@ -247,15 +266,15 @@
     }
 
     var html = [];
-    var byTier = state.sort.key === 'myRank' && state.sort.dir === 'asc';
     // Emit each tier header once, on first appearance. Tiers are only roughly
     // contiguous in personal-rank order — promoting a player past a tier
     // boundary would otherwise ping-pong the headers (Tier 4, Tier 2, Tier 4…).
+    // The board is always in that order now, so the bands always apply.
     var tierSeen = {};
 
     for (var i = 0; i < rows.length; i++) {
       var r = rows[i];
-      if (byTier && r.tier != null && !tierSeen[r.tier]) {
+      if (r.tier != null && !tierSeen[r.tier]) {
         tierSeen[r.tier] = true;
         html.push('<div class="oven-tiersep" data-tier="' + esc(r.tier) + '">' +
           'Tier ' + esc(r.tier) + ' <span class="tier-count"></span></div>');
@@ -382,16 +401,16 @@
     var seps = state.listEl.querySelectorAll('.oven-tiersep');
     for (var i = 0; i < seps.length; i++) {
       var tier = seps[i].getAttribute('data-tier');
-      var total = 0, left = 0;
+      var left = 0;
       state.rows.forEach(function (r) {
         if (String(r.tier) !== tier) return;
-        total++;
         if (!state.drafted[r.key]) left++;
       });
+      // Only the cliff is worth saying — a running count next to every tier
+      // header is arithmetic you never act on.
       var cliff = left <= 2 && left > 0;
       seps[i].querySelector('.tier-count').innerHTML =
-        '· ' + left + ' of ' + total + ' left' +
-        (cliff ? ' <span class="cliff">· tier cliff</span>' : '');
+        cliff ? '<span class="cliff">· tier cliff</span>' : '';
     }
   }
 
@@ -420,6 +439,7 @@
 
   global.OvenBoard = {
     esc: esc,
+    gradeChip: gradeChip,
     normName: normName,
     normPos: normPos,
     playerKey: playerKey,

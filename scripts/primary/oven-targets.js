@@ -175,10 +175,6 @@
 
     upcoming.forEach(function (p, i) {
       pool = pool.slice(gaps[i]);                 // the room drafts to consensus
-      var nextGap = i + 1 < upcoming.length ? gaps[i + 1] : null;
-
-      var marketIdx = {};
-      pool.forEach(function (r, idx) { marketIdx[r.key] = idx; });
 
       var boardOrder = pool.slice().sort(byAdj);
       var chosen = boardOrder[0] || null;
@@ -219,12 +215,6 @@
       entries.forEach(function (e) { e.best = e.row.pos ? bestAtPos[e.row.pos] === e.row : false; });
       entries.sort(function (a, b) { return byAdj(a.row, b.row); });
 
-      entries.forEach(function (e) {
-        // Still there after the room takes nextGap more? If not, he is this
-        // pick or never — the only projection worth acting on.
-        e.survives = nextGap == null ? null : marketIdx[e.row.key] >= nextGap;
-      });
-
       byPick[p.pick_no] = {
         pick: p, entries: entries, chosen: chosen,
         gone: gaps[i], left: pool.length,
@@ -251,16 +241,29 @@
 
   /* ---------- shared row bits ---------- */
 
-  // `fade` is carried by the row receding, not by a badge — matches the board.
-  function gradeChip(r) {
-    return r.grade && r.grade !== 'fade'
-      ? '<span class="oven-grade ' + esc(r.grade) + '">' + esc(r.grade) + '</span>' : '';
-  }
+  // The board owns the grade badge (heart for love/like, `fade` carried by the
+  // row receding rather than a badge) — same markup here so the two surfaces
+  // can't drift.
+  function gradeChip(r) { return global.OvenBoard.gradeChip(r); }
 
   function fadedCls(r) { return r && r.grade === 'fade' ? ' faded' : ''; }
 
-  function subLine(r) {
-    return [r.team, r.fpPosRank, r.bye ? 'BYE ' + r.bye : ''].filter(Boolean).join(' · ');
+  /* Position and team ride the name line — the same two elements as the big
+   * board, so a player looks the same in the drawer as he does on the board.
+   * The badge carries the positional rank because "RB7" already says "RB". */
+  function posBadge(pos, posRank) {
+    return '<span class="player-pos pos-' + esc(pos || 'OTHER') + '">' +
+      esc(posRank || pos || '—') + '</span>';
+  }
+
+  function teamTag(team) {
+    return team ? '<span class="oven-tp-team">' + esc(team) + '</span>' : '';
+  }
+
+  // Same reason as the board's .oven-name-text: the crossed-off rule has to
+  // target the name alone, and text-decoration can't be undone by a child.
+  function nameText(name) {
+    return '<span class="oven-tp-name-text">' + esc(name) + '</span>';
   }
 
   function pickName(p) {
@@ -290,9 +293,9 @@
     return '<div class="oven-tp-row' + (drafted ? ' is-gone' : '') + fadedCls(r) +
       '" data-key="' + esc(r.key) + '">' +
       '<div class="oven-tp-rk">' + (r.myRank == null ? '—' : r.myRank) + '</div>' +
+      posBadge(r.pos, r.fpPosRank) +
       '<div class="oven-tp-main">' +
-        '<div class="oven-tp-name">' + esc(r.name) + gradeChip(r) + '</div>' +
-        '<div class="oven-tp-sub">' + esc(subLine(r)) + '</div>' +
+        '<div class="oven-tp-name">' + nameText(r.name) + teamTag(r.team) + gradeChip(r) + '</div>' +
       '</div>' +
       windowChip(r, s, proj) +
       '<button class="oven-tp-x" type="button" data-drop="' + esc(r.key) + '" ' +
@@ -327,9 +330,7 @@
       var list = groups[pos].sort(function (a, b) {
         return (a.myRank == null ? 9999 : a.myRank) - (b.myRank == null ? 9999 : b.myRank);
       });
-      var left = list.filter(function (r) { return !s.drafted[r.key]; }).length;
-      html.push('<div class="oven-tp-group">' + esc(pos) +
-        '<span class="oven-tp-group-count">' + left + ' of ' + list.length + ' left</span></div>');
+      html.push('<div class="oven-tp-group">' + esc(pos) + '</div>');
       list.forEach(function (r) { html.push(targetRowHTML(r, s, proj)); });
     });
     return html.join('');
@@ -341,16 +342,16 @@
     var chips = '';
     if (e.proj) chips += '<span class="oven-tp-chip proj">proj</span>';
     if (e.best) chips += '<span class="oven-tp-chip pos">top ' + esc(e.row.pos) + '</span>';
-    if (e.tgt) chips += '<span class="oven-tp-chip tgt">target</span>';
-    if (e.survives === false) chips += '<span class="oven-tp-chip hot">now or never</span>';
-    else if (e.survives === true) chips += '<span class="oven-tp-chip">can wait</span>';
+    // Same emoji-needs-a-name rule as the grade badge.
+    if (e.tgt) chips += '<span class="oven-tp-chip tgt" role="img" aria-label="target" ' +
+      'title="target">🎯</span>';
 
     return '<div class="oven-tp-row compact' + (e.tgt ? ' is-target' : '') +
       (e.floor ? ' is-floor' : '') + fadedCls(e.row) + '" data-key="' + esc(e.row.key) + '">' +
       '<div class="oven-tp-rk">' + (e.row.myRank == null ? '—' : e.row.myRank) + '</div>' +
+      posBadge(e.row.pos, e.row.fpPosRank) +
       '<div class="oven-tp-main">' +
-        '<div class="oven-tp-name">' + esc(e.row.name) + gradeChip(e.row) + '</div>' +
-        '<div class="oven-tp-sub">' + esc([e.row.pos, subLine(e.row)].filter(Boolean).join(' · ')) + '</div>' +
+        '<div class="oven-tp-name">' + nameText(e.row.name) + teamTag(e.row.team) + gradeChip(e.row) + '</div>' +
       '</div>' +
       '<div class="oven-tp-chips">' + chips + '</div>' +
     '</div>';
@@ -361,9 +362,10 @@
     var kind = p.is_keeper ? 'kept' : 'picked';
     return '<div class="oven-tp-row filled">' +
       '<div class="oven-tp-rk">' + esc(global.OvenDraft.roundPickLabel(p.pick_no, s.teamsCount)) + '</div>' +
+      // A made pick only carries Sleeper metadata — bare position, no pos rank.
+      posBadge(global.OvenBoard.normPos(m.position), null) +
       '<div class="oven-tp-main">' +
-        '<div class="oven-tp-name">' + esc(pickName(p)) + '</div>' +
-        '<div class="oven-tp-sub">' + esc([m.position, m.team].filter(Boolean).join(' · ')) + '</div>' +
+        '<div class="oven-tp-name">' + nameText(pickName(p)) + teamTag(m.team) + '</div>' +
       '</div>' +
       '<span class="oven-tp-chip ' + kind + '">' + kind + '</span>' +
     '</div>';
@@ -409,7 +411,6 @@
       html.push('<div class="oven-tp-round' + (isNow ? ' is-now' : (isDone ? ' is-done' : '')) + '">' +
         '<div class="oven-tp-round-head">' +
           '<span class="oven-tp-round-no">Round ' + r + '</span>' +
-          '<span class="oven-tp-round-prog">' + made + '/' + s.teamsCount + ' taken</span>' +
         '</div>' + body.join('') +
       '</div>');
     }

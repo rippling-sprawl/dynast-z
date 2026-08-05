@@ -263,7 +263,9 @@ body:has(.oven-content) header {
 
 /* The one number that matters. Mono, big, tight — this page has never let the
  * data face be the loud thing and that was the whole problem. */
-.oven-next { min-width: 0; }
+/* Takes the row: the pick label is the console's only content now, and the
+ * connection dot rides the far edge. */
+.oven-next { flex: 1; min-width: 0; }
 .oven-pick-label {
   font-family: var(--oven-data);
   font-size: 34px;
@@ -305,18 +307,6 @@ body:has(.oven-content) header {
 
 @keyframes ovenBreathe { 0%, 100% { opacity: 1; } 50% { opacity: .45; } }
 
-.oven-tally {
-  flex: 1;
-  font-family: var(--oven-data);
-  font-size: 11px;
-  line-height: 1.5;
-  color: var(--oven-ash-dim);
-  font-variant-numeric: tabular-nums;
-  text-align: right;
-  min-width: 140px;
-}
-.oven-tally strong { color: var(--oven-ash); font-weight: 700; }
-
 .oven-conn { flex-shrink: 0; }
 .oven-live-dot {
   width: 6px; height: 6px; border-radius: 50%;
@@ -335,12 +325,26 @@ body:has(.oven-content) header {
 
 /* ---------- controls ---------- */
 
+/* Two stacked rows: what you're looking at, then what you're taking away. They
+ * wear the same chip because they are the same gesture, and the "Hide:" label
+ * is what tells you the second row subtracts instead of selecting. */
 .oven-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 0;
+}
+.oven-filter-row {
   display: flex;
   gap: 5px;
   flex-wrap: wrap;
   align-items: center;
-  padding: 10px 0;
+}
+.oven-filter-label {
+  font-family: var(--oven-data);
+  font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .18em;
+  color: var(--oven-ash-dim);
+  margin-right: 1px;
 }
 .oven-chip {
   font-family: var(--oven-data);
@@ -386,8 +390,6 @@ body:has(.oven-content) header {
   letter-spacing: .16em;
   color: var(--oven-ash-dim);
 }
-.oven-thead .sortable { cursor: pointer; transition: color .12s; }
-.oven-thead .sortable:hover { color: var(--oven-flame); }
 
 .oven-row {
   display: flex;
@@ -399,7 +401,7 @@ body:has(.oven-content) header {
   font-size: 13px;
   /* Most of virtualization's benefit for one CSS line; ignored where unsupported. */
   content-visibility: auto;
-  contain-intrinsic-size: 0 42px;
+  contain-intrinsic-size: 0 32px;
 }
 .oven-row:last-child { border-bottom: none; }
 .oven-row:hover { background: var(--oven-brick-hi); }
@@ -425,14 +427,21 @@ body:has(.oven-content) header {
  * calculator.css (11px/700, radius 3, min-width 30) tightened for board
  * density. .pos-TE #e65100 does sit near --oven-flame; the heat rail is the
  * far-left 3px edge and the badge is a filled block, so they read as different
- * objects rather than the same signal. */
+ * objects rather than the same signal.
+ *
+ * The badge reads "RB7", not "RB" — the positional rank is the fact you act on
+ * and it names the position on the way past, so one element carries both and
+ * the row stays a single line. min-width fits the widest real label ("WR100"). */
 .oven-row .player-pos,
+.oven-tp-row .player-pos,
 .oven-thead .player-pos {
   font-family: var(--oven-data);
   font-size: 10px; font-weight: 700; letter-spacing: .04em;
   padding: 2px 5px; border-radius: 3px;
-  min-width: 30px; text-align: center; flex-shrink: 0;
+  min-width: 40px; text-align: center; flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
 }
+.oven-tp-row .player-pos { font-size: 9px; min-width: 36px; padding: 2px 4px; }
 /* The header cell carries .player-pos as a layout hook but no .pos-* fill, so
  * it needs the column's label treatment, not a badge's. */
 .oven-thead .player-pos {
@@ -441,14 +450,13 @@ body:has(.oven-content) header {
   font-size: 9px; letter-spacing: .16em;
   padding-left: 0; padding-right: 0;
 }
-.oven-thead .player-pos.sortable:hover { color: var(--oven-flame); }
 
 /* Fallback fill. The board emits pos-OTHER for a blank position, and the CSV's
  * Pos column is free text, so pos-FLEX / pos-HB / anything can reach the DOM
  * with no global rule behind it — which would render as bare text in a row of
  * filled badges. Zero specificity via :where() so all six real .pos-* fills
  * still win; a plain .oven-row .player-pos here would outrank them instead. */
-:where(.oven-row) :where(.player-pos) {
+:where(.oven-row, .oven-tp-row) :where(.player-pos) {
   background: var(--oven-mortar);
   color: var(--oven-bone);
 }
@@ -461,21 +469,41 @@ body:has(.oven-content) header {
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .oven-name-note { color: var(--oven-ash-dim); font-weight: 400; }
-.oven-name-sub {
-  font-family: var(--oven-data);
-  font-size: 10px; color: var(--oven-ash-dim); letter-spacing: .04em;
-  margin-top: 1px;
-}
 
-/* Names the explicit CSV grade, so a saturated rail on a Δ 0 row is legible. */
+/* The NFL team sits on the name line, not under it. It's an identifier, not a
+ * ranking input — data face, dim, one size down, so it reads as an annotation
+ * on the name rather than a second column competing with it. */
+.oven-name-team,
+.oven-tp-team {
+  font-family: var(--oven-data);
+  font-size: 9.5px; font-weight: 700; letter-spacing: .1em;
+  color: var(--oven-ash-dim);
+  margin-left: 7px; vertical-align: 1px;
+}
+.oven-tp-team { font-size: 9px; margin-left: 6px; }
+
+/* Names the explicit CSV grade, so a saturated rail on a Δ 0 row is legible.
+ * This is the word treatment, still worn by `avoid`. */
 .oven-grade {
   font-family: var(--oven-data);
   font-size: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: .14em;
   border-radius: 2px; padding: 2px 5px; margin-left: 6px; vertical-align: 1px;
 }
-.oven-grade.love  { background: rgba(255, 122, 24, .22); color: var(--oven-flame); }
-.oven-grade.like  { background: rgba(255, 122, 24, .11); color: #E08A46; }
 .oven-grade.avoid { background: rgba(106, 169, 208, .22); color: var(--oven-frost); }
+
+/* love and like are hearts. A glyph in a pill is a badge wearing a badge, so
+ * the chrome comes off entirely and the heart is the whole mark — which is what
+ * makes it survivable 250 rows deep. Color lives in the emoji, so no fill here
+ * and the pair reads as one scale: deep red over pink. */
+.oven-grade.love,
+.oven-grade.like {
+  background: none;
+  padding: 0;
+  font-size: 11px;
+  letter-spacing: 0;
+  line-height: 1;
+  vertical-align: -1px;
+}
 
 /* A `fade` grade has no badge. It recedes the row instead — the same gesture as
  * being drafted, one stop short of it: no line-through, and lighter than .34, so
@@ -483,21 +511,6 @@ body:has(.oven-content) header {
 .oven-row.faded,
 .oven-tp-row.faded { opacity: .52; }
 
-.oven-ecr {
-  width: 32px; flex-shrink: 0; text-align: right;
-  font-family: var(--oven-data);
-  font-size: 11px; color: var(--oven-ash-dim);
-  font-variant-numeric: tabular-nums;
-}
-.oven-delta {
-  width: 40px; flex-shrink: 0; text-align: right;
-  font-family: var(--oven-data);
-  font-size: 11px; font-weight: 700;
-  font-variant-numeric: tabular-nums;
-}
-.oven-delta.pos  { color: var(--oven-flame); }
-.oven-delta.neg  { color: var(--oven-frost); }
-.oven-delta.zero { color: var(--oven-ash-dim); }
 
 .oven-taken {
   font-family: var(--oven-data);
@@ -511,8 +524,13 @@ body:has(.oven-content) header {
 /* ---------- pulled from the oven ---------- */
 
 .oven-row.gone { opacity: .34; }
-.oven-row.gone .oven-name-main { text-decoration: line-through; text-decoration-thickness: 1px; }
+/* Struck on the name only — the team, grade and note are still true about him. */
+.oven-row.gone .oven-name-text { text-decoration: line-through; text-decoration-thickness: 1px; }
 .oven-row.gone .oven-rail { background: var(--oven-mortar) !important; }
+
+/* Drafted or kept, both routes to .gone. The pin would queue a target that can
+ * never come up; it's last in the row and takes nothing with it when it goes. */
+.oven-row.gone .oven-pin { display: none; }
 
 /* Overlay, not `background` — the row carries its heat wash as an inline style,
  * and animating background directly would blink the wash out and snap it back. */
@@ -530,7 +548,8 @@ body:has(.oven-content) header {
 }
 
 /* players pushed off my board */
-.oven-row.off .oven-name-main { color: var(--oven-ash-dim); text-decoration: line-through; }
+.oven-row.off .oven-name-main { color: var(--oven-ash-dim); }
+.oven-row.off .oven-name-text { text-decoration: line-through; }
 
 /* ================= THE HORIZON =================
  * The signature. `placeMarkers()` computes, live, where you will actually be
@@ -827,7 +846,7 @@ body.oven-tp-open .oven-tp { transform: translateX(0); visibility: visible; }
 /* ---------- rows ---------- */
 
 .oven-tp-group {
-  display: flex; align-items: baseline; justify-content: space-between;
+  display: flex; align-items: baseline;
   gap: 8px;
   padding: 13px 12px 5px;
   font-family: var(--oven-data);
@@ -838,8 +857,6 @@ body.oven-tp-open .oven-tp { transform: translateX(0); visibility: visible; }
   background: var(--oven-brick);
   z-index: 1;
 }
-.oven-tp-group-count { font-weight: 400; letter-spacing: .08em; color: var(--oven-ash-dim); }
-
 .oven-tp-row {
   display: flex; align-items: center; gap: 9px;
   padding: 8px 12px;
@@ -848,7 +865,7 @@ body.oven-tp-open .oven-tp { transform: translateX(0); visibility: visible; }
 .oven-tp-row:hover { background: var(--oven-brick-hi); }
 .oven-tp-row.compact { padding: 6px 12px; }
 .oven-tp-row.is-gone { opacity: .4; }
-.oven-tp-row.is-gone .oven-tp-name { text-decoration: line-through; text-decoration-thickness: 1px; }
+.oven-tp-row.is-gone .oven-tp-name-text { text-decoration: line-through; text-decoration-thickness: 1px; }
 .oven-tp-row.is-target { box-shadow: inset 2px 0 0 var(--oven-flame); }
 .oven-tp-row.filled { background: rgba(20, 16, 14, .5); }
 /* Positional-floor rows answer "and if the room runs my position?" — they are
@@ -872,11 +889,6 @@ body.oven-tp-open .oven-tp { transform: translateX(0); visibility: visible; }
   font-size: 12.5px; font-weight: 600; color: var(--oven-bone);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.oven-tp-sub {
-  font-family: var(--oven-data);
-  font-size: 9px; color: var(--oven-ash-dim); letter-spacing: .04em;
-  margin-top: 1px;
-}
 .oven-tp-chips { display: flex; flex-wrap: wrap; gap: 3px; justify-content: flex-end; max-width: 44%; }
 
 .oven-tp-chip {
@@ -889,7 +901,13 @@ body.oven-tp-open .oven-tp { transform: translateX(0); visibility: visible; }
   color: var(--oven-ash-dim);
 }
 /* flame = mine or urgent; frost = the market's business; bare = neutral fact */
-.oven-tp-chip.tgt    { border-color: var(--oven-ember); color: var(--oven-flame); }
+/* The dart replaced the word, so it sheds the pill for the same reason the
+ * hearts did — and it stays the widest mark in the chip stack, which is right:
+ * "this one is mine" outranks every other chip on the row. */
+.oven-tp-chip.tgt {
+  border-color: transparent; background: none;
+  padding: 0 1px; font-size: 12px; line-height: 1.3; letter-spacing: 0;
+}
 .oven-tp-chip.proj   { border-color: transparent; background: rgba(106, 169, 208, .14); color: var(--oven-frost); }
 .oven-tp-chip.pos    { border-color: transparent; background: rgba(230, 222, 210, .07); color: var(--oven-ash); }
 .oven-tp-chip.hot    { border-color: var(--oven-ember); background: rgba(255, 122, 24, .16); color: var(--oven-flame); }
@@ -935,7 +953,7 @@ body.oven-tp-open .oven-tp { transform: translateX(0); visibility: visible; }
 .oven-tp-round.is-now { box-shadow: inset 2px 0 0 var(--oven-flame); }
 
 .oven-tp-round-head {
-  display: flex; align-items: baseline; justify-content: space-between;
+  display: flex; align-items: baseline;
   gap: 8px;
   padding: 11px 12px 6px;
   font-family: var(--oven-data);
@@ -946,7 +964,6 @@ body.oven-tp-open .oven-tp { transform: translateX(0); visibility: visible; }
   z-index: 1;
 }
 .oven-tp-round.is-now .oven-tp-round-no { color: var(--oven-flame); }
-.oven-tp-round-prog { font-weight: 400; letter-spacing: .08em; color: var(--oven-ash-dim); }
 
 .oven-tp-slot {
   display: flex; align-items: center; gap: 9px;
@@ -981,10 +998,7 @@ body.oven-tp-open .oven-tp { transform: translateX(0); visibility: visible; }
 
 @media (max-width: 560px) {
   .oven-team-grid { grid-template-columns: 1fr; }
-  .oven-ecr { display: none; }
-  .oven-thead .oven-ecr { display: none; }
   .oven-pick-label { font-size: 27px; }
-  .oven-tally { text-align: left; flex-basis: 100%; min-width: 0; }
   .oven-rk { width: 25px; font-size: 10px; }
   .oven-name-main { font-size: 12.5px; }
   .oven-row { gap: 7px; }

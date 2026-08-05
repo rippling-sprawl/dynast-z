@@ -6,7 +6,7 @@
   <link rel="icon" type="image/png" href="/favicon.png">
   <title>Big Board | The Baker's Oven</title>
   <link rel="stylesheet" href="/styles/base/styles.css?v=abec71e4">
-  <link rel="stylesheet" href="/styles/primary/bakers-oven.css?v=8c059e28">
+  <link rel="stylesheet" href="/styles/primary/bakers-oven.css?v=9dfb50a0">
 </head>
 <body>
   <div id="header-mount"></div>
@@ -14,14 +14,13 @@
   <script src="/scripts/base/auth.js?v=55c2cb8e"></script>
   <script src="/scripts/base/nav.js?v=e4a37bf6"></script>
   <script src="/scripts/base/sync.js?v=f19ba045"></script>
-  <script src="/scripts/components/table-sort.js?v=c892311f"></script>
   <script src="/scripts/components/sticky-headers.js?v=43c9432d"></script>
   <script src="/scripts/style/heatmap.js?v=80458313"></script>
-  <script src="/scripts/primary/oven-config.js?v=65a566dc"></script>
-  <script src="/scripts/primary/oven-csv.js?v=9d72dad8"></script>
+  <script src="/scripts/primary/oven-config.js?v=6c60e214"></script>
+  <script src="/scripts/primary/oven-csv.js?v=6d188388"></script>
   <script src="/scripts/primary/oven-draft.js?v=5f15d9b3"></script>
-  <script src="/scripts/primary/oven-board.js?v=d29f107b"></script>
-  <script src="/scripts/primary/oven-targets.js?v=bcc4ade7"></script>
+  <script src="/scripts/primary/oven-board.js?v=7a137c72"></script>
+  <script src="/scripts/primary/oven-targets.js?v=9dd5afec"></script>
   <script>initPage();</script>
 
   <main class="oven-content">
@@ -41,31 +40,39 @@
             <span class="oven-eyebrow">Your pick</span>
             <span class="oven-pick-label">—</span>
           </div>
-          <div class="oven-tally" id="clock"></div>
           <div class="oven-conn" id="conn"></div>
         </div>
 
+        <!-- Two rows, because they are two different questions: the first picks
+             what you're looking at, the second takes things away. Sharing one
+             wrapped row made "Hide drafted" read as an eighth position. -->
         <div class="oven-controls" id="controls">
-          <button class="oven-chip" data-pos="">All</button>
-          <button class="oven-chip" data-pos="QB">QB</button>
-          <button class="oven-chip" data-pos="RB">RB</button>
-          <button class="oven-chip" data-pos="WR">WR</button>
-          <button class="oven-chip" data-pos="TE">TE</button>
-          <button class="oven-chip" data-pos="K">K</button>
-          <button class="oven-chip" data-pos="DEF">DEF</button>
-          <button class="oven-chip" id="hide-drafted">Hide drafted</button>
+          <div class="oven-filter-row">
+            <button class="oven-chip" data-pos="">All</button>
+            <button class="oven-chip" data-pos="QB">QB</button>
+            <button class="oven-chip" data-pos="RB">RB</button>
+            <button class="oven-chip" data-pos="WR">WR</button>
+            <button class="oven-chip" data-pos="TE">TE</button>
+            <button class="oven-chip" data-pos="K">K</button>
+            <button class="oven-chip" data-pos="DEF">DEF</button>
+          </div>
+          <div class="oven-filter-row">
+            <span class="oven-filter-label">Hide:</span>
+            <button class="oven-chip" data-hide="hideDrafted" aria-pressed="false">Drafted</button>
+            <button class="oven-chip" data-hide="hideFade" aria-pressed="false">Fade</button>
+          </div>
         </div>
       </div>
 
-      <div class="oven-thead">
+      <!-- Labels, not controls. The board has one order — yours — and the
+           columns are not clickable. -->
+      <!-- <div class="oven-thead">
         <div class="oven-rail"></div>
-        <div class="oven-rk sortable" data-sort="myRank">RK</div>
-        <span class="player-pos sortable" data-sort="pos">POS</span>
-        <div class="oven-name sortable" data-sort="name">Player</div>
-        <div class="oven-ecr sortable" data-sort="fpRank">ECR</div>
-        <div class="oven-delta sortable" data-sort="heat">Δ</div>
+        <div class="oven-rk">RK</div>
+        <span class="player-pos">POS</span>
+        <div class="oven-name">Player</div>
         <div class="oven-taken" style="visibility:hidden">x</div>
-      </div>
+      </div> -->
       <div class="oven-list" id="list"></div>
 
       <p class="oven-note" id="footnote"></p>
@@ -98,7 +105,6 @@
     function renderClock() {
       var c = S.clock;
       var nextEl = document.getElementById('next-pick');
-      var clockEl = document.getElementById('clock');
       var consoleEl = document.getElementById('statusbar');
       if (!c) return;
 
@@ -121,12 +127,6 @@
         document.title = onClock ? 'ON THE CLOCK — ' + base
           : (away <= 5 ? '(' + away + ') ' + base : 'Big Board | ' + base);
       }
-
-      var avail = S.rows.filter(function (r) { return !S.drafted[r.key]; }).length;
-      clockEl.innerHTML =
-        'Pick <strong>' + (c.onTheClock || '—') + '</strong> of ' + (S.teamsCount * draft.settings.rounds) +
-        ' · <strong>' + c.madeCount + '</strong> off the board' +
-        '<br><strong>' + avail + '</strong> left on your board';
     }
 
     function onPicks(picks) {
@@ -157,17 +157,14 @@
       });
       document.querySelector('.oven-chip[data-pos=""]').classList.add('active');
 
-      var hd = document.getElementById('hide-drafted');
-      hd.addEventListener('click', function () {
-        S.filters.hideDrafted = !S.filters.hideDrafted;
-        hd.classList.toggle('active', S.filters.hideDrafted);
-        OvenBoard.render(listEl);
-      });
-
-      document.querySelectorAll('.oven-thead .sortable').forEach(function (el) {
-        el.addEventListener('click', function () {
-          var key = el.getAttribute('data-sort');
-          S.sort = Sort.toggle(S.sort, key, key === 'heat' ? 'desc' : 'asc');
+      // The Hide chips are independent toggles, not a radio group like the
+      // positions — each names one filter key on S.filters.
+      document.querySelectorAll('.oven-chip[data-hide]').forEach(function (btn) {
+        var key = btn.getAttribute('data-hide');
+        btn.addEventListener('click', function () {
+          S.filters[key] = !S.filters[key];
+          btn.classList.toggle('active', S.filters[key]);
+          btn.setAttribute('aria-pressed', S.filters[key] ? 'true' : 'false');
           OvenBoard.render(listEl);
         });
       });

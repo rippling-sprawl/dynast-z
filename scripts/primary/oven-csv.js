@@ -109,7 +109,7 @@
     if (GRADES.indexOf(v) !== -1) return v;
     // Tolerate the obvious synonyms rather than dropping an opinion on a typo.
     if (v === 'l' || v === 'high' || v === '+' || v === 'target') return 'like';
-    if (v === 'a' || v === 'low' || v === '-' || v === 'no') return 'avoid';
+    if (v === 'a' || v === 'low' || v === '-' || v === 'no' || v === 'hate') return 'avoid';
     if (v === 'f' || v === 'down') return 'fade';
     if (v === 'lv' || v === 'up' || v === '++') return 'love';
     return null;

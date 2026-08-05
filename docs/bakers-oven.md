@@ -98,7 +98,7 @@ preserved on the row and ignored — you can keep your own working columns.
 | `Team` | `Tm`, `NFLTeam` | Same |
 | `Tier` | — | Your tier band; falls back to FantasyPros' tier |
 | `MyRank` | `Rank`, `RK` | Board order; falls back to row order |
-| `Grade` | `Like`, `Opinion` | `love` / `like` / `fade` / `avoid` |
+| `Grade` | `Like`, `Opinion` | `love` / `like` / `fade` / `avoid` (`hate` → `avoid`) |
 | `Note` | `Notes`, `Comment` | Free text, shown on the row |
 
 The parser is a real RFC-4180 state machine, not `split(',')` — quoted commas, embedded
@@ -106,6 +106,19 @@ newlines, `""` escapes, CRLF/LF/CR, and a UTF-8 BOM all round-trip. **Download t
 starter file from the current FantasyPros top 250, so the first upload is one edit away.
 
 ### Hot and cold
+
+The console's filter block is two rows: positions (a radio group — one at a time, `All` clears),
+then **Hide:** `Drafted` and `Fade`, which are independent toggles reading `S.filters.hideDrafted`
+and `S.filters.hideFade`. `Fade` hides *both* negative grades, `fade` and `avoid` — they are the
+two ways of writing "not for me", and hiding one while leaving the other on the board is never
+what you meant. Filtering happens in `visibleRows()` and forces a full `render()`, not a patch.
+
+A graded player also wears a badge, so a saturated rail on a row the market agrees with doesn't
+read as a bug: `love` → ❤️ and `like` → 🩷 (`OVEN.GRADE_ICON`), `avoid` stays the word, and `fade` gets no
+badge at all — a fade is your disinterest, not a fact about the player, so the row recedes
+instead. `OvenBoard.gradeChip()` owns the markup and the Targets drawer calls it, so the two
+surfaces can't drift. The emoji carry `role="img"` + `aria-label`, since a glyph has no
+accessible name of its own.
 
 An explicit `Grade` wins. Without one, heat is `fpRank - myRank` — positive means you're higher
 on him than consensus. It renders through `window.Heatmap.diverging` in two channels: a
@@ -198,10 +211,9 @@ it:
    already took rounds 1–4. This look-ahead is the entire reason the view exists; without it
    every round would recommend the same player.
 
-Each row is chipped with what it is: `proj` (rank order put him here), `target` (he's in your
-queue — a player can be both), `top RB` (best remaining at his position), and the verdict that
-actually drives a decision — `now or never` vs `can wait`, computed by asking whether his index
-in the current pool survives the *next* gap. Past the rank-order entries, every position with a
+Each row is chipped with what it is: `proj` (rank order put him here), 🎯 (he's in your
+queue — a player can be both), and `top RB` (best remaining at his position).
+Past the rank-order entries, every position with a
 body left contributes its best remaining player as a **floor**, so a run on your position never
 leaves a pick with no answer; those rows are set lighter, since they are fallbacks rather than
 recommendations.
@@ -235,9 +247,40 @@ picks: 12, 13, 36, 37, 60, 61, 85, 108, 109, 132, 151, 156, 157, 162, 180, 181
 
 ## Rendering
 
+A board row is one line: heat rail · your rank · position badge · name · taken tag · pin. The
+position badge carries the **positional rank** (`RB7`, not `RB`) — it names the position on the
+way past, so one colored cell does both jobs — and the NFL team rides the name line as a dim
+annotation. There is no sub-line under the name; the same shape is used in the Targets and
+Projections drawer. Once a player is drafted or kept (`.gone`), his pin goes `display: none` — it
+would queue a target that can never come up, and it's last in the row so it takes nothing with
+it.
+
+Neither FantasyPros number has a column. ECR is still loaded and still drives everything that
+matters — the heat rail, the row wash, and the projection's market order — but reading a
+consensus rank off a row was never the decision, and the printed Δ that replaced it wasn't
+either: the heat rail already says *how far apart you and the market are* in a form you can read
+at a scroll, and a number restating it in the same row is the same claim charged twice.
+
+The crossed-off rule targets `.oven-name-text`, not the whole name line: `text-decoration`
+propagates to descendants and a child cannot opt out, so the team, grade and note sit outside the
+struck span rather than being un-struck inside it.
+
+### One order, no sorting
+
+**The board is never re-ordered.** `state.rows` comes out of `buildBoard()` in personal-rank
+order and stays that way for the session; the header cells are labels with no `data-sort`, no
+click handler, and no hover affordance, and there is no sort state to toggle. Re-ordering the
+board mid-draft is the one interaction that can cost you a pick — the horizon markers, the tier
+bands, and your own memory of where a player sits are all anchored to rank order, and every one
+of them is meaningless under a different sort.
+
+Filtering stayed because it *subtracts* rows without moving the survivors: `visibleRows()`
+returns a filtered slice of the same array, in the same order. The page no longer loads
+`scripts/components/table-sort.js` at all.
+
 Two-phase, deliberately:
 
-- `render()` — full `innerHTML` build. Boot, CSV import, sort/filter change.
+- `render()` — full `innerHTML` build. Boot, CSV import, filter change.
 - `applyDraftState()` — surgical class/text patches. Every poll.
 
 A full rebuild on each poll would reset scroll position and kill the cross-off animation while
@@ -287,7 +330,8 @@ Run `python3 server.py`, open `http://localhost:8000`.
 
 **Draft data** (league is `pre_draft` until 2026-08-31, so this is testable now)
 8. All **7** keepers render struck through with a `KEPT · owner` tag.
-9. Console tally reads *Pick 1 of 192 · 7 off the board* — proving first-unfilled, not `length + 1`.
+9. `computeClock().onTheClock` is **1**, not 8 — proving first-unfilled, not `length + 1`. (No
+   longer visible in the console; check it from the devtools console via `OvenBoard.state.clock`.)
 10. Console reads **Your pick / 2.01 / 10 away** (pick 12 is a keeper; 9 and 12 are filled), and
     the board carries a `The chalk · 10 gone before you're up` header above a hatched band that
     ends at the `You choose from here · 2.01` horizon.
@@ -310,16 +354,18 @@ Run `python3 server.py`, open `http://localhost:8000`.
 19. Projections lists **16** rounds. baker28's R14 keeper fills round 14 with a `kept` chip;
     made picks show `picked`; the traded-away R7 and R12 read "No pick this round".
 20. Round 2 does not recommend the same player round 1 already took — that is the look-ahead.
-21. Queue a player who is 40 spots down: he appears in a later round with a `target` chip, and his
+21. Queue a player who is 40 spots down: he appears in a later round with a 🎯 chip, and his
     targets-view window chip agrees with the round he shows up in.
-22. Sort or filter the board → re-render → targeted rows are still marked.
+22. Filter the board → re-render → targeted rows are still marked, and the surviving rows are
+    still in ascending personal-rank order.
 
 **Sync**
 23. Signed in, import on one browser → open another → same board and the same target queue.
     Signed out → localStorage only, still fully functional.
 
 **Degraded**
-24. Rename `data/fp_redraft.json` → board still renders from CSV with `—` in ECR.
+24. Rename `data/fp_redraft.json` → board still renders from CSV, with no heat rail or row wash
+    (nothing to disagree with).
 25. No CSV at all → board seeds from FantasyPros ranks with an import prompt.
 26. Import a new CSV that drops a queued player: he vanishes from the drawer but stays in storage,
     and the empty state says how many saved targets aren't on the current board.

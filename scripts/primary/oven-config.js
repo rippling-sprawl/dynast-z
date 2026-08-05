@@ -49,6 +49,12 @@
     // graded row and a computed row are directly comparable.
     GRADE_HEAT: { love: 24, like: 10, fade: -10, avoid: -24 },
 
+    // The two positive grades wear a glyph instead of a word — at a 250-row
+    // scroll a heart registers faster than four letters, and the pair reads as
+    // one scale (deeper red = stronger). `fade` still has no badge at all, and
+    // `avoid` stays a word: it's the rare one, and it should cost a beat to read.
+    GRADE_ICON: { love: '❤️', like: '🩷' },
+
     // Round projections. Both weights are in board positions, on the same scale
     // as GRADE_HEAT: queuing a player is worth ~8 spots when the simulation
     // decides who I'd actually take, and a `love` grade is worth 12 (24 × 0.5).
