@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <title>Big Board | The Baker's Oven</title>
+  <link rel="stylesheet" href="/styles/base/styles.css?v=abec71e4">
+  <link rel="stylesheet" href="/styles/primary/bakers-oven.css?v=333dcb72">
+</head>
+<body>
+  <div id="header-mount"></div>
+  <div id="nav-drawer-mount"></div>
+  <script src="/scripts/base/auth.js?v=2ce11c2d"></script>
+  <script src="/scripts/base/nav.js?v=4d9c3196"></script>
+  <script src="/scripts/base/sync.js?v=f19ba045"></script>
+  <script src="/scripts/components/table-sort.js?v=c892311f"></script>
+  <script src="/scripts/components/sticky-headers.js?v=43c9432d"></script>
+  <script src="/scripts/style/heatmap.js?v=80458313"></script>
+  <script src="/scripts/primary/oven-config.js?v=016f04fc"></script>
+  <script src="/scripts/primary/oven-csv.js?v=9d72dad8"></script>
+  <script src="/scripts/primary/oven-draft.js?v=5f15d9b3"></script>
+  <script src="/scripts/primary/oven-board.js?v=4a6bd872"></script>
+  <script>initPage();</script>
+
+  <main class="oven-content">
+    <div class="oven-breadcrumbs">
+      <a href="/football">Football</a><span class="sep">/</span><a href="/the-bakers-oven">The Baker's Oven</a><span class="sep">/</span><span id="crumb-team">Board</span>
+    </div>
+
+    <div id="loading">Loading draft board…</div>
+
+    <div id="sections" style="display:none;">
+      <div class="oven-statusbar" id="statusbar">
+        <div class="oven-statusbar-inner">
+          <span class="oven-next" id="next-pick">—</span>
+          <span class="oven-clock" id="clock"></span>
+          <span style="flex:1"></span>
+          <span id="conn"></span>
+        </div>
+      </div>
+
+      <div class="oven-controls" id="controls">
+        <input class="oven-search" id="search" type="search" placeholder="Search players…" autocomplete="off">
+        <button class="oven-chip" data-pos="">All</button>
+        <button class="oven-chip" data-pos="QB">QB</button>
+        <button class="oven-chip" data-pos="RB">RB</button>
+        <button class="oven-chip" data-pos="WR">WR</button>
+        <button class="oven-chip" data-pos="TE">TE</button>
+        <button class="oven-chip" data-pos="K">K</button>
+        <button class="oven-chip" data-pos="DEF">DEF</button>
+        <button class="oven-chip" id="hide-drafted">Hide drafted</button>
+      </div>
+
+      <div class="oven-thead">
+        <div class="oven-rail"></div>
+        <div class="oven-rk sortable" data-sort="myRank">RK</div>
+        <div class="oven-mark"></div>
+        <span class="player-pos sortable" data-sort="pos" style="background:transparent;color:#8b949e">POS</span>
+        <div class="oven-name sortable" data-sort="name">Player</div>
+        <div class="oven-tier sortable" data-sort="tier" style="background:transparent">Tier</div>
+        <div class="oven-ecr sortable" data-sort="fpRank">ECR</div>
+        <div class="oven-delta sortable" data-sort="heat">Δ</div>
+        <div class="oven-taken" style="visibility:hidden">x</div>
+      </div>
+      <div class="oven-list" id="list"></div>
+
+      <p class="oven-note" id="footnote"></p>
+    </div>
+  </main>
+
+  <script>
+  (function () {
+    var loading = document.getElementById('loading');
+    var sections = document.getElementById('sections');
+    var listEl = document.getElementById('list');
+    var S = OvenBoard.state;
+
+    var rosterId = parseInt((location.pathname.match(/\/the-bakers-oven\/([^/?#]+)/) || [])[1], 10);
+    if (!rosterId || isNaN(rosterId)) rosterId = OVEN.MY_ROSTER_ID;
+
+    var ctx = null, draft = null, poller = null;
+    var prevDrafted = {};
+    var lastUpdate = null;
+
+    function setConn(html) { document.getElementById('conn').innerHTML = html; }
+
+    function renderClock() {
+      var c = S.clock;
+      var nextEl = document.getElementById('next-pick');
+      var clockEl = document.getElementById('clock');
+      if (!c) return;
+
+      if (c.myNext == null) {
+        nextEl.textContent = 'No picks left';
+        nextEl.className = 'oven-next';
+      } else {
+        var label = OvenDraft.roundPickLabel(c.myNext, S.teamsCount);
+        var away = c.untilMyTurn;
+        nextEl.textContent = away === 0 ? 'ON THE CLOCK · ' + label : 'Your pick ' + label + ' · ' + away + ' away';
+        nextEl.className = 'oven-next' + (away === 0 ? ' onclock' : (away <= 3 ? ' imminent' : ''));
+        var base = "The Baker's Oven";
+        document.title = away === 0 ? 'ON THE CLOCK — ' + base
+          : (away <= 5 ? '(' + away + ') ' + base : 'Big Board | ' + base);
+      }
+
+      var avail = S.rows.filter(function (r) { return !S.drafted[r.key]; }).length;
+      clockEl.innerHTML = 'Pick <strong>' + (c.onTheClock || '—') + '</strong> of ' + (S.teamsCount * draft.settings.rounds) +
+        ' · <strong>' + c.madeCount + '</strong> off the board · <strong>' + avail + '</strong> left on yours';
+    }
+
+    function onPicks(picks) {
+      var drafted = OvenBoard.indexPicks(picks, S.rows);
+      var newly = {};
+      Object.keys(drafted).forEach(function (k) { if (!prevDrafted[k]) newly[k] = true; });
+      S.drafted = drafted;
+      var plan = OvenDraft.buildPickPlan(draft, ctx.tradedPicks);
+      S.clock = OvenDraft.computeClock(plan, picks, rosterId, S.teamsCount * draft.settings.rounds);
+      OvenBoard.applyDraftState(newly, Object.keys(prevDrafted).length === 0);
+      prevDrafted = drafted;
+      lastUpdate = Date.now();
+      renderClock();
+      setConn('<span class="oven-live-dot"></span>');
+    }
+
+    function wireControls() {
+      var search = document.getElementById('search');
+      var t = null;
+      search.addEventListener('input', function () {
+        clearTimeout(t);
+        t = setTimeout(function () { S.filters.q = search.value; OvenBoard.render(listEl); renderClock(); }, 150);
+      });
+
+      document.querySelectorAll('.oven-chip[data-pos]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var pos = btn.getAttribute('data-pos');
+          S.filters.pos = pos || null;
+          document.querySelectorAll('.oven-chip[data-pos]').forEach(function (b) { b.classList.remove('active'); });
+          btn.classList.add('active');
+          OvenBoard.render(listEl);
+        });
+      });
+      document.querySelector('.oven-chip[data-pos=""]').classList.add('active');
+
+      var hd = document.getElementById('hide-drafted');
+      hd.addEventListener('click', function () {
+        S.filters.hideDrafted = !S.filters.hideDrafted;
+        hd.classList.toggle('active', S.filters.hideDrafted);
+        OvenBoard.render(listEl);
+      });
+
+      document.querySelectorAll('.oven-thead .sortable').forEach(function (el) {
+        el.addEventListener('click', function () {
+          var key = el.getAttribute('data-sort');
+          S.sort = Sort.toggle(S.sort, key, key === 'heat' ? 'desc' : 'asc');
+          OvenBoard.render(listEl);
+        });
+      });
+    }
+
+    async function boot() {
+      try {
+        var results = await Promise.all([
+          OvenDraft.loadLeague(OVEN.LEAGUE_ID),
+          fetch(OVEN.FP_DATA, { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : []; }).catch(function () { return []; }),
+          fetch(OVEN.FP_META, { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }),
+          loadWithSync(OVEN.SYNC_SPORT, OVEN.SYNC_KEY, OVEN.STORAGE_KEY, null),
+        ]);
+        ctx = results[0];
+        var fp = results[1] || [], fpMeta = results[2], board = results[3];
+
+        draft = await OvenDraft.loadDraft(ctx.draftId);
+        S.teamsCount = draft.settings.teams;
+        S.myRosterId = rosterId;
+        ctx.teams.forEach(function (t) { S.teams[t.roster_id] = t; });
+
+        var me = S.teams[rosterId];
+        document.getElementById('crumb-team').textContent = me ? me.teamName : 'Roster ' + rosterId;
+
+        S.rows = OvenBoard.computeHeat(
+          OvenBoard.buildBoard(board && board.rows, fp)
+        );
+
+        wireControls();
+        OvenBoard.render(listEl);
+
+        var picks = await OvenDraft.loadPicks(ctx.draftId, draft.last_picked || draft.status);
+        onPicks(picks);
+
+        // Freshness + provenance note.
+        var notes = [];
+        if (!board || !board.rows || !board.rows.length) {
+          notes.push('Showing <strong>FantasyPros half-PPR ranks</strong> — <a href="/the-bakers-oven" style="color:#58a6ff">import your CSV</a> to use your own board.');
+        }
+        if (fpMeta) {
+          var ageDays = (Date.now() / 1000 - (fpMeta.fetched_ts || 0)) / 86400;
+          notes.push('FantasyPros ECR updated ' + OvenBoard.esc(fpMeta.last_updated || '?') +
+            ', fetched ' + Math.floor(ageDays) + 'd ago' +
+            (ageDays > OVEN.FP_STALE_DAYS ? ' — <span style="color:#d29922">stale, re-run scripts/fetch_fp_redraft.py</span>' : '') + '.');
+        }
+        document.getElementById('footnote').innerHTML = notes.join(' ');
+
+        loading.style.display = 'none';
+        sections.style.display = '';
+
+        Sticky.pinBelow(document.getElementById('statusbar'), [document.querySelector('header')]);
+        Sticky.pinBelow(document.getElementById('controls'), [document.querySelector('header'), document.getElementById('statusbar')]);
+
+        poller = OvenDraft.createPoller({
+          draftId: ctx.draftId,
+          onPicks: onPicks,
+          onStatusChange: function (prev, next) {
+            if (prev) setConn('<span class="oven-degraded">Draft ' + next.replace('_', ' ') + '</span>');
+          },
+          onError: function (err, attempt) {
+            var ago = lastUpdate ? Math.round((Date.now() - lastUpdate) / 60000) : null;
+            setConn('<span class="oven-degraded">Reconnecting (' + attempt + ')' +
+              (ago != null ? ' · last update ' + ago + 'm ago' : '') + '</span>');
+          },
+        });
+        poller.start();
+      } catch (e) {
+        loading.textContent = 'Error: ' + e.message;
+      }
+    }
+
+    boot();
+  })();
+  </script>
+</body>
+</html>

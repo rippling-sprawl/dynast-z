@@ -15,6 +15,7 @@ function buildNavItems() {
     { type: 'section', label: 'Betting' },
     { type: 'link', label: 'Bets', href: '/bets' },
     { type: 'section', label: 'Football' },
+    { type: 'link', label: "The Baker's Oven", href: '/the-bakers-oven' },
     { type: 'link', label: 'Trade Calculator', href: '/trade-calculator' },
     { type: 'link', label: 'JHBC', href: '/league/1314983622930870272' },
     { type: 'link', label: 'Drew Dynasty', href: '/league/1312081645817327616' },

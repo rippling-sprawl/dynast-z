@@ -1021,6 +1021,123 @@ def resolve_player(index, name, position, team):
     return active[0] if len(active) == 1 else None
 
 
+### The Baker's Oven ###########################################################
+# Resolving board rows to Sleeper player_ids happens once, at CSV upload, so the
+# live draft path is an exact ID match and no fuzzy matching can fail mid-draft.
+
+# FantasyPros calls team defenses "DST", Sleeper calls them "DEF". Sleeper also
+# uses the team abbreviation itself as the defense's player_id ("SEA"), so
+# defenses resolve by team code and never touch the name index.
+_DEF_POSITIONS = {"DEF", "DST", "D/ST", "DS"}
+
+# Team defenses are commonly written as a city or full team name in a hand-built
+# board ("Seattle", "Seattle Seahawks", "Seahawks"); map the nickname/city back
+# to Sleeper's abbreviation.
+_DEF_NAME_HINTS = {
+    "cardinals": "ARI", "arizona": "ARI", "falcons": "ATL", "atlanta": "ATL",
+    "ravens": "BAL", "baltimore": "BAL", "bills": "BUF", "buffalo": "BUF",
+    "panthers": "CAR", "carolina": "CAR", "bears": "CHI", "chicago": "CHI",
+    "bengals": "CIN", "cincinnati": "CIN", "browns": "CLE", "cleveland": "CLE",
+    "cowboys": "DAL", "dallas": "DAL", "broncos": "DEN", "denver": "DEN",
+    "lions": "DET", "detroit": "DET", "packers": "GB", "green bay": "GB",
+    "texans": "HOU", "houston": "HOU", "colts": "IND", "indianapolis": "IND",
+    "jaguars": "JAX", "jacksonville": "JAX", "chiefs": "KC", "kansas city": "KC",
+    "raiders": "LV", "las vegas": "LV", "chargers": "LAC", "rams": "LAR",
+    "dolphins": "MIA", "miami": "MIA", "vikings": "MIN", "minnesota": "MIN",
+    "patriots": "NE", "new england": "NE", "saints": "NO", "new orleans": "NO",
+    "giants": "NYG", "jets": "NYJ", "eagles": "PHI", "philadelphia": "PHI",
+    "steelers": "PIT", "pittsburgh": "PIT", "49ers": "SF", "niners": "SF",
+    "san francisco": "SF", "seahawks": "SEA", "seattle": "SEA",
+    "buccaneers": "TB", "bucs": "TB", "tampa bay": "TB", "titans": "TEN",
+    "tennessee": "TEN", "commanders": "WAS", "washington": "WAS",
+}
+
+
+def _loose_name(name):
+    """Aggressive name key for hand-typed board entries: lowercase, suffixes and
+    all punctuation removed. Only used as a fallback after norm_name() misses —
+    norm_name() itself is left alone because the trade calculator depends on its
+    exact behavior."""
+    return re.sub(r"[^a-z0-9]", "", norm_name(name or "").lower())
+
+
+def resolve_defense(name, team):
+    """Resolve a team defense to Sleeper's player_id (the team abbreviation)."""
+    code = normalize_team(team)
+    if code != "FA":
+        return code
+    key = (name or "").strip().lower()
+    if key in _DEF_NAME_HINTS:
+        return _DEF_NAME_HINTS[key]
+    # Fall back to any nickname/city appearing in the string ("Seattle D/ST").
+    for hint, abbr in _DEF_NAME_HINTS.items():
+        if hint in key:
+            return abbr
+    guess = normalize_team(name)
+    return guess if guess != "FA" else None
+
+
+def resolve_board_players(entries):
+    """Resolve board rows to Sleeper player_ids.
+
+    Takes [{name, pos, team}, ...] and returns one result per entry, in order,
+    with player_id set to None when no unambiguous match exists. Unmatched rows
+    are always returned rather than dropped, so the UI can name them.
+    """
+    index, ok = build_player_resolver()
+    if not ok:
+        raise RuntimeError("Sleeper player data unavailable")
+
+    # Loose index built once, consulted only when the strict pass misses.
+    loose = {}
+    for norm, candidates in index.items():
+        loose.setdefault(re.sub(r"[^a-z0-9]", "", norm.lower()), []).extend(candidates)
+
+    results = []
+    for entry in entries:
+        name = (entry.get("name") or "").strip()
+        pos = (entry.get("pos") or "").strip().upper()
+        team = (entry.get("team") or "").strip()
+
+        if not name:
+            results.append({"player_id": None, "reason": "empty name"})
+            continue
+
+        if pos in _DEF_POSITIONS:
+            pid = resolve_defense(name, team)
+            results.append({
+                "player_id": pid, "position": "DEF", "team": pid,
+                "reason": None if pid else "unknown defense",
+            })
+            continue
+
+        match = resolve_player(index, name, pos, team)
+        if not match:
+            candidates = loose.get(_loose_name(name)) or []
+            if pos:
+                narrowed = [c for c in candidates if c["position"] == norm_pos(pos)]
+                if narrowed:
+                    candidates = narrowed
+            if len(candidates) == 1:
+                match = candidates[0]
+            elif candidates:
+                active = [c for c in candidates if c.get("active")]
+                match = active[0] if len(active) == 1 else None
+
+        if match:
+            results.append({
+                "player_id": match["player_id"],
+                "position": match["position"],
+                "team": match["team"],
+                "rookie": match.get("years_exp") == 0,
+                "reason": None,
+            })
+        else:
+            results.append({"player_id": None, "reason": "no unambiguous match"})
+
+    return results
+
+
 def rookie_keys_from_resolver(index):
     """Fallback rookie set ('normname|POS') derived from the resolver index, for
     pool entries that don't resolve to a unique player_id. One DB pass, same
@@ -1276,6 +1393,14 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         elif self.path == "/football/grading-system":
             self.path = "/views/home/grading-system.html"
             super().do_GET()
+        # The Baker's Oven — live draft companion. /the-bakers-oven is the team
+        # picker; /the-bakers-oven/{rosterId} is that team's big board.
+        elif self.path.split("?")[0] == "/the-bakers-oven":
+            self.path = "/views/football/oven-index.html"
+            super().do_GET()
+        elif re.match(r"^/the-bakers-oven/[^/]+/?$", self.path.split("?")[0]):
+            self.path = "/views/football/oven-board.html"
+            super().do_GET()
         elif self.path == "/odds":
             self.path = "/views/odds/index.html"
             super().do_GET()
@@ -1385,6 +1510,28 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             super().do_GET()
 
     def do_POST(self):
+        # The Baker's Oven: resolve uploaded board rows to Sleeper player_ids
+        # once, at import, so the live draft path is an exact ID match.
+        if self.path == "/api/football/resolve":
+            try:
+                length = int(self.headers.get("Content-Length", 0))
+                body = json.loads(self.rfile.read(length)) if length else {}
+                entries = body.get("players") or []
+                if not isinstance(entries, list):
+                    self._json_response(400, {"error": "players must be a list"})
+                    return
+                if len(entries) > 2000:
+                    self._json_response(400, {"error": "Too many players (max 2000)"})
+                    return
+                results = resolve_board_players(entries)
+                self._json_response(200, {
+                    "players": results,
+                    "matched": sum(1 for r in results if r.get("player_id")),
+                    "total": len(results),
+                })
+            except Exception as e:
+                self._json_response(500, {"error": str(e)})
+            return
         if self.path == "/api/auth":
             length = int(self.headers.get("Content-Length", 0))
             body = json.loads(self.rfile.read(length)) if length else {}
@@ -1564,7 +1711,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         self.wfile.write(json.dumps(data).encode())
 
     def log_message(self, format, *args):
-        if "/api/" in (args[0] if args else ""):
+        # send_error() routes through here with an HTTPStatus as args[0], not a
+        # string, so coerce before the substring test — otherwise every 404 in
+        # local dev raises inside the logger and resets the connection.
+        if "/api/" in str(args[0] if args else ""):
             super().log_message(format, *args)
 
 

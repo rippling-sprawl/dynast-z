@@ -1,0 +1,305 @@
+/* The Baker's Oven — live draft companion.
+ *
+ * Palette follows styles/base/styles.css (#0f1117 / #161b22 / #30363d /
+ * #58a6ff). Position badges (.pos-QB etc.) come from the global stylesheet and
+ * are deliberately not redefined here.
+ *
+ * Hot/cold note: the source spreadsheet's fills (#57BB8A .. #EB9891) are alpha
+ * over WHITE. Over this app's near-black background the same hues composite
+ * dark, so the rail carries full saturation and the row wash carries a low
+ * alpha. Hue and ordering stay faithful; luminance is inverted for dark mode.
+ */
+
+.oven-content { max-width: 940px; margin: 0 auto; padding: 0 12px 80px; }
+
+/* ---------- index page ---------- */
+
+.oven-breadcrumbs { font-size: 12px; color: #8b949e; margin: 16px 0 10px; }
+.oven-breadcrumbs a { color: #58a6ff; text-decoration: none; }
+.oven-breadcrumbs a:hover { text-decoration: underline; }
+.oven-breadcrumbs .sep { margin: 0 6px; color: #30363d; }
+
+.oven-h2 { font-size: 20px; font-weight: 700; color: #f0f6fc; margin: 0 0 4px; }
+.oven-sub { font-size: 13px; color: #8b949e; margin: 0 0 20px; line-height: 1.5; }
+
+.oven-card {
+  background: #161b22; border: 1px solid #30363d; border-radius: 10px;
+  padding: 16px; margin-bottom: 16px;
+}
+.oven-card h3 {
+  font-size: 12px; text-transform: uppercase; letter-spacing: .5px;
+  color: #8b949e; font-weight: 700; margin: 0 0 12px;
+}
+
+.oven-status-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px;
+}
+.oven-stat-label {
+  font-size: 10px; text-transform: uppercase; letter-spacing: .5px; color: #6e7681;
+  font-weight: 700; margin-bottom: 3px;
+}
+.oven-stat-value { font-size: 15px; color: #f0f6fc; font-weight: 600; }
+.oven-stat-value.mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+
+.oven-pill {
+  display: inline-block; font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .5px; padding: 3px 8px; border-radius: 999px; border: 1px solid;
+}
+.oven-pill.pre_draft { color: #d29922; border-color: #d29922; background: rgba(210,153,34,.12); }
+.oven-pill.drafting  { color: #2ea043; border-color: #2ea043; background: rgba(46,160,67,.12); }
+.oven-pill.paused    { color: #8b949e; border-color: #8b949e; background: rgba(139,148,158,.12); }
+.oven-pill.complete  { color: #58a6ff; border-color: #58a6ff; background: rgba(88,166,255,.12); }
+
+.oven-team-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.oven-team-card {
+  display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+  background: #161b22; border: 1px solid #30363d; border-radius: 8px;
+  text-decoration: none; transition: border-color .15s, background .15s;
+}
+.oven-team-card:hover { border-color: #58a6ff; background: #1c2128; }
+.oven-team-card.is-me { border-color: #58a6ff; background: #1f2d3d; }
+.oven-team-avatar {
+  width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+  background: #21262d; object-fit: cover;
+}
+.oven-team-meta { min-width: 0; flex: 1; }
+.oven-team-name {
+  font-size: 13px; font-weight: 600; color: #f0f6fc;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.oven-team-sub {
+  font-size: 11px; color: #6e7681;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+.oven-you-tag {
+  font-size: 9px; font-weight: 700; color: #58a6ff; text-transform: uppercase;
+  letter-spacing: .5px; border: 1px solid #58a6ff; border-radius: 3px; padding: 1px 4px;
+}
+
+/* ---------- import ---------- */
+
+.oven-drop {
+  border: 1px dashed #30363d; border-radius: 8px; padding: 20px; text-align: center;
+  color: #8b949e; font-size: 13px; transition: border-color .15s, background .15s;
+  cursor: pointer;
+}
+.oven-drop:hover, .oven-drop.dragover { border-color: #58a6ff; background: #1c2128; color: #f0f6fc; }
+.oven-drop input[type=file] { display: none; }
+
+.oven-btn {
+  display: inline-block; background: #21262d; border: 1px solid #30363d; color: #c9d1d9;
+  font-size: 12px; font-weight: 600; padding: 6px 12px; border-radius: 6px;
+  cursor: pointer; text-decoration: none; transition: border-color .15s, color .15s, background .15s;
+}
+.oven-btn:hover { border-color: #58a6ff; color: #f0f6fc; }
+.oven-btn.primary { background: #238636; border-color: #2ea043; color: #fff; }
+.oven-btn.primary:hover { background: #2ea043; }
+.oven-btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+
+.oven-note { font-size: 12px; color: #8b949e; line-height: 1.5; margin: 10px 0 0; }
+.oven-note code {
+  background: #21262d; padding: 1px 5px; border-radius: 3px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; color: #c9d1d9;
+}
+
+.oven-msg { font-size: 12px; border-radius: 6px; padding: 8px 12px; margin-top: 10px; line-height: 1.5; }
+.oven-msg.ok   { color: #2ea043; background: rgba(46,160,67,.1);  border: 1px solid rgba(46,160,67,.35); }
+.oven-msg.warn { color: #d29922; background: rgba(210,153,34,.1); border: 1px solid rgba(210,153,34,.35); }
+.oven-msg.err  { color: #f85149; background: rgba(248,81,73,.1);  border: 1px solid rgba(248,81,73,.35); }
+
+/* ---------- board: sticky status bar ---------- */
+
+.oven-statusbar {
+  position: sticky; z-index: 20; background: #0f1117;
+  border-bottom: 1px solid #30363d; padding: 8px 0; margin-bottom: 0;
+}
+.oven-statusbar-inner { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.oven-clock {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px; color: #8b949e;
+}
+.oven-clock strong { color: #f0f6fc; }
+.oven-next {
+  font-size: 12px; font-weight: 700; color: #58a6ff;
+  border: 1px solid #58a6ff; border-radius: 6px; padding: 4px 10px;
+  background: rgba(88,166,255,.1);
+}
+.oven-next.imminent { color: #2ea043; border-color: #2ea043; background: rgba(46,160,67,.14); }
+.oven-next.onclock {
+  color: #fff; background: #238636; border-color: #2ea043;
+  animation: ovenPulse 1.4s ease-in-out infinite;
+}
+@keyframes ovenPulse { 0%,100% { opacity: 1; } 50% { opacity: .55; } }
+
+.oven-degraded {
+  font-size: 11px; color: #d29922; border: 1px solid #d29922;
+  background: rgba(210,153,34,.12); border-radius: 999px; padding: 2px 9px;
+}
+.oven-live-dot {
+  width: 7px; height: 7px; border-radius: 50%; background: #2ea043; display: inline-block;
+  animation: ovenPulse 2s ease-in-out infinite;
+}
+
+/* ---------- board: controls ---------- */
+
+.oven-controls {
+  position: sticky; z-index: 19; background: #0f1117;
+  padding: 8px 0; border-bottom: 1px solid #21262d;
+  display: flex; gap: 6px; flex-wrap: wrap; align-items: center;
+}
+.oven-chip {
+  background: #21262d; border: 1px solid #30363d; color: #8b949e; font-size: 10px;
+  font-weight: 600; text-transform: uppercase; letter-spacing: .4px;
+  padding: 3px 7px; border-radius: 4px; cursor: pointer;
+  transition: color .15s, border-color .15s, background .15s;
+}
+.oven-chip:hover { color: #f0f6fc; border-color: #58a6ff; }
+.oven-chip.active { background: #1f2d3d; color: #f0f6fc; border-color: #58a6ff; }
+.oven-search {
+  background: #0f1117; border: 1px solid #30363d; color: #f0f6fc; font-size: 12px;
+  padding: 4px 9px; border-radius: 6px; min-width: 130px; flex: 1;
+}
+.oven-search:focus { outline: none; border-color: #58a6ff; }
+
+/* ---------- board: rows ---------- */
+
+.oven-list { border: 1px solid #30363d; border-top: none; border-radius: 0 0 8px 8px; overflow: hidden; }
+
+.oven-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 10px 6px 0; border-bottom: 1px solid #21262d;
+  position: relative; font-size: 13px;
+  /* Most of virtualization's benefit for one CSS line; ignored where unsupported. */
+  content-visibility: auto; contain-intrinsic-size: 0 40px;
+}
+.oven-row:last-child { border-bottom: none; }
+.oven-row:hover { background: #161b22; }
+
+.oven-rail { width: 4px; align-self: stretch; flex-shrink: 0; background: transparent; }
+.oven-rk {
+  width: 34px; flex-shrink: 0; text-align: right; font-size: 11px; color: #6e7681;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+.oven-mark { width: 30px; flex-shrink: 0; font-size: 9px; }
+.oven-row .player-pos {
+  font-size: 10px; font-weight: 700; padding: 2px 5px; border-radius: 3px;
+  min-width: 28px; text-align: center; flex-shrink: 0;
+}
+.oven-name { flex: 1; min-width: 0; }
+.oven-name-main {
+  font-size: 13px; color: #f0f6fc; white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis;
+}
+.oven-name-sub {
+  font-size: 10px; color: #6e7681;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+.oven-tier {
+  font-size: 10px; font-weight: 700; color: #8b949e; background: #21262d;
+  border-radius: 3px; padding: 2px 6px; flex-shrink: 0;
+}
+
+/* Names the explicit CSV grade, so a colored rail on a Δ 0 row is legible. */
+.oven-grade {
+  font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px;
+  border-radius: 3px; padding: 1px 5px; margin-left: 4px; vertical-align: 1px;
+}
+.oven-grade.love  { background: rgba(87,187,138,.22);  color: #7ee0ab; }
+.oven-grade.like  { background: rgba(87,187,138,.13);  color: #63c294; }
+.oven-grade.fade  { background: rgba(235,152,145,.13); color: #e0938d; }
+.oven-grade.avoid { background: rgba(235,152,145,.22); color: #f0a49e; }
+.oven-delta {
+  width: 42px; flex-shrink: 0; text-align: right; font-size: 11px; font-weight: 600;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+.oven-delta.pos { color: #2ea043; }
+.oven-delta.neg { color: #f85149; }
+.oven-delta.zero { color: #6e7681; }
+.oven-ecr {
+  width: 34px; flex-shrink: 0; text-align: right; font-size: 11px; color: #8b949e;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+.oven-taken {
+  font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px;
+  border-radius: 3px; padding: 2px 5px; flex-shrink: 0; white-space: nowrap;
+  background: #21262d; color: #6e7681;
+}
+.oven-taken.keeper { background: #2d2410; color: #d29922; }
+.oven-taken.mine { background: #1f2d3d; color: #58a6ff; }
+
+/* drafted */
+.oven-row.gone { opacity: .38; }
+.oven-row.gone .oven-name-main { text-decoration: line-through; }
+.oven-row.gone .oven-rail { background: #30363d !important; }
+.oven-row.just-gone { animation: ovenFlash 2.4s ease-out; }
+@keyframes ovenFlash {
+  0%   { background: rgba(248,81,73,.28); }
+  100% { background: transparent; }
+}
+
+/* players I've pushed off my board */
+.oven-row.off .oven-name-main { color: #6e7681; text-decoration: line-through; }
+
+/* likely gone before my next pick */
+.oven-row.atrisk .oven-rk { color: #484f58; }
+.oven-row.atrisk::after {
+  content: ''; position: absolute; left: 0; right: 0; top: 0; bottom: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(45deg, transparent, transparent 6px,
+              rgba(139,148,158,.045) 6px, rgba(139,148,158,.045) 12px);
+}
+
+/* my expected pick markers */
+.oven-marker {
+  display: flex; align-items: center; gap: 8px;
+  padding: 5px 10px; background: #0d1117;
+  border-top: 1px solid #30363d; border-bottom: 1px solid #30363d;
+  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px;
+  color: #8b949e;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+.oven-marker.next {
+  color: #58a6ff; background: rgba(88,166,255,.1);
+  border-color: #58a6ff; border-left: 3px solid #58a6ff;
+}
+.oven-marker-line { flex: 1; height: 1px; background: #30363d; }
+.oven-marker.next .oven-marker-line { background: rgba(88,166,255,.4); }
+
+/* tier separators */
+.oven-tiersep {
+  display: flex; align-items: center; gap: 8px; padding: 4px 10px;
+  background: #161b22; border-bottom: 1px solid #21262d;
+  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px;
+  color: #6e7681; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+.oven-tiersep .cliff { color: #f85149; }
+
+.oven-thead {
+  display: flex; align-items: center; gap: 8px; padding: 6px 10px 6px 0;
+  background: #161b22; border: 1px solid #30363d; border-bottom: none;
+  border-radius: 8px 8px 0 0;
+  font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .4px;
+  color: #8b949e;
+}
+.oven-thead .sortable { cursor: pointer; }
+.oven-thead .sortable:hover { color: #f0f6fc; }
+
+.oven-empty { padding: 32px 16px; text-align: center; color: #6e7681; font-size: 13px; }
+
+/* ---------- mobile ---------- */
+
+@media (max-width: 560px) {
+  .oven-team-grid { grid-template-columns: 1fr; }
+  .oven-ecr, .oven-tier { display: none; }
+  .oven-rk { width: 26px; font-size: 10px; }
+  .oven-mark { width: 24px; }
+  .oven-name-main { font-size: 12px; }
+  .oven-row { gap: 6px; }
+  .oven-statusbar-inner { gap: 8px; }
+  .oven-clock { font-size: 11px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .oven-row.just-gone { animation: none; }
+  .oven-next.onclock, .oven-live-dot { animation: none; }
+}
