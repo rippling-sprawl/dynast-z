@@ -12,16 +12,8 @@
   <div id="header-mount"></div>
   <div id="nav-drawer-mount"></div>
   <script src="/scripts/base/auth.js?v=8f2b460f"></script>
-  <script src="/scripts/base/nav.js?v=d80ba5fd"></script>
-  <script>
-    initPage();
-    // The Baker's Oven holds per-account leagues and boards (see requireLogin
-    // in auth.js). The card is below this script, so reveal it once the
-    // document has parsed.
-    document.addEventListener('DOMContentLoaded', function () {
-      if (isLoggedIn()) document.getElementById('oven-card').hidden = false;
-    });
-  </script>
+  <script src="/scripts/base/nav.js?v=9546680e"></script>
+  <script>initPage();</script>
 
   <div class="masters-content">
     <h2>Football</h2>
@@ -31,7 +23,7 @@
 
     <h3 class="hub-section">Tools</h3>
     <div class="hub-grid">
-      <a class="hub-card" href="/the-bakers-oven" id="oven-card" hidden><h3>The Baker&rsquo;s Oven</h3><p>Live draft companion &mdash; your leagues, big board &amp; next pick</p></a>
+      <a class="hub-card" href="/the-bakers-oven"><h3>The Baker&rsquo;s Oven</h3><p>Live draft companion &mdash; your leagues, big board &amp; next pick</p></a>
       <a class="hub-card" href="/trade-calculator"><h3>Trade Calculator</h3><p>Value any dynasty trade with blended rankings</p></a>
       <a class="hub-card" href="/football/grading-system"><h3>Grading System</h3><p>How player &amp; pick values are calculated</p></a>
     </div>

@@ -1367,7 +1367,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 self.wfile.write(json.dumps(data).encode())
             except Exception as e:
                 self.wfile.write(json.dumps({"error": str(e)}).encode())
-        elif self.path == "/account":
+        # Query string tolerated: gated pages link here as /account?next=…, and
+        # Vercel's rewrites match on the path alone, so dev must too.
+        elif self.path.split("?")[0] == "/account":
             self.path = "/views/home/account.html"
             super().do_GET()
         elif self.path == "/archive":

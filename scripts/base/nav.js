@@ -11,21 +11,14 @@ const CURRENT_GOLF_YEAR = 2026;
 
 function buildNavItems() {
   const items = []
-  // Mirrors isLoggedIn() in auth.js, which several pages don't load (and
-  // account.html loads after nav.js), so read the id key directly when it
-  // isn't available.
-  const signedIn = typeof isLoggedIn === 'function'
-    ? isLoggedIn()
-    : !!localStorage.getItem('dz_user_id');
   items.push(
     { type: 'section', label: 'Betting' },
     { type: 'link', label: 'Bets', href: '/bets' },
     { type: 'section', label: 'Football' },
-  );
-  // The Baker's Oven holds per-account leagues and boards (see requireLogin in
-  // auth.js), so it needs an identity but not a role.
-  if (signedIn) items.push({ type: 'link', label: "The Baker's Oven", href: '/the-bakers-oven' });
-  items.push(
+    // The Baker's Oven holds per-account leagues and boards, but the landing
+    // page is public and pitches itself to signed-out visitors, so it is
+    // listed for everyone.
+    { type: 'link', label: "The Baker's Oven", href: '/the-bakers-oven' },
     { type: 'link', label: 'Trade Calculator', href: '/trade-calculator' },
     { type: 'link', label: 'JHBC', href: '/league/1314983622930870272' },
     { type: 'link', label: 'Drew Dynasty', href: '/league/1312081645817327616' },

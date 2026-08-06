@@ -767,12 +767,31 @@
     var clock = state.clock;
     if (!clock || !clock.myUpcoming.length || clock.onTheClock == null) return;
 
-    // Query the DOM rather than the rowEls map so this is in on-screen order,
-    // which is what the marker positions are relative to.
-    var avail = Array.prototype.filter.call(
-      state.listEl.querySelectorAll('.oven-row[data-key]'),
-      function (el) { return !state.drafted[el.getAttribute('data-key')]; }
-    );
+    /* The pool is every undrafted player on the board — NOT every undrafted row
+     * on screen. A filter hides rows; it does not remove anyone from the draft.
+     * Counting only what's visible is what made `Hide: Fade` push the horizon
+     * DOWN the board: the faded players between you and your pick stopped being
+     * counted as gone-before-you, so the marker had to eat that many extra
+     * visible names to reach `ahead`. Same for a position filter.
+     *
+     * So walk `state.rows` (the one true order, which the visible list only
+     * samples) and record, per available player, the row element if he happens
+     * to be on screen and `null` if he's filtered out. Positions are then indices
+     * into the FULL pool, and a marker anchors to the first player at or after
+     * that depth who is actually rendered. Drafted players stay out of the pool
+     * on both paths — they really are gone — which is why `Hide: Drafted` never
+     * moved the horizon and `Hide: Fade` did. */
+    var pool = [];
+    var els = state.rowEls;
+    state.rows.forEach(function (r) {
+      if (state.drafted[r.key]) return;
+      pool.push((els && els.get(r.key)) || null);
+    });
+
+    function anchorFrom(idx) {
+      for (var p = idx; p < pool.length; p++) if (pool[p]) return p;
+      return -1;
+    }
 
     // Every remaining pick of mine gets a horizon, not just the next few — the
     // loop runs out on its own once a marker would land past the bottom of the
@@ -783,9 +802,13 @@
       var pickNo = clock.myUpcoming[m];
       var ahead = 0;
       for (var n = clock.onTheClock; n < pickNo; n++) if (!filled[n]) ahead++;
-      if (ahead >= avail.length) break;
+      if (ahead >= pool.length) break;
 
-      var target = avail[ahead];
+      // Past the last rendered row: the horizon is off the bottom of the board
+      // as filtered, and every later pick is further down still.
+      var targetIdx = anchorFrom(ahead);
+      if (targetIdx === -1) break;
+      var target = pool[targetIdx];
       var label = global.OvenDraft.roundPickLabel(pickNo, state.teamsCount);
       var div = document.createElement('div');
       div.className = 'oven-marker' + (m === 0 ? ' next' : '');
@@ -804,14 +827,25 @@
       // These are the players who go before you choose — saying how many is the
       // whole point of computing the marker in the first place.
       if (m === 0) {
-        for (var a = 0; a < ahead && a < avail.length; a++) avail[a].classList.add('atrisk');
-        if (ahead > 0) {
+        // The hatch paints the visible members of the chalk; the count states the
+        // real one. A filter subtracts rows from the band, never from the number
+        // — "10 gone before you're up" is a fact about the draft, not about what
+        // this screen is currently showing.
+        for (var a = 0; a < ahead && a < pool.length; a++) {
+          if (pool[a]) pool[a].classList.add('atrisk');
+        }
+        // No visible chalk row means no band to name — and the header would land
+        // between the horizon and the row it points at, reading as if the chalk
+        // came after your pick.
+        var firstIdx = ahead > 0 ? anchorFrom(0) : -1;
+        if (firstIdx !== -1 && firstIdx < ahead) {
+          var first = pool[firstIdx];
           var zone = document.createElement('div');
           zone.className = 'oven-zone';
           zone.innerHTML = '<span>The chalk</span>' +
             '<span class="oven-zone-line"></span>' +
             '<span>' + ahead + ' gone before you’re up</span>';
-          avail[0].parentNode.insertBefore(zone, avail[0]);
+          first.parentNode.insertBefore(zone, first);
         }
       }
     }

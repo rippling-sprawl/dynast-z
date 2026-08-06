@@ -237,6 +237,61 @@ button.oven-team-card {
   margin-left: auto; padding-left: 12px; flex-shrink: 0;
 }
 
+/* ---------- signed out ---------- */
+
+/* /the-bakers-oven is public so the tool can be seen before it can be used.
+ * Everything past this page needs an account (the leagues and the board are
+ * per-user), so the signed-out state is a pitch: what it looks like, then the
+ * two ways in. */
+.oven-signin { border-left: 2px solid var(--oven-ember); }
+.oven-signin p {
+  font-size: 13px; color: var(--oven-ash); line-height: 1.55;
+  margin: 0; max-width: 60ch;
+}
+
+.oven-preview { margin: 22px 0 0; }
+/* Half-width: it is a taste of the board, not the board. Full-bleed on a
+ * phone, where half a screenshot of a 250-row table shows nothing at all. */
+.oven-preview-shot {
+  display: block; width: 50%; padding: 0; margin: 0;
+  background: var(--oven-brick);
+  border: 1px solid var(--oven-mortar); border-radius: 4px;
+  cursor: zoom-in; overflow: hidden;
+  transition: border-color .15s;
+}
+.oven-preview-shot:hover { border-color: var(--oven-ember); }
+.oven-preview-shot img { display: block; width: 100%; height: auto; }
+.oven-preview figcaption {
+  font-family: var(--oven-data);
+  font-size: 10px; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--oven-ash-dim); margin-top: 9px;
+}
+
+/* ---------- lightbox ---------- */
+
+.oven-lightbox {
+  position: fixed; inset: 0; z-index: 200;
+  display: flex; align-items: center; justify-content: center;
+  padding: 32px;
+  background: rgba(10, 7, 5, .93);
+  cursor: zoom-out;
+}
+.oven-lightbox[hidden] { display: none; }
+.oven-lightbox img {
+  max-width: 100%; max-height: 100%;
+  width: auto; height: auto;
+  object-fit: contain;
+  border: 1px solid var(--oven-mortar); border-radius: 4px;
+}
+/* Same glyph and hit area as the drawer close, so the two read as one control. */
+.oven-lightbox-close {
+  position: absolute; top: 14px; right: 16px;
+  background: transparent; border: 0; cursor: pointer;
+  font-size: 30px; line-height: 1; color: var(--oven-ash);
+  padding: 4px 10px;
+}
+.oven-lightbox-close:hover { color: var(--oven-flame); }
+
 /* ---------- import ---------- */
 
 .oven-drop {
@@ -1308,6 +1363,8 @@ body.oven-tp-open .oven-tp { transform: translateX(0); visibility: visible; }
   }
   .oven-tp-tab { top: auto; bottom: 76px; transform: none; }
   .oven-tp-chips { max-width: 50%; }
+  .oven-preview-shot { width: 100%; }
+  .oven-lightbox { padding: 12px; }
 }
 
 /* ---------- mobile ---------- */

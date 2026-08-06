@@ -317,6 +317,16 @@ marker sits after `pickNo - onTheClock` still-available players — "if the boar
 you're choosing from here." Unlike the static column, this honors keepers, traded picks, and
 every pick actually made, and the markers rise up the board as players come off.
 
+**Still-available means the whole board, not the visible rows.** `placeMarkers()` counts down
+`state.rows` minus `state.drafted`, carrying a row element per available player and `null` for
+anyone a filter is hiding, then anchors each marker to the first player at or past that depth who
+is actually rendered. Only drafting removes someone from that count — a filter never does. This
+is the difference between the two Hide chips: `Drafted` was always free (drafted players leave the
+pool either way), while `Fade` used to *push the horizon down the board*, because the faded
+players between you and your pick stopped counting as gone-before-you and the marker had to eat
+that many extra visible names to make up the depth. A position filter had the same bug. Hiding is
+a view, not a trade.
+
 This is the page's signature element, so it is built as one: the first marker is full-bleed,
 flame, and set in the serif face (used here and on the on-the-clock state, nowhere else). Later
 markers are quiet — `Then · 3.12`. The count of players between you and it lives in the pinned
@@ -770,6 +780,11 @@ Run `python3 server.py`, open `http://localhost:8000`.
      clears and the button returns to `·`. The Δ read the same value through all three.
 27e. With **Hide: Fade** on, grading someone `fade` removes his row immediately — that is the
      filter doing what it says. Turn the chip off: he's back, still ❌. Nothing was lost.
+27e-ii. Mid-draft, with faded players above your horizon: toggle **Hide: Fade** on and off. The
+     `You choose from here` marker lands **in front of the same player both times** — it just has
+     fewer rows above it — and `The chalk · N gone before you're up` keeps the same N. Same for
+     switching a position filter on: the horizon marks the first player of that position expected
+     to survive, not the N-th one. Only a pick actually being made moves the horizon.
 27f. Open the drawer's **Projections**, then grade a mid-board player **Like**: he moves up in the
      simulated rounds without waiting for a poll. **Fade** moves him down. The drawer's own rows
      still wear the ❤️/❌ badge; the board row does not, because its control already says it.
