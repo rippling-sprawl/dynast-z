@@ -69,7 +69,9 @@
   var RESERVE_SLOTS = { IR: true, TAXI: true };
 
   var state = {
-    mounted: false,
+    mounted: false,   // the drawer is built and on the page
+    bound: false,     // syncKey/storageKey resolved — the queue can be read and written
+    loaded: false,    // the saved queue has been pulled once
     open: false,
     view: 'targets',
     keys: [],          // board keys, insertion order
@@ -123,12 +125,13 @@
    * importing rankings replaces the board: a column that exists in the file is
    * the file's answer for every row, including the blank cells.
    *
-   * Refuses before mount, when there is no storageKey to persist to and no
-   * drawer to repaint. That's the no-draft league page, where the queue is
-   * neither loaded nor shown; silently writing one would clobber the real queue
-   * the moment a draft appears. Callers get `false` and can say so. */
+   * Needs a bound queue, not a mounted drawer — see attach(). Before binding
+   * there is no storage key to persist to, and writing the unscoped fallback
+   * would land one league's targets on every other one. With no drawer up,
+   * markBoard finds no rows and render returns at its mounted check, so an
+   * unmounted write is just a write. */
   function setKeys(keys) {
-    if (!state.mounted) return false;
+    if (!state.bound) return false;
     var next = [];
     (keys || []).forEach(function (k) {
       if (k && next.indexOf(k) === -1) next.push(k);
@@ -759,26 +762,24 @@
     };
   }
 
-  function mount(opts) {
-    if (state.mounted) return;
-    state.getState = (opts && opts.getState) || null;
-
-    // Per-league keys when the host names a league (both Oven pages do). The
-    // unscoped fallback keeps the drawer independently mountable.
-    var lid = opts && opts.leagueId;
-    if (lid && global.OvenLeagues) {
-      var tk = global.OvenLeagues.targetKeys(lid);
+  // Per-league keys when the host names a league (both Oven pages do). The
+  // unscoped fallback keeps the drawer independently mountable.
+  function bindKeys(leagueId) {
+    if (state.bound) return;
+    if (leagueId && global.OvenLeagues) {
+      var tk = global.OvenLeagues.targetKeys(leagueId);
       state.syncKey = tk.syncKey;
       state.storageKey = tk.storageKey;
     } else {
       state.syncKey = C.TARGETS_SYNC_KEY;
       state.storageKey = C.TARGETS_STORAGE_BASE;
     }
+    state.bound = true;
+  }
 
-    build();
-    wire();
-    state.mounted = true;
-
+  function loadQueue() {
+    if (state.loaded) return Promise.resolve(state.keys.slice());
+    state.loaded = true;
     var loader = typeof global.loadWithSync === 'function'
       ? global.loadWithSync(C.SYNC_SPORT, state.syncKey, state.storageKey, null)
       : Promise.resolve(null);
@@ -786,8 +787,33 @@
     return Promise.resolve(loader).then(function (saved) {
       if (saved && Array.isArray(saved.keys)) state.keys = saved.keys.slice();
       markBoard();
-      render();
-    }).catch(function () { render(); });
+      return state.keys.slice();
+    }).catch(function () { return state.keys.slice(); });
+  }
+
+  /* The queue without the drawer: resolve this league's storage key and load it,
+   * touching no DOM. The league page calls this at boot so a CSV import can
+   * write the Target column into the queue on a league whose draft isn't
+   * scheduled yet — mount() only runs on the draft branch, and gating an import
+   * on a panel that happens not to be on screen is not a rule anyone would
+   * predict from the file they just uploaded. Idempotent, and safe in either
+   * order with mount(). */
+  function attach(opts) {
+    bindKeys(opts && opts.leagueId);
+    return loadQueue();
+  }
+
+  function mount(opts) {
+    if (state.mounted) return;
+    state.getState = (opts && opts.getState) || null;
+    bindKeys(opts && opts.leagueId);
+
+    build();
+    wire();
+    state.mounted = true;
+
+    return loadQueue().then(function () { render(); })
+      .catch(function () { render(); });
   }
 
   function refresh() {
@@ -797,6 +823,7 @@
 
   global.OvenTargets = {
     mount: mount,
+    attach: attach,
     refresh: refresh,
     // The model, callable without the drawer: takes an explicit host state (or
     // the mounted one) so it can be exercised headless and read by other views.

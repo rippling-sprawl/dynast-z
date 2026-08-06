@@ -221,9 +221,15 @@ round trip go through the queue rather than the board blob:
   `OvenTargets.setKeys()` replaces the queue outright. A file *without* one says nothing about
   targets and leaves the queue alone; re-importing a plain ranking list must not silently empty it.
 
-`setKeys` refuses before the drawer mounts and reports `false`, which is the no-draft league page:
-there is no per-league storage key resolved yet, and writing one would clobber the real queue as
-soon as a draft appears. The import summary says so rather than dropping the marks quietly.
+Writing the queue needs it **bound**, not mounted. `mount()` only runs on the league page's draft
+branch, so gating the import on it would mean a Target column that imports on a league with a
+draft scheduled and silently does nothing on one without — a rule nobody could predict from the
+file they just uploaded. `OvenTargets.attach({leagueId})` resolves the per-league storage key and
+pulls the saved queue while touching no DOM; the league page calls it in its boot `Promise.all`,
+alongside the board load, so the queue is live before the import button exists. `mount()` shares
+the same `bindKeys`/`loadQueue` pair and is idempotent with it in either order (`state.bound`,
+`state.loaded`). With no drawer up, `markBoard` finds no rows and `render` returns at its mounted
+check, so an unmounted write is just a write.
 
 ### Hot and cold
 
@@ -409,6 +415,8 @@ OvenTargets.mount({ getState: function () { return {
   rows, drafted, picks, plan, teamsCount, rounds, myRosterId, rosterPositions
 }; } });
 OvenTargets.refresh();   // after every poll
+
+OvenTargets.attach({ leagueId });   // queue only, no drawer — see Targets in the CSV
 ```
 
 It never writes to the board. The only thing it persists is a list of board keys, under its own

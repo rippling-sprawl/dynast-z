@@ -19,7 +19,7 @@
   <script src="/scripts/primary/oven-draft.js?v=6b481746"></script>
   <script src="/scripts/primary/oven-leagues.js?v=3332aa1a"></script>
   <script src="/scripts/primary/oven-board.js?v=40404af5"></script>
-  <script src="/scripts/primary/oven-targets.js?v=bb0dc827"></script>
+  <script src="/scripts/primary/oven-targets.js?v=6419a1d8"></script>
   <script>initPage();</script>
 
   <main class="oven-content">
@@ -329,18 +329,13 @@
       lines.push('<strong>Imported ' + parsed.rows.length + ' players.</strong>');
       if (resolved) lines.push(resolved.matched + ' matched to Sleeper.');
       if (targets.applied) lines.push(targets.count + ' queued as targets.');
-      else if (targets.count) {
-        lines.push('<br>' + targets.count + ' row(s) marked Target were skipped — ' +
-          'the targets queue opens once this league has a draft scheduled.');
-      }
       if (unmatched.length) {
         lines.push('<br>' + unmatched.length + ' unmatched (kept in your rankings, will cross off by name): ' +
           unmatched.slice(0, 12).map(function (r) { return OvenBoard.esc(r.name); }).join(', ') +
           (unmatched.length > 12 ? ', …' : ''));
       }
       parsed.warnings.forEach(function (w) { lines.push('<br>' + OvenBoard.esc(w)); });
-      var skippedTargets = !targets.applied && targets.count;
-      msg(unmatched.length || skippedTargets ? 'warn' : 'ok', lines.join(' '));
+      msg(unmatched.length ? 'warn' : 'ok', lines.join(' '));
       renderBoardSummary();
     }
 
@@ -428,6 +423,10 @@
           OvenDraft.loadLeague(leagueId).catch(function (e) { return { error: e }; }),
           fetch(OVEN.FP_DATA, { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : []; }).catch(function () { return []; }),
           loadWithSync(bk.sport, bk.syncKey, bk.storageKey, null),
+          // The targets queue, bound and loaded before anything can import into
+          // it. Separate from mount() below, which only runs on the draft
+          // branch: the Target column has to import on any league, drawer or no.
+          OvenTargets.attach({ leagueId: leagueId }),
         ]);
         fp = results[1] || [];
         board = results[2];
