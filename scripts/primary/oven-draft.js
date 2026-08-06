@@ -223,12 +223,16 @@
       return Math.round(ms * (0.8 + Math.random() * 0.4)); // jitter
     }
 
-    function tick() {
-      if (stopped || inFlight) return;
-      if (typeof document !== 'undefined' && document.hidden) return;
+    /* `force` is the manual path (a button, a tab coming back): it skips the
+     * hidden-document guard, since the click IS the proof someone is looking.
+     * Returns the round-trip so a caller can show a spinner for its lifetime;
+     * errors are handled here, so the promise always resolves. */
+    function tick(force) {
+      if (stopped || inFlight) return Promise.resolve();
+      if (!force && typeof document !== 'undefined' && document.hidden) return Promise.resolve();
       inFlight = true;
 
-      loadDraft(draftId).then(function (draft) {
+      return loadDraft(draftId).then(function (draft) {
         failures = 0;
         onDraft(draft);
 
@@ -270,11 +274,14 @@
       clearTimeout(timer);
     }
 
+    /* Clearing lastPicked is what makes this a *force*: the heartbeat's
+     * "nothing moved, skip the 80 KB" shortcut can't fire, so the picks array
+     * is always refetched and onPicks always runs. */
     function refreshNow() {
-      lastPicked = null;   // force a picks refetch
+      lastPicked = null;
       clearTimeout(timer);
       inFlight = false;
-      tick();
+      return tick(true);
     }
 
     function onVisible() {

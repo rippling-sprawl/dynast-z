@@ -362,6 +362,23 @@ button.oven-team-card {
 
 @keyframes ovenBreathe { 0%, 100% { opacity: 1; } 50% { opacity: .45; } }
 
+/* Manual refetch. Ash at rest so it never competes with the pick label — this
+ * is the thing you reach for, not the thing you read. */
+.oven-refresh {
+  flex: none;
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px;
+  background: transparent; border: 1px solid var(--oven-mortar); border-radius: 2px;
+  color: var(--oven-ash-dim); cursor: pointer; padding: 0;
+  transition: border-color .15s, color .15s, background .15s;
+}
+.oven-refresh svg { width: 13px; height: 13px; }
+.oven-refresh:hover { border-color: var(--oven-ember); color: var(--oven-flame); background: rgba(255, 122, 24, .07); }
+.oven-refresh:disabled { cursor: default; color: var(--oven-flame); border-color: var(--oven-mortar); background: transparent; }
+.oven-refresh.spinning svg { animation: ovenSpin .8s linear infinite; }
+
+@keyframes ovenSpin { to { transform: rotate(360deg); } }
+
 .oven-conn { flex-shrink: 0; }
 .oven-live-dot {
   width: 6px; height: 6px; border-radius: 50%;
@@ -1310,6 +1327,8 @@ body.oven-tp-open .oven-tp { transform: translateX(0); visibility: visible; }
   .oven-row.just-gone::before { animation: none; opacity: 0; }
   .oven-next.onclock .oven-eyebrow,
   .oven-live-dot { animation: none; }
+  /* The disabled state still reads as "working" without the spin. */
+  .oven-refresh.spinning svg { animation: none; }
   .oven-content *, .oven-console *, .oven-tp * { transition: none !important; }
   .oven-tp { transition: none !important; }
 }

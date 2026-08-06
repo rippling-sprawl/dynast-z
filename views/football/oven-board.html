@@ -6,7 +6,7 @@
   <link rel="icon" type="image/png" href="/favicon.png">
   <title>Big Board | The Baker's Oven</title>
   <link rel="stylesheet" href="/styles/base/styles.css?v=abec71e4">
-  <link rel="stylesheet" href="/styles/primary/bakers-oven.css?v=d8215fe7">
+  <link rel="stylesheet" href="/styles/primary/bakers-oven.css?v=441f085e">
 </head>
 <body>
   <div id="header-mount"></div>
@@ -17,7 +17,7 @@
   <script src="/scripts/components/sticky-headers.js?v=43c9432d"></script>
   <script src="/scripts/primary/oven-config.js?v=9ade0897"></script>
   <script src="/scripts/primary/oven-csv.js?v=03725b67"></script>
-  <script src="/scripts/primary/oven-draft.js?v=6d611264"></script>
+  <script src="/scripts/primary/oven-draft.js?v=6b481746"></script>
   <script src="/scripts/primary/oven-leagues.js?v=3332aa1a"></script>
   <script src="/scripts/primary/oven-weekly.js?v=da1d9929"></script>
   <script src="/scripts/primary/oven-board.js?v=7d05fe86"></script>
@@ -41,6 +41,14 @@
             <span class="oven-eyebrow">Your pick</span>
             <span class="oven-pick-label">—</span>
           </div>
+          <!-- Escape hatch for the heartbeat. The poller only refetches picks
+               when the draft object says something moved; if Sleeper is slow to
+               update that, or you just don't trust the dot, this refetches the
+               picks array unconditionally. -->
+          <button type="button" class="oven-refresh" id="refresh"
+                  title="Refetch picks from Sleeper" aria-label="Refresh picks from Sleeper">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.5 8a5.5 5.5 0 1 1-1.6-3.9"/><path d="M13.7 2.2v3.1h-3.1"/></svg>
+          </button>
           <div class="oven-conn" id="conn"></div>
         </div>
 
@@ -199,6 +207,22 @@
           btn.classList.toggle('active', S.filters[key]);
           btn.setAttribute('aria-pressed', S.filters[key] ? 'true' : 'false');
           OvenBoard.render(listEl);
+        });
+      });
+
+      /* Force refresh. The poller owns the request, so this is just a button on
+       * refreshNow() — no second fetch path that could disagree with the live
+       * one about what the board shows. Disabled for the round trip so an
+       * impatient double-click can't stack overlapping fetches. */
+      var refreshBtn = document.getElementById('refresh');
+      refreshBtn.addEventListener('click', function () {
+        if (!poller || refreshBtn.disabled) return;
+        refreshBtn.disabled = true;
+        refreshBtn.classList.add('spinning');
+        setConn('<span class="oven-degraded">Refreshing</span>');
+        poller.refreshNow().then(function () {
+          refreshBtn.disabled = false;
+          refreshBtn.classList.remove('spinning');
         });
       });
 

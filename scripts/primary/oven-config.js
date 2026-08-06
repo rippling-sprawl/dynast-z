@@ -16,8 +16,8 @@
     // Sleeper documents "stay under 1000 calls/minute". 8s polling over a 2h
     // draft is 900 requests (7.5/min) — under 1% of that. Sleeper's own edge
     // sets s-maxage=30, so unchanged polls revalidate to 304/0 bytes anyway.
-    POLL_MS: { drafting: 8000, pre_draft: 60000, complete: 0, paused: 15000 },
-    STATUS_POLL_MS: 60000,
+    POLL_MS: { drafting: 8000, pre_draft: 20000, complete: 0, paused: 15000 },
+    STATUS_POLL_MS: 20000,
     BACKOFF_START_MS: 8000,
     BACKOFF_MAX_MS: 60000,
 
