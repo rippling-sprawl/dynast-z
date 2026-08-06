@@ -20,6 +20,10 @@
     tier: ['tier'],
     myRank: ['myrank', 'rank', 'rk', 'mine', 'myrk'],
     grade: ['grade', 'like', 'likedislike', 'opinion'],
+    // The Targets queue, as a column. It lives in its own synced slice (see
+    // TARGETS_STORAGE_BASE) rather than on the board row, but a sheet is where
+    // people actually build a draft list, so it round-trips through the CSV.
+    target: ['target', 'targets', 'targeted', 'queue', 'queued', 'pin', 'pinned'],
     note: ['note', 'notes', 'comment', 'comments'],
   };
 
@@ -119,6 +123,18 @@
     return null;
   }
 
+  // The Target column is a flag, and a spreadsheet has a dozen ways of writing
+  // one. Anything truthy marks him; anything else — including the "no" spellings
+  // and a blank cell — leaves him off the queue. Unlike a grade, there is no
+  // third state to preserve, so an unrecognized value is a plain false rather
+  // than a warning.
+  var TARGET_TRUE = ['y', 'yes', 'x', 'true', 't', '1', 'target', '✓', '✔', '*'];
+
+  function cleanTarget(value) {
+    var v = String(value == null ? '' : value).trim().toLowerCase();
+    return !!v && TARGET_TRUE.indexOf(v) !== -1;
+  }
+
   /* Parse a CSV into board rows.
    * Returns { rows, errors, warnings, headers, extras }.
    * Throws only when the file has no usable header — every other problem is
@@ -166,6 +182,7 @@
         tier: toInt(raw[map.tier]),
         myRank: toInt(raw[map.myRank]),
         grade: cleanGrade(raw[map.grade]),
+        target: cleanTarget(raw[map.target]),
         note: (raw[map.note] || '').trim(),
         extra: extra,
         player_id: null,   // filled in by /api/football/resolve
@@ -206,7 +223,11 @@
     return lines.join('\r\n');
   }
 
-  var TEMPLATE_HEADER = ['Player', 'Pos', 'Team', 'Tier', 'MyRank', 'Grade', 'Note'];
+  var TEMPLATE_HEADER = ['Player', 'Pos', 'Team', 'Tier', 'MyRank', 'Grade', 'Target', 'Note'];
+
+  // What an exported target reads as — one of the spellings cleanTarget
+  // accepts, so the file we write is a file we can read back.
+  var TARGET_MARK = 'Y';
 
   // Build a starter CSV from the FantasyPros half-PPR snapshot so the first
   // upload is one edit away, and so the download -> edit -> upload round trip
@@ -214,24 +235,37 @@
   function buildTemplate(fpPlayers, limit) {
     var n = limit || 250;
     var rows = fpPlayers.slice(0, n).map(function (p, i) {
-      return [p.name, p.position, p.team, p.tier == null ? '' : p.tier, i + 1, '', ''];
+      return [p.name, p.position, p.team, p.tier == null ? '' : p.tier, i + 1, '', '', ''];
     });
     return toCSV(TEMPLATE_HEADER, rows);
   }
 
-  // Export the current board back out, preserving any extra columns the user
-  // keeps in their own sheet.
-  function boardToCSV(rows) {
+  /* Export the current board back out, preserving any extra columns the user
+   * keeps in their own sheet.
+   *
+   * `isTarget` is a predicate over the row, because the queue is not on the row:
+   * it's a separate synced slice keyed by board key, and only the host page
+   * knows which league's queue is loaded. Without one, a row parsed straight
+   * from a CSV still carries its own `target` flag. */
+  function boardToCSV(rows, isTarget) {
+    var known = {};
+    TEMPLATE_HEADER.forEach(function (h) { known[normHeader(h)] = true; });
+
     var extraLabels = [];
     rows.forEach(function (p) {
       Object.keys(p.extra || {}).forEach(function (k) {
+        // A board imported before Target was a column of ours kept it in
+        // `extra`; re-emitting it would put two Target columns in the file and
+        // the second would be dead weight the parser ignores.
+        if (known[normHeader(k)]) return;
         if (extraLabels.indexOf(k) === -1) extraLabels.push(k);
       });
     });
     var header = TEMPLATE_HEADER.concat(extraLabels);
     var body = rows.map(function (p) {
+      var tgt = isTarget ? isTarget(p) : p.target;
       var base = [p.name, p.pos || '', p.team || '', p.tier == null ? '' : p.tier,
-        p.myRank == null ? '' : p.myRank, p.grade || '', p.note || ''];
+        p.myRank == null ? '' : p.myRank, p.grade || '', tgt ? TARGET_MARK : '', p.note || ''];
       return base.concat(extraLabels.map(function (k) { return (p.extra || {})[k] || ''; }));
     });
     return toCSV(header, body);
@@ -258,5 +292,6 @@
     download: download,
     GRADES: GRADES,
     TEMPLATE_HEADER: TEMPLATE_HEADER,
+    TARGET_MARK: TARGET_MARK,
   };
 })(window);

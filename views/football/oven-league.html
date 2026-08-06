@@ -6,7 +6,7 @@
   <link rel="icon" type="image/png" href="/favicon.png">
   <title>The Baker's Oven | Dynast-Z</title>
   <link rel="stylesheet" href="/styles/base/styles.css?v=abec71e4">
-  <link rel="stylesheet" href="/styles/primary/bakers-oven.css?v=21ba883f">
+  <link rel="stylesheet" href="/styles/primary/bakers-oven.css?v=1cdb4e07">
 </head>
 <body>
   <div id="header-mount"></div>
@@ -15,11 +15,11 @@
   <script src="/scripts/base/nav.js?v=9546680e"></script>
   <script src="/scripts/base/sync.js?v=1b85ffb1"></script>
   <script src="/scripts/primary/oven-config.js?v=0394fc36"></script>
-  <script src="/scripts/primary/oven-csv.js?v=03725b67"></script>
+  <script src="/scripts/primary/oven-csv.js?v=77440fca"></script>
   <script src="/scripts/primary/oven-draft.js?v=6b481746"></script>
   <script src="/scripts/primary/oven-leagues.js?v=3332aa1a"></script>
-  <script src="/scripts/primary/oven-board.js?v=265a19a2"></script>
-  <script src="/scripts/primary/oven-targets.js?v=ca7f071d"></script>
+  <script src="/scripts/primary/oven-board.js?v=40404af5"></script>
+  <script src="/scripts/primary/oven-targets.js?v=bb0dc827"></script>
   <script>initPage();</script>
 
   <main class="oven-content">
@@ -65,11 +65,13 @@
         <p class="oven-note">
           Rankings are private to your account and saved per league.
           Columns: <code>Player</code> (required), <code>Pos</code>, <code>Team</code>,
-          <code>Tier</code>, <code>MyRank</code>, <code>Grade</code>, <code>Note</code>.
+          <code>Tier</code>, <code>MyRank</code>, <code>Grade</code>, <code>Target</code>,
+          <code>Note</code>.
           <code>Grade</code> accepts <code>like</code> or <code>fade</code> — older sheets'
           <code>love</code> and <code>avoid</code> are read as those. You can also set it on the
-          board itself, and it weights the Targets projection. Any extra columns you keep are
-          preserved and ignored.
+          board itself, and it weights the Targets projection. <code>Target</code> is your
+          Targets queue: mark a row <code>Y</code> to queue him, and importing a sheet that has
+          the column replaces the queue. Any extra columns you keep are preserved and ignored.
         </p>
       </div>
     </div>
@@ -257,6 +259,20 @@
         '<div class="oven-msg ' + cls + '">' + text + '</div>';
     }
 
+    /* The Target column, back into the queue it was exported from. Only when
+     * the file actually has the column: a sheet without one says nothing about
+     * targets, and reading its absence as "none" would wipe the queue every
+     * time someone re-imports a plain ranking list.
+     *
+     * Keys, not names — the queue stores board keys, and OvenBoard.playerKey is
+     * what both the drawer and the board rows use to build them. */
+    function applyImportedTargets(parsed) {
+      if (parsed.headers.indexOf('target') === -1) return { applied: false, count: 0 };
+      var keys = parsed.rows.filter(function (r) { return r.target; })
+        .map(function (r) { return OvenBoard.playerKey(r.name, r.pos, r.team); });
+      return { applied: OvenTargets.setKeys(keys), count: keys.length };
+    }
+
     async function importText(text, filename) {
       var parsed;
       try {
@@ -303,19 +319,29 @@
       var bk = OvenLeagues.boardKeys(leagueId);
       saveWithSync(bk.sport, bk.syncKey, bk.storageKey, board);
 
+      // Rebuild before the queue is rewritten: the drawer resolves its keys
+      // against the board it was handed, and that board is the one just imported.
+      if (draft) rebuildTargetState(draft, null);
+      var targets = applyImportedTargets(parsed);
+
       var unmatched = parsed.rows.filter(function (r) { return !r.player_id; });
       var lines = [];
       lines.push('<strong>Imported ' + parsed.rows.length + ' players.</strong>');
       if (resolved) lines.push(resolved.matched + ' matched to Sleeper.');
+      if (targets.applied) lines.push(targets.count + ' queued as targets.');
+      else if (targets.count) {
+        lines.push('<br>' + targets.count + ' row(s) marked Target were skipped — ' +
+          'the targets queue opens once this league has a draft scheduled.');
+      }
       if (unmatched.length) {
         lines.push('<br>' + unmatched.length + ' unmatched (kept in your rankings, will cross off by name): ' +
           unmatched.slice(0, 12).map(function (r) { return OvenBoard.esc(r.name); }).join(', ') +
           (unmatched.length > 12 ? ', …' : ''));
       }
       parsed.warnings.forEach(function (w) { lines.push('<br>' + OvenBoard.esc(w)); });
-      msg(unmatched.length ? 'warn' : 'ok', lines.join(' '));
+      var skippedTargets = !targets.applied && targets.count;
+      msg(unmatched.length || skippedTargets ? 'warn' : 'ok', lines.join(' '));
       renderBoardSummary();
-      if (draft) rebuildTargetState(draft, null);
     }
 
     function wireImport() {
@@ -342,7 +368,13 @@
       });
       document.getElementById('export-btn').addEventListener('click', function () {
         if (!board || !board.rows.length) { msg('err', 'No rankings to export yet.'); return; }
-        OvenCSV.download('bakers-oven-rankings.csv', OvenCSV.boardToCSV(board.rows));
+        // The Target column comes from the queue, not the row — same board keys
+        // the drawer pins by, so a target survives the trip out to a sheet.
+        var queued = {};
+        OvenTargets.keys().forEach(function (k) { queued[k] = true; });
+        OvenCSV.download('bakers-oven-rankings.csv', OvenCSV.boardToCSV(board.rows, function (r) {
+          return !!queued[OvenBoard.playerKey(r.name, r.pos, r.team)];
+        }));
       });
     }
 

@@ -880,6 +880,41 @@ button.oven-team-card {
 .oven-row.off .oven-name-main { color: var(--oven-ash-dim); }
 .oven-row.off .oven-name-text { text-decoration: line-through; }
 
+/* ---------- rescued rows ----------
+ * A row a Hide toggle removed, put back because it is the only thing left inside
+ * one of my pick windows (see rescueEmptyWindows in oven-board.js). It has to
+ * read as an exception in both directions at once: still filtered — you did
+ * choose to hide him — but present on purpose rather than by a bug in the
+ * toggle.
+ *
+ * So the row keeps whatever recession it already had (.faded stays at .52) and
+ * the exception is carried entirely by the tag, which is the only thing here at
+ * full strength. The `best available` wording is the reason he is on screen, not
+ * a warning: at this pick, hidden or not, he is what the board has.
+ */
+.oven-row.rescued {
+  /* Dashed, where every other rule on this board is solid: the line is the
+   * outline of a row that would not otherwise be here. */
+  border-top: 1px dashed var(--oven-mortar);
+  border-bottom: 1px dashed var(--oven-mortar);
+}
+/* .faded is an opacity on the ROW, and opacity does not un-inherit — a child
+ * cannot set itself back to 1 any more than it can opt out of a strikethrough
+ * (same trap as .oven-name-text above). So a rescued row carries the recession
+ * on its columns instead of on itself, which leaves the tag at full strength.
+ * It has to be: the tag is the entire explanation for the row being here, and a
+ * label at .52 explaining a row at .52 explains nothing. */
+.oven-row.rescued.faded { opacity: 1; }
+.oven-row.rescued.faded > *:not(.oven-rescued) { opacity: .52; }
+
+.oven-rescued {
+  font-family: var(--oven-data);
+  font-size: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: .12em;
+  border-radius: 2px; padding: 3px 6px; flex-shrink: 0; white-space: nowrap;
+  border: 1px solid var(--oven-ember);
+  color: var(--oven-flame);
+}
+
 /* ---------- re-ranking ----------
  * Dragging a row moves the player, and mid-drag the only open question is which
  * seam he lands in — so the whole signal is one flame rule on that seam. The row
@@ -887,6 +922,16 @@ button.oven-team-card {
  * far you have moved him. */
 .oven-row[draggable="true"] { cursor: grab; }
 .oven-row:active { cursor: grabbing; }
+/* A row is a drag handle, not prose. On touch the press-and-hold that starts a
+ * drag is the same gesture that starts a text selection, so the selection wins
+ * and the drag never happens — and on desktop a slow drag paints the name blue.
+ * Nothing on a row is worth copying (the CSV export is how the board leaves),
+ * so the whole list opts out, callout included. */
+.oven-list {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
 .oven-row.is-dragging { opacity: .3; }
 .oven-row.drop-before { box-shadow: inset 0 2px 0 var(--oven-flame); }
 .oven-row.drop-after  { box-shadow: inset 0 -2px 0 var(--oven-flame); }

@@ -201,18 +201,38 @@ preserved on the row and ignored — you can keep your own working columns.
 | `Tier` | — | Your tier band; falls back to FantasyPros' tier |
 | `MyRank` | `Rank`, `RK` | Board order; falls back to row order |
 | `Grade` | `Like`, `Opinion` | `like` / `fade`. The retired `love` and `avoid` are read as `like` and `fade` (`OVEN.GRADE_LEGACY`), as are the usual synonyms (`hate` → `fade`, `++` → `like`). Also settable on the board — see [Setting a grade](#setting-a-grade) |
+| `Target` | `Targets`, `Queued`, `Pin` | Your Targets queue as a column. `Y`/`Yes`/`X`/`1`/`✓` all mark him; blank leaves him off. Exported from the live queue, not from the row — see [Targets in the CSV](#targets-in-the-csv) |
 | `Note` | `Notes`, `Comment` | Free text, shown on the row |
 
 The parser is a real RFC-4180 state machine, not `split(',')` — quoted commas, embedded
 newlines, `""` escapes, CRLF/LF/CR, and a UTF-8 BOM all round-trip. **Download template** builds a
 starter file from the current FantasyPros top 250, so the first upload is one edit away.
 
+### Targets in the CSV
+
+`Target` is the one column that isn't a property of the row. The queue is its own synced slice
+(`TARGETS_STORAGE_BASE`, per league) holding board keys and nothing else, so the two ends of the
+round trip go through the queue rather than the board blob:
+
+- **Export** — `boardToCSV(rows, isTarget)` takes a predicate, because `oven-csv.js` has no idea
+  which league's queue is loaded. The league page builds it from `OvenTargets.keys()`, matching on
+  `OvenBoard.playerKey(name, pos, team)` — the same key the pin button writes.
+- **Import** — a file *with* the column is authoritative for every row in it, blanks included, so
+  `OvenTargets.setKeys()` replaces the queue outright. A file *without* one says nothing about
+  targets and leaves the queue alone; re-importing a plain ranking list must not silently empty it.
+
+`setKeys` refuses before the drawer mounts and reports `false`, which is the no-draft league page:
+there is no per-league storage key resolved yet, and writing one would clobber the real queue as
+soon as a draft appears. The import summary says so rather than dropping the marks quietly.
+
 ### Hot and cold
 
 The console's filter block is two rows: positions (a radio group — one at a time, `All` clears),
 then **Hide:** `Drafted` and `Fade`, which are independent toggles reading `S.filters.hideDrafted`
 and `S.filters.hideFade`. Filtering happens in `visibleRows()` and forces a full `render()`, not a
-patch.
+patch. It has exactly one exception, and it is not in `visibleRows()`: a Hide toggle that would
+leave one of your picks with no players at all hands that pick its best available back — see
+[A pick is never empty](#a-pick-is-never-empty--rescued-rows).
 
 A graded player states his grade in a mark, never in color — the two surfaces state it
 differently, on purpose. **The board row** shows it
@@ -337,6 +357,44 @@ Rows above the first marker are a **named zone** — a `The chalk · N gone befo
 header, plus a diagonal hatch. The hatch is painted at `z-index: -1` so it knocks back the
 background without darkening the glyphs: these rows are exactly what you read when the board
 *doesn't* go chalk, so recession is carried by texture, never by dimming text below contrast.
+
+#### A pick is never empty — rescued rows
+
+The markers cut the board into **windows**: everything between one horizon and the next is what
+that pick can realistically reach. A Hide toggle can empty a window outright — a run of players
+you all faded, say — and then two markers stack with nothing between them, which reads as *"you
+have no pick there"* when the truth is *"everything there is hidden"*. That is the one case where
+a filter stops subtracting rows and starts deleting a pick.
+
+So `rescueEmptyWindows()` gives an empty window its **best available** back — the first player at
+or past that pick's depth — hidden or not, marked `.rescued` and wearing a `best available` tag
+that says why it's on screen. It runs inside `placeMarkers()`, before the markers are placed, so
+the horizon anchors to the row it just put back instead of skipping past it.
+
+Three rules keep the toggle honest:
+
+1. **Nobody moves.** The row is reinserted at its real depth in the pool, so every survivor keeps
+   the position and the neighbours it had. Same promise the horizons make, for the same reason.
+2. **One row per empty window, never more.** Fade three players in a row and you get the first one
+   back, not all three. Anywhere the toggle isn't erasing a pick it still means exactly what it says
+   — a window with even one survivor is never topped up.
+3. **The position filter is not overridden.** `Hide: Fade` says "take these off my board", so
+   handing one back is a correction. Filtering to RB says "this screen is running backs" —
+   answering *"no RB in that window"* with a receiver would be answering a question nobody asked,
+   so an empty window under a position filter is a real finding and is left to stack. With both on,
+   the rescue stays inside the position. (`Hide: Drafted` can't empty a window at all — drafted
+   players leave the pool on both paths.)
+
+Rescued rows are torn down and rebuilt on every `placeMarkers()`, exactly like the markers they
+answer to: one pick landing changes every depth below it, so *which* windows are empty is never
+stable enough to patch. `dropRescued()` also removes them from `state.rowEls`, which is what keeps
+a grade patch, an open grade menu and `OvenTargets.markBoard()` from holding a detached element.
+
+Two display notes. The row is inserted **above** a tier header it sits before, not under it —
+otherwise the band would claim a tier for a row that isn't in it. And `.faded` is an opacity on the
+row, which a child cannot un-inherit, so a rescued row moves that recession onto its columns
+(`.rescued.faded > *:not(.oven-rescued)`) and leaves the tag at full strength: a label at `.52`
+explaining a row at `.52` explains nothing.
 
 ---
 

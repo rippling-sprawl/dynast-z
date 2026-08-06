@@ -118,6 +118,28 @@
 
   function toggle(key) { return has(key) ? (remove(key), false) : (add(key), true); }
 
+  /* Replace the queue wholesale — the CSV import's path in, when the sheet
+   * carries a Target column. Replace rather than merge, for the same reason
+   * importing rankings replaces the board: a column that exists in the file is
+   * the file's answer for every row, including the blank cells.
+   *
+   * Refuses before mount, when there is no storageKey to persist to and no
+   * drawer to repaint. That's the no-draft league page, where the queue is
+   * neither loaded nor shown; silently writing one would clobber the real queue
+   * the moment a draft appears. Callers get `false` and can say so. */
+  function setKeys(keys) {
+    if (!state.mounted) return false;
+    var next = [];
+    (keys || []).forEach(function (k) {
+      if (k && next.indexOf(k) === -1) next.push(k);
+    });
+    state.keys = next;
+    persist();
+    markBoard();
+    render();
+    return true;
+  }
+
   function clear() {
     if (!state.keys.length) return;
     state.keys = [];
@@ -788,6 +810,7 @@
     toggle: togglePanel,
     add: add,
     remove: remove,
+    setKeys: setKeys,
     has: has,
     keys: function () { return state.keys.slice(); },
     state: state,

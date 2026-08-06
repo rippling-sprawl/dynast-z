@@ -750,6 +750,108 @@
     if (state.gradeOpenKey) positionGradeMenu();
   }
 
+  /* ---------- rescued rows (a pick is never empty) ----------
+   *
+   * The horizons cut the board into windows: everything between my pick's marker
+   * and the next one is what that pick can realistically reach. A Hide toggle can
+   * empty a window outright — a run of players you all faded, say — and then two
+   * markers stack with nothing between them, which reads as "you have no pick
+   * there" when what is true is "everything there is hidden". That is the one
+   * case where a filter stops subtracting rows and starts deleting a pick.
+   *
+   * So a window with no visible row gets its best available back, hidden or not,
+   * marked as the exception it is. This does NOT move anybody: the row is
+   * reinserted at its real depth in the pool, so every survivor keeps the
+   * position it had — the same promise placeMarkers() makes about the horizons,
+   * for the same reason. One row per empty window, never more; the toggle still
+   * means what it says everywhere it isn't erasing a pick.
+   *
+   * The POSITION filter is not overridden, and that asymmetry is deliberate.
+   * `Hide: Fade` says "take these off my board", so showing one back is a
+   * correction. Filtering to RB says "this screen is running backs" — answering
+   * "no RB in that window" with a receiver would be answering a question nobody
+   * asked. An empty window under a position filter is a real finding, so it is
+   * left to stack. `Hide: Drafted` never empties a window at all: drafted players
+   * are out of the pool on both paths. */
+
+  function rescuable(r) {
+    return !state.filters.pos || r.pos === state.filters.pos;
+  }
+
+  function makeRowEl(r) {
+    var wrap = document.createElement('div');
+    wrap.innerHTML = rowHTML(r);
+    var el = wrap.firstElementChild;
+    el.classList.add('rescued');
+    // Says why a row you filtered away is on screen, in the row itself — a
+    // treatment alone would just look like the toggle had failed. It sits before
+    // the grade control because the fastest fix is usually to re-grade him.
+    var tag = document.createElement('span');
+    tag.className = 'oven-rescued';
+    tag.textContent = 'best available';
+    tag.title = 'Hidden by your filters, shown because nothing else is left at this pick';
+    el.insertBefore(tag, el.querySelector('.oven-grade-btn'));
+    return el;
+  }
+
+  /* Rebuilt from scratch on every poll, exactly like the markers they answer to —
+   * one pick landing changes every depth below it, so which windows are empty is
+   * never stable enough to patch. Dropping them here also keeps `rowEls` honest:
+   * a rescued row lives in that map while it is on screen (so a grade patch, an
+   * open menu and OvenTargets.markBoard all find it) and leaves with the element. */
+  function dropRescued() {
+    var old = state.listEl.querySelectorAll('.oven-row.rescued');
+    for (var i = 0; i < old.length; i++) {
+      var key = old[i].getAttribute('data-key');
+      if (state.rowEls && state.rowEls.get(key) === old[i]) state.rowEls.delete(key);
+      old[i].remove();
+    }
+  }
+
+  /* Mutates `pool` in place so the marker pass that follows anchors to the row it
+   * just put back rather than skipping past it to the next visible name. */
+  function rescueEmptyWindows(pool, poolRows, depths) {
+    if (!state.rowEls) return;
+    for (var m = 0; m < depths.length; m++) {
+      var start = depths[m];
+      if (start >= pool.length) break;
+      var end = m + 1 < depths.length ? Math.min(depths[m + 1], pool.length) : pool.length;
+
+      var p, occupied = false;
+      for (p = start; p < end; p++) if (pool[p]) { occupied = true; break; }
+      if (occupied) continue;
+
+      var idx = -1;
+      for (p = start; p < end; p++) if (rescuable(poolRows[p])) { idx = p; break; }
+      if (idx === -1) continue;   // a position filter emptied it; that answer stands
+
+      // Anchor to the next row still on screen, so he lands where he belongs
+      // rather than at the end of whatever window he came from. Nothing after him
+      // means the window runs off the bottom of the board — append.
+      var el = makeRowEl(poolRows[idx]);
+      var after = -1;
+      for (p = idx + 1; p < pool.length; p++) if (pool[p]) { after = p; break; }
+      if (after === -1) {
+        state.listEl.appendChild(el);
+      } else {
+        /* Step back over any tier header sitting between him and that anchor.
+         * Inserting straight before the anchor would drop him under a band whose
+         * boundary he is above — the header would then be claiming a tier for the
+         * first row beneath it that is not the row's own. */
+        var anchor = pool[after], prev = anchor.previousElementSibling;
+        while (prev && prev.classList.contains('oven-tiersep') &&
+               String(poolRows[idx].tier) !== prev.getAttribute('data-tier')) {
+          anchor = prev;
+          prev = anchor.previousElementSibling;
+        }
+        anchor.parentNode.insertBefore(el, anchor);
+      }
+
+      pool[idx] = el;
+      state.rowEls.set(poolRows[idx].key, el);
+    }
+  }
+
   /* The spreadsheet's pick-marker column, recomputed live.
    *
    * For my k-th upcoming pick, the marker sits after (pickNo - onTheClock)
@@ -760,6 +862,7 @@
     if (!state.listEl) return;
     var old = state.listEl.querySelectorAll('.oven-marker, .oven-zone');
     for (var i = 0; i < old.length; i++) old[i].remove();
+    dropRescued();
     state.listEl.querySelectorAll('.oven-row.atrisk').forEach(function (e) {
       e.classList.remove('atrisk');
     });
@@ -782,9 +885,11 @@
      * on both paths — they really are gone — which is why `Hide: Drafted` never
      * moved the horizon and `Hide: Fade` did. */
     var pool = [];
+    var poolRows = [];
     var els = state.rowEls;
     state.rows.forEach(function (r) {
       if (state.drafted[r.key]) return;
+      poolRows.push(r);
       pool.push((els && els.get(r.key)) || null);
     });
 
@@ -793,15 +898,28 @@
       return -1;
     }
 
+    // Depth into the pool at which each of my remaining picks lands: the number
+    // of still-unfilled picks between the clock and mine. Computed up front
+    // because a pick's WINDOW is [its own depth, the next pick's depth) — the
+    // players it can realistically reach — and the rescue pass below needs both
+    // ends of that span before any marker is placed.
+    var filled = clock.filled;
+    var depths = [];
+    for (var d = 0; d < clock.myUpcoming.length; d++) {
+      var ah = 0;
+      for (var q = clock.onTheClock; q < clock.myUpcoming[d]; q++) if (!filled[q]) ah++;
+      depths.push(ah);
+    }
+
+    rescueEmptyWindows(pool, poolRows, depths);
+
     // Every remaining pick of mine gets a horizon, not just the next few — the
     // loop runs out on its own once a marker would land past the bottom of the
     // board. The first is the signature; the rest are quiet rules that say the
     // same thing, so a scroll down the board reads as "mine, mine, mine".
-    var filled = clock.filled;
     for (var m = 0; m < clock.myUpcoming.length; m++) {
       var pickNo = clock.myUpcoming[m];
-      var ahead = 0;
-      for (var n = clock.onTheClock; n < pickNo; n++) if (!filled[n]) ahead++;
+      var ahead = depths[m];
       if (ahead >= pool.length) break;
 
       // Past the last rendered row: the horizon is off the bottom of the board
