@@ -22,22 +22,25 @@ timescale of weeks, not minutes; re-run this script when it does.
 
 Kickoff slots
 -------------
-Every game is bucketed into `regular` or `primetime`, in US Eastern — the
-timezone the league schedules in, and the only one where the windows land on
-round numbers:
+Every game is bucketed into `regular` or `odd`, in US Eastern — the timezone the
+league schedules in, and the only one where the windows land on round numbers:
 
     regular     Sunday, 12:00-17:59 ET     the 1:00 and 4:05/4:25 slates
-    primetime   everything else            Sunday 9:30am international,
-                                           Sunday/Monday/Thursday night, and the
-                                           Thanksgiving / Christmas / Saturday
-                                           standalone windows
+    odd         everything else            every non-Sunday game, plus the
+                                           Sunday 9:30am international kickoffs
+                                           and Sunday night
     tbd         no kickoff time yet        flex-scheduled late-season games
 
-That is the "primetime vs regular" split as a viewer experiences it: a regular
-game is one of a dozen kicking off at once, a primetime game is the only one on.
-The standalone Thanksgiving (4:30pm ET) and Christmas (4:30pm ET) games sit in
-the afternoon by the clock but are national windows, which is why the rule keys
-on Sunday-ness and not on the hour alone.
+`regular` is the default case and the overwhelming majority of the season (181
+of 272 games), so it is the absence of a marker on the page — only `odd` is
+worth printing.
+
+Two rules, in order. A game not on a Sunday is odd, full stop: Thursday night,
+Monday night and the Thanksgiving / Christmas / Saturday standalones are each a
+window of their own whatever the clock says, which is why hour alone can't
+decide it — the Thanksgiving games kick at 1:00 and 4:30pm ET and are anything
+but routine. A Sunday game is regular only inside the two afternoon slates,
+which leaves the 9:30am international window and the night game as odd.
 
 Usage:
     python3 scripts/fetch_nfl_schedule.py              # current season
@@ -62,6 +65,9 @@ ET = ZoneInfo("America/New_York")
 
 REGULAR_SEASON = 2
 WEEKS = range(1, 19)
+
+# datetime.weekday(): Monday is 0, so Sunday is 6.
+SUNDAY = 6
 
 # A modern regular season is 18 weeks x 16 games less the byes = 272, and 32
 # teams play 17 apiece. Anything short of these means a week failed to parse and
@@ -105,14 +111,13 @@ def parse_kickoff(s):
 
 
 def classify(kickoff_utc, time_valid):
-    """-> "regular" | "primetime" | "tbd". See the module docstring."""
+    """-> "regular" | "odd" | "tbd". See the module docstring."""
     if not time_valid:
         return "tbd"
     et = kickoff_utc.astimezone(ET)
-    # weekday(): Monday is 0, so Sunday is 6.
-    if et.weekday() == 6 and 12 <= et.hour < 18:
-        return "regular"
-    return "primetime"
+    if et.weekday() != SUNDAY:
+        return "odd"
+    return "regular" if 12 <= et.hour < 18 else "odd"
 
 
 def parse_event(ev):
@@ -258,10 +263,23 @@ def verify(weeks, teams):
         for g in w["games"]:
             slots[g["slot"]] = slots.get(g["slot"], 0) + 1
     print("Slots: " + ", ".join(f"{k} {v}" for k, v in sorted(slots.items())))
-    if not slots.get("primetime") or not slots.get("regular"):
+    if not slots.get("odd") or not slots.get("regular"):
         print("ERROR: one of the two slot buckets is empty — the ET classification "
               "is not doing anything.", file=sys.stderr)
         ok = False
+
+    # The rule the page leans on hardest: no non-Sunday game may be `regular`,
+    # because the page prints nothing at all for a regular game and a Thursday
+    # nighter rendered bare would read as a 1:00 Sunday afternoon game.
+    for w in weeks:
+        for g in w["games"]:
+            if g["slot"] != "regular":
+                continue
+            et = parse_kickoff(g["kickoff"]).astimezone(ET)
+            if et.weekday() != SUNDAY:
+                print(f"ERROR: non-Sunday game marked regular: week {w['week']} "
+                      f"{g['away']}@{g['home']} {et:%a %H:%M} ET", file=sys.stderr)
+                ok = False
 
     return ok, total, slots
 

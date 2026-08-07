@@ -7,7 +7,7 @@
   <title>NFL Schedule | Dynast-Z</title>
   <link rel="stylesheet" href="/styles/base/styles.css?v=abec71e4">
   <link rel="stylesheet" href="/styles/base/hub.css?v=2b363e8e">
-  <link rel="stylesheet" href="/styles/primary/nfl-schedule.css?v=0701d9d0">
+  <link rel="stylesheet" href="/styles/primary/nfl-schedule.css?v=a5a662b4">
 </head>
 <body class="masters-body">
   <div id="header-mount"></div>
@@ -34,10 +34,10 @@
     <div id="list"><p class="sched-empty">Loading schedule…</p></div>
 
     <div class="sched-legend">
-      <strong>Primetime</strong> is any game in a window of its own — Thursday, Sunday and
-      Monday night, the Sunday morning international kickoffs, and the Thanksgiving,
-      Christmas and Saturday standalones. <strong>Regular</strong> is a Sunday afternoon
-      game, one of a dozen kicking off at the same time. All times US Eastern.
+      An unmarked game is a regular one — a Sunday afternoon kickoff, one of a dozen going
+      off at the same time. <strong class="sched-legend-odd">odd</strong> marks everything
+      else: every game not played on a Sunday, plus the Sunday morning international
+      kickoffs and Sunday night. All times US Eastern.
     </div>
   </div>
 
@@ -66,9 +66,9 @@
     /* ---------- time ----------
      * Every kickoff in the file is a UTC instant; every label on this page is
      * US Eastern, because that is the timezone the league schedules in and the
-     * one the primetime/regular split is defined against (see the fetch
-     * script). Rendering in the viewer's own zone would put a "1:00 PM slate"
-     * game at 10:00 AM for a west-coast reader and make the badges look wrong.
+     * one the odd/regular split is defined against (see the fetch script).
+     * Rendering in the viewer's own zone would put a "1:00 PM slate" game at
+     * 10:00 AM for a west-coast reader and make the badges look wrong.
      */
     var TZ = 'America/New_York';
 
@@ -172,8 +172,8 @@
       var away = teamsByAbbr[g.away] || { abbr: g.away };
       var home = teamsByAbbr[g.home] || { abbr: g.home };
 
-      function team(t) {
-        return '<span class="sched-team' + (state.team === t.abbr ? ' is-picked' : '') +
+      function team(t, side) {
+        return '<span class="sched-team ' + side + (state.team === t.abbr ? ' is-picked' : '') +
           '" title="' + esc(t.name || t.abbr) + '">' + esc(t.abbr) + '</span>';
       }
 
@@ -184,11 +184,19 @@
       var venue = g.neutral && g.venue
         ? '<span class="sched-venue">' + esc(g.venue) + '</span>' : '';
 
+      // Only the exceptions are labelled. A regular Sunday-afternoon game is
+      // the default case on 181 of 272 rows, and stamping every one of them
+      // "regular" would bury the ~67 that are actually worth noticing — the
+      // badge means something precisely because most rows don't have one.
+      var badge = g.slot === 'regular' ? ''
+        : '<span class="sched-slot ' + g.slot + '">' + g.slot + '</span>';
+
       return '<div class="sched-game' + (tbd ? ' is-tbd' : '') + '">' +
         '<span class="sched-time">' + (tbd ? 'TBD' : esc(fmtTime.format(d))) + '</span>' +
-        '<span class="sched-matchup">' + team(away) +
-          '<span class="sched-at">' + sep + '</span>' + team(home) + venue + '</span>' +
-        '<span class="sched-slot ' + g.slot + '">' + g.slot + '</span>' +
+        '<span class="sched-matchup">' +
+          '<span class="sched-teams">' + team(away, 'away') +
+            '<span class="sched-at">' + sep + '</span>' + team(home, 'home') + '</span>' +
+          badge + venue + '</span>' +
         '</div>';
     }
 
@@ -244,15 +252,16 @@
         : (data.weeks.filter(function (w) { return w.week === state.week; })[0] || { games: [] }).games
       ).filter(matches);
 
-      var counts = { regular: 0, primetime: 0, tbd: 0 };
+      var counts = { regular: 0, odd: 0, tbd: 0 };
       games.forEach(function (g) { counts[g.slot]++; });
 
       var bits = [state.week === 'all' ? 'All 18 weeks' : 'Week ' + state.week];
       if (state.week === nowWeek) bits.push('<span class="is-now">this week</span>');
       if (state.team) bits.push(esc((teamsByAbbr[state.team] || {}).name || state.team));
       bits.push(games.length + (games.length === 1 ? ' game' : ' games'));
-      if (counts.regular) bits.push(counts.regular + ' regular');
-      if (counts.primetime) bits.push(counts.primetime + ' primetime');
+      // No "regular" count, for the same reason there is no regular badge: it
+      // is the leftover, and the reader can subtract.
+      if (counts.odd) bits.push(counts.odd + ' odd');
       if (counts.tbd) bits.push(counts.tbd + ' TBD');
       summaryEl.innerHTML = bits.join(' &middot; ');
     }

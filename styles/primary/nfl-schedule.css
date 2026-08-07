@@ -1,13 +1,18 @@
 /* === NFL schedule (/football/schedule) ===
  * Condensed one-line-per-game list rendered from data/nfl_schedule.json.
- * Sits on the hub shell (hub.css: .masters-body / .masters-content). */
+ * Sits on the hub shell (hub.css: .masters-body / .masters-content).
+ *
+ * Density is the point: a full week is 16 games and "all weeks" is 272, so the
+ * row is tuned to be scannable in a single column rather than comfortable. Row
+ * height lands near 22px — tight enough that a whole week fits without
+ * scrolling, loose enough that the day headers still separate. */
 
 .sched-filters {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
   align-items: center;
-  margin: 0 0 12px;
+  margin: 0 0 10px;
 }
 
 .sched-filters select {
@@ -15,7 +20,7 @@
   border: 1px solid #30363d;
   color: #e1e4e8;
   font-size: 13px;
-  padding: 6px 10px;
+  padding: 5px 9px;
   border-radius: 6px;
   cursor: pointer;
 }
@@ -31,7 +36,7 @@
   color: #58a6ff;
   font-size: 12px;
   cursor: pointer;
-  padding: 6px 2px;
+  padding: 5px 2px;
 }
 
 .sched-reset:hover { text-decoration: underline; }
@@ -41,7 +46,7 @@
   font-size: 11px;
   color: #6e7681;
   font-family: monospace;
-  margin: 0 0 14px;
+  margin: 0 0 10px;
 }
 
 .sched-summary .is-now {
@@ -54,41 +59,43 @@
   display: flex;
   align-items: baseline;
   gap: 8px;
-  margin: 18px 0 6px;
-  padding-bottom: 5px;
+  margin: 13px 0 2px;
+  padding-bottom: 2px;
   border-bottom: 1px solid #21262d;
 }
 
 .sched-group:first-child { margin-top: 0; }
 
 .sched-group h3 {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.7px;
   color: #8b949e;
   font-family: monospace;
   margin: 0;
+  line-height: 1.4;
 }
 
 .sched-group .sched-group-sub {
-  font-size: 11px;
+  font-size: 10px;
   color: #484f58;
   font-family: monospace;
 }
 
 /* --- One game, one line ---
- * Grid rather than a table: the four cells want fixed alignment down the
- * column, but the row is a link-sized target, not tabular data. */
+ * Grid rather than a table: the time wants a fixed column down the page, the
+ * rest of the row is a single flow. */
 
 .sched-game {
   display: grid;
-  grid-template-columns: 82px minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 10px;
-  padding: 7px 10px;
-  border-radius: 6px;
-  font-size: 13px;
+  grid-template-columns: 58px minmax(0, 1fr);
+  align-items: baseline;
+  gap: 8px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  line-height: 1.5;
 }
 
 /* Striping restarts inside each .sched-rows group — the day/week headers are
@@ -97,7 +104,7 @@
 
 .sched-game .sched-time {
   font-family: monospace;
-  font-size: 12px;
+  font-size: 11px;
   color: #8b949e;
   text-align: right;
   white-space: nowrap;
@@ -108,60 +115,72 @@
 .sched-matchup {
   display: flex;
   align-items: baseline;
-  gap: 6px;
+  gap: 8px;
   min-width: 0;
 }
 
-.sched-team {
-  font-weight: 600;
+/* Fixed-width cells so the badge that follows starts at the same x on every
+ * row. Abbreviations run 2-3 characters ("NE" to "WSH") and the separator is
+ * either "@" or "vs", so a monospace 3ch/2ch/3ch block is exactly wide enough
+ * and never ragged — without this the "odd" badges zigzag down the page. */
+.sched-teams {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
   font-family: monospace;
-  font-size: 13px;
-  color: #e1e4e8;
-  letter-spacing: 0.3px;
+  flex: none;
 }
+
+.sched-team {
+  width: 3ch;
+  font-weight: 600;
+  font-size: 12px;
+  color: #e1e4e8;
+}
+
+.sched-team.away { text-align: right; }
+.sched-team.home { text-align: left; }
 
 /* The filtered team, so a single row still reads at a glance which side is
  * "yours" when the matchup is scanned in a list of seventeen. */
 .sched-team.is-picked { color: #58a6ff; }
 
 .sched-at {
+  width: 2ch;
+  text-align: center;
   color: #484f58;
-  font-size: 11px;
-  font-family: monospace;
+  font-size: 10px;
 }
 
 .sched-venue {
-  font-size: 11px;
+  font-size: 10px;
   color: #484f58;
-  margin-left: 2px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-/* --- Slot badge --- */
+/* --- Slot badge ---
+ * There is deliberately no `.regular` rule: a regular game renders no badge at
+ * all, so the marker reads as an exception rather than as a column. */
 
 .sched-slot {
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 700;
   font-family: monospace;
   text-transform: uppercase;
   letter-spacing: 0.6px;
-  padding: 2px 7px;
+  padding: 0 5px;
   border-radius: 999px;
   border: 1px solid transparent;
   white-space: nowrap;
+  flex: none;
 }
 
-.sched-slot.primetime {
+.sched-slot.odd {
   color: #d29922;
   border-color: rgba(210, 153, 34, 0.45);
   background: rgba(210, 153, 34, 0.12);
-}
-
-.sched-slot.regular {
-  color: #6e7681;
-  border-color: #30363d;
 }
 
 .sched-slot.tbd {
@@ -174,10 +193,11 @@
 
 .sched-bye {
   display: grid;
-  grid-template-columns: 82px minmax(0, 1fr);
-  gap: 10px;
-  padding: 7px 10px;
-  font-size: 13px;
+  grid-template-columns: 58px minmax(0, 1fr);
+  gap: 8px;
+  padding: 2px 8px;
+  font-size: 12px;
+  line-height: 1.5;
   color: #484f58;
   font-style: italic;
 }
@@ -185,26 +205,28 @@
 .sched-empty {
   font-size: 13px;
   color: #8b949e;
-  padding: 20px 10px;
+  padding: 16px 8px;
 }
 
 .sched-legend {
-  margin-top: 22px;
-  padding-top: 12px;
+  margin-top: 18px;
+  padding-top: 10px;
   border-top: 1px solid #21262d;
   font-size: 11px;
   color: #6e7681;
   line-height: 1.6;
 }
 
-.sched-legend code {
-  color: #8b949e;
-  font-size: 11px;
+.sched-legend-odd {
+  color: #d29922;
+  font-family: monospace;
+  text-transform: uppercase;
+  font-size: 10px;
+  letter-spacing: 0.6px;
 }
 
 @media (max-width: 560px) {
-  .sched-game { grid-template-columns: 70px minmax(0, 1fr); }
-  .sched-game .sched-slot { grid-column: 2; justify-self: start; }
+  .sched-game,
+  .sched-bye { grid-template-columns: 52px minmax(0, 1fr); }
   .sched-venue { display: none; }
-  .sched-bye { grid-template-columns: 70px minmax(0, 1fr); }
 }
