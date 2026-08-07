@@ -1429,27 +1429,6 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         elif self.path.split("?")[0] == "/bets":
             self.path = "/views/bets/index.html"
             super().do_GET()
-        elif self.path == "/jane":
-            self.path = "/views/jane/index.html"
-            super().do_GET()
-        elif self.path == "/jane/jobs":
-            self.path = "/views/jane/jobs.html"
-            super().do_GET()
-        elif self.path == "/jane/admin":
-            self.path = "/views/jane/admin.html"
-            super().do_GET()
-        elif self.path == "/jane/marketing-coordinator":
-            self.path = "/views/jane/marketing-coordinator.html"
-            super().do_GET()
-        elif self.path == "/jane/asheville-rentals":
-            self.path = "/views/jane/asheville-rentals.html"
-            super().do_GET()
-        elif self.path == "/jane/builders-claude":
-            self.path = "/views/jane/builders-claude.html"
-            super().do_GET()
-        elif self.path == "/jane/builders-chatgpt":
-            self.path = "/views/jane/builders-chatgpt.html"
-            super().do_GET()
         # Golf routes: /golf/:year/:tournament/:page
         elif re.match(r"/golf/\d{4}$", self.path) or re.match(r"/season/\d{4}$", self.path):
             self.path = "/views/golf/season.html"
@@ -1590,33 +1569,6 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     })
                 else:
                     self._json_response(400, {"error": "Unknown action"})
-            except Exception as e:
-                self._json_response(500, {"error": str(e)})
-        elif self.path == "/api/asheville-rentals/refresh":
-            # Local-only: re-scrape every Asheville rental source by running the
-            # Node scraper, which writes both data.json copies. Then return the
-            # fresh site-served file. (This endpoint only exists on the local dev
-            # server; production has no equivalent, so the page hides the button.)
-            root = os.path.dirname(os.path.abspath(__file__))
-            scraper_dir = os.path.join(root, "asheville-rentals")
-            try:
-                proc = subprocess.run(
-                    ["node", "scrape.mjs"],
-                    cwd=scraper_dir, capture_output=True, text=True, timeout=240,
-                )
-                if proc.returncode != 0:
-                    err = (proc.stderr or proc.stdout or "unknown error").strip()
-                    self._json_response(500, {"error": "Scrape failed: " + err[-500:]})
-                    return
-                with open(os.path.join(root, "data", "asheville-rentals.json")) as f:
-                    payload = f.read()
-                self.send_response(200)
-                self.send_header("Content-Type", "application/json")
-                self.send_header("Access-Control-Allow-Origin", "*")
-                self.end_headers()
-                self.wfile.write(payload.encode())
-            except subprocess.TimeoutExpired:
-                self._json_response(504, {"error": "Scrape timed out after 240s"})
             except Exception as e:
                 self._json_response(500, {"error": str(e)})
         else:

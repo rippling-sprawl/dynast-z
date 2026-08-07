@@ -1,9 +1,11 @@
 /* The Baker's Oven — feature configuration (window.OVEN).
  *
- * Tuning constants only. The league, the draft and the identity of "my" team
- * are NOT here: leagues are per-account data (see oven-leagues.js), the league
- * id comes from the URL, and draft_id is derived at runtime from the league
- * object so a new season or a redraft doesn't require a code change.
+ * Tuning constants, plus the one shared vocabulary table (SLOT_ELIGIBLE) and the
+ * pure derivation over it that more than one module needs. The league, the draft
+ * and the identity of "my" team are NOT here: leagues are per-account data (see
+ * oven-leagues.js), the league id comes from the URL, and draft_id is derived at
+ * runtime from the league object so a new season or a redraft doesn't require a
+ * code change.
  */
 (function (global) {
   'use strict';
@@ -152,5 +154,57 @@
     // reaches that far.
     WEEKLY_SINGLE_TIER_POS: ['TE', 'K', 'DEF'],
 
+    /* ---------- the league's own lineup vocabulary ---------- */
+
+    /* Which players a lineup slot accepts, keyed by Sleeper's `roster_positions`
+     * vocabulary. A single-position slot is its own eligibility list, so an
+     * unrecognized slot ('DL', a league-specific label) still behaves sanely by
+     * only accepting its own name. Slot specificity is `elig.length` — that is
+     * what makes a QB land at QB rather than in the SUPER_FLEX beside it.
+     *
+     * It sits here rather than inside either reader because it has two:
+     * oven-targets fills the Team view's lineup from it, and
+     * OVEN.startablePositions() below turns it into the set of positions a
+     * league actually starts — which is what keeps kickers and defenses off the
+     * board of a league that rosters neither. */
+    SLOT_ELIGIBLE: {
+      QB: ['QB'], RB: ['RB'], WR: ['WR'], TE: ['TE'], K: ['K'], DEF: ['DEF'],
+      FLEX: ['RB', 'WR', 'TE'],
+      WRRB_FLEX: ['RB', 'WR'],
+      REC_FLEX: ['WR', 'TE'],
+      SUPER_FLEX: ['QB', 'RB', 'WR', 'TE'],
+      IDP_FLEX: ['DL', 'LB', 'DB'],
+    },
+
+    // Slots that hold a player but never start one, so they say nothing about
+    // which positions a league uses. IR and TAXI are never drafted into either;
+    // BN is, but by whoever the starters didn't fit.
+    NON_STARTING_SLOTS: { BN: true, IR: true, TAXI: true },
+
+  };
+
+  /* Every position this league can actually start, derived from its own
+   * `roster_positions` — the only authority on the question. A 'FLEX' contributes
+   * RB/WR/TE, a bare 'QB' contributes QB, and BN/IR/TAXI contribute nothing.
+   *
+   * This is what a board filters on. A league with no K and no DEF slot cannot
+   * start either, so a kicker on its big board is a row that can never become a
+   * lineup decision — noise in the one place (draft night) where a row you skip
+   * past still costs you a beat.
+   *
+   * Returns **null**, not an empty list, when the league declares no starting
+   * slot at all — an unloaded league, a league that is all bench. Null means "no
+   * opinion, show everything"; an empty list would mean "start nobody" and would
+   * blank the board. Callers must treat the two differently. */
+  global.OVEN.startablePositions = function (rosterPositions) {
+    var O = global.OVEN, seen = {}, out = [];
+    (rosterPositions || []).forEach(function (raw) {
+      var slot = String(raw || '').toUpperCase();
+      if (!slot || O.NON_STARTING_SLOTS[slot]) return;
+      (O.SLOT_ELIGIBLE[slot] || [slot]).forEach(function (pos) {
+        if (!seen[pos]) { seen[pos] = true; out.push(pos); }
+      });
+    });
+    return out.length ? out : null;
   };
 })(window);

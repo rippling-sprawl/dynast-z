@@ -27,8 +27,14 @@
  * that look-ahead is the whole reason the view exists.
  *
  * On top of the rank-ordered rows, every pick carries a positional floor: QB,
- * RB, WR and TE each show their best remaining player, so no pick can render as
- * an undifferentiated wall of RB/WR with the QB or TE fallback invisible.
+ * RB, WR and TE — narrowed to the ones this league actually starts — each show
+ * their best remaining player, so no pick can render as an undifferentiated wall
+ * of RB/WR with the QB or TE fallback invisible.
+ *
+ * Positions the league doesn't start never reach here at all: the host's rows
+ * come from OvenBoard.buildBoard, which drops them (see OvenBoard.setPositions).
+ * So the queue, the projections and the lineup are all already free of kickers
+ * in a league with no K slot, without any of the three filtering for itself.
  */
 (function (global) {
   'use strict';
@@ -41,31 +47,31 @@
 
   var POS_ORDER = ['QB', 'RB', 'WR', 'TE', 'K', 'DEF'];
 
-  // Positions the projection guarantees a row for. K and DEF are out: they go in
-  // the last two rounds regardless of who's left, so a "best kicker available"
-  // row is noise at every pick that isn't one of those two.
+  /* Positions the projection guarantees a row for, before the league narrows it.
+   * K and DEF are out even in a league that starts them: they go in the last two
+   * rounds regardless of who's left, so a "best kicker available" row is noise at
+   * every pick that isn't one of those two. */
   var FLOOR_POS = ['QB', 'RB', 'WR', 'TE'];
 
-  /* Which players a lineup slot accepts, keyed by Sleeper's `roster_positions`
-   * vocabulary. A single-position slot is its own eligibility list, so an
-   * unrecognized slot ('DL', a league-specific label) still behaves sanely by
-   * only accepting its own name. Slot specificity is `elig.length` — that is
-   * what makes a QB land at QB rather than in the SUPER_FLEX beside it. */
-  var SLOT_ELIGIBLE = {
-    QB: ['QB'], RB: ['RB'], WR: ['WR'], TE: ['TE'], K: ['K'], DEF: ['DEF'],
-    FLEX: ['RB', 'WR', 'TE'],
-    WRRB_FLEX: ['RB', 'WR'],
-    REC_FLEX: ['WR', 'TE'],
-    SUPER_FLEX: ['QB', 'RB', 'WR', 'TE'],
-    IDP_FLEX: ['DL', 'LB', 'DB'],
-  };
+  /* And the league's own answer on top. A floor exists to make sure a pick never
+   * renders as an undifferentiated wall of RB/WR with the QB fallback invisible —
+   * so it can only name positions this league actually starts. In practice the
+   * board rows are already filtered to those (see OvenBoard.setPositions), and
+   * this keeps the guarantee from reaching for a position with nothing behind it
+   * in a TE-less or IDP league. */
+  function floorPositions(s) {
+    var allowed = C.startablePositions(s.rosterPositions);
+    if (!allowed) return FLOOR_POS;
+    return FLOOR_POS.filter(function (p) { return allowed.indexOf(p) !== -1; });
+  }
 
   // Sleeper's slot names are wide enough to break the label column; these are
   // the only ones that need shortening.
   var SLOT_LABEL = { SUPER_FLEX: 'SFLEX', WRRB_FLEX: 'W/R', REC_FLEX: 'W/T', IDP_FLEX: 'IDP' };
 
   // Reserve slots exist on the roster but are never drafted into — showing an
-  // always-empty IR row would read as a lineup hole.
+  // always-empty IR row would read as a lineup hole. BN is handled separately by
+  // buildTeam (it gets a section), so it isn't one of these.
   var RESERVE_SLOTS = { IR: true, TAXI: true };
 
   var state = {
@@ -226,6 +232,7 @@
     });
 
     var pool = s.rows.filter(function (r) { return !s.drafted[r.key]; }).sort(byMarket);
+    var floorPos = floorPositions(s);
 
     var byPick = {};
     var windows = {};   // key -> { first, last, take } in rounds
@@ -254,13 +261,14 @@
 
       /* Positional floor. Rank order alone can hand you six receivers and no
        * answer to "what if the room runs QBs before this pick?" — so every
-       * FLOOR_POS with a body left on the board contributes its best remaining
-       * player here, added past the entry ceiling rather than displacing the
-       * rank-order picks. They sort in by adjusted rank, so a filler at QB40
-       * lands at the bottom of the pick where it reads as the fallback it is. */
+       * floor position with a body left on the board contributes its best
+       * remaining player here, added past the entry ceiling rather than
+       * displacing the rank-order picks. They sort in by adjusted rank, so a
+       * filler at QB40 lands at the bottom of the pick where it reads as the
+       * fallback it is. */
       var bestAtPos = {};
       boardOrder.forEach(function (r) {
-        if (r.pos && FLOOR_POS.indexOf(r.pos) !== -1 && !bestAtPos[r.pos]) bestAtPos[r.pos] = r;
+        if (r.pos && floorPos.indexOf(r.pos) !== -1 && !bestAtPos[r.pos]) bestAtPos[r.pos] = r;
       });
       var covered = {};
       entries.forEach(function (e) { if (e.row.pos) covered[e.row.pos] = true; });
@@ -517,7 +525,7 @@
       declared = true;
       if (v === 'BN') { benchSlots++; return; }
       if (RESERVE_SLOTS[v]) return;
-      starters.push({ pos: v, elig: SLOT_ELIGIBLE[v] || [v], player: null });
+      starters.push({ pos: v, elig: C.SLOT_ELIGIBLE[v] || [v], player: null });
     });
     if (!declared) return null;
 
@@ -641,7 +649,7 @@
           'flex spots go to whoever is left.</span>'
         : '<span>Assumes the room drafts to consensus and you take your projected ' +
           'player each round. Grades and targets pull a player forward. Every pick also ' +
-          'lists the best QB, RB, WR and TE left.</span>';
+          'lists the best ' + floorPositions(s).join(', ') + ' left.</span>';
 
     var clr = D.getElementById('oven-tp-clear');
     if (clr) clr.addEventListener('click', clear);

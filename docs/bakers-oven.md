@@ -89,7 +89,7 @@ Not a bottleneck by roughly three orders of magnitude.
 | `views/football/oven-league.html` | One league: draft status, My Rankings import, Open Draft Board |
 | `views/football/oven-board.html` | The board; boot sequence and poller wiring |
 | `styles/primary/bakers-oven.css` | All `.oven-*` styles |
-| `scripts/primary/oven-config.js` | `window.OVEN` — storage key bases and tuning constants |
+| `scripts/primary/oven-config.js` | `window.OVEN` — storage key bases, tuning constants, the lineup-slot vocabulary and `startablePositions()` |
 | `scripts/primary/oven-leagues.js` | `window.OvenLeagues` — saved leagues, Sleeper metadata, every storage key |
 | `scripts/primary/oven-csv.js` | `window.OvenCSV` — RFC-4180 parser, template, export |
 | `scripts/primary/oven-draft.js` | `window.OvenDraft` — Sleeper client, pick math, poller |
@@ -187,6 +187,53 @@ orphan every stored row for no functional gain; `board` is still the right word 
 the rankings render into.
 
 ---
+
+## The league picks the positions
+
+A board is a list of draft decisions, and a league that starts no kicker can never make one about
+a kicker. Both sources hand over all six positions regardless — FantasyPros ships 32 defenses and
+32 kickers in its 862, and a rankings CSV is usually a general-purpose sheet reused across leagues
+— so the league itself has to be the filter. `league.roster_positions` is the only thing that
+knows.
+
+`OVEN.startablePositions(rosterPositions)` turns those slots into the set of positions the league
+can start, expanding each through `OVEN.SLOT_ELIGIBLE` (`FLEX` → RB/WR/TE, `SUPER_FLEX` →
+QB/RB/WR/TE, an unrecognized league-specific label → itself) and skipping `OVEN.NON_STARTING_SLOTS`
+(`BN`, `IR`, `TAXI`), which say nothing about which positions a league uses. An 18-team league
+rostering `QB RB RB WR WR TE FLEX FLEX` + 6 × `BN` yields `QB, RB, WR, TE` — 64 rows off the board.
+
+Both hosts call `OvenBoard.setPositions(ctx.league.roster_positions)` **before** `buildBoard()`,
+which is the one gate everything downstream reads through: the rendered list, the undrafted pool
+the horizons count against, and the rows the Targets drawer projects, queues and fills a lineup
+from all come off `state.rows`. Filtering once at the build is filtering everywhere — no view
+filters for itself, and none of them can drift.
+
+Three rules keep the gate from lying:
+
+1. **Null is not an empty list.** `startablePositions` returns `null` when the league declares no
+   starting slot at all — an unloaded league, a league that is all bench. Null means *no opinion,
+   show everything*; an empty list would mean *start nobody* and would blank the board.
+2. **A blank position is kept.** "Unknown" is not the same claim as "kicker", and dropping a
+   player because his sheet had an empty `Pos` cell is the one failure mode that would be
+   invisible. Aliases are normalized first, so `PK` and `D/ST` are caught (`normPos`).
+3. **Nothing is destroyed.** The dropped rows are held on `state.offBoard` and re-appended by
+   `exportRows()`, which is a **write** path — every save the board makes (a drag, a grade) goes
+   through it, so dropping them would make the first click on any row quietly delete the kickers
+   out of the stored sheet. They keep their own `myRank`: nothing on screen was ordered against
+   them, so there is no order to restate, and rewriting a number the user typed to paper over a
+   gap in the visible ranks would be the bigger lie. `buildBoard` splits them straight back out on
+   the next load, and the same blob imported into a league that *does* start K/DEF shows all 862.
+
+The board page prunes the position chips to match before wiring them — a chip with no rows behind
+it isn't a filter, it's a button that empties the board — and says what it held back in the
+footnote. The league page's rankings card says it too, as a second sentence: "300 players" is a
+fact about the import and stays true; the board is where they went. Both count out loud, because
+the alternative is a board that is silently missing players you know you ranked.
+
+The Targets drawer's positional floor (`FLOOR_POS`) is narrowed the same way, so a TE-less or IDP
+league can't guarantee a row for a position with nothing behind it. Queue entries saved for a
+position the league doesn't start simply don't resolve against the rows and stay dormant — they
+come back if the same league ever adds the slot.
 
 ## The CSV
 
@@ -886,6 +933,19 @@ Run `python3 server.py`, open `http://localhost:8000`.
 31c. Draft a third RB with both RB slots full → he takes `FLEX`, not the bench, and `WR`/`TE`
      stay `Open`. A fourth goes to the bench.
 31d. Unfilled slots read `Open` on a hatched row; the section headers count `n of N`.
+
+**The league's positions**
+31e. Open the board for `1340070186379673600` (`QB RB RB WR WR TE FLEX FLEX` + 6 × `BN`, no K, no
+     DEF). With no CSV imported it renders **798** rows, not 862; the `K` and `DEF` filter chips
+     are gone from the console; the footnote reads "Hiding 64 DEF/K — this league starts none."
+     Scroll to the bottom: the tail is receivers, no kickers anywhere. The Targets drawer's
+     projections list "the best QB, RB, WR, TE left" and never float a defense as a floor row.
+31f. Same board in a league that *does* roster `K`/`DEF` (e.g. `1384025526670233600`) → all 862
+     rows, both chips present, no footnote. The gate is per league, not per account.
+31g. Grade or drag one player on the 798-row board, then hit `Export My Rankings` on the league
+     page → the file still has all 32 kickers and 32 defenses. Re-import it into a K/DEF league →
+     they are all there. The write path must never eat the rows the board hid.
+31h. A CSV row with a blank `Pos` still appears; one with `PK` or `D/ST` does not.
 
 **Re-ranking**
 32. Drag the #40 row up onto the seam above #8: he lands at 8, everyone from 8 down shifts one,

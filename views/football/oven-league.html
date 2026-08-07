@@ -14,12 +14,12 @@
   <script src="/scripts/base/auth.js?v=8f2b460f"></script>
   <script src="/scripts/base/nav.js?v=9546680e"></script>
   <script src="/scripts/base/sync.js?v=1b85ffb1"></script>
-  <script src="/scripts/primary/oven-config.js?v=0394fc36"></script>
+  <script src="/scripts/primary/oven-config.js?v=4e89081a"></script>
   <script src="/scripts/primary/oven-csv.js?v=77440fca"></script>
   <script src="/scripts/primary/oven-draft.js?v=6b481746"></script>
   <script src="/scripts/primary/oven-leagues.js?v=3332aa1a"></script>
-  <script src="/scripts/primary/oven-board.js?v=40404af5"></script>
-  <script src="/scripts/primary/oven-targets.js?v=6419a1d8"></script>
+  <script src="/scripts/primary/oven-board.js?v=3376ca4d"></script>
+  <script src="/scripts/primary/oven-targets.js?v=0a8f0b95"></script>
   <script>initPage();</script>
 
   <main class="oven-content">
@@ -98,6 +98,10 @@
       myRosterId: null, rosterPositions: [] };
 
     function rebuildTargetState(draft, picks) {
+      // Same gate the big board sets, for the same reason: the drawer's targets,
+      // projections and lineup are all read off these rows, so a position this
+      // league doesn't start has to be gone before they are built.
+      OvenBoard.setPositions(ctx.league && ctx.league.roster_positions);
       tp.rows = OvenBoard.buildBoard(board && board.rows, fp);
       tp.picks = picks || tp.picks;
       tp.drafted = OvenBoard.indexPicks(tp.picks, tp.rows);
@@ -215,9 +219,29 @@
       }
       var matched = board.rows.filter(function (r) { return r.player_id; }).length;
       var when = board.importedAt ? new Date(board.importedAt).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : 'unknown';
+
+      /* The file's whole count, then what this league does with it. Reported off
+       * the stored rows rather than OvenBoard.state, because this card renders on
+       * a league with no draft scheduled — where nothing has built a board yet.
+       * Kept as a second sentence: "300 players" is a fact about the import and
+       * stays true, and the board is where they went. */
+      var allowed = OVEN.startablePositions(ctx.league && ctx.league.roster_positions);
+      var held = allowed
+        ? board.rows.filter(function (r) {
+            var p = OvenBoard.normPos(r.pos);
+            return p && allowed.indexOf(p) === -1;
+          })
+        : [];
+      var heldPos = {};
+      held.forEach(function (r) { heldPos[OvenBoard.normPos(r.pos)] = true; });
+
       el.innerHTML = '<div class="oven-msg ok">' + board.rows.length + ' players · ' +
         matched + ' matched to Sleeper · imported ' + OvenBoard.esc(when) +
-        (board.filename ? ' from ' + OvenBoard.esc(board.filename) : '') + '</div>';
+        (board.filename ? ' from ' + OvenBoard.esc(board.filename) : '') +
+        (held.length
+          ? '<br>' + held.length + ' ' + Object.keys(heldPos).sort().join('/') +
+            ' kept out of the board — this league starts none.'
+          : '') + '</div>';
     }
 
     /* An unsaved league still renders — you can follow a shared link into any

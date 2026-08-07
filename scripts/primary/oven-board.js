@@ -88,10 +88,49 @@
     return C.GRADE_LEGACY[g] || null;
   }
 
+  /* ---------- positions this league actually starts ----------
+   *
+   * The board is a list of draft decisions, and a league that rosters no K and
+   * no DEF slot can never make one about a kicker. Both sources hand us all six
+   * positions regardless — FantasyPros ships 32 defenses and 32 kickers, and a
+   * rankings CSV is usually a general-purpose sheet reused across leagues — so
+   * the league itself has to be the filter. `roster_positions` is the only thing
+   * that knows, which is why the hosts set this before building.
+   *
+   * Null (the default, and what an unloaded league gives) means no opinion: show
+   * everything. See OVEN.startablePositions for why that is not an empty list. */
+  function setPositions(rosterPositions) {
+    var list = C.startablePositions(rosterPositions);
+    if (!list) { state.positions = null; return null; }
+    var set = {};
+    list.forEach(function (p) { set[p] = true; });
+    state.positions = set;
+    return list;
+  }
+
+  /* A row belongs on the board unless the league has said otherwise. A row with
+   * no position at all is kept: "unknown" is not the same claim as "kicker", and
+   * dropping a player because his sheet had a blank cell is the one failure mode
+   * that would be invisible. */
+  function startable(pos) {
+    if (!state.positions) return true;
+    var p = normPos(pos);
+    return !p || !!state.positions[p];
+  }
+
   /* Merge CSV rows with the FantasyPros snapshot.
    * FP wins for ECR/tier metadata; the CSV owns rank, tier override, and grade.
    * With no CSV at all the board seeds entirely from FP, so the page is useful
-   * before anything has been uploaded. */
+   * before anything has been uploaded.
+   *
+   * Rows at a position the league doesn't start are split off here, at the one
+   * gate everything downstream reads: the rendered list, the undrafted pool the
+   * horizons count against, and the rows the Targets drawer projects from all
+   * come off `state.rows`, so filtering once here is filtering everywhere.
+   *
+   * They are set aside rather than discarded (see exportRows) — the stored board
+   * is the user's CSV, and re-grading one player is not consent to delete the
+   * kickers out of a sheet they may also use in a league that starts them. */
   function buildBoard(csvRows, fpPlayers) {
     var fpByKey = {};
     (fpPlayers || []).forEach(function (p) {
@@ -134,6 +173,9 @@
         };
       });
     }
+
+    state.offBoard = rows.filter(function (r) { return !startable(r.pos); });
+    rows = rows.filter(function (r) { return startable(r.pos); });
 
     rows.sort(function (a, b) {
       var ar = a.myRank == null ? Infinity : a.myRank;
@@ -215,6 +257,11 @@
     // re-passed at each of those call sites, and the one that got missed would
     // blank the column with no error.
     weekly: null,         // key -> {t12, t24, t36, games, pos}
+    // The league's startable positions as a lookup, and the rows the last
+    // buildBoard() set aside because they aren't at one. Null positions means
+    // the league hasn't said (or starts nothing), and nothing is filtered.
+    positions: null,      // {QB: true, ...} | null
+    offBoard: [],         // rows held back only so exportRows can hand them back
   };
 
   /* Set once at boot, after the league's scoring settings are known. */
@@ -1066,9 +1113,18 @@
 
   /* The board blob's rows, in the shape a CSV import writes — same object
    * either way, so `Export My Rankings` and the next page load both see the
-   * order you dragged. */
+   * order you dragged.
+   *
+   * The rows buildBoard set aside for being at a position this league doesn't
+   * start ride along at the end, verbatim. This is a WRITE path: every save the
+   * board makes (a drag, a grade) goes through here, so dropping them would make
+   * the first click on any row quietly delete the kickers out of the stored
+   * sheet. They keep their own myRank — nothing on screen was ordered against
+   * them, so there is no order here to restate, and rewriting a number the user
+   * typed to paper over a gap in the visible ranks would be the bigger lie.
+   * buildBoard splits them straight back out on the next load. */
   function exportRows() {
-    return state.rows.map(function (r) {
+    function shape(r) {
       return {
         name: r.name,
         pos: r.pos || '',
@@ -1080,7 +1136,8 @@
         extra: r.extra || {},
         player_id: r.player_id || null,
       };
-    });
+    }
+    return state.rows.map(shape).concat((state.offBoard || []).map(shape));
   }
 
   function wireReorder(listEl) {
@@ -1179,6 +1236,7 @@
     normName: normName,
     normPos: normPos,
     playerKey: playerKey,
+    setPositions: setPositions,
     buildBoard: buildBoard,
     setWeekly: setWeekly,
     indexPicks: indexPicks,
