@@ -6,7 +6,7 @@
   <link rel="icon" type="image/png" href="/favicon.png">
   <title>Big Board | The Baker's Oven</title>
   <link rel="stylesheet" href="/styles/base/styles.css?v=abec71e4">
-  <link rel="stylesheet" href="/styles/primary/bakers-oven.css?v=1cdb4e07">
+  <link rel="stylesheet" href="/styles/primary/bakers-oven.css?v=56506583">
 </head>
 <body>
   <div id="header-mount"></div>
@@ -15,13 +15,13 @@
   <script src="/scripts/base/nav.js?v=9546680e"></script>
   <script src="/scripts/base/sync.js?v=1b85ffb1"></script>
   <script src="/scripts/components/sticky-headers.js?v=43c9432d"></script>
-  <script src="/scripts/primary/oven-config.js?v=4e89081a"></script>
-  <script src="/scripts/primary/oven-csv.js?v=77440fca"></script>
+  <script src="/scripts/primary/oven-config.js?v=b40e5d01"></script>
+  <script src="/scripts/primary/oven-csv.js?v=39f0d531"></script>
   <script src="/scripts/primary/oven-draft.js?v=6b481746"></script>
   <script src="/scripts/primary/oven-leagues.js?v=3332aa1a"></script>
   <script src="/scripts/primary/oven-weekly.js?v=da1d9929"></script>
-  <script src="/scripts/primary/oven-board.js?v=3376ca4d"></script>
-  <script src="/scripts/primary/oven-targets.js?v=0a8f0b95"></script>
+  <script src="/scripts/primary/oven-board.js?v=d03d3343"></script>
+  <script src="/scripts/primary/oven-targets.js?v=d5d21668"></script>
   <script>initPage();</script>
 
   <main class="oven-content">
@@ -277,11 +277,16 @@
           // Degrades to null: this is a nice-to-have column, and a 404 here must
           // never be the reason the board fails to open on draft night.
           fetch(OVEN.WEEKLY_DATA).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }),
+          // 23 KB, immutable for two finished seasons — same cache treatment,
+          // same degrade-to-null. Without it every row simply loses its history
+          // line; the board still opens.
+          fetch(OVEN.POSRANK_DATA).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }),
         ]);
         ctx = results[0];
         var fp = results[1] || [], fpMeta = results[2];
         board = results[3];
         var weekly = results[4];
+        var posRanks = results[5];
         leagueCrumb.textContent = ctx.league.name;
 
         draft = await OvenDraft.loadDraft(ctx.draftId);
@@ -297,6 +302,12 @@
         // downstream reader (the list, the pool, the drawer) sees rows through.
         OvenBoard.setPositions(ctx.league.roster_positions);
         S.rows = OvenBoard.buildBoard(board && board.rows, fp);
+
+        // Where each player finished the last two seasons, half-PPR. Handed
+        // over whole — the file names its own two seasons, so nothing here
+        // hardcodes a year. Before the first render, since it's part of every
+        // row rather than a toggled column.
+        OvenBoard.setPosRanks(posRanks);
 
         // Last season's finishes, scored by THIS league's settings — the whole
         // point of doing it here rather than shipping precomputed ranks. The

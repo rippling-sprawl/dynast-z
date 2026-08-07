@@ -42,8 +42,9 @@ so there is no CORS reason to proxy — and proxying would be actively harmful, 
 live draft is a bug factory. Going direct also means the rate limit applies per client IP.
 
 ```
-CSV upload ──> POST /api/football/resolve ──> rows carry a Sleeper player_id   (once, at import)
-                    └── reuses build_player_resolver() / resolve_player()
+CSV upload ──> merge into the board ──> POST /api/football/resolve ──> rows carry a
+                                        (only rows with no id yet)     Sleeper player_id
+                    └── reuses build_player_resolver() / resolve_player()   (once, at import)
 
 draft night ──> browser polls api.sleeper.app directly ──> exact player_id match ──> cross off
 
@@ -51,7 +52,10 @@ static ──> data/fp_redraft.json (committed)  +  /api/players (KTC/FantasyCal
 ```
 
 Resolving names **once at import** is the load-bearing decision: the live path becomes an
-exact ID match, so no fuzzy matching can fail mid-draft.
+exact ID match, so no fuzzy matching can fail mid-draft. It runs **after** the merge and only over
+rows still lacking an id — the resolver should see a row's merged position and team (a sheet that
+left `Pos` blank resolves better once it has landed on the board row that already knows he's an
+RB), and a cancelled file should cost nothing. On a re-import that's usually just the new rows.
 
 ### Polling — why a heartbeat, not conditional requests
 
@@ -93,13 +97,15 @@ Not a bottleneck by roughly three orders of magnitude.
 | `scripts/primary/oven-leagues.js` | `window.OvenLeagues` — saved leagues, Sleeper metadata, every storage key |
 | `scripts/primary/oven-csv.js` | `window.OvenCSV` — RFC-4180 parser, template, export |
 | `scripts/primary/oven-draft.js` | `window.OvenDraft` — Sleeper client, pick math, poller |
-| `scripts/primary/oven-board.js` | `window.OvenBoard` — merge, render, patch, re-rank |
+| `scripts/primary/oven-board.js` | `window.OvenBoard` — the two merges (`buildBoard` against FantasyPros, `mergeImport` against an incoming CSV), render, patch, re-rank |
 | `scripts/primary/oven-targets.js` | `window.OvenTargets` — mountable Targets / Projections / Team drawer |
 | `scripts/primary/oven-weekly.js` | `window.OvenWeekly` — last season's finishes, scored by this league |
 | `scripts/fetch_fp_redraft.py` | Offline FantasyPros half-PPR scrape |
 | `data/fp_redraft.json` · `data/fp_redraft_meta.json` | Generated, committed |
 | `scripts/fetch_nfl_weekly.py` | Offline Sleeper weekly stat-line pull |
 | `data/nfl_weekly_2025.json` · `data/nfl_weekly_2025_meta.json` | Generated, committed |
+| `scripts/fetch_pos_ranks.py` | Offline Sleeper half-PPR positional finishes, last two seasons |
+| `data/nfl_pos_ranks.json` · `data/nfl_pos_ranks_meta.json` | Generated, committed |
 
 Modified: `vercel.json` (rewrites), `server.py` (3 view branches + `/api/football/resolve` +
 a `log_message` fix), `scripts/base/auth.js` (`requireLogin`, the `clearUser` sweep),
@@ -246,7 +252,7 @@ preserved on the row and ignored — you can keep your own working columns.
 | `Pos` | `Position` | Helps disambiguate; inferred when blank |
 | `Team` | `Tm`, `NFLTeam` | Same |
 | `Tier` | — | Your tier band; falls back to FantasyPros' tier |
-| `MyRank` | `Rank`, `RK` | Board order; falls back to row order |
+| `MyRank` | `Rank`, `RK` | Board order. With no `MyRank` column at all, file order is used — but only to place rows the board doesn't already have; see [Choosing what imports](#choosing-what-imports) |
 | `Grade` | `Like`, `Opinion` | `like` / `fade`. The retired `love` and `avoid` are read as `like` and `fade` (`OVEN.GRADE_LEGACY`), as are the usual synonyms (`hate` → `fade`, `++` → `like`). Also settable on the board — see [Setting a grade](#setting-a-grade) |
 | `Target` | `Targets`, `Queued`, `Pin` | Your Targets queue as a column. `Y`/`Yes`/`X`/`1`/`✓` all mark him; blank leaves him off. Exported from the live queue, not from the row — see [Targets in the CSV](#targets-in-the-csv) |
 | `Note` | `Notes`, `Comment` | Free text, shown on the row |
@@ -254,6 +260,85 @@ preserved on the row and ignored — you can keep your own working columns.
 The parser is a real RFC-4180 state machine, not `split(',')` — quoted commas, embedded
 newlines, `""` escapes, CRLF/LF/CR, and a UTF-8 BOM all round-trip. **Download template** builds a
 starter file from the current FantasyPros top 250, so the first upload is one edit away.
+
+### Choosing what imports
+
+An import used to be a replacement: `board = { rows: parsed.rows }`, the whole blob, every column.
+That made the sheet the only place your rankings could live. Push one round of updated grades from
+a spreadsheet and you also overwrote every tier, note and rank on the board — including the ones
+you'd set by dragging — and any player you'd trimmed out of the sheet vanished.
+
+It **merges** now, and you say which columns it may touch.
+
+**Two steps.** Dropping a file parses it and renders a confirm panel (`#import-confirm`, its own
+element — `#import-msg` beside it is a one-shot `innerHTML` blitz that the next status line blows
+away, and controls can't live in something that gets stomped). The panel names the file, counts
+the rows, splits them into *already on your board* / *new*, and offers one `.oven-chip` per column
+**actually present in the file**. Nothing is written until **Import**. The point of the ordering:
+which columns a sheet should apply is a question you can only answer once you know what's in it,
+and answering it after the board has been overwritten is no answer at all.
+
+**Player, Pos and Team have no chip.** They're how a row is identified — matched against the board
+and sent to the resolver — so switching them off would mean an import that can't say which player
+it's talking about. They always apply, and only when the cell is non-blank: a sheet that left `Pos`
+empty isn't claiming the player has no position.
+
+**A checked column overwrites, blanks included. An unchecked column is never read.** The blank rule
+is what makes export → edit → re-import able to *clear* a grade rather than only ever set one, and
+it's the rule `Target` has always followed. It's stated on the panel, because it is the one thing
+about the flow you could get wrong.
+
+**Matching** is `OvenBoard.mergeImport(existingRows, incomingRows, selected)`, which lives in
+`oven-board.js` and not `oven-csv.js`: it needs `playerKey`, `normName` and `teamFromDefenseName`
+(the last two module-private), and its output has to be exactly the `exportRows()` shape, which is
+the same blob a drag on the board writes. `oven-csv.js` is deliberately ignorant of board keys —
+`boardToCSV(rows, isTarget)` taking a *predicate* is the evidence — and that direction is worth
+keeping. Three probes, in order:
+
+1. `playerKey(name, pos, team)`.
+2. For a row whose `Pos` cell is blank, `DEF|<team from the nickname>`. `playerKey` only consults
+   `DEF_TEAMS` once it already believes the row is a defense, so "Denver Broncos" with no position
+   keys as `|denver broncos` and would otherwise look like a brand-new player.
+3. `normName`, but **only when exactly one unclaimed board row matches**. This is the case where
+   the sheet moved him to WR or still carries last season's team code — the row updates in place
+   and its pos/team are relabelled, rather than a duplicate appearing. Merging onto a *guess* would
+   overwrite the wrong player, which is the one failure here nobody would ever notice, so an
+   ambiguous name is added as its own row and warned about instead.
+
+A `claimed` set means one board row per incoming row. `parseBoard` dedupes only on the exact
+lowercased name, so "A.J. Brown" and "AJ Brown" both survive it and both `normName` the same way;
+the second becomes its own row with a warning rather than silently landing on top of the first —
+folding them would pick a winner between two cells the user wrote, and neither answer would be
+discoverable from the board afterwards.
+
+**Nothing is ever removed.** A row in the file updates what it matches; a row that matches nothing
+is appended; a player on the board the file never mentions is left exactly as he was. An import can
+add and it can overwrite, and that's all — which is what makes dropping a hand-built sheet of
+twelve sleepers onto a 300-player board a safe thing to do.
+
+**Ranks.** New players with no rank (MyRank unchecked, or absent from the file) go to the bottom in
+file order, after the board's current maximum, so nothing already ranked moves and `buildBoard`'s
+sort still has a number to work with. This is why `parseBoard` reports its file-order synthesis as
+a `rankSynthesized` **flag** rather than a warning: "using the row order from your file as the
+board order" is a plain lie about the 300 rows that were already ranked, so the host phrases it for
+its own context.
+
+A file that covers only part of the board **will** produce duplicate rank numbers, and they are
+deliberately not renumbered. Three reasons: renumbering would rewrite ranks for players the user
+didn't include, which is the same objection that makes the merge additive; collisions are already a
+supported stored state (`renumber()` walks only `state.rows` while `exportRows()` concatenates
+`state.offBoard` at its pre-drag ranks, so every league hiding K/DEF has been persisting them since
+that filter shipped); and `buildBoard`'s comparator is a plain `ar - br` over a stable sort, so ties
+resolve to merged-array order — existing rows first, appended rows last — deterministically. The
+summary counts them out loud and names the one gesture that does normalize everything to `1..n`:
+drag any row.
+
+**Extras.** Every truthy key in the selection that isn't a canonical field *is* an extra column's
+own label, so one flat map carries both and no separate label list has to be threaded through.
+(`mapColumns` only files a header under `extras` when nothing in `HEADER_ALIASES` matched, so the
+two namespaces can't collide.) A checked extra with an empty cell **deletes** the key, which is
+load-bearing: `parseBoard` only writes non-empty extras onto a row, so without the delete a checked
+extra column could add and update but never clear.
 
 ### Targets in the CSV
 
@@ -264,9 +349,20 @@ round trip go through the queue rather than the board blob:
 - **Export** — `boardToCSV(rows, isTarget)` takes a predicate, because `oven-csv.js` has no idea
   which league's queue is loaded. The league page builds it from `OvenTargets.keys()`, matching on
   `OvenBoard.playerKey(name, pos, team)` — the same key the pin button writes.
-- **Import** — a file *with* the column is authoritative for every row in it, blanks included, so
-  `OvenTargets.setKeys()` replaces the queue outright. A file *without* one says nothing about
-  targets and leaves the queue alone; re-importing a plain ranking list must not silently empty it.
+- **Import** — a checked `Target` column is authoritative **for the rows in the file**, blanks
+  included, and for nobody else. It used to replace the queue outright, which was right when an
+  import replaced the board; under an additive merge it would empty the queue of every player the
+  sheet happened not to list. So the league page computes the next full key list itself —
+  `keys().filter(not unqueued by this file)` then append the newly marked — and hands that to
+  `OvenTargets.setKeys()`, which already owns the bound-check, dedupe, persist, `markBoard` and
+  `render`. Existing queue order survives (it filters rather than rebuilds); new entries append in
+  file order. A file *without* the column, or with its chip off, says nothing about targets and
+  leaves the queue alone; re-importing a plain ranking list must not silently empty it.
+
+  Keys come off the **merged** row and **after** resolution, not off the CSV row's own fields: a
+  line with a blank `Pos` that landed on a defense — or had its position filled in by the resolver
+  — keys differently than the file would suggest. That's why `mergeImport` returns `resolved[]` as
+  `{ row, isNew }` and not a precomputed key.
 
 Writing the queue needs it **bound**, not mounted. `mount()` only runs on the league page's draft
 branch, so gating the import on it would mean a Target column that imports on a league with a
@@ -695,6 +791,133 @@ time would likely get a Vercel IP blocked.
 
 ---
 
+## Where he finished — the two seasons before this one
+
+Under every name, always on: his **half-PPR positional finish** for Y-1 and Y-2, the same number
+Sleeper's player card prints.
+
+```
+Christian McCaffrey  SF
+2025 RB1  2024 RB71
+```
+
+That pair is the argument the row can't otherwise make. RB1 then RB71 is a back who was elite and
+then lost a season; RB4 then RB2 (Gibbs) is one who has been elite twice. Same ECR neighborhood,
+opposite histories.
+
+It is the **third** thing a row says about a player, and the three do not overlap:
+
+| Where | Claim | Whose scoring |
+|---|---|---|
+| Δ column | Where the market has him **this** year vs where you do | FantasyPros half-PPR ECR |
+| This line | Where he **finished**, last two years | Sleeper half-PPR |
+| `2025 weeks` chip | How many weeks he was **startable** last year | **Yours** |
+
+**Deliberately not league-scored**, unlike the weekly counts. A positional finish is a shared
+reference — "he was the WR7" means the same thing in every conversation you have had about him —
+and half-PPR is the format it gets quoted in. Re-scoring it privately would produce a different
+number wearing the same name. The weekly counts already answer the under-my-rules question, and
+answering it twice in two grammars on one row makes neither readable.
+
+**Always on, unlike the weekly table.** Two numbers are not the three-plus-a-toggle that chip
+exists to keep off the board, and a history you have to remember to turn on is one you won't have
+on mid-run, which is the only moment it matters.
+
+### How good the finish was, in four steps
+
+The numbers are graded against **their own position's starter depth**
+(`OVEN.POSRANK_STARTERS` — QB 12, RB 24, WR 30, TE/K/DEF 12), because RB4 and WR4 are not the same
+achievement and one scale across both would say they were:
+
+| | | RB | WR | reading |
+|---|---|---|---|---|
+| `t1` | ≤ half the starters | ≤ 12 | ≤ 15 | an every-week guy — the finish you draft for |
+| `t2` | ≤ the starters | ≤ 24 | ≤ 30 | a starter, unremarkably |
+| `t3` | ≤ twice the starters | ≤ 48 | ≤ 60 | bench, bye-week filler |
+| `t4` | beyond | — | — | he was not a fantasy player that year |
+
+**Starters, not a percentile.** 253 wide receivers were ranked last season; a percentile over that
+pool puts WR40 — a man nobody started — in the top fifth. Against 30 starting WRs he lands where
+he actually was. Fixed at 12 teams and not read from the league, because this grades a season that
+has already happened: "RB18 in 2025" meant the same thing to everyone who watched it, and a
+10-team league does not retroactively make him worse.
+
+**Four steps, and four is the ceiling** — the same reason `.oven-delta` buckets its opacity instead
+of computing one. Nobody resolves more than about four levels in a 10px number.
+
+**Value, not hue, and that's the palette law of this file** (see the header of `bakers-oven.css`).
+Flame and frost are the only two colors on the page and the Δ column is the one element allowed to
+wear them; when something on a board row is orange it means you and the market disagree, full stop.
+A green/red heat scale here would be a third and fourth hue arguing with that on the same row, and
+the thing it would shout over is the column you actually act on. Brightness carries it instead —
+bone → ash → ash-dim → ash-dim at .62 — which on a near-black page is the strongest channel there
+is. On the full 862-row board that lands 101 values in `t1`, 101 in `t2`, 193 in `t3`, 700 in `t4`.
+
+### A season he didn't play is blank, not a dash
+
+The slot still renders and still takes its box — `visibility: hidden` on a slot that keeps its year
+and a placeholder — so the second season starts at the same x on every row and the line is one line
+tall whether a player has two finishes, one, or none. The slot is a measured 64px, which is the
+widest content the full board produces (`2024 WR1338`); a pixel less and 22 rows deep in the board
+wobble their second column 2px right.
+
+A dash *is* information — "he wasn't in the league" — but it's information the empty space already
+carries, and 200 rookie rows of punctuation is a column of marks the eye has to sort out from the
+numbers it came for. The `title` still says `did not play` on the row you stop on. What a blank
+never means is a bad season: a 2026 rookie has no 2025 finish, a number there would be fabricated,
+and the games-played gate below is what keeps one from appearing.
+
+### Two traps in the fetch
+
+`scripts/fetch_pos_ranks.py` pulls `pos_rank_half_ppr` from `GET /stats/nfl/regular/{season}` (one
+request per season, browser UA required, same as the weekly script). Two things about that field
+are not what they look like:
+
+- **Sleeper ranks every player in its database, played or not.** All 8,233 rows in the 2025 file
+  carry a `pos_rank_half_ppr`, because the zero-point block has to be ordered somehow. Ungated,
+  a 2026 rookie shows a 2024 finish in the 500s — a fabricated season. The gate is `gp`: he gets a
+  finish for a season he played and a dash for one he didn't. Zero-point seasons survive it —
+  playing and scoring nothing is a real, if grim, finish. 8,233 rows → **708 players**, 23 KB.
+- **The rank is computed within Sleeper's `position`, not `fantasy_positions`.** Kyle Juszczyk is
+  `fantasy_positions: ["RB"]` and `position: "FB"`, and his `pos_rank_half_ppr` of 1 means **FB1**
+  — 45 points on the season. Printed as "RB1" that is not a small error. Any player whose two
+  positions disagree is dropped (~10/season): the number is true about a pool the board can't
+  name, which makes it unusable rather than imprecise.
+
+Joined to the board by `OvenBoard.playerKey()`, exactly like the weekly file — same
+`norm_name()`/`player_key()` pair, same must-not-drift rule (see *Joining to the board* below).
+Collisions across two seasons of namesakes are reported and resolved to the better finish; there
+were 0 among players the board actually shows.
+
+```bash
+python3 scripts/fetch_pos_ranks.py                    # last two completed seasons
+python3 scripts/fetch_pos_ranks.py --seasons 2025,2024
+```
+
+**The file names its own seasons** (`{seasons: [2025, 2024], ranks: {key: [r, r]}}`), and the
+renderer takes the labels from the payload. Next August a re-fetch rolls the years forward with no
+code change — `OVEN.POSRANK_DATA` is the only constant, and it has no year in it. That is the one
+thing to keep true if this file is ever restructured: a year hardcoded in JS is a row that
+confidently mislabels 2025's number as 2026's the first summer nobody re-runs the script.
+
+### The row aligns to its first line, not its middle
+
+The name column now carries sub-lines — this one always, the weekly table when its chip is on — so
+`.oven-row` is 48px (73px with weekly) while the facts on either side of the name are about its
+first line. Centered in the whole row, the position badge floated into the gap between the name and
+the finishes and read as belonging to neither.
+
+So the rank, the badge, the Δ and the drafted tag top-align onto a shared **18px first line**
+(`.oven-name-main` fixes `line-height: 18px`; the badge's 14px line + 2px padding adds up to the
+same 18px, which is what lets them align without a magic offset). Only the two 22px **controls**
+stay centered: a button is a place to click, not a fact about the name.
+
+`contain-intrinsic-size` is stated as the **content box** — 33px, and 58px under `.show-weekly` —
+which is what makes a skipped row render at exactly the height it occupies once laid out. A stale
+estimate on 860 rows makes the scrollbar jump as they render in.
+
+---
+
 ## Last season's weekly finishes
 
 The **`2025 weeks`** chip opens a small table under each player: how many weeks he finished top
@@ -851,6 +1074,35 @@ Run `python3 server.py`, open `http://localhost:8000`.
 15. A junk extra column imports fine and is preserved; a file with no `Player` column errors clearly.
 16. A misspelled name is **kept** on the board and listed as unmatched, never dropped.
 
+**The import merge** (`scripts/primary/oven-board.js` — `mergeImport` is pure, so most of this is
+also checkable headlessly by loading `oven-config.js` + `oven-csv.js` + `oven-board.js` into a
+`vm` context and calling it directly, no browser or account needed)
+17. Drop a file → the confirm panel appears and **nothing is written**: reload, and the old board
+    is intact. Cancel, then drop the *same file again* → the panel reappears (the `file.value = ''`
+    reset; without it the second choose fires no `change` event and the drop zone reads as dead).
+18. Export the board, edit only `Note` in a copy, re-import with **only Note** checked → notes
+    change and tiers/ranks/grades are byte-identical on a fresh export.
+19. Same file with the `Grade` cells blanked: **checked** clears the grades, **unchecked** leaves
+    them. This is the blanks-overwrite rule, and it is the one people will be surprised by.
+20. Import 300 rows, then a 5-row sheet with 3 of them plus 2 new → *3 updated · 2 added · 302 on
+    your board*, and the 297 untouched rows are unchanged. Delete 200 rows from an exported sheet
+    and re-import → still 300. An import never removes.
+21. Flip a player's `Pos` from RB to WR in the sheet → he updates in place (added count **0**), not
+    duplicated. Blank the `Pos` cell on a defense row → it merges onto the existing `DEF|DEN`.
+22. Put "AJ Brown" and "A.J. Brown" in one file → the second lands as a separate row **with a
+    warning**, never silently on top of the first.
+23. A file with no `MyRank` column → existing board order is unchanged and new players land at the
+    bottom in file order. A subset file *with* `MyRank` → collisions are reported, the board sorts
+    deterministically, and one drag renumbers to `1..n`.
+24. Queue A, B and C in the drawer, then import a file containing only A (`Target=Y`) and B
+    (blank) with the chip **on** → A stays, B is unqueued, **C is untouched**. Chip **off** → the
+    queue is completely unchanged. Same on a league with **no draft scheduled**, where `mount()`
+    never runs — that's the bound-not-mounted path.
+25. Network tab: importing into an empty board POSTs all N to `/api/football/resolve`; re-importing
+    the same file POSTs a near-empty body; **cancelling a file POSTs nothing**. Block the POST and
+    the import still completes with a warning, with every previously matched row keeping its
+    `player_id` (the summary's matched count must not drop).
+
 **Draft data** (league is `pre_draft` until 2026-08-31, so this is testable now)
 17. All **7** keepers render struck through with a `KEPT · owner` tag, and **their Δ cells are
     blank** — the column stays aligned on the live rows above and below them.
@@ -963,9 +1215,23 @@ Run `python3 server.py`, open `http://localhost:8000`.
 37. Signed in, import on one browser → open another → same leagues, same board, same target
     queue. (Signed out there is nothing to show: every Oven page requires an identity now.)
 
+**Positional finishes**
+37a. Every row carries `2025 RB4  2024 RB2` under the name, left-aligned with the name and not
+    with the badge. Christian McCaffrey reads `2025 RB1  2024 RB71` — and the RB71 is visibly
+    dimmer than the RB1. Ashton Jeanty shows `2025 RB13` with the 2024 slot **blank**, and a 2026
+    rookie's line is blank end to end without collapsing the row. Spot-check any number against
+    that player's Sleeper card — they're Sleeper's, unmodified.
+37c. Scroll to row ~200: the two year columns are still at the same x they were at row 1, no
+    wobble, including on the deep rows carrying four-digit ranks.
+37b. The badge sits on the name's line, not floating between the name and the finishes, and the
+    grade/pin pair stays centered in the row. Toggling `2025 weeks` adds a third line under the
+    finishes and moves nothing above it.
+
 **Degraded**
 38. Rename `data/fp_redraft.json` → board still renders from CSV, with every Δ reading `—`
     (nothing to disagree with).
+38a. Rename `data/nfl_pos_ranks.json` → the finish line disappears entirely (not a row of dashes)
+    and the board opens normally.
 39. No CSV at all → board seeds from FantasyPros ranks with an import prompt.
 40. Import a new CSV that drops a queued player: he vanishes from the drawer but stays in storage,
     and the empty state says how many saved targets aren't on the current board.

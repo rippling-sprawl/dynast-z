@@ -227,6 +227,176 @@
    * `OVEN.GRADE_HEAT` survives, but only as the Targets projection's scoring
    * weight (adjRank in oven-targets.js). It is no longer a display scale. */
 
+  /* ---------- the import merge ---------- */
+
+  /* The board blob's row shape, in one place: a CSV import and a drag on the
+   * board both write it, and the two have to agree byte for byte or a merge
+   * would silently invent or drop a field. */
+  function shapeRow(r) {
+    return {
+      name: r.name,
+      pos: r.pos || '',
+      team: r.team || '',
+      tier: r.tier == null ? null : r.tier,
+      myRank: r.myRank == null ? null : r.myRank,
+      grade: r.grade || null,
+      note: r.note || '',
+      extra: r.extra || {},
+      player_id: r.player_id || null,
+    };
+  }
+
+  /* Same shape, but `extra` is copied rather than shared. The merge mutates it,
+   * and the league page runs a throwaway merge to count what a file would do
+   * before you've agreed to anything — a dry run that edited the live board
+   * would be the worst possible way to find that out. */
+  function cloneRow(r) {
+    var row = shapeRow(r);
+    row.extra = {};
+    Object.keys(r.extra || {}).forEach(function (k) { row.extra[k] = r.extra[k]; });
+    return row;
+  }
+
+  // The canonical CSV fields, so a selection key that is none of them is an
+  // extra column's own label. mapColumns only files a header under `extras`
+  // when nothing in HEADER_ALIASES matched, so the two namespaces can't collide
+  // and one flat map can carry both.
+  var CANON_FIELDS = {
+    player: 1, pos: 1, team: 1, tier: 1, myRank: 1, grade: 1, target: 1, note: 1,
+  };
+
+  function findExisting(inc, byKey, byName, claimed, warnings) {
+    var probes = [playerKey(inc.name, inc.pos, inc.team)];
+
+    /* A defense whose Pos cell is blank: "Denver Broncos" keys as
+     * `|denver broncos`, while the row already on the board is `DEF|DEN`.
+     * playerKey only consults DEF_TEAMS once it already believes the row is a
+     * defense, so the nickname has to be probed explicitly. */
+    if (!normPos(inc.pos)) {
+      var t = teamFromDefenseName(inc.name);
+      if (t) probes.push('DEF|' + t);
+    }
+
+    var taken = false;
+    for (var i = 0; i < probes.length; i++) {
+      var j = byKey[probes[i]];
+      if (j === undefined) continue;
+      if (!claimed[j]) return j;
+      taken = true;
+    }
+
+    /* Pos or team disagree — the sheet moved him to WR, or still carries last
+     * season's team code. The name is the identity of last resort, and only
+     * when it points at exactly one row: merging onto a guess would overwrite
+     * the wrong player, which is the one failure here nobody would notice. */
+    var free = (byName[normName(inc.name)] || []).filter(function (j) { return !claimed[j]; });
+    if (free.length === 1) return free[0];
+
+    /* Two lines in one file for the same player. parseBoard only catches the
+     * exact-name case, so "A.J. Brown" and "AJ Brown" both reach here and the
+     * second one has nothing left to land on. It becomes its own row — silently
+     * folding it into the first would pick a winner between two cells the user
+     * wrote, and neither answer is discoverable from the board afterwards. */
+    if (taken || free.length > 1) {
+      warnings.push('"' + inc.name + '" matches a player this file already updated — added as a separate row.');
+    }
+    return -1;
+  }
+
+  function applyRow(row, inc, sel) {
+    // Identity always imports, but a blank cell is not an instruction: a sheet
+    // that left Pos empty isn't claiming the player has no position.
+    var p = normPos(inc.pos);
+    if (p) row.pos = p;
+    if (inc.team) row.team = String(inc.team).toUpperCase();
+
+    /* A selected column is the file's answer for every row in it, blanks
+     * included. That is what lets export -> edit -> re-import CLEAR a grade
+     * rather than only ever set one, and it's the rule the Target column has
+     * always followed. An unselected column is never read at all. */
+    if (sel.tier) row.tier = inc.tier;
+    if (sel.myRank) row.myRank = inc.myRank;
+    if (sel.grade) row.grade = inc.grade || null;
+    if (sel.note) row.note = inc.note || '';
+
+    Object.keys(sel).forEach(function (k) {
+      if (!sel[k] || CANON_FIELDS[k]) return;
+      var v = (inc.extra || {})[k];
+      // parseBoard only writes non-empty extras onto the row, so without the
+      // delete a selected extra column could add and update but never clear.
+      if (v != null && v !== '') row.extra[k] = v;
+      else delete row.extra[k];
+    });
+
+    // player_id is deliberately not written here. The Sleeper resolver should
+    // see the MERGED pos and team — a row whose sheet left Pos blank resolves
+    // better against the board row that already knows he's an RB — so
+    // resolution runs after this, not before it.
+  }
+
+  /* Apply an imported CSV to the board a league already has.
+   *
+   * Additive by design: a row in the file updates the row it matches, a row
+   * that matches nothing is appended, and a player on the board the file never
+   * mentions is left exactly as he was. An import can add and it can overwrite;
+   * it can never remove. That is what makes dropping a hand-built sheet of
+   * twelve sleepers onto a 300-player board a safe thing to do.
+   *
+   * `selected` is the column picker's answer — { tier: true, myRank: false,
+   * 'ADP': true, … } — keyed by canonical field name or by an extra column's
+   * own label. `target` may appear in it and is deliberately NOT applied here:
+   * the queue is a separate synced slice that only the host page has bound.
+   *
+   * Returns { rows, resolved, updated, added, warnings }. `resolved` carries one
+   * entry per incoming row — { row, isNew } — so the host can write the Targets
+   * queue against the row a CSV line ENDED UP on. It holds the row rather than a
+   * key because Sleeper resolution runs after this and can still fill in a blank
+   * position, which would change the key out from under a stored one. */
+  function mergeImport(existingRows, incomingRows, selected) {
+    var sel = selected || {};
+    var out = (existingRows || []).map(cloneRow);
+    var byKey = {}, byName = {}, claimed = {}, warnings = [];
+    var maxRank = 0;
+
+    out.forEach(function (r, i) {
+      var k = playerKey(r.name, r.pos, r.team);
+      if (byKey[k] === undefined) byKey[k] = i;   // first wins, as everywhere else
+      var n = normName(r.name);
+      (byName[n] = byName[n] || []).push(i);
+      if (r.myRank != null && r.myRank > maxRank) maxRank = r.myRank;
+    });
+
+    var resolved = [], updated = 0, added = 0;
+
+    (incomingRows || []).forEach(function (inc) {
+      var i = findExisting(inc, byKey, byName, claimed, warnings);
+      var isNew = i === -1;
+      var row;
+      if (isNew) {
+        row = shapeRow({ name: inc.name, extra: {} });
+        out.push(row);
+        i = out.length - 1;
+        added++;
+      } else {
+        row = out[i];
+        updated++;
+      }
+      /* One board row per incoming row. parseBoard dedupes on the exact
+       * lowercased name, so "AJ Brown" and "A.J. Brown" both survive it and
+       * both normName the same way; without this the second would land on top
+       * of the first instead of surfacing as the duplicate it is. */
+      claimed[i] = true;
+      applyRow(row, inc, sel);
+      /* A new player with no rank — MyRank unselected, or absent from the file
+       * — goes to the bottom in file order. Nothing already on the board moves,
+       * and buildBoard's sort still has a number to work with. */
+      if (isNew && row.myRank == null) row.myRank = ++maxRank;
+      resolved.push({ row: row, isNew: isNew });
+    });
+
+    return { rows: out, resolved: resolved, updated: updated, added: added, warnings: warnings };
+  }
+
   /* ---------- rendering ---------- */
 
   /* The board has exactly one order: yours, ascending. There is no column
@@ -257,6 +427,13 @@
     // re-passed at each of those call sites, and the one that got missed would
     // blank the column with no error.
     weekly: null,         // key -> {t12, t24, t36, games, pos}
+    // Where he actually finished, half-PPR, for the last two seasons — the
+    // payload of /data/nfl_pos_ranks.json verbatim: {seasons: [Y-1, Y-2],
+    // ranks: {key: [rank|null, rank|null]}}. Held whole rather than flattened
+    // because the seasons ride WITH the ranks: the file decides which two years
+    // it is about, and a renderer that took the years from anywhere else would
+    // label 2024's number 2025 the first summer nobody re-ran the fetch.
+    posRanks: null,
     // The league's startable positions as a lookup, and the rows the last
     // buildBoard() set aside because they aren't at one. Null positions means
     // the league hasn't said (or starts nothing), and nothing is filtered.
@@ -267,6 +444,13 @@
   /* Set once at boot, after the league's scoring settings are known. */
   function setWeekly(counts) {
     state.weekly = counts || null;
+  }
+
+  /* Set once at boot from the fetched file, whole. Rejects a payload without
+   * both halves rather than half-storing it: a `ranks` map with no `seasons`
+   * would render two unlabeled numbers, which is worse than rendering none. */
+  function setPosRanks(payload) {
+    state.posRanks = payload && payload.seasons && payload.ranks ? payload : null;
   }
 
   function visibleRows() {
@@ -659,6 +843,83 @@
     return '<div class="oven-weekly" title="' + esc(title) + '">' + cells.join('') + '</div>';
   }
 
+  /* How good a finish IS, graded against his own position — because RB4 and WR4
+   * are not the same achievement and a scale that treated them alike would be
+   * worse than no scale at all. The whole point of a positional rank is that it
+   * is already normalized; the formatting has to stay normalized with it.
+   *
+   * The yardstick is how many of that position get STARTED league-wide
+   * (OVEN.POSRANK_STARTERS), not a percentile of everyone who took a snap. There
+   * were 253 ranked WRs last season and a percentile over them would put WR40 —
+   * a man nobody started — comfortably in the top fifth. Against 30 starting
+   * WRs, WR40 is what it actually was: off the board.
+   *
+   * Four steps, and four is the ceiling on purpose: the same reason .oven-delta
+   * buckets its opacity rather than computing one. Nobody resolves more than
+   * about four levels in a 10px number, and this is a sub-line under a name, not
+   * a chart.
+   *
+   *   t1  top half of the starters   an every-week guy — the finish you draft for
+   *   t2  the rest of the starters   a starter, unremarkably
+   *   t3  out to twice the starters  bench, bye-week filler
+   *   t4  beyond that                he was not a fantasy player that year
+   */
+  function posRankTier(pos, rank) {
+    var starters = C.POSRANK_STARTERS[pos] || C.POSRANK_STARTERS_DEFAULT;
+    if (rank <= starters / 2) return 't1';
+    if (rank <= starters) return 't2';
+    if (rank <= starters * 2) return 't3';
+    return 't4';
+  }
+
+  /* Where he finished: half-PPR positional rank for the last two seasons, the
+   * number off Sleeper's own player card.
+   *
+   * Not the same claim as anything else on the row, which is why it earns its
+   * line. The Δ column is where the market has him THIS year; the weekly chip is
+   * how many weeks he was startable last year, under this league's rules. This
+   * is the flat historical fact — RB4 then RB19 — and it's the one people
+   * already carry in their heads, because it's how finishes get quoted.
+   *
+   * Always on, unlike the weekly table. Two small numbers are not the three-plus
+   * a toggle exists to keep off the board, and a history you have to turn on is
+   * a history you won't have on at the moment you need it (mid-run, deciding
+   * between two names). It costs one subdued line under the name.
+   *
+   * A season he didn't play renders as EMPTY SPACE, not as a dash and not as
+   * nothing: the slot keeps its box (`visibility: hidden` on a slot that still
+   * holds its year and a placeholder), so the second year sits at the same x on
+   * every row and the line is the same height whether a player has two finishes,
+   * one, or none. A dash was a mark to read on 200 rookie rows; blank says the
+   * same thing by saying nothing. The title still spells out "did not play" for
+   * the row you stop on. */
+  function posRankCell(r) {
+    var pr = state.posRanks;
+    if (!pr) return '';        // file never loaded — no line at all, not a row of dashes
+
+    var ranks = pr.ranks[r.key] || [];
+    var cells = [], label = [];
+    for (var i = 0; i < pr.seasons.length; i++) {
+      var yr = pr.seasons[i], n = ranks[i];
+      // The position rides on the number ("RB4"), the way a finish is spoken,
+      // rather than being implied by the badge four columns to the left. The
+      // badge holds MY rank for this year — two bare numbers under it, meaning
+      // something else entirely, would read as more of the same.
+      //
+      // The placeholder on a missing season is a real rank's worth of glyphs,
+      // never a dash: it's invisible, and its only job is to hold a box the
+      // same size the number would have taken.
+      var txt = n == null ? '—' : (r.pos || '#') + n;
+      cells.push('<span class="opr' + (n == null ? ' is-none' : ' ' + posRankTier(r.pos, n)) + '">' +
+        '<i class="opr-y">' + esc(String(yr)) + '</i>' +
+        '<span class="opr-n">' + esc(txt) + '</span></span>');
+      label.push(yr + ': ' + (n == null ? 'did not play' : txt));
+    }
+    return '<div class="oven-posrank" title="' +
+      esc('Half-PPR positional finish · ' + label.join(' · ') + ' — Sleeper') +
+      '">' + cells.join('') + '</div>';
+  }
+
   /* Every row is the same flat markup — no inline styles at all now that the heat
    * wash is gone, which is why applyDraftState() can patch a row by touching
    * classes and never has to reason about what color it was. */
@@ -667,8 +928,30 @@
     // column. Straight from the two ranks: a grade is what *I* think of him and
     // has no business moving a number that reports what the market thinks.
     var d = r.fpRank != null && r.myRank != null ? r.fpRank - r.myRank : null;
-    var dCls = d == null ? 'zero' : (d > 0 ? 'pos' : (d < 0 ? 'neg' : 'zero'));
-    var dTxt = d == null ? '—' : (d > 0 ? '+' + d : String(d));
+    // Printed as a percentage of where I have him, not as spots, because a spot
+    // is not a fixed unit down the board. Four spots at pick 8 moves a player
+    // across half a round of value; four spots at pick 120 is inside the noise
+    // of who happens to be listed next. Dividing by myRank is what makes the
+    // column comparable top to bottom — +50% reads the same at 8 as at 200.
+    var pct = d == null ? null : Math.round((d / r.myRank) * 100);
+    // The gate is still spots, deliberately: percent alone would make the top of
+    // the board scream (rank 2 vs ECR 3 is +50% off one spot of nothing). Four
+    // spots is the floor for "we actually disagree", and the percent then says
+    // how much that gap is worth where he sits. Under it the cell goes empty,
+    // same as a player with no consensus rank, so the eye only ever lands on the
+    // column when it means something — the title still has the numbers.
+    var dShown = d != null && Math.abs(d) >= 4;
+    var mag = pct == null ? 0 : Math.abs(pct);
+    // Hue is direction, opacity is size — the two facts the column carries, on
+    // two channels that don't fight. Buckets, not a computed alpha, because rows
+    // are styled by class alone (see the note above rowHTML) and four steps is
+    // all the eye resolves in an 11px number anyway.
+    var dCls = !dShown ? 'zero' : (d > 0 ? 'pos' : 'neg') + ' ' +
+      (mag >= 60 ? 'd4' : mag >= 30 ? 'd3' : mag >= 12 ? 'd2' : 'd1');
+    // Clamped, not because 2400% is wrong — a WR I have at 3 and the market has
+    // at 75 really is that far apart — but because the column is 48px and the
+    // exact figure past a point isn't the message. The title keeps the truth.
+    var dTxt = !dShown ? '' : (d > 0 ? '+' : '-') + Math.min(mag, 999) + '%';
     // The position column carries the positional rank — same badge, same color,
     // one more fact. "RB7" states the position too, so nothing is lost by
     // spending the cell on it, and the row keeps a single line. It's MY pos rank
@@ -699,14 +982,21 @@
         '<div class="oven-name-main"><span class="oven-name-text">' + esc(r.name) + '</span>' +
           (r.team ? '<span class="oven-name-team">' + esc(r.team) + '</span>' : '') +
           (r.note ? ' <span class="oven-name-note">· ' + esc(r.note) + '</span>' : '') + '</div>' +
-        // Second line of the name column, not a column of its own — so it grows
-        // the row downward when it's on and costs nothing when it's off.
+        // Both sub-lines belong to the name column, not to columns of their own:
+        // they annotate the player, and they grow the row downward instead of
+        // widening it. History first — it's always on, so the weekly table
+        // appears below it rather than shoving it down when the chip is toggled.
+        posRankCell(r) +
         weeklyCell(r) +
       '</div>' +
+      // The title carries what the cell can't: the spots, since the printed
+      // percent is a ratio and a ratio doesn't say how far anyone moves, and the
+      // uncapped percent for the handful of rows the 999 clamp bites.
       '<div class="oven-delta ' + dCls + '" title="' +
         (d == null ? 'no consensus rank' : 'ECR ' + r.fpRank + ' · you have him ' +
           (d === 0 ? 'there too' : Math.abs(d) + ' spot' + (Math.abs(d) === 1 ? '' : 's') +
-            (d > 0 ? ' higher' : ' lower'))) + '">' + dTxt + '</div>' +
+            (d > 0 ? ' higher' : ' lower') + ' (' + (d > 0 ? '+' : '-') + Math.abs(pct) +
+            '%)')) + '">' + dTxt + '</div>' +
       '<div class="oven-taken" hidden></div>' +
       gradeButton(r) +
       '<button class="oven-pin" type="button" aria-pressed="false" aria-label="Add to targets">+</button>' +
@@ -1124,20 +1414,9 @@
    * typed to paper over a gap in the visible ranks would be the bigger lie.
    * buildBoard splits them straight back out on the next load. */
   function exportRows() {
-    function shape(r) {
-      return {
-        name: r.name,
-        pos: r.pos || '',
-        team: r.team || '',
-        tier: r.tier == null ? null : r.tier,
-        myRank: r.myRank,
-        grade: r.grade || null,
-        note: r.note || '',
-        extra: r.extra || {},
-        player_id: r.player_id || null,
-      };
-    }
-    return state.rows.map(shape).concat((state.offBoard || []).map(shape));
+    // shapeRow, shared with mergeImport — the drag and the import write the
+    // same blob, so they cannot be allowed to disagree about its shape.
+    return state.rows.map(shapeRow).concat((state.offBoard || []).map(shapeRow));
   }
 
   function wireReorder(listEl) {
@@ -1238,7 +1517,9 @@
     playerKey: playerKey,
     setPositions: setPositions,
     buildBoard: buildBoard,
+    mergeImport: mergeImport,
     setWeekly: setWeekly,
+    setPosRanks: setPosRanks,
     indexPicks: indexPicks,
     render: render,
     applyDraftState: applyDraftState,

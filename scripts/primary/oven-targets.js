@@ -199,6 +199,11 @@
     return base - grade - (has(r.key) ? C.PROJ_TARGET_BONUS : 0);
   }
 
+  // The rank a projection row is judged by: mine, since mine is what the row
+  // prints and what the room's absence from my board can't speak to. Consensus
+  // stands in only where I never ranked him at all.
+  function projRank(r) { return r.myRank == null ? marketRank(r) : r.myRank; }
+
   function byMarket(a, b) {
     return (marketRank(a) - marketRank(b)) ||
       ((a.myRank == null ? 9999 : a.myRank) - (b.myRank == null ? 9999 : b.myRank));
@@ -243,12 +248,21 @@
       var boardOrder = pool.slice().sort(byAdj);
       var chosen = boardOrder[0] || null;
 
+      /* Everything below lists off `inReach`, not the whole pool. A player I
+       * rank a pick and a half past this slot isn't a candidate here at any
+       * confidence — he's still there two rounds later, where he'll be listed
+       * against a pick he actually fits. The simulation itself keeps running on
+       * the full pool: `chosen` above and the survival windows below are what
+       * the room does, and the room doesn't consult my reach. */
+      var reach = p.pick_no + C.PROJ_REACH_ROUNDS * s.teamsCount;
+      var inReach = boardOrder.filter(function (r) { return projRank(r) <= reach; });
+
       var seen = {}, entries = [];
-      boardOrder.slice(0, C.PROJ_PROJECTED_SHOWN).forEach(function (r) {
+      inReach.slice(0, C.PROJ_PROJECTED_SHOWN).forEach(function (r) {
         seen[r.key] = { row: r, proj: true, tgt: has(r.key) };
         entries.push(seen[r.key]);
       });
-      boardOrder.filter(function (r) { return has(r.key); })
+      inReach.filter(function (r) { return has(r.key); })
         .slice(0, C.PROJ_MAX_ENTRIES)
         .forEach(function (r) {
           if (seen[r.key]) { seen[r.key].tgt = true; return; }
@@ -265,9 +279,10 @@
        * remaining player here, added past the entry ceiling rather than
        * displacing the rank-order picks. They sort in by adjusted rank, so a
        * filler at QB40 lands at the bottom of the pick where it reads as the
-       * fallback it is. */
+       * fallback it is. Reach binds here too — a position whose best body left
+       * is far past this pick contributes no row rather than a fantasy one. */
       var bestAtPos = {};
-      boardOrder.forEach(function (r) {
+      inReach.forEach(function (r) {
         if (r.pos && floorPos.indexOf(r.pos) !== -1 && !bestAtPos[r.pos]) bestAtPos[r.pos] = r;
       });
       var covered = {};
@@ -277,7 +292,6 @@
         entries.push({ row: bestAtPos[pos], proj: false, tgt: has(bestAtPos[pos].key), floor: true });
       });
 
-      entries.forEach(function (e) { e.best = e.row.pos ? bestAtPos[e.row.pos] === e.row : false; });
       entries.sort(function (a, b) { return byAdj(a.row, b.row); });
 
       byPick[p.pick_no] = {
@@ -412,7 +426,6 @@
   function projEntryHTML(e, s) {
     var chips = '';
     if (e.proj) chips += '<span class="oven-tp-chip proj">proj</span>';
-    if (e.best) chips += '<span class="oven-tp-chip pos">top ' + esc(e.row.pos) + '</span>';
     // Same emoji-needs-a-name rule as the grade badge.
     if (e.tgt) chips += '<span class="oven-tp-chip tgt" role="img" aria-label="target" ' +
       'title="target">🎯</span>';

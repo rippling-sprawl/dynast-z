@@ -114,6 +114,13 @@
     PROJ_PROJECTED_SHOWN: 3,   // best-available rows offered per future pick
     PROJ_MAX_ENTRIES: 6,       // ceiling once targets are merged in
 
+    // How far past a pick a player's rank may sit and still be worth listing
+    // under it, in league sizes — 1.5 × teams, so a pick and a half. Deeper
+    // than that and the row isn't a candidate for this pick, it's a candidate
+    // for a pick two rounds from now that will have its own list. One-sided:
+    // a faller ranked well ABOVE the pick is the whole point of the view.
+    PROJ_REACH_ROUNDS: 1.5,
+
     // No color constants live here any more. They existed so JS could interpolate
     // a ramp for the heat rail and row wash; with both gone, the Δ column is the
     // only thing left that carries a hue and it takes --oven-flame / --oven-frost
@@ -139,6 +146,44 @@
     WEEKLY_SEASON: 2025,
     WEEKLY_DATA: '/data/nfl_weekly_2025.json',
     WEEKLY_META: '/data/nfl_weekly_2025_meta.json',
+
+    // Where he actually finished: half-PPR positional rank for the two seasons
+    // before this one, straight off Sleeper's player card. The sub-line under
+    // every name.
+    //
+    // The one number here that is NOT scored by your league, deliberately. A
+    // positional finish is a shared reference — "he was the WR7" means the same
+    // thing in every conversation you've had about him — and half-PPR is the
+    // format it's quoted in. Re-scoring it privately would produce a different
+    // number wearing the same name, and the weekly counts above already answer
+    // the under-my-rules question.
+    //
+    // No season constant beside it: which two years the file covers is stated
+    // IN the file, so a re-fetch next August rolls the labels forward without a
+    // code change. See scripts/fetch_pos_ranks.py.
+    POSRANK_DATA: '/data/nfl_pos_ranks.json',
+
+    // How many of each position get STARTED across a 12-team league — the
+    // yardstick the finish line grades a rank against (posRankTier in
+    // oven-board.js), so RB4 and WR4 are scored as what each actually was
+    // rather than as the same number.
+    //
+    // Starters, not roster spots and not a percentile of everyone who played.
+    // 253 wide receivers were ranked last season; a percentile over that pool
+    // puts WR40 in the top fifth, when WR40 is a man nobody started. Against 30
+    // starting WRs he lands where he belongs.
+    //
+    // RB 24 is two per team, WR 30 is two and a half (the flex mostly lands
+    // here), and the four one-start positions are one apiece. Fixed at 12 teams
+    // rather than read from the league: the league's own roster_positions can
+    // say how many RBs IT starts, but this is grading a finish in a season that
+    // has already happened, and "RB18 in 2025" meant the same thing to everyone
+    // who watched it. A 10-team league doesn't retroactively make him worse.
+    POSRANK_STARTERS: { QB: 12, RB: 24, WR: 30, TE: 12, K: 12, DEF: 12 },
+    // A CSV can carry any position string it likes. One start per team is the
+    // conservative reading of an unknown one — it grades that column harder
+    // rather than painting it optimistically.
+    POSRANK_STARTERS_DEFAULT: 12,
 
     // The three cutoffs shown per row. 12 is "positional starter in a 12-team
     // league", and the wider two say whether a low top-12 count means he was

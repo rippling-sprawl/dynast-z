@@ -6,7 +6,7 @@
   <link rel="icon" type="image/png" href="/favicon.png">
   <title>The Baker's Oven | Dynast-Z</title>
   <link rel="stylesheet" href="/styles/base/styles.css?v=abec71e4">
-  <link rel="stylesheet" href="/styles/primary/bakers-oven.css?v=1cdb4e07">
+  <link rel="stylesheet" href="/styles/primary/bakers-oven.css?v=56506583">
 </head>
 <body>
   <div id="header-mount"></div>
@@ -14,12 +14,12 @@
   <script src="/scripts/base/auth.js?v=8f2b460f"></script>
   <script src="/scripts/base/nav.js?v=9546680e"></script>
   <script src="/scripts/base/sync.js?v=1b85ffb1"></script>
-  <script src="/scripts/primary/oven-config.js?v=4e89081a"></script>
-  <script src="/scripts/primary/oven-csv.js?v=77440fca"></script>
+  <script src="/scripts/primary/oven-config.js?v=b40e5d01"></script>
+  <script src="/scripts/primary/oven-csv.js?v=39f0d531"></script>
   <script src="/scripts/primary/oven-draft.js?v=6b481746"></script>
   <script src="/scripts/primary/oven-leagues.js?v=3332aa1a"></script>
-  <script src="/scripts/primary/oven-board.js?v=3376ca4d"></script>
-  <script src="/scripts/primary/oven-targets.js?v=0a8f0b95"></script>
+  <script src="/scripts/primary/oven-board.js?v=d03d3343"></script>
+  <script src="/scripts/primary/oven-targets.js?v=d5d21668"></script>
   <script>initPage();</script>
 
   <main class="oven-content">
@@ -39,40 +39,52 @@
         <div id="draft-status"></div>
       </div>
 
-      <div class="oven-card">
-        <h3>Open Draft Board</h3>
-        <div class="oven-team-grid one-col" id="open-board"></div>
-      </div>
+      <div class="oven-league-grid">
+        <div class="oven-card">
+          <h3>Open Draft Board</h3>
+          <div class="oven-team-grid one-col" id="open-board"></div>
+        </div>
 
-      <div class="oven-card">
-        <h3>My Rankings</h3>
-        <div id="board-summary"></div>
-        <div class="oven-drop" id="drop">
-          <input type="file" id="file" accept=".csv,text/csv">
-          <strong>Drop a CSV here</strong> or click to choose a file
+        <div class="oven-card">
+          <h3>Rankings CSV</h3>
+          <p class="oven-note">
+            Rankings are private to your account and saved per league.
+            Columns: <code>Player</code> (required), <code>Pos</code>, <code>Team</code>,
+            <code>Tier</code>, <code>MyRank</code>, <code>Grade</code>, <code>Target</code>,
+            <code>Note</code>.
+            <code>Grade</code> accepts <code>like</code> or <code>fade</code> — older sheets'
+            <code>love</code> and <code>avoid</code> are read as those. You can also set it on the
+            board itself, and it weights the Targets projection. <code>Target</code> is your
+            Targets queue: mark a row <code>Y</code> to queue him; importing applies it only to the
+            players in the file, so anyone else's queue entry is left alone. Any extra columns you
+            keep are preserved.
+            <br>
+            An import <strong>merges</strong> into the rankings you already have — you pick which
+            columns it applies, players it doesn't mention are left untouched, and nothing it can
+            do will remove a player from your board.
+          </p>
         </div>
-        <div class="oven-btn-row">
-          <button class="oven-btn with-icon" id="tpl-btn">
-            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2v8"/><path d="M4.5 7 8 10.5 11.5 7"/><path d="M2.5 13h11"/></svg>
-            Rankings Template
-          </button>
-          <button class="oven-btn with-icon" id="export-btn">
-            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2v8"/><path d="M4.5 7 8 10.5 11.5 7"/><path d="M2.5 13h11"/></svg>
-            My Rankings
-          </button>
+
+        <div class="oven-card full">
+          <h3>My Rankings</h3>
+          <div id="board-summary"></div>
+          <div class="oven-drop" id="drop">
+            <input type="file" id="file" accept=".csv,text/csv">
+            <strong>Drop a CSV here</strong> or click to choose a file
+          </div>
+          <div class="oven-btn-row">
+            <button class="oven-btn with-icon" id="tpl-btn">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2v8"/><path d="M4.5 7 8 10.5 11.5 7"/><path d="M2.5 13h11"/></svg>
+              Rankings Template
+            </button>
+            <button class="oven-btn with-icon" id="export-btn">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2v8"/><path d="M4.5 7 8 10.5 11.5 7"/><path d="M2.5 13h11"/></svg>
+              My Rankings
+            </button>
+          </div>
+          <div id="import-confirm" hidden></div>
+          <div id="import-msg"></div>
         </div>
-        <div id="import-msg"></div>
-        <p class="oven-note">
-          Rankings are private to your account and saved per league.
-          Columns: <code>Player</code> (required), <code>Pos</code>, <code>Team</code>,
-          <code>Tier</code>, <code>MyRank</code>, <code>Grade</code>, <code>Target</code>,
-          <code>Note</code>.
-          <code>Grade</code> accepts <code>like</code> or <code>fade</code> — older sheets'
-          <code>love</code> and <code>avoid</code> are read as those. You can also set it on the
-          board itself, and it weights the Targets projection. <code>Target</code> is your
-          Targets queue: mark a row <code>Y</code> to queue him, and importing a sheet that has
-          the column replaces the queue. Any extra columns you keep are preserved and ignored.
-        </p>
       </div>
     </div>
   </main>
@@ -283,62 +295,194 @@
         '<div class="oven-msg ' + cls + '">' + text + '</div>';
     }
 
-    /* The Target column, back into the queue it was exported from. Only when
-     * the file actually has the column: a sheet without one says nothing about
-     * targets, and reading its absence as "none" would wipe the queue every
-     * time someone re-imports a plain ranking list.
+    function clearMsg() { document.getElementById('import-msg').innerHTML = ''; }
+
+    function haveBoard() { return !!(board && board.rows && board.rows.length); }
+
+    /* The columns a file can offer the picker, in the order the template writes
+     * them, with the sheet's own extra columns last in file order.
      *
-     * Keys, not names — the queue stores board keys, and OvenBoard.playerKey is
-     * what both the drawer and the board rows use to build them. */
-    function applyImportedTargets(parsed) {
-      if (parsed.headers.indexOf('target') === -1) return { applied: false, count: 0 };
-      var keys = parsed.rows.filter(function (r) { return r.target; })
-        .map(function (r) { return OvenBoard.playerKey(r.name, r.pos, r.team); });
-      return { applied: OvenTargets.setKeys(keys), count: keys.length };
+     * Player, Pos and Team are deliberately absent. They are how a row is
+     * identified — matched against the board, and sent to Sleeper — so letting
+     * someone switch them off would mean an import that can't tell which player
+     * it is talking about. They always apply, and only when non-blank. */
+    var COLUMN_LABEL = { tier: 'Tier', myRank: 'MyRank', grade: 'Grade', target: 'Target', note: 'Note' };
+    var COLUMN_ORDER = ['tier', 'myRank', 'grade', 'target', 'note'];
+
+    function fileColumns(parsed) {
+      return COLUMN_ORDER
+        .filter(function (f) { return parsed.headers.indexOf(f) !== -1; })
+        .map(function (f) { return { key: f, label: COLUMN_LABEL[f] }; })
+        .concat(parsed.extras.map(function (label) { return { key: label, label: label }; }));
     }
 
-    async function importText(text, filename) {
+    /* The Target column, back into the queue it was exported from.
+     *
+     * Per row, over the rows the file actually contains. An import merges now,
+     * so the file is authoritative for the players in it and says nothing at all
+     * about anyone else — reading its silence as "not a target" would empty the
+     * queue of every player the sheet happened not to list.
+     *
+     * Keys off the MERGED row rather than the CSV row's own fields, and after
+     * Sleeper resolution: a sheet with a blank Pos cell that landed on a defense
+     * — or had its position filled in by the resolver — keys differently than
+     * the line in the file would. */
+    function applyImportedTargets(resolved, rows, selected) {
+      if (!selected.target) return { applied: false, queued: 0, unqueued: 0 };
+
+      var on = {}, off = {};
+      resolved.forEach(function (e, i) {
+        var key = OvenBoard.playerKey(e.row.name, e.row.pos, e.row.team);
+        (rows[i] && rows[i].target ? on : off)[key] = true;
+      });
+
+      var before = OvenTargets.keys();
+      var next = before.filter(function (k) { return !off[k]; }); // order preserved
+      var unqueued = before.length - next.length;
+      var queued = 0;
+      Object.keys(on).forEach(function (k) {
+        if (next.indexOf(k) === -1) { next.push(k); queued++; }
+      });
+      return { applied: OvenTargets.setKeys(next), queued: queued, unqueued: unqueued };
+    }
+
+    /* ---------- step one: parse and ask ----------
+     *
+     * A file is staged, not imported. Which columns a sheet should apply is a
+     * question you can only answer once you know what's in it, and answering it
+     * after the board has already been overwritten is no answer at all. Nothing
+     * is written until Import is clicked. */
+    var pending = null;   // { parsed, filename, columns, selected, dry }
+
+    function stageFile(text, filename) {
       var parsed;
       try {
         parsed = OvenCSV.parseBoard(text);
       } catch (e) {
+        cancelImport();
         msg('err', OvenBoard.esc(e.message));
         return;
       }
-      msg('warn', 'Matching ' + parsed.rows.length + ' players to Sleeper…');
 
-      var resolved = null;
-      try {
-        var resp = await fetch('/api/football/resolve', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            players: parsed.rows.map(function (r) { return { name: r.name, pos: r.pos, team: r.team }; }),
-          }),
-        });
-        var data = await resp.json();
-        if (data.error) throw new Error(data.error);
-        resolved = data;
-      } catch (e) {
-        // Resolution is an optimization, not a requirement — the board still
-        // crosses players off by name key. Import rather than block.
-        msg('warn', 'Imported ' + parsed.rows.length + ' players, but Sleeper ID matching failed (' +
-          OvenBoard.esc(e.message) + '). Cross-off will fall back to name matching.');
+      var columns = fileColumns(parsed);
+      var selected = {};
+      columns.forEach(function (c) { selected[c.key] = true; });
+
+      pending = {
+        parsed: parsed,
+        filename: filename || 'pasted.csv',
+        columns: columns,
+        selected: selected,
+        // Matching doesn't depend on the selection, so the updated/added split
+        // is settled here and doesn't move as chips are toggled.
+        dry: OvenBoard.mergeImport(board && board.rows, parsed.rows, {}),
+      };
+      clearMsg();
+      renderConfirm();
+    }
+
+    function renderConfirm() {
+      var el = document.getElementById('import-confirm');
+      if (!pending) { el.hidden = true; el.innerHTML = ''; return; }
+      var p = pending;
+      var n = p.parsed.rows.length;
+
+      var head = '<strong>' + OvenBoard.esc(p.filename) + '</strong> · ' +
+        n + ' row' + (n === 1 ? '' : 's');
+      if (haveBoard()) {
+        head += ' · ' + p.dry.updated + ' already on your board · ' + p.dry.added + ' new';
       }
 
-      if (resolved) {
-        resolved.players.forEach(function (m, i) {
-          if (parsed.rows[i]) {
-            parsed.rows[i].player_id = m.player_id;
-            if (!parsed.rows[i].pos && m.position) parsed.rows[i].pos = m.position;
-            if (!parsed.rows[i].team && m.team) parsed.rows[i].team = m.team;
-          }
-        });
+      var chips = p.columns.map(function (c) {
+        var on = !!p.selected[c.key];
+        return '<button type="button" class="oven-chip' + (on ? ' active' : '') + '" ' +
+          'data-col="' + OvenBoard.esc(c.key) + '" aria-pressed="' + on + '">' +
+          OvenBoard.esc(c.label) + '</button>';
+      }).join('');
+
+      var note = p.columns.length
+        ? (haveBoard()
+            ? 'Player, Pos and Team always import. An unchecked column is not read at all — ' +
+              'your board keeps whatever it has. A checked column overwrites, including its ' +
+              'blank cells. Nothing here can remove a player from your board.'
+            : 'Player, Pos and Team always import. An unchecked column is not read at all.')
+        : 'This file has nothing but Player, Pos and Team — importing it can only add players.';
+
+      var flags = [];
+      if (p.parsed.rankSynthesized) {
+        flags.push(haveBoard()
+          ? 'No MyRank column — anyone new appends to the bottom of your board in file order.'
+          : "No MyRank column — your file's row order is the board order.");
+      }
+      p.parsed.warnings.concat(p.dry.warnings).forEach(function (w) { flags.push(OvenBoard.esc(w)); });
+
+      el.innerHTML = '<div class="oven-confirm">' +
+        '<div class="oven-confirm-head">' + head + '</div>' +
+        (chips ? '<div class="oven-filter-row"><span class="oven-filter-label">Apply</span>' + chips + '</div>' : '') +
+        '<p class="oven-note">' + note + '</p>' +
+        flags.map(function (f) { return '<div class="oven-msg warn">' + f + '</div>'; }).join('') +
+        '<div class="oven-btn-row">' +
+          '<button type="button" class="oven-btn primary" id="confirm-import">Import</button>' +
+          '<button type="button" class="oven-btn" id="confirm-cancel">Cancel</button>' +
+        '</div></div>';
+      el.hidden = false;
+    }
+
+    function cancelImport() {
+      pending = null;
+      var el = document.getElementById('import-confirm');
+      el.hidden = true;
+      el.innerHTML = '';
+      // Without this, choosing the same file again fires no change event at all
+      // and the drop zone reads as broken.
+      document.getElementById('file').value = '';
+    }
+
+    /* ---------- step two: merge, resolve, save ---------- */
+
+    async function runImport() {
+      if (!pending) return;
+      var p = pending;
+      var wasEmpty = !haveBoard();
+      var merged = OvenBoard.mergeImport(board && board.rows, p.parsed.rows, p.selected);
+      cancelImport();
+
+      /* Resolve only what has no id yet — on a re-import that's usually just the
+       * new rows — and against the MERGED pos and team, which is why this runs
+       * here and not at parse time. A row whose sheet left Pos blank resolves
+       * better once it has landed on the board row that already knows he's a RB. */
+      var needs = merged.rows.filter(function (r) { return !r.player_id; });
+      var newlyMatched = 0, resolveFailed = null;
+      if (needs.length) {
+        msg('warn', 'Matching ' + needs.length + ' player' + (needs.length === 1 ? '' : 's') + ' to Sleeper…');
+        try {
+          var resp = await fetch('/api/football/resolve', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              players: needs.map(function (r) { return { name: r.name, pos: r.pos, team: r.team }; }),
+            }),
+          });
+          var data = await resp.json();
+          if (data.error) throw new Error(data.error);
+          data.players.forEach(function (m, i) {
+            var row = needs[i];
+            if (!row) return;
+            // Never write a null over an id an earlier import already earned.
+            if (m.player_id) { row.player_id = m.player_id; newlyMatched++; }
+            if (!row.pos && m.position) row.pos = m.position;
+            if (!row.team && m.team) row.team = m.team;
+          });
+        } catch (e) {
+          // Resolution is an optimization, not a requirement — the board still
+          // crosses players off by name key. Import rather than block.
+          resolveFailed = e.message;
+        }
       }
 
       board = {
-        rows: parsed.rows, filename: filename || 'pasted.csv',
-        importedAt: Date.now(), warnings: parsed.warnings,
+        rows: merged.rows, filename: p.filename, importedAt: Date.now(),
+        warnings: p.parsed.warnings.concat(merged.warnings),
       };
       var bk = OvenLeagues.boardKeys(leagueId);
       saveWithSync(bk.sport, bk.syncKey, bk.storageKey, board);
@@ -346,21 +490,61 @@
       // Rebuild before the queue is rewritten: the drawer resolves its keys
       // against the board it was handed, and that board is the one just imported.
       if (draft) rebuildTargetState(draft, null);
-      var targets = applyImportedTargets(parsed);
+      var targets = applyImportedTargets(merged.resolved, p.parsed.rows, p.selected);
 
-      var unmatched = parsed.rows.filter(function (r) { return !r.player_id; });
+      renderImportResult(p, merged, wasEmpty, newlyMatched, resolveFailed, targets);
+      renderBoardSummary();
+    }
+
+    function renderImportResult(p, merged, wasEmpty, newlyMatched, resolveFailed, targets) {
       var lines = [];
-      lines.push('<strong>Imported ' + parsed.rows.length + ' players.</strong>');
-      if (resolved) lines.push(resolved.matched + ' matched to Sleeper.');
-      if (targets.applied) lines.push(targets.count + ' queued as targets.');
+      lines.push(wasEmpty
+        ? '<strong>Imported ' + merged.rows.length + ' players.</strong>'
+        : '<strong>Imported ' + OvenBoard.esc(p.filename) + '.</strong> ' +
+          merged.updated + ' updated · ' + merged.added + ' added · ' +
+          merged.rows.length + ' on your board.');
+
+      var applied = p.columns.filter(function (c) { return p.selected[c.key]; })
+        .map(function (c) { return OvenBoard.esc(c.label); });
+      if (applied.length) lines.push('Applied ' + applied.join(', ') + '.');
+      else if (!wasEmpty) lines.push('No columns applied.');
+
+      if (newlyMatched) lines.push(newlyMatched + ' newly matched to Sleeper.');
+      if (targets.applied && (targets.queued || targets.unqueued)) {
+        lines.push('Targets: ' + targets.queued + ' queued, ' + targets.unqueued + ' unqueued.');
+      }
+
+      /* Ranks are allowed to collide. A file that covers part of your board
+       * carries no opinion about the players it left out, so renumbering them to
+       * close the gaps would rewrite ranks you never touched — the same reason
+       * the merge is additive in the first place. Said out loud instead, with
+       * the one gesture that does normalize them. */
+      var seen = {}, dupes = 0;
+      merged.rows.forEach(function (r) {
+        if (r.myRank == null) return;
+        if (seen[r.myRank]) dupes++; else seen[r.myRank] = true;
+      });
+      if (dupes && !wasEmpty) {
+        lines.push('<br>' + dupes + ' player' + (dupes === 1 ? '' : 's') +
+          ' now share a rank with someone else — drag any row on the board to renumber.');
+      }
+
+      if (resolveFailed) {
+        lines.push('<br>Sleeper ID matching failed (' + OvenBoard.esc(resolveFailed) +
+          '). Cross-off will fall back to name matching.');
+      }
+
+      var unmatched = merged.rows.filter(function (r) { return !r.player_id; });
       if (unmatched.length) {
         lines.push('<br>' + unmatched.length + ' unmatched (kept in your rankings, will cross off by name): ' +
           unmatched.slice(0, 12).map(function (r) { return OvenBoard.esc(r.name); }).join(', ') +
           (unmatched.length > 12 ? ', …' : ''));
       }
-      parsed.warnings.forEach(function (w) { lines.push('<br>' + OvenBoard.esc(w)); });
-      msg(unmatched.length ? 'warn' : 'ok', lines.join(' '));
-      renderBoardSummary();
+      merged.warnings.concat(p.parsed.warnings).forEach(function (w) {
+        lines.push('<br>' + OvenBoard.esc(w));
+      });
+
+      msg(unmatched.length || resolveFailed ? 'warn' : 'ok', lines.join(' '));
     }
 
     function wireImport() {
@@ -368,7 +552,7 @@
       var file = document.getElementById('file');
       drop.addEventListener('click', function () { file.click(); });
       file.addEventListener('change', function () {
-        if (file.files && file.files[0]) file.files[0].text().then(function (t) { importText(t, file.files[0].name); });
+        if (file.files && file.files[0]) file.files[0].text().then(function (t) { stageFile(t, file.files[0].name); });
       });
       ['dragenter', 'dragover'].forEach(function (ev) {
         drop.addEventListener(ev, function (e) { e.preventDefault(); drop.classList.add('dragover'); });
@@ -378,7 +562,23 @@
       });
       drop.addEventListener('drop', function (e) {
         var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
-        if (f) f.text().then(function (t) { importText(t, f.name); });
+        if (f) f.text().then(function (t) { stageFile(t, f.name); });
+      });
+
+      // Delegated off the container, so re-rendering the panel never needs the
+      // chips re-bound.
+      document.getElementById('import-confirm').addEventListener('click', function (e) {
+        if (!pending) return;
+        var chip = e.target.closest('.oven-chip[data-col]');
+        if (chip) {
+          var k = chip.getAttribute('data-col');
+          pending.selected[k] = !pending.selected[k];
+          chip.classList.toggle('active', pending.selected[k]);
+          chip.setAttribute('aria-pressed', String(!!pending.selected[k]));
+          return;
+        }
+        if (e.target.closest('#confirm-import')) runImport();
+        else if (e.target.closest('#confirm-cancel')) { cancelImport(); clearMsg(); }
       });
 
       document.getElementById('tpl-btn').addEventListener('click', function () {

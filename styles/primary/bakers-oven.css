@@ -107,6 +107,21 @@ body:has(.oven-content) header {
   padding: 18px;
   margin-bottom: 14px;
 }
+/* The board link and the CSV rules are both short and neither wants a full
+ * row to itself — paired, they read as one header row above the import card,
+ * which keeps the whole width for its drop zone. */
+.oven-league-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: 14px;
+}
+.oven-league-grid > .oven-card { margin-bottom: 0; }
+.oven-league-grid > .oven-card.full { grid-column: 1 / -1; }
+/* Sole content of its card — the 14px that separates it from a drop zone is
+ * just a gap under the heading here. */
+.oven-league-grid > .oven-card > .oven-note:first-of-type { margin-top: 0; }
+
 .oven-card h3 {
   font-family: var(--oven-data);
   font-size: 13px;
@@ -339,6 +354,24 @@ button.oven-team-card {
 .oven-msg.warn { color: var(--oven-ash);   background: var(--oven-brick); border-color: var(--oven-frost); }
 .oven-msg.err  { color: var(--oven-bone);  background: rgba(194, 65, 12, .15); border-color: var(--oven-ember); }
 
+/* The import's confirm step. A panel, not a message: it owns controls, and
+ * #import-msg beside it is a one-shot innerHTML blitz that the next status line
+ * blows away. Chips inside it are the console's .oven-chip verbatim — the same
+ * control doing the same thing, so it should look the same doing it. */
+.oven-confirm {
+  background: var(--oven-brick);
+  border: 1px solid var(--oven-mortar); border-radius: 4px;
+  padding: 13px 14px; margin-top: 14px;
+}
+.oven-confirm-head { font-size: 12px; color: var(--oven-ash-dim); margin-bottom: 11px; line-height: 1.5; }
+.oven-confirm-head strong { color: var(--oven-bone); font-weight: 600; }
+/* Sat on --oven-kiln in the console; on the panel's brick it needs the darker
+ * ground back or an inactive chip disappears into its own container. */
+.oven-confirm .oven-chip { background: var(--oven-kiln); }
+.oven-confirm .oven-chip.active { background: var(--oven-flame); }
+.oven-confirm .oven-note { margin-top: 11px; }
+.oven-confirm .oven-msg { background: var(--oven-kiln); }
+
 /* ================= THE CONSOLE =================
  * Status and controls were two stacked sticky bars. On a phone that is two
  * bands of chrome above any content, on the one page where vertical space is
@@ -549,6 +582,18 @@ button.oven-team-card {
   color: var(--oven-ash-dim);
 }
 
+/* THE FIRST LINE, not the row, is what everything on a row aligns to.
+ *
+ * The name column carries sub-lines under the name — the finish history always,
+ * the weekly table when its chip is on — so the row is two or three lines tall
+ * while the facts on either side of it are about the first one. Centered in the
+ * whole row, the position badge floated into the gap between the name and the
+ * history, which read as belonging to neither.
+ *
+ * So the data cells top-align onto a shared 18px first line (the rule right
+ * below this one), and only the two 22px CONTROLS stay centered in the row: a
+ * button is a place to click, not a fact about the name, and centering keeps
+ * the pair balanced against a row of any height. */
 .oven-row {
   display: flex;
   align-items: center;
@@ -557,10 +602,32 @@ button.oven-team-card {
   border-bottom: 1px solid rgba(58, 44, 36, .5);
   position: relative;
   font-size: 13px;
-  /* Most of virtualization's benefit for one CSS line; ignored where unsupported. */
+  /* Most of virtualization's benefit for one CSS line; ignored where unsupported.
+   *
+   * This is the CONTENT box of a skipped row, so it excludes the 14px of padding
+   * and the hairline: 33px is name (19) + gap (2) + the finishes line (12),
+   * measured, which makes a skipped row render at exactly the 48px it occupies
+   * once it's laid out. .show-weekly below restates it for the third line. */
   content-visibility: auto;
-  contain-intrinsic-size: 0 32px;
+  contain-intrinsic-size: 0 33px;
 }
+
+/* The 18px first line. Every cell that belongs to it either sets this
+ * line-height on its text or, for the badge, adds up to exactly 18px of box —
+ * which is what lets them top-align without a magic offset per cell. */
+.oven-row > .oven-rk,
+.oven-row > .player-pos,
+.oven-row > .oven-delta,
+.oven-row > .oven-taken {
+  align-self: flex-start;
+  line-height: 18px;
+}
+/* 14px of line + 2px padding top and bottom = the same 18px, so the badge sits
+ * on the name's line rather than a pixel above or below it. Scoped to the board
+ * row: the Targets drawer's badge is on a single-line row and needs none of it. */
+.oven-row > .player-pos { line-height: 14px; }
+/* Its own padding already lifts it; only the text needs to sit on the line. */
+.oven-row > .oven-taken { line-height: 12px; }
 .oven-row:last-child { border-bottom: none; }
 .oven-row:hover { background: var(--oven-brick-hi); }
 
@@ -619,6 +686,9 @@ button.oven-team-card {
 .oven-name-main {
   font-family: var(--oven-name);
   font-size: 13.5px; font-weight: 600; letter-spacing: -.005em;
+  /* Fixed, not `normal`: this is the 18px first line the rank, the badge and the
+   * Δ align themselves to, so it can't be left to vary with the font. */
+  line-height: 18px;
   color: var(--oven-bone);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
@@ -756,6 +826,95 @@ button.oven-team-card {
  * the cutoff sits as a heading over its own value rather than beside it, so the
  * three counts form one readable row instead of three label-value pairs the eye
  * has to separate. */
+/* ---------- where he finished ----------
+ *
+ * Two half-PPR positional finishes — last season and the one before — on a
+ * subdued line under the name. Always on, and the only always-on sub-line: it's
+ * two small numbers, and the one thing you want mid-run is the history you
+ * didn't have to remember to turn on.
+ *
+ * Left-aligned with the name, inside the name column, because it is an
+ * annotation on the player and not a column of its own. A third column of ranks
+ * on a board whose whole discipline is having ONE order would be read as another
+ * order to scan down (see the same note on .oven-weekly).
+ *
+ * Quiet by construction: 10px mono at ash-dim, under a 13.5px sans name at bone.
+ * The size and color gap is what keeps a scroll down the board reading names,
+ * with the history there for the row you stop on. */
+.oven-posrank {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-top: 2px;
+  font-family: var(--oven-data);
+  /* So the finishes line up down the board and RB4 / RB19 read as a pair
+   * rather than as two differently-shaped numbers. */
+  font-variant-numeric: tabular-nums;
+  color: var(--oven-ash-dim);
+}
+/* A fixed slot, not a shrink-wrapped one. Both years occupy the same box on
+ * every row whatever they hold, so the second season starts at the same x all
+ * the way down the board and a hidden slot leaves a hole exactly where its
+ * number would have been.
+ *
+ * 64px is measured, not guessed: the widest slot the full 862-row board
+ * produces is "2024 WR1338" at 63.8px. A pixel under it and 22 rows deep in the
+ * board push their second year 2px right — which is invisible on any one row
+ * and obvious as a wobble in a column you scroll past. */
+.oven-posrank .opr {
+  display: inline-flex; align-items: baseline; gap: 4px;
+  min-width: 64px;
+}
+
+/* A season he didn't play. Hidden, not removed and not a dash: the slot keeps
+ * its box, so nothing after it shifts and the line stays one line tall on a row
+ * with no history at all.
+ *
+ * A dash IS information — "he wasn't in the league" — but it's information you
+ * already have from the empty space, and 200 rookie rows of punctuation is a
+ * column of marks the eye has to sort from the numbers it came for. The title
+ * still says "did not play" on the row you stop on. */
+.oven-posrank .opr.is-none { visibility: hidden; }
+
+/* The year is the label, so it takes the same treatment .ow-t gives `T12`: a
+ * size down, bolder, tracked out. Two sub-lines with one grammar between them —
+ * label then value — rather than each inventing its own. */
+.oven-posrank .opr-y {
+  font-style: normal;
+  font-size: 8px; font-weight: 700; letter-spacing: .08em;
+  /* One step quieter than the finish beside it — same ink, less of it, the way
+   * .oven-delta ramps. You read the year once to orient and then only the
+   * numbers, so it has to be legible without being a second thing to read. */
+  opacity: .72;
+}
+.oven-posrank .opr-n { font-size: 10.5px; }
+
+/* ---------- how good a finish was, in four steps ----------
+ *
+ * Graded against the position's own starter depth (OVEN.POSRANK_STARTERS), so
+ * RB4 and WR4 are scored as what each actually was. The tier is computed in JS
+ * and arrives as a class; see posRankTier() for what the four mean.
+ *
+ * VALUE, NOT HUE — and that is the palette law of this file, not a preference.
+ * Flame and frost are the only two colors on this page, and .oven-delta is the
+ * one element allowed to wear them: when something on a board row is orange it
+ * means you and the market disagree, full stop. A green/red heat scale here
+ * would be a third and fourth hue arguing with that signal on the same row —
+ * and the one it would shout over is the column you actually act on.
+ *
+ * Brightness carries it instead, which on a near-black page is the strongest
+ * channel available anyway: an elite finish is the brightest thing on the
+ * sub-line and a WR90 recedes toward the background. The name above stays
+ * bigger and bolder, so a bone-white RB1 annotates the row rather than
+ * outranking the player it belongs to. */
+.oven-posrank .t1 .opr-n { color: var(--oven-bone); }
+.oven-posrank .t2 .opr-n { color: var(--oven-ash); }
+.oven-posrank .t3 .opr-n { color: var(--oven-ash-dim); }
+/* Still legible — it's a real fact about a real season, not missing data, and
+ * mortar (which IS the missing-data color, see .oven-weekly.is-empty) would
+ * state the wrong thing about a man who finished WR80. */
+.oven-posrank .t4 .opr-n { color: var(--oven-ash-dim); opacity: .62; }
+
 .oven-weekly { display: none; }
 .oven-list.show-weekly .oven-weekly {
   /* Two rows, flowing by column: each tier emits its heading then its value, so
@@ -793,12 +952,15 @@ button.oven-team-card {
 
 /* The row grows by a line when the sub-line is on, so the virtualization hint
  * has to grow with it — a stale estimate on 860 rows makes the scrollbar jump
- * as rows render in. */
-.oven-list.show-weekly .oven-row { contain-intrinsic-size: 0 48px; }
+ * as rows render in. Three lines now: name, finishes, this table — 58px of
+ * content, a 73px row. */
+.oven-list.show-weekly .oven-row { contain-intrinsic-size: 0 58px; }
 
 /* ---------- rank vs consensus ----------
- * How far you are from FantasyPros, printed, in board positions. The row's ONLY
- * colored element — there is no heat rail and no row wash any more, so when
+ * How far you are from FantasyPros, printed as a percentage of where you have
+ * him — spots are not a fixed unit down a board, so the gap is stated relative
+ * to his own rank and a top-20 disagreement outweighs the same spot count at
+ * 120. The row's ONLY colored element — there is no heat rail and no row wash any more, so when
  * something on a board row is flame or frost it is this, and it means exactly one
  * thing: you and the market disagree, by this much, in this direction.
  *
@@ -810,19 +972,33 @@ button.oven-team-card {
  * Baker's Oven should have measured in from the start.
  *
  * Right-aligned and tabular so the column reads as a shape on the way down — a
- * stack of +2 +1 −3 is you and the market agreeing, and you can see that without
- * reading a single value. Fixed width so a "+100" doesn't shove the taken tag. */
+ * run of empty cells is you and the market agreeing, and you can see that
+ * without reading a single value. Fixed width so a "+140%" doesn't shove the
+ * taken tag, and so the blanks hold the column open. */
 .oven-delta {
-  width: 40px; flex-shrink: 0; text-align: right;
+  width: 48px; flex-shrink: 0; text-align: right;
   font-family: var(--oven-data);
   font-size: 11px; font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
 .oven-delta.pos  { color: var(--oven-flame); }
 .oven-delta.neg  { color: var(--oven-frost); }
-/* Agreement is the boring case and by far the most common one. Dim, so 860 rows
- * of near-zero don't read as a column of alarms. */
+/* Agreement is the boring case and by far the most common one — and under |Δ| 4
+ * it prints nothing at all, so this only ever styles an empty cell. Kept dim
+ * anyway: the class is what applyDraftState and the DOM see. */
 .oven-delta.zero { color: var(--oven-ash-dim); }
+
+/* Size, on the second channel. Hue already says which way you disagree; opacity
+ * says by how much, so the column ramps from barely-there at |Δ| 4 to full
+ * flame/frost at 30+ and a glance down it finds the loud rows without reading a
+ * digit. Opacity rather than lighter color variants so both poles fade at the
+ * same rate against the same near-black — a hand-picked pale orange and pale
+ * blue would not stay opposite each other, and the pairing is the whole point.
+ * The floor is .4, not 0: a printed number always has to be readable. */
+.oven-delta.d1 { opacity: .4; }
+.oven-delta.d2 { opacity: .6; }
+.oven-delta.d3 { opacity: .8; }
+.oven-delta.d4 { opacity: 1; }
 
 .oven-taken {
   font-family: var(--oven-data);
@@ -1325,12 +1501,8 @@ body.oven-tp-open .oven-tp { transform: translateX(0); visibility: visible; }
   padding: 0 1px; font-size: 12px; line-height: 1.3; letter-spacing: 0;
 }
 .oven-tp-chip.proj   { border-color: transparent; background: rgba(106, 169, 208, .14); color: var(--oven-frost); }
-.oven-tp-chip.pos    { border-color: transparent; background: rgba(230, 222, 210, .07); color: var(--oven-ash); }
 .oven-tp-chip.hot    { border-color: var(--oven-ember); background: rgba(255, 122, 24, .16); color: var(--oven-flame); }
 .oven-tp-chip.warn   { border-color: rgba(255, 122, 24, .4); color: #E08A46; }
-/* "top RB" is a fact about the pool, not a judgment about the player — so it
- * stays on the neutral border and never borrows either accent. */
-.oven-tp-chip.pos    { border-color: var(--oven-mortar); color: var(--oven-ash); letter-spacing: .1em; }
 .oven-tp-chip.gone   { border-color: transparent; color: var(--oven-ash-dim); }
 .oven-tp-chip.kept   { border-color: var(--oven-mortar); color: var(--oven-ash); }
 .oven-tp-chip.picked { border-color: transparent; background: var(--oven-flame); color: #1A0D03; }
@@ -1410,6 +1582,7 @@ body.oven-tp-open .oven-tp { transform: translateX(0); visibility: visible; }
   .oven-tp-chips { max-width: 50%; }
   .oven-preview-shot { width: 100%; }
   .oven-lightbox { padding: 12px; }
+  .oven-league-grid { grid-template-columns: 1fr; }
 }
 
 /* ---------- mobile ---------- */

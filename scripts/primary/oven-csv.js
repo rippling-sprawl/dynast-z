@@ -136,7 +136,7 @@
   }
 
   /* Parse a CSV into board rows.
-   * Returns { rows, errors, warnings, headers, extras }.
+   * Returns { rows, warnings, headers, extras, rankSynthesized }.
    * Throws only when the file has no usable header — every other problem is
    * reported as a warning so a mostly-good file still imports. */
   function parseBoard(text) {
@@ -192,12 +192,19 @@
 
     if (!out.length) throw new Error('Found a header row but no player rows beneath it.');
 
-    // MyRank drives board order. When absent, fall back to file order so a
-    // hand-sorted sheet still works without anyone numbering 300 rows.
+    /* MyRank drives board order. When absent, fall back to file order so a
+     * hand-sorted sheet still works without anyone numbering 300 rows.
+     *
+     * Reported as a flag rather than a warning, because what the synthesis
+     * MEANS depends on the caller. An import merges into an existing board, so
+     * file order only decides where newly added players land — "using the row
+     * order from your file as the board order" would be a plain lie about the
+     * 300 rows already ranked. The host phrases it for its own context. */
     var ranked = out.filter(function (p) { return p.myRank != null; }).length;
+    var rankSynthesized = false;
     if (ranked === 0) {
       out.forEach(function (p, i) { p.myRank = i + 1; });
-      warnings.push('No MyRank column — using the row order from your file as the board order.');
+      rankSynthesized = true;
     } else if (ranked < out.length) {
       warnings.push((out.length - ranked) + ' row(s) have no MyRank; they sort to the bottom.');
     }
@@ -207,6 +214,7 @@
       warnings: warnings,
       headers: Object.keys(map),
       extras: cols.extras.map(function (x) { return x.label; }),
+      rankSynthesized: rankSynthesized,
     };
   }
 
