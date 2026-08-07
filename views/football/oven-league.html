@@ -6,7 +6,7 @@
   <link rel="icon" type="image/png" href="/favicon.png">
   <title>Baker's Oven | Dynast-Z</title>
   <link rel="stylesheet" href="/styles/base/styles.css?v=abec71e4">
-  <link rel="stylesheet" href="/styles/primary/bakers-oven.css?v=e0914ad0">
+  <link rel="stylesheet" href="/styles/primary/bakers-oven.css?v=1972a867">
 </head>
 <body>
   <div id="header-mount"></div>
@@ -18,7 +18,7 @@
   <script src="/scripts/primary/oven-csv.js?v=075581d9"></script>
   <script src="/scripts/primary/oven-draft.js?v=6be4e481"></script>
   <script src="/scripts/primary/oven-leagues.js?v=51be0572"></script>
-  <script src="/scripts/primary/oven-board.js?v=b9392c84"></script>
+  <script src="/scripts/primary/oven-board.js?v=e3305cc4"></script>
   <script src="/scripts/primary/oven-targets.js?v=021cceab"></script>
   <script>initPage();</script>
 
@@ -164,6 +164,16 @@
 
     function row(html) { return '<div class="oven-status-grid">' + html + '</div>'; }
 
+    /* Sleeper hands back max_keepers: 1 for every league, keepers on or off — 1
+     * is the floor of the setting, not a league that keeps one player. Only a
+     * commissioner raising it (or the explicit keeper league type) turns them
+     * on. A league that never offered keepers has nothing to report, so the
+     * tile is absent rather than zeroed. */
+    function keepersEnabled() {
+      var s = (ctx.league && ctx.league.settings) || {};
+      return Number(s.max_keepers || 0) > 1 || Number(s.type) === 1;
+    }
+
     function renderStatus(draft, picks) {
       var s = draft.settings;
       var keepers = picks.filter(function (p) { return p.is_keeper; }).length;
@@ -175,7 +185,7 @@
         ) +
         row(
           stat('Draft Date', fmtStart(draft.start_time) + ' <span style="color:#6e7681;font-size:12px">' + countdown(draft.start_time) + '</span>') +
-          stat('Keepers set', keepers + ' league-wide', true)
+          (keepersEnabled() ? stat('Keepers set', keepers + ' league-wide', true) : '')
         );
     }
 
@@ -204,14 +214,14 @@
 
       var sub = '@' + OvenBoard.esc(me.username);
       if (draft) {
-        var slot = null;
-        Object.keys(draft.slot_to_roster_id || {}).forEach(function (s) {
-          if (draft.slot_to_roster_id[s] === myRosterId) slot = Number(s);
-        });
-        var mine = OvenDraft.buildPickPlan(draft, ctx.tradedPicks)
-          .filter(function (p) { return p.owner === myRosterId; });
-        if (slot) sub += ' · slot ' + slot;
-        if (mine.length) sub += ' · 1st at ' + OvenDraft.roundPickLabel(mine[0].pick_no, draft.settings.teams);
+        // var slot = null;
+        // Object.keys(draft.slot_to_roster_id || {}).forEach(function (s) {
+        //   if (draft.slot_to_roster_id[s] === myRosterId) slot = Number(s);
+        // });
+        // var mine = OvenDraft.buildPickPlan(draft, ctx.tradedPicks)
+        //   .filter(function (p) { return p.owner === myRosterId; });
+        // if (slot) sub += ' · slot ' + slot;
+        // if (mine.length) sub += ' · 1st at ' + OvenDraft.roundPickLabel(mine[0].pick_no, draft.settings.teams);
       }
 
       el.innerHTML = '<a class="oven-team-card is-me oven-open-board" href="/bakers-oven/' + leagueId + '/' + myRosterId + '">' +

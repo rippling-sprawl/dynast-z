@@ -411,7 +411,9 @@
   var state = {
     rows: [], rowEls: null, listEl: null, teams: {},
     drafted: {},          // key -> pick
-    filters: { pos: null, hideDrafted: false, hideFade: false },
+    // showSubline starts true: the finishes/odds line predates its chip, and the
+    // chip exists to turn it OFF on a small screen, not to opt into it.
+    filters: { pos: null, hideDrafted: false, hideFade: false, showWeekly: false, showSubline: true },
     clock: null, teamsCount: 12, myRosterId: null,
     onReorder: null, reorderWired: false,
     // The grade control. Same opt-in shape as reordering — the host owns
@@ -1080,9 +1082,10 @@
           (r.team ? '<span class="oven-name-team">' + esc(r.team) + '</span>' : '') + '</div>' +
         // Both sub-lines belong to the name column, not to columns of their own:
         // they annotate the player, and they grow the row downward instead of
-        // widening it. History and odds first — always on, so the weekly table
-        // appears below them rather than shoving them down when the chip is
-        // toggled.
+        // widening it. History and odds first — on by default, so the weekly
+        // table appears below them rather than shoving them down when its chip
+        // is toggled. Both are emitted on every row regardless; their chips
+        // flip a class on the list, so neither costs a re-render.
         subLine(r) +
         weeklyCell(r) +
       '</div>' +

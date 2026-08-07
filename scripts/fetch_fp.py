@@ -18,14 +18,14 @@ import sys
 
 UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 
-ARTICLE_URL = "https://www.fantasypros.com/2026/07/fantasy-football-rankings-dynasty-trade-value-chart-july-2026-update/"
+ARTICLE_URL = "https://www.fantasypros.com/2026/08/fantasy-football-rankings-dynasty-trade-value-chart-august-2026-update/"
 
 # Datawrapper CSV endpoints for each position group
 POSITION_CSVS = {
-    "QB": "https://datawrapper.dwcdn.net/yu3Xc/1/dataset.csv",
-    "RB": "https://datawrapper.dwcdn.net/6AbA7/1/dataset.csv",
-    "WR": "https://datawrapper.dwcdn.net/CPGMD/1/dataset.csv",
-    "TE": "https://datawrapper.dwcdn.net/ZBVic/1/dataset.csv",
+    "QB": "https://datawrapper.dwcdn.net/jcbi5/1/dataset.csv",
+    "RB": "https://datawrapper.dwcdn.net/HXKZl/1/dataset.csv",
+    "WR": "https://datawrapper.dwcdn.net/LFTe5/1/dataset.csv",
+    "TE": "https://datawrapper.dwcdn.net/pnawx/1/dataset.csv",
 }
 
 

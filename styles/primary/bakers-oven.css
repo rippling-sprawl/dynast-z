@@ -532,6 +532,11 @@ button.oven-team-card {
 /* Show adds a column where Hide removes rows. They share the row to save a band
  * of vertical chrome, so the gap has to carry the distinction on its own. */
 .oven-filter-sep { margin-left: 10px; }
+/* Inert on desktop; on a phone it becomes a full-width flex item of no height,
+ * which forces everything after it onto the next line. A wrap break rather than
+ * a second .oven-filter-row in the markup, so one row of HTML serves both
+ * layouts and the desktop gap-as-separator survives untouched. */
+.oven-filter-break { display: none; }
 .oven-chip {
   font-family: var(--oven-data);
   background: transparent;
@@ -853,9 +858,11 @@ button.oven-team-card {
 /* ---------- where he finished ----------
  *
  * Two half-PPR positional finishes — last season and the one before — on a
- * subdued line under the name. Always on, and the only always-on sub-line: it's
- * two small numbers, and the one thing you want mid-run is the history you
- * didn't have to remember to turn on.
+ * subdued line under the name. On by default, and the only sub-line that is:
+ * it's two small numbers, and the one thing you want mid-run is the history you
+ * didn't have to remember to turn on. The History & Odds chip can take it away
+ * (see .oven-list.hide-subline), which is a different thing from having to ask
+ * for it.
  *
  * Left-aligned with the name, inside the name column, because it is an
  * annotation on the player and not a column of its own. A third column of ranks
@@ -1052,6 +1059,18 @@ button.oven-team-card {
  * as rows render in. Three lines now: name, finishes, this table — 58px of
  * content, a 73px row. */
 .oven-list.show-weekly .oven-row { contain-intrinsic-size: 0 58px; }
+
+/* And the reverse, for the History & Odds chip: the sub-line is on by default,
+ * so turning it off is a class that removes a line. display: none rather than
+ * visibility, same as .oven-weekly — a collapsed line still owns its gap, and
+ * buying back that gap is the entire point of the chip on a phone.
+ *
+ * Both estimates drop by the 14px the line costs (12px of line + 2px margin):
+ * 33 → 19 with the name alone, 58 → 44 with the weekly table under it. Left
+ * stale they'd make the scrollbar jump as skipped rows render in. */
+.oven-list.hide-subline .oven-subline { display: none; }
+.oven-list.hide-subline .oven-row { contain-intrinsic-size: 0 19px; }
+.oven-list.hide-subline.show-weekly .oven-row { contain-intrinsic-size: 0 44px; }
 
 /* ---------- rank vs consensus ----------
  * How far you are from FantasyPros, printed as a percentage of where you have
@@ -1704,6 +1723,13 @@ body.oven-tp-open .oven-tp { transform: translateX(0); visibility: visible; }
    * which costs a little scrollbar drift on skipped rows and nothing else. */
   .oven-subline { flex-wrap: wrap; row-gap: 1px; }
   .oven-subsep { display: none; }
+  /* Hide and Show get a line each here. Wrapped onto one row at this width the
+   * two groups interleave — a Show chip can land beside a Hide chip with the
+   * "Show:" label stranded at the end of the line above — and the labels stop
+   * meaning anything. The break costs one band of chrome and buys back which
+   * chips subtract rows and which add them. */
+  .oven-filter-break { display: block; flex-basis: 100%; height: 0; }
+  .oven-filter-sep { margin-left: 0; }
   .oven-marker.next .oven-marker-label,
   .oven-marker.next .oven-marker-pick { font-size: 15px; }
   .oven-h2 { font-size: 25px; }

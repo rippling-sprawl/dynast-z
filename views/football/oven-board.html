@@ -6,7 +6,7 @@
   <link rel="icon" type="image/png" href="/favicon.png">
   <title>Big Board | Baker's Oven</title>
   <link rel="stylesheet" href="/styles/base/styles.css?v=abec71e4">
-  <link rel="stylesheet" href="/styles/primary/bakers-oven.css?v=e0914ad0">
+  <link rel="stylesheet" href="/styles/primary/bakers-oven.css?v=1972a867">
 </head>
 <body>
   <div id="header-mount"></div>
@@ -20,7 +20,7 @@
   <script src="/scripts/primary/oven-draft.js?v=6be4e481"></script>
   <script src="/scripts/primary/oven-leagues.js?v=51be0572"></script>
   <script src="/scripts/primary/oven-weekly.js?v=2ed364a8"></script>
-  <script src="/scripts/primary/oven-board.js?v=b9392c84"></script>
+  <script src="/scripts/primary/oven-board.js?v=e3305cc4"></script>
   <script src="/scripts/primary/oven-targets.js?v=021cceab"></script>
   <script>initPage();</script>
 
@@ -69,12 +69,24 @@
             <span class="oven-filter-label">Hide:</span>
             <button class="oven-chip" data-hide="hideDrafted" aria-pressed="false">Drafted</button>
             <button class="oven-chip" data-hide="hideFade" aria-pressed="false">Fade</button>
+            <!-- Forces the Show group onto its own line on a phone, where the
+                 wrapped single row read as one undifferentiated pile of chips.
+                 An empty flex item rather than a second .oven-filter-row so the
+                 desktop layout — one row, one gap carrying the distinction —
+                 stays exactly as it was. -->
+            <span class="oven-filter-break" aria-hidden="true"></span>
+            <span class="oven-filter-label oven-filter-sep" id="show-label" hidden>Show:</span>
             <!-- Adds a column rather than removing rows, so it sits apart from
                  the Hide toggles. Stays hidden until the weekly file has
                  actually loaded and been scored — a chip that toggles a column
                  of dashes is worse than no chip. -->
-            <span class="oven-filter-label oven-filter-sep" id="show-label" hidden>Show:</span>
             <button class="oven-chip" id="chip-weekly" data-show="showWeekly" aria-pressed="false" hidden></button>
+            <!-- The sub-line under every name — last two seasons' finishes and
+                 the season-long market. Unlike the weekly chip this one starts
+                 ON, because the line has always been on and a Show chip that
+                 defaults off would silently take away data people already read.
+                 It's here so a phone can buy back a line of row height. -->
+            <button class="oven-chip active" id="chip-subline" data-show="showSubline" aria-pressed="true" hidden>History &amp; Odds</button>
           </div>
         </div>
       </div>
@@ -248,6 +260,18 @@
         weeklyChip.classList.toggle('active', S.filters.showWeekly);
         weeklyChip.setAttribute('aria-pressed', S.filters.showWeekly ? 'true' : 'false');
       });
+
+      // Same class-flip, opposite polarity: this one is on by default, so the
+      // list carries hide-subline when the chip is OFF rather than show-* when
+      // it's on. A default-on chip whose class is named for the default would
+      // have to be set at boot on every load.
+      var sublineChip = document.getElementById('chip-subline');
+      sublineChip.addEventListener('click', function () {
+        S.filters.showSubline = !S.filters.showSubline;
+        listEl.classList.toggle('hide-subline', !S.filters.showSubline);
+        sublineChip.classList.toggle('active', S.filters.showSubline);
+        sublineChip.setAttribute('aria-pressed', S.filters.showSubline ? 'true' : 'false');
+      });
     }
 
     async function boot() {
@@ -333,6 +357,16 @@
           chip.title = 'Top ' + OVEN.WEEKLY_TIERS.join('/') + ' positional finishes in ' +
             OVEN.WEEKLY_SEASON + ', scored by this league\'s settings';
           chip.hidden = false;
+          document.getElementById('show-label').hidden = false;
+        }
+
+        // Same gate, one file earlier: a chip that toggles a line nothing feeds
+        // is a button that does nothing. Either source is enough — subLine()
+        // emits whichever half it has.
+        if (posRanks || propLines) {
+          var subChip = document.getElementById('chip-subline');
+          subChip.title = 'Last two seasons\' positional finishes and the season-long market lines, under each name';
+          subChip.hidden = false;
           document.getElementById('show-label').hidden = false;
         }
 

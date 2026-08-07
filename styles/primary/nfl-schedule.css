@@ -42,17 +42,6 @@
 .sched-reset:hover { text-decoration: underline; }
 .sched-reset[hidden] { display: none; }
 
-.sched-summary {
-  font-size: 11px;
-  color: #6e7681;
-  font-family: monospace;
-  margin: 0 0 10px;
-}
-
-.sched-summary .is-now {
-  color: #d29922;
-}
-
 /* --- Group headers: a calendar day within a week, or a week in all-weeks --- */
 
 .sched-group {
@@ -85,22 +74,67 @@
 
 /* --- One game, one line ---
  * Grid rather than a table: the time wants a fixed column down the page, the
- * rest of the row is a single flow. */
+ * rest of the row is a single flow.
+ *
+ * Each leading column is sized to exactly its widest content in the 11px
+ * monospace it renders in — "Sep 14" is 6 characters, every kickoff that
+ * renders is 4 ("1:00" through "9:30"), a week number is 2 — and the content is
+ * right-aligned inside it. Nothing floats in slack space, so the single 10px
+ * gap is the whole of the spacing between date, time and matchup and the three
+ * gutters are visually identical down the page. */
 
 .sched-game {
   display: grid;
-  grid-template-columns: 58px minmax(0, 1fr);
+  grid-template-columns: 28px minmax(0, 1fr);
   align-items: baseline;
-  gap: 8px;
+  gap: 10px;
   padding: 2px 8px;
   border-radius: 4px;
   font-size: 12px;
   line-height: 1.5;
 }
 
+/* Leading columns for the all-weeks lists, where the row has to say which day
+ * it is (no day header above it) and, for a single team's season, which week. */
+.sched-game.has-date { grid-template-columns: 42px 28px minmax(0, 1fr); }
+.sched-game.has-week.has-date { grid-template-columns: 15px 42px 28px minmax(0, 1fr); }
+
+.sched-game .sched-wk,
+.sched-game .sched-date {
+  font-family: monospace;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.sched-game .sched-wk {
+  color: #484f58;
+  text-align: right;
+}
+
+/* Right-aligned so the gap to the time column is the same on a "Sep 9" row as
+ * on a "Sep 14" one. */
+.sched-game .sched-date {
+  color: #8b949e;
+  text-align: right;
+}
+
+.sched-game.is-tbd .sched-date { color: #6e7681; }
+
 /* Striping restarts inside each .sched-rows group — the day/week headers are
  * siblings of the rows, so counting across the whole list stripes arbitrarily. */
 .sched-rows .sched-game:nth-child(even) { background: #14171d; }
+
+/* --- Slate break ---
+ * The rule between the 1:00 games and the 4:00 ones. A Sunday is two blocks of
+ * games, not one run of twelve rows, and the day headers can't say so — they
+ * are one level up. Heavier than the header underline so it reads as a divider
+ * inside the day rather than as the start of a new one. */
+.sched-rows .sched-game.is-slate-break {
+  border-top: 2px solid #30363d;
+  margin-top: 4px;
+  padding-top: 4px;
+  border-radius: 0 0 4px 4px;
+}
 
 .sched-game .sched-time {
   font-family: monospace;
@@ -191,13 +225,10 @@
 
 /* --- Bye + empty --- */
 
-.sched-bye {
-  display: grid;
-  grid-template-columns: 58px minmax(0, 1fr);
-  gap: 8px;
-  padding: 2px 8px;
-  font-size: 12px;
-  line-height: 1.5;
+/* A bye is a .sched-game so it keeps the row rhythm and the striping count —
+ * it is a week of the season, just one with no game in it. */
+.sched-bye,
+.sched-bye .sched-date {
   color: #484f58;
   font-style: italic;
 }
@@ -208,25 +239,8 @@
   padding: 16px 8px;
 }
 
-.sched-legend {
-  margin-top: 18px;
-  padding-top: 10px;
-  border-top: 1px solid #21262d;
-  font-size: 11px;
-  color: #6e7681;
-  line-height: 1.6;
-}
-
-.sched-legend-odd {
-  color: #d29922;
-  font-family: monospace;
-  text-transform: uppercase;
-  font-size: 10px;
-  letter-spacing: 0.6px;
-}
-
 @media (max-width: 560px) {
-  .sched-game,
-  .sched-bye { grid-template-columns: 52px minmax(0, 1fr); }
+  /* The columns are already at their content width — only the gutters give. */
+  .sched-game { gap: 8px; }
   .sched-venue { display: none; }
 }
