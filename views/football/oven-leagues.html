@@ -5,19 +5,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <link rel="icon" type="image/png" href="/favicon.png">
   <title>Baker's Oven | Dynast-Z</title>
-  <link rel="stylesheet" href="/styles/base/styles.css?v=abec71e4">
-  <link rel="stylesheet" href="/styles/primary/bakers-oven.css?v=6a931a2f">
+  <link rel="stylesheet" href="/styles/base/styles.css">
+  <link rel="stylesheet" href="/styles/primary/bakers-oven.css">
+  <link rel="stylesheet" href="/styles/base/lightbox.css">
 </head>
 <body>
   <div id="header-mount"></div>
   <div id="nav-drawer-mount"></div>
-  <script src="/scripts/base/auth.js?v=8ab3e67e"></script>
-  <script src="/scripts/base/nav.js?v=1d4c0225"></script>
-  <script src="/scripts/base/sync.js?v=1b85ffb1"></script>
-  <script src="/scripts/primary/oven-config.js?v=3b9b0913"></script>
-  <script src="/scripts/primary/oven-draft.js?v=6be4e481"></script>
-  <script src="/scripts/primary/oven-leagues.js?v=51be0572"></script>
-  <script src="/scripts/primary/oven-board.js?v=c0ad760a"></script>
+  <script src="/scripts/base/auth.js"></script>
+  <script src="/scripts/base/nav.js"></script>
+  <script src="/scripts/base/lightbox.js"></script>
+  <script src="/scripts/base/sync.js"></script>
+  <script src="/scripts/primary/oven-config.js"></script>
+  <script src="/scripts/primary/oven-draft.js"></script>
+  <script src="/scripts/primary/oven-leagues.js"></script>
+  <script src="/scripts/primary/oven-board.js"></script>
   <script>initPage();</script>
 
   <main class="oven-content">
@@ -43,7 +45,9 @@
         </div>
       </div>
 
-      <figure class="oven-preview">
+      <!-- Opted out of the shared lightbox (scripts/base/lightbox.js): this
+           preview already opens its own full-size viewer below. -->
+      <figure class="oven-preview" data-no-lightbox>
         <button type="button" class="oven-preview-shot" id="preview-open"
                 aria-label="Open a larger preview of the draft board">
           <img src="/assets/screenshots/bakers-oven-preview.png" alt="Baker's Oven draft board mid-draft: your pick on the clock, the big board tiered and crossed off, and the projections drawer showing who is likely to reach each of your next picks.">

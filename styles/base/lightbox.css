@@ -1,0 +1,96 @@
+/* === Shared image lightbox ===
+ * Click-to-enlarge for inline content images, paired with scripts/base/lightbox.js.
+ *
+ * The overlay is a fixed, flex-centred box sized off the viewport, so the image
+ * stays vertically and horizontally centred and re-fits itself on rotation with
+ * no JS involved — a landscape phone just gets a wider box for the same image. */
+
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  background: rgba(8, 10, 14, 0.94);
+  cursor: zoom-out;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  overscroll-behavior: contain;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.lightbox[hidden] { display: none; }
+.lightbox.open { opacity: 1; }
+
+.lightbox .lightbox-image {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: 6px;
+  cursor: default;
+}
+
+.lightbox-close {
+  position: absolute;
+  top: 10px;
+  right: 14px;
+  background: transparent;
+  border: 0;
+  padding: 4px 10px;
+  font-size: 30px;
+  line-height: 1;
+  color: #8b949e;
+  cursor: pointer;
+}
+
+.lightbox-close:hover { color: #f0f6fc; }
+.lightbox-close:focus-visible { outline: 2px solid #58a6ff; outline-offset: 2px; }
+
+/* The page underneath is pinned rather than merely `overflow: hidden`, since
+ * iOS keeps scrolling the body behind a fixed overlay otherwise. The scroll
+ * offset is re-applied on close by lightbox.js. */
+body.lightbox-open {
+  position: fixed;
+  left: 0;
+  right: 0;
+  width: 100%;
+  overflow: hidden;
+}
+
+/* Phone in landscape: trim the frame so a wide chart runs nearly edge to edge. */
+@media (orientation: landscape) and (max-height: 560px) {
+  .lightbox { padding: 6px 10px; }
+  .lightbox-close { top: 0; right: 2px; font-size: 26px; }
+}
+
+@media (orientation: portrait) and (max-width: 560px) {
+  .lightbox { padding: 14px; }
+}
+
+/* --- Affordance on the page images themselves --- */
+
+img[data-lightbox],
+img.lightboxable,
+figure img {
+  cursor: zoom-in;
+}
+
+[data-no-lightbox] img,
+img[data-no-lightbox] {
+  cursor: inherit;
+}
+
+img[data-lightbox]:focus-visible,
+img.lightboxable:focus-visible,
+figure img:focus-visible {
+  outline: 2px solid #58a6ff;
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lightbox { transition: none; }
+}

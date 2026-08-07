@@ -5,14 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <link rel="icon" type="image/png" href="/favicon.png">
   <title>Settle Up | Dynast-Z</title>
-  <link rel="stylesheet" href="/styles/base/styles.css?v=abec71e4">
-  <link rel="stylesheet" href="/styles/primary/bets.css?v=c8aec98e">
+  <link rel="stylesheet" href="/styles/base/styles.css">
+  <link rel="stylesheet" href="/styles/primary/bets.css">
+  <link rel="stylesheet" href="/styles/base/lightbox.css">
 </head>
 <body>
   <div id="header-mount"></div>
   <div id="nav-drawer-mount"></div>
-  <script src="/scripts/base/auth.js?v=8ab3e67e"></script>
-  <script src="/scripts/base/nav.js?v=1d4c0225"></script>
+  <script src="/scripts/base/auth.js"></script>
+  <script src="/scripts/base/nav.js"></script>
+  <script src="/scripts/base/lightbox.js"></script>
   <script>initPage();</script>
 
   <main class="bets-content">
@@ -25,8 +27,8 @@
     <div id="settle-table"></div>
   </main>
 
-  <script src="/scripts/primary/bets-api.js?v=58137871"></script>
-  <script src="/scripts/primary/bets.js?v=5d563ca7"></script>
+  <script src="/scripts/primary/bets-api.js"></script>
+  <script src="/scripts/primary/bets.js"></script>
   <script>
     (async function () {
       if (!isLoggedIn()) { location.href = '/account'; return; }

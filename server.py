@@ -1151,6 +1151,26 @@ def rookie_keys_from_resolver(index):
 
 
 class Handler(http.server.SimpleHTTPRequestHandler):
+    # Mirror vercel.json: HTML is no-store so a refresh always gets the current
+    # build. Locally we extend that to /styles and /scripts too, because dev
+    # serves them unhashed (build.py only runs on deploy) and a cached copy
+    # under an unversioned URL would survive an edit.
+    NO_STORE_PREFIXES = ("/views/", "/styles/", "/scripts/")
+
+    def send_head(self):
+        # Only static serving reaches send_head; the /api branches in do_GET
+        # write their own headers and set their own Cache-Control.
+        self._no_store = self.path.startswith(self.NO_STORE_PREFIXES)
+        try:
+            return super().send_head()
+        finally:
+            self._no_store = False
+
+    def end_headers(self):
+        if getattr(self, "_no_store", False):
+            self.send_header("Cache-Control", "no-store")
+        super().end_headers()
+
     def do_GET(self):
         if self.path == "/api/players":
             self.send_response(200)
