@@ -15,7 +15,8 @@
     "receiving yards",
     "passing tds",
     "rushing tds",
-    "receiving tds"
+    "receiving tds",
+    "receptions"
   ],
   "consensus": "mean of each book's main O/U line; yards and TDs each summed across the player's priced markets",
   "player_count": 104,
@@ -25,5 +26,5 @@
     "score": 118
   },
   "size_bytes": 14012,
-  "built_at": "2026-08-07T02:17:23+00:00"
+  "built_at": "2026-08-07T16:51:52+00:00"
 }

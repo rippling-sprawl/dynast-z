@@ -6,7 +6,7 @@
   <link rel="icon" type="image/png" href="/favicon.png">
   <title>Big Board | Baker's Oven</title>
   <link rel="stylesheet" href="/styles/base/styles.css?v=abec71e4">
-  <link rel="stylesheet" href="/styles/primary/bakers-oven.css?v=1972a867">
+  <link rel="stylesheet" href="/styles/primary/bakers-oven.css?v=6a931a2f">
 </head>
 <body>
   <div id="header-mount"></div>
@@ -20,8 +20,8 @@
   <script src="/scripts/primary/oven-draft.js?v=6be4e481"></script>
   <script src="/scripts/primary/oven-leagues.js?v=51be0572"></script>
   <script src="/scripts/primary/oven-weekly.js?v=2ed364a8"></script>
-  <script src="/scripts/primary/oven-board.js?v=e3305cc4"></script>
-  <script src="/scripts/primary/oven-targets.js?v=021cceab"></script>
+  <script src="/scripts/primary/oven-board.js?v=c0ad760a"></script>
+  <script src="/scripts/primary/oven-targets.js?v=9764b9d5"></script>
   <script>initPage();</script>
 
   <main class="oven-content">
@@ -49,7 +49,6 @@
                   title="Refetch picks from Sleeper" aria-label="Refresh picks from Sleeper">
             <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.5 8a5.5 5.5 0 1 1-1.6-3.9"/><path d="M13.7 2.2v3.1h-3.1"/></svg>
           </button>
-          <div class="oven-conn" id="conn"></div>
         </div>
 
         <!-- Two rows, because they are two different questions: the first picks
@@ -75,18 +74,24 @@
                  desktop layout — one row, one gap carrying the distinction —
                  stays exactly as it was. -->
             <span class="oven-filter-break" aria-hidden="true"></span>
+            <!-- Show adds annotation where Hide removes rows, which is why it
+                 sits apart from the Hide toggles rather than reading as more of
+                 them.
+
+                 Two chips, not one, because they are two different claims about
+                 a player: where he actually finished, and what the books have
+                 him priced to do. They sit on one sub-line and share a rule, but
+                 wanting the history is no reason to carry the market — and on a
+                 phone the two together are the difference between 19px of row
+                 and 33px.
+
+                 The weekly-finishes chip that used to sit here is gone; the
+                 weekly file is no longer fetched or scored (see boot). -->
             <span class="oven-filter-label oven-filter-sep" id="show-label" hidden>Show:</span>
-            <!-- Adds a column rather than removing rows, so it sits apart from
-                 the Hide toggles. Stays hidden until the weekly file has
-                 actually loaded and been scored — a chip that toggles a column
-                 of dashes is worse than no chip. -->
-            <button class="oven-chip" id="chip-weekly" data-show="showWeekly" aria-pressed="false" hidden></button>
-            <!-- The sub-line under every name — last two seasons' finishes and
-                 the season-long market. Unlike the weekly chip this one starts
-                 ON, because the line has always been on and a Show chip that
-                 defaults off would silently take away data people already read.
-                 It's here so a phone can buy back a line of row height. -->
-            <button class="oven-chip active" id="chip-subline" data-show="showSubline" aria-pressed="true" hidden>History &amp; Odds</button>
+            <!-- Each stays hidden until ITS file has actually loaded. A chip
+                 that toggles a line of nothing is worse than no chip. -->
+            <button class="oven-chip" id="chip-history" data-show="showHistory" aria-pressed="false" hidden>History</button>
+            <button class="oven-chip" id="chip-odds" data-show="showOdds" aria-pressed="false" hidden>Odds</button>
           </div>
         </div>
       </div>
@@ -128,13 +133,10 @@
     // import wrote.
     var board = null, bk = null;
     var prevDrafted = {};
-    var lastUpdate = null;
     // Kept for the Targets & Projections drawer, which needs the raw picks
     // (keepers carry their player in metadata, not on my board) and the pick
     // plan (which rounds I actually own after trades).
     var latestPicks = [], plan = [];
-
-    function setConn(html) { document.getElementById('conn').innerHTML = html; }
 
     function renderClock() {
       var c = S.clock;
@@ -173,10 +175,8 @@
       S.clock = OvenDraft.computeClock(plan, picks, rosterId, S.teamsCount * draft.settings.rounds);
       OvenBoard.applyDraftState(newly, Object.keys(prevDrafted).length === 0);
       prevDrafted = drafted;
-      lastUpdate = Date.now();
       renderClock();
       OvenTargets.refresh();
-      setConn('<span class="oven-live-dot"></span>');
     }
 
     /* Both row edits land here: dragging re-ranks him, the grade control records
@@ -242,35 +242,31 @@
         if (!poller || refreshBtn.disabled) return;
         refreshBtn.disabled = true;
         refreshBtn.classList.add('spinning');
-        setConn('<span class="oven-degraded">Refreshing</span>');
         poller.refreshNow().then(function () {
           refreshBtn.disabled = false;
           refreshBtn.classList.remove('spinning');
         });
       });
 
-      // Show is a column, not a filter: no rows change, so there is nothing to
-      // re-render. Toggling one class on the list lets CSS reveal the cell and
-      // keeps your scroll position — a full rebuild at row 180 would throw you
-      // back to the top of the board.
-      var weeklyChip = document.getElementById('chip-weekly');
-      weeklyChip.addEventListener('click', function () {
-        S.filters.showWeekly = !S.filters.showWeekly;
-        listEl.classList.toggle('show-weekly', S.filters.showWeekly);
-        weeklyChip.classList.toggle('active', S.filters.showWeekly);
-        weeklyChip.setAttribute('aria-pressed', S.filters.showWeekly ? 'true' : 'false');
-      });
-
-      // Same class-flip, opposite polarity: this one is on by default, so the
-      // list carries hide-subline when the chip is OFF rather than show-* when
-      // it's on. A default-on chip whose class is named for the default would
-      // have to be set at boot on every load.
-      var sublineChip = document.getElementById('chip-subline');
-      sublineChip.addEventListener('click', function () {
-        S.filters.showSubline = !S.filters.showSubline;
-        listEl.classList.toggle('hide-subline', !S.filters.showSubline);
-        sublineChip.classList.toggle('active', S.filters.showSubline);
-        sublineChip.setAttribute('aria-pressed', S.filters.showSubline ? 'true' : 'false');
+      /* Show adds annotation, not rows: nothing is filtered, so there is nothing
+       * to re-render. Each chip flips one class on the list and CSS reveals its
+       * group — which keeps your scroll position, where a full rebuild at row
+       * 180 would throw you back to the top of the board mid-run.
+       *
+       * Both are wired the same way, off the chip's own data-show key, because
+       * they are the same gesture on two independent groups. The rule between
+       * the groups is CSS's problem (.show-history.show-odds): a separator is
+       * only a separator when there is something on both sides of it. */
+      document.querySelectorAll('.oven-chip[data-show]').forEach(function (btn) {
+        var key = btn.getAttribute('data-show');
+        // show-history / show-odds — the class is the key, hyphenated.
+        var cls = key.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
+        btn.addEventListener('click', function () {
+          S.filters[key] = !S.filters[key];
+          listEl.classList.toggle(cls, S.filters[key]);
+          btn.classList.toggle('active', S.filters[key]);
+          btn.setAttribute('aria-pressed', S.filters[key] ? 'true' : 'false');
+        });
       });
     }
 
@@ -296,16 +292,20 @@
           fetch(OVEN.FP_DATA, { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : []; }).catch(function () { return []; }),
           fetch(OVEN.FP_META, { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }),
           loadWithSync(bk.sport, bk.syncKey, bk.storageKey, null),
-          // 2 MB, but ~0.3 MB gzipped and immutable for a finished season, so
-          // unlike everything else the Oven fetches it wants the HTTP cache.
-          // Degrades to null: this is a nice-to-have column, and a 404 here must
-          // never be the reason the board fails to open on draft night.
-          fetch(OVEN.WEEKLY_DATA).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }),
-          // 23 KB, immutable for two finished seasons — same cache treatment,
-          // same degrade-to-null. Without it every row simply loses its history
-          // line; the board still opens.
+          // OVEN.WEEKLY_DATA is deliberately NOT fetched. It is 2 MB, and it
+          // cost a scoring pass over 860 players at boot, to fill a column whose
+          // chip is gone — dead weight on the one screen where draft-night load
+          // time is the whole game. Everything behind it (OvenWeekly,
+          // setWeekly, .oven-weekly) is intact, so restoring the chip is
+          // restoring this fetch and the scoring block below it.
+          //
+          // 31 KB, immutable for three finished seasons, so unlike everything
+          // else the Oven fetches it wants the HTTP cache. Degrades to null:
+          // this is an opt-in annotation, and a 404 here must never be the
+          // reason the board fails to open on draft night — without it every row
+          // simply loses its history line and the chip never appears.
           fetch(OVEN.POSRANK_DATA).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }),
-          // 14 KB of season-long consensus lines. Unlike the two files above
+          // 14 KB of season-long consensus lines. Unlike the file above
           // this one is NOT immutable — the books move their numbers all
           // summer, and it is rebuilt whenever a Recorder bundle lands — but a
           // stale line is a line the market held yesterday, which is still a
@@ -316,9 +316,8 @@
         ctx = results[0];
         var fp = results[1] || [], fpMeta = results[2];
         board = results[3];
-        var weekly = results[4];
-        var posRanks = results[5];
-        var propLines = results[6];
+        var posRanks = results[4];
+        var propLines = results[5];
         leagueCrumb.textContent = ctx.league.name;
 
         draft = await OvenDraft.loadDraft(ctx.draftId);
@@ -335,39 +334,34 @@
         OvenBoard.setPositions(ctx.league.roster_positions);
         S.rows = OvenBoard.buildBoard(board && board.rows, fp);
 
-        // Where each player finished the last two seasons, half-PPR. Handed
-        // over whole — the file names its own two seasons, so nothing here
-        // hardcodes a year. Before the first render, since it's part of every
-        // row rather than a toggled column.
+        // Where each player finished the last three seasons, half-PPR. Handed
+        // over whole — the file names its own seasons, so nothing here
+        // hardcodes a year, and re-running the fetch over a different window
+        // changes the row without touching this page.
         OvenBoard.setPosRanks(posRanks);
 
         // And what the books have him doing next season, on the same sub-line.
-        // Set beside the finishes and for the same reason: it is part of every
-        // row, not a column you turn on.
         OvenBoard.setPropLines(propLines);
 
-        // Last season's finishes, scored by THIS league's settings — the whole
-        // point of doing it here rather than shipping precomputed ranks. The
-        // league object already carries scoring_settings; loadLeague has always
-        // returned it, nothing else had used it yet.
-        if (weekly && ctx.league.scoring_settings) {
-          OvenBoard.setWeekly(OvenWeekly.computeCounts(weekly, ctx.league.scoring_settings));
-          var chip = document.getElementById('chip-weekly');
-          chip.textContent = OVEN.WEEKLY_SEASON + ' weeks';
-          chip.title = 'Top ' + OVEN.WEEKLY_TIERS.join('/') + ' positional finishes in ' +
-            OVEN.WEEKLY_SEASON + ', scored by this league\'s settings';
-          chip.hidden = false;
-          document.getElementById('show-label').hidden = false;
+        /* One chip per file, revealed only if its file actually arrived: a chip
+         * that toggles a line nothing feeds is a button that does nothing, and
+         * either of these can 404 without the other. The seasons in the title
+         * come off the payload for the same reason setPosRanks takes it whole —
+         * the file decides which years it is about. */
+        var showLabel = document.getElementById('show-label');
+        if (posRanks) {
+          var histChip = document.getElementById('chip-history');
+          histChip.title = 'Half-PPR positional finish in ' +
+            posRanks.seasons.join(', ') + ', under each name — Sleeper';
+          histChip.hidden = false;
+          showLabel.hidden = false;
         }
-
-        // Same gate, one file earlier: a chip that toggles a line nothing feeds
-        // is a button that does nothing. Either source is enough — subLine()
-        // emits whichever half it has.
-        if (posRanks || propLines) {
-          var subChip = document.getElementById('chip-subline');
-          subChip.title = 'Last two seasons\' positional finishes and the season-long market lines, under each name';
-          subChip.hidden = false;
-          document.getElementById('show-label').hidden = false;
+        if (propLines) {
+          var oddsChip = document.getElementById('chip-odds');
+          oddsChip.title = 'Season-long consensus lines — yards, TDs' +
+            (OvenBoard.state.hasRecs ? ', receptions' : '') + ' — under each name';
+          oddsChip.hidden = false;
+          showLabel.hidden = false;
         }
 
         wireControls();
@@ -433,14 +427,6 @@
         poller = OvenDraft.createPoller({
           draftId: ctx.draftId,
           onPicks: onPicks,
-          onStatusChange: function (prev, next) {
-            if (prev) setConn('<span class="oven-degraded">Draft ' + next.replace('_', ' ') + '</span>');
-          },
-          onError: function (err, attempt) {
-            var ago = lastUpdate ? Math.round((Date.now() - lastUpdate) / 60000) : null;
-            setConn('<span class="oven-degraded">Reconnecting (' + attempt + ')' +
-              (ago != null ? ' · last update ' + ago + 'm ago' : '') + '</span>');
-          },
         });
         poller.start();
       } catch (e) {

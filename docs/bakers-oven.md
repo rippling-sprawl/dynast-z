@@ -256,7 +256,7 @@ preserved on the row and ignored — you can keep your own working columns.
 | `Player` | `Name`, `PlayerName` | **Required.** Player, or a team name for a defense |
 | `Pos` | `Position` | Helps disambiguate; inferred when blank |
 | `Team` | `Tm`, `NFLTeam` | Same |
-| `Tier` | — | Your tier band; falls back to FantasyPros' tier |
+| `Tier` | — | Your tier band; falls back to FantasyPros' tier. Stored and exported, but the board does not draw it |
 | `MyRank` | `Rank`, `RK` | Board order. With no `MyRank` column at all, file order is used — but only to place rows the board doesn't already have; see [Choosing what imports](#choosing-what-imports) |
 | `Grade` | `Like`, `Opinion` | `like` / `fade`. The retired `love` and `avoid` are read as `like` and `fade` (`OVEN.GRADE_LEGACY`), as are the usual synonyms (`hate` → `fade`, `++` → `like`). Also settable on the board — see [Setting a grade](#setting-a-grade) |
 | `Target` | `Targets`, `Queued`, `Pin` | Your Targets queue as a column. `Y`/`Yes`/`X`/`1`/`✓` all mark him; blank leaves him off. Exported from the live queue, not from the row — see [Targets in the CSV](#targets-in-the-csv) |
@@ -463,9 +463,9 @@ below the horizon); a `render()` and a `dragstart` close it.
 non-obvious decision here. It used to be justified by the heat wash — grading one player re-tinted
 his neighbors, so nothing about it was local. With the wash gone a grade is very nearly a one-row
 fact, but not quite: `.faded` moves with it, and under **Hide: Fade** grading someone `fade`
-drops him out of `visibleRows()` entirely, which can orphan the tier header he was the only
-visible member of. A patch path would therefore still have to know about the filter and about tier
-headers — which is to say, restate `render()`. The Δ column does *not* move on a grade; it reads
+drops him out of `visibleRows()` entirely, which changes the pool the horizons and the rescue pass
+read. A patch path would therefore still have to know about the filter — which is to say, restate
+`render()`. The Δ column does *not* move on a grade; it reads
 the two ranks directly. `render()` restores `scrollY`, so the board doesn't jump, and the rebuild
 has never been the thing worth optimizing here.
 
@@ -506,8 +506,10 @@ markers are quiet — `Then · 3.12`. The count of players between you and it li
 console, not on the marker; the console is always on screen, so printing "N away" in both places
 just says it twice.
 
-Rows above the first marker are a **named zone** — a `The chalk · N gone before you're up`
-header, plus a diagonal hatch. The hatch is painted at `z-index: -1` so it knocks back the
+Rows above the first marker are a **named zone** — a `The chalk` header, plus a diagonal hatch.
+The header names the band and stops there: it used to print `N gone before you're up`, but the
+count is arithmetic you never act on and the horizon below already says where you land. The hatch
+is painted at `z-index: -1` so it knocks back the
 background without darkening the glyphs: these rows are exactly what you read when the board
 *doesn't* go chalk, so recession is carried by texture, never by dimming text below contrast.
 
@@ -543,8 +545,7 @@ answer to: one pick landing changes every depth below it, so *which* windows are
 stable enough to patch. `dropRescued()` also removes them from `state.rowEls`, which is what keeps
 a grade patch, an open grade menu and `OvenTargets.markBoard()` from holding a detached element.
 
-Two display notes. The row is inserted **above** a tier header it sits before, not under it —
-otherwise the band would claim a tier for a row that isn't in it. And `.faded` is an opacity on the
+One display note. `.faded` is an opacity on the
 row, which a child cannot un-inherit, so a rescued row moves that recession onto its columns
 (`.rescued.faded > *:not(.oven-rescued)`) and leaves the tag at full strength: a label at `.52`
 explaining a row at `.52` explains nothing.
@@ -720,9 +721,9 @@ struck span rather than being un-struck inside it.
 **The board is never re-ordered.** `state.rows` comes out of `buildBoard()` in personal-rank
 order and stays that way for the session; the header cells are labels with no `data-sort`, no
 click handler, and no hover affordance, and there is no sort state to toggle. Re-ordering the
-board mid-draft is the one interaction that can cost you a pick — the horizon markers, the tier
-bands, and your own memory of where a player sits are all anchored to rank order, and every one
-of them is meaningless under a different sort.
+board mid-draft is the one interaction that can cost you a pick — the horizon markers and your own
+memory of where a player sits are both anchored to rank order, and neither survives a different
+sort.
 
 Filtering stayed because it *subtracts* rows without moving the survivors: `visibleRows()`
 returns a filtered slice of the same array, in the same order. The page no longer loads
@@ -742,15 +743,10 @@ seam above or below another row moves that player there. On drop:
 2. **Renumber from the top.** Every `myRank` becomes its array position + 1, including rows that
    arrived with no `MyRank` at all — once you have hand-ordered the board there is no longer an
    "unranked, sorts to the bottom" tail worth preserving.
-3. **Adopt the destination tier.** Tier belongs to the band, not to the player: the moved row
-   takes the tier of whoever he now sits behind (or, dropped at the very top, of whoever he now
-   sits in front of). Carrying his old tier along would emit a stray `Tier 6` header in the middle
-   of tier 2 — headers fire on first appearance — and would claim something the move just
-   contradicted.
-4. **Re-render.** The Δ column is `fpRank - myRank` computed at render time, so moving a player
+3. **Re-render.** The Δ column is `fpRank - myRank` computed at render time, so moving a player
    necessarily restates it — his and everyone he displaced. That is the point: drag someone up and
    watch the number climb into flame.
-5. **Hand the rows to the host.** `onReorder(rows)` receives them in the exact shape a CSV import
+4. **Hand the rows to the host.** `onReorder(rows)` receives them in the exact shape a CSV import
    writes, and `/bakers-oven/{leagueId}/{rosterId}` writes them straight back into the same
    per-league blob under `oven_board:{leagueId}`. A board still seeded from FantasyPros (nothing
    imported for this league yet) becomes a real saved board on the first move — dragging a player
@@ -776,9 +772,10 @@ virtualization's benefit for one CSS line.
 All interpolated strings go through `esc()` — CSV content is user-supplied and lands in
 `innerHTML`.
 
-Tier headers are emitted **once per tier, on first appearance**. Tiers are only roughly
-contiguous in personal-rank order; promoting a player past a tier boundary would otherwise
-ping-pong the headers.
+The board does **not** draw tier bands. `Tier` still rides on the row and round-trips through the
+CSV, but the horizons already cut the board into the only windows that decide anything, and a
+second set of bands competed with them for the same glance. A drag no longer rewrites the value
+either — the sheet's column is the user's, not the renderer's.
 
 ---
 
@@ -1195,8 +1192,9 @@ also checkable headlessly by loading `oven-config.js` + `oven-csv.js` + `oven-bo
 17. Drop a file → the confirm panel appears and **nothing is written**: reload, and the old board
     is intact. Cancel, then drop the *same file again* → the panel reappears (the `file.value = ''`
     reset; without it the second choose fires no `change` event and the drop zone reads as dead).
-18. Export the board, edit only `Tier` in a copy, re-import with **only Tier** checked → tiers
-    change and ranks/grades/targets are byte-identical on a fresh export.
+18. Export the board, edit only `Tier` in a copy, re-import with **only Tier** checked → the new
+    tiers come back on the next export (nothing on the board draws them) and
+    ranks/grades/targets are byte-identical.
 19. Same file with the `Grade` cells blanked: **checked** clears the grades, **unchecked** leaves
     them. This is the blanks-overwrite rule, and it is the one people will be surprised by.
 20. Import 300 rows, then a 5-row sheet with 3 of them plus 2 new → *3 updated · 2 added · 302 on
@@ -1224,8 +1222,8 @@ also checkable headlessly by loading `oven-config.js` + `oven-csv.js` + `oven-bo
 18. `computeClock().onTheClock` is **1**, not 8 — proving first-unfilled, not `length + 1`. (No
    longer visible in the console; check it from the devtools console via `OvenBoard.state.clock`.)
 19. Console reads **Your pick / 2.01 / 10 away** (pick 12 is a keeper; 9 and 12 are filled), and
-    the board carries a `The chalk · 10 gone before you're up` header above a hatched band that
-    ends at the `You choose from here · 2.01` horizon.
+    the board carries a `The chalk` header above a hatched band of 10 rows that ends at the
+    `You choose from here · 2.01` horizon.
 20. Board pick list matches the fixture above.
 
 **Live behavior**
@@ -1263,7 +1261,7 @@ also checkable headlessly by loading `oven-config.js` + `oven-csv.js` + `oven-bo
      filter doing what it says. Turn the chip off: he's back, still ❌. Nothing was lost.
 27e-ii. Mid-draft, with faded players above your horizon: toggle **Hide: Fade** on and off. The
      `You choose from here` marker lands **in front of the same player both times** — it just has
-     fewer rows above it — and `The chalk · N gone before you're up` keeps the same N. Same for
+     fewer rows above it. Same for
      switching a position filter on: the horizon marks the first player of that position expected
      to survive, not the N-th one. Only a pick actually being made moves the horizon.
 27f. Open the drawer (it lands on **Projections**), then grade a mid-board player **Like**: he moves up in the
@@ -1319,7 +1317,8 @@ also checkable headlessly by loading `oven-config.js` + `oven-csv.js` + `oven-bo
 32. Drag the #40 row up onto the seam above #8: he lands at 8, everyone from 8 down shifts one,
     the `RK` column renumbers 1..N with no gaps, and his Δ jumps to roughly `+32` in flame (he is
     now 30+ spots ahead of consensus). The drawer does not open and the queue is unchanged.
-33. He shows the tier of the band he landed in, and no stray `Tier N` header appears mid-board.
+33. No tier band or `Tier N` header appears anywhere on the board, and his `Tier` cell in a fresh
+    export is the value his sheet gave him — a drag does not edit it.
 34. Reload the page → the new order is still there. `Export My Rankings` on the league page
     matches what the board shows.
 35. With **QB** filtered on, drag QB6 above QB2: only the QBs move relative to each other; clear

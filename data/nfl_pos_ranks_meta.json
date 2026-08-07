@@ -3,15 +3,17 @@
   "stat": "pos_rank_half_ppr",
   "seasons": [
     2025,
-    2024
+    2024,
+    2023
   ],
-  "player_count": 864,
+  "player_count": 992,
   "per_season": {
     "2025": 708,
-    "2024": 695
+    "2024": 695,
+    "2023": 688
   },
-  "size_bytes": 24051,
-  "fetched_at": "2026-08-07T01:31:48+00:00",
-  "fetched_ts": 1786066308,
+  "size_bytes": 31840,
+  "fetched_at": "2026-08-07T16:51:02+00:00",
+  "fetched_ts": 1786121462,
   "url": "https://api.sleeper.app/v1/stats/nfl/regular/{season}"
 }

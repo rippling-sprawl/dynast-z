@@ -411,9 +411,12 @@
   var state = {
     rows: [], rowEls: null, listEl: null, teams: {},
     drafted: {},          // key -> pick
-    // showSubline starts true: the finishes/odds line predates its chip, and the
-    // chip exists to turn it OFF on a small screen, not to opt into it.
-    filters: { pos: null, hideDrafted: false, hideFade: false, showWeekly: false, showSubline: true },
+    // History and Odds are two chips because they are two claims — where he
+    // finished, and what he is priced to do — and wanting one is no reason to
+    // carry the other. Both start OFF: the board's default state is the order
+    // and nothing else, and a row that annotates itself before you ask is a row
+    // you have to read past 860 times.
+    filters: { pos: null, hideDrafted: false, hideFade: false, showHistory: false, showOdds: false },
     clock: null, teamsCount: 12, myRosterId: null,
     onReorder: null, reorderWired: false,
     // The grade control. Same opt-in shape as reordering — the host owns
@@ -439,6 +442,8 @@
     // feeds carry no position at all (see build_prop_lines.py), so this is the
     // one lookup on the row that doesn't go through playerKey().
     props: null,
+    // Whether ANY priced player has a receptions line — see setPropLines.
+    hasRecs: false,
     // The league's startable positions as a lookup, and the rows the last
     // buildBoard() set aside because they aren't at one. Null positions means
     // the league hasn't said (or starts nothing), and nothing is filtered.
@@ -463,6 +468,18 @@
    * meta file beside it, and nothing on the row reads it. */
   function setPropLines(payload) {
     state.props = payload && payload.lines ? payload.lines : null;
+    /* Whether the REC slot exists on the row at all, decided once here rather
+     * than per row. Within a group that exists, a missing slot keeps its box so
+     * the numbers line up down the board (see propCell) — but that rule assumes
+     * SOMEBODY is priced for it. No book currently posts a season-long
+     * receptions market, and holding an empty third slot on every priced row for
+     * a number that is never there would be a column of reserved nothing.
+     *
+     * One pass over ~100 entries at boot, so the row renderer stays a lookup. */
+    state.hasRecs = false;
+    for (var k in (state.props || {})) {
+      if (state.props[k].recs != null) { state.hasRecs = true; break; }
+    }
   }
 
   function visibleRows() {
@@ -813,6 +830,11 @@
    * carries .show-weekly — toggling a class beats re-rendering 860 rows, which
    * would reset the scroll position mid-board.
    *
+   * PARKED: oven-board.html no longer fetches the weekly file or calls
+   * setWeekly(), and the chip that set .show-weekly is gone from the controls.
+   * With state.weekly null this returns '' and the feature costs nothing.
+   * Everything here still works the moment a host calls setWeekly() again.
+   *
    * It sits UNDER the name rather than in a right-hand column. Three numbers in
    * their own column were reading as a fourth ranking to scan down; on their own
    * line they read as an annotation on the player they describe, and each one
@@ -829,7 +851,10 @@
   }
 
   function weeklyCell(r) {
-    var w = state.weekly && state.weekly[r.key];
+    // No weekly file scored means no chip to reveal this, so the markup would be
+    // 860 divs nothing can ever show. Emitted only when the counts exist.
+    if (!state.weekly) return '';
+    var w = state.weekly[r.key];
     if (!w) return '<div class="oven-weekly is-empty">—</div>';
 
     var tiers = weeklyTiers(r.pos);
@@ -884,19 +909,24 @@
     return 't4';
   }
 
-  /* Where he finished: half-PPR positional rank for the last two seasons, the
+  /* Where he finished: half-PPR positional rank for the last three seasons, the
    * number off Sleeper's own player card.
    *
    * Not the same claim as anything else on the row, which is why it earns its
    * line. The Δ column is where the market has him THIS year; the weekly chip is
    * how many weeks he was startable last year, under this league's rules. This
-   * is the flat historical fact — RB4 then RB19 — and it's the one people
+   * is the flat historical fact — RB4, RB19, RB8 — and it's the one people
    * already carry in their heads, because it's how finishes get quoted.
    *
-   * Always on, unlike the weekly table. Two small numbers are not the three-plus
-   * a toggle exists to keep off the board, and a history you have to turn on is
-   * a history you won't have on at the moment you need it (mid-run, deciding
-   * between two names). It costs one subdued line under the name.
+   * Three seasons, not two, and the third is what makes the group a shape rather
+   * than a comparison: two numbers say "better or worse than last year", three
+   * say whether the good year was the pattern or the exception. Off by default
+   * behind the History chip, which is what buys the room for the third — the
+   * board's resting state is your order and nothing else.
+   *
+   * Season count comes from the FILE, never from here: the loop below walks
+   * pr.seasons, so re-running fetch_pos_ranks.py with a different window changes
+   * the line and nothing in this renderer.
    *
    * A season he didn't play renders as EMPTY SPACE, not as a dash and not as
    * nothing: the slot keeps its box (`visibility: hidden` on a slot that still
@@ -932,20 +962,22 @@
       '">' + cells.join('') + '</div>';
   }
 
-  /* What the market has him doing this season: one consensus yardage number and
-   * one consensus touchdown number, sitting to the right of the two finishes on
-   * the same sub-line.
+  /* What the market has him doing this season: consensus yardage, touchdowns
+   * and — where a book posts the market — receptions, sitting to the right of
+   * the finishes on the same sub-line.
    *
-   * They share a line because they answer the same question — how good is he —
-   * and reading "RB4 RB19 1150 9.5" left to right IS the argument: what he did,
-   * then what he's priced to do. Put on their own line they'd be a third thing
-   * under the name and the comparison would cost a saccade.
+   * They share a line with the finishes because they answer the same question —
+   * how good is he — and reading "RB4 RB19 RB8 1150 9.5" left to right IS the
+   * argument: what he did, then what he's priced to do. Put on their own line
+   * they'd be a third thing under the name and the comparison would cost a
+   * saccade. The two chips are what decide whether either group is there; this
+   * function only decides what a group SAYS when it is.
    *
    * They are drawn as a separate GROUP because they are a separate claim, and
    * the difference matters more than the adjacency: a finish is a settled fact
    * off Sleeper, a line is three sportsbooks' current price on a season nobody
-   * has played. Same line, one rule between them, different labels — 2024/2025
-   * over the finishes, YDS/TD over the odds. Nothing about the two groups is
+   * has played. Same line, one rule between them, different labels — the seasons
+   * over the finishes, YDS/TD/REC over the odds. Nothing about the two groups is
    * meant to look averageable.
    *
    * Blank is the normal state. About a hundred players are priced at all, so
@@ -963,14 +995,19 @@
     var p = state.props[normName(r.name)];
     if (!p) return '';                  // not priced — the common case
 
-    // Yards to the whole yard, TDs to a tenth. The file already rounds to
-    // exactly this (see build_prop_lines.py) — the toFixed here is about
-    // PRINTING, so a consensus of 8 TDs reads "8.0" beside a 9.5 instead of
-    // shrinking to a single glyph and breaking the column.
+    // Yards to the whole yard, TDs and receptions to a tenth. The file already
+    // rounds to exactly this (see build_prop_lines.py) — the toFixed here is
+    // about PRINTING, so a consensus of 8 TDs reads "8.0" beside a 9.5 instead
+    // of shrinking to a single glyph and breaking the column.
+    // Receptions last, after the two summed totals: it is the one number here
+    // that is a single market rather than a sum, and it is the one that decides
+    // a PPR draft — read at the end of the line it lands as the punchline of
+    // "what is he priced to do", not as a third kind of yardage.
     var pairs = [
       { k: 'YDS', v: propNum(p.yards, 0) },
       { k: 'TD', v: propNum(p.tds, 1) },
     ];
+    if (state.hasRecs) pairs.push({ k: 'REC', v: propNum(p.recs, 1) });
     var cells = [], label = [];
     for (var i = 0; i < pairs.length; i++) {
       // A priced player missing one of the two (a rusher with a yardage line and
@@ -980,7 +1017,10 @@
       cells.push('<span class="opl' + (has ? '' : ' is-none') + '">' +
         '<i class="opl-k">' + pairs[i].k + '</i>' +
         '<span class="opl-n">' + esc(has ? pairs[i].v : '0') + '</span></span>');
-      if (has) label.push(pairs[i].v + (pairs[i].k === 'TD' ? ' TDs' : ' yards'));
+      if (has) {
+        label.push(pairs[i].v + (pairs[i].k === 'TD' ? ' TDs'
+          : pairs[i].k === 'REC' ? ' receptions' : ' yards'));
+      }
     }
 
     // The title carries what the two numbers can't: which markets were summed to
@@ -1005,11 +1045,19 @@
 
   /* The sub-line the two of them share: finishes, a rule, odds.
    *
-   * The rule is emitted only when both sides are there, which is the whole
-   * reason this isn't a border on .oven-props. A border would draw a stray
-   * leading hairline on every unpriced row (and on every row at all, the summer
-   * the pos-ranks file is missing) — a separator with nothing on one side of it
-   * is a mark that means nothing. */
+   * Both groups are emitted on every row whatever the chips say, and CSS decides
+   * which are visible — same trick the weekly table uses, and for the same
+   * reason: flipping a class on the list beats re-rendering 860 rows, which
+   * would throw your scroll position back to the top mid-run.
+   *
+   * The rule is emitted only when both sides EXIST, which is the whole reason
+   * this isn't a border on .oven-props. A border would draw a stray leading
+   * hairline on every unpriced row (and on every row at all, the summer the
+   * pos-ranks file is missing) — a separator with nothing on one side of it is a
+   * mark that means nothing. Existing isn't enough now that the two are toggled
+   * apart, though: with History on and Odds off the rule would dangle off the
+   * end of the finishes. So CSS shows it only when BOTH chips are on, and this
+   * function's job is just to make sure there is one to show. */
   function subLine(r) {
     var hist = posRankCell(r);
     var odds = propCell(r);
@@ -1082,10 +1130,10 @@
           (r.team ? '<span class="oven-name-team">' + esc(r.team) + '</span>' : '') + '</div>' +
         // Both sub-lines belong to the name column, not to columns of their own:
         // they annotate the player, and they grow the row downward instead of
-        // widening it. History and odds first — on by default, so the weekly
-        // table appears below them rather than shoving them down when its chip
-        // is toggled. Both are emitted on every row regardless; their chips
-        // flip a class on the list, so neither costs a re-render.
+        // widening it. History and odds first, the weekly table under them, so
+        // the order on the row matches the order of the chips that reveal them.
+        // Everything is emitted on every row regardless of the chips; they flip
+        // classes on the list, so no toggle costs a re-render.
         subLine(r) +
         weeklyCell(r) +
       '</div>' +
@@ -1118,22 +1166,11 @@
       return;
     }
 
+    // Tiers are carried on the row and round-trip through the CSV, but the board
+    // no longer draws them: the horizons already cut it into the only windows
+    // that decide anything, and a second set of bands competed with them.
     var html = [];
-    // Emit each tier header once, on first appearance. Tiers are only roughly
-    // contiguous in personal-rank order — promoting a player past a tier
-    // boundary would otherwise ping-pong the headers (Tier 4, Tier 2, Tier 4…).
-    // The board is always in that order now, so the bands always apply.
-    var tierSeen = {};
-
-    for (var i = 0; i < rows.length; i++) {
-      var r = rows[i];
-      if (r.tier != null && !tierSeen[r.tier]) {
-        tierSeen[r.tier] = true;
-        html.push('<div class="oven-tiersep" data-tier="' + esc(r.tier) + '">' +
-          'Tier ' + esc(r.tier) + ' <span class="tier-count"></span></div>');
-      }
-      html.push(rowHTML(r));
-    }
+    for (var i = 0; i < rows.length; i++) html.push(rowHTML(rows[i]));
 
     state.listEl.innerHTML = html.join('');
     state.rowEls = new Map();
@@ -1179,7 +1216,6 @@
     });
 
     placeMarkers();
-    updateTierCounts();
     // A poll is otherwise surgical, but placeMarkers() inserts and removes
     // marker rows, which shifts every row below the horizon — and with it the
     // button an open menu is pinned to. Re-anchor rather than leave it floating
@@ -1268,21 +1304,8 @@
       var el = makeRowEl(poolRows[idx]);
       var after = -1;
       for (p = idx + 1; p < pool.length; p++) if (pool[p]) { after = p; break; }
-      if (after === -1) {
-        state.listEl.appendChild(el);
-      } else {
-        /* Step back over any tier header sitting between him and that anchor.
-         * Inserting straight before the anchor would drop him under a band whose
-         * boundary he is above — the header would then be claiming a tier for the
-         * first row beneath it that is not the row's own. */
-        var anchor = pool[after], prev = anchor.previousElementSibling;
-        while (prev && prev.classList.contains('oven-tiersep') &&
-               String(poolRows[idx].tier) !== prev.getAttribute('data-tier')) {
-          anchor = prev;
-          prev = anchor.previousElementSibling;
-        }
-        anchor.parentNode.insertBefore(el, anchor);
-      }
+      if (after === -1) state.listEl.appendChild(el);
+      else pool[after].parentNode.insertBefore(el, pool[after]);
 
       pool[idx] = el;
       state.rowEls.set(poolRows[idx].key, el);
@@ -1378,14 +1401,11 @@
           '<span class="oven-marker-line"></span>';
       target.parentNode.insertBefore(div, target);
 
-      // The territory above the first horizon is a named zone, not a texture.
-      // These are the players who go before you choose — saying how many is the
-      // whole point of computing the marker in the first place.
+      // The territory above the first horizon is a named zone, not a texture:
+      // these are the players who go before you choose. It names the band and
+      // stops there — a count of how many go first is a number you can't act on,
+      // and the horizon below already says where you land.
       if (m === 0) {
-        // The hatch paints the visible members of the chalk; the count states the
-        // real one. A filter subtracts rows from the band, never from the number
-        // — "10 gone before you're up" is a fact about the draft, not about what
-        // this screen is currently showing.
         for (var a = 0; a < ahead && a < pool.length; a++) {
           if (pool[a]) pool[a].classList.add('atrisk');
         }
@@ -1398,29 +1418,10 @@
           var zone = document.createElement('div');
           zone.className = 'oven-zone';
           zone.innerHTML = '<span>The chalk</span>' +
-            '<span class="oven-zone-line"></span>' +
-            '<span>' + ahead + ' gone before you’re up</span>';
+            '<span class="oven-zone-line"></span>';
           first.parentNode.insertBefore(zone, first);
         }
       }
-    }
-  }
-
-  function updateTierCounts() {
-    if (!state.listEl) return;
-    var seps = state.listEl.querySelectorAll('.oven-tiersep');
-    for (var i = 0; i < seps.length; i++) {
-      var tier = seps[i].getAttribute('data-tier');
-      var left = 0;
-      state.rows.forEach(function (r) {
-        if (String(r.tier) !== tier) return;
-        if (!state.drafted[r.key]) left++;
-      });
-      // Only the cliff is worth saying — a running count next to every tier
-      // header is arithmetic you never act on.
-      var cliff = left <= 2 && left > 0;
-      seps[i].querySelector('.tier-count').innerHTML =
-        cliff ? '<span class="cliff">· tier cliff</span>' : '';
     }
   }
 
@@ -1489,14 +1490,11 @@
     var at = after ? to + 1 : to;
     state.rows.splice(at, 0, row);
 
-    /* Tier belongs to the band, not to the player. Carrying his old tier into
-     * his new home would emit a stray "Tier 6" header in the middle of tier 2 —
-     * tier headers fire on first appearance — and would claim something the move
-     * just contradicted. So he adopts the tier of whoever he now sits behind
-     * (or, dropped at the very top, of whoever he now sits in front of). */
-    var neighbor = at > 0 ? state.rows[at - 1] : state.rows[at + 1];
-    if (neighbor) row.tier = neighbor.tier;
-
+    /* His tier rides along untouched. It used to be rewritten to the neighbor's
+     * on every drop, because the board drew tier bands and a stray "Tier 6"
+     * header mid-tier-2 was worse than losing the sheet's value. Nothing draws
+     * them now, so the only thing that reassignment could do is quietly edit a
+     * column the user authored and will export again. */
     renumber();
     return true;
   }
@@ -1538,8 +1536,9 @@
 
     listEl.addEventListener('dragover', function (e) {
       if (!drag.key) return;
-      // Tier bands and horizon markers are not seams — drop them and nothing
-      // happens, so drop the hint too rather than promising a landing spot.
+      // Horizon markers and the chalk header are not seams — drop them and
+      // nothing happens, so drop the hint too rather than promising a landing
+      // spot.
       var row = rowUnder(e);
       if (!row) { clearHint(); return; }
       e.preventDefault();

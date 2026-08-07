@@ -297,7 +297,7 @@
 
       byPick[p.pick_no] = {
         pick: p, entries: entries, chosen: chosen,
-        gone: gaps[i], left: pool.length,
+        left: pool.length,
       };
 
       pool.forEach(function (r) {
@@ -480,10 +480,12 @@
           var done = proj.filled[p.pick_no];
           if (done) { body.push(madePickHTML(done, s)); return; }
           var pr = proj.byPick[p.pick_no];
+          // The pick label and a rule, nothing else. How many players come off
+          // before this slot is a number you can't act on — what you act on is
+          // the list of names underneath it.
           body.push('<div class="oven-tp-slot">' +
             '<span class="oven-tp-slot-pick">' + esc(global.OvenDraft.roundPickLabel(p.pick_no, s.teamsCount)) + '</span>' +
             '<span class="oven-tp-slot-line"></span>' +
-            '<span class="oven-tp-slot-meta">' + (pr ? pr.gone + ' off before you' : 'projected') + '</span>' +
           '</div>');
           if (!pr || !pr.entries.length) {
             body.push('<div class="oven-tp-none">Nothing left on your board this deep.</div>');

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Fetch the last two completed seasons' half-PPR POSITIONAL FINISHES and save to
+Fetch the last three completed seasons' half-PPR POSITIONAL FINISHES and save to
 data/nfl_pos_ranks.json.
 
 Why this exists
@@ -8,12 +8,12 @@ Why this exists
 The board's Δ column says where the market has a player this year, and the
 weekly chip says how many weeks he was startable last year. Neither says the
 plainest fact about him: where he finished. "RB4 in 2025, RB19 in 2024" is the
-one line that separates a back who has been elite twice from one coming off a
-career year — and it's the number people already carry in their heads, because
+one line that separates a back who has been elite three years running from one
+coming off a career year — and it's the number people already carry in their heads, because
 it's what Sleeper's own player card prints.
 
 So this ships exactly what that card shows: `pos_rank_half_ppr` from the season
-stats endpoint, verbatim, for Y-1 and Y-2. Not recomputed, not re-scored.
+stats endpoint, verbatim, for Y-1 through Y-3. Not recomputed, not re-scored.
 
 Deliberately NOT league-scored, unlike the weekly counts
 --------------------------------------------------------
@@ -30,8 +30,8 @@ Sibling of fetch_nfl_weekly.py — same UA requirement, same player keys, same
 verify-before-write discipline.
 
 Usage:
-    python3 scripts/fetch_pos_ranks.py                    # last two seasons
-    python3 scripts/fetch_pos_ranks.py --seasons 2025,2024
+    python3 scripts/fetch_pos_ranks.py                    # last three seasons
+    python3 scripts/fetch_pos_ranks.py --seasons 2025,2024,2023
 """
 
 import argparse
@@ -48,9 +48,12 @@ UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML,
 
 SLEEPER_API = "https://api.sleeper.app/v1"
 
-# Two seasons, and only two. A third is a third number on a line meant to be
-# read at a glance mid-draft, and by Y-3 the player is a different player.
-SEASON_COUNT = 2
+# Three seasons. Two showed whether last year was real; three shows the shape —
+# a back who has been top-12 three straight years reads differently from one who
+# spiked once, and that distinction is invisible at two. Affordable now that the
+# line is opt-in: the History chip is off by default, so the third number costs
+# nothing on a board nobody asked to annotate.
+SEASON_COUNT = 3
 
 # Sanity floor per season. A finished season has ~700 fantasy-relevant players
 # who took a snap; far below that means the API shape changed or the season
@@ -268,7 +271,7 @@ def main():
     default_last = datetime.now(timezone.utc).year - 1
     ap.add_argument("--seasons", default=None,
                     help=f"comma-separated, newest first "
-                         f"(default {default_last},{default_last - 1})")
+                         f"(default {default_last},{default_last - 1},{default_last - 2})")
     args = ap.parse_args()
 
     if args.seasons:
@@ -287,7 +290,7 @@ def main():
         return 1
 
     # Key-major, one array per player in `seasons` order: the row renderer wants
-    # both years for one player at once, and this way each key string is stored
+    # every year for one player at once, and this way each key string is stored
     # once instead of per season. `null` — not 0, not a missing slot — for a year
     # he didn't finish, so the array is always the same length as `seasons` and
     # the reader never has to ask which year a lone number belongs to.

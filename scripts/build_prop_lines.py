@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Season-long player props, reduced to two numbers a draft board can print:
+Season-long player props, reduced to three numbers a draft board can print:
 data/nfl_prop_lines.json.
 
 Reads the three committed book snapshots — data/fd.json (FanDuel),
@@ -13,6 +13,7 @@ What comes out, per player:
 
     yards   the consensus season yardage line
     tds     the consensus season touchdown line
+    recs    the consensus season receptions line, where a book posts one
 
 CONSENSUS = the mean of the books' main lines for that market, which is exactly
 what /odds already calls FMV (fair market value). It is not de-vigged and it is
@@ -22,14 +23,22 @@ itself. Averaging the number across books is the whole of the fair value here.
 The prices are read only to decide WHICH line is a book's main one — see
 main_line() — and are then discarded.
 
-BOTH NUMBERS ARE SUMS ACROSS MARKETS. A player is priced on one to three
-separate markets (passing/rushing/receiving x yards/TDs); "his yards" is all of
-them added up, so a dual-threat QB with a 4,000-yard passing line and a 575-yard
-rushing line reads 4575, and Bijan reads his rushing line because that is the
-only yardage the market prices him for. The alternative — one market chosen per
-position — would have thrown away a real priced market on the six players whose
-legs are the reason they go in the first round. The per-market breakdown ships
-alongside the totals so the board's tooltip can say which markets made the sum.
+YARDS AND TDS ARE SUMS ACROSS MARKETS; RECEPTIONS ARE NOT. A player is priced
+on one to three separate markets (passing/rushing/receiving x yards/TDs); "his
+yards" is all of them added up, so a dual-threat QB with a 4,000-yard passing
+line and a 575-yard rushing line reads 4575, and Bijan reads his rushing line
+because that is the only yardage the market prices him for. The alternative —
+one market chosen per position — would have thrown away a real priced market on
+the six players whose legs are the reason they go in the first round. The
+per-market breakdown ships alongside the totals so the board's tooltip can say
+which markets made the sum.
+Receptions have exactly one market and nothing to add them to, which is why they
+are their own field rather than a fourth term in either sum.
+
+Reception coverage is currently ZERO and that is not a bug: none of the three
+books posts a season-long receptions O/U in the committed snapshots. The field
+is here so the number appears the day one of them does, without another pass
+through this file and the board.
 
 Coverage is thin by nature and that is fine: the books price ~105 players, the
 board holds ~860. A player with no market gets no entry and the board prints
@@ -45,11 +54,16 @@ import sys
 import unicodedata
 from datetime import datetime, timezone
 
-# The six season-long markets the books actually put up. Ordered so the
-# breakdown in a tooltip reads pass -> rush -> receive, the way a stat line does.
+# The season-long markets the books actually put up. Ordered so the breakdown in
+# a tooltip reads pass -> rush -> receive, the way a stat line does.
 YARD_STATS = ("passing yards", "rushing yards", "receiving yards")
 TD_STATS = ("passing tds", "rushing tds", "receiving tds")
-STATS = YARD_STATS + TD_STATS
+# Its own group of one, and NOT summed into anything: a reception is not a yard
+# and not a touchdown, and it is the number that decides a PPR draft. Kept
+# separate rather than folded in for the same reason yards and TDs are separate
+# from each other — nothing about the three averages or adds.
+REC_STATS = ("receptions",)
+STATS = YARD_STATS + TD_STATS + REC_STATS
 
 # Sanity floor. The books price roughly a hundred skill players each summer; a
 # run that produces a handful means a vendor shape moved and the parse fell
@@ -354,7 +368,8 @@ def build(players, display):
 
         yards = [parts[s] for s in YARD_STATS if s in parts]
         tds = [parts[s] for s in TD_STATS if s in parts]
-        if not yards and not tds:
+        recs = [parts[s] for s in REC_STATS if s in parts]
+        if not yards and not tds and not recs:
             continue
 
         # In BOOKS order, not alphabetical, so a tooltip lists them the way the
@@ -372,6 +387,11 @@ def build(players, display):
             entry["yards"] = round(sum(yards))
         if tds:
             entry["tds"] = round(sum(tds), 1)
+        # Same tenth as TDs, and for the same reason: the lines are half-points,
+        # so a tenth is exactly the resolution at which two books disagreeing
+        # (77.5 and 78.5 -> 78.0) still shows and no finer.
+        if recs:
+            entry["recs"] = round(sum(recs), 1)
         lines[key] = entry
     return lines
 
@@ -402,14 +422,31 @@ def verify(lines, by_book):
         if "tds" in e and not (0 < e["tds"] < 70):
             print(f"ERROR: implausible TDs for {e['name']}: {e['tds']}", file=sys.stderr)
             ok = False
+        # The record is 149. A number past 200 is a weekly line that leaked into
+        # a season-long feed, which on the board would read as a genuine outlier
+        # rather than as the parse error it is.
+        if "recs" in e and not (0 < e["recs"] < 200):
+            print(f"ERROR: implausible receptions for {e['name']}: {e['recs']}", file=sys.stderr)
+            ok = False
 
     both = sum(1 for e in lines.values() if "yards" in e and "tds" in e)
     multi = sum(1 for e in lines.values() if len(e["parts"]) > 2)
+    priced_recs = sum(1 for e in lines.values() if "recs" in e)
     print(f"\n  {len(lines)} players priced — {both} with both numbers, "
-          f"{multi} summed across more than one market")
+          f"{multi} summed across more than one market, {priced_recs} with a "
+          f"reception line")
+    # Not an error. No book in the committed snapshots has ever posted a
+    # SEASON-LONG receptions market — FanDuel's "Alt Receptions" coupons are
+    # navigation entries with no market behind them — so zero is the expected
+    # reading until one does. Said out loud anyway, because a silent zero here
+    # and a blank REC slot on the board would look identical to a broken parse.
+    if not priced_recs:
+        print("  note: no book posted a season-long receptions market — the "
+              "board will omit the REC slot entirely")
     for key, e in sorted(lines.items(), key=lambda kv: -(kv[1].get("yards") or 0))[:5]:
         print(f"    {e['name']:<22} {e.get('yards', '—'):>6} yds  "
-              f"{e.get('tds', '—'):>5} TD   [{', '.join(e['books'])}]")
+              f"{e.get('tds', '—'):>5} TD  {e.get('recs', '—'):>5} REC   "
+              f"[{', '.join(e['books'])}]")
     return ok
 
 

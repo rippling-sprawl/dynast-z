@@ -7,7 +7,7 @@
   <title>NFL Schedule | Dynast-Z</title>
   <link rel="stylesheet" href="/styles/base/styles.css?v=abec71e4">
   <link rel="stylesheet" href="/styles/base/hub.css?v=2b363e8e">
-  <link rel="stylesheet" href="/styles/primary/nfl-schedule.css?v=e363f766">
+  <link rel="stylesheet" href="/styles/primary/nfl-schedule.css?v=4344f113">
 </head>
 <body class="masters-body">
   <div id="header-mount"></div>
@@ -210,8 +210,12 @@
       var away = teamsByAbbr[g.away] || { abbr: g.away };
       var home = teamsByAbbr[g.home] || { abbr: g.home };
 
+      // The picked-team highlight says which side of a home/away pairing is
+      // "yours". A neutral-site game has no such pairing — neither team is at
+      // home — so the row carries the venue instead and no side is coloured.
       function team(t, side) {
-        return '<span class="sched-team ' + side + (state.team === t.abbr ? ' is-picked' : '') +
+        var picked = !g.neutral && state.team === t.abbr;
+        return '<span class="sched-team ' + side + (picked ? ' is-picked' : '') +
           '" title="' + esc(t.name || t.abbr) + '">' + esc(t.abbr) + '</span>';
       }
 

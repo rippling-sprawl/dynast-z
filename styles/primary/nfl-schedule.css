@@ -242,5 +242,22 @@
 @media (max-width: 560px) {
   /* The columns are already at their content width — only the gutters give. */
   .sched-game { gap: 8px; }
-  .sched-venue { display: none; }
+
+  /* The venue no longer fits beside the matchup at this width, and dropping it
+   * loses the one thing a neutral-site row exists to say. It wraps to its own
+   * line under the teams instead: full-basis so it always breaks rather than
+   * squeezing in after the badge, and free to run to two lines if the stadium
+   * name is long. The row's column gap would be far too much air between the
+   * two lines of one matchup, so the row gap is set separately. */
+  .sched-matchup {
+    flex-wrap: wrap;
+    row-gap: 0;
+  }
+
+  .sched-venue {
+    flex-basis: 100%;
+    white-space: normal;
+    overflow: visible;
+    line-height: 1.3;
+  }
 }

@@ -490,22 +490,6 @@ button.oven-team-card {
 
 @keyframes ovenSpin { to { transform: rotate(360deg); } }
 
-.oven-conn { flex-shrink: 0; }
-.oven-live-dot {
-  width: 6px; height: 6px; border-radius: 50%;
-  background: var(--oven-flame); display: inline-block;
-  animation: ovenBreathe 2.4s ease-in-out infinite;
-}
-/* Cold, not red. In a kiln, losing the fire IS the alarm state. */
-.oven-degraded {
-  font-family: var(--oven-data);
-  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .12em;
-  color: var(--oven-frost);
-  border: 1px solid rgba(106, 169, 208, .4);
-  background: rgba(106, 169, 208, .1);
-  border-radius: 2px; padding: 3px 8px;
-}
-
 /* ---------- controls ---------- */
 
 /* Two stacked rows: what you're looking at, then what you're taking away. They
@@ -636,11 +620,12 @@ button.oven-team-card {
   /* Most of virtualization's benefit for one CSS line; ignored where unsupported.
    *
    * This is the CONTENT box of a skipped row, so it excludes the 14px of padding
-   * and the hairline: 33px is name (19) + gap (2) + the finishes line (12),
-   * measured, which makes a skipped row render at exactly the 48px it occupies
-   * once it's laid out. .show-weekly below restates it for the third line. */
+   * and the hairline: 19px is the name line alone, measured, which makes a
+   * skipped row render at exactly the 33px it occupies once it's laid out. That
+   * is the board's resting height — every Show chip is off by default. The rules
+   * near .oven-weekly restate it for each line a chip adds. */
   content-visibility: auto;
-  contain-intrinsic-size: 0 33px;
+  contain-intrinsic-size: 0 19px;
 }
 
 /* The 18px first line. Every cell that belongs to it either sets this
@@ -842,6 +827,12 @@ button.oven-team-card {
 
 /* Top 12 / 24 / 36 positional finishes, scored by this league's settings.
  *
+ * PARKED. Nothing sets .show-weekly any more — the chip is gone from the
+ * controls and oven-board.html no longer fetches or scores the weekly file, so
+ * these rules currently style markup that is never emitted. Kept whole, and
+ * kept correct (the row-height rules below still account for the line), because
+ * bringing the chip back is putting one button and one fetch back.
+ *
  * Off by default. The board's one job is to hold your order, and three more
  * numbers on 860 rows compete with the Δ column for the same glance — so this
  * is opt-in, revealed by toggling .show-weekly on the list rather than by
@@ -857,12 +848,11 @@ button.oven-team-card {
  * has to separate. */
 /* ---------- where he finished ----------
  *
- * Two half-PPR positional finishes — last season and the one before — on a
- * subdued line under the name. On by default, and the only sub-line that is:
- * it's two small numbers, and the one thing you want mid-run is the history you
- * didn't have to remember to turn on. The History & Odds chip can take it away
- * (see .oven-list.hide-subline), which is a different thing from having to ask
- * for it.
+ * Three half-PPR positional finishes — the last three seasons — on a subdued
+ * line under the name, behind the History chip. Three rather than two because
+ * two only say "better or worse than last year" and three say whether the good
+ * year was the pattern; the chip is what pays for the third, since the board's
+ * resting state is your order and nothing else.
  *
  * Left-aligned with the name, inside the name column, because it is an
  * annotation on the player and not a column of its own. A third column of ranks
@@ -885,19 +875,32 @@ button.oven-team-card {
  * 12px of gap either side of the rule, against 10px between slots WITHIN a
  * group: the groups have to separate more than their members do, and that's the
  * cheapest way to say so on a line this small. */
-.oven-subline {
+/* All three parts are emitted on every row and revealed by class, never by
+ * re-render — see subLine() in oven-board.js. The line itself collapses unless
+ * at least one of its groups is on, because an empty flex container is still
+ * 2px of margin and a row's worth of height across 860 rows. */
+.oven-subline { display: none; }
+.oven-list.show-history .oven-subline,
+.oven-list.show-odds .oven-subline {
   display: flex;
   align-items: baseline;
   gap: 12px;
   margin-top: 2px;
 }
-.oven-subsep {
+/* A rule needs something on BOTH sides of it. subLine() already withholds it
+ * from a row that has only one group's worth of data; this withholds it from a
+ * row where only one group is switched on, which is the same mark meaning the
+ * same nothing for a different reason. */
+.oven-subsep { display: none; }
+.oven-list.show-history.show-odds .oven-subsep {
+  display: block;
   align-self: center;
   width: 1px; height: 11px;
   background: var(--oven-mortar);
 }
 
-.oven-posrank {
+.oven-posrank { display: none; }
+.oven-list.show-history .oven-posrank {
   display: flex;
   align-items: baseline;
   gap: 10px;
@@ -972,9 +975,10 @@ button.oven-team-card {
 
 /* ---------- what the market has him doing ----------
  *
- * Two consensus season lines — yards and touchdowns — to the right of the two
- * finishes, in the same grammar the finishes use: a small tracked label over
- * (beside) a mono number, fixed slots, tabular figures. Same grammar on purpose:
+ * Consensus season lines — yards, touchdowns, and receptions where a book posts
+ * the market — to the right of the finishes, in the same grammar the finishes
+ * use: a small tracked label over (beside) a mono number, fixed slots, tabular
+ * figures. Same grammar on purpose:
  * they sit on one line and a second visual language there would read as a
  * second sub-line that happened to wrap.
  *
@@ -985,8 +989,10 @@ button.oven-team-card {
  * are not the same achievement, the pools differ by position, and any ramp
  * drawn over them would be a grade this data can't support. So both numbers sit
  * at ash: brighter than a bad finish, dimmer than a great one, and making no
- * claim of their own. */
-.oven-props {
+ * claim of their own. Receptions take the same flat treatment for the same
+ * reason — 78 catches is a different achievement at TE than at WR. */
+.oven-props { display: none; }
+.oven-list.show-odds .oven-props {
   display: flex;
   align-items: baseline;
   gap: 10px;
@@ -1054,23 +1060,26 @@ button.oven-team-card {
  * a zero, which would be a claim about how he played. */
 .oven-weekly.is-empty { color: var(--oven-mortar); }
 
-/* The row grows by a line when the sub-line is on, so the virtualization hint
- * has to grow with it — a stale estimate on 860 rows makes the scrollbar jump
- * as rows render in. Three lines now: name, finishes, this table — 58px of
- * content, a 73px row. */
-.oven-list.show-weekly .oven-row { contain-intrinsic-size: 0 58px; }
-
-/* And the reverse, for the History & Odds chip: the sub-line is on by default,
- * so turning it off is a class that removes a line. display: none rather than
- * visibility, same as .oven-weekly — a collapsed line still owns its gap, and
- * buying back that gap is the entire point of the chip on a phone.
+/* Every one of these lines changes the row's height, so the virtualization hint
+ * has to change with it — a stale estimate on 860 rows makes the scrollbar jump
+ * as skipped rows render in.
  *
- * Both estimates drop by the 14px the line costs (12px of line + 2px margin):
- * 33 → 19 with the name alone, 58 → 44 with the weekly table under it. Left
- * stale they'd make the scrollbar jump as skipped rows render in. */
-.oven-list.hide-subline .oven-subline { display: none; }
-.oven-list.hide-subline .oven-row { contain-intrinsic-size: 0 19px; }
-.oven-list.hide-subline.show-weekly .oven-row { contain-intrinsic-size: 0 44px; }
+ * The base .oven-row estimate is 19px: the name and nothing else, which is what
+ * the board looks like with no Show chip on. Each addition is measured content,
+ * not padding:
+ *
+ *   sub-line     +14px   12px of line + 2px margin — History and Odds share it,
+ *                        so ONE class or BOTH costs the same 14
+ *   weekly       +25px   a two-row table + 3px margin
+ *
+ * History and Odds landing on the same 33px is why this is three rules and not
+ * four: they are one line, and turning on the second group widens it rather than
+ * growing the row. */
+.oven-list.show-history .oven-row,
+.oven-list.show-odds .oven-row { contain-intrinsic-size: 0 33px; }
+.oven-list.show-weekly .oven-row { contain-intrinsic-size: 0 44px; }
+.oven-list.show-weekly.show-history .oven-row,
+.oven-list.show-weekly.show-odds .oven-row { contain-intrinsic-size: 0 58px; }
 
 /* ---------- rank vs consensus ----------
  * How far you are from FantasyPros, printed as a percentage of where you have
@@ -1244,7 +1253,7 @@ body.oven-reordering .oven-grade-btn { pointer-events: none; }
  * The signature. `placeMarkers()` computes, live, where you will actually be
  * choosing from if the board goes chalk — honoring keepers, traded picks, and
  * every pick made. That number is the most useful thing on the page and it used
- * to render at the same weight as a tier rule. It is a horizon now: full-bleed,
+ * to render at the same weight as a section rule. It is a horizon now: full-bleed,
  * flame, serif, and it climbs the board as players come off.
  */
 
@@ -1360,25 +1369,6 @@ body.oven-reordering .oven-grade-btn { pointer-events: none; }
     transparent, transparent 6px,
     rgba(20, 16, 14, .7) 6px, rgba(20, 16, 14, .7) 9px
   );
-}
-
-/* ---------- tiers ---------- */
-
-.oven-tiersep {
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
-  padding: 14px 10px 5px;
-  font-family: var(--oven-data);
-  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .18em;
-  color: var(--oven-ash);
-  border-bottom: 1px solid var(--oven-mortar);
-}
-.oven-tiersep .tier-count { color: var(--oven-ash-dim); letter-spacing: .1em; font-weight: 400; }
-.oven-tiersep .cliff {
-  color: var(--oven-flame);
-  border-bottom: 1px solid var(--oven-ember);
-  padding-bottom: 1px;
 }
 
 .oven-empty {
@@ -1712,17 +1702,23 @@ body.oven-tp-open .oven-tp { transform: translateX(0); visibility: visible; }
   .oven-rk { width: 25px; font-size: 10px; }
   .oven-name-main { font-size: 12.5px; }
   .oven-row { gap: 7px; }
-  /* Four fixed slots and a rule need ~275px; the name column on a phone gets
-   * about half that once the rank, the badge, Δ, the grade and the pin have
+  /* Six fixed slots and a rule need ~350px; the name column on a phone gets
+   * well under half that once the rank, the badge, Δ, the grade and the pin have
    * taken theirs. So the sub-line is allowed to wrap here and the odds drop
    * under the finishes — which separates the two data sets harder than the rule
    * did, not less, so the rule goes rather than dangle at the end of a wrapped
-   * line. The YDS/TD labels are what let the second line stand alone.
+   * line. The YDS/TD/REC labels are what let the second line stand alone.
+   *
+   * Written against the both-chips-on selector because that is the only state
+   * that draws the rule at all, and a bare .oven-subsep would lose to it on
+   * specificity and leave the hairline exactly where it was meant to go.
    *
    * A wrapped row is taller than .oven-row's contain-intrinsic-size estimate,
-   * which costs a little scrollbar drift on skipped rows and nothing else. */
-  .oven-subline { flex-wrap: wrap; row-gap: 1px; }
-  .oven-subsep { display: none; }
+   * which costs a little scrollbar drift on skipped rows and nothing else — and
+   * only when someone has turned both groups on at this width. */
+  .oven-list.show-history .oven-subline,
+  .oven-list.show-odds .oven-subline { flex-wrap: wrap; row-gap: 1px; }
+  .oven-list.show-history.show-odds .oven-subsep { display: none; }
   /* Hide and Show get a line each here. Wrapped onto one row at this width the
    * two groups interleave — a Show chip can land beside a Hide chip with the
    * "Show:" label stranded at the end of the line above — and the labels stop
@@ -1737,8 +1733,7 @@ body.oven-tp-open .oven-tp { transform: translateX(0); visibility: visible; }
 
 @media (prefers-reduced-motion: reduce) {
   .oven-row.just-gone::before { animation: none; opacity: 0; }
-  .oven-next.onclock .oven-eyebrow,
-  .oven-live-dot { animation: none; }
+  .oven-next.onclock .oven-eyebrow { animation: none; }
   /* The disabled state still reads as "working" without the spin. */
   .oven-refresh.spinning svg { animation: none; }
   .oven-content *, .oven-console *, .oven-tp * { transition: none !important; }
