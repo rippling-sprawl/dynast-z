@@ -1,4 +1,4 @@
-# The Baker's Oven — live Sleeper draft companion
+# Baker's Oven — live Sleeper draft companion
 
 A big board that updates itself against a live Sleeper draft. Players cross off as they're
 picked or kept, your next pick tracks its own position down the board, and the players you're
@@ -11,9 +11,9 @@ Routes:
 
 | URL | Page |
 |---|---|
-| `/the-bakers-oven` | Your saved leagues + add-a-league. Nothing else. |
-| `/the-bakers-oven/{leagueId}` | That league's draft status, **My Rankings** (CSV import), and **Open Draft Board** |
-| `/the-bakers-oven/{leagueId}/{rosterId}` | The big board for that team |
+| `/bakers-oven` | Your saved leagues + add-a-league. Nothing else. |
+| `/bakers-oven/{leagueId}` | That league's draft status, **My Rankings** (CSV import), and **Open Draft Board** |
+| `/bakers-oven/{leagueId}/{rosterId}` | The big board for that team |
 
 Everything league-scoped lives on the league page, including the CSV. There is no team grid —
 **Open Draft Board** is a single link to your own team, resolved from the saved league's
@@ -23,9 +23,12 @@ Everything league-scoped lives on the league page, including the CSV. There is n
 not the draft slot and not a user id. Both route segments match digits only — a non-numeric
 segment 404s rather than booting a page destined to fail against Sleeper.
 
-A bare one-segment `/the-bakers-oven/{rosterId}` is a **legacy link** from before leagues
+The route used to be `/the-bakers-oven`. `vercel.json` and `server.py` both 301 the old prefix
+to the new one, path and query preserved, so shared board links and bookmarks still land.
+
+A bare one-segment `/bakers-oven/{rosterId}` is a **legacy link** from before leagues
 existed. `oven-league.html` recognizes it by length (≤ 5 digits) and redirects: to
-`/the-bakers-oven/{onlyLeague}/{rosterId}` when the account has exactly one saved league,
+`/bakers-oven/{onlyLeague}/{rosterId}` when the account has exactly one saved league,
 otherwise back to the league list. The redirect can't live in `vercel.json` or `server.py` —
 which league a bare roster id belongs to is per-account data the server never sees.
 
@@ -106,6 +109,8 @@ Not a bottleneck by roughly three orders of magnitude.
 | `data/nfl_weekly_2025.json` · `data/nfl_weekly_2025_meta.json` | Generated, committed |
 | `scripts/fetch_pos_ranks.py` | Offline Sleeper half-PPR positional finishes, last two seasons |
 | `data/nfl_pos_ranks.json` · `data/nfl_pos_ranks_meta.json` | Generated, committed |
+| `scripts/build_prop_lines.py` | Offline reduction of the three book snapshots to one consensus yards + TD line per player |
+| `data/nfl_prop_lines.json` · `data/nfl_prop_lines_meta.json` | Generated, committed |
 
 Modified: `vercel.json` (rewrites), `server.py` (3 view branches + `/api/football/resolve` +
 a `log_message` fix), `scripts/base/auth.js` (`requireLogin`, the `clearUser` sweep),
@@ -255,7 +260,6 @@ preserved on the row and ignored — you can keep your own working columns.
 | `MyRank` | `Rank`, `RK` | Board order. With no `MyRank` column at all, file order is used — but only to place rows the board doesn't already have; see [Choosing what imports](#choosing-what-imports) |
 | `Grade` | `Like`, `Opinion` | `like` / `fade`. The retired `love` and `avoid` are read as `like` and `fade` (`OVEN.GRADE_LEGACY`), as are the usual synonyms (`hate` → `fade`, `++` → `like`). Also settable on the board — see [Setting a grade](#setting-a-grade) |
 | `Target` | `Targets`, `Queued`, `Pin` | Your Targets queue as a column. `Y`/`Yes`/`X`/`1`/`✓` all mark him; blank leaves him off. Exported from the live queue, not from the row — see [Targets in the CSV](#targets-in-the-csv) |
-| `Note` | `Notes`, `Comment` | Free text, shown on the row |
 
 The parser is a real RFC-4180 state machine, not `split(',')` — quoted commas, embedded
 newlines, `""` escapes, CRLF/LF/CR, and a UTF-8 BOM all round-trip. **Download template** builds a
@@ -265,7 +269,7 @@ starter file from the current FantasyPros top 250, so the first upload is one ed
 
 An import used to be a replacement: `board = { rows: parsed.rows }`, the whole blob, every column.
 That made the sheet the only place your rankings could live. Push one round of updated grades from
-a spreadsheet and you also overwrote every tier, note and rank on the board — including the ones
+a spreadsheet and you also overwrote every tier and rank on the board — including the ones
 you'd set by dragging — and any player you'd trimmed out of the sheet vanished.
 
 It **merges** now, and you say which columns it may touch.
@@ -416,7 +420,7 @@ is now purely the Targets projection's scoring weight (`adjRank` in `oven-target
 Flame/frost stayed as the Δ column's two states, and the reasoning that picked them still holds:
 the source sheet's `#57BB8A` / `#EB9891` were alpha-over-white, so they composite muddy on a
 near-black page, and green/red is the single hue pair that collapses under deuteranopia. Blue↔orange
-is the standard safe substitute, and it happens to be what a board called The Baker's Oven should
+is the standard safe substitute, and it happens to be what a board called Baker's Oven should
 have been measuring in all along. The two values live in `bakers-oven.css` only — `oven-config.js`
 no longer carries color constants, because nothing interpolates a ramp any more.
 
@@ -477,7 +481,7 @@ drag-reorder path, which reads `myRank`; it's there now too.
 The control stays visible and live on a **drafted** row, unlike the pin, which hides. The pin
 hides because it would queue a target that can never come up — an action with no outcome. A grade
 isn't an action, it's a fact, and the drafted-row treatment already commits to keeping those
-(struck on the name only; the team, grade and note are still true about him).
+(struck on the name only; the team and grade are still true about him).
 
 ### Expected-pick markers — the horizon
 
@@ -581,14 +585,11 @@ The drawer is deliberately **non-modal on wide screens**: you queue players off 
 drawer open, and a scrim over the board would eat those clicks. Below 720 px it gets the scrim,
 because there the drawer covers the board anyway.
 
-### View 1 — targets
+### View 1 — projections (the default)
 
-The queue, grouped by position, ordered by your rank. Each row carries the grade chip and a
-window chip fed by the projection below: `R4–R7` (available across that span), `R3 only` (one
-shot at him), `yours R2` (the sim already takes him there), `out of reach`, or `gone 3.05` once
-he's actually off the board.
-
-### View 2 — projections
+The drawer opens here. Of the three views it's the only one that answers "what happens next",
+which is the question you have with the drawer open mid-draft; the queue is something you built
+beforehand and can check on demand.
 
 Rounds 1..N, exactly as the draft is structured. Keepers and made picks fill their own round from
 `pick.metadata` — not from the board, because a keeper need not be on your CSV at all. Rounds you
@@ -616,6 +617,13 @@ leaves a pick with no answer; those rows are set lighter, since they are fallbac
 recommendations.
 
 The model is exported as `OvenTargets.project(state)` so it can be exercised without mounting.
+
+### View 2 — targets
+
+The queue, grouped by position, ordered by your rank. Each row carries the grade chip and a
+window chip fed by the projection above: `R4–R7` (available across that span), `R3 only` (one
+shot at him), `yours R2` (the sim already takes him there), `out of reach`, or `gone 3.05` once
+he's actually off the board.
 
 ### View 3 — team
 
@@ -704,7 +712,7 @@ board isn't showing. `.gone` is applied by `applyDraftState()` on every poll and
 `render()`, so the single rule covers the surgical patch, a full rebuild, and an undone pick.
 
 The crossed-off rule targets `.oven-name-text`, not the whole name line: `text-decoration`
-propagates to descendants and a child cannot opt out, so the team and note sit outside the
+propagates to descendants and a child cannot opt out, so the team sits outside the
 struck span rather than being un-struck inside it.
 
 ### One order, no sorting
@@ -743,7 +751,7 @@ seam above or below another row moves that player there. On drop:
    necessarily restates it — his and everyone he displaced. That is the point: drag someone up and
    watch the number climb into flame.
 5. **Hand the rows to the host.** `onReorder(rows)` receives them in the exact shape a CSV import
-   writes, and `/the-bakers-oven/{leagueId}/{rosterId}` writes them straight back into the same
+   writes, and `/bakers-oven/{leagueId}/{rosterId}` writes them straight back into the same
    per-league blob under `oven_board:{leagueId}`. A board still seeded from FantasyPros (nothing
    imported for this league yet) becomes a real saved board on the first move — dragging a player
    *is* authoring your rankings. `Export My Rankings` on the league page then gives you the board
@@ -918,6 +926,113 @@ estimate on 860 rows makes the scrollbar jump as they render in.
 
 ---
 
+## What the market has him doing — the odds half of the same line
+
+To the right of the finishes, on the same sub-line, separated by a hairline: the **consensus
+season-long yardage line** and the **consensus season-long touchdown line**, from the three books
+this repo already records.
+
+```
+Bijan Robinson  ATL
+2025 RB3  2024 RB4  │  YDS 1150   TD 9.5
+└──── history ────┘     └──── odds ────┘
+```
+
+**One line, two data sets, and the layout has to say both at once.** Adjacent because reading it
+left to right *is* the argument — what he did, then what he is priced to do — and a third line
+under the name would cost a saccade to make the same comparison. Ruled apart because they are not
+the same kind of number: the left pair is a settled fact off Sleeper, the right pair is three
+sportsbooks' current price on a season nobody has played. Different labels over each group
+(`2025`/`2024` vs `YDS`/`TD`) so nothing about them looks averageable.
+
+The `.oven-subsep` rule is an **element**, emitted only when both groups exist — not a border on
+the odds group. Seven rows in eight have no market at all, and a border would draw a leading
+hairline attached to nothing on every one of them. On phones (`max-width: 560px`) the sub-line
+wraps and the rule goes: two lines separate the sets harder than a rule does, and `YDS`/`TD` carry
+the second line on their own.
+
+### Consensus means the mean of the books' lines
+
+`scripts/build_prop_lines.py` reads the three snapshots `/odds` already reads —
+`data/fd.json` (FanDuel), `data/dk.json` (DraftKings), `data/score/*.json` (ESPN) — and writes
+`data/nfl_prop_lines.json`. No new source, no network call: everything is already in the repo,
+just spread across three vendor shapes.
+
+Consensus is the **mean of the books' main lines**, which is exactly what `/odds` already calls
+FMV, and the two pages are kept in step deliberately — a number that disagreed with the odds page
+would make one of them a liar. It is not de-vigged and it is not a probability: an O/U line is
+already the market's midpoint estimate of the quantity, and the vig lives in the two prices
+flanking it. The prices are read only to pick **which** line is a book's main one — the paired
+O/U whose implied probabilities sit closest together, since DraftKings and FanDuel both list
+alternates — and then discarded.
+
+### Both numbers are sums across markets
+
+A player is priced on one to three separate markets (passing / rushing / receiving × yards / TDs).
+"His yards" is all of them added up:
+
+| | | |
+|---|---|---|
+| Josh Allen | `YDS 4025` | 3541.8 passing + 483.5 rushing |
+| Bijan Robinson | `YDS 1150` | rushing only — the market prices him nowhere else |
+| Josh Allen | `TD 35.2` | 24.2 passing + 11.0 rushing |
+
+The alternative — one market chosen per position, QB→passing and RB→rushing — would have thrown
+away a real priced market on the six players whose legs are the reason they go early. The
+per-market breakdown ships in the file and the row's `title` spells it out, because `4025` beside
+`3250` is two different sentences depending on whether the first includes 480 rushing yards.
+
+**Rounded in the file, not at render**: yards to the whole yard (a tenth of a yard across a season
+is noise), TDs to a tenth (the lines are half-points, so a tenth is where two books disagreeing —
+7.5 and 8.5 → 8.0 — still shows). The renderer's `toFixed` is about *printing*, so a consensus of
+8 TDs reads `8.0` beside a `9.5` instead of shrinking to one glyph and breaking the column.
+
+### It joins by NAME, and it is the only thing on the row that does
+
+Every other join on the board goes through `playerKey()` — `POS|normalized name`. This one can't:
+a book market says `Lamar Jackson Regular Season Rushing Yards` and nothing else, there is no
+position anywhere in the feed, and inferring one from the market would file every rushing line
+under `RB` — wrong for exactly the players who matter most. So the file keys on `norm_name()`
+alone and the row looks up by name.
+
+`norm_name()` in `build_prop_lines.py` must therefore stay byte-for-byte equivalent to `normName()`
+in `oven-board.js`, same as its copies in `fetch_pos_ranks.py` and `fetch_nfl_weekly.py`. A drift
+produces a valid-looking file that joins to nothing, silently. Against the current FantasyPros
+seed the join is **104 of 104**.
+
+**Blank is the normal state.** The books price ~104 players; the board holds ~860. A player with no
+market gets **no group at all** — not an empty box — because 750 rows of reserved empty space is a
+column of nothing down the whole board. Within a group that *does* exist, a missing half (a back
+with a yardage line and no touchdown market) keeps its slot hidden, exactly as a season he didn't
+play does, so the two slots still line up.
+
+### Flat color, deliberately
+
+The finishes spend brightness on a four-step scale graded against starter depth (see above). The
+odds don't, and copying it would have been a mistake: 1150 rushing yards and 1150 receiving yards
+are not the same achievement, the pools differ by position, and any ramp drawn over them would be
+a grade this data can't support. Both numbers sit at `--oven-ash` — brighter than a bad finish,
+dimmer than a great one, making no claim of their own.
+
+### Refreshing it
+
+```bash
+python3 scripts/build_prop_lines.py
+```
+
+Re-run it after any Recorder ingest that updates `data/fd.json`, `data/dk.json` or
+`data/score/*.json`, and commit the two generated files. It refuses to overwrite good data if a
+book parses to zero markets, if fewer than 40 players come out, or if any number lands outside a
+plausible range — a vendor shape moving is a silent parse failure otherwise, and one wrong row in
+860 reads as a player nobody likes.
+
+Unlike the pos-ranks and weekly files this one is **not** immutable — the books move their numbers
+all summer — but it takes the same one-hour `/data/` cache and the same degrade-to-null on fetch. A
+stale line is a line the market held yesterday, which is still usable on draft night; a board that
+won't open is not.
+
+---
+
 ## Last season's weekly finishes
 
 The **`2025 weeks`** chip opens a small table under each player: how many weeks he finished top
@@ -1033,14 +1148,14 @@ and been scored, and a 404 on the data file degrades to no column rather than a 
 Run `python3 server.py`, open `http://localhost:8000`.
 
 **Routes**
-1. `/the-bakers-oven` is the league list; `/the-bakers-oven/1384025526670233600` is that
-   league's team picker; `/the-bakers-oven/1384025526670233600/1` is roster 1's board.
+1. `/bakers-oven` is the league list; `/bakers-oven/1384025526670233600` is that
+   league's team picker; `/bakers-oven/1384025526670233600/1` is roster 1's board.
    Check with `curl -s localhost:8000/… | grep -c 'id="leagues"'` — only the list page has it.
-2. `/the-bakers-oven/abc` and `/the-bakers-oven/{id}/1/2` both 404.
-3. Legacy `/the-bakers-oven/1` redirects to `/the-bakers-oven/{onlyLeague}/1` with one saved
-   league, and to `/the-bakers-oven` with two.
+2. `/bakers-oven/abc` and `/bakers-oven/{id}/1/2` both 404.
+3. Legacy `/bakers-oven/1` redirects to `/bakers-oven/{onlyLeague}/1` with one saved
+   league, and to `/bakers-oven` with two.
 4. Signed out, every Oven URL bounces to `/account`. Signed in as a **non-admin**, all three
-   render, "The Baker's Oven" appears in the hamburger drawer, and `/football` shows its card.
+   render, "Baker's Oven" appears in the hamburger drawer, and `/football` shows its card.
 
 **Leagues**
 5. Paste `1384025526670233600` → 12-team picker → pick one → the card shows
@@ -1080,8 +1195,8 @@ also checkable headlessly by loading `oven-config.js` + `oven-csv.js` + `oven-bo
 17. Drop a file → the confirm panel appears and **nothing is written**: reload, and the old board
     is intact. Cancel, then drop the *same file again* → the panel reappears (the `file.value = ''`
     reset; without it the second choose fires no `change` event and the drop zone reads as dead).
-18. Export the board, edit only `Note` in a copy, re-import with **only Note** checked → notes
-    change and tiers/ranks/grades are byte-identical on a fresh export.
+18. Export the board, edit only `Tier` in a copy, re-import with **only Tier** checked → tiers
+    change and ranks/grades/targets are byte-identical on a fresh export.
 19. Same file with the `Grade` cells blanked: **checked** clears the grades, **unchecked** leaves
     them. This is the blanks-overwrite rule, and it is the one people will be surprised by.
 20. Import 300 rows, then a 5-row sheet with 3 of them plus 2 new → *3 updated · 2 added · 302 on
@@ -1123,9 +1238,10 @@ also checkable headlessly by loading `oven-config.js` + `oven-csv.js` + `oven-bo
 24. Offline → "Reconnecting (n) · last update Nm ago", backoff widens; online → recovers.
 
 **Targets & Projections**
-25. The tab sits on the right edge of both `/the-bakers-oven/{leagueId}` and
-    `/the-bakers-oven/{leagueId}/1` — but **not** the top-level league list, which has no draft
-    context to project from. Opening it on a wide screen leaves the board fully clickable.
+25. The tab sits on the right edge of both `/bakers-oven/{leagueId}` and
+    `/bakers-oven/{leagueId}/1` — but **not** the top-level league list, which has no draft
+    context to project from. It opens on **Projections**, with that tab active. Opening it on a
+    wide screen leaves the board fully clickable.
 26. The pin at the end of a board row adds him: it flips to `✓`, the row gains a flame inner rail,
     and he appears in the queue. Pin again (or `×` in the drawer) removes him. Same on a phone —
     the pin is the only route in, on every device.
@@ -1150,7 +1266,7 @@ also checkable headlessly by loading `oven-config.js` + `oven-csv.js` + `oven-bo
      fewer rows above it — and `The chalk · N gone before you're up` keeps the same N. Same for
      switching a position filter on: the horizon marks the first player of that position expected
      to survive, not the N-th one. Only a pick actually being made moves the horizon.
-27f. Open the drawer's **Projections**, then grade a mid-board player **Like**: he moves up in the
+27f. Open the drawer (it lands on **Projections**), then grade a mid-board player **Like**: he moves up in the
      simulated rounds without waiting for a poll. **Fade** moves him down. The drawer's own rows
      still wear the ❤️/❌ badge; the board row does not, because its control already says it.
 27g. Keyboard: Tab to the control, Enter opens, ↑/↓/Home/End move, Enter picks, Escape closes and
@@ -1227,11 +1343,31 @@ also checkable headlessly by loading `oven-config.js` + `oven-csv.js` + `oven-bo
     grade/pin pair stays centered in the row. Toggling `2025 weeks` adds a third line under the
     finishes and moves nothing above it.
 
+**Consensus lines**
+37d. Bijan Robinson's row reads `2025 RB3  2024 RB4 │ YDS 1150  TD 9.5`, with a visible hairline
+    between the two groups. Cross-check against `/odds` → the FMV column of *Regular Season
+    Rushing Yards* and *Rushing TDs* reads `1150.2` and `9.5`: the same mean of the same three
+    book lines, differing only by the whole-yard rounding this line applies. Anything further
+    apart than that means the two pages have drifted on which line a book's main one is.
+37e. Josh Allen reads `YDS 4025  TD 35.2` — the sums of his passing **and** rushing markets. Hover:
+    the title breaks out `passing yards 3541.8, rushing yards 483.5, passing TDs 24.2,
+    rushing TDs 11.0` and names FanDuel, DraftKings, ESPN in that order.
+37f. Patrick Mahomes has **no** odds group at all (the snapshot prices him only in award futures),
+    and no empty box is reserved where it would have been. Bhayshul Tuten has `YDS 700` with the
+    `TD` slot blank but holding its width — the books give him no touchdown market.
+37g. Scroll to row ~200: `YDS` and `TD` are still at the same x they were at row 1, and the odds
+    group starts at the same x on every row that has one.
+37h. Narrow to a phone width (<560px): the odds wrap under the finishes, the hairline disappears
+    rather than dangling at the end of the wrapped line, and nothing overflows the name column.
+
 **Degraded**
 38. Rename `data/fp_redraft.json` → board still renders from CSV, with every Δ reading `—`
     (nothing to disagree with).
 38a. Rename `data/nfl_pos_ranks.json` → the finish line disappears entirely (not a row of dashes)
     and the board opens normally.
+38b. Rename `data/nfl_prop_lines.json` → the odds group and the hairline both disappear, the
+    finishes stay put at the same x, and the board opens normally. Rename *both* files → the
+    sub-line is gone entirely and the row is one line shorter with no empty gap.
 39. No CSV at all → board seeds from FantasyPros ranks with an import prompt.
 40. Import a new CSV that drops a queued player: he vanishes from the drawer but stays in storage,
     and the empty state says how many saved targets aren't on the current board.

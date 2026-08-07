@@ -1,4 +1,4 @@
-/* The Baker's Oven — Sleeper draft state and polling (window.OvenDraft).
+/* Baker's Oven — Sleeper draft state and polling (window.OvenDraft).
  *
  * Pure logic + network. No DOM. The browser talks to Sleeper directly:
  * api.sleeper.app sends `access-control-allow-origin: *`, so there is no CORS

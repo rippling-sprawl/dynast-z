@@ -1,7 +1,7 @@
-/* The Baker's Oven — CSV import/export (window.OvenCSV).
+/* Baker's Oven — CSV import/export (window.OvenCSV).
  *
  * Zero dependencies, matching the rest of the repo. The parser is a real
- * RFC-4180 state machine rather than split(',') because player notes and
+ * RFC-4180 state machine rather than split(',') because free-text columns and
  * "Last, First" names contain commas, and a naive split silently corrupts rows
  * instead of failing loudly.
  *
@@ -24,7 +24,6 @@
     // TARGETS_STORAGE_BASE) rather than on the board row, but a sheet is where
     // people actually build a draft list, so it round-trips through the CSV.
     target: ['target', 'targets', 'targeted', 'queue', 'queued', 'pin', 'pinned'],
-    note: ['note', 'notes', 'comment', 'comments'],
   };
 
   var GRADES = ['like', 'fade'];
@@ -183,7 +182,6 @@
         myRank: toInt(raw[map.myRank]),
         grade: cleanGrade(raw[map.grade]),
         target: cleanTarget(raw[map.target]),
-        note: (raw[map.note] || '').trim(),
         extra: extra,
         player_id: null,   // filled in by /api/football/resolve
         srcLine: r + 1,
@@ -231,7 +229,7 @@
     return lines.join('\r\n');
   }
 
-  var TEMPLATE_HEADER = ['Player', 'Pos', 'Team', 'Tier', 'MyRank', 'Grade', 'Target', 'Note'];
+  var TEMPLATE_HEADER = ['Player', 'Pos', 'Team', 'Tier', 'MyRank', 'Grade', 'Target'];
 
   // What an exported target reads as — one of the spellings cleanTarget
   // accepts, so the file we write is a file we can read back.
@@ -243,7 +241,7 @@
   function buildTemplate(fpPlayers, limit) {
     var n = limit || 250;
     var rows = fpPlayers.slice(0, n).map(function (p, i) {
-      return [p.name, p.position, p.team, p.tier == null ? '' : p.tier, i + 1, '', '', ''];
+      return [p.name, p.position, p.team, p.tier == null ? '' : p.tier, i + 1, '', ''];
     });
     return toCSV(TEMPLATE_HEADER, rows);
   }
@@ -273,7 +271,7 @@
     var body = rows.map(function (p) {
       var tgt = isTarget ? isTarget(p) : p.target;
       var base = [p.name, p.pos || '', p.team || '', p.tier == null ? '' : p.tier,
-        p.myRank == null ? '' : p.myRank, p.grade || '', tgt ? TARGET_MARK : '', p.note || ''];
+        p.myRank == null ? '' : p.myRank, p.grade || '', tgt ? TARGET_MARK : ''];
       return base.concat(extraLabels.map(function (k) { return (p.extra || {})[k] || ''; }));
     });
     return toCSV(header, body);

@@ -4,9 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <link rel="icon" type="image/png" href="/favicon.png">
-  <title>The Baker's Oven | Dynast-Z</title>
+  <title>Baker's Oven | Dynast-Z</title>
   <link rel="stylesheet" href="/styles/base/styles.css?v=abec71e4">
-  <link rel="stylesheet" href="/styles/primary/bakers-oven.css?v=56506583">
+  <link rel="stylesheet" href="/styles/primary/bakers-oven.css?v=6f85631f">
 </head>
 <body>
   <div id="header-mount"></div>
@@ -14,20 +14,19 @@
   <script src="/scripts/base/auth.js?v=8f2b460f"></script>
   <script src="/scripts/base/nav.js?v=9546680e"></script>
   <script src="/scripts/base/sync.js?v=1b85ffb1"></script>
-  <script src="/scripts/primary/oven-config.js?v=b40e5d01"></script>
-  <script src="/scripts/primary/oven-csv.js?v=39f0d531"></script>
+  <script src="/scripts/primary/oven-config.js?v=4e3bb4ac"></script>
+  <script src="/scripts/primary/oven-csv.js?v=7082f64c"></script>
   <script src="/scripts/primary/oven-draft.js?v=6b481746"></script>
   <script src="/scripts/primary/oven-leagues.js?v=3332aa1a"></script>
-  <script src="/scripts/primary/oven-board.js?v=d03d3343"></script>
-  <script src="/scripts/primary/oven-targets.js?v=d5d21668"></script>
+  <script src="/scripts/primary/oven-board.js?v=250ef296"></script>
+  <script src="/scripts/primary/oven-targets.js?v=4337ad12"></script>
   <script>initPage();</script>
 
   <main class="oven-content">
     <div class="oven-breadcrumbs">
-      <a href="/">Home</a><span class="sep">/</span><a href="/football">Football</a><span class="sep">/</span><a href="/the-bakers-oven">The Baker's Oven</a><span class="sep">/</span><span id="crumb-league">League</span>
+      <a href="/">Home</a><span class="sep">/</span><a href="/football">Football</a><span class="sep">/</span><a href="/bakers-oven">Baker's Oven</a><span class="sep">/</span><span id="crumb-league">League</span>
     </div>
-    <h2 class="oven-h2">🔥 The Baker's Oven</h2>
-    <p class="oven-sub">Your rankings, live against the Sleeper draft. Players cross off as they're picked or kept, and your next pick tracks itself down the board.</p>
+    <h2 class="oven-h2">🔥 Baker's Oven</h2>
 
     <div id="loading">Loading league…</div>
 
@@ -46,12 +45,36 @@
         </div>
 
         <div class="oven-card">
-          <h3>Rankings CSV</h3>
+          <h3>My Rankings</h3>
+          <div id="board-summary"></div>
+          <div class="oven-rank-actions">
+            <div class="oven-rank-tile oven-drop" id="drop">
+              <input type="file" id="file" accept=".csv,text/csv">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 10.5v-8"/><path d="M4.5 6 8 2.5 11.5 6"/><path d="M2.5 13h11"/></svg>
+              <span class="label">Import CSV</span>
+              <span class="sub">Drop a file or click to browse</span>
+            </div>
+            <button type="button" class="oven-rank-tile" id="tpl-btn">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2v8"/><path d="M4.5 7 8 10.5 11.5 7"/><path d="M2.5 13h11"/></svg>
+              <span class="label">Template</span>
+              <span class="sub">A blank sheet to rank in</span>
+            </button>
+            <button type="button" class="oven-rank-tile" id="export-btn">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2v8"/><path d="M4.5 7 8 10.5 11.5 7"/><path d="M2.5 13h11"/></svg>
+              <span class="label">Export</span>
+              <span class="sub">Your board as a CSV</span>
+            </button>
+          </div>
+          <div id="import-confirm" hidden></div>
+          <div id="import-msg"></div>
+        </div>
+
+        <div class="oven-card full">
+          <h3>Readme</h3>
           <p class="oven-note">
             Rankings are private to your account and saved per league.
             Columns: <code>Player</code> (required), <code>Pos</code>, <code>Team</code>,
-            <code>Tier</code>, <code>MyRank</code>, <code>Grade</code>, <code>Target</code>,
-            <code>Note</code>.
+            <code>Tier</code>, <code>MyRank</code>, <code>Grade</code>, <code>Target</code>.
             <code>Grade</code> accepts <code>like</code> or <code>fade</code> — older sheets'
             <code>love</code> and <code>avoid</code> are read as those. You can also set it on the
             board itself, and it weights the Targets projection. <code>Target</code> is your
@@ -63,27 +86,6 @@
             columns it applies, players it doesn't mention are left untouched, and nothing it can
             do will remove a player from your board.
           </p>
-        </div>
-
-        <div class="oven-card full">
-          <h3>My Rankings</h3>
-          <div id="board-summary"></div>
-          <div class="oven-drop" id="drop">
-            <input type="file" id="file" accept=".csv,text/csv">
-            <strong>Drop a CSV here</strong> or click to choose a file
-          </div>
-          <div class="oven-btn-row">
-            <button class="oven-btn with-icon" id="tpl-btn">
-              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2v8"/><path d="M4.5 7 8 10.5 11.5 7"/><path d="M2.5 13h11"/></svg>
-              Rankings Template
-            </button>
-            <button class="oven-btn with-icon" id="export-btn">
-              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2v8"/><path d="M4.5 7 8 10.5 11.5 7"/><path d="M2.5 13h11"/></svg>
-              My Rankings
-            </button>
-          </div>
-          <div id="import-confirm" hidden></div>
-          <div id="import-msg"></div>
         </div>
       </div>
     </div>
@@ -99,7 +101,7 @@
     var ctx = null, board = null, fp = [], draft = null, rec = null;
     var leagueId = null, myRosterId = null;
 
-    var seg = (location.pathname.match(/\/the-bakers-oven\/([^/?#]+)/) || [])[1] || '';
+    var seg = (location.pathname.match(/\/bakers-oven\/([^/?#]+)/) || [])[1] || '';
 
     // The Targets & Projections drawer mounts here too — the queue and the round
     // plan are worth reading before draft night, not only during it. Same
@@ -212,7 +214,7 @@
         if (mine.length) sub += ' · 1st at ' + OvenDraft.roundPickLabel(mine[0].pick_no, draft.settings.teams);
       }
 
-      el.innerHTML = '<a class="oven-team-card is-me oven-open-board" href="/the-bakers-oven/' + leagueId + '/' + myRosterId + '">' +
+      el.innerHTML = '<a class="oven-team-card is-me oven-open-board" href="/bakers-oven/' + leagueId + '/' + myRosterId + '">' +
         (me.avatar
           ? '<img class="oven-team-avatar" src="' + OvenBoard.esc(me.avatar) + '" alt="" referrerpolicy="no-referrer">'
           : '<div class="oven-team-avatar"></div>') +
@@ -306,8 +308,8 @@
      * identified — matched against the board, and sent to Sleeper — so letting
      * someone switch them off would mean an import that can't tell which player
      * it is talking about. They always apply, and only when non-blank. */
-    var COLUMN_LABEL = { tier: 'Tier', myRank: 'MyRank', grade: 'Grade', target: 'Target', note: 'Note' };
-    var COLUMN_ORDER = ['tier', 'myRank', 'grade', 'target', 'note'];
+    var COLUMN_LABEL = { tier: 'Tier', myRank: 'MyRank', grade: 'Grade', target: 'Target' };
+    var COLUMN_ORDER = ['tier', 'myRank', 'grade', 'target'];
 
     function fileColumns(parsed) {
       return COLUMN_ORDER
@@ -619,15 +621,15 @@
       });
     }
 
-    /* Legacy /the-bakers-oven/{rosterId} links, from before leagues existed.
+    /* Legacy /bakers-oven/{rosterId} links, from before leagues existed.
      * League ids are 18-19 digits and roster ids are one or two, so the shape
      * disambiguates. The server can't do this redirect — which league a bare
      * roster id belongs to is per-account data it never sees. */
     function handleLegacySegment() {
       var saved = OvenLeagues.list();
       location.replace(saved.length === 1
-        ? '/the-bakers-oven/' + saved[0].league_id + '/' + seg
-        : '/the-bakers-oven');
+        ? '/bakers-oven/' + saved[0].league_id + '/' + seg
+        : '/bakers-oven');
     }
 
     async function boot() {
@@ -668,7 +670,7 @@
         OvenLeagues.setLastLeagueId(leagueId);
         rec = OvenLeagues.get(leagueId);
         document.getElementById('crumb-league').textContent = ctx.league.name;
-        document.title = ctx.league.name + " | The Baker's Oven";
+        document.title = ctx.league.name + " | Baker's Oven";
 
         if (ctx.draftId) {
           draft = await OvenDraft.loadDraft(ctx.draftId);

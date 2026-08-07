@@ -1,4 +1,4 @@
-/* The Baker's Oven — feature configuration (window.OVEN).
+/* Baker's Oven — feature configuration (window.OVEN).
  *
  * Tuning constants, plus the one shared vocabulary table (SLOT_ELIGIBLE) and the
  * pure derivation over it that more than one module needs. The league, the draft
@@ -162,6 +162,31 @@
     // IN the file, so a re-fetch next August rolls the labels forward without a
     // code change. See scripts/fetch_pos_ranks.py.
     POSRANK_DATA: '/data/nfl_pos_ranks.json',
+
+    // What the market expects of him THIS season: one consensus yardage line
+    // and one consensus touchdown line, on the same sub-line as the finishes
+    // and to the right of them.
+    //
+    // The other half of a sentence the finishes only start. Two positional
+    // ranks say what he has already done; a season-long O/U says what three
+    // sportsbooks are willing to take money on him doing next — priced, not
+    // projected, which is a different kind of claim than anything else on the
+    // row. Neither one answers the other, which is exactly why both are here
+    // and why they are drawn as two groups with a rule between them.
+    //
+    // Consensus = the mean of the books' main lines, the same FMV the /odds
+    // page computes and shows; yards and touchdowns are each SUMMED across the
+    // markets a player is priced on, so a rushing quarterback's legs count.
+    // ~100 players have a market at all, out of ~860 on the board — a blank
+    // here is the normal case, not a gap. See scripts/build_prop_lines.py.
+    PROPS_DATA: '/data/nfl_prop_lines.json',
+
+    // The books, spelled the way a person says them. The file stores the short
+    // codes it parses from ("fd"/"dk"/"score"); a tooltip that named a source
+    // "score" would be naming nothing. An unmapped code falls through as-is
+    // rather than being dropped — a new book should show up wrong-looking, not
+    // invisible.
+    PROPS_BOOKS: { fd: 'FanDuel', dk: 'DraftKings', score: 'ESPN' },
 
     // How many of each position get STARTED across a 12-team league — the
     // yardstick the finish line grades a rank against (posRankTier in

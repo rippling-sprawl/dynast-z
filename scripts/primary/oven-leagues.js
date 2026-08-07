@@ -1,4 +1,4 @@
-/* The Baker's Oven — saved leagues and storage keys (window.OvenLeagues).
+/* Baker's Oven — saved leagues and storage keys (window.OvenLeagues).
  *
  * The Oven used to be one hardcoded league. It is now a per-account list:
  * paste a Sleeper league id, we fetch its metadata, you say which team is

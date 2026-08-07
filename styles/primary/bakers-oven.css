@@ -1,4 +1,4 @@
-/* The Baker's Oven — live draft companion.
+/* Baker's Oven — live draft companion.
  *
  * This page does NOT inherit the app's GitHub-dark palette. It is a kiln:
  * warm charcoal, one ember accent, one cold counter-accent. The name was
@@ -107,9 +107,9 @@ body:has(.oven-content) header {
   padding: 18px;
   margin-bottom: 14px;
 }
-/* The board link and the CSV rules are both short and neither wants a full
- * row to itself — paired, they read as one header row above the import card,
- * which keeps the whole width for its drop zone. */
+/* The two things you came to do — open the board, import a file — sit side by
+ * side at the top, and the CSV rules you read once run full width underneath
+ * them rather than pushing the import below the fold. */
 .oven-league-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -254,7 +254,7 @@ button.oven-team-card {
 
 /* ---------- signed out ---------- */
 
-/* /the-bakers-oven is public so the tool can be seen before it can be used.
+/* /bakers-oven is public so the tool can be seen before it can be used.
  * Everything past this page needs an account (the leagues and the board are
  * per-user), so the signed-out state is a pitch: what it looks like, then the
  * two ways in. */
@@ -309,13 +309,36 @@ button.oven-team-card {
 
 /* ---------- import ---------- */
 
-.oven-drop {
-  border: 1px dashed var(--oven-mortar); border-radius: 4px; padding: 24px;
-  text-align: center; color: var(--oven-ash); font-size: 13px;
-  transition: border-color .15s, background .15s, color .15s; cursor: pointer;
+/* The card's three doors — import, template, export — are equal thirds of one
+ * row. Same tile, same hit area, so no one of them reads as the real control
+ * and the other two as footnotes; only the import tile's dashed edge says it
+ * also takes a drop. */
+.oven-rank-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 14px;
 }
-.oven-drop:hover, .oven-drop.dragover {
-  border-color: var(--oven-flame); background: rgba(255, 122, 24, .05); color: var(--oven-bone);
+.oven-rank-tile {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  border: 1px solid var(--oven-mortar); border-radius: 4px;
+  padding: 14px 10px; text-align: center;
+  background: transparent; color: var(--oven-ash); font: inherit;
+  cursor: pointer;
+  transition: border-color .15s, background .15s, color .15s;
+}
+.oven-rank-tile:hover { border-color: var(--oven-flame); background: rgba(255, 122, 24, .05); color: var(--oven-bone); }
+.oven-rank-tile svg { width: 16px; height: 16px; flex: none; color: var(--oven-ash-dim); }
+.oven-rank-tile:hover svg { color: var(--oven-flame); }
+.oven-rank-tile .label {
+  font-family: var(--oven-data); font-size: 11px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .1em;
+}
+.oven-rank-tile .sub { font-size: 11px; line-height: 1.35; color: var(--oven-ash-dim); }
+
+.oven-drop { border-style: dashed; }
+.oven-drop.dragover {
+  border-color: var(--oven-flame); background: rgba(255, 122, 24, .08); color: var(--oven-bone);
 }
 .oven-drop input[type=file] { display: none; }
 
@@ -590,10 +613,13 @@ button.oven-team-card {
  * whole row, the position badge floated into the gap between the name and the
  * history, which read as belonging to neither.
  *
- * So the data cells top-align onto a shared 18px first line (the rule right
- * below this one), and only the two 22px CONTROLS stay centered in the row: a
- * button is a place to click, not a fact about the name, and centering keeps
- * the pair balanced against a row of any height. */
+ * So the cells that identify the player — rank, badge, taken tag — top-align
+ * onto a shared 18px first line (the rule right below this one), and the RIGHT
+ * END of the row stays centered: the two 22px controls and the Δ between them.
+ * A button is a place to click, not a fact about the name, and the Δ is what
+ * you click them because of — the argument for grading him or pinning him. The
+ * three read as one cluster at any row height, which they can't do if the Δ
+ * rides the first line while the buttons it feeds sit centered below it. */
 .oven-row {
   display: flex;
   align-items: center;
@@ -617,7 +643,6 @@ button.oven-team-card {
  * which is what lets them top-align without a magic offset per cell. */
 .oven-row > .oven-rk,
 .oven-row > .player-pos,
-.oven-row > .oven-delta,
 .oven-row > .oven-taken {
   align-self: flex-start;
   line-height: 18px;
@@ -687,12 +712,11 @@ button.oven-team-card {
   font-family: var(--oven-name);
   font-size: 13.5px; font-weight: 600; letter-spacing: -.005em;
   /* Fixed, not `normal`: this is the 18px first line the rank, the badge and the
-   * Δ align themselves to, so it can't be left to vary with the font. */
+   * taken tag align themselves to, so it can't be left to vary with the font. */
   line-height: 18px;
   color: var(--oven-bone);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.oven-name-note { color: var(--oven-ash-dim); font-weight: 400; }
 
 /* The NFL team sits on the name line, not under it. It's an identifier, not a
  * ranking input — data face, dim, one size down, so it reads as an annotation
@@ -841,11 +865,35 @@ button.oven-team-card {
  * Quiet by construction: 10px mono at ash-dim, under a 13.5px sans name at bone.
  * The size and color gap is what keeps a scroll down the board reading names,
  * with the history there for the row you stop on. */
+/* The sub-line itself: history on the left, a hairline, the market on the
+ * right. It is one line and two data sets, and the layout has to say both
+ * things at once — adjacency for the comparison, a rule for the fact that these
+ * are not the same kind of number and nothing about them averages.
+ *
+ * The rule is an element (emitted by subLine() only when both groups exist),
+ * not a border on the right-hand group. Seven rows in eight have no market, and
+ * a border would draw a leading hairline attached to nothing on every one of
+ * them.
+ *
+ * 12px of gap either side of the rule, against 10px between slots WITHIN a
+ * group: the groups have to separate more than their members do, and that's the
+ * cheapest way to say so on a line this small. */
+.oven-subline {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-top: 2px;
+}
+.oven-subsep {
+  align-self: center;
+  width: 1px; height: 11px;
+  background: var(--oven-mortar);
+}
+
 .oven-posrank {
   display: flex;
   align-items: baseline;
   gap: 10px;
-  margin-top: 2px;
   font-family: var(--oven-data);
   /* So the finishes line up down the board and RB4 / RB19 read as a pair
    * rather than as two differently-shaped numbers. */
@@ -915,6 +963,55 @@ button.oven-team-card {
  * state the wrong thing about a man who finished WR80. */
 .oven-posrank .t4 .opr-n { color: var(--oven-ash-dim); opacity: .62; }
 
+/* ---------- what the market has him doing ----------
+ *
+ * Two consensus season lines — yards and touchdowns — to the right of the two
+ * finishes, in the same grammar the finishes use: a small tracked label over
+ * (beside) a mono number, fixed slots, tabular figures. Same grammar on purpose:
+ * they sit on one line and a second visual language there would read as a
+ * second sub-line that happened to wrap.
+ *
+ * FLAT COLOR, and this is the one place the history's four-step brightness
+ * scale is deliberately NOT copied. A positional finish has a natural yardstick
+ * — starter depth at his position — and .opr-n spends brightness on it. A
+ * yardage line has no such scale: 1150 rushing yards and 1150 receiving yards
+ * are not the same achievement, the pools differ by position, and any ramp
+ * drawn over them would be a grade this data can't support. So both numbers sit
+ * at ash: brighter than a bad finish, dimmer than a great one, and making no
+ * claim of their own. */
+.oven-props {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-family: var(--oven-data);
+  font-variant-numeric: tabular-nums;
+  color: var(--oven-ash-dim);
+}
+/* Fixed slots for the same reason .opr has them: so YDS and TD each start at
+ * the same x down the whole board and the two read as columns rather than as
+ * text that happens to be near other text.
+ *
+ * 50px is the widest pair this data can produce, plus slack: a four-digit
+ * yardage is 4 mono glyphs at 10.5px (~25px), the label is 3 tracked glyphs at
+ * 8px (~16px), and the gap is 4 — about 45px, and no season line goes five
+ * digits. The TD slot is narrower and takes the same width anyway, because
+ * matching slots are what put the second label at a fixed x. */
+.oven-props .opl {
+  display: inline-flex; align-items: baseline; gap: 4px;
+  min-width: 50px;
+}
+/* Priced for one and not the other — a back with a yardage line and no
+ * touchdown market. Hidden, box kept, exactly as a season he didn't play is
+ * handled: within a group that exists, both slots still have to line up. (A
+ * player with no market at all has no group; see propCell.) */
+.oven-props .opl.is-none { visibility: hidden; }
+.oven-props .opl-k {
+  font-style: normal;
+  font-size: 8px; font-weight: 700; letter-spacing: .08em;
+  opacity: .72;
+}
+.oven-props .opl-n { font-size: 10.5px; color: var(--oven-ash); }
+
 .oven-weekly { display: none; }
 .oven-list.show-weekly .oven-weekly {
   /* Two rows, flowing by column: each tier emits its heading then its value, so
@@ -979,6 +1076,9 @@ button.oven-team-card {
   width: 48px; flex-shrink: 0; text-align: right;
   font-family: var(--oven-data);
   font-size: 11px; font-weight: 700;
+  /* Stated rather than left at `normal` so the digits' box is a known height
+   * against the 22px controls it centers with, instead of one the font picks. */
+  line-height: 18px;
   font-variant-numeric: tabular-nums;
 }
 .oven-delta.pos  { color: var(--oven-flame); }
@@ -1593,6 +1693,17 @@ body.oven-tp-open .oven-tp { transform: translateX(0); visibility: visible; }
   .oven-rk { width: 25px; font-size: 10px; }
   .oven-name-main { font-size: 12.5px; }
   .oven-row { gap: 7px; }
+  /* Four fixed slots and a rule need ~275px; the name column on a phone gets
+   * about half that once the rank, the badge, Δ, the grade and the pin have
+   * taken theirs. So the sub-line is allowed to wrap here and the odds drop
+   * under the finishes — which separates the two data sets harder than the rule
+   * did, not less, so the rule goes rather than dangle at the end of a wrapped
+   * line. The YDS/TD labels are what let the second line stand alone.
+   *
+   * A wrapped row is taller than .oven-row's contain-intrinsic-size estimate,
+   * which costs a little scrollbar drift on skipped rows and nothing else. */
+  .oven-subline { flex-wrap: wrap; row-gap: 1px; }
+  .oven-subsep { display: none; }
   .oven-marker.next .oven-marker-label,
   .oven-marker.next .oven-marker-pick { font-size: 15px; }
   .oven-h2 { font-size: 25px; }

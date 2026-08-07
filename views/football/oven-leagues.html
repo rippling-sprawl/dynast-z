@@ -4,9 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <link rel="icon" type="image/png" href="/favicon.png">
-  <title>The Baker's Oven | Dynast-Z</title>
+  <title>Baker's Oven | Dynast-Z</title>
   <link rel="stylesheet" href="/styles/base/styles.css?v=abec71e4">
-  <link rel="stylesheet" href="/styles/primary/bakers-oven.css?v=56506583">
+  <link rel="stylesheet" href="/styles/primary/bakers-oven.css?v=6f85631f">
 </head>
 <body>
   <div id="header-mount"></div>
@@ -14,17 +14,17 @@
   <script src="/scripts/base/auth.js?v=8f2b460f"></script>
   <script src="/scripts/base/nav.js?v=9546680e"></script>
   <script src="/scripts/base/sync.js?v=1b85ffb1"></script>
-  <script src="/scripts/primary/oven-config.js?v=b40e5d01"></script>
+  <script src="/scripts/primary/oven-config.js?v=4e3bb4ac"></script>
   <script src="/scripts/primary/oven-draft.js?v=6b481746"></script>
   <script src="/scripts/primary/oven-leagues.js?v=3332aa1a"></script>
-  <script src="/scripts/primary/oven-board.js?v=d03d3343"></script>
+  <script src="/scripts/primary/oven-board.js?v=250ef296"></script>
   <script>initPage();</script>
 
   <main class="oven-content">
     <div class="oven-breadcrumbs">
-      <a href="/">Home</a><span class="sep">/</span><a href="/football">Football</a><span class="sep">/</span><span>The Baker's Oven</span>
+      <a href="/">Home</a><span class="sep">/</span><a href="/football">Football</a><span class="sep">/</span><span>Baker's Oven</span>
     </div>
-    <h2 class="oven-h2">🔥 The Baker's Oven</h2>
+    <h2 class="oven-h2">🔥 Baker's Oven</h2>
     <p class="oven-sub">Your leagues, live against the Sleeper draft. Open a league to load your rankings and your draft board — players cross off as they're picked or kept, and your next pick tracks itself down the board.</p>
 
     <div id="loading">Loading your leagues…</div>
@@ -38,15 +38,15 @@
           one before it can load anything. Creating one takes a username and a password.
         </p>
         <div class="oven-btn-row">
-          <a class="oven-btn primary" href="/account?next=/the-bakers-oven">Sign in</a>
-          <a class="oven-btn" href="/account?next=/the-bakers-oven">Create account</a>
+          <a class="oven-btn primary" href="/account?next=/bakers-oven">Sign in</a>
+          <a class="oven-btn" href="/account?next=/bakers-oven">Create account</a>
         </div>
       </div>
 
       <figure class="oven-preview">
         <button type="button" class="oven-preview-shot" id="preview-open"
                 aria-label="Open a larger preview of the draft board">
-          <img src="/assets/screenshots/bakers-oven-preview.png" alt="The Baker's Oven draft board mid-draft: your pick on the clock, the big board tiered and crossed off, and the projections drawer showing who is likely to reach each of your next picks.">
+          <img src="/assets/screenshots/bakers-oven-preview.png" alt="Baker's Oven draft board mid-draft: your pick on the clock, the big board tiered and crossed off, and the projections drawer showing who is likely to reach each of your next picks.">
         </button>
         <figcaption>The board, live at 1.01 — click to enlarge</figcaption>
       </figure>
@@ -77,7 +77,7 @@
 
   <div class="oven-lightbox" id="lightbox" hidden>
     <button type="button" class="oven-lightbox-close" id="lightbox-close" aria-label="Close preview">&times;</button>
-    <img src="/assets/screenshots/bakers-oven-preview.png" alt="The Baker's Oven draft board, full size.">
+    <img src="/assets/screenshots/bakers-oven-preview.png" alt="Baker's Oven draft board, full size.">
   </div>
 
   <script>
@@ -111,7 +111,7 @@
             ? '<img class="oven-team-avatar" src="' + OvenBoard.esc(l.avatar) + '" alt="" referrerpolicy="no-referrer">'
             : '<div class="oven-team-avatar"></div>') +
           '<div class="oven-team-meta">' +
-            '<a class="oven-league-link oven-team-name" href="/the-bakers-oven/' + OvenBoard.esc(l.league_id) + '">' +
+            '<a class="oven-league-link oven-team-name" href="/bakers-oven/' + OvenBoard.esc(l.league_id) + '">' +
               OvenBoard.esc(l.name) + '</a>' +
             '<div class="oven-team-sub">' + sub + '</div>' +
             '<div class="oven-team-sub">' + mine + '</div>' +

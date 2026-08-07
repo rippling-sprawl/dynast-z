@@ -4,9 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <link rel="icon" type="image/png" href="/favicon.png">
-  <title>Big Board | The Baker's Oven</title>
+  <title>Big Board | Baker's Oven</title>
   <link rel="stylesheet" href="/styles/base/styles.css?v=abec71e4">
-  <link rel="stylesheet" href="/styles/primary/bakers-oven.css?v=56506583">
+  <link rel="stylesheet" href="/styles/primary/bakers-oven.css?v=6f85631f">
 </head>
 <body>
   <div id="header-mount"></div>
@@ -15,18 +15,18 @@
   <script src="/scripts/base/nav.js?v=9546680e"></script>
   <script src="/scripts/base/sync.js?v=1b85ffb1"></script>
   <script src="/scripts/components/sticky-headers.js?v=43c9432d"></script>
-  <script src="/scripts/primary/oven-config.js?v=b40e5d01"></script>
-  <script src="/scripts/primary/oven-csv.js?v=39f0d531"></script>
+  <script src="/scripts/primary/oven-config.js?v=4e3bb4ac"></script>
+  <script src="/scripts/primary/oven-csv.js?v=7082f64c"></script>
   <script src="/scripts/primary/oven-draft.js?v=6b481746"></script>
   <script src="/scripts/primary/oven-leagues.js?v=3332aa1a"></script>
   <script src="/scripts/primary/oven-weekly.js?v=da1d9929"></script>
-  <script src="/scripts/primary/oven-board.js?v=d03d3343"></script>
-  <script src="/scripts/primary/oven-targets.js?v=d5d21668"></script>
+  <script src="/scripts/primary/oven-board.js?v=250ef296"></script>
+  <script src="/scripts/primary/oven-targets.js?v=4337ad12"></script>
   <script>initPage();</script>
 
   <main class="oven-content">
     <div class="oven-breadcrumbs">
-      <a href="/football">Football</a><span class="sep">/</span><a href="/the-bakers-oven">The Baker's Oven</a><span class="sep">/</span><a id="crumb-league" href="/the-bakers-oven">League</a><span class="sep">/</span><span id="crumb-team">Board</span>
+      <a href="/football">Football</a><span class="sep">/</span><a href="/bakers-oven">Baker's Oven</a><span class="sep">/</span><a id="crumb-league" href="/bakers-oven">League</a><span class="sep">/</span><span id="crumb-team">Board</span>
     </div>
 
     <div id="loading">Loading draft board…</div>
@@ -106,7 +106,7 @@
 
     // Both segments come from the route, which only matches digits — no
     // fallback roster, because there is no longer a "my" roster to fall back to.
-    var seg = location.pathname.match(/\/the-bakers-oven\/(\d+)\/(\d+)/) || [];
+    var seg = location.pathname.match(/\/bakers-oven\/(\d+)\/(\d+)/) || [];
     var leagueId = seg[1];
     var rosterId = parseInt(seg[2], 10);
 
@@ -145,7 +145,7 @@
           '<span class="oven-pick-label">' + label + '</span>' +
           (onClock ? '' : '<span class="oven-pick-away">' + away + ' away</span>');
         consoleEl.classList.toggle('is-live', onClock);
-        var base = "The Baker's Oven";
+        var base = "Baker's Oven";
         document.title = onClock ? 'ON THE CLOCK — ' + base
           : (away <= 5 ? '(' + away + ') ' + base : 'Big Board | ' + base);
       }
@@ -253,7 +253,7 @@
     async function boot() {
       try {
         if (!leagueId || !rosterId || isNaN(rosterId)) {
-          loading.innerHTML = 'Not a board URL. <a href="/the-bakers-oven">Pick a league →</a>';
+          loading.innerHTML = 'Not a board URL. <a href="/bakers-oven">Pick a league →</a>';
           return;
         }
 
@@ -263,7 +263,7 @@
         // ctx.league.name replaces it below if the league was renamed.
         var rec = OvenLeagues.get(leagueId);
         var leagueCrumb = document.getElementById('crumb-league');
-        leagueCrumb.href = '/the-bakers-oven/' + leagueId;
+        leagueCrumb.href = '/bakers-oven/' + leagueId;
         if (rec) leagueCrumb.textContent = rec.name;
 
         bk = OvenLeagues.boardKeys(leagueId);
@@ -281,12 +281,20 @@
           // same degrade-to-null. Without it every row simply loses its history
           // line; the board still opens.
           fetch(OVEN.POSRANK_DATA).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }),
+          // 14 KB of season-long consensus lines. Unlike the two files above
+          // this one is NOT immutable — the books move their numbers all
+          // summer, and it is rebuilt whenever a Recorder bundle lands — but a
+          // stale line is a line the market held yesterday, which is still a
+          // usable fact on draft night. So it takes the same shared HTTP cache
+          // (an hour, per vercel.json) and the same degrade-to-null.
+          fetch(OVEN.PROPS_DATA).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }),
         ]);
         ctx = results[0];
         var fp = results[1] || [], fpMeta = results[2];
         board = results[3];
         var weekly = results[4];
         var posRanks = results[5];
+        var propLines = results[6];
         leagueCrumb.textContent = ctx.league.name;
 
         draft = await OvenDraft.loadDraft(ctx.draftId);
@@ -308,6 +316,11 @@
         // hardcodes a year. Before the first render, since it's part of every
         // row rather than a toggled column.
         OvenBoard.setPosRanks(posRanks);
+
+        // And what the books have him doing next season, on the same sub-line.
+        // Set beside the finishes and for the same reason: it is part of every
+        // row, not a column you turn on.
+        OvenBoard.setPropLines(propLines);
 
         // Last season's finishes, scored by THIS league's settings — the whole
         // point of doing it here rather than shipping precomputed ranks. The
@@ -367,7 +380,7 @@
             'They stay in your saved rankings.');
         }
         if (!board || !board.rows || !board.rows.length) {
-          notes.push('Showing <strong>FantasyPros half-PPR ranks</strong> — <a href="/the-bakers-oven/' + leagueId + '">import your rankings for this league</a> to use your own board.');
+          notes.push('Showing <strong>FantasyPros half-PPR ranks</strong> — <a href="/bakers-oven/' + leagueId + '">import your rankings for this league</a> to use your own board.');
         }
         if (fpMeta) {
           var ageDays = (Date.now() / 1000 - (fpMeta.fetched_ts || 0)) / 86400;

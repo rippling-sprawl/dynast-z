@@ -51,7 +51,7 @@ function requireAdmin(fallback) {
 }
 
 // Page gate for account-scoped routes — anything whose data is stored per user
-// and is meaningless without an identity (The Baker's Oven). Same UI-level
+// and is meaningless without an identity (Baker's Oven). Same UI-level
 // caveat as requireAdmin: the real enforcement is the X-User-Id check in the
 // Python endpoints.
 function requireLogin() {

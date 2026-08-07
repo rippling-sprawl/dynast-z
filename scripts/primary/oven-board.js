@@ -1,4 +1,4 @@
-/* The Baker's Oven — board model and rendering (window.OvenBoard).
+/* Baker's Oven — board model and rendering (window.OvenBoard).
  *
  * Rendering is two-phase on purpose:
  *   render()          full innerHTML build (boot, CSV import, sort/filter change)
@@ -151,7 +151,6 @@
           myRank: r.myRank,
           tier: r.tier != null ? r.tier : (fp ? fp.tier : null),
           grade: normGrade(r.grade),
-          note: r.note,
           extra: r.extra || {},
           // No fpPosRank: the badge shows my positional rank, and FP's would be
           // a second, contradictory "RB7" sitting on the row waiting to be read.
@@ -167,7 +166,7 @@
           key: playerKey(p.name, p.position, p.team),
           player_id: null,
           name: p.name, pos: p.position, team: p.team,
-          myRank: i + 1, tier: p.tier, grade: null, note: '', extra: {},
+          myRank: i + 1, tier: p.tier, grade: null, extra: {},
           fpRank: p.rank,
           onMyBoard: false,
         };
@@ -240,7 +239,6 @@
       tier: r.tier == null ? null : r.tier,
       myRank: r.myRank == null ? null : r.myRank,
       grade: r.grade || null,
-      note: r.note || '',
       extra: r.extra || {},
       player_id: r.player_id || null,
     };
@@ -262,7 +260,7 @@
   // when nothing in HEADER_ALIASES matched, so the two namespaces can't collide
   // and one flat map can carry both.
   var CANON_FIELDS = {
-    player: 1, pos: 1, team: 1, tier: 1, myRank: 1, grade: 1, target: 1, note: 1,
+    player: 1, pos: 1, team: 1, tier: 1, myRank: 1, grade: 1, target: 1,
   };
 
   function findExisting(inc, byKey, byName, claimed, warnings) {
@@ -317,7 +315,6 @@
     if (sel.tier) row.tier = inc.tier;
     if (sel.myRank) row.myRank = inc.myRank;
     if (sel.grade) row.grade = inc.grade || null;
-    if (sel.note) row.note = inc.note || '';
 
     Object.keys(sel).forEach(function (k) {
       if (!sel[k] || CANON_FIELDS[k]) return;
@@ -434,6 +431,12 @@
     // it is about, and a renderer that took the years from anywhere else would
     // label 2024's number 2025 the first summer nobody re-ran the fetch.
     posRanks: null,
+    // What the market has him doing this season: the `lines` map of
+    // /data/nfl_prop_lines.json, keyed by normalized NAME with no position
+    // prefix — {name: {yards, tds, parts, books}}. Name-only because the books'
+    // feeds carry no position at all (see build_prop_lines.py), so this is the
+    // one lookup on the row that doesn't go through playerKey().
+    props: null,
     // The league's startable positions as a lookup, and the rows the last
     // buildBoard() set aside because they aren't at one. Null positions means
     // the league hasn't said (or starts nothing), and nothing is filtered.
@@ -451,6 +454,13 @@
    * would render two unlabeled numbers, which is worse than rendering none. */
   function setPosRanks(payload) {
     state.posRanks = payload && payload.seasons && payload.ranks ? payload : null;
+  }
+
+  /* Set once at boot from the fetched file. Only the `lines` map is kept — the
+   * file's own bookkeeping (build time, per-book market counts) lives in the
+   * meta file beside it, and nothing on the row reads it. */
+  function setPropLines(payload) {
+    state.props = payload && payload.lines ? payload.lines : null;
   }
 
   function visibleRows() {
@@ -920,6 +930,93 @@
       '">' + cells.join('') + '</div>';
   }
 
+  /* What the market has him doing this season: one consensus yardage number and
+   * one consensus touchdown number, sitting to the right of the two finishes on
+   * the same sub-line.
+   *
+   * They share a line because they answer the same question — how good is he —
+   * and reading "RB4 RB19 1150 9.5" left to right IS the argument: what he did,
+   * then what he's priced to do. Put on their own line they'd be a third thing
+   * under the name and the comparison would cost a saccade.
+   *
+   * They are drawn as a separate GROUP because they are a separate claim, and
+   * the difference matters more than the adjacency: a finish is a settled fact
+   * off Sleeper, a line is three sportsbooks' current price on a season nobody
+   * has played. Same line, one rule between them, different labels — 2024/2025
+   * over the finishes, YDS/TD over the odds. Nothing about the two groups is
+   * meant to look averageable.
+   *
+   * Blank is the normal state. About a hundred players are priced at all, so
+   * seven rows in eight have no odds here — which is why the group vanishes
+   * entirely rather than holding an empty box the way a missing SEASON does.
+   * A missing season is a hole in a two-slot line that has to stay aligned; a
+   * player with no market has no group at all, and 750 rows of reserved empty
+   * space would be a column of nothing down the whole board. */
+  function propNum(n, decimals) {
+    return n == null || isNaN(n) ? null : Number(n).toFixed(decimals || 0);
+  }
+
+  function propCell(r) {
+    if (!state.props) return '';        // file never loaded — no group, not an empty one
+    var p = state.props[normName(r.name)];
+    if (!p) return '';                  // not priced — the common case
+
+    // Yards to the whole yard, TDs to a tenth. The file already rounds to
+    // exactly this (see build_prop_lines.py) — the toFixed here is about
+    // PRINTING, so a consensus of 8 TDs reads "8.0" beside a 9.5 instead of
+    // shrinking to a single glyph and breaking the column.
+    var pairs = [
+      { k: 'YDS', v: propNum(p.yards, 0) },
+      { k: 'TD', v: propNum(p.tds, 1) },
+    ];
+    var cells = [], label = [];
+    for (var i = 0; i < pairs.length; i++) {
+      // A priced player missing one of the two (a rusher with a yardage line and
+      // no touchdown market) keeps the slot, hidden, exactly as a missing season
+      // does — within a group that exists, the two slots still have to line up.
+      var has = pairs[i].v != null;
+      cells.push('<span class="opl' + (has ? '' : ' is-none') + '">' +
+        '<i class="opl-k">' + pairs[i].k + '</i>' +
+        '<span class="opl-n">' + esc(has ? pairs[i].v : '0') + '</span></span>');
+      if (has) label.push(pairs[i].v + (pairs[i].k === 'TD' ? ' TDs' : ' yards'));
+    }
+
+    // The title carries what the two numbers can't: which markets were summed to
+    // make them, and which books priced it. A 4025 next to a 3250 is two
+    // different sentences depending on whether the first one includes 480
+    // rushing yards, and the row can't say that in the space it has.
+    var parts = [];
+    // One decimal on every component, whatever the file stored: these are the
+    // unrounded per-market consensus figures, and "rushing tds 11" beside
+    // "passing tds 24.2" reads as a different kind of number rather than as the
+    // same one that happened to land on a whole.
+    for (var k in p.parts) {
+      parts.push(k.replace('tds', 'TDs') + ' ' + Number(p.parts[k]).toFixed(1));
+    }
+    var books = (p.books || []).map(function (b) { return C.PROPS_BOOKS[b] || b; });
+    return '<div class="oven-props" title="' +
+      esc('Market consensus · ' + label.join(' · ') +
+        (parts.length ? ' — ' + parts.join(', ') : '') +
+        (books.length ? ' · ' + books.join(', ') : '')) +
+      '">' + cells.join('') + '</div>';
+  }
+
+  /* The sub-line the two of them share: finishes, a rule, odds.
+   *
+   * The rule is emitted only when both sides are there, which is the whole
+   * reason this isn't a border on .oven-props. A border would draw a stray
+   * leading hairline on every unpriced row (and on every row at all, the summer
+   * the pos-ranks file is missing) — a separator with nothing on one side of it
+   * is a mark that means nothing. */
+  function subLine(r) {
+    var hist = posRankCell(r);
+    var odds = propCell(r);
+    if (!hist && !odds) return '';
+    return '<div class="oven-subline">' + hist +
+      (hist && odds ? '<span class="oven-subsep" aria-hidden="true"></span>' : '') +
+      odds + '</div>';
+  }
+
   /* Every row is the same flat markup — no inline styles at all now that the heat
    * wash is gone, which is why applyDraftState() can patch a row by touching
    * classes and never has to reason about what color it was. */
@@ -977,16 +1074,16 @@
       '<div class="oven-name">' +
         // The name is its own element so the crossed-off treatment lands on it
         // alone — text-decoration propagates to descendants and a child can't
-        // opt out, so the team and note have to sit outside the struck span
-        // rather than be un-struck inside it.
+        // opt out, so the team has to sit outside the struck span rather than
+        // be un-struck inside it.
         '<div class="oven-name-main"><span class="oven-name-text">' + esc(r.name) + '</span>' +
-          (r.team ? '<span class="oven-name-team">' + esc(r.team) + '</span>' : '') +
-          (r.note ? ' <span class="oven-name-note">· ' + esc(r.note) + '</span>' : '') + '</div>' +
+          (r.team ? '<span class="oven-name-team">' + esc(r.team) + '</span>' : '') + '</div>' +
         // Both sub-lines belong to the name column, not to columns of their own:
         // they annotate the player, and they grow the row downward instead of
-        // widening it. History first — it's always on, so the weekly table
-        // appears below it rather than shoving it down when the chip is toggled.
-        posRankCell(r) +
+        // widening it. History and odds first — always on, so the weekly table
+        // appears below them rather than shoving them down when the chip is
+        // toggled.
+        subLine(r) +
         weeklyCell(r) +
       '</div>' +
       // The title carries what the cell can't: the spots, since the printed
@@ -1520,6 +1617,7 @@
     mergeImport: mergeImport,
     setWeekly: setWeekly,
     setPosRanks: setPosRanks,
+    setPropLines: setPropLines,
     indexPicks: indexPicks,
     render: render,
     applyDraftState: applyDraftState,

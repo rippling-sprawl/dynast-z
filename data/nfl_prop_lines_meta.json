@@ -1,0 +1,29 @@
+{
+  "sources": [
+    "data/fd.json",
+    "data/dk.json",
+    "data/score/*.json"
+  ],
+  "books": [
+    "fd",
+    "dk",
+    "score"
+  ],
+  "stats": [
+    "passing yards",
+    "rushing yards",
+    "receiving yards",
+    "passing tds",
+    "rushing tds",
+    "receiving tds"
+  ],
+  "consensus": "mean of each book's main O/U line; yards and TDs each summed across the player's priced markets",
+  "player_count": 104,
+  "markets_per_book": {
+    "fd": 127,
+    "dk": 163,
+    "score": 118
+  },
+  "size_bytes": 14012,
+  "built_at": "2026-08-07T02:17:23+00:00"
+}

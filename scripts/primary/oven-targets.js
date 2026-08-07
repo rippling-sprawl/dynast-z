@@ -1,4 +1,4 @@
-/* The Baker's Oven — Targets & Projections (window.OvenTargets).
+/* Baker's Oven — Targets & Projections (window.OvenTargets).
  *
  * A mountable right-edge drawer, not a page. It injects its own tab, panel and
  * event wiring into <body>, reads everything it needs through one accessor the
@@ -12,9 +12,10 @@
  *   OvenTargets.refresh();   // after any poll
  *
  * Three sub-views:
- *   targets     — the queue, grouped by position, in my rank order
  *   projections — rounds 1..N, keepers and made picks filled in, future rounds
- *                 simulated forward
+ *                 simulated forward. The default: it's the one view that answers
+ *                 "what happens next", so it's what the drawer opens on
+ *   targets     — the queue, grouped by position, in my rank order
  *   team        — my lineup as the league defines it (roster_positions), filled
  *                 from what I've actually kept and drafted
  *
@@ -79,7 +80,7 @@
     bound: false,     // syncKey/storageKey resolved — the queue can be read and written
     loaded: false,    // the saved queue has been pulled once
     open: false,
-    view: 'targets',
+    view: 'projections',
     keys: [],          // board keys, insertion order
     getState: null,
     els: {},
@@ -759,8 +760,8 @@
       '<aside class="oven-tp" id="oven-tp" aria-hidden="true" aria-label="Targets and projections">' +
         '<div class="oven-tp-head">' +
           '<nav class="oven-tp-nav">' +
-            '<a href="#" data-view="targets" class="active">Targets<span class="oven-tp-count" hidden>0</span></a>' +
-            '<a href="#" data-view="projections">Projections</a>' +
+            '<a href="#" data-view="projections" class="active">Projections</a>' +
+            '<a href="#" data-view="targets">Targets<span class="oven-tp-count" hidden>0</span></a>' +
             '<a href="#" data-view="team">Team</a>' +
           '</nav>' +
           '<button class="oven-tp-close" type="button" aria-label="Close targets">&times;</button>' +

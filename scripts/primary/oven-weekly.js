@@ -1,4 +1,4 @@
-/* The Baker's Oven — last season's weekly finishes (window.OvenWeekly).
+/* Baker's Oven — last season's weekly finishes (window.OvenWeekly).
  *
  * Pure model, no DOM. Given the committed raw stat lines from
  * scripts/fetch_nfl_weekly.py and a league's scoring_settings, it answers: how

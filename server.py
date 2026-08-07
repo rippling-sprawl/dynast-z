@@ -1021,7 +1021,7 @@ def resolve_player(index, name, position, team):
     return active[0] if len(active) == 1 else None
 
 
-### The Baker's Oven ###########################################################
+### Baker's Oven ###############################################################
 # Resolving board rows to Sleeper player_ids happens once, at CSV upload, so the
 # live draft path is an exact ID match and no fuzzy matching can fail mid-draft.
 
@@ -1395,20 +1395,27 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         elif self.path == "/football/grading-system":
             self.path = "/views/home/grading-system.html"
             super().do_GET()
-        # The Baker's Oven — live draft companion. /the-bakers-oven is the
+        # Baker's Oven — live draft companion. /bakers-oven is the
         # account's saved-league list; /{leagueId} is that league's draft and
         # team picker; /{leagueId}/{rosterId} is that team's big board. Only
         # digits match: Sleeper ids are always numeric, and a junk segment
         # should 404 rather than boot a page that will fail against Sleeper.
         # A legacy one-segment roster id lands on oven-league.html, which
         # detects it by length and redirects.
-        elif self.path.split("?")[0] == "/the-bakers-oven":
+        #
+        # The route used to be /the-bakers-oven. Saved bookmarks and any board
+        # link already shared keep working via a 301 that drops the article.
+        elif self.path.split("?")[0] == "/the-bakers-oven" or self.path.startswith("/the-bakers-oven/"):
+            self.send_response(301)
+            self.send_header("Location", "/bakers-oven" + self.path[len("/the-bakers-oven"):])
+            self.end_headers()
+        elif self.path.split("?")[0] == "/bakers-oven":
             self.path = "/views/football/oven-leagues.html"
             super().do_GET()
-        elif re.match(r"^/the-bakers-oven/\d+/\d+/?$", self.path.split("?")[0]):
+        elif re.match(r"^/bakers-oven/\d+/\d+/?$", self.path.split("?")[0]):
             self.path = "/views/football/oven-board.html"
             super().do_GET()
-        elif re.match(r"^/the-bakers-oven/\d+/?$", self.path.split("?")[0]):
+        elif re.match(r"^/bakers-oven/\d+/?$", self.path.split("?")[0]):
             self.path = "/views/football/oven-league.html"
             super().do_GET()
         elif self.path == "/odds":
@@ -1499,7 +1506,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             super().do_GET()
 
     def do_POST(self):
-        # The Baker's Oven: resolve uploaded board rows to Sleeper player_ids
+        # Baker's Oven: resolve uploaded board rows to Sleeper player_ids
         # once, at import, so the live draft path is an exact ID match.
         if self.path == "/api/football/resolve":
             try:
