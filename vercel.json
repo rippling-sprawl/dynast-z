@@ -17,6 +17,7 @@
     { "source": "/bets/settle", "destination": "/views/bets/settle.html" },
     { "source": "/bets", "destination": "/views/bets/index.html" },
     { "source": "/football/grading-system", "destination": "/views/home/grading-system.html" },
+    { "source": "/football/schedule", "destination": "/views/football/schedule.html" },
     { "source": "/football", "destination": "/views/home/football.html" },
     { "source": "/bakers-oven/:leagueId/:rosterId", "destination": "/views/football/oven-board.html" },
     { "source": "/bakers-oven/:leagueId", "destination": "/views/football/oven-league.html" },

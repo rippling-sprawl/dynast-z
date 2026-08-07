@@ -6,20 +6,20 @@
   <link rel="icon" type="image/png" href="/favicon.png">
   <title>Baker's Oven | Dynast-Z</title>
   <link rel="stylesheet" href="/styles/base/styles.css?v=abec71e4">
-  <link rel="stylesheet" href="/styles/primary/bakers-oven.css?v=6f85631f">
+  <link rel="stylesheet" href="/styles/primary/bakers-oven.css?v=e0914ad0">
 </head>
 <body>
   <div id="header-mount"></div>
   <div id="nav-drawer-mount"></div>
-  <script src="/scripts/base/auth.js?v=8f2b460f"></script>
-  <script src="/scripts/base/nav.js?v=9546680e"></script>
+  <script src="/scripts/base/auth.js?v=8ab3e67e"></script>
+  <script src="/scripts/base/nav.js?v=1d4c0225"></script>
   <script src="/scripts/base/sync.js?v=1b85ffb1"></script>
-  <script src="/scripts/primary/oven-config.js?v=4e3bb4ac"></script>
-  <script src="/scripts/primary/oven-csv.js?v=7082f64c"></script>
-  <script src="/scripts/primary/oven-draft.js?v=6b481746"></script>
-  <script src="/scripts/primary/oven-leagues.js?v=3332aa1a"></script>
-  <script src="/scripts/primary/oven-board.js?v=250ef296"></script>
-  <script src="/scripts/primary/oven-targets.js?v=4337ad12"></script>
+  <script src="/scripts/primary/oven-config.js?v=3b9b0913"></script>
+  <script src="/scripts/primary/oven-csv.js?v=075581d9"></script>
+  <script src="/scripts/primary/oven-draft.js?v=6be4e481"></script>
+  <script src="/scripts/primary/oven-leagues.js?v=51be0572"></script>
+  <script src="/scripts/primary/oven-board.js?v=b9392c84"></script>
+  <script src="/scripts/primary/oven-targets.js?v=021cceab"></script>
   <script>initPage();</script>
 
   <main class="oven-content">
@@ -46,7 +46,6 @@
 
         <div class="oven-card">
           <h3>My Rankings</h3>
-          <div id="board-summary"></div>
           <div class="oven-rank-actions">
             <div class="oven-rank-tile oven-drop" id="drop">
               <input type="file" id="file" accept=".csv,text/csv">
@@ -54,17 +53,18 @@
               <span class="label">Import CSV</span>
               <span class="sub">Drop a file or click to browse</span>
             </div>
-            <button type="button" class="oven-rank-tile" id="tpl-btn">
-              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2v8"/><path d="M4.5 7 8 10.5 11.5 7"/><path d="M2.5 13h11"/></svg>
-              <span class="label">Template</span>
-              <span class="sub">A blank sheet to rank in</span>
-            </button>
             <button type="button" class="oven-rank-tile" id="export-btn">
               <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2v8"/><path d="M4.5 7 8 10.5 11.5 7"/><path d="M2.5 13h11"/></svg>
               <span class="label">Export</span>
-              <span class="sub">Your board as a CSV</span>
+              <span class="sub">Your rankings as a CSV</span>
+            </button>
+            <button type="button" class="oven-rank-tile" id="tpl-btn">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2v8"/><path d="M4.5 7 8 10.5 11.5 7"/><path d="M2.5 13h11"/></svg>
+              <span class="label">Template</span>
+              <span class="sub">A blank sheet of rankings</span>
             </button>
           </div>
+          <div id="board-summary"></div>
           <div id="import-confirm" hidden></div>
           <div id="import-msg"></div>
         </div>
@@ -225,12 +225,12 @@
         '<span class="oven-open-cta">Open →</span></a>';
     }
 
+    /* Only ever called off an import — never on boot. The card reports what a
+     * file just did, so on a later visit it would be describing an upload the
+     * page has no part in, next to a drop zone asking for a new one. */
     function renderBoardSummary() {
       var el = document.getElementById('board-summary');
-      if (!board || !board.rows || !board.rows.length) {
-        el.innerHTML = '<div class="oven-msg warn">No rankings uploaded for this league — the draft board will fall back to FantasyPros half-PPR ranks until you import a CSV.</div>';
-        return;
-      }
+      if (!board || !board.rows || !board.rows.length) { el.innerHTML = ''; return; }
       var matched = board.rows.filter(function (r) { return r.player_id; }).length;
       var when = board.importedAt ? new Date(board.importedAt).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : 'unknown';
 
@@ -684,7 +684,6 @@
 
         renderClaim();
         renderOpenBoard(draft);
-        renderBoardSummary();
         wireImport();
 
         loading.style.display = 'none';

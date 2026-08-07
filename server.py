@@ -1395,6 +1395,12 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         elif self.path == "/football/grading-system":
             self.path = "/views/home/grading-system.html"
             super().do_GET()
+        # Query string tolerated: the schedule page keeps its week/team filters
+        # in ?week=&team= so a view is linkable, and Vercel matches on the path
+        # alone, so dev must too.
+        elif self.path.split("?")[0] == "/football/schedule":
+            self.path = "/views/football/schedule.html"
+            super().do_GET()
         # Baker's Oven — live draft companion. /bakers-oven is the
         # account's saved-league list; /{leagueId} is that league's draft and
         # team picker; /{leagueId}/{rosterId} is that team's big board. Only

@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <title>NFL Schedule | Dynast-Z</title>
+  <link rel="stylesheet" href="/styles/base/styles.css?v=abec71e4">
+  <link rel="stylesheet" href="/styles/base/hub.css?v=2b363e8e">
+  <link rel="stylesheet" href="/styles/primary/nfl-schedule.css?v=0701d9d0">
+</head>
+<body class="masters-body">
+  <div id="header-mount"></div>
+  <div id="nav-drawer-mount"></div>
+  <script src="/scripts/base/auth.js?v=8ab3e67e"></script>
+  <script src="/scripts/base/nav.js?v=1d4c0225"></script>
+  <script>initPage();</script>
+
+  <div class="masters-content">
+    <div class="masters-breadcrumbs">
+      <a href="/">Home</a><span class="separator">/</span><a href="/football">Football</a><span class="separator">/</span><span>Schedule</span>
+    </div>
+
+    <h2>NFL Schedule</h2>
+    <p class="subtitle" id="season-label">Regular season</p>
+
+    <div class="sched-filters">
+      <select id="f-week" aria-label="Week"></select>
+      <select id="f-team" aria-label="Team"></select>
+      <button type="button" class="sched-reset" id="f-reset" hidden>Reset</button>
+    </div>
+
+    <p class="sched-summary" id="summary"></p>
+    <div id="list"><p class="sched-empty">Loading schedule…</p></div>
+
+    <div class="sched-legend">
+      <strong>Primetime</strong> is any game in a window of its own — Thursday, Sunday and
+      Monday night, the Sunday morning international kickoffs, and the Thanksgiving,
+      Christmas and Saturday standalones. <strong>Regular</strong> is a Sunday afternoon
+      game, one of a dozen kicking off at the same time. All times US Eastern.
+    </div>
+  </div>
+
+  <script>
+  (function () {
+    'use strict';
+
+    var DATA_URL = '/data/nfl_schedule.json';
+
+    var data = null;
+    var teamsByAbbr = {};
+    var state = { week: 1, team: '' };   // week: 1-18 or 'all'; team: abbr or ''
+
+    var listEl = document.getElementById('list');
+    var summaryEl = document.getElementById('summary');
+    var weekSel = document.getElementById('f-week');
+    var teamSel = document.getElementById('f-team');
+    var resetBtn = document.getElementById('f-reset');
+
+    function esc(s) {
+      return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+      });
+    }
+
+    /* ---------- time ----------
+     * Every kickoff in the file is a UTC instant; every label on this page is
+     * US Eastern, because that is the timezone the league schedules in and the
+     * one the primetime/regular split is defined against (see the fetch
+     * script). Rendering in the viewer's own zone would put a "1:00 PM slate"
+     * game at 10:00 AM for a west-coast reader and make the badges look wrong.
+     */
+    var TZ = 'America/New_York';
+
+    function fmt(opts) {
+      opts.timeZone = TZ;
+      return new Intl.DateTimeFormat('en-US', opts);
+    }
+
+    var fmtTime = fmt({ hour: 'numeric', minute: '2-digit' });
+    var fmtDayLong = fmt({ weekday: 'long', month: 'long', day: 'numeric' });
+    var fmtDayShort = fmt({ month: 'short', day: 'numeric' });
+    // en-CA yields YYYY-MM-DD, which is the calendar-day grouping key.
+    var fmtDayKey = new Intl.DateTimeFormat('en-CA',
+      { timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit' });
+
+    function toDate(iso) {
+      // "2026-09-10T00:20Z" — Safari parses this, but be explicit about the
+      // zone rather than relying on it.
+      return new Date(iso.replace(' ', 'T'));
+    }
+
+    /* ---------- which week is it right now? ----------
+     * The file ships each week's window as [start, end) in UTC: midnight ET on
+     * the day of that week's first game, to midnight ET after its last. The
+     * windows never overlap and the only uncovered days are Tuesdays, so the
+     * first week that has not yet ended is unambiguously "now" — including
+     * during a Tuesday, when it correctly reads as the week about to start.
+     *
+     * Before the season that is week 1, which is also the plain default. After
+     * the last game it falls through to week 18 rather than to nothing.
+     */
+    function currentWeek(now) {
+      for (var i = 0; i < data.weeks.length; i++) {
+        if (now < toDate(data.weeks[i].end)) return data.weeks[i].week;
+      }
+      return data.weeks[data.weeks.length - 1].week;
+    }
+
+    /* ---------- filters ---------- */
+
+    function readParams() {
+      var q = new URLSearchParams(location.search);
+      var w = q.get('week');
+      var t = (q.get('team') || '').toUpperCase();
+
+      if (w === 'all') state.week = 'all';
+      else if (w && data.weeks.some(function (x) { return String(x.week) === w; })) state.week = Number(w);
+
+      if (t && teamsByAbbr[t]) state.team = t;
+    }
+
+    function writeParams() {
+      var q = new URLSearchParams();
+      q.set('week', String(state.week));
+      if (state.team) q.set('team', state.team);
+      history.replaceState(null, '', location.pathname + '?' + q.toString());
+    }
+
+    function buildFilters(nowWeek) {
+      weekSel.innerHTML = '<option value="all">All weeks</option>' +
+        data.weeks.map(function (w) {
+          return '<option value="' + w.week + '">Week ' + w.week +
+            (w.week === nowWeek ? ' — this week' : '') + '</option>';
+        }).join('');
+
+      teamSel.innerHTML = '<option value="">All teams</option>' +
+        data.teams.slice().sort(function (a, b) { return a.name < b.name ? -1 : 1; })
+          .map(function (t) {
+            return '<option value="' + esc(t.abbr) + '">' + esc(t.name) + '</option>';
+          }).join('');
+
+      weekSel.value = String(state.week);
+      teamSel.value = state.team;
+
+      weekSel.addEventListener('change', function () {
+        state.week = weekSel.value === 'all' ? 'all' : Number(weekSel.value);
+        apply(nowWeek);
+      });
+      teamSel.addEventListener('change', function () {
+        state.team = teamSel.value;
+        apply(nowWeek);
+      });
+      resetBtn.addEventListener('click', function () {
+        state.week = nowWeek;
+        state.team = '';
+        weekSel.value = String(nowWeek);
+        teamSel.value = '';
+        apply(nowWeek);
+      });
+    }
+
+    function matches(g) {
+      return !state.team || g.away === state.team || g.home === state.team;
+    }
+
+    /* ---------- render ---------- */
+
+    function gameRow(g) {
+      var d = toDate(g.kickoff);
+      var tbd = g.slot === 'tbd';
+      var away = teamsByAbbr[g.away] || { abbr: g.away };
+      var home = teamsByAbbr[g.home] || { abbr: g.home };
+
+      function team(t) {
+        return '<span class="sched-team' + (state.team === t.abbr ? ' is-picked' : '') +
+          '" title="' + esc(t.name || t.abbr) + '">' + esc(t.abbr) + '</span>';
+      }
+
+      // A neutral-site game has no true home team, so "@" would be a lie and
+      // the venue is the whole point of the row — it's the only case where the
+      // stadium earns its space in a condensed list.
+      var sep = g.neutral ? 'vs' : '@';
+      var venue = g.neutral && g.venue
+        ? '<span class="sched-venue">' + esc(g.venue) + '</span>' : '';
+
+      return '<div class="sched-game' + (tbd ? ' is-tbd' : '') + '">' +
+        '<span class="sched-time">' + (tbd ? 'TBD' : esc(fmtTime.format(d))) + '</span>' +
+        '<span class="sched-matchup">' + team(away) +
+          '<span class="sched-at">' + sep + '</span>' + team(home) + venue + '</span>' +
+        '<span class="sched-slot ' + g.slot + '">' + g.slot + '</span>' +
+        '</div>';
+    }
+
+    function groupHeader(title, sub) {
+      return '<div class="sched-group"><h3>' + esc(title) + '</h3>' +
+        (sub ? '<span class="sched-group-sub">' + esc(sub) + '</span>' : '') + '</div>';
+    }
+
+    // One week: group by ET calendar day, so a week reads Thu / Sun / Mon.
+    function renderWeek(wk) {
+      var games = wk.games.filter(matches);
+      if (!games.length) {
+        return '<p class="sched-empty">' + (state.team
+          ? esc((teamsByAbbr[state.team] || {}).name || state.team) +
+            ' are on bye in week ' + wk.week + '.'
+          : 'No games in week ' + wk.week + '.') + '</p>';
+      }
+      // Rows are wrapped per day so the zebra striping restarts with each
+      // group — counted across the whole list, the headers are siblings too and
+      // the stripes land on arbitrary rows.
+      var html = '', lastKey = null;
+      games.forEach(function (g) {
+        var d = toDate(g.kickoff);
+        var key = fmtDayKey.format(d);
+        if (key !== lastKey) {
+          if (lastKey !== null) html += '</div>';
+          html += groupHeader(fmtDayLong.format(d)) + '<div class="sched-rows">';
+          lastKey = key;
+        }
+        html += gameRow(g);
+      });
+      return html + '</div>';
+    }
+
+    // All weeks: group by week. With a team picked this is that team's season,
+    // so the byes are rendered rather than skipped — a missing week 7 would
+    // otherwise read as a data gap.
+    function renderAll() {
+      return data.weeks.map(function (wk) {
+        var games = wk.games.filter(matches);
+        var span = fmtDayShort.format(toDate(wk.start)) + ' – ' +
+          fmtDayShort.format(new Date(toDate(wk.end).getTime() - 86400000));
+        var head = groupHeader('Week ' + wk.week, span);
+        if (games.length) return head + '<div class="sched-rows">' + games.map(gameRow).join('') + '</div>';
+        if (state.team) return head + '<div class="sched-rows"><div class="sched-bye"><span></span><span>Bye week</span></div></div>';
+        return '';
+      }).join('');
+    }
+
+    function renderSummary(nowWeek) {
+      var games = (state.week === 'all'
+        ? data.weeks.reduce(function (a, w) { return a.concat(w.games); }, [])
+        : (data.weeks.filter(function (w) { return w.week === state.week; })[0] || { games: [] }).games
+      ).filter(matches);
+
+      var counts = { regular: 0, primetime: 0, tbd: 0 };
+      games.forEach(function (g) { counts[g.slot]++; });
+
+      var bits = [state.week === 'all' ? 'All 18 weeks' : 'Week ' + state.week];
+      if (state.week === nowWeek) bits.push('<span class="is-now">this week</span>');
+      if (state.team) bits.push(esc((teamsByAbbr[state.team] || {}).name || state.team));
+      bits.push(games.length + (games.length === 1 ? ' game' : ' games'));
+      if (counts.regular) bits.push(counts.regular + ' regular');
+      if (counts.primetime) bits.push(counts.primetime + ' primetime');
+      if (counts.tbd) bits.push(counts.tbd + ' TBD');
+      summaryEl.innerHTML = bits.join(' &middot; ');
+    }
+
+    function apply(nowWeek) {
+      resetBtn.hidden = (state.week === nowWeek && !state.team);
+      renderSummary(nowWeek);
+      listEl.innerHTML = state.week === 'all'
+        ? renderAll()
+        : renderWeek(data.weeks.filter(function (w) { return w.week === state.week; })[0]);
+      writeParams();
+    }
+
+    fetch(DATA_URL)
+      .then(function (r) {
+        if (!r.ok) throw new Error('schedule data unavailable (' + r.status + ')');
+        return r.json();
+      })
+      .then(function (doc) {
+        data = doc;
+        data.teams.forEach(function (t) { teamsByAbbr[t.abbr] = t; });
+
+        document.getElementById('season-label').textContent =
+          data.season + ' regular season · ' +
+          data.weeks.reduce(function (a, w) { return a + w.games.length; }, 0) + ' games';
+
+        // The default is week 1, then moved to whichever week the clock is
+        // actually in — the page is read during the season far more often than
+        // before it, and week 1 in December is never what was wanted.
+        var nowWeek = currentWeek(new Date());
+        state.week = nowWeek;
+        readParams();          // an explicit ?week=/?team= still wins
+
+        buildFilters(nowWeek);
+        apply(nowWeek);
+      })
+      .catch(function (e) {
+        listEl.innerHTML = '<p class="sched-empty">Error: ' + esc(e.message) + '</p>';
+      });
+  })();
+  </script>
+</body>
+</html>
