@@ -108,6 +108,25 @@
     return list;
   }
 
+  /* The NFL abbreviations actually present on the board, sorted, for the team
+   * filter's options. Read off the rows rather than from a hardcoded list of 32
+   * for the same reason the position chips get pruned: an option with no rows
+   * behind it isn't a filter, it's a button that empties the board. A relocated
+   * or renamed franchise also needs no edit here — whatever the sheet and the
+   * FantasyPros snapshot spell the team, that is what you can filter to.
+   *
+   * Rows with no team (free agents, a sheet with the column blank) contribute
+   * nothing: there is no abbreviation to offer, and they stay visible under
+   * "All" like every other unfiltered row. */
+  function boardTeams() {
+    var seen = {};
+    state.rows.forEach(function (r) {
+      var t = (r.team || '').toUpperCase();
+      if (t) seen[t] = true;
+    });
+    return Object.keys(seen).sort();
+  }
+
   /* A row belongs on the board unless the league has said otherwise. A row with
    * no position at all is kept: "unknown" is not the same claim as "kicker", and
    * dropping a player because his sheet had a blank cell is the one failure mode
@@ -416,7 +435,10 @@
     // carry the other. Both start OFF: the board's default state is the order
     // and nothing else, and a row that annotates itself before you ask is a row
     // you have to read past 860 times.
-    filters: { pos: null, hideDrafted: false, hideFade: false, showHistory: false, showOdds: false },
+    // `team` is an NFL abbreviation (uppercase, as the rows carry it) or null
+    // for all — the same shape as `pos`, and for the same reason: both say
+    // "this screen is about X" rather than taking rows away.
+    filters: { pos: null, team: null, hideDrafted: false, hideFade: false, showHistory: false, showOdds: false },
     clock: null, teamsCount: 12, myRosterId: null,
     onReorder: null, reorderWired: false,
     // The grade control. Same opt-in shape as reordering — the host owns
@@ -486,6 +508,7 @@
     var f = state.filters;
     var out = state.rows.filter(function (r) {
       if (f.pos && r.pos !== f.pos) return false;
+      if (f.team && (r.team || '').toUpperCase() !== f.team) return false;
       if (f.hideDrafted && state.drafted[r.key]) return false;
       if (f.hideFade && r.grade === 'fade') return false;
       return true;
@@ -1239,16 +1262,18 @@
    * for the same reason. One row per empty window, never more; the toggle still
    * means what it says everywhere it isn't erasing a pick.
    *
-   * The POSITION filter is not overridden, and that asymmetry is deliberate.
-   * `Hide: Fade` says "take these off my board", so showing one back is a
-   * correction. Filtering to RB says "this screen is running backs" — answering
-   * "no RB in that window" with a receiver would be answering a question nobody
-   * asked. An empty window under a position filter is a real finding, so it is
-   * left to stack. `Hide: Drafted` never empties a window at all: drafted players
-   * are out of the pool on both paths. */
+   * The POSITION and TEAM filters are not overridden, and that asymmetry is
+   * deliberate. `Hide: Fade` says "take these off my board", so showing one back
+   * is a correction. Filtering to RB — or to BUF — says "this screen is running
+   * backs"; answering "no RB in that window" with a receiver would be answering a
+   * question nobody asked. An empty window under either of those is a real
+   * finding, so it is left to stack. `Hide: Drafted` never empties a window at
+   * all: drafted players are out of the pool on both paths. */
 
   function rescuable(r) {
-    return !state.filters.pos || r.pos === state.filters.pos;
+    if (state.filters.pos && r.pos !== state.filters.pos) return false;
+    if (state.filters.team && (r.team || '').toUpperCase() !== state.filters.team) return false;
+    return true;
   }
 
   function makeRowEl(r) {
@@ -1615,6 +1640,7 @@
     normPos: normPos,
     playerKey: playerKey,
     setPositions: setPositions,
+    boardTeams: boardTeams,
     buildBoard: buildBoard,
     mergeImport: mergeImport,
     setWeekly: setWeekly,

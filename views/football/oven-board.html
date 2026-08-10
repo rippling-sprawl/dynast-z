@@ -65,6 +65,14 @@
             <button class="oven-chip" data-pos="TE">TE</button>
             <button class="oven-chip" data-pos="K">K</button>
             <button class="oven-chip" data-pos="DEF">DEF</button>
+            <!-- Same row as the positions because it answers the same question —
+                 what this screen is about — and stacks with them rather than
+                 replacing one. A select, not chips: 32 abbreviations as chips
+                 would be four wrapped rows of chrome on the one screen where
+                 vertical space is the whole game. Options are filled from the
+                 board at boot, so this is empty until then. -->
+            <select class="oven-select oven-select-chip" id="team-filter"
+                    aria-label="Filter by NFL team"></select>
           </div>
           <div class="oven-filter-row">
             <span class="oven-filter-label">Hide:</span>
@@ -222,6 +230,29 @@
         });
       });
       document.querySelector('.oven-chip[data-pos=""]').classList.add('active');
+
+      /* Team filter. Built from the rows the board actually holds — see
+       * boardTeams() — so an abbreviation is only offered when there is somebody
+       * behind it, and a league that starts no DEF never offers the four teams
+       * whose only row was their defense. It composes with the position chips
+       * rather than resetting them: RB + BUF is a question people ask on draft
+       * night ("who's left in that backfield"), and having one control clear the
+       * other would be answering a different one. */
+      var teamSel = document.getElementById('team-filter');
+      var teams = OvenBoard.boardTeams();
+      var opts = ['<option value="">All Teams</option>'];
+      teams.forEach(function (t) {
+        opts.push('<option value="' + OvenBoard.esc(t) + '">' + OvenBoard.esc(t) + '</option>');
+      });
+      teamSel.innerHTML = opts.join('');
+      // Nothing to filter by — one option that reads "All Teams" is a control
+      // that can only ever do nothing.
+      if (!teams.length) teamSel.hidden = true;
+      teamSel.addEventListener('change', function () {
+        S.filters.team = teamSel.value || null;
+        teamSel.classList.toggle('active', !!S.filters.team);
+        OvenBoard.render(listEl);
+      });
 
       // The Hide chips are independent toggles, not a radio group like the
       // positions — each names one filter key on S.filters.

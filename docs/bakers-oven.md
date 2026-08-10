@@ -380,12 +380,24 @@ check, so an unmounted write is just a write.
 
 ### Hot and cold
 
-The console's filter block is two rows: positions (a radio group — one at a time, `All` clears),
-then **Hide:** `Drafted` and `Fade`, which are independent toggles reading `S.filters.hideDrafted`
-and `S.filters.hideFade`. Filtering happens in `visibleRows()` and forces a full `render()`, not a
-patch. It has exactly one exception, and it is not in `visibleRows()`: a Hide toggle that would
-leave one of your picks with no players at all hands that pick its best available back — see
+The console's filter block is two rows: positions (a radio group — one at a time, `All` clears)
+plus the **team** select beside them, then **Hide:** `Drafted` and `Fade`, which are independent
+toggles reading `S.filters.hideDrafted` and `S.filters.hideFade`. Filtering happens in
+`visibleRows()` and forces a full `render()`, not a patch. It has exactly one exception, and it is
+not in `visibleRows()`: a Hide toggle that would leave one of your picks with no players at all
+hands that pick its best available back — see
 [A pick is never empty](#a-pick-is-never-empty--rescued-rows).
+
+The team filter is `S.filters.team` — an NFL abbreviation or `null` — and it *composes* with the
+positions rather than resetting them, because `RB` + `BUF` ("who's left in that backfield") is a
+question draft night actually asks. Its options come from `OvenBoard.boardTeams()`, which reads the
+abbreviations off `state.rows`, so the same rule that prunes the position chips holds here: an
+option is only offered when there are rows behind it, a league that starts no `DEF` never offers the
+teams whose only row was their defense, and nothing hardcodes a list of 32 that a relocation would
+falsify. It's a `<select>` rather than chips — 32 abbreviations would be four wrapped rows of chrome
+on the screen where vertical space is the whole game — wearing the chip's metrics
+(`.oven-select-chip`) and the chip's lit `.active` state so it reads as part of that row. Rows with
+no team at all contribute no option and are only ever visible under *All Teams*.
 
 A graded player states his grade in a mark, never in color — the two surfaces state it
 differently, on purpose. **The board row** shows it
@@ -533,12 +545,12 @@ Three rules keep the toggle honest:
 2. **One row per empty window, never more.** Fade three players in a row and you get the first one
    back, not all three. Anywhere the toggle isn't erasing a pick it still means exactly what it says
    — a window with even one survivor is never topped up.
-3. **The position filter is not overridden.** `Hide: Fade` says "take these off my board", so
-   handing one back is a correction. Filtering to RB says "this screen is running backs" —
-   answering *"no RB in that window"* with a receiver would be answering a question nobody asked,
-   so an empty window under a position filter is a real finding and is left to stack. With both on,
-   the rescue stays inside the position. (`Hide: Drafted` can't empty a window at all — drafted
-   players leave the pool on both paths.)
+3. **The position and team filters are not overridden.** `Hide: Fade` says "take these off my
+   board", so handing one back is a correction. Filtering to RB — or to BUF — says "this screen is
+   running backs"; answering *"no RB in that window"* with a receiver would be answering a question
+   nobody asked, so an empty window under either of those is a real finding and is left to stack.
+   With Fade on as well, the rescue stays inside whatever position and team are set (`rescuable()`).
+   (`Hide: Drafted` can't empty a window at all — drafted players leave the pool on both paths.)
 
 Rescued rows are torn down and rebuilt on every `placeMarkers()`, exactly like the markers they
 answer to: one pick landing changes every depth below it, so *which* windows are empty is never
@@ -737,7 +749,7 @@ which is why nothing anchored to personal rank breaks afterward.
 `OvenBoard.enableReorder({ onReorder })`. Board rows are `draggable="true"`; dropping one on the
 seam above or below another row moves that player there. On drop:
 
-1. **Move by key, not by on-screen index.** A position filter may be active, so the row you
+1. **Move by key, not by on-screen index.** A position or team filter may be active, so the row you
    dropped onto is a position in `state.rows` that the visible list only samples. Landing between
    two visible rows leaves every hidden row between them exactly where it was.
 2. **Renumber from the top.** Every `myRank` becomes its array position + 1, including rows that

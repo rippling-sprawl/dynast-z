@@ -564,6 +564,38 @@ button.oven-team-card {
 }
 .oven-select:focus { outline: none; border-color: var(--oven-flame); background-color: var(--oven-kiln); }
 
+/* The team filter, sitting in the chip row. It is a select because 32
+ * abbreviations would be four wrapped rows of chips, but it stands in the same
+ * line as the position chips, so it wears their metrics — data face, 10px,
+ * uppercase, the same border and 5px band — and keeps only the caret and the
+ * popup that make it a select. Transparent like an inactive chip: the .oven-brick
+ * fill the picker shells wear on the setup page would read as a selected chip
+ * here. The caret needs the padding, so the right side runs wider than 9px. */
+.oven-select-chip {
+  font-family: var(--oven-data);
+  background-color: transparent;
+  color: var(--oven-ash-dim);
+  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em;
+  padding: 5px 21px 5px 9px;
+  background-position: calc(100% - 12px) 52%, calc(100% - 7px) 52%;
+  transition: color .15s, border-color .15s, background-color .15s;
+}
+.oven-select-chip:hover { color: var(--oven-bone); border-color: var(--oven-ash-dim); }
+/* Filtered to a team — same lit state as an active chip, caret included, since
+ * the arrows are background gradients and would otherwise stay ash on flame. */
+.oven-select-chip.active {
+  background-color: var(--oven-flame);
+  border-color: var(--oven-flame);
+  color: #1A0D03;
+  background-image: linear-gradient(45deg, transparent 50%, #1A0D03 50%),
+                    linear-gradient(135deg, #1A0D03 50%, transparent 50%);
+}
+.oven-select-chip.active:focus { background-color: var(--oven-flame); }
+/* The popup is a native menu, so it draws in the platform's colors unless the
+ * options say otherwise — and inheriting the active chip's near-black text onto
+ * a dark menu is a list you cannot read. */
+.oven-select-chip option { background: var(--oven-brick); color: var(--oven-bone); }
+
 /* One input, one button. The input takes whatever is left. */
 .oven-field-row { display: flex; gap: 8px; align-items: center; }
 .oven-field-row .oven-search,
