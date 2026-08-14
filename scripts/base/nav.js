@@ -21,6 +21,7 @@ function buildNavItems() {
     { type: 'link', label: "Baker's Oven", href: '/bakers-oven' },
     { type: 'link', label: 'Trade Calculator', href: '/trade-calculator' },
     { type: 'link', label: 'NFL Schedule', href: '/football/schedule' },
+    { type: 'link', label: "Baker's Buns", href: '/football/bakers-buns' },
     { type: 'link', label: 'NFL Odds', href: '/odds' },
     { type: 'link', label: 'JHBC', href: '/league/1314983622930870272' },
     { type: 'link', label: 'Drew Dynasty', href: '/league/1312081645817327616' },

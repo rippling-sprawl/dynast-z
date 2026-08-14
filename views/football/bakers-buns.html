@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <title>Baker&rsquo;s Buns | Dynast-Z</title>
+  <link rel="stylesheet" href="/styles/base/styles.css">
+  <link rel="stylesheet" href="/styles/base/hub.css">
+  <link rel="stylesheet" href="/styles/primary/bakers-buns.css">
+</head>
+<!--
+  Baker's Buns — football notes.
+
+  Seeded from the "NFL 2026-27" Google Doc; the doc's tabs map onto the
+  `.bun-section` groups below (Outlook, Bets, Playoffs, Worst to First,
+  Division Notes, Appendix). Content is authored inline for now. This page is
+  meant to grow into the app's note-taking section, so every note is a
+  self-contained `.note` card (or a row in a `.bun-table`) — the shape a stored
+  note record would render into — rather than free-form prose.
+-->
+<body class="masters-body">
+  <div id="header-mount"></div>
+  <div id="nav-drawer-mount"></div>
+  <script src="/scripts/base/auth.js"></script>
+  <script src="/scripts/base/nav.js"></script>
+  <script>initPage();</script>
+
+  <div class="masters-content">
+    <div class="masters-breadcrumbs">
+      <a href="/">Home</a><span class="separator">/</span><a href="/football">Football</a><span class="separator">/</span><span>Baker&rsquo;s Buns</span>
+    </div>
+
+    <h2>Baker&rsquo;s Buns</h2>
+    <p class="subtitle">NFL 2026-27 &mdash; notes, takes &amp; open positions</p>
+
+    <nav class="bun-nav">
+      <a href="#projections">Projections</a>
+      <a href="#oline">O-Line</a>
+      <a href="#outlook">Outlook</a>
+      <a href="#bets">Bets</a>
+      <a href="#playoffs">Playoffs</a>
+      <a href="#worst-to-first">Worst to First</a>
+      <a href="#divisions">Division Notes</a>
+      <a href="#appendix">Appendix</a>
+    </nav>
+
+    <!-- ================= PROJECTIONS ================= -->
+    <section class="bun-section" id="projections">
+      <h3>2026 Projections</h3>
+      <p class="bun-section-note" id="proj-note"></p>
+
+      <div class="proj-controls" id="proj-controls">
+        <button type="button" class="proj-toggle active" data-conf="">All</button>
+        <button type="button" class="proj-toggle" data-conf="AFC">AFC</button>
+        <button type="button" class="proj-toggle" data-conf="NFC">NFC</button>
+      </div>
+
+      <div class="bun-table-wrap">
+        <table class="bun-table" id="proj-table">
+          <thead>
+            <tr>
+              <th scope="col" class="num">#</th>
+              <th scope="col" class="sortable" data-sort="team">Team</th>
+              <th scope="col" class="col-div proj-hide-sm">Div</th>
+              <th scope="col" class="num sortable" data-sort="score">Score</th>
+              <th scope="col" class="num sortable" data-sort="eyeTest">Eye<span class="th-sub">of 10</span></th>
+              <th scope="col" class="num sortable" data-sort="oLine">O-Line<span class="th-sub">rank</span></th>
+              <th scope="col" class="num sortable" data-sort="sos">SoS<span class="th-sub">rank</span></th>
+              <th scope="col" class="num sortable" data-sort="rest">Rest<span class="th-sub">net</span></th>
+              <th scope="col" class="num sortable" data-sort="luck">Luck<span class="th-sub">vs pythag</span></th>
+              <th scope="col" class="num sortable proj-hide-sm" data-sort="make">Make</th>
+              <th scope="col" class="num sortable proj-hide-sm" data-sort="miss">Miss</th>
+              <th scope="col" class="num sortable proj-hide-sm" data-sort="division">Div Odds</th>
+            </tr>
+          </thead>
+          <tbody id="proj-body">
+            <tr><td colspan="12" class="proj-empty">Loading projections&hellip;</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p class="bun-section-note">Tap any team to open its offensive line detail.</p>
+
+      <div class="bun-grid">
+        <article class="note accent-info" id="proj-model">
+          <h4>How the score is built</h4>
+          <span class="note-meta">Weighted z-scores</span>
+          <p id="proj-weights"></p>
+          <p>
+            Each input is converted to a z-score against the 32-team field, then
+            blended. O-Line and SoS ranks are inverted first, so a positive
+            z-score always means &ldquo;better than average.&rdquo;
+          </p>
+          <p class="note-take" id="proj-legend"></p>
+        </article>
+
+        <article class="note accent-good">
+          <h4>Where the inputs come from</h4>
+          <span class="note-meta">Verified against the sources</span>
+          <ul>
+            <li><strong>O-Line</strong> &mdash; the PFF 2026 ranking, 1&ndash;32, matching all 32 rows exactly</li>
+            <li><strong>SoS</strong> &mdash; Sharp Football&rsquo;s odds-based strength of schedule; the five easiest and hardest match exactly</li>
+            <li><strong>Rest</strong> &mdash; Sharp Football&rsquo;s net rest edge in days (Bears +15 to Chargers &minus;24)</li>
+            <li><strong>Eye Test</strong> &mdash; manual, 0&ndash;10</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <!-- ================= OFFENSIVE LINE ================= -->
+    <section class="bun-section" id="oline">
+      <h3>Offensive Line</h3>
+      <p class="bun-section-note" id="ol-source"></p>
+
+      <div class="bun-grid" id="ol-themes"></div>
+
+      <h3 style="margin-top:28px">Biggest swing factors</h3>
+      <div class="bun-grid">
+        <article class="note accent-warn">
+          <h4>Injuries that moved a team</h4>
+          <span class="note-meta">Ranked impact</span>
+          <ul>
+            <li><strong>Commanders</strong> &mdash; Tunsil&rsquo;s injury drops them to 32nd on its own</li>
+            <li><strong>Panthers</strong> &mdash; both starting tackles (Ekwonu, Moton) unavailable</li>
+            <li><strong>Lions</strong> &mdash; Cade Mays out, the main reason they sit 19th despite Sewell</li>
+            <li><strong>Raiders</strong> &mdash; Kolton Miller lost after four games</li>
+            <li><strong>Bears</strong> &mdash; Dalman retired; Trapilo already missed rookie time</li>
+          </ul>
+        </article>
+
+        <article class="note accent-good">
+          <h4>Where continuity is the edge</h4>
+          <ul>
+            <li><strong>Broncos</strong> (1st) &mdash; all five starters back, no turnover</li>
+            <li><strong>Eagles</strong> (2nd) &mdash; same five, though Stoutland left</li>
+            <li><strong>Buccaneers</strong> (3rd) &mdash; Wirfs and Goedeke both elite</li>
+          </ul>
+          <p class="note-take">
+            All three sit top-10 in the composite &mdash; O-Line is 40% of it.
+          </p>
+        </article>
+
+        <article class="note accent-warn">
+          <h4>Health-dependent, high variance</h4>
+          <ul>
+            <li><strong>Chargers</strong> &mdash; Slater and Alt both carry concerns; 7th if healthy, much worse if not</li>
+            <li><strong>Vikings</strong> &mdash; Darrisaw elite but rarely available</li>
+            <li><strong>Giants</strong> &mdash; same story with Andrew Thomas</li>
+            <li><strong>Rams</strong> &mdash; Alaric Jackson facing possible suspension</li>
+          </ul>
+        </article>
+
+        <article class="note">
+          <h4>Bottom-tier reasons</h4>
+          <ul>
+            <li><strong>Packers</strong> (28th) &mdash; four of five starters have one combined season above a 65.0 grade</li>
+            <li><strong>Dolphins</strong> (25th) &mdash; Savaiinaea graded 28.4, worst of any starter</li>
+            <li><strong>Ravens</strong> (24th) &mdash; 2025 guards graded 55.2 combined, sixth worst</li>
+            <li><strong>Browns</strong> (31st) &mdash; four new starters plus a rookie left tackle</li>
+          </ul>
+          <p class="note-take">
+            Squares with the doc&rsquo;s Packers fade &mdash; the O-line is the
+            part of that case not already priced as an injury story.
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <!-- ================= OUTLOOK ================= -->
+    <section class="bun-section" id="outlook">
+      <h3>Outlook</h3>
+
+      <div class="bun-grid">
+        <article class="note accent-warn">
+          <h4>Packers &mdash; injuries &amp; offensive attrition</h4>
+          <span class="note-meta">Fade candidate</span>
+          <ul>
+            <li>Kraft</li>
+            <li>Parsons</li>
+            <li>Watson always hurt</li>
+            <li>Doubs and Wicks</li>
+            <li>Jacobs isn&rsquo;t getting younger</li>
+            <li>Relying on Golden</li>
+          </ul>
+          <p class="note-take">
+            <strong>Play:</strong> Bears make / Packers miss
+            <span class="odds plus">+219</span>. Add Lions to make
+            <span class="odds plus">+366</span>.
+          </p>
+        </article>
+
+        <article class="note accent-warn">
+          <h4>Patriots &mdash; regression setup</h4>
+          <span class="note-meta">End of 2025-26 notes</span>
+          <p>
+            Could be this year&rsquo;s Commanders &mdash; luck, injuries and
+            schedule all point the same way. Regression in 2026 makes them a
+            prime &ldquo;miss playoffs&rdquo; pick, on top of the Super Bowl
+            hangover.
+          </p>
+        </article>
+
+        <article class="note">
+          <h4>Coaching takes</h4>
+          <span class="note-meta">End of 2025-26 notes</span>
+          <ul>
+            <li>Payton and McVay continue to be overrated.</li>
+            <li>Payton going for 4th down in FG range up 7-0 in a game that finished 10-7.</li>
+            <li>McVay not going for 2 down 5 with 2 minutes left.</li>
+          </ul>
+        </article>
+
+        <article class="note">
+          <h4>Offseason watch</h4>
+          <span class="note-meta">End of 2025-26 notes</span>
+          <ul>
+            <li>James Pearce arrest &mdash; not a great start to the offseason.</li>
+          </ul>
+        </article>
+
+        <article class="note accent-info">
+          <h4>Roster ages</h4>
+          <span class="note-meta">As of May 1st</span>
+          <p class="muted">
+            Chart lives in the source doc &mdash; not yet imported here.
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <!-- ================= BETS ================= -->
+    <section class="bun-section" id="bets">
+      <h3>Bets</h3>
+      <p class="bun-section-note">Open win-total positions carried over from the doc.</p>
+
+      <div class="bun-table-wrap">
+        <table class="bun-table">
+          <caption>Season win totals</caption>
+          <thead>
+            <tr>
+              <th scope="col">Side</th>
+              <th scope="col">Prop</th>
+              <th scope="col" class="num">Amt</th>
+              <th scope="col" class="num">Odds</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="col-team">Jets</td>
+              <td>u5.5 Wins</td>
+              <td class="num">200</td>
+              <td class="num"><span class="odds plus">+110</span></td>
+            </tr>
+            <tr>
+              <td class="col-team">Jets</td>
+              <td>u4.5 Wins</td>
+              <td class="num">50</td>
+              <td class="num"><span class="odds plus">+200</span></td>
+            </tr>
+            <tr>
+              <td class="col-team">Patriots</td>
+              <td>u9.5 Wins</td>
+              <td class="num">150</td>
+              <td class="num"><span class="odds plus">+120</span></td>
+            </tr>
+            <tr>
+              <td class="col-team">Patriots</td>
+              <td>u8.5 Wins</td>
+              <td class="num">50</td>
+              <td class="num"><span class="odds plus">+200</span></td>
+            </tr>
+            <tr>
+              <td class="col-team">Patriots</td>
+              <td>u7.5 Wins</td>
+              <td class="num">25</td>
+              <td class="num"><span class="odds plus">+350</span></td>
+            </tr>
+            <tr>
+              <td class="col-team">Browns</td>
+              <td class="muted">TBD</td>
+              <td class="num muted">&mdash;</td>
+              <td class="num muted">&mdash;</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ================= PLAYOFFS ================= -->
+    <section class="bun-section" id="playoffs">
+      <h3>Playoffs</h3>
+
+      <div class="bun-grid">
+        <article class="note accent-warn">
+          <h4>To miss</h4>
+          <ul>
+            <li>Bengals <span class="odds plus">+126</span></li>
+            <li>Texans <span class="odds plus">+136</span></li>
+            <li>Ravens <span class="odds plus">+290</span></li>
+            <li>Patriots <span class="odds plus">+176</span></li>
+          </ul>
+        </article>
+
+        <article class="note accent-good">
+          <h4>To make</h4>
+          <ul>
+            <li>Bears <span class="odds plus">+108</span></li>
+            <li>Eagles <span class="odds minus">-152</span></li>
+            <li>Broncos <span class="odds minus">-146</span></li>
+          </ul>
+        </article>
+
+        <article class="note accent-info">
+          <h4>2025 wins &mdash; expected vs actual</h4>
+          <span class="note-meta">Wins above pythag</span>
+          <p>
+            The doc left this open. Pythagorean expectation turns points scored
+            and allowed into the record a team &ldquo;should&rdquo; have had, so
+            the gap is the luck to fade or back.
+          </p>
+          <ul id="pythag-hot"></ul>
+          <ul id="pythag-cold"></ul>
+          <p class="note-take">
+            Note the crossover with the fades already in the doc: the Broncos
+            were 2025&rsquo;s luckiest team by a full win, and the Patriots
+            &ldquo;miss playoffs&rdquo; case gets help from a +1.5.
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <!-- ================= WORST TO FIRST ================= -->
+    <section class="bun-section" id="worst-to-first">
+      <h3>Worst to First</h3>
+      <p class="bun-section-note">Best odds as of May 5th &mdash; 2025 expected vs actual wins</p>
+
+      <div class="bun-table-wrap">
+        <table class="bun-table">
+          <thead>
+            <tr>
+              <th scope="col">Div</th>
+              <th scope="col">Team</th>
+              <th scope="col" class="num">Odds</th>
+              <th scope="col">Notes</th>
+              <th scope="col" class="num">Exp</th>
+              <th scope="col" class="num">Act</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="group-row"><td colspan="6">NFC</td></tr>
+            <tr>
+              <td class="col-div">North</td>
+              <td class="col-team">Lions</td>
+              <td class="num"><span class="odds plus">+180</span></td>
+              <td>
+                <ul>
+                  <li>Obvious first choice for this trend</li>
+                  <li>1st easiest SoS</li>
+                  <li>Terrion Arnold arrest</li>
+                </ul>
+              </td>
+              <td class="num">10</td>
+              <td class="num">9</td>
+            </tr>
+            <tr>
+              <td class="col-div">South</td>
+              <td class="col-team">Saints</td>
+              <td class="num"><span class="odds plus">+300</span></td>
+              <td>
+                <ul>
+                  <li>2nd easiest SoS</li>
+                  <li>Shough was clearly competent</li>
+                  <li>Seemingly good coach</li>
+                  <li>Added rookie weapons</li>
+                </ul>
+              </td>
+              <td class="num">6.3</td>
+              <td class="num">6</td>
+            </tr>
+            <tr>
+              <td class="col-div">East</td>
+              <td class="col-team">Giants</td>
+              <td class="num"><span class="odds plus">+600</span></td>
+              <td>
+                <ul>
+                  <li>New, much better coach</li>
+                </ul>
+              </td>
+              <td class="num">7.1</td>
+              <td class="num">4</td>
+            </tr>
+            <tr>
+              <td class="col-div">West</td>
+              <td class="col-team">Cardinals</td>
+              <td class="num"><span class="odds plus">+9000</span></td>
+              <td>
+                <ul>
+                  <li>Simply too tough of a division</li>
+                  <li>Reaching for RB Love doesn&rsquo;t move the needle</li>
+                </ul>
+              </td>
+              <td class="num">5.4</td>
+              <td class="num">3</td>
+            </tr>
+
+            <tr class="group-row"><td colspan="6">AFC</td></tr>
+            <tr>
+              <td class="col-div">South</td>
+              <td class="col-team">Titans</td>
+              <td class="num"><span class="odds plus">+950</span></td>
+              <td>
+                <ul>
+                  <li>New coach</li>
+                  <li>Added a WR #1 (Tate)</li>
+                  <li>Year 2 for Ward</li>
+                  <li>Always a dumb division</li>
+                  <li>#1 toughest in 2025 to #13 easiest in 2026</li>
+                  <li>10 wins would be a 7 win jump (the absolute cap YoY)</li>
+                </ul>
+              </td>
+              <td class="num">3.8</td>
+              <td class="num">3</td>
+            </tr>
+            <tr>
+              <td class="col-div">North</td>
+              <td class="col-team">Browns</td>
+              <td class="num"><span class="odds plus">+1800</span></td>
+              <td>
+                <ul>
+                  <li>There&rsquo;s no way DeShaun returns to Pro Bowl caliber, right?</li>
+                </ul>
+              </td>
+              <td class="num">5.5</td>
+              <td class="num">5</td>
+            </tr>
+            <tr>
+              <td class="col-div">West</td>
+              <td class="col-team">Raiders</td>
+              <td class="num"><span class="odds plus">+2000</span></td>
+              <td>
+                <ul>
+                  <li>Any history of rookie QBs winning the division?</li>
+                  <li>Solid coaching upgrade (Kubiak from SEA)</li>
+                </ul>
+              </td>
+              <td class="num">3.4</td>
+              <td class="num">3</td>
+            </tr>
+            <tr>
+              <td class="col-div">East</td>
+              <td class="col-team">Jets</td>
+              <td class="num"><span class="odds plus">+2500</span></td>
+              <td>
+                <ul>
+                  <li>No</li>
+                </ul>
+              </td>
+              <td class="num">3.9</td>
+              <td class="num">3</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ================= DIVISION NOTES ================= -->
+    <section class="bun-section" id="divisions">
+      <h3>Notes &amp; Takes by Division</h3>
+
+      <div class="bun-grid">
+        <article class="note accent-info">
+          <h4>NFC North</h4>
+          <ul>
+            <li><strong>Bears</strong> &mdash; Year 2 in the Johnson system</li>
+            <li><strong>Lions</strong> &mdash; Nobody believes in us</li>
+            <li><strong>Packers</strong> &mdash; Parsons injury? Jacobs older. WR turnover (Doubs, Wicks)</li>
+            <li><strong>Vikings</strong> &mdash; Kyler is better than what they had last year. Strong defense (Flores)</li>
+          </ul>
+        </article>
+
+        <article class="note accent-info">
+          <h4>NFC South</h4>
+          <ul>
+            <li><strong>Saints</strong> <span class="odds plus">+300</span> &mdash; Top 5 easiest schedule</li>
+            <li><strong>Panthers</strong> <span class="odds plus">+375</span> &mdash; Top 5 hardest schedule</li>
+          </ul>
+        </article>
+
+        <article class="note accent-info">
+          <h4>NFC East</h4>
+          <ul>
+            <li><strong>Eagles</strong> <span class="odds plus">+140</span> &mdash; New OC. New weapons. Addition by subtraction (AJ Brown). Easiest schedule within division</li>
+            <li><strong>Cowboys</strong> <span class="odds plus">+200</span> &mdash; Defense can&rsquo;t get worse than last year</li>
+            <li><strong>Commanders</strong> <span class="odds plus">+400</span> &mdash; Still old. Daniels is brittle</li>
+            <li><strong>Giants</strong> <span class="odds plus">+600</span> &mdash; Strong defense. Much better coaching. Health regression?</li>
+          </ul>
+        </article>
+
+        <article class="note accent-info">
+          <h4>NFC West</h4>
+          <p>Anybody&rsquo;s guess.</p>
+        </article>
+
+        <article class="note accent-info">
+          <h4>AFC North</h4>
+          <ul>
+            <li><strong>Bengals</strong> &mdash; Can&rsquo;t get much worse than last year</li>
+            <li><strong>Steelers</strong> &mdash; New coach. Who&rsquo;s the QB?</li>
+            <li><strong>Ravens</strong> &mdash; New coach</li>
+            <li><strong>Browns</strong> &mdash; New coach</li>
+          </ul>
+        </article>
+
+        <article class="note">
+          <h4>AFC South &middot; East &middot; West</h4>
+          <p class="muted">Not filled in yet.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- ================= APPENDIX ================= -->
+    <section class="bun-section" id="appendix">
+      <h3>Appendix</h3>
+
+      <div class="bun-grid">
+        <article class="note accent-good">
+          <h4>Strength of schedule &mdash; biggest YoY improvement</h4>
+          <span class="note-meta">Predicted 2025 &rarr; 2026</span>
+          <ul>
+            <li>Colts: #5 toughest in 2025 &rarr; #9 easiest in 2026</li>
+            <li>Titans: #1 toughest in 2025 &rarr; #13 easiest in 2026</li>
+            <li>Bengals: #13 toughest in 2025 &rarr; #3 easiest in 2026</li>
+            <li>Chiefs: #7 toughest in 2025 &rarr; #10 easiest in 2026</li>
+            <li>Ravens: #12 toughest in 2025 &rarr; #6 easiest in 2026</li>
+          </ul>
+        </article>
+
+        <article class="note accent-warn">
+          <h4>Rest edge &mdash; what Sharp actually found</h4>
+          <span class="note-meta">Feeds the 15% Rest input</span>
+          <p>
+            Rest edge is the extra days of recovery a team has versus its
+            opponent; net rest sums that across the season.
+          </p>
+          <ul>
+            <li>A 3&ndash;6 day rest advantage has covered at <strong>54.6%</strong> since 2016 &mdash; +4.2% ROI over 233 games</li>
+            <li>Short-week road games after Week 6 are the trap: 43.9% wins, 47.4% ATS, &minus;9.4% ROI</li>
+            <li>Those same road teams with extra rest instead covered 53.3% &mdash; an 11.2-point swing</li>
+            <li>2026&rsquo;s 39-day spread from best to worst is the widest since 2000</li>
+          </ul>
+          <p class="note-take">
+            <strong>Most helped:</strong> Bears +15, Bills +14, then Cowboys,
+            Titans, Cardinals. <strong>Most hurt:</strong> Chargers &minus;24,
+            Eagles &minus;15, Dolphins, Steelers, Chiefs.
+          </p>
+        </article>
+
+        <article class="note">
+          <h4>Charts still in the doc</h4>
+          <p>
+            Coaches, combo, and passing defense charts have not been imported
+            yet. The O-line and strength-of-schedule material is now covered
+            above; the 2026 SoS and rest-edge charts are on the
+            <a href="/football">Football hub</a>.
+          </p>
+        </article>
+      </div>
+
+      <h3 style="margin-top:28px">Sources</h3>
+      <p class="bun-section-note">What each link actually says, so the page stands on its own.</p>
+
+      <ul class="bun-links">
+        <li>
+          <a href="https://www.pff.com/news/nfl-offensive-line-rankings-2026" target="_blank" rel="noopener">PFF &mdash; 2026 offensive line rankings</a>
+          <span class="link-src">Feeds the 40% O-Line input</span>
+          <p>All 32 lines graded off individual player grades weighted toward pass protection, over three years of history. Rankings move weekly with injuries; results start counting after Week 4. Summarized in full in the <a href="#oline">O-Line section</a>.</p>
+        </li>
+        <li>
+          <a href="https://www.sharpfootballanalysis.com/betting/nfl-schedule-rest-disparity/" target="_blank" rel="noopener">Sharp Football &mdash; schedule rest disparity</a>
+          <span class="link-src">Feeds the 15% Rest input</span>
+          <p>Quantifies net rest edge and its betting effect: 3&ndash;6 days of extra rest covers 54.6% since 2016, while short-week road games after Week 6 cover just 47.4%. 2026 has the widest spread since 2000.</p>
+        </li>
+        <li>
+          <a href="https://x.com/sharpfootball/status/2082119731826618393" target="_blank" rel="noopener">@sharpfootball &mdash; strength of schedule</a>
+          <span class="link-src">Feeds the 25% SoS input</span>
+          <p>Odds-based SoS refreshed once all 32 teams were in camp. Easiest: Lions, Bengals, Saints, Jets, Ravens. Hardest: Cardinals, Dolphins, Panthers, Commanders, Cowboys &mdash; matching the sheet exactly.</p>
+        </li>
+        <li>
+          <a href="https://x.com/mrcaseb/status/2056384033185996900" target="_blank" rel="noopener">@mrcaseb &mdash; team strength vs schedule</a>
+          <span class="link-src">The &ldquo;Combo&rdquo; chart</span>
+          <p>Derives implied team strength (points above average on a neutral field) from all 272 DraftKings spreads, then plots each team against its average opponent strength adjusted for home field. Finds who is good, and who is good <em>and</em> has an easy road.</p>
+        </li>
+        <li>
+          <a href="https://x.com/MikeClayNFL/status/2054198281027117140/photo/1" target="_blank" rel="noopener">@MikeClayNFL &mdash; projected O-line starters</a>
+          <span class="link-src">O-Line</span>
+          <p>A chart of projected 2026 starting offensive lines for all 32 teams. Useful as the depth-chart companion to PFF&rsquo;s graded ranking above; the post text itself is just the label.</p>
+        </li>
+        <li>
+          <a href="https://x.com/ihartitz/status/2068794289958604930" target="_blank" rel="noopener">@ihartitz &mdash; goal-line rush volume</a>
+          <span class="link-src">Rushing</span>
+          <p>2025 team rush attempts from inside the 5. Bills led at 37, then Colts 31, Rams and Commanders 29. The Jets were last by a mile at 5, with Panthers 9 and Titans/Raiders 10 &mdash; a TD-equity signal for backfields on both ends.</p>
+        </li>
+        <li>
+          <a href="https://x.com/ihartitz/status/2081762681237733690" target="_blank" rel="noopener">@ihartitz &mdash; Frank Reich&rsquo;s recent record</a>
+          <span class="link-src">Supports the Jets under</span>
+          <p>Walks through the new Jets OC&rsquo;s last five years: fired midseason by the Colts in 2022 with the 30th scoring offense, then fired by Carolina after 11 games in 2023. Direct support for the Jets win-total unders already logged in Bets.</p>
+        </li>
+        <li>
+          <a href="https://x.com/adamlevitan/status/2081424878599836103" target="_blank" rel="noopener">@adamlevitan &mdash; where the bad coaches landed</a>
+          <span class="link-src">Coaching</span>
+          <p>Tracks previously-fired offensive coaches into their 2026 jobs: Shane Waldron to Jacksonville, Nathaniel Hackett to Arizona, Kevin Patullo to Miami, Matt Nagy to the Giants. A fade list for those offenses.</p>
+        </li>
+        <li>
+          <a href="https://x.com/lordreebs/status/2076727636022206935" target="_blank" rel="noopener">@lordreebs &mdash; league-wide offensive trends</a>
+          <span class="link-src">Context</span>
+          <p>Offenses flattened out in 2025 after gaining ground in 2024, with the kickoff rules and a size arms race on both sides of the ball as the drivers. Framing for where scoring sits heading into 2026.</p>
+        </li>
+        <li>
+          <a href="https://x.com/wheatonbrando/status/2055327173162991812" target="_blank" rel="noopener">@wheatonbrando</a>
+          <span class="link-src">Divisions &mdash; low value</span>
+          <p>Filed under Divisions &amp; Playoffs in the doc, but the post is a throwaway Texans joke with no analytical content. Kept only so the doc&rsquo;s link list stays accounted for.</p>
+        </li>
+        <li>
+          <a href="https://x.com/fball_insights/status/2074590563093893554" target="_blank" rel="noopener">@fball_insights</a>
+          <span class="link-src">O-Line &mdash; not retrieved</span>
+          <p>Listed under Offensive Line in the doc. The post body did not come back on fetch, so there is nothing summarized here yet.</p>
+        </li>
+      </ul>
+    </section>
+  </div>
+
+  <script>
+  /* Projections table — reads the snapshot exported from the "Projections" tab
+   * of the source sheet. The sheet's composite is
+   *   0.20*EyeTest + 0.40*OLine + 0.25*SoS + 0.15*Rest
+   * over z-scores; `score` is carried through as the sheet computed it rather
+   * than recomputed here, so this page can never disagree with the sheet. */
+  (function () {
+    'use strict';
+
+    var DATA_URL = '/data/nfl_projections_2026.json';
+
+    var tbody = document.getElementById('proj-body');
+    var table = document.getElementById('proj-table');
+    var controls = document.getElementById('proj-controls');
+
+    var teams = [];
+    var state = { conf: '', sort: 'score', dir: -1 };  // dir: -1 desc, 1 asc
+
+    function esc(s) {
+      return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+      });
+    }
+
+    /* American odds: always signed, thousands-separated, and deliberately
+     * NOT colour-coded. The heat map covers the metric columns, where a
+     * positive always means "better than average". Odds do not work that way:
+     * a plus price on Make means unlikely to make, while a plus price on Miss
+     * means unlikely to miss, so colouring both green would read as good news
+     * for opposite outcomes. */
+    function fmtOdds(n) {
+      if (n == null) return '<span class="muted">&mdash;</span>';
+      var sign = n > 0 ? '+' : '-';
+      var body = Math.abs(n).toLocaleString('en-US');
+      return '<span class="odds odds-plain">' + sign + body + '</span>';
+    }
+
+    function fmtZ(z) {
+      if (z == null) return '';
+      var cls = z > 0.05 ? 'pos' : (z < -0.05 ? 'neg' : 'flat');
+      return '<span class="z-val ' + cls + '">' + (z > 0 ? '+' : '') + z.toFixed(1) + '</span>';
+    }
+
+    // The raw input beneath each z-score, in the units the sheet recorded it in.
+    function zCell(z, rawLabel) {
+      return '<td class="z-cell">' + fmtZ(z) +
+        '<span class="z-raw">' + esc(rawLabel) + '</span></td>';
+    }
+
+    function scoreCell(score, maxAbs) {
+      var pct = maxAbs ? (Math.abs(score) / maxAbs) * 50 : 0;
+      var neg = score < 0;
+      var style = neg
+        ? 'right:50%;width:' + pct + '%'
+        : 'left:50%;width:' + pct + '%';
+      return '<td class="score-cell">' +
+        '<span class="score-num">' + (score > 0 ? '+' : '') + score.toFixed(2) + '</span>' +
+        '<span class="score-bar"><i class="' + (neg ? 'neg' : '') + '" style="' + style + '"></i></span>' +
+        '</td>';
+    }
+
+    /* Wins Above Pythag — 2025 actual wins minus the record their points
+     * scored/allowed implied. Colouring is deliberately inverted against the
+     * z-score columns: a big positive here is luck that tends to regress, so it
+     * reads as a warning rather than as a strength. */
+    function luckCell(t) {
+      var p = t.pythag;
+      if (!p) return '<td class="z-cell"></td>';
+      var v = p.winsAbovePythag;
+      var cls = v >= 1 ? 'luck-hot' : (v <= -1 ? 'luck-cold' : 'luck-even');
+      return '<td class="z-cell">' +
+        '<span class="z-val ' + cls + '">' + (v > 0 ? '+' : '') + v.toFixed(1) + '</span>' +
+        '<span class="z-raw">' + p.w + '-' + p.l + (p.t ? '-' + p.t : '') +
+        ' / ' + p.pythagW.toFixed(1) + '</span></td>';
+    }
+
+    // Offensive line detail, shown in a hidden row beneath each team. Empty
+    // buckets are dropped rather than rendered as empty headings.
+    function olBlock(label, items, cls) {
+      if (!items || !items.length) return '';
+      return '<div class="ol-block ' + cls + '">' +
+        '<h5>' + esc(label) + '</h5><ul>' +
+        items.map(function (s) { return '<li>' + esc(s) + '</li>'; }).join('') +
+        '</ul></div>';
+    }
+
+    // "Won 3.0 more than their points implied" reads better than a bare number.
+    function luckLine(t) {
+      var p = t.pythag;
+      if (!p) return '';
+      var v = p.winsAbovePythag;
+      var verdict = v >= 1
+        ? 'won ' + v.toFixed(1) + ' more than their points implied — regression candidate'
+        : (v <= -1
+          ? 'won ' + Math.abs(v).toFixed(1) + ' fewer than their points implied — bounce-back candidate'
+          : 'record matched their points');
+      return '<p class="ol-pythag"><strong>2025:</strong> ' + p.w + '-' + p.l +
+        (p.t ? '-' + p.t : '') + ', ' + p.pf + ' PF / ' + p.pa + ' PA &middot; pythag ' +
+        p.pythagW.toFixed(1) + ' wins &mdash; ' + verdict + '</p>';
+    }
+
+    function detailRow(t) {
+      var ol = t.oline;
+      if (!ol) return '';
+      var body =
+        '<p class="ol-verdict"><strong>PFF #' + t.raw.oLineRank + '</strong> &mdash; ' +
+        esc(ol.verdict) + '</p>' +
+        luckLine(t) +
+        '<div class="ol-blocks">' +
+        olBlock('Injuries', ol.injuries, 'is-inj') +
+        olBlock('Pros', ol.pros, 'is-pro') +
+        olBlock('Risks & cons', ol.cons, 'is-con') +
+        '</div>';
+      return '<tr class="proj-detail" data-for="' + esc(t.team) + '" hidden>' +
+        '<td colspan="12"><div class="ol-detail">' + body + '</div></td></tr>';
+    }
+
+    // Sort keys. Ranks (O-Line, SoS) are compared on their z-score so that
+    // "better" always sorts the same direction as every other column.
+    var KEYS = {
+      team: function (t) { return t.team; },
+      score: function (t) { return t.score; },
+      eyeTest: function (t) { return t.z.eyeTest; },
+      oLine: function (t) { return t.z.oLine; },
+      sos: function (t) { return t.z.sos; },
+      rest: function (t) { return t.z.rest; },
+      luck: function (t) { return t.pythag ? t.pythag.winsAbovePythag : null; },
+      make: function (t) { return t.odds.make; },
+      miss: function (t) { return t.odds.miss; },
+      division: function (t) { return t.odds.division; }
+    };
+
+    function render() {
+      var rows = teams.filter(function (t) {
+        return !state.conf || t.conf === state.conf;
+      });
+
+      var key = KEYS[state.sort] || KEYS.score;
+      rows.sort(function (a, b) {
+        var x = key(a), y = key(b);
+        if (typeof x === 'string') return x.localeCompare(y) * state.dir;
+        // Missing odds sort last regardless of direction.
+        if (x == null) return 1;
+        if (y == null) return -1;
+        return (x - y) * state.dir;
+      });
+
+      var maxAbs = rows.reduce(function (m, t) {
+        return Math.max(m, Math.abs(t.score));
+      }, 0);
+
+      if (!rows.length) {
+        tbody.innerHTML = '<tr><td colspan="12" class="proj-empty">No teams match.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = rows.map(function (t, i) {
+        return '<tr class="proj-row" data-team="' + esc(t.team) + '" tabindex="0">' +
+          '<td class="proj-rank">' + (i + 1) + '</td>' +
+          '<td class="col-team"><span class="row-caret">&rsaquo;</span>' + esc(t.team) + '</td>' +
+          '<td class="col-div proj-hide-sm">' + esc(t.conf + ' ' + t.div) + '</td>' +
+          scoreCell(t.score, maxAbs) +
+          zCell(t.z.eyeTest, t.raw.eyeTest) +
+          zCell(t.z.oLine, '#' + t.raw.oLineRank) +
+          zCell(t.z.sos, '#' + t.raw.sosRank) +
+          zCell(t.z.rest, (t.raw.rest > 0 ? '+' : '') + t.raw.rest) +
+          luckCell(t) +
+          '<td class="num proj-hide-sm">' + fmtOdds(t.odds.make) + '</td>' +
+          '<td class="num proj-hide-sm">' + fmtOdds(t.odds.miss) + '</td>' +
+          '<td class="num proj-hide-sm">' + fmtOdds(t.odds.division) + '</td>' +
+          '</tr>' + detailRow(t);
+      }).join('');
+
+      // Caret on the active sort column.
+      table.querySelectorAll('th.sortable').forEach(function (th) {
+        var old = th.querySelector('.sort-caret');
+        if (old) old.remove();
+        if (th.dataset.sort !== state.sort) return;
+        var caret = document.createElement('span');
+        caret.className = 'sort-caret';
+        caret.textContent = state.dir === -1 ? '▾' : '▴';
+        th.appendChild(caret);
+      });
+    }
+
+    table.querySelectorAll('th.sortable').forEach(function (th) {
+      th.addEventListener('click', function () {
+        var k = th.dataset.sort;
+        if (state.sort === k) {
+          state.dir = -state.dir;
+        } else {
+          state.sort = k;
+          // Team defaults A-Z; every metric defaults best-first.
+          state.dir = k === 'team' ? 1 : -1;
+        }
+        render();
+      });
+    });
+
+    // Expand/collapse a team's O-line detail. Delegated, so it survives the
+    // re-render that sorting and filtering trigger.
+    function toggleRow(tr) {
+      var detail = tr.nextElementSibling;
+      if (!detail || !detail.classList.contains('proj-detail')) return;
+      var open = detail.hidden;
+      detail.hidden = !open;
+      tr.classList.toggle('open', open);
+    }
+
+    tbody.addEventListener('click', function (e) {
+      var tr = e.target.closest('tr.proj-row');
+      if (tr) toggleRow(tr);
+    });
+
+    tbody.addEventListener('keydown', function (e) {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      var tr = e.target.closest('tr.proj-row');
+      if (!tr) return;
+      e.preventDefault();
+      toggleRow(tr);
+    });
+
+    controls.addEventListener('click', function (e) {
+      var btn = e.target.closest('.proj-toggle');
+      if (!btn) return;
+      state.conf = btn.dataset.conf;
+      controls.querySelectorAll('.proj-toggle').forEach(function (b) {
+        b.classList.toggle('active', b === btn);
+      });
+      render();
+    });
+
+    function renderOlineSection(src) {
+      if (!src) return;
+      var note = document.getElementById('ol-source');
+      note.innerHTML = esc(src.summary) +
+        (src.url ? ' <a href="' + esc(src.url) + '" target="_blank" rel="noopener">' +
+          esc(src.name) + '</a>' : '');
+
+      var themes = document.getElementById('ol-themes');
+      themes.innerHTML = (src.themes || []).map(function (t) {
+        return '<article class="note accent-info"><h4>' + esc(t.title) + '</h4>' +
+          '<p>' + esc(t.body) + '</p></article>';
+      }).join('');
+    }
+
+    // Top/bottom 4 by wins above pythag — the regression and bounce-back lists.
+    function renderPythagLists() {
+      var ranked = teams.filter(function (t) { return t.pythag; })
+        .sort(function (a, b) {
+          return b.pythag.winsAbovePythag - a.pythag.winsAbovePythag;
+        });
+      if (!ranked.length) return;
+
+      function li(t) {
+        var v = t.pythag.winsAbovePythag;
+        // Same inverted palette as the table's Luck column: amber = lucky and
+        // due to regress, blue = unlucky and due to bounce back.
+        return '<li><strong>' + esc(t.team) + '</strong> ' +
+          '<span class="z-val ' + (v > 0 ? 'luck-hot' : 'luck-cold') + '">' +
+          (v > 0 ? '+' : '') + v.toFixed(1) + '</span> ' +
+          '<span class="z-raw-inline">(' + t.pythag.w + '-' + t.pythag.l +
+          ' vs ' + t.pythag.pythagW.toFixed(1) + ')</span></li>';
+      }
+
+      document.getElementById('pythag-hot').innerHTML =
+        '<li class="list-head">Won more than they earned &mdash; fade</li>' +
+        ranked.slice(0, 4).map(li).join('');
+      document.getElementById('pythag-cold').innerHTML =
+        '<li class="list-head">Better than their record &mdash; back</li>' +
+        ranked.slice(-4).reverse().map(li).join('');
+    }
+
+    fetch(DATA_URL, { cache: 'no-store' })
+      .then(function (r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      })
+      .then(function (d) {
+        teams = d.teams || [];
+
+        document.getElementById('proj-note').textContent = d.note || '';
+
+        var w = d.weights || {};
+        document.getElementById('proj-weights').innerHTML =
+          'Score = ' +
+          [['Eye Test', w.eyeTest], ['O-Line', w.oLine], ['SoS', w.sos], ['Rest', w.rest]]
+            .filter(function (p) { return p[1] != null; })
+            .map(function (p) {
+              return '<strong>' + Math.round(p[1] * 100) + '%</strong> ' + esc(p[0]);
+            })
+            .join(' &middot; ');
+
+        var legend = document.getElementById('proj-legend');
+        if (d.eyeTestLegend) {
+          legend.innerHTML = '<strong>Eye Test scale:</strong> ' + esc(d.eyeTestLegend);
+        } else {
+          legend.remove();
+        }
+
+        renderOlineSection(d.olineSource);
+        renderPythagLists();
+        render();
+      })
+      .catch(function () {
+        tbody.innerHTML =
+          '<tr><td colspan="12" class="proj-empty">Could not load projections.</td></tr>';
+      });
+  })();
+  </script>
+</body>
+</html>

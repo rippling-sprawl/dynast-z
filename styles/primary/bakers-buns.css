@@ -1,0 +1,539 @@
+/* === Baker's Buns ===
+ * Notes surface for football takes, bets and reference tables. Content is
+ * currently authored inline in views/football/bakers-buns.html; the markup is
+ * deliberately shaped as a list of self-contained `.note` cards inside
+ * `.bun-section` groups so it can be swapped for stored/editable notes later
+ * without restyling the page. */
+
+/* --- Section nav (jump links) --- */
+.bun-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 12px 0 20px;
+}
+
+.bun-nav a {
+  font-family: monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #8b949e;
+  text-decoration: none;
+  padding: 5px 10px;
+  border: 1px solid #2a2a2a;
+  border-radius: 999px;
+  background: #161616;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.bun-nav a:hover {
+  color: #e1e4e8;
+  border-color: #60a5fa;
+}
+
+/* --- Section --- */
+.bun-section {
+  margin: 28px 0 0;
+  scroll-margin-top: 72px;
+}
+
+.bun-section > h3 {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #888;
+  font-family: monospace;
+  font-weight: 700;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #2a2a2a;
+}
+
+.bun-section > .bun-section-note {
+  margin-top: 6px;
+  font-size: 11px;
+  font-family: monospace;
+  color: #555;
+}
+
+/* --- Note cards --- */
+.bun-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+  align-items: start;
+}
+
+.note {
+  background: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  border-left: 3px solid #2a2a2a;
+  border-radius: 6px;
+  padding: 14px 16px;
+}
+
+.note.accent-warn { border-left-color: #b8860b; }
+.note.accent-good { border-left-color: #2ea043; }
+.note.accent-info { border-left-color: #60a5fa; }
+
+.note h4 {
+  font-size: 13px;
+  font-weight: 600;
+  color: #f0f0f0;
+  margin: 0;
+}
+
+.note .note-meta {
+  display: block;
+  margin-top: 2px;
+  font-size: 10px;
+  font-family: monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #555;
+}
+
+.note ul {
+  margin: 8px 0 0;
+  padding-left: 16px;
+}
+
+.note li {
+  font-size: 12px;
+  line-height: 1.5;
+  color: #c9d1d9;
+  margin-bottom: 3px;
+}
+
+.note p {
+  font-size: 12px;
+  line-height: 1.5;
+  color: #c9d1d9;
+  margin: 8px 0 0;
+}
+
+/* A conclusion / actionable line at the bottom of a note. */
+.note .note-take {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid #2a2a2a;
+  font-size: 12px;
+  color: #e1e4e8;
+}
+
+.note .note-take strong { color: #f0f0f0; }
+
+/* --- Odds pill --- */
+.odds {
+  font-family: monospace;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.odds.plus { color: #2ea043; }
+.odds.minus { color: #f0883e; }
+
+/* Odds inside the projections table sit outside the heat map — see fmtOdds in
+ * the view for why a signed price must not be coloured like a metric. */
+.odds.odds-plain { color: #c9d1d9; }
+
+/* --- Tables --- */
+.bun-table-wrap {
+  margin-top: 12px;
+  overflow-x: auto;
+}
+
+.bun-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.bun-table caption {
+  text-align: left;
+  font-family: monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #666;
+  padding-bottom: 6px;
+}
+
+.bun-table th {
+  text-align: left;
+  font-family: monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #666;
+  font-weight: 700;
+  padding: 6px 10px;
+  border-bottom: 1px solid #2a2a2a;
+  white-space: nowrap;
+}
+
+.bun-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid #1f1f1f;
+  color: #c9d1d9;
+  vertical-align: top;
+}
+
+.bun-table tbody tr:last-child td { border-bottom: none; }
+
+.bun-table .col-team {
+  color: #f0f0f0;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.bun-table .col-div {
+  font-family: monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #666;
+  white-space: nowrap;
+}
+
+.bun-table .num {
+  font-family: monospace;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.bun-table ul {
+  margin: 0;
+  padding-left: 15px;
+}
+
+.bun-table li {
+  line-height: 1.45;
+  margin-bottom: 2px;
+}
+
+.bun-table .muted { color: #555; font-style: italic; }
+
+/* Conference divider inside the worst-to-first table. */
+.bun-table tr.group-row td {
+  background: #161616;
+  font-family: monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #8b949e;
+  font-weight: 700;
+  padding: 5px 10px;
+}
+
+/* --- Link list --- */
+.bun-links {
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bun-links li {
+  padding: 10px 0;
+  border-bottom: 1px solid #1f1f1f;
+}
+
+.bun-links li:last-child { border-bottom: none; }
+
+.bun-links > li > a {
+  font-size: 13px;
+  font-weight: 600;
+  color: #60a5fa;
+  text-decoration: none;
+}
+
+.bun-links a:hover { text-decoration: underline; }
+
+.bun-links .link-src {
+  display: inline-block;
+  font-family: monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #555;
+  margin-left: 8px;
+}
+
+/* The summary of what the link actually says — the reason the list exists. */
+.bun-links p {
+  margin: 4px 0 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #c9d1d9;
+}
+
+.bun-links p a { font-size: inherit; font-weight: 400; }
+
+/* --- Projections table ---
+ * Rendered from /data/nfl_projections_2026.json by the inline script in
+ * views/football/bakers-buns.html. */
+.proj-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.proj-toggle {
+  font-family: monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #8b949e;
+  background: #161616;
+  border: 1px solid #2a2a2a;
+  border-radius: 999px;
+  padding: 5px 12px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+
+.proj-toggle:hover { color: #e1e4e8; border-color: #3a3a3a; }
+
+.proj-toggle.active {
+  color: #111;
+  background: #60a5fa;
+  border-color: #60a5fa;
+  font-weight: 700;
+}
+
+/* Sortable headers */
+.bun-table th.sortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.bun-table th.sortable:hover { color: #c9d1d9; }
+
+.bun-table th.sortable .sort-caret {
+  color: #60a5fa;
+  margin-left: 3px;
+}
+
+.bun-table th .th-sub {
+  display: block;
+  font-size: 9px;
+  color: #4a4a4a;
+  letter-spacing: 0;
+  text-transform: none;
+  font-weight: 400;
+}
+
+/* A z-score cell: the normalized value with its raw input beneath. */
+.z-cell { font-family: monospace; text-align: right; white-space: nowrap; }
+.z-cell .z-val { font-size: 12px; }
+.z-cell .z-raw { display: block; font-size: 9px; color: #555; }
+
+.z-val.pos { color: #2ea043; }
+.z-val.neg { color: #f0883e; }
+.z-val.flat { color: #8b949e; }
+
+/* Composite score: number plus a bar diverging from a centre baseline. */
+.score-cell { width: 96px; }
+
+.score-num {
+  font-family: monospace;
+  font-size: 12px;
+  font-weight: 700;
+  color: #f0f0f0;
+  display: block;
+  text-align: right;
+}
+
+.score-bar {
+  display: block;
+  position: relative;
+  height: 4px;
+  margin-top: 3px;
+  background: #1f1f1f;
+  border-radius: 2px;
+}
+
+.score-bar::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -1px;
+  bottom: -1px;
+  width: 1px;
+  background: #3a3a3a;
+}
+
+.score-bar i {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  border-radius: 2px;
+  background: #2ea043;
+}
+
+.score-bar i.neg { background: #f0883e; }
+
+.proj-rank {
+  font-family: monospace;
+  font-size: 11px;
+  color: #555;
+  text-align: right;
+}
+
+.bun-table tbody tr.conf-nfc .col-team { border-left: 2px solid transparent; }
+
+.proj-empty { padding: 16px 0; font-size: 12px; font-family: monospace; color: #555; }
+
+/* Wins above pythag. Inverted against the z-score palette on purpose: a large
+ * positive is luck that regresses, so it warns rather than praises. */
+.z-val.luck-hot { color: #d29922; }
+.z-val.luck-cold { color: #58a6ff; }
+.z-val.luck-even { color: #8b949e; }
+
+/* --- Pinned rank + team columns ---
+ * The metric columns run off the right edge on narrow screens, and a scrolled
+ * row is unreadable once you lose the team name. Both are scoped to
+ * #proj-table so the other .bun-table instances are unaffected, and to
+ * tr.proj-row so the full-width detail row's single cell is never pinned.
+ * The sticky cells need an opaque background or the columns sliding beneath
+ * them show through, so every row state below repaints them explicitly. */
+#proj-table th:nth-child(1),
+#proj-table tr.proj-row > td:nth-child(1) {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  width: 30px;
+  min-width: 30px;
+  background: #111;
+}
+
+#proj-table th:nth-child(2),
+#proj-table tr.proj-row > td:nth-child(2) {
+  position: sticky;
+  left: 30px;
+  z-index: 2;
+  background: #111;
+  border-right: 1px solid #2a2a2a;
+}
+
+/* --- Expandable O-line detail --- */
+.proj-row { cursor: pointer; }
+.proj-row:hover td { background: #171717; }
+
+/* Re-assert hover on the pinned cells: the rules above carry an ID, so they
+ * outrank `.proj-row:hover td` and would otherwise stay unhighlighted. */
+#proj-table tr.proj-row:hover > td:nth-child(1),
+#proj-table tr.proj-row:hover > td:nth-child(2) {
+  background: #171717;
+}
+.proj-row:focus-visible { outline: 1px solid #60a5fa; outline-offset: -1px; }
+
+.row-caret {
+  display: inline-block;
+  width: 10px;
+  margin-right: 5px;
+  color: #555;
+  font-family: monospace;
+  transition: transform 0.15s, color 0.15s;
+}
+
+.proj-row.open .row-caret {
+  transform: rotate(90deg);
+  color: #60a5fa;
+}
+
+.proj-detail > td {
+  padding: 0;
+  border-bottom: 1px solid #1f1f1f;
+  background: #141414;
+}
+
+.ol-detail {
+  padding: 12px 16px 14px 31px;
+  border-left: 2px solid #60a5fa;
+}
+
+.ol-verdict {
+  font-size: 12px;
+  color: #e1e4e8;
+  margin: 0 0 6px;
+}
+
+.ol-verdict strong { color: #60a5fa; font-family: monospace; }
+
+.ol-pythag {
+  font-size: 11px;
+  color: #8b949e;
+  margin: 0 0 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #1f1f1f;
+}
+
+.ol-pythag strong { color: #c9d1d9; }
+
+.ol-blocks {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 10px 18px;
+}
+
+.ol-block h5 {
+  font-family: monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 700;
+  margin: 0 0 4px;
+  color: #666;
+}
+
+.ol-block.is-inj h5 { color: #d29922; }
+.ol-block.is-pro h5 { color: #2ea043; }
+.ol-block.is-con h5 { color: #f0883e; }
+
+.ol-block ul { margin: 0; padding-left: 15px; }
+
+.ol-block li {
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: #c9d1d9;
+  margin-bottom: 3px;
+}
+
+/* --- Pythag over/under-performer lists --- */
+.note li.list-head {
+  list-style: none;
+  margin-left: -16px;
+  margin-top: 8px;
+  margin-bottom: 4px;
+  font-family: monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #666;
+}
+
+.z-raw-inline { font-family: monospace; font-size: 10px; color: #555; }
+
+@media (max-width: 700px) {
+  .proj-hide-sm { display: none; }
+}
+
+/* --- Placeholder for sections the doc left blank --- */
+.bun-empty {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border: 1px dashed #2a2a2a;
+  border-radius: 6px;
+  font-size: 12px;
+  font-family: monospace;
+  color: #555;
+}
+
+@media (max-width: 600px) {
+  .bun-grid { grid-template-columns: 1fr; }
+  .bun-table th, .bun-table td { padding: 6px 8px; }
+}

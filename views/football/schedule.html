@@ -26,8 +26,22 @@
     <h2>NFL Schedule</h2>
 
     <div class="sched-filters">
-      <select id="f-week" aria-label="Week"></select>
-      <select id="f-team" aria-label="Team"></select>
+      <div class="dd" id="dd-week">
+        <button type="button" class="dd-btn" id="f-week" aria-haspopup="true" aria-expanded="false">
+          <span class="dd-value">All weeks</span>
+        </button>
+        <div class="dd-panel dd-weeks" id="week-menu" role="menu" aria-label="Week" hidden></div>
+      </div>
+
+      <div class="dd" id="dd-team">
+        <button type="button" class="dd-btn" id="f-team" aria-haspopup="true" aria-expanded="false">
+          <span class="dd-value">All teams</span>
+        </button>
+        <div class="dd-panel dd-teams" role="menu" aria-label="Team" hidden>
+          <div class="tp" id="team-grid"></div>
+        </div>
+      </div>
+
       <button type="button" class="sched-reset" id="f-reset" hidden>Reset</button>
     </div>
 
@@ -45,9 +59,33 @@
     var state = { week: 1, team: '' };   // week: 1-18 or 'all'; team: abbr or ''
 
     var listEl = document.getElementById('list');
-    var weekSel = document.getElementById('f-week');
-    var teamSel = document.getElementById('f-team');
+    var weekBtn = document.getElementById('f-week');
+    var weekMenu = document.getElementById('week-menu');
+    var teamBtn = document.getElementById('f-team');
+    var teamPicker = document.getElementById('team-grid');
     var resetBtn = document.getElementById('f-reset');
+
+    /* The league, in the shape it is actually organised in. The schedule feed
+     * ships teams as one flat alphabetical list, and alphabetical is the one
+     * ordering nobody thinks about football in — a reader looking for the Bears
+     * looks in the NFC North, not between Atlanta and Cincinnati. Realignment
+     * has happened once since 2002, so a static map is the right home for it;
+     * the abbreviations are the feed's own, which is also how the logo files
+     * are named. */
+    var CONFERENCES = [
+      { name: 'AFC', divisions: [
+        { name: 'East',  teams: ['BUF', 'MIA', 'NE', 'NYJ'] },
+        { name: 'North', teams: ['BAL', 'CIN', 'CLE', 'PIT'] },
+        { name: 'South', teams: ['HOU', 'IND', 'JAX', 'TEN'] },
+        { name: 'West',  teams: ['DEN', 'KC', 'LAC', 'LV'] }
+      ] },
+      { name: 'NFC', divisions: [
+        { name: 'East',  teams: ['DAL', 'NYG', 'PHI', 'WSH'] },
+        { name: 'North', teams: ['CHI', 'DET', 'GB', 'MIN'] },
+        { name: 'South', teams: ['ATL', 'CAR', 'NO', 'TB'] },
+        { name: 'West',  teams: ['ARI', 'LAR', 'SEA', 'SF'] }
+      ] }
+    ];
 
     function esc(s) {
       return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
@@ -162,35 +200,194 @@
       history.replaceState(null, '', location.pathname + '?' + q.toString());
     }
 
-    function buildFilters(nowWeek) {
-      weekSel.innerHTML = '<option value="all">All weeks</option>' +
+    /* ---------- dropdowns ----------
+     * Two filters, one control. The triggers are identical — same box, same
+     * caret, same behaviour — and only what opens underneath differs: a list of
+     * weeks on one, the league's logos on the other. The week list could have
+     * stayed a native <select>, but a native select cannot be made to match a
+     * custom trigger across browsers, and "these are the two filters" is the
+     * thing the row has to say first.
+     */
+    var dropdowns = [];
+
+    function closeDropdown(dd, refocus) {
+      if (dd.panel.hidden) return;
+      dd.panel.hidden = true;
+      dd.btn.setAttribute('aria-expanded', 'false');
+      if (refocus) dd.btn.focus();
+    }
+
+    function closeAllDropdowns() {
+      dropdowns.forEach(function (d) { closeDropdown(d, false); });
+    }
+
+    function openDropdown(dd) {
+      dropdowns.forEach(function (d) { if (d !== dd) closeDropdown(d, false); });
+      dd.panel.hidden = false;
+      dd.btn.setAttribute('aria-expanded', 'true');
+      // Opening lands on the current choice, so the keyboard starts where the
+      // filter already is rather than at the top of a list of nineteen weeks.
+      var here = dd.panel.querySelector('.is-on') || dd.panel.querySelector('button');
+      if (here) here.focus();
+    }
+
+    // Arrows walk the panel in DOM order. That is exactly right for the week
+    // list, and for the team grid it reads across each division and on to the
+    // next — the same path the eye takes.
+    var ARROW = { ArrowDown: 1, ArrowRight: 1, ArrowUp: -1, ArrowLeft: -1 };
+
+    function registerDropdown(root) {
+      var dd = {
+        root: root,
+        btn: root.querySelector('.dd-btn'),
+        panel: root.querySelector('.dd-panel')
+      };
+      dropdowns.push(dd);
+
+      dd.btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        if (dd.panel.hidden) openDropdown(dd); else closeDropdown(dd, true);
+      });
+
+      dd.panel.addEventListener('keydown', function (e) {
+        var step = ARROW[e.key];
+        if (!step) return;
+        e.preventDefault();
+        var items = [].slice.call(dd.panel.querySelectorAll('button'));
+        var i = items.indexOf(document.activeElement);
+        var next = items[(i + step + items.length) % items.length];
+        if (next) next.focus();
+      });
+
+      return dd;
+    }
+
+    document.addEventListener('click', function (e) {
+      if (!e.target.closest || !e.target.closest('.dd')) closeAllDropdowns();
+    });
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key !== 'Escape') return;
+      dropdowns.forEach(function (d) { closeDropdown(d, true); });
+    });
+
+    // One team: the logo, with the abbreviation as the accessible name and the
+    // full name as the tooltip. The logos are served from this app rather than
+    // hotlinked from nfl.com, so the picker cannot break when they reorganise
+    // their CDN — see assets/icons/nfl/.
+    function teamButton(abbr) {
+      var t = teamsByAbbr[abbr] || { abbr: abbr };
+      return '<button type="button" class="tp-team" data-team="' + esc(abbr) + '"' +
+        ' aria-pressed="false" title="' + esc(t.name || abbr) + '">' +
+        '<img src="/assets/icons/nfl/' + esc(abbr) + '.svg" alt="' + esc(t.name || abbr) + '">' +
+        '</button>';
+    }
+
+    function buildTeamPicker() {
+      // Any team the feed knows about that the division map doesn't — a
+      // relocation, or a changed abbreviation upstream — still gets a button,
+      // because a team silently missing from the picker is also a team that
+      // cannot be filtered to at all.
+      var placed = {};
+      var html = CONFERENCES.map(function (conf) {
+        return '<div class="tp-conf"><h3 class="tp-conf-name">' + conf.name + '</h3>' +
+          conf.divisions.map(function (div) {
+            return '<div class="tp-div"><span class="tp-div-name">' + esc(div.name) + '</span>' +
+              '<div class="tp-teams">' + div.teams.map(function (abbr) {
+                placed[abbr] = true;
+                return teamButton(abbr);
+              }).join('') + '</div></div>';
+          }).join('') + '</div>';
+      }).join('');
+
+      var stray = data.teams.filter(function (t) { return !placed[t.abbr]; });
+      if (stray.length) {
+        html += '<div class="tp-conf tp-stray"><h3 class="tp-conf-name">Other</h3>' +
+          '<div class="tp-div"><div class="tp-teams">' +
+          stray.map(function (t) { return teamButton(t.abbr); }).join('') +
+          '</div></div></div>';
+      }
+
+      teamPicker.innerHTML = html;
+    }
+
+    function buildWeekMenu(nowWeek) {
+      weekMenu.innerHTML = '<button type="button" class="dd-opt" data-week="all" role="menuitem">' +
+        'All weeks</button>' +
         data.weeks.map(function (w) {
-          return '<option value="' + w.week + '">Week ' + w.week +
-            (w.week === nowWeek ? ' — this week' : '') + '</option>';
+          return '<button type="button" class="dd-opt" data-week="' + w.week + '" role="menuitem">' +
+            'Week ' + w.week +
+            (w.week === nowWeek ? '<span class="dd-note">this week</span>' : '') +
+            '</button>';
         }).join('');
+    }
 
-      teamSel.innerHTML = '<option value="">All teams</option>' +
-        data.teams.slice().sort(function (a, b) { return a.name < b.name ? -1 : 1; })
-          .map(function (t) {
-            return '<option value="' + esc(t.abbr) + '">' + esc(t.name) + '</option>';
-          }).join('');
+    /* The trigger says what the filter is currently set to — it is the only
+     * place that reads once the panel is shut. The team one carries the logo as
+     * well as the name, so the closed control still shows the same thing the
+     * open grid does. */
+    function syncFilters(nowWeek) {
+      weekBtn.querySelector('.dd-value').textContent =
+        state.week === 'all' ? 'All weeks' : 'Week ' + state.week +
+          (state.week === nowWeek ? ' — this week' : '');
 
-      weekSel.value = String(state.week);
-      teamSel.value = state.team;
+      var opts = weekMenu.querySelectorAll('.dd-opt');
+      for (var j = 0; j < opts.length; j++) {
+        opts[j].classList.toggle('is-on', opts[j].getAttribute('data-week') === String(state.week));
+      }
 
-      weekSel.addEventListener('change', function () {
-        state.week = weekSel.value === 'all' ? 'all' : Number(weekSel.value);
+      var t = state.team ? (teamsByAbbr[state.team] || { abbr: state.team }) : null;
+      teamBtn.querySelector('.dd-value').innerHTML = t
+        ? '<img class="dd-logo" src="/assets/icons/nfl/' + esc(t.abbr) + '.svg" alt="">' +
+          esc(t.name || t.abbr)
+        : 'All teams';
+
+      // The picked team reads as picked; with a pick made, everything else
+      // steps back so the one selected logo is the only thing at full strength.
+      teamPicker.classList.toggle('has-pick', !!state.team);
+      var btns = teamPicker.querySelectorAll('.tp-team');
+      for (var i = 0; i < btns.length; i++) {
+        var on = btns[i].getAttribute('data-team') === state.team;
+        btns[i].classList.toggle('is-on', on);
+        btns[i].setAttribute('aria-pressed', on ? 'true' : 'false');
+      }
+    }
+
+    function buildFilters(nowWeek) {
+      buildWeekMenu(nowWeek);
+      buildTeamPicker();
+
+      var weekDd = registerDropdown(document.getElementById('dd-week'));
+      var teamDd = registerDropdown(document.getElementById('dd-team'));
+
+      weekMenu.addEventListener('click', function (e) {
+        var opt = e.target.closest ? e.target.closest('.dd-opt') : null;
+        if (!opt || !weekMenu.contains(opt)) return;
+        var v = opt.getAttribute('data-week');
+        state.week = v === 'all' ? 'all' : Number(v);
+        closeDropdown(weekDd, true);
         apply(nowWeek);
       });
-      teamSel.addEventListener('change', function () {
-        state.team = teamSel.value;
+
+      // Picking a team means looking for that team, and a team plays once a
+      // week — a single-week view answers "are they playing Sunday" and nothing
+      // else. The week snaps to all-weeks so the pick lands on their season.
+      // Clicking the picked team again is how you get back to all teams; the
+      // week stays where it was put.
+      teamPicker.addEventListener('click', function (e) {
+        var btn = e.target.closest ? e.target.closest('.tp-team') : null;
+        if (!btn || !teamPicker.contains(btn)) return;
+        var abbr = btn.getAttribute('data-team');
+        state.team = state.team === abbr ? '' : abbr;
+        if (state.team) state.week = 'all';
+        closeDropdown(teamDd, true);
         apply(nowWeek);
       });
+
       resetBtn.addEventListener('click', function () {
         state.week = nowWeek;
         state.team = '';
-        weekSel.value = String(nowWeek);
-        teamSel.value = '';
+        closeAllDropdowns();
         apply(nowWeek);
       });
     }
@@ -260,6 +457,38 @@
           '<span class="sched-teams">' + team(away, 'away') +
             '<span class="sched-at">' + sep + '</span>' + team(home, 'home') + '</span>' +
           badge + venue + '</span>' +
+        '</div>';
+    }
+
+    /* ---------- per-team links ----------
+     * Pro-Football-Reference keys teams by their own three-letter code, which
+     * predates several relocations and rebrands and so disagrees with the
+     * league's abbreviation on a third of the league — the Cardinals are still
+     * "crd", the Chargers still "sdg". Only the codes that differ are listed;
+     * everything else is the lowercased abbreviation. */
+    var PFR_CODES = {
+      ARI: 'crd', BAL: 'rav', GB: 'gnb', HOU: 'htx', IND: 'clt', KC: 'kan',
+      LAC: 'sdg', LAR: 'ram', LV: 'rai', NE: 'nwe', NO: 'nor', SF: 'sfo',
+      TB: 'tam', TEN: 'oti', WSH: 'was'
+    };
+
+    // The season the schedule file is for, which is the year PFR files these
+    // games under — not the calendar year, which is the wrong one for every
+    // January game and for the whole offseason.
+    function teamLinks(abbr) {
+      var t = teamsByAbbr[abbr] || { abbr: abbr };
+      var pfr = PFR_CODES[abbr] || abbr.toLowerCase();
+      var links = [
+        { label: 'Pro-Football-Reference',
+          href: 'https://www.pro-football-reference.com/teams/' + pfr + '/' +
+            data.season + '.htm' }
+      ];
+      return '<div class="sched-links">' +
+        '<span class="sched-links-label">' + esc(t.name || abbr) + '</span>' +
+        links.map(function (l) {
+          return '<a href="' + esc(l.href) + '" target="_blank" rel="noopener">' +
+            esc(l.label) + '</a>';
+        }).join('') +
         '</div>';
     }
 
@@ -333,10 +562,14 @@
     }
 
     function apply(nowWeek) {
+      syncFilters(nowWeek);
       resetBtn.hidden = (state.week === nowWeek && !state.team);
-      listEl.innerHTML = state.week === 'all'
+      var html = state.week === 'all'
         ? renderAll()
         : renderWeek(data.weeks.filter(function (w) { return w.week === state.week; })[0]);
+      // Below the schedule, not above it: the games are what was asked for and
+      // the links are where to go next.
+      listEl.innerHTML = html + (state.team ? teamLinks(state.team) : '');
       writeParams();
     }
 
