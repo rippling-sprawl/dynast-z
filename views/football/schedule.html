@@ -7,6 +7,7 @@
   <title>NFL Schedule | Dynast-Z</title>
   <link rel="stylesheet" href="/styles/base/styles.css">
   <link rel="stylesheet" href="/styles/base/hub.css">
+  <link rel="stylesheet" href="/styles/components/nfl-pickers.css">
   <link rel="stylesheet" href="/styles/primary/nfl-schedule.css">
   <link rel="stylesheet" href="/styles/base/lightbox.css">
 </head>
@@ -16,6 +17,8 @@
   <script src="/scripts/base/auth.js"></script>
   <script src="/scripts/base/nav.js"></script>
   <script src="/scripts/base/lightbox.js"></script>
+  <!-- The week menu and the team grid, shared with /football/bakers-buns. -->
+  <script src="/scripts/components/nfl-pickers.js"></script>
   <script>initPage();</script>
 
   <div class="masters-content">
@@ -25,7 +28,8 @@
 
     <h2>NFL Schedule</h2>
 
-    <div class="sched-filters">
+    <!-- Markup contract for scripts/components/nfl-pickers.js. -->
+    <div class="dd-row">
       <div class="dd" id="dd-week">
         <button type="button" class="dd-btn" id="f-week" aria-haspopup="true" aria-expanded="false">
           <span class="dd-value">All weeks</span>
@@ -64,28 +68,6 @@
     var teamBtn = document.getElementById('f-team');
     var teamPicker = document.getElementById('team-grid');
     var resetBtn = document.getElementById('f-reset');
-
-    /* The league, in the shape it is actually organised in. The schedule feed
-     * ships teams as one flat alphabetical list, and alphabetical is the one
-     * ordering nobody thinks about football in — a reader looking for the Bears
-     * looks in the NFC North, not between Atlanta and Cincinnati. Realignment
-     * has happened once since 2002, so a static map is the right home for it;
-     * the abbreviations are the feed's own, which is also how the logo files
-     * are named. */
-    var CONFERENCES = [
-      { name: 'AFC', divisions: [
-        { name: 'East',  teams: ['BUF', 'MIA', 'NE', 'NYJ'] },
-        { name: 'North', teams: ['BAL', 'CIN', 'CLE', 'PIT'] },
-        { name: 'South', teams: ['HOU', 'IND', 'JAX', 'TEN'] },
-        { name: 'West',  teams: ['DEN', 'KC', 'LAC', 'LV'] }
-      ] },
-      { name: 'NFC', divisions: [
-        { name: 'East',  teams: ['DAL', 'NYG', 'PHI', 'WSH'] },
-        { name: 'North', teams: ['CHI', 'DET', 'GB', 'MIN'] },
-        { name: 'South', teams: ['ATL', 'CAR', 'NO', 'TB'] },
-        { name: 'West',  teams: ['ARI', 'LAR', 'SEA', 'SF'] }
-      ] }
-    ];
 
     function esc(s) {
       return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
@@ -200,204 +182,39 @@
       history.replaceState(null, '', location.pathname + '?' + q.toString());
     }
 
-    /* ---------- dropdowns ----------
-     * Two filters, one control. The triggers are identical — same box, same
-     * caret, same behaviour — and only what opens underneath differs: a list of
-     * weeks on one, the league's logos on the other. The week list could have
-     * stayed a native <select>, but a native select cannot be made to match a
-     * custom trigger across browsers, and "these are the two filters" is the
-     * thing the row has to say first.
+    /* ---------- the filter controls ----------
+     * The two controls themselves — the week menu, the league's logo grid, and
+     * the open/shut behaviour they share — live in
+     * scripts/components/nfl-pickers.js, because /football/bakers-buns files a
+     * note against the same team and the same week this page filters by. What
+     * stays here is what is particular to a schedule: which weeks the file
+     * actually has, which one is "now", and what picking one means.
      */
-    var dropdowns = [];
 
-    /* The team grid opens as an overlay rather than as a panel hanging off its
-     * trigger — thirty-two logos is a lightbox-sized thing, not a menu-sized
-     * one, and anchored under the button it would either shove the schedule
-     * down the page or run off the bottom of a phone. Same treatment as the
-     * image viewer on /football: centred over a dimmed page, with the body
-     * pinned underneath so iOS doesn't scroll it behind the overlay.
-     * body.lightbox-open and its scroll restore come from lightbox.css. */
-    var scrollY = 0;
-
-    function lockScroll() {
-      scrollY = window.scrollY || window.pageYOffset || 0;
-      document.body.style.top = -scrollY + 'px';
-      document.body.classList.add('lightbox-open');
-    }
-
-    function unlockScroll() {
-      if (!document.body.classList.contains('lightbox-open')) return;
-      document.body.classList.remove('lightbox-open');
-      document.body.style.top = '';
-      window.scrollTo(0, scrollY);
-    }
-
-    function closeDropdown(dd, refocus) {
-      if (dd.panel.hidden) return;
-      dd.panel.hidden = true;
-      dd.btn.setAttribute('aria-expanded', 'false');
-      if (dd.modal) unlockScroll();
-      if (refocus) dd.btn.focus();
-    }
-
-    function closeAllDropdowns() {
-      dropdowns.forEach(function (d) { closeDropdown(d, false); });
-    }
-
-    function openDropdown(dd) {
-      dropdowns.forEach(function (d) { if (d !== dd) closeDropdown(d, false); });
-      dd.panel.hidden = false;
-      dd.btn.setAttribute('aria-expanded', 'true');
-      if (dd.modal) lockScroll();
-      // Opening lands on the current choice, so the keyboard starts where the
-      // filter already is rather than at the top of a list of nineteen weeks.
-      var here = dd.panel.querySelector('.is-on') || dd.panel.querySelector('button');
-      if (here) here.focus();
-    }
-
-    // Arrows walk the panel in DOM order. That is exactly right for the week
-    // list, and for the team grid it reads across each division and on to the
-    // next — the same path the eye takes.
-    var ARROW = { ArrowDown: 1, ArrowRight: 1, ArrowUp: -1, ArrowLeft: -1 };
-
-    function registerDropdown(root) {
-      var dd = {
-        root: root,
-        btn: root.querySelector('.dd-btn'),
-        panel: root.querySelector('.dd-pop')
-      };
-      dd.modal = dd.panel.classList.contains('dd-overlay');
-      dropdowns.push(dd);
-
-      dd.btn.addEventListener('click', function (e) {
-        e.stopPropagation();
-        if (dd.panel.hidden) openDropdown(dd); else closeDropdown(dd, true);
-      });
-
-      // The dimmed backdrop is the overlay itself; anything landing on it
-      // rather than on the grid is a click outside, which closes.
-      if (dd.modal) {
-        dd.panel.addEventListener('click', function (e) {
-          if (e.target === dd.panel) closeDropdown(dd, true);
-        });
-      }
-
-      dd.panel.addEventListener('keydown', function (e) {
-        var items, i;
-        // A modal keeps the keyboard inside it while it is open.
-        if (dd.modal && e.key === 'Tab') {
-          e.preventDefault();
-          items = [].slice.call(dd.panel.querySelectorAll('button'));
-          i = items.indexOf(document.activeElement);
-          items[(i + (e.shiftKey ? -1 : 1) + items.length) % items.length].focus();
-          return;
-        }
-        var step = ARROW[e.key];
-        if (!step) return;
-        e.preventDefault();
-        items = [].slice.call(dd.panel.querySelectorAll('button'));
-        i = items.indexOf(document.activeElement);
-        var next = items[(i + step + items.length) % items.length];
-        if (next) next.focus();
-      });
-
-      return dd;
-    }
-
-    document.addEventListener('click', function (e) {
-      if (!e.target.closest || !e.target.closest('.dd')) closeAllDropdowns();
-    });
-
-    document.addEventListener('keydown', function (e) {
-      if (e.key !== 'Escape') return;
-      dropdowns.forEach(function (d) { closeDropdown(d, true); });
-    });
-
-    // One team: the logo, with the abbreviation as the accessible name and the
-    // full name as the tooltip. The logos are served from this app rather than
-    // hotlinked from nfl.com, so the picker cannot break when they reorganise
-    // their CDN — see assets/icons/nfl/.
-    function teamButton(abbr) {
-      var t = teamsByAbbr[abbr] || { abbr: abbr };
-      return '<button type="button" class="tp-team" data-team="' + esc(abbr) + '"' +
-        ' aria-pressed="false" title="' + esc(t.name || abbr) + '">' +
-        '<img src="/assets/icons/nfl/' + esc(abbr) + '.svg" alt="' + esc(t.name || abbr) + '">' +
-        '</button>';
-    }
-
-    function buildTeamPicker() {
-      // Any team the feed knows about that the division map doesn't — a
-      // relocation, or a changed abbreviation upstream — still gets a button,
-      // because a team silently missing from the picker is also a team that
-      // cannot be filtered to at all.
-      var placed = {};
-      var html = CONFERENCES.map(function (conf) {
-        return '<div class="tp-conf"><h3 class="tp-conf-name">' + conf.name + '</h3>' +
-          conf.divisions.map(function (div) {
-            return '<div class="tp-div"><span class="tp-div-name">' + esc(div.name) + '</span>' +
-              '<div class="tp-teams">' + div.teams.map(function (abbr) {
-                placed[abbr] = true;
-                return teamButton(abbr);
-              }).join('') + '</div></div>';
-          }).join('') + '</div>';
-      }).join('');
-
-      var stray = data.teams.filter(function (t) { return !placed[t.abbr]; });
-      if (stray.length) {
-        html += '<div class="tp-conf tp-stray"><h3 class="tp-conf-name">Other</h3>' +
-          '<div class="tp-div"><div class="tp-teams">' +
-          stray.map(function (t) { return teamButton(t.abbr); }).join('') +
-          '</div></div></div>';
-      }
-
-      teamPicker.innerHTML = html;
-    }
-
-    function buildWeekMenu(nowWeek) {
-      weekMenu.innerHTML = '<button type="button" class="dd-opt" data-week="all" role="menuitem">' +
-        'All weeks</button>' +
+    function weekOptions(nowWeek) {
+      return [{ value: 'all', label: 'All weeks' }].concat(
         data.weeks.map(function (w) {
-          return '<button type="button" class="dd-opt" data-week="' + w.week + '" role="menuitem">' +
-            'Week ' + w.week +
-            (w.week === nowWeek ? '<span class="dd-note">this week</span>' : '') +
-            '</button>';
-        }).join('');
+          return {
+            value: w.week,
+            label: 'Week ' + w.week,
+            note: w.week === nowWeek ? 'this week' : ''
+          };
+        }));
     }
 
-    /* The trigger says what the filter is currently set to — it is the only
-     * place that reads once the panel is shut. The team one carries the logo as
-     * well as the name, so the closed control still shows the same thing the
-     * open grid does. */
+    function weekLabel(nowWeek) {
+      if (state.week === 'all') return 'All weeks';
+      return 'Week ' + state.week + (state.week === nowWeek ? ' — this week' : '');
+    }
+
     function syncFilters(nowWeek) {
-      weekBtn.querySelector('.dd-value').textContent =
-        state.week === 'all' ? 'All weeks' : 'Week ' + state.week +
-          (state.week === nowWeek ? ' — this week' : '');
-
-      var opts = weekMenu.querySelectorAll('.dd-opt');
-      for (var j = 0; j < opts.length; j++) {
-        opts[j].classList.toggle('is-on', opts[j].getAttribute('data-week') === String(state.week));
-      }
-
-      var t = state.team ? (teamsByAbbr[state.team] || { abbr: state.team }) : null;
-      teamBtn.querySelector('.dd-value').innerHTML = t
-        ? '<img class="dd-logo" src="/assets/icons/nfl/' + esc(t.abbr) + '.svg" alt="">' +
-          esc(t.name || t.abbr)
-        : 'All teams';
-
-      // The picked team reads as picked; with a pick made, everything else
-      // steps back so the one selected logo is the only thing at full strength.
-      teamPicker.classList.toggle('has-pick', !!state.team);
-      var btns = teamPicker.querySelectorAll('.tp-team');
-      for (var i = 0; i < btns.length; i++) {
-        var on = btns[i].getAttribute('data-team') === state.team;
-        btns[i].classList.toggle('is-on', on);
-        btns[i].setAttribute('aria-pressed', on ? 'true' : 'false');
-      }
+      syncWeekMenu(weekBtn, weekMenu, state.week, weekLabel(nowWeek));
+      syncTeamPicker(teamBtn, teamPicker, state.team, data.teams);
     }
 
     function buildFilters(nowWeek) {
-      buildWeekMenu(nowWeek);
-      buildTeamPicker();
+      buildWeekMenu(weekMenu, weekOptions(nowWeek));
+      buildTeamPicker(teamPicker, data.teams);
 
       var weekDd = registerDropdown(document.getElementById('dd-week'));
       var teamDd = registerDropdown(document.getElementById('dd-team'));

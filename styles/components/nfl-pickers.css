@@ -1,0 +1,386 @@
+/* === Shared NFL pickers ===
+ * The week menu and the team grid, extracted from /football/schedule so
+ * /football/bakers-buns can take a note against the same team and the same week
+ * the schedule filters by. Behaviour lives in scripts/components/nfl-pickers.js.
+ *
+ * Nothing here is page-specific: a consumer supplies the .dd-row markup and
+ * styles whatever sits beside the triggers itself (the schedule's Reset link
+ * stays in nfl-schedule.css). Depends on styles/base/lightbox.css for the
+ * body.lightbox-open scroll pin the team overlay uses. */
+
+.dd-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin: 0 0 10px;
+}
+
+/* --- The trigger ---
+ * Week and team are the same control: same box, same caret, same open/shut
+ * behaviour. Only the panel differs — a list of weeks on one, the league's
+ * logos on the other — because that difference is about what is being picked,
+ * not about which filter it is. */
+
+.dd { position: relative; }
+
+.dd-btn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: #21262d;
+  border: 1px solid #30363d;
+  color: #e1e4e8;
+  font-size: 13px;
+  font-family: inherit;
+  padding: 5px 9px;
+  border-radius: 6px;
+  cursor: pointer;
+  line-height: 1.5;
+}
+
+.dd-btn:hover { border-color: #484f58; }
+
+.dd-btn:focus-visible,
+.dd-btn[aria-expanded="true"] {
+  outline: none;
+  border-color: #58a6ff;
+}
+
+.dd-value {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* The closed team trigger shows the club, not just its name — the same logo
+ * that was tapped in the grid. */
+.dd-logo {
+  width: 17px;
+  height: 17px;
+  object-fit: contain;
+  display: block;
+}
+
+/* One caret, drawn the same on both, so neither filter looks like the more
+ * important one. */
+.dd-btn::after {
+  content: "";
+  width: 7px;
+  height: 7px;
+  margin-left: auto;
+  border-right: 1.5px solid #8b949e;
+  border-bottom: 1.5px solid #8b949e;
+  transform: translateY(-2px) rotate(45deg);
+  flex: none;
+}
+
+.dd-btn[aria-expanded="true"]::after {
+  transform: translateY(1px) rotate(225deg);
+}
+
+.dd-pop[hidden] { display: none; }
+
+/* Week menu: a plain list, anchored under its trigger and tall enough to want
+ * a cap and a scroll. */
+.dd-menu {
+  position: absolute;
+  top: calc(100% + 5px);
+  left: 0;
+  z-index: 30;
+  background: #0d1117;
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.6);
+  padding: 6px;
+  min-width: 100%;
+  width: max-content;
+  max-height: min(360px, 60vh);
+  overflow-y: auto;
+}
+
+.dd-opt {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  width: 100%;
+  background: none;
+  border: none;
+  border-radius: 5px;
+  color: #e1e4e8;
+  font-size: 13px;
+  font-family: inherit;
+  text-align: left;
+  padding: 5px 9px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.dd-opt:hover { background: #161b22; }
+
+.dd-opt:focus-visible {
+  outline: none;
+  background: #161b22;
+}
+
+.dd-opt.is-on {
+  color: #58a6ff;
+  background: rgba(88, 166, 255, 0.12);
+}
+
+.dd-note {
+  font-size: 10px;
+  font-family: monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: #6e7681;
+  margin-left: auto;
+}
+
+.dd-opt.is-on .dd-note { color: #58a6ff; }
+
+/* A rule between groups of weeks — the preseason, the regular season and the
+ * playoffs read as three runs rather than one list of twenty-three entries. */
+.dd-opt.is-group-start {
+  margin-top: 5px;
+  padding-top: 8px;
+  border-top: 1px solid #21262d;
+  border-radius: 0 0 5px 5px;
+}
+
+/* Team overlay: the whole league is too big to hang off a button, so it opens
+ * over the page instead — the same fixed, flex-centred box as the image
+ * lightbox on /football. Centring in the viewport rather than anchoring to the
+ * trigger is also what lets the grid be capped against the viewport instead of
+ * against whatever room happens to be left below the filter row. */
+.dd-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5vh 5vw;
+  background: rgba(8, 10, 14, 0.94);
+  overscroll-behavior: contain;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* A week menu can open as an overlay too, rather than hanging off its trigger.
+ * That is the form-in-a-dialog case: an anchored panel is clipped by the
+ * dialog's own scroller, and a fixed overlay is not clipped by anything. Same
+ * card as the team grid, narrower because it holds one column of words. */
+.dd-overlay .dd-menu {
+  position: static;
+  /* The anchored menu is at least as wide as the trigger it hangs off; this one
+   * hangs off nothing, and inheriting that min-width would stretch it to the
+   * full width of the overlay. */
+  min-width: 0;
+  width: min(320px, 90vw);
+  max-width: 90vw;
+  max-height: min(70vh, 520px);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.7);
+}
+
+/* The card. Never more than 90% of the viewport in either direction, and it
+ * scrolls inside itself if a short landscape window can't take the full grid. */
+.dd-overlay .tp {
+  width: min(492px, 90vw);
+  max-width: 90vw;
+  max-height: 90vh;
+  overflow: auto;
+  background: #0d1117;
+  border: 1px solid #30363d;
+  border-radius: 10px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.7);
+  padding: 14px 16px;
+}
+
+/* --- Team picker ---
+ * A grid of club logos in place of a 33-row dropdown. A logo is recognised
+ * faster than a name is read, and the whole league is visible at once, so
+ * picking a team is one tap rather than open-scroll-select.
+ *
+ * The layout is the league's own: conferences side by side, divisions stacked
+ * down each one, four teams to a division as a 2x2 block. Four icon columns
+ * total — the widest thing that still leaves a phone-width column readable,
+ * and the reason the whole league fits on one screen without scrolling. */
+
+.tp {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 22px;
+  width: 460px;
+  max-width: 100%;
+}
+
+.tp-conf {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+/* The NFC column reads as its own half of the league rather than as more of
+ * the AFC's list. The rule is the divider; the gap alone was ambiguous. */
+.tp-conf + .tp-conf {
+  border-left: 1px solid #21262d;
+  padding-left: 22px;
+  margin-left: -22px;
+}
+
+.tp-conf-name {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  color: #8b949e;
+  font-family: monospace;
+  margin: 0;
+  padding-bottom: 2px;
+  border-bottom: 1px solid #21262d;
+  line-height: 1.4;
+}
+
+.tp-div-name {
+  display: block;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  color: #484f58;
+  font-family: monospace;
+  margin-bottom: 1px;
+}
+
+/* Centred rather than stretched: the selected ring is drawn on the button, so
+ * a button as wide as its grid column would put a large empty box around a
+ * small logo. The button hugs the logo and the slack sits in the gutters. */
+.tp-teams {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px;
+  justify-items: center;
+}
+
+/* An unplaced team — one the division map doesn't know — gets its own block
+ * across the full width rather than vanishing from the picker. */
+.tp-stray { grid-column: 1 / -1; }
+
+.tp-team {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 4px;
+  width: 100%;
+  max-width: 52px;
+  cursor: pointer;
+  opacity: 0.85;
+  transition: opacity 0.12s ease, background-color 0.12s ease;
+}
+
+.tp-team img {
+  width: 100%;
+  max-width: 40px;
+  aspect-ratio: 1;
+  object-fit: contain;
+  display: block;
+  pointer-events: none;
+}
+
+.tp-team:hover { opacity: 1; background: #161b22; }
+
+.tp-team:focus-visible {
+  outline: none;
+  border-color: #58a6ff;
+  opacity: 1;
+}
+
+/* With a pick made, the other 31 step back — the selected logo should be the
+ * only thing at full strength, so the current filter is readable at a glance
+ * from anywhere on the page. Dimmed, not hidden: they are still the way to
+ * switch teams, and a half-empty picker would be worse to aim at. */
+.tp.has-pick .tp-team { opacity: 0.28; }
+.tp.has-pick .tp-team:hover { opacity: 0.7; }
+
+.tp .tp-team.is-on,
+.tp.has-pick .tp-team.is-on {
+  opacity: 1;
+  border-color: #58a6ff;
+  background: rgba(88, 166, 255, 0.12);
+}
+
+/* The no-team choice, for a picker where "no team" is a real answer rather than
+ * the absence of one — a league-wide note on Baker's Buns. It spans the grid
+ * above the conferences, because it is not a 33rd club. */
+.tp-any {
+  grid-column: 1 / -1;
+  display: block;
+  width: 100%;
+  background: none;
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  color: #c9d1d9;
+  font-family: inherit;
+  font-size: 12px;
+  padding: 6px 9px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.tp-any:hover { border-color: #484f58; background: #161b22; }
+
+.tp-any:focus-visible {
+  outline: none;
+  border-color: #58a6ff;
+}
+
+.tp-any.is-on {
+  color: #58a6ff;
+  border-color: #58a6ff;
+  background: rgba(88, 166, 255, 0.12);
+}
+
+/* Full strength even when a team is picked — it is how you get back. */
+.tp.has-pick .tp-any { opacity: 1; }
+
+@media (max-width: 560px) {
+  /* The week menu drops out of its trigger and spans the content width instead,
+   * anchored to the filter row rather than to the button — a menu hung off the
+   * second of two buttons would run off the right edge of a phone. (The team
+   * overlay needs none of this: it is centred on the viewport already.) */
+  .dd-row { position: relative; }
+  .dd { position: static; }
+
+  .dd-menu {
+    left: 0;
+    right: 0;
+    width: auto;
+  }
+
+  /* The picker takes the whole card here — four columns of logos across the
+   * phone, which is what makes each one a comfortable tap target. The cap on
+   * the logo grows with it so the grid fills the width instead of leaving four
+   * thin columns of icons stranded up the left. */
+  .tp { gap: 8px 14px; }
+
+  .dd-overlay { padding: 4vh 4vw; }
+
+  .tp-conf { gap: 6px; }
+
+  .tp-conf + .tp-conf {
+    padding-left: 14px;
+    margin-left: -14px;
+  }
+
+  /* Sized so all eight rows clear the fold on a phone: four logo columns wide
+   * enough to aim at, and the whole league still on one screen. */
+  .tp-team {
+    max-width: 60px;
+    padding: 4px;
+  }
+
+  .tp-team img { max-width: 50px; }
+}

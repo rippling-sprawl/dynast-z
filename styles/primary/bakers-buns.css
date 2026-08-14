@@ -743,3 +743,378 @@ body.modal-open { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) {
   .tc-modal[open] { animation: none; }
 }
+
+
+/* ================= NOTES =================
+ * Taking a note, and what a taken note looks like. Behaviour is in
+ * scripts/primary/bun-notes.js; everything here is admin-only in practice,
+ * because nothing that writes is rendered for anyone else. */
+
+/* --- League notes ---
+ * A note filed against no team is about the league, and there is no team card
+ * for it to open in — so it gets the top of the page, above the table the rest
+ * of the notes hang off. Hidden entirely when there are none and the reader
+ * cannot add any. */
+.bun-league-notes { margin-bottom: 22px; }
+
+.bun-league-notes[hidden] { display: none; }
+
+.bun-league-notes h3 {
+  font-size: 13px;
+  font-weight: 700;
+  color: #f0f0f0;
+  margin: 0 0 6px;
+}
+
+.bun-league-notes ul { margin: 0; padding-left: 16px; }
+
+.bun-league-notes li {
+  font-size: 12px;
+  line-height: 1.5;
+  color: #c9d1d9;
+  margin-bottom: 3px;
+}
+
+/* --- The bullet --- */
+
+/* Which week a note is about, when it is about one at all. A general note —
+ * most of them — carries no chip, so the chip means "this one is dated". */
+.tc-note-wk {
+  display: inline-block;
+  margin-right: 6px;
+  font-family: monospace;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #8b949e;
+  background: #1f1f1f;
+  border: 1px solid #2a2a2a;
+  border-radius: 4px;
+  padding: 0 4px;
+  vertical-align: 1px;
+}
+
+/* Where the note came from, in the same shape the Sources list uses: the
+ * handle, because that is all an X link tells us without an API key. */
+.tc-note-src {
+  margin-left: 5px;
+  font-family: monospace;
+  font-size: 10px;
+  color: #60a5fa;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.tc-note-src:hover { text-decoration: underline; }
+
+/* The pencil rides at the end of the note it edits rather than in a column of
+ * its own — the notes are one to five lines each and a gutter of pencils would
+ * outweigh them. Dim until the bullet is hovered or it is focused. */
+.tc-note-edit {
+  margin-left: 5px;
+  padding: 0 2px;
+  background: none;
+  border: none;
+  color: #484f58;
+  cursor: pointer;
+  vertical-align: 1px;
+  opacity: 0;
+  transition: opacity 0.12s ease, color 0.12s ease;
+}
+
+li:hover > .tc-note-edit,
+.tc-note-edit:focus-visible { opacity: 1; }
+
+.tc-note-edit:hover { color: #60a5fa; }
+
+.tc-note-edit:focus-visible { outline: none; color: #60a5fa; }
+
+/* Coarse pointers have no hover to reveal it with. */
+@media (hover: none) {
+  .tc-note-edit { opacity: 0.55; }
+}
+
+/* Sits under the list, and — unlike the list — renders even when the team has
+ * nothing written about it yet, which is exactly when it is wanted. */
+.tc-note-add {
+  display: inline-block;
+  margin-top: 6px;
+  font-family: monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #60a5fa;
+  background: none;
+  border: 1px dashed #2f3b4a;
+  border-radius: 6px;
+  padding: 3px 8px;
+  cursor: pointer;
+}
+
+.tc-note-add:hover { border-color: #60a5fa; background: rgba(96, 165, 250, 0.08); }
+
+/* --- The floating "take a note" button ---
+ * The one control on the page that is not about reading it, so it does not sit
+ * in the filter row with the ones that are. Bottom right, above the fold on any
+ * scroll position, and out of the way of the horizontally-scrolling table. */
+.bn-fab {
+  position: fixed;
+  right: 16px;
+  bottom: calc(16px + env(safe-area-inset-bottom));
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  color: #111;
+  background: #60a5fa;
+  border: 1px solid #60a5fa;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  transition: transform 0.12s ease, background-color 0.12s ease;
+}
+
+.bn-fab[hidden] { display: none; }
+
+.bn-fab:hover { background: #8ec0ff; transform: translateY(-1px); }
+
+.bn-fab:focus-visible { outline: 2px solid #8ec0ff; outline-offset: 2px; }
+
+/* A dialog is on the top layer and the button is not, so while one is open the
+ * button would sit under the backdrop as a dimmed disc. */
+body.modal-open .bn-fab { display: none; }
+
+/* --- The note modal ---
+ * Same shape as the team card's dialog, because it is the other half of the
+ * same object: one opens a team's notes, the other writes them. */
+.bn-modal {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  padding: 0;
+  border: 1px solid #2a2a2a;
+  border-radius: 10px;
+  background: #141414;
+  color: #c9d1d9;
+  width: min(520px, calc(100vw - 32px));
+  max-width: none;
+  max-height: min(86vh, 760px);
+  overflow: hidden;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+}
+
+.bn-modal[open] {
+  display: flex;
+  flex-direction: column;
+}
+
+.bn-modal::backdrop { background: rgba(0, 0, 0, 0.66); }
+
+/* Saving locks the form rather than closing it: a write that fails has to be
+ * able to hand the text back. */
+.bn-modal.is-saving .bn-body,
+.bn-modal.is-saving .bn-actions { opacity: 0.5; pointer-events: none; }
+
+.bn-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px 10px;
+  border-bottom: 1px solid #1f1f1f;
+}
+
+.bn-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: #f0f0f0;
+}
+
+.bn-close {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  color: #8b949e;
+  background: #1b1b1b;
+  border: 1px solid #2a2a2a;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.bn-close:hover { color: #e1e4e8; border-color: #3a3a3a; }
+
+.bn-body {
+  padding: 12px 14px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* The shared pickers carry the schedule page's palette; this dialog is a shade
+ * darker, so only the surfaces are restated — the behaviour and the layout are
+ * the component's. */
+.bn-modal .dd-btn { background: #1b1b1b; border-color: #2a2a2a; }
+.bn-modal .dd-btn:hover { border-color: #3a3a3a; }
+
+.bn-modal .dd-btn:focus-visible,
+.bn-modal .dd-btn[aria-expanded="true"] { border-color: #60a5fa; }
+
+.bn-modal .dd-menu { background: #141414; border-color: #2a2a2a; }
+.bn-modal .dd-opt:hover { background: #1b1b1b; }
+.bn-modal .dd-opt.is-on { color: #60a5fa; background: rgba(96, 165, 250, 0.12); }
+.bn-modal .dd-overlay .tp { background: #141414; border-color: #2a2a2a; }
+
+.bn-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.bn-input {
+  flex: 1;
+  min-width: 0;
+  background: #1b1b1b;
+  border: 1px solid #2a2a2a;
+  border-radius: 6px;
+  color: #e1e4e8;
+  font-family: inherit;
+  font-size: 13px;
+  padding: 7px 9px;
+}
+
+.bn-input::placeholder { color: #565656; }
+
+.bn-input:focus {
+  outline: none;
+  border-color: #60a5fa;
+}
+
+/* The "+" on the first row and the "×" on the rest: same box, so the column of
+ * buttons stays a column. */
+.bn-row-btn {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  font-size: 16px;
+  line-height: 1;
+  color: #8b949e;
+  background: #1b1b1b;
+  border: 1px solid #2a2a2a;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.bn-row-btn:hover { color: #e1e4e8; border-color: #3a3a3a; }
+
+.bn-row-btn:focus-visible { outline: none; border-color: #60a5fa; }
+
+.bn-label {
+  display: block;
+  margin: 12px 0 4px;
+  font-family: monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #666;
+}
+
+.bn-label span { color: #484f58; text-transform: none; letter-spacing: 0; }
+
+#bn-src { width: 100%; }
+
+/* Echoes back what was parsed out of the link — the handle the bullet will
+ * show — so a mistyped URL is caught before it is saved rather than after. */
+.bn-hint {
+  margin: 4px 0 0;
+  min-height: 14px;
+  font-family: monospace;
+  font-size: 10px;
+  color: #666;
+}
+
+.bn-hint.is-ok { color: #2ea043; }
+.bn-hint.is-bad { color: #f0883e; }
+
+.bn-error {
+  margin: 0;
+  padding: 0 14px 10px;
+  font-size: 12px;
+  color: #f85149;
+}
+
+.bn-error[hidden] { display: none; }
+
+.bn-actions {
+  display: flex;
+  gap: 8px;
+  padding: 10px 14px calc(12px + env(safe-area-inset-bottom));
+  border-top: 1px solid #1f1f1f;
+}
+
+.bn-btn {
+  background: #1b1b1b;
+  border: 1px solid #2a2a2a;
+  border-radius: 6px;
+  color: #c9d1d9;
+  font-family: inherit;
+  font-size: 13px;
+  padding: 7px 14px;
+  cursor: pointer;
+}
+
+.bn-btn:hover { border-color: #3a3a3a; color: #e1e4e8; }
+
+.bn-btn:focus-visible { outline: none; border-color: #60a5fa; }
+
+/* Save is the last thing in the row and the only filled control in the dialog.
+ * Delete leads it from the far end, so the destructive action is nowhere near
+ * the one the writer is aiming for. */
+.bn-btn.is-primary {
+  margin-left: auto;
+  color: #111;
+  background: #60a5fa;
+  border-color: #60a5fa;
+  font-weight: 700;
+}
+
+.bn-btn.is-primary:hover { background: #8ec0ff; color: #111; }
+
+.bn-btn.is-danger { color: #f85149; }
+
+.bn-btn.is-danger:hover { color: #ff7b72; border-color: #f85149; }
+
+/* Delete sits alone on the left; Cancel and Save keep the right. */
+.bn-btn.is-danger + .bn-btn { margin-left: auto; }
+.bn-btn.is-danger + .bn-btn + .bn-btn.is-primary { margin-left: 0; }
+
+@media (max-width: 600px) {
+  /* Bottom sheet, like the team card. */
+  .bn-modal {
+    width: 100%;
+    max-height: 90vh;
+    position: fixed;
+    inset: auto 0 0 0;
+    margin: 0;
+    border-radius: 14px 14px 0 0;
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
+  }
+
+  .bn-modal[open] { animation: tc-sheet-up 0.18s ease-out; }
+
+  .bn-fab {
+    width: 48px;
+    height: 48px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bn-modal[open] { animation: none; }
+}

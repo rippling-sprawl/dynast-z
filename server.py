@@ -135,6 +135,37 @@ def resolve_bets_user(headers, require_active):
     return user_id, None
 
 
+_bun_notes_api = None
+
+
+def bun_notes_api():
+    """Load api/bun-notes.py for its note validation, so this local mirror and
+    the deployed function can never disagree about what a valid note is. Loaded
+    by path because the filename has a hyphen in it, and lazily because a dev
+    who never opens Baker's Buns should not pay for it."""
+    global _bun_notes_api
+    if _bun_notes_api is None:
+        import importlib.util
+        path = os.path.join(DATA_DIR, "api", "bun-notes.py")
+        spec = importlib.util.spec_from_file_location("bun_notes_api", path)
+        _bun_notes_api = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(_bun_notes_api)
+    return _bun_notes_api
+
+
+def resolve_notes_admin(headers):
+    """Baker's Buns notes are a published, global store: anyone may read them,
+    only an active admin may write. No audit-target indirection — a note has no
+    owner to manage on behalf of."""
+    user_id = headers.get("X-User-Id")
+    if not user_id:
+        return None, (401, {"error": "Not authenticated"})
+    user = fetch_user(user_id)
+    if not user or user.get("status") is not True or user.get("role") != "admin":
+        return None, (403, {"error": "Not authorized to edit notes"})
+    return user_id, None
+
+
 def read_cache(name, ttl=None):
     path = os.path.join(CACHE_DIR, name)
     if not os.path.exists(path):
@@ -1297,6 +1328,19 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     self._json_response(200, {r["data_key"]: r["data"] for r in rows})
             except Exception as e:
                 self._json_response(500, {"error": str(e)})
+        elif self.path.startswith("/api/bun-notes"):
+            # Public: the notes are published reading, and the page renders them
+            # for signed-out visitors.
+            try:
+                params = parse_qs(urlparse(self.path).query, keep_blank_values=True)
+                query = "bun_notes?select=data&order=created_at"
+                if "team" in params:
+                    team = (params["team"][0] or "").upper()
+                    query += "&team=eq." + urllib.request.quote(team)
+                rows = supabase_request(query)
+                self._json_response(200, [r["data"] for r in (rows or [])])
+            except Exception as e:
+                self._json_response(500, {"error": str(e)})
         elif self.path.startswith("/api/bets"):
             eff, err = resolve_bets_user(self.headers, require_active=False)
             if err:
@@ -1640,6 +1684,41 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 self._json_response(200, {"ok": True})
             except Exception as e:
                 self._json_response(500, {"error": str(e)})
+        elif self.path.startswith("/api/bun-notes"):
+            user_id, err = resolve_notes_admin(self.headers)
+            if err:
+                self._json_response(*err)
+                return
+            api = bun_notes_api()
+            try:
+                length = int(self.headers.get("Content-Length", 0))
+                body = json.loads(self.rfile.read(length)) if length else {}
+            except Exception:
+                self._json_response(400, {"error": "Body must be JSON"})
+                return
+            notes = body.get("notes") if isinstance(body, dict) and "notes" in body else [body]
+            if not isinstance(notes, list) or not notes:
+                self._json_response(400, {"error": "No notes in the request"})
+                return
+            if len(notes) > api.MAX_BATCH:
+                self._json_response(400, {"error": f"At most {api.MAX_BATCH} notes per request"})
+                return
+            rows = []
+            for note in notes:
+                row, error = api.normalize(note, user_id)
+                if error:
+                    self._json_response(400, {"error": error})
+                    return
+                rows.append(row)
+            try:
+                supabase_request(
+                    "bun_notes?on_conflict=id",
+                    method="POST", body=rows,
+                    extra_headers={"Prefer": "resolution=merge-duplicates,return=representation"},
+                )
+                self._json_response(200, {"ok": True, "notes": [r["data"] for r in rows]})
+            except Exception as e:
+                self._json_response(500, {"error": str(e)})
         elif self.path == "/api/bets":
             eff, err = resolve_bets_user(self.headers, require_active=True)
             if err:
@@ -1669,7 +1748,26 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self.end_headers()
 
     def do_DELETE(self):
-        if self.path.startswith("/api/bets"):
+        if self.path.startswith("/api/bun-notes"):
+            _, err = resolve_notes_admin(self.headers)
+            if err:
+                self._json_response(*err)
+                return
+            params = parse_qs(urlparse(self.path).query)
+            note_id = params.get("id", [None])[0]
+            if not note_id:
+                self._json_response(400, {"error": "id parameter is required"})
+                return
+            try:
+                supabase_request(
+                    "bun_notes?id=eq." + urllib.request.quote(note_id),
+                    method="DELETE",
+                    extra_headers={"Prefer": "return=representation"},
+                )
+                self._json_response(200, {"ok": True})
+            except Exception as e:
+                self._json_response(500, {"error": str(e)})
+        elif self.path.startswith("/api/bets"):
             eff, err = resolve_bets_user(self.headers, require_active=True)
             if err:
                 self._json_response(*err)

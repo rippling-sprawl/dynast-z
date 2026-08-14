@@ -7,6 +7,7 @@
   <title>Baker&rsquo;s Buns | Dynast-Z</title>
   <link rel="stylesheet" href="/styles/base/styles.css">
   <link rel="stylesheet" href="/styles/base/hub.css">
+  <link rel="stylesheet" href="/styles/components/nfl-pickers.css">
   <link rel="stylesheet" href="/styles/primary/bakers-buns.css">
   <link rel="stylesheet" href="/styles/base/lightbox.css">
 </head>
@@ -20,10 +21,14 @@
   owns in the Projections table, expanded.
 
   What sits outside that table is only how the score is built (Methodology) and
-  where the numbers came from (Sources). When this becomes a real note-taking
-  surface, a saved note will carry a team and render into that team's card —
-  which is why every per-team string lives in
-  data/nfl_projections_2026.json rather than in this markup.
+  where the numbers came from (Sources).
+
+  It is now a real note-taking surface: an admin files a note against a team and
+  a week, and it renders into that team's card. The store is Supabase, not this
+  markup and no longer the JSON — scripts/seed_bun_notes.py moved the doc's
+  notes across, and data/nfl_projections_2026.json keeps its copy only as the
+  fallback rendered when /api/bun-notes cannot be reached. A note filed against
+  no team is about the league, and opens the page instead of a card.
 -->
 <body class="masters-body">
   <div id="header-mount"></div>
@@ -32,6 +37,10 @@
   <script src="/scripts/base/nav.js"></script>
   <!-- Any <figure> img is lightboxable for free — see scripts/base/lightbox.js. -->
   <script src="/scripts/base/lightbox.js"></script>
+  <!-- Taking a note: the team and week pickers are the schedule page's, and the
+       store behind them is Supabase rather than the JSON below. -->
+  <script src="/scripts/components/nfl-pickers.js"></script>
+  <script src="/scripts/primary/bun-notes.js"></script>
   <script>initPage();</script>
 
   <div class="masters-content">
@@ -47,6 +56,14 @@
       <a href="#sources">Sources</a>
       <a href="#graphs">Graphs</a>
     </nav>
+
+    <!--
+      Notes filed against no team. They are about the league rather than a club,
+      so there is no card for them to open in and they take the top of the page.
+      Filled by the script; stays hidden when there are none to show and the
+      reader is not the one who would add them.
+    -->
+    <section class="bun-section bun-league-notes" id="league-notes" hidden></section>
 
     <!-- ================= PROJECTIONS ================= -->
     <section class="bun-section" id="projections">
@@ -111,6 +128,20 @@
         <div class="tc-modal-scroll" id="team-modal-body"></div>
       </dialog>
     </section>
+
+    <!--
+      Take a note. Starts hidden for everyone and is unhidden by
+      initBunNotes() only for an admin — the same conditional reveal /bets uses
+      for its admin card. The gate that matters is the server's: /api/bun-notes
+      refuses a write from anyone else regardless of what the page shows.
+    -->
+    <button type="button" class="bn-fab" id="bn-fab" aria-haspopup="dialog" hidden>
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M12 5v14"></path><path d="M5 12h14"></path>
+      </svg>
+      <span class="sr-only">Take a note</span>
+    </button>
 
     <!-- ================= METHODOLOGY ================= -->
     <section class="bun-section" id="methodology">
@@ -500,19 +531,55 @@
       return '<li class="tc-luck ' + luckClass(v) + '">' + esc(verdict) + '</li>';
     }
 
+    /* Whether this reader can write. The store has to have loaded first: an
+     * "add a note" button over a list that failed to arrive would be offering
+     * to append to notes nobody can see. */
+    function canEdit() {
+      return typeof isAdmin === 'function' && isAdmin() && bunNotesLoaded();
+    }
+
+    /* The doc's own notes, for when the store is unreachable. Plain strings
+     * with no id, so no pencil and nothing to edit — this is the read-only
+     * copy that shipped in the JSON, and it is either/or with the live one
+     * rather than merged, so a note can never render twice. */
+    function fallbackNotes(t) {
+      return ((t.notes || {}).notes || []).map(function (s) {
+        return '<li>' + esc(s) + '</li>';
+      }).join('');
+    }
+
     // One list, so the luck read sits among the notes rather than above them.
     // It leads, because it is the season the rest of them are written against.
     function notesInner(t) {
-      var items = ((t.notes || {}).notes || []).map(function (s) {
-        return '<li>' + esc(s) + '</li>';
-      });
+      var body = bunNotesLoaded()
+        ? bunNotesFor(t.abbr).map(bunNoteBullet).join('')
+        : fallbackNotes(t);
+
       var luck = luckNote(t.pythag);
-      if (luck) items.unshift(luck);
-      return items.length ? '<ul>' + items.join('') + '</ul>' : '';
+      body = (luck || body) ? '<ul class="tc-notes">' + luck + body + '</ul>' : '';
+
+      // Deliberately outside that test: cardBlock() drops a block with nothing
+      // in it, so a team the doc never wrote about would otherwise be the one
+      // team with no way to start writing about it.
+      if (canEdit()) {
+        body += '<button type="button" class="tc-note-add" data-note-add="' +
+          esc(t.abbr) + '">+ Add note</button>';
+      }
+      return body;
+    }
+
+    /* The schedule read is a note like any other — it is filed under kind
+     * "schedule" so it keeps the block it has always had instead of joining the
+     * bullets above. */
+    function scheduleInner(t) {
+      if (!bunNotesLoaded()) {
+        var s = (t.notes || {}).schedule;
+        return s ? '<p>' + esc(s) + '</p>' : '';
+      }
+      return bunNoteList(bunNotesFor(t.abbr, 'schedule'));
     }
 
     function cardHtml(t) {
-      var n = t.notes || {};
       var head =
         '<div class="tc-head">' + logo(t, 'tc-logo') +
         '<div class="tc-id"><h4>' + esc(t.team) + '</h4></div>' +
@@ -525,7 +592,7 @@
       var body =
         cardBlock('Offensive line — PFF #' + t.raw.oLineRank, 'is-ol', olineInner(t.oline)) +
         cardBlock('Notes', 'is-note', notesInner(t)) +
-        cardBlock('Schedule', 'is-sched', n.schedule ? '<p>' + esc(n.schedule) + '</p>' : '');
+        cardBlock('Schedule', 'is-sched', scheduleInner(t));
 
       return '<div class="team-card">' + head +
         '<div class="tc-grid">' + body + '</div></div>';
@@ -747,6 +814,49 @@
       if (e.target === modal || e.target.closest('[data-close]')) modal.close();
     });
 
+    /* ---------- notes ----------
+     * Everything the note store needs from the page: somewhere for a league
+     * note to render, and a way to put a card back after one is written. */
+
+    var reopenRow = null;
+
+    // Two modal dialogs stacked would leave the card's backdrop over the form,
+    // so the card closes first — and is noted down, to be reopened once the
+    // note is saved.
+    function stashCard() {
+      reopenRow = lastOpener;
+      if (modal.open) modal.close();
+    }
+
+    function notesChanged() {
+      renderLeagueNotes();
+      if (reopenRow && reopenRow.isConnected) openCard(reopenRow);
+      reopenRow = null;
+    }
+
+    function renderLeagueNotes() {
+      var el = document.getElementById('league-notes');
+      if (!el) return;
+
+      var list = bunNotesLoaded() ? bunNotesLeague() : [];
+      // Nothing to show and nothing to add: the section is not a placeholder,
+      // it is a section that only exists once there is league-wide writing.
+      if (!list.length && !canEdit()) {
+        el.hidden = true;
+        el.innerHTML = '';
+        return;
+      }
+
+      el.hidden = false;
+      el.innerHTML = '<h3>League notes</h3>' +
+        (list.length
+          ? bunNoteList(list)
+          : '<p class="bun-section-note">Nothing filed against the league yet.</p>') +
+        (canEdit()
+          ? '<button type="button" class="tc-note-add" data-note-add="">+ Add note</button>'
+          : '');
+    }
+
     // Delegated, so it survives the re-render that sorting and filtering trigger.
     tbody.addEventListener('click', function (e) {
       var tr = e.target.closest('tr.proj-row');
@@ -859,19 +969,38 @@
 
     }
 
-    fetch(DATA_URL, { cache: 'no-store' })
-      .then(function (r) {
+    /* The two loads run together: the projections are the page and the notes
+     * are what the cards are opened for, and neither needs the other to start.
+     * bunNotesLoad() never rejects — a store that could not be reached reports
+     * itself as not loaded, and every note renderer falls back to the copy in
+     * the projections file. */
+    Promise.all([
+      fetch(DATA_URL, { cache: 'no-store' }).then(function (r) {
         if (!r.ok) throw new Error('HTTP ' + r.status);
         return r.json();
-      })
-      .then(function (d) {
+      }),
+      bunNotesLoad()
+    ])
+      .then(function (res) {
+        var d = res[0];
         teams = d.teams || [];
         renderMeta(d);
         computeHeat();
         buildFilters();
         measurePinTop();
         render();
+        renderLeagueNotes();
         showHint();   // only once there are rows for it to point at
+
+        initBunNotes({
+          teams: teams,
+          fab: document.getElementById('bn-fab'),
+          // A card and the note dialog are both modal; the card steps aside and
+          // comes back afterwards, so a note taken while reading a team lands
+          // the reader back on that team with it.
+          beforeOpen: stashCard,
+          onSaved: notesChanged
+        });
       })
       .catch(function () {
         tbody.innerHTML =
