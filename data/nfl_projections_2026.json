@@ -73,6 +73,25 @@
         "pythagWinPct": 0.536,
         "pythagW": 9.1,
         "winsAbovePythag": 1.9
+      },
+      "abbr": "CHI",
+      "short": "Bears",
+      "notes": {
+        "takes": [
+          "Year 2 in the Johnson system"
+        ],
+        "angles": [
+          {
+            "label": "Make playoffs",
+            "price": "+108"
+          },
+          {
+            "label": "Bears make / Packers miss",
+            "price": "+219",
+            "note": "Add Lions to make for +366"
+          }
+        ],
+        "schedule": null
       }
     },
     {
@@ -121,6 +140,23 @@
         "pythagWinPct": 0.589,
         "pythagW": 10.0,
         "winsAbovePythag": -1.0
+      },
+      "abbr": "DET",
+      "short": "Lions",
+      "notes": {
+        "takes": [
+          "Nobody believes in us",
+          "Obvious first choice for the worst-to-first trend",
+          "1st easiest SoS",
+          "Terrion Arnold arrest"
+        ],
+        "angles": [
+          {
+            "label": "Worst to first",
+            "price": "+180"
+          }
+        ],
+        "schedule": null
       }
     },
     {
@@ -169,6 +205,16 @@
         "pythagWinPct": 0.519,
         "pythagW": 8.8,
         "winsAbovePythag": 0.2
+      },
+      "abbr": "MIN",
+      "short": "Vikings",
+      "notes": {
+        "takes": [
+          "Kyler is better than what they had last year",
+          "Strong defense (Flores)"
+        ],
+        "angles": [],
+        "schedule": null
       }
     },
     {
@@ -214,6 +260,24 @@
         "pythagWinPct": 0.549,
         "pythagW": 9.3,
         "winsAbovePythag": 0.2
+      },
+      "abbr": "GB",
+      "short": "Packers",
+      "notes": {
+        "takes": [
+          "Injury and attrition pile-up: Kraft, Parsons, Watson always hurt",
+          "WR turnover \u2014 Doubs and Wicks",
+          "Jacobs isn't getting younger",
+          "Relying on Golden"
+        ],
+        "angles": [
+          {
+            "label": "Fade \u2014 Bears make / Packers miss",
+            "price": "+219",
+            "note": "Add Lions to make for +366"
+          }
+        ],
+        "schedule": null
       }
     },
     {
@@ -258,6 +322,13 @@
         "pythagWinPct": 0.454,
         "pythagW": 7.7,
         "winsAbovePythag": 0.3
+      },
+      "abbr": "TB",
+      "short": "Buccaneers",
+      "notes": {
+        "takes": [],
+        "angles": [],
+        "schedule": null
       }
     },
     {
@@ -302,6 +373,23 @@
         "pythagWinPct": 0.37,
         "pythagW": 6.3,
         "winsAbovePythag": -0.3
+      },
+      "abbr": "NO",
+      "short": "Saints",
+      "notes": {
+        "takes": [
+          "2nd easiest SoS",
+          "Shough was clearly competent",
+          "Seemingly good coach",
+          "Added rookie weapons"
+        ],
+        "angles": [
+          {
+            "label": "Worst to first",
+            "price": "+300"
+          }
+        ],
+        "schedule": null
       }
     },
     {
@@ -347,6 +435,15 @@
         "pythagWinPct": 0.425,
         "pythagW": 7.2,
         "winsAbovePythag": 0.8
+      },
+      "abbr": "ATL",
+      "short": "Falcons",
+      "notes": {
+        "takes": [
+          "James Pearce arrest \u2014 not a great start to the offseason"
+        ],
+        "angles": [],
+        "schedule": null
       }
     },
     {
@@ -392,6 +489,20 @@
         "pythagWinPct": 0.383,
         "pythagW": 6.5,
         "winsAbovePythag": 1.5
+      },
+      "abbr": "CAR",
+      "short": "Panthers",
+      "notes": {
+        "takes": [
+          "Top 5 hardest schedule"
+        ],
+        "angles": [
+          {
+            "label": "Win division",
+            "price": "+375"
+          }
+        ],
+        "schedule": null
       }
     },
     {
@@ -438,6 +549,27 @@
         "pythagWinPct": 0.59,
         "pythagW": 10.0,
         "winsAbovePythag": 1.0
+      },
+      "abbr": "PHI",
+      "short": "Eagles",
+      "notes": {
+        "takes": [
+          "New OC",
+          "New weapons",
+          "Addition by subtraction (AJ Brown)",
+          "Easiest schedule within division"
+        ],
+        "angles": [
+          {
+            "label": "Make playoffs",
+            "price": "-152"
+          },
+          {
+            "label": "Win division",
+            "price": "+140"
+          }
+        ],
+        "schedule": null
       }
     },
     {
@@ -483,6 +615,20 @@
         "pythagWinPct": 0.452,
         "pythagW": 7.7,
         "winsAbovePythag": -0.2
+      },
+      "abbr": "DAL",
+      "short": "Cowboys",
+      "notes": {
+        "takes": [
+          "Defense can't get worse than last year"
+        ],
+        "angles": [
+          {
+            "label": "Win division",
+            "price": "+200"
+          }
+        ],
+        "schedule": null
       }
     },
     {
@@ -531,6 +677,22 @@
         "pythagWinPct": 0.417,
         "pythagW": 7.1,
         "winsAbovePythag": -3.1
+      },
+      "abbr": "NYG",
+      "short": "Giants",
+      "notes": {
+        "takes": [
+          "New, much better coach",
+          "Strong defense",
+          "Health regression?"
+        ],
+        "angles": [
+          {
+            "label": "Worst to first / win division",
+            "price": "+600"
+          }
+        ],
+        "schedule": null
       }
     },
     {
@@ -577,6 +739,21 @@
         "pythagWinPct": 0.363,
         "pythagW": 6.2,
         "winsAbovePythag": -1.2
+      },
+      "abbr": "WSH",
+      "short": "Commanders",
+      "notes": {
+        "takes": [
+          "Still old",
+          "Daniels is brittle"
+        ],
+        "angles": [
+          {
+            "label": "Win division",
+            "price": "+400"
+          }
+        ],
+        "schedule": null
       }
     },
     {
@@ -623,6 +800,13 @@
         "pythagWinPct": 0.596,
         "pythagW": 10.1,
         "winsAbovePythag": 1.9
+      },
+      "abbr": "SF",
+      "short": "49ers",
+      "notes": {
+        "takes": [],
+        "angles": [],
+        "schedule": null
       }
     },
     {
@@ -668,6 +852,15 @@
         "pythagWinPct": 0.722,
         "pythagW": 12.3,
         "winsAbovePythag": -0.3
+      },
+      "abbr": "LAR",
+      "short": "Rams",
+      "notes": {
+        "takes": [
+          "McVay continues to be overrated \u2014 didn't go for 2 down 5 with 2 minutes left"
+        ],
+        "angles": [],
+        "schedule": null
       }
     },
     {
@@ -713,6 +906,13 @@
         "pythagWinPct": 0.767,
         "pythagW": 13.0,
         "winsAbovePythag": 1.0
+      },
+      "abbr": "SEA",
+      "short": "Seahawks",
+      "notes": {
+        "takes": [],
+        "angles": [],
+        "schedule": null
       }
     },
     {
@@ -758,6 +958,21 @@
         "pythagWinPct": 0.32,
         "pythagW": 5.4,
         "winsAbovePythag": -2.4
+      },
+      "abbr": "ARI",
+      "short": "Cardinals",
+      "notes": {
+        "takes": [
+          "Simply too tough of a division",
+          "Reaching for RB Love doesn't move the needle"
+        ],
+        "angles": [
+          {
+            "label": "Worst to first",
+            "price": "+9000"
+          }
+        ],
+        "schedule": null
       }
     },
     {
@@ -803,6 +1018,20 @@
         "pythagWinPct": 0.399,
         "pythagW": 6.8,
         "winsAbovePythag": -0.8
+      },
+      "abbr": "CIN",
+      "short": "Bengals",
+      "notes": {
+        "takes": [
+          "Can't get much worse than last year"
+        ],
+        "angles": [
+          {
+            "label": "Miss playoffs",
+            "price": "+126"
+          }
+        ],
+        "schedule": "#13 toughest in 2025 \u2192 #3 easiest in 2026"
       }
     },
     {
@@ -849,6 +1078,20 @@
         "pythagWinPct": 0.537,
         "pythagW": 9.1,
         "winsAbovePythag": -1.1
+      },
+      "abbr": "BAL",
+      "short": "Ravens",
+      "notes": {
+        "takes": [
+          "New coach"
+        ],
+        "angles": [
+          {
+            "label": "Miss playoffs",
+            "price": "+290"
+          }
+        ],
+        "schedule": "#12 toughest in 2025 \u2192 #6 easiest in 2026"
       }
     },
     {
@@ -894,6 +1137,16 @@
         "pythagWinPct": 0.515,
         "pythagW": 8.8,
         "winsAbovePythag": 1.2
+      },
+      "abbr": "PIT",
+      "short": "Steelers",
+      "notes": {
+        "takes": [
+          "New coach",
+          "Who's the QB?"
+        ],
+        "angles": [],
+        "schedule": null
       }
     },
     {
@@ -938,6 +1191,21 @@
         "pythagWinPct": 0.326,
         "pythagW": 5.5,
         "winsAbovePythag": -0.5
+      },
+      "abbr": "CLE",
+      "short": "Browns",
+      "notes": {
+        "takes": [
+          "New coach",
+          "There's no way DeShaun returns to Pro Bowl caliber, right?"
+        ],
+        "angles": [
+          {
+            "label": "Worst to first",
+            "price": "+1800"
+          }
+        ],
+        "schedule": null
       }
     },
     {
@@ -983,6 +1251,13 @@
         "pythagWinPct": 0.572,
         "pythagW": 9.7,
         "winsAbovePythag": -1.7
+      },
+      "abbr": "IND",
+      "short": "Colts",
+      "notes": {
+        "takes": [],
+        "angles": [],
+        "schedule": "#5 toughest in 2025 \u2192 #9 easiest in 2026"
       }
     },
     {
@@ -1028,6 +1303,18 @@
         "pythagWinPct": 0.678,
         "pythagW": 11.5,
         "winsAbovePythag": 0.5
+      },
+      "abbr": "HOU",
+      "short": "Texans",
+      "notes": {
+        "takes": [],
+        "angles": [
+          {
+            "label": "Miss playoffs",
+            "price": "+136"
+          }
+        ],
+        "schedule": null
       }
     },
     {
@@ -1074,6 +1361,13 @@
         "pythagWinPct": 0.693,
         "pythagW": 11.8,
         "winsAbovePythag": 1.2
+      },
+      "abbr": "JAX",
+      "short": "Jaguars",
+      "notes": {
+        "takes": [],
+        "angles": [],
+        "schedule": null
       }
     },
     {
@@ -1119,6 +1413,24 @@
         "pythagWinPct": 0.225,
         "pythagW": 3.8,
         "winsAbovePythag": -0.8
+      },
+      "abbr": "TEN",
+      "short": "Titans",
+      "notes": {
+        "takes": [
+          "New coach",
+          "Added a WR #1 (Tate)",
+          "Year 2 for Ward",
+          "Always a dumb division",
+          "10 wins would be a 7 win jump \u2014 the absolute cap YoY"
+        ],
+        "angles": [
+          {
+            "label": "Worst to first",
+            "price": "+950"
+          }
+        ],
+        "schedule": "#1 toughest in 2025 \u2192 #13 easiest in 2026"
       }
     },
     {
@@ -1164,6 +1476,13 @@
         "pythagWinPct": 0.658,
         "pythagW": 11.2,
         "winsAbovePythag": 0.8
+      },
+      "abbr": "BUF",
+      "short": "Bills",
+      "notes": {
+        "takes": [],
+        "angles": [],
+        "schedule": null
       }
     },
     {
@@ -1211,6 +1530,22 @@
         "pythagWinPct": 0.733,
         "pythagW": 12.5,
         "winsAbovePythag": 1.5
+      },
+      "abbr": "NE",
+      "short": "Patriots",
+      "notes": {
+        "takes": [
+          "Could be this year's Commanders \u2014 luck, injuries and schedule all point the same way",
+          "Super Bowl hangover",
+          "Prime miss-playoffs pick"
+        ],
+        "angles": [
+          {
+            "label": "Miss playoffs",
+            "price": "+176"
+          }
+        ],
+        "schedule": null
       }
     },
     {
@@ -1256,6 +1591,20 @@
         "pythagWinPct": 0.227,
         "pythagW": 3.9,
         "winsAbovePythag": -0.9
+      },
+      "abbr": "NYJ",
+      "short": "Jets",
+      "notes": {
+        "takes": [
+          "No"
+        ],
+        "angles": [
+          {
+            "label": "Worst to first",
+            "price": "+2500"
+          }
+        ],
+        "schedule": null
       }
     },
     {
@@ -1301,6 +1650,13 @@
         "pythagWinPct": 0.383,
         "pythagW": 6.5,
         "winsAbovePythag": 0.5
+      },
+      "abbr": "MIA",
+      "short": "Dolphins",
+      "notes": {
+        "takes": [],
+        "angles": [],
+        "schedule": null
       }
     },
     {
@@ -1346,6 +1702,20 @@
         "pythagWinPct": 0.646,
         "pythagW": 11.0,
         "winsAbovePythag": 3.0
+      },
+      "abbr": "DEN",
+      "short": "Broncos",
+      "notes": {
+        "takes": [
+          "Payton continues to be overrated \u2014 went for it on 4th down in FG range up 7-0 in a game that finished 10-7"
+        ],
+        "angles": [
+          {
+            "label": "Make playoffs",
+            "price": "-146"
+          }
+        ],
+        "schedule": null
       }
     },
     {
@@ -1392,6 +1762,13 @@
         "pythagWinPct": 0.558,
         "pythagW": 9.5,
         "winsAbovePythag": -3.5
+      },
+      "abbr": "KC",
+      "short": "Chiefs",
+      "notes": {
+        "takes": [],
+        "angles": [],
+        "schedule": "#7 toughest in 2025 \u2192 #10 easiest in 2026"
       }
     },
     {
@@ -1439,6 +1816,13 @@
         "pythagWinPct": 0.547,
         "pythagW": 9.3,
         "winsAbovePythag": 1.7
+      },
+      "abbr": "LAC",
+      "short": "Chargers",
+      "notes": {
+        "takes": [],
+        "angles": [],
+        "schedule": null
       }
     },
     {
@@ -1486,6 +1870,21 @@
         "pythagWinPct": 0.2,
         "pythagW": 3.4,
         "winsAbovePythag": -0.4
+      },
+      "abbr": "LV",
+      "short": "Raiders",
+      "notes": {
+        "takes": [
+          "Any history of rookie QBs winning the division?",
+          "Solid coaching upgrade (Kubiak from SEA)"
+        ],
+        "angles": [
+          {
+            "label": "Worst to first",
+            "price": "+2000"
+          }
+        ],
+        "schedule": null
       }
     }
   ],

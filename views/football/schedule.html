@@ -30,14 +30,14 @@
         <button type="button" class="dd-btn" id="f-week" aria-haspopup="true" aria-expanded="false">
           <span class="dd-value">All weeks</span>
         </button>
-        <div class="dd-panel dd-weeks" id="week-menu" role="menu" aria-label="Week" hidden></div>
+        <div class="dd-pop dd-menu" id="week-menu" role="menu" aria-label="Week" hidden></div>
       </div>
 
       <div class="dd" id="dd-team">
-        <button type="button" class="dd-btn" id="f-team" aria-haspopup="true" aria-expanded="false">
+        <button type="button" class="dd-btn" id="f-team" aria-haspopup="dialog" aria-expanded="false">
           <span class="dd-value">All teams</span>
         </button>
-        <div class="dd-panel dd-teams" role="menu" aria-label="Team" hidden>
+        <div class="dd-pop dd-overlay" id="team-overlay" role="dialog" aria-modal="true" aria-label="Team" hidden>
           <div class="tp" id="team-grid"></div>
         </div>
       </div>
@@ -210,10 +210,33 @@
      */
     var dropdowns = [];
 
+    /* The team grid opens as an overlay rather than as a panel hanging off its
+     * trigger — thirty-two logos is a lightbox-sized thing, not a menu-sized
+     * one, and anchored under the button it would either shove the schedule
+     * down the page or run off the bottom of a phone. Same treatment as the
+     * image viewer on /football: centred over a dimmed page, with the body
+     * pinned underneath so iOS doesn't scroll it behind the overlay.
+     * body.lightbox-open and its scroll restore come from lightbox.css. */
+    var scrollY = 0;
+
+    function lockScroll() {
+      scrollY = window.scrollY || window.pageYOffset || 0;
+      document.body.style.top = -scrollY + 'px';
+      document.body.classList.add('lightbox-open');
+    }
+
+    function unlockScroll() {
+      if (!document.body.classList.contains('lightbox-open')) return;
+      document.body.classList.remove('lightbox-open');
+      document.body.style.top = '';
+      window.scrollTo(0, scrollY);
+    }
+
     function closeDropdown(dd, refocus) {
       if (dd.panel.hidden) return;
       dd.panel.hidden = true;
       dd.btn.setAttribute('aria-expanded', 'false');
+      if (dd.modal) unlockScroll();
       if (refocus) dd.btn.focus();
     }
 
@@ -225,6 +248,7 @@
       dropdowns.forEach(function (d) { if (d !== dd) closeDropdown(d, false); });
       dd.panel.hidden = false;
       dd.btn.setAttribute('aria-expanded', 'true');
+      if (dd.modal) lockScroll();
       // Opening lands on the current choice, so the keyboard starts where the
       // filter already is rather than at the top of a list of nineteen weeks.
       var here = dd.panel.querySelector('.is-on') || dd.panel.querySelector('button');
@@ -240,8 +264,9 @@
       var dd = {
         root: root,
         btn: root.querySelector('.dd-btn'),
-        panel: root.querySelector('.dd-panel')
+        panel: root.querySelector('.dd-pop')
       };
+      dd.modal = dd.panel.classList.contains('dd-overlay');
       dropdowns.push(dd);
 
       dd.btn.addEventListener('click', function (e) {
@@ -249,12 +274,29 @@
         if (dd.panel.hidden) openDropdown(dd); else closeDropdown(dd, true);
       });
 
+      // The dimmed backdrop is the overlay itself; anything landing on it
+      // rather than on the grid is a click outside, which closes.
+      if (dd.modal) {
+        dd.panel.addEventListener('click', function (e) {
+          if (e.target === dd.panel) closeDropdown(dd, true);
+        });
+      }
+
       dd.panel.addEventListener('keydown', function (e) {
+        var items, i;
+        // A modal keeps the keyboard inside it while it is open.
+        if (dd.modal && e.key === 'Tab') {
+          e.preventDefault();
+          items = [].slice.call(dd.panel.querySelectorAll('button'));
+          i = items.indexOf(document.activeElement);
+          items[(i + (e.shiftKey ? -1 : 1) + items.length) % items.length].focus();
+          return;
+        }
         var step = ARROW[e.key];
         if (!step) return;
         e.preventDefault();
-        var items = [].slice.call(dd.panel.querySelectorAll('button'));
-        var i = items.indexOf(document.activeElement);
+        items = [].slice.call(dd.panel.querySelectorAll('button'));
+        i = items.indexOf(document.activeElement);
         var next = items[(i + step + items.length) % items.length];
         if (next) next.focus();
       });
