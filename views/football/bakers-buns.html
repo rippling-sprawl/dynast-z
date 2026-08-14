@@ -16,8 +16,8 @@
   Seeded from the "NFL 2026-27" Google Doc. The doc filed the same team under
   several tabs at once — the Bears turned up in six places — so nothing here is
   grouped by topic. A team's every fact (its metrics, its 2025 luck, its
-  offensive line, the doc's takes on it, and the angles priced against it)
-  lives in one place: the row it owns in the Projections table, expanded.
+  offensive line, and the doc's notes on it) lives in one place: the row it
+  owns in the Projections table, expanded.
 
   What sits outside that table is only how the score is built (Methodology) and
   where the numbers came from (Sources). When this becomes a real note-taking
@@ -68,9 +68,9 @@
               <th scope="col" class="num sortable" data-sort="sos">SoS<span class="th-sub">rank</span></th>
               <th scope="col" class="num sortable" data-sort="rest">Rest<span class="th-sub">net</span></th>
               <th scope="col" class="num sortable" data-sort="luck">Luck<span class="th-sub">vs pythag</span></th>
-              <th scope="col" class="num sortable proj-hide-sm" data-sort="make">Make</th>
-              <th scope="col" class="num sortable proj-hide-sm" data-sort="miss">Miss</th>
-              <th scope="col" class="num sortable proj-hide-sm" data-sort="division">Div Odds</th>
+              <th scope="col" class="num sortable" data-sort="make">Make</th>
+              <th scope="col" class="num sortable" data-sort="miss">Miss</th>
+              <th scope="col" class="num sortable" data-sort="division">Div<span class="th-sub">odds</span></th>
             </tr>
           </thead>
           <tbody id="proj-body">
@@ -78,6 +78,26 @@
           </tbody>
         </table>
       </div>
+
+      <!--
+        The pinned copy of the header row. Empty until the script clones the
+        real <thead> into it, and hidden whenever the table's own header is
+        where it should be. aria-hidden because it is a duplicate: the header
+        a screen reader associates with the cells is the one in the table.
+      -->
+      <div class="proj-float-head" id="proj-float-head" aria-hidden="true"></div>
+
+      <!--
+        The team card opens here, not as a row inside the table. The table
+        scrolls sideways on a phone, and a card rendered inside it slid off with
+        the columns; a dialog is anchored to the viewport instead, so the notes
+        stay put and wrap to the screen width. Centred on desktop, a bottom
+        sheet on mobile.
+      -->
+      <dialog class="tc-modal" id="team-modal" aria-label="Team card">
+        <button type="button" class="tc-modal-close" data-close aria-label="Close">&times;</button>
+        <div class="tc-modal-scroll" id="team-modal-body"></div>
+      </dialog>
     </section>
 
     <!-- ================= METHODOLOGY ================= -->
@@ -108,10 +128,39 @@
           </ul>
         </article>
 
+        <!-- The evidence for the heaviest weight in the score, and the only
+             thing on the page that back-tests it. The chart itself is in
+             Graphs; this is what it says. -->
+        <article class="note accent-info">
+          <h4>Why O-Line carries the most weight</h4>
+          <span class="note-meta">Preseason rank vs playoffs, 2016&ndash;2025</span>
+          <p>
+            Ten years of PFF&rsquo;s preseason ranking, sorted into quartiles and
+            counted on who actually made the playoffs:
+          </p>
+          <ul>
+            <li><strong>Ranks 1&ndash;8</strong> &mdash; 59% made it (the top four alone: 65%)</li>
+            <li><strong>9&ndash;16</strong> &mdash; 48%</li>
+            <li><strong>17&ndash;24</strong> &mdash; 33%</li>
+            <li><strong>25&ndash;32</strong> &mdash; 26%</li>
+          </ul>
+          <p class="note-take">
+            <strong>Edge</strong> in the chart is that quartile base rate minus
+            what FanDuel&rsquo;s price implies (8/13/26), against the raw number
+            rather than a de-vigged one. The widest disagreements: Cardinals
+            <span class="odds odds-plain">+28%</span> and Jets
+            <span class="odds odds-plain">+21%</span> to make, Ravens
+            <span class="odds odds-plain">+39%</span> and Texans
+            <span class="odds odds-plain">+35%</span> to miss. See
+            <a href="#graphs">Graphs</a>.
+          </p>
+        </article>
+
         <article class="note accent-warn">
           <h4>Reading the colours</h4>
           <ul>
             <li><span class="z-val pos">Green</span> / <span class="z-val neg">orange</span> on the metric columns: better or worse than the 32-team average</li>
+            <li>The colour is a heat map, not a switch &mdash; it deepens with distance from that average, scaled to each column&rsquo;s own spread, so the strongest tint in a column is that column&rsquo;s most extreme team</li>
             <li><span class="z-val luck-hot">Amber</span> on Luck: won more than their points implied, so due to regress</li>
             <li><span class="z-val luck-cold">Blue</span> on Luck: won fewer, so due to bounce back</li>
             <li>Odds columns are left uncoloured &mdash; a plus price means opposite things on Make and Miss</li>
@@ -195,12 +244,6 @@
       <p class="bun-section-note">Tap any chart to open it full screen.</p>
 
       <div class="graph-grid">
-        <figure class="graph">
-          <img src="/assets/images/nfl-roster-ages-2026.jpg"
-               alt="NFL average roster age for the 2026 season, all 32 teams ranked youngest to oldest with overall, offense and defense splits — Dolphins youngest at 25.18, Commanders oldest at 26.79"
-               loading="lazy" width="1600" height="1014">
-          <figcaption><strong>Roster Ages</strong> &mdash; average age by team, as of May 2026</figcaption>
-        </figure>
 
         <figure class="graph">
           <img src="/assets/images/nfl-sos-2026.png"
@@ -217,6 +260,13 @@
         </figure>
 
         <figure class="graph">
+          <img src="/assets/images/nfl-coaches-2026.jpg"
+               alt="Broadcast graphic listing the ten new NFL head coaches for the 2026 season with their teams"
+               loading="lazy" width="1600" height="901">
+          <figcaption><strong>Coaches</strong> &mdash; new head coaches this season &middot; broadcast still</figcaption>
+        </figure>
+
+        <figure class="graph">
           <img src="/assets/images/nfl-combo-2026.jpg"
                alt="2026 market-implied team ratings plotted against average opponent rating, derived from DraftKings lookahead spreads — Rams strongest, Cardinals weakest"
                loading="lazy" width="1600" height="1040">
@@ -224,10 +274,10 @@
         </figure>
 
         <figure class="graph">
-          <img src="/assets/images/nfl-passing-defense-2026.jpg"
-               alt="Rank of pass efficiency defense of opponents, weeks 1 to 18, all 32 teams from easiest schedule (Vikings) to hardest (Bears)"
-               loading="lazy" width="1600" height="991">
-          <figcaption><strong>Passing Defense</strong> &mdash; strength of the pass defenses each team faces &middot; Sharp Football Analysis</figcaption>
+          <img src="/assets/images/nfl-oline-playoff-outcomes.png"
+               alt="Playoff outcomes by PFF preseason offensive line rank, 2016 to 2025, one row per rank with each season's finish — wild card, division, conference or Super Bowl — then the playoff rate for each quartile, eighth, sixteenth and pair of ranks, and the 2026 team at each rank with its edge against FanDuel's make and miss prices"
+               loading="lazy" width="1415" height="949">
+          <figcaption><strong>O-Line Rank vs Playoffs</strong> &mdash; what each preseason rank did over ten seasons, and where 2026&rsquo;s prices disagree with that base rate &middot; PFF, Pro Football Reference, FanDuel (8/13/26)</figcaption>
         </figure>
 
         <figure class="graph">
@@ -245,24 +295,24 @@
         </figure>
 
         <figure class="graph">
-          <img src="/assets/images/nfl-coaches-2026.jpg"
-               alt="Broadcast graphic listing the ten new NFL head coaches for the 2026 season with their teams"
-               loading="lazy" width="1600" height="901">
-          <figcaption><strong>Coaches</strong> &mdash; new head coaches this season &middot; broadcast still</figcaption>
+          <img src="/assets/images/nfl-passing-defense-2026.jpg"
+               alt="Rank of pass efficiency defense of opponents, weeks 1 to 18, all 32 teams from easiest schedule (Vikings) to hardest (Bears)"
+               loading="lazy" width="1600" height="991">
+          <figcaption><strong>Passing Defense</strong> &mdash; strength of the pass defenses each team faces &middot; Sharp Football Analysis</figcaption>
+        </figure>
+
+        <figure class="graph">
+          <img src="/assets/images/nfl-roster-ages-2026.jpg"
+               alt="NFL average roster age for the 2026 season, all 32 teams ranked youngest to oldest with overall, offense and defense splits — Dolphins youngest at 25.18, Commanders oldest at 26.79"
+               loading="lazy" width="1600" height="1014">
+          <figcaption><strong>Roster Ages</strong> &mdash; average age by team, as of May 2026</figcaption>
         </figure>
 
         <figure class="graph">
           <img src="/assets/images/nfl-division-champions.jpg"
                alt="Grid of NFL division champions by season from 2002 to 2025, one row per division, with per-team title counts and stars marking champions that also won the Super Bowl"
                loading="lazy" width="1600" height="1099">
-          <figcaption><strong>Division Champions</strong> &mdash; every division winner 2002&ndash;2025, with title counts &middot; context for the worst-to-first angles</figcaption>
-        </figure>
-
-        <figure class="graph">
-          <img src="/assets/images/nfl-playoff-parlay-2026.jpg"
-               alt="Sportsbook slip for a three-leg same-game parlay at plus 430: Eagles, Broncos and Bears each to make the playoffs in 2026-27"
-               loading="lazy" width="1179" height="570">
-          <figcaption><strong>Playoff parlay</strong> &mdash; not a chart: a 3-leg slip at <span class="odds odds-plain">+430</span> (Eagles, Broncos, Bears to make). The legs sit on those teams&rsquo; cards as angles; <a href="/bets">/bets</a> is where wagers are tracked.</figcaption>
+          <figcaption><strong>Division Champions</strong> &mdash; every division winner 2002&ndash;2025, with title counts &middot; context for the worst-to-first runs</figcaption>
         </figure>
       </div>
     </section>
@@ -322,10 +372,44 @@
         Math.abs(n).toLocaleString('en-US') + '</span>';
     }
 
-    function fmtZ(z) {
+    /* ---------- heat map ----------
+     * Every coloured metric is scaled to its own column's spread rather than
+     * simply being green above zero and orange below it: the deepest green in
+     * a column belongs to that column's best team, and a value a hair above
+     * average reads as barely-tinted. The scale is computed over the full
+     * 32-team field, never the filtered view, so a team keeps the same colour
+     * when you narrow the table to one division.
+     *
+     * The intensity is handed to CSS as --heat (0..1) and mixed there, so the
+     * palette stays in the stylesheet with the rest of the colours. */
+    var HEAT_KEYS = ['eyeTest', 'oLine', 'sos', 'rest'];
+    var heatMax = {};
+
+    function computeHeat() {
+      HEAT_KEYS.forEach(function (k) {
+        heatMax[k] = teams.reduce(function (m, t) {
+          var v = t.z ? t.z[k] : null;
+          return v == null ? m : Math.max(m, Math.abs(v));
+        }, 0) || 1;
+      });
+      heatMax.luck = teams.reduce(function (m, t) {
+        return t.pythag ? Math.max(m, Math.abs(t.pythag.winsAbovePythag)) : m;
+      }, 0) || 1;
+    }
+
+    // 0 at the field average, 1 at the column's extreme. The exponent lifts the
+    // middle of the range: on a straight ratio the whole midfield washes out to
+    // grey, and the point of the column is to separate those teams.
+    function heat(v, key) {
+      var t = Math.min(1, Math.abs(v) / (heatMax[key] || 1));
+      return (0.12 + 0.88 * Math.pow(t, 0.7)).toFixed(3);
+    }
+
+    function fmtZ(z, key) {
       if (z == null) return '';
       var cls = z > 0.05 ? 'pos' : (z < -0.05 ? 'neg' : 'flat');
-      return '<span class="z-val ' + cls + '">' + (z > 0 ? '+' : '') + z.toFixed(1) + '</span>';
+      return '<span class="z-val ' + cls + '" style="--heat:' + heat(z, key) + '">' +
+        (z > 0 ? '+' : '') + z.toFixed(1) + '</span>';
     }
 
     function signed(n, digits) {
@@ -335,15 +419,17 @@
     // Wins above pythag drives two different displays, so its class lives here.
     // The palette is inverted against the z-score columns on purpose: a big
     // positive is luck that tends to regress, so it warns rather than praises.
+    // The ±1 line still marks a regression call in the card note; in the table
+    // the colour is continuous like every other column.
     function luckClass(v) {
-      return v >= 1 ? 'luck-hot' : (v <= -1 ? 'luck-cold' : 'luck-even');
+      return v > 0.05 ? 'luck-hot' : (v < -0.05 ? 'luck-cold' : 'luck-even');
     }
 
     /* ---------- row cells ---------- */
 
     // The raw input beneath each z-score, in the units the sheet recorded it in.
-    function zCell(z, rawLabel) {
-      return '<td class="z-cell">' + fmtZ(z) +
+    function zCell(key, z, rawLabel) {
+      return '<td class="z-cell">' + fmtZ(z, key) +
         '<span class="z-raw">' + esc(rawLabel) + '</span></td>';
     }
 
@@ -356,7 +442,8 @@
       if (!p) return '<td class="z-cell"></td>';
       var v = p.winsAbovePythag;
       return '<td class="z-cell">' +
-        '<span class="z-val ' + luckClass(v) + '">' + signed(v, 1) + '</span>' +
+        '<span class="z-val ' + luckClass(v) + '" style="--heat:' + heat(v, 'luck') + '">' +
+        signed(v, 1) + '</span>' +
         '<span class="z-raw">' + p.w + '-' + p.l + (p.t ? '-' + p.t : '') +
         ' / ' + p.pythagW.toFixed(1) + '</span></td>';
     }
@@ -386,30 +473,32 @@
         cardBlock('Risks & cons', 'is-con', bullets(ol.cons));
     }
 
-    function anglesInner(angles) {
-      if (!angles || !angles.length) return '';
-      return '<ul class="tc-angles">' + angles.map(function (a) {
-        return '<li><span class="tc-angle-label">' + esc(a.label) + '</span>' +
-          '<span class="odds odds-plain">' + esc(a.price) + '</span>' +
-          (a.note ? '<span class="tc-angle-note">' + esc(a.note) + '</span>' : '') +
-          '</li>';
-      }).join('') + '</ul>';
-    }
-
-    function pythagInner(p) {
+    /* The 2025 luck read, as a note rather than a block of its own: only the
+     * regression / bounce-back call, since the record and the points behind it
+     * are already in the Luck column of the row above. A team whose record
+     * matched its points has nothing to say here. */
+    function luckNote(p) {
       if (!p) return '';
       var v = p.winsAbovePythag;
+      if (v > -1 && v < 1) return '';
       var verdict = v >= 1
-        ? 'won ' + v.toFixed(1) + ' more than their points implied — regression candidate'
-        : (v <= -1
-          ? 'won ' + Math.abs(v).toFixed(1) + ' fewer than their points implied — bounce-back candidate'
-          : 'record matched their points');
-      return '<p>' + p.w + '-' + p.l + (p.t ? '-' + p.t : '') + ' &middot; ' +
-        p.pf + ' PF / ' + p.pa + ' PA &middot; pythag ' + p.pythagW.toFixed(1) + ' wins</p>' +
-        '<p class="tc-luck ' + luckClass(v) + '">' + esc(verdict) + '</p>';
+        ? 'regression candidate'
+        : 'bounce-back candidate';
+      return '<li class="tc-luck ' + luckClass(v) + '">' + esc(verdict) + '</li>';
     }
 
-    function detailRow(t) {
+    // One list, so the luck read sits among the notes rather than above them.
+    // It leads, because it is the season the rest of them are written against.
+    function notesInner(t) {
+      var items = ((t.notes || {}).notes || []).map(function (s) {
+        return '<li>' + esc(s) + '</li>';
+      });
+      var luck = luckNote(t.pythag);
+      if (luck) items.unshift(luck);
+      return items.length ? '<ul>' + items.join('') + '</ul>' : '';
+    }
+
+    function cardHtml(t) {
       var n = t.notes || {};
       var head =
         '<div class="tc-head">' + logo(t, 'tc-logo') +
@@ -424,14 +513,11 @@
       // are already columns in the table above.
       var body =
         cardBlock('Offensive line — PFF #' + t.raw.oLineRank, 'is-ol', olineInner(t.oline)) +
-        cardBlock('Takes', 'is-take', bullets(n.takes)) +
-        cardBlock('Angles', 'is-angle', anglesInner(n.angles)) +
-        cardBlock('2025', 'is-pythag', pythagInner(t.pythag)) +
+        cardBlock('Notes', 'is-note', notesInner(t)) +
         cardBlock('Schedule', 'is-sched', n.schedule ? '<p>' + esc(n.schedule) + '</p>' : '');
 
-      return '<tr class="proj-detail" data-for="' + esc(t.team) + '" hidden>' +
-        '<td colspan="10"><div class="team-card">' + head +
-        '<div class="tc-grid">' + body + '</div></div></td></tr>';
+      return '<div class="team-card">' + head +
+        '<div class="tc-grid">' + body + '</div></div>';
     }
 
     /* ---------- sort / filter / render ---------- */
@@ -473,22 +559,24 @@
 
       if (!rows.length) {
         tbody.innerHTML = '<tr><td colspan="10" class="proj-empty">No teams match.</td></tr>';
+        refreshPin();
         return;
       }
 
       tbody.innerHTML = rows.map(function (t) {
-        return '<tr class="proj-row" data-team="' + esc(t.team) + '" tabindex="0">' +
+        return '<tr class="proj-row" data-team="' + esc(t.team) + '" tabindex="0" ' +
+          'aria-haspopup="dialog">' +
           '<td class="col-team">' + logo(t, 'team-logo') + '</td>' +
           scoreCell(t.score) +
-          zCell(t.z.eyeTest, t.raw.eyeTest) +
-          zCell(t.z.oLine, '#' + t.raw.oLineRank) +
-          zCell(t.z.sos, '#' + t.raw.sosRank) +
-          zCell(t.z.rest, signed(t.raw.rest)) +
+          zCell('eyeTest', t.z.eyeTest, t.raw.eyeTest) +
+          zCell('oLine', t.z.oLine, '#' + t.raw.oLineRank) +
+          zCell('sos', t.z.sos, '#' + t.raw.sosRank) +
+          zCell('rest', t.z.rest, signed(t.raw.rest)) +
           luckCell(t) +
-          '<td class="num proj-hide-sm">' + fmtOdds(t.odds.make) + '</td>' +
-          '<td class="num proj-hide-sm">' + fmtOdds(t.odds.miss) + '</td>' +
-          '<td class="num proj-hide-sm">' + fmtOdds(t.odds.division) + '</td>' +
-          '</tr>' + detailRow(t);
+          '<td class="num">' + fmtOdds(t.odds.make) + '</td>' +
+          '<td class="num">' + fmtOdds(t.odds.miss) + '</td>' +
+          '<td class="num">' + fmtOdds(t.odds.division) + '</td>' +
+          '</tr>';
       }).join('');
 
       // Caret on the active sort column.
@@ -501,37 +589,156 @@
         caret.textContent = state.dir === -1 ? '▾' : '▴';
         th.appendChild(caret);
       });
+
+      // The pinned copy of the header is rebuilt from the real one, so it picks
+      // up the caret that just moved along with any change in column widths.
+      refreshPin();
     }
 
     /* ---------- events ---------- */
 
-    table.querySelectorAll('th.sortable').forEach(function (th) {
-      th.addEventListener('click', function () {
-        var k = th.dataset.sort;
-        if (state.sort === k) {
-          state.dir = -state.dir;
-        } else {
-          state.sort = k;
-          // Team defaults A-Z; every metric defaults best-first.
-          state.dir = k === 'team' ? 1 : -1;
-        }
-        render();
-      });
-    });
-
-    // Expand/collapse a team's card. Delegated, so it survives the re-render
-    // that sorting and filtering trigger.
-    function toggleRow(tr) {
-      var detail = tr.nextElementSibling;
-      if (!detail || !detail.classList.contains('proj-detail')) return;
-      var open = detail.hidden;
-      detail.hidden = !open;
-      tr.classList.toggle('open', open);
+    function applySort(k) {
+      if (!k) return;
+      if (state.sort === k) {
+        state.dir = -state.dir;
+      } else {
+        state.sort = k;
+        // Team defaults A-Z; every metric defaults best-first.
+        state.dir = k === 'team' ? 1 : -1;
+      }
+      render();
     }
 
+    table.querySelectorAll('th.sortable').forEach(function (th) {
+      th.addEventListener('click', function () { applySort(th.dataset.sort); });
+    });
+
+    /* ---------- pinned header row ----------
+     * `position: sticky` cannot do this here. .bun-table-wrap scrolls
+     * horizontally, and a scroll container is exactly what a sticky child
+     * resolves `top` against — a wrapper that never scrolls vertically gives a
+     * header that never sticks. So the real <thead> is cloned into a fixed bar
+     * under the site header, and this keeps the two in step:
+     *
+     *   - it is rebuilt on every render, taking its column widths from the live
+     *     table (the clone has no body of its own to size columns from, hence
+     *     table-layout: fixed);
+     *   - it is a scroll container itself, so the team column's sticky left:0
+     *     has something to hold onto, and its scrollLeft tracks the table's;
+     *   - it rides the last row out of view rather than vanishing at the line:
+     *     once the bottom of the tbody passes the pin, the bar goes up with it
+     *     and is hidden the moment the last row is gone.
+     */
+    var wrap = table.parentNode;
+    var floatHead = document.getElementById('proj-float-head');
+    var thead = table.tHead;
+    var pinTop = 0;
+
+    // The site header is sticky at top:0, so it owns the first N pixels.
+    function measurePinTop() {
+      var h = document.querySelector('header');
+      pinTop = h ? Math.round(h.getBoundingClientRect().height) : 0;
+    }
+
+    function buildFloatHead() {
+      floatHead.innerHTML = '<table class="bun-table">' + thead.outerHTML + '</table>';
+      var clone = floatHead.firstChild;
+      clone.style.width = table.getBoundingClientRect().width + 'px';
+      var src = thead.rows[0].cells, dst = clone.tHead.rows[0].cells;
+      for (var i = 0; i < src.length; i++) {
+        dst[i].style.width = src[i].getBoundingClientRect().width + 'px';
+      }
+      floatHead.scrollLeft = wrap.scrollLeft;
+    }
+
+    function updatePin() {
+      var wrapTop = wrap.getBoundingClientRect().top;
+      var headH = thead.getBoundingClientRect().height;
+      var bodyBottom = tbody.getBoundingClientRect().bottom;
+      var show = wrapTop < pinTop && bodyBottom > pinTop;
+
+      floatHead.classList.toggle('is-pinned', show);
+      if (!show) return;
+
+      floatHead.style.top = Math.min(pinTop, bodyBottom - headH) + 'px';
+      floatHead.style.left = wrap.getBoundingClientRect().left + 'px';
+      floatHead.style.width = wrap.clientWidth + 'px';
+      // Re-asserted on every update, not just on the table's scroll event: a
+      // sideways scroll that happened while the bar was hidden never reached
+      // it, because an element with no box has no scroll position to set.
+      floatHead.scrollLeft = wrap.scrollLeft;
+    }
+
+    function refreshPin() {
+      buildFloatHead();
+      updatePin();
+    }
+
+    var pinQueued = false;
+    function queuePin() {
+      if (pinQueued) return;
+      pinQueued = true;
+      requestAnimationFrame(function () { pinQueued = false; updatePin(); });
+    }
+
+    window.addEventListener('scroll', queuePin, { passive: true });
+    wrap.addEventListener('scroll', function () {
+      floatHead.scrollLeft = wrap.scrollLeft;
+    }, { passive: true });
+
+    window.addEventListener('resize', function () {
+      measurePinTop();
+      refreshPin();
+    });
+
+    // Sorting from the pinned bar, since it is the header the reader can see.
+    floatHead.addEventListener('click', function (e) {
+      var th = e.target.closest('th.sortable');
+      if (th) applySort(th.dataset.sort);
+    });
+
+    /* ---------- the card dialog ----------
+     * <dialog> carries the modal behaviour the card needs — Esc to close, the
+     * rest of the page made inert, a styleable ::backdrop — so the only work
+     * left here is filling it, closing on a backdrop click, and putting focus
+     * back on the row that opened it. */
+
+    var modal = document.getElementById('team-modal');
+    var modalBody = document.getElementById('team-modal-body');
+    var lastOpener = null;
+
+    function openCard(tr) {
+      var name = tr.dataset.team;
+      var t = teams.filter(function (x) { return x.team === name; })[0];
+      if (!t) return;
+
+      modalBody.innerHTML = cardHtml(t);
+      modalBody.scrollTop = 0;
+      modal.setAttribute('aria-label', name);
+      lastOpener = tr;
+      modal.showModal();
+      // The page behind a modal dialog still scrolls in some browsers.
+      document.body.classList.add('modal-open');
+    }
+
+    modal.addEventListener('close', function () {
+      document.body.classList.remove('modal-open');
+      // The row may have been re-rendered away by a sort or filter, in which
+      // case there is nothing to return focus to.
+      if (lastOpener && lastOpener.isConnected) lastOpener.focus();
+      lastOpener = null;
+    });
+
+    // A click that lands on the dialog itself is a click on the sheet's
+    // padding-free edge or the backdrop — either way, outside the card.
+    modal.addEventListener('click', function (e) {
+      if (e.target === modal || e.target.closest('[data-close]')) modal.close();
+    });
+
+    // Delegated, so it survives the re-render that sorting and filtering trigger.
     tbody.addEventListener('click', function (e) {
       var tr = e.target.closest('tr.proj-row');
-      if (tr) toggleRow(tr);
+      if (tr) openCard(tr);
     });
 
     tbody.addEventListener('keydown', function (e) {
@@ -539,7 +746,7 @@
       var tr = e.target.closest('tr.proj-row');
       if (!tr) return;
       e.preventDefault();
-      toggleRow(tr);
+      openCard(tr);
     });
 
     /* One chip row per conference: the conference itself, then its divisions.
@@ -614,7 +821,9 @@
       .then(function (d) {
         teams = d.teams || [];
         renderMeta(d);
+        computeHeat();
         buildFilters();
+        measurePinTop();
         render();
       })
       .catch(function () {

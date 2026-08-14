@@ -77,19 +77,8 @@
       "abbr": "CHI",
       "short": "Bears",
       "notes": {
-        "takes": [
+        "notes": [
           "Year 2 in the Johnson system"
-        ],
-        "angles": [
-          {
-            "label": "Make playoffs",
-            "price": "+108"
-          },
-          {
-            "label": "Bears make / Packers miss",
-            "price": "+219",
-            "note": "Add Lions to make for +366"
-          }
         ],
         "schedule": null
       }
@@ -144,17 +133,11 @@
       "abbr": "DET",
       "short": "Lions",
       "notes": {
-        "takes": [
+        "notes": [
           "Nobody believes in us",
           "Obvious first choice for the worst-to-first trend",
           "1st easiest SoS",
           "Terrion Arnold arrest"
-        ],
-        "angles": [
-          {
-            "label": "Worst to first",
-            "price": "+180"
-          }
         ],
         "schedule": null
       }
@@ -209,11 +192,10 @@
       "abbr": "MIN",
       "short": "Vikings",
       "notes": {
-        "takes": [
+        "notes": [
           "Kyler is better than what they had last year",
           "Strong defense (Flores)"
         ],
-        "angles": [],
         "schedule": null
       }
     },
@@ -264,18 +246,11 @@
       "abbr": "GB",
       "short": "Packers",
       "notes": {
-        "takes": [
+        "notes": [
           "Injury and attrition pile-up: Kraft, Parsons, Watson always hurt",
           "WR turnover \u2014 Doubs and Wicks",
           "Jacobs isn't getting younger",
           "Relying on Golden"
-        ],
-        "angles": [
-          {
-            "label": "Fade \u2014 Bears make / Packers miss",
-            "price": "+219",
-            "note": "Add Lions to make for +366"
-          }
         ],
         "schedule": null
       }
@@ -326,8 +301,7 @@
       "abbr": "TB",
       "short": "Buccaneers",
       "notes": {
-        "takes": [],
-        "angles": [],
+        "notes": [],
         "schedule": null
       }
     },
@@ -377,17 +351,11 @@
       "abbr": "NO",
       "short": "Saints",
       "notes": {
-        "takes": [
+        "notes": [
           "2nd easiest SoS",
           "Shough was clearly competent",
           "Seemingly good coach",
           "Added rookie weapons"
-        ],
-        "angles": [
-          {
-            "label": "Worst to first",
-            "price": "+300"
-          }
         ],
         "schedule": null
       }
@@ -439,10 +407,9 @@
       "abbr": "ATL",
       "short": "Falcons",
       "notes": {
-        "takes": [
+        "notes": [
           "James Pearce arrest \u2014 not a great start to the offseason"
         ],
-        "angles": [],
         "schedule": null
       }
     },
@@ -493,14 +460,8 @@
       "abbr": "CAR",
       "short": "Panthers",
       "notes": {
-        "takes": [
+        "notes": [
           "Top 5 hardest schedule"
-        ],
-        "angles": [
-          {
-            "label": "Win division",
-            "price": "+375"
-          }
         ],
         "schedule": null
       }
@@ -553,21 +514,11 @@
       "abbr": "PHI",
       "short": "Eagles",
       "notes": {
-        "takes": [
+        "notes": [
           "New OC",
           "New weapons",
           "Addition by subtraction (AJ Brown)",
           "Easiest schedule within division"
-        ],
-        "angles": [
-          {
-            "label": "Make playoffs",
-            "price": "-152"
-          },
-          {
-            "label": "Win division",
-            "price": "+140"
-          }
         ],
         "schedule": null
       }
@@ -619,14 +570,8 @@
       "abbr": "DAL",
       "short": "Cowboys",
       "notes": {
-        "takes": [
+        "notes": [
           "Defense can't get worse than last year"
-        ],
-        "angles": [
-          {
-            "label": "Win division",
-            "price": "+200"
-          }
         ],
         "schedule": null
       }
@@ -681,16 +626,10 @@
       "abbr": "NYG",
       "short": "Giants",
       "notes": {
-        "takes": [
+        "notes": [
           "New, much better coach",
           "Strong defense",
           "Health regression?"
-        ],
-        "angles": [
-          {
-            "label": "Worst to first / win division",
-            "price": "+600"
-          }
         ],
         "schedule": null
       }
@@ -743,15 +682,9 @@
       "abbr": "WSH",
       "short": "Commanders",
       "notes": {
-        "takes": [
+        "notes": [
           "Still old",
           "Daniels is brittle"
-        ],
-        "angles": [
-          {
-            "label": "Win division",
-            "price": "+400"
-          }
         ],
         "schedule": null
       }
@@ -804,8 +737,7 @@
       "abbr": "SF",
       "short": "49ers",
       "notes": {
-        "takes": [],
-        "angles": [],
+        "notes": [],
         "schedule": null
       }
     },
@@ -856,10 +788,9 @@
       "abbr": "LAR",
       "short": "Rams",
       "notes": {
-        "takes": [
+        "notes": [
           "McVay continues to be overrated \u2014 didn't go for 2 down 5 with 2 minutes left"
         ],
-        "angles": [],
         "schedule": null
       }
     },
@@ -910,8 +841,7 @@
       "abbr": "SEA",
       "short": "Seahawks",
       "notes": {
-        "takes": [],
-        "angles": [],
+        "notes": [],
         "schedule": null
       }
     },
@@ -962,15 +892,9 @@
       "abbr": "ARI",
       "short": "Cardinals",
       "notes": {
-        "takes": [
+        "notes": [
           "Simply too tough of a division",
           "Reaching for RB Love doesn't move the needle"
-        ],
-        "angles": [
-          {
-            "label": "Worst to first",
-            "price": "+9000"
-          }
         ],
         "schedule": null
       }
@@ -1022,14 +946,8 @@
       "abbr": "CIN",
       "short": "Bengals",
       "notes": {
-        "takes": [
+        "notes": [
           "Can't get much worse than last year"
-        ],
-        "angles": [
-          {
-            "label": "Miss playoffs",
-            "price": "+126"
-          }
         ],
         "schedule": "#13 toughest in 2025 \u2192 #3 easiest in 2026"
       }
@@ -1082,14 +1000,8 @@
       "abbr": "BAL",
       "short": "Ravens",
       "notes": {
-        "takes": [
+        "notes": [
           "New coach"
-        ],
-        "angles": [
-          {
-            "label": "Miss playoffs",
-            "price": "+290"
-          }
         ],
         "schedule": "#12 toughest in 2025 \u2192 #6 easiest in 2026"
       }
@@ -1141,11 +1053,10 @@
       "abbr": "PIT",
       "short": "Steelers",
       "notes": {
-        "takes": [
+        "notes": [
           "New coach",
           "Who's the QB?"
         ],
-        "angles": [],
         "schedule": null
       }
     },
@@ -1195,15 +1106,9 @@
       "abbr": "CLE",
       "short": "Browns",
       "notes": {
-        "takes": [
+        "notes": [
           "New coach",
           "There's no way DeShaun returns to Pro Bowl caliber, right?"
-        ],
-        "angles": [
-          {
-            "label": "Worst to first",
-            "price": "+1800"
-          }
         ],
         "schedule": null
       }
@@ -1255,8 +1160,7 @@
       "abbr": "IND",
       "short": "Colts",
       "notes": {
-        "takes": [],
-        "angles": [],
+        "notes": [],
         "schedule": "#5 toughest in 2025 \u2192 #9 easiest in 2026"
       }
     },
@@ -1307,13 +1211,7 @@
       "abbr": "HOU",
       "short": "Texans",
       "notes": {
-        "takes": [],
-        "angles": [
-          {
-            "label": "Miss playoffs",
-            "price": "+136"
-          }
-        ],
+        "notes": [],
         "schedule": null
       }
     },
@@ -1365,8 +1263,7 @@
       "abbr": "JAX",
       "short": "Jaguars",
       "notes": {
-        "takes": [],
-        "angles": [],
+        "notes": [],
         "schedule": null
       }
     },
@@ -1417,18 +1314,12 @@
       "abbr": "TEN",
       "short": "Titans",
       "notes": {
-        "takes": [
+        "notes": [
           "New coach",
           "Added a WR #1 (Tate)",
           "Year 2 for Ward",
           "Always a dumb division",
           "10 wins would be a 7 win jump \u2014 the absolute cap YoY"
-        ],
-        "angles": [
-          {
-            "label": "Worst to first",
-            "price": "+950"
-          }
         ],
         "schedule": "#1 toughest in 2025 \u2192 #13 easiest in 2026"
       }
@@ -1480,8 +1371,7 @@
       "abbr": "BUF",
       "short": "Bills",
       "notes": {
-        "takes": [],
-        "angles": [],
+        "notes": [],
         "schedule": null
       }
     },
@@ -1534,16 +1424,10 @@
       "abbr": "NE",
       "short": "Patriots",
       "notes": {
-        "takes": [
+        "notes": [
           "Could be this year's Commanders \u2014 luck, injuries and schedule all point the same way",
           "Super Bowl hangover",
           "Prime miss-playoffs pick"
-        ],
-        "angles": [
-          {
-            "label": "Miss playoffs",
-            "price": "+176"
-          }
         ],
         "schedule": null
       }
@@ -1595,14 +1479,8 @@
       "abbr": "NYJ",
       "short": "Jets",
       "notes": {
-        "takes": [
+        "notes": [
           "No"
-        ],
-        "angles": [
-          {
-            "label": "Worst to first",
-            "price": "+2500"
-          }
         ],
         "schedule": null
       }
@@ -1654,8 +1532,7 @@
       "abbr": "MIA",
       "short": "Dolphins",
       "notes": {
-        "takes": [],
-        "angles": [],
+        "notes": [],
         "schedule": null
       }
     },
@@ -1706,14 +1583,8 @@
       "abbr": "DEN",
       "short": "Broncos",
       "notes": {
-        "takes": [
+        "notes": [
           "Payton continues to be overrated \u2014 went for it on 4th down in FG range up 7-0 in a game that finished 10-7"
-        ],
-        "angles": [
-          {
-            "label": "Make playoffs",
-            "price": "-146"
-          }
         ],
         "schedule": null
       }
@@ -1766,8 +1637,7 @@
       "abbr": "KC",
       "short": "Chiefs",
       "notes": {
-        "takes": [],
-        "angles": [],
+        "notes": [],
         "schedule": "#7 toughest in 2025 \u2192 #10 easiest in 2026"
       }
     },
@@ -1820,8 +1690,7 @@
       "abbr": "LAC",
       "short": "Chargers",
       "notes": {
-        "takes": [],
-        "angles": [],
+        "notes": [],
         "schedule": null
       }
     },
@@ -1874,15 +1743,9 @@
       "abbr": "LV",
       "short": "Raiders",
       "notes": {
-        "takes": [
+        "notes": [
           "Any history of rookie QBs winning the division?",
           "Solid coaching upgrade (Kubiak from SEA)"
-        ],
-        "angles": [
-          {
-            "label": "Worst to first",
-            "price": "+2000"
-          }
         ],
         "schedule": null
       }
