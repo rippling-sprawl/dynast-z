@@ -57,6 +57,18 @@
            from the conferences and divisions actually present in the data. -->
       <div class="proj-controls" id="proj-controls"></div>
 
+      <!--
+        First-run hint for the team card, modelled on the Scout page's swipe
+        hint: nothing in the table says that a row opens anything, so a pill
+        says it once. It starts `hidden` and the script unhides it only after
+        the rows land and only when the dismissal flag is absent, so a reader
+        who has already met it never sees it flash on load.
+      -->
+      <button type="button" class="bun-hint" id="notes-hint" title="Dismiss" hidden>
+        Select a team for Notes
+        <span class="bun-hint-x" aria-hidden="true">&times;</span>
+      </button>
+
       <div class="bun-table-wrap">
         <table class="bun-table" id="proj-table">
           <thead>
@@ -717,6 +729,7 @@
       modalBody.scrollTop = 0;
       modal.setAttribute('aria-label', name);
       lastOpener = tr;
+      dismissHint();   // the hint has been obeyed; it has nothing left to say
       modal.showModal();
       // The page behind a modal dialog still scrolls in some browsers.
       document.body.classList.add('modal-open');
@@ -749,6 +762,40 @@
       e.preventDefault();
       openCard(tr);
     });
+
+    /* ---------- the first-run hint ----------
+     * A pill above the table saying that a row opens a card, shown until the
+     * reader has either opened one or dismissed the pill. The flag is a plain
+     * per-device localStorage key: this is a one-time nudge about the UI, not
+     * a preference about the data, so it is deliberately neither account-
+     * scoped (unlike the Oven's keys, see scripts/primary/oven-config.js) nor
+     * synced to Supabase. A browser that refuses storage — private mode, an
+     * embedded webview — is treated as already dismissed rather than shown
+     * the hint on every single visit. */
+
+    var HINT_KEY = 'dz_buns_notes_hint_v1';
+    var HINT_FADE_MS = 400;   // must match .bun-hint's opacity transition
+    var hint = document.getElementById('notes-hint');
+
+    function hintDismissed() {
+      try { return localStorage.getItem(HINT_KEY) === '1'; } catch (e) { return true; }
+    }
+
+    function showHint() {
+      if (!hint || hintDismissed()) return;
+      hint.hidden = false;
+    }
+
+    function dismissHint() {
+      if (!hint || hint.hidden) return;
+      try { localStorage.setItem(HINT_KEY, '1'); } catch (e) { /* private mode */ }
+      hint.classList.add('is-hiding');
+      // Pulled out of the flow only after it has faded, so the table slides up
+      // once rather than jumping the moment the pill is clicked.
+      setTimeout(function () { hint.hidden = true; }, HINT_FADE_MS);
+    }
+
+    if (hint) hint.addEventListener('click', dismissHint);
 
     /* One chip row per conference: the conference itself, then its divisions.
      * Division chips carry the qualified token but show only the short label,
@@ -826,6 +873,7 @@
         buildFilters();
         measurePinTop();
         render();
+        showHint();   // only once there are rows for it to point at
       })
       .catch(function () {
         tbody.innerHTML =

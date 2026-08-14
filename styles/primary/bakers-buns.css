@@ -362,6 +362,37 @@
 
 .proj-toggle.is-conf.active { color: #111; border-color: #60a5fa; }
 
+/* The first-run hint. Shaped like a selected filter chip rather than invented
+ * fresh — it sits directly under that row, so a second pill vocabulary here
+ * would read as a third kind of control. It fades on dismissal (see
+ * HINT_FADE_MS in the page script) the way the Scout page's swipe hint does,
+ * and `hidden` has to be re-stated because `display: inline-flex` outranks the
+ * attribute's UA rule. */
+.bun-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  font-family: monospace;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #111;
+  background: #60a5fa;
+  border: 1px solid #60a5fa;
+  border-radius: 999px;
+  padding: 5px 12px;
+  cursor: pointer;
+  transition: opacity 0.4s ease;
+}
+
+.bun-hint[hidden] { display: none; }
+
+.bun-hint.is-hiding { opacity: 0; }
+
+.bun-hint-x { font-size: 13px; line-height: 1; opacity: 0.6; }
+
 
 /* The team column is the logo alone — the name is carried by alt/title, and
  * the mark is quicker to scan and far narrower, which matters because this
