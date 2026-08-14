@@ -647,6 +647,21 @@ body.modal-open { overflow: hidden; }
   color: #666;
 }
 
+/* Pushed to the trailing edge of the head, clear of the close button. */
+.tc-sched-link {
+  margin-left: auto;
+  flex: none;
+  font-family: monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #60a5fa;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.tc-sched-link:hover { color: #8ec0ff; text-decoration: underline; }
+
 .tc-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(215px, 1fr));

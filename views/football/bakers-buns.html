@@ -515,11 +515,9 @@
       var n = t.notes || {};
       var head =
         '<div class="tc-head">' + logo(t, 'tc-logo') +
-        '<div class="tc-id"><h4>' + esc(t.team) + '</h4>' +
-        '<span class="tc-sub">' + esc(t.conf + ' ' + t.div) +
-        ' &middot; score ' + signed(t.score, 2) +
-        ' &middot; O-line #' + t.raw.oLineRank +
-        ' &middot; SoS #' + t.raw.sosRank + '</span></div></div>';
+        '<div class="tc-id"><h4>' + esc(t.team) + '</h4></div>' +
+        '<a class="tc-sched-link" href="/football/schedule?week=all&amp;team=' +
+        esc(t.abbr) + '">Schedule &rarr;</a></div>';
 
       // Offensive line leads the grid: it is the heaviest input into the score,
       // so it reads first. The playoff/division prices are omitted here — they
