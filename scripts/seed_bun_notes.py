@@ -14,8 +14,11 @@ rows rather than duplicating them. Notes an admin has since edited are
 overwritten back to the doc's wording — that is the point of a re-run, but it is
 worth knowing before you do one.
 
-    SUPABASE_URL=... SUPABASE_KEY=... python3 scripts/seed_bun_notes.py --dry-run
-    SUPABASE_URL=... SUPABASE_KEY=... python3 scripts/seed_bun_notes.py
+    python3 scripts/seed_bun_notes.py --dry-run
+    python3 scripts/seed_bun_notes.py
+
+Credentials come from the repo's .env, the same file server.py reads. Passing
+SUPABASE_URL / SUPABASE_KEY in the environment still overrides it.
 """
 import json
 import os
@@ -25,6 +28,15 @@ from datetime import datetime, timezone
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SOURCE = "data/nfl_projections_2026.json"
+
+# Read .env by absolute path rather than by search, so the script works from any
+# working directory. Environment variables already set win, as they should.
+try:
+    from dotenv import load_dotenv
+    load_dotenv(os.path.join(ROOT, ".env"))
+except ImportError:
+    pass
+
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "")
 
@@ -96,7 +108,9 @@ def main():
         return
 
     if not SUPABASE_URL or not SUPABASE_KEY:
-        sys.exit("Set SUPABASE_URL and SUPABASE_KEY first.")
+        sys.exit(f"No Supabase credentials. Expected SUPABASE_URL and SUPABASE_KEY "
+                 f"in the environment or in {os.path.join(ROOT, '.env')} "
+                 f"(pip3 install python-dotenv to read the file).")
 
     req = urllib.request.Request(
         f"{SUPABASE_URL}/rest/v1/bun_notes?on_conflict=id",

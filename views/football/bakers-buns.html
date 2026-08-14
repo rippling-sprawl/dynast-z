@@ -838,6 +838,22 @@
       var el = document.getElementById('league-notes');
       if (!el) return;
 
+      /* The store being unreachable is invisible to a reader — the notes below
+       * are the copy that shipped in the projections file, and they read the
+       * same. It is not invisible to the person who came here to write one:
+       * every control they are looking for is missing, and without this they
+       * have no way to tell that from "the feature isn't deployed". */
+      if (typeof isAdmin === 'function' && isAdmin() && !bunNotesLoaded()) {
+        el.hidden = false;
+        el.innerHTML = '<h3>Notes</h3>' +
+          '<p class="bun-section-note">The note store is not responding, so the ' +
+          'notes below are the copy in <code>data/nfl_projections_2026.json</code> ' +
+          'and nothing can be added or edited. Check <code>/api/bun-notes</code> — ' +
+          'if it reports a 404 from PostgREST, the <code>bun_notes</code> table has ' +
+          'not been created yet (see <code>scripts/sql/bun_notes.sql</code>).</p>';
+        return;
+      }
+
       var list = bunNotesLoaded() ? bunNotesLeague() : [];
       // Nothing to show and nothing to add: the section is not a placeholder,
       // it is a section that only exists once there is league-wide writing.
