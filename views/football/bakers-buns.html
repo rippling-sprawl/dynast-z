@@ -39,7 +39,7 @@
       <a href="/">Home</a><span class="separator">/</span><a href="/football">Football</a><span class="separator">/</span><span>Baker&rsquo;s Buns</span>
     </div>
 
-    <h2>Baker&rsquo;s Buns</h2>
+    <h2>🍞 Baker&rsquo;s Buns</h2>
 
     <nav class="bun-nav">
       <a href="#projections">Projections</a>
@@ -62,7 +62,7 @@
           <thead>
             <tr>
               <th scope="col" class="sortable" data-sort="team"><span class="sr-only">Team</span></th>
-              <th scope="col" class="num sortable" data-sort="score">Score</th>
+              <th scope="col" class="num sortable" data-sort="score">Rank</th>
               <th scope="col" class="num sortable" data-sort="eyeTest">Eye<span class="th-sub">of 10</span></th>
               <th scope="col" class="num sortable" data-sort="oLine">O-Line<span class="th-sub">rank</span></th>
               <th scope="col" class="num sortable" data-sort="sos">SoS<span class="th-sub">rank</span></th>
@@ -70,7 +70,7 @@
               <th scope="col" class="num sortable" data-sort="luck">Luck<span class="th-sub">vs pythag</span></th>
               <th scope="col" class="num sortable" data-sort="make">Make</th>
               <th scope="col" class="num sortable" data-sort="miss">Miss</th>
-              <th scope="col" class="num sortable" data-sort="division">Div<span class="th-sub">odds</span></th>
+              <th scope="col" class="num sortable" data-sort="division">Div</th>
             </tr>
           </thead>
           <tbody id="proj-body">
@@ -444,8 +444,9 @@
       return '<td class="z-cell">' +
         '<span class="z-val ' + luckClass(v) + '" style="--heat:' + heat(v, 'luck') + '">' +
         signed(v, 1) + '</span>' +
-        '<span class="z-raw">' + p.w + '-' + p.l + (p.t ? '-' + p.t : '') +
-        ' / ' + p.pythagW.toFixed(1) + '</span></td>';
+        // The raw line is the pythagorean expectation alone: the actual record
+        // is what the column is measuring against, not a second number to read.
+        '<span class="z-raw">Exp: ' + p.pythagW.toFixed(1) + '</span></td>';
     }
 
     /* ---------- team card (the expanded row) ----------

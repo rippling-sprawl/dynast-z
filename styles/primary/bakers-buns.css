@@ -418,12 +418,15 @@
  * Every rule states its flat colour first and the mix second: a browser
  * without color-mix() drops the mixes and lands on the old two-colour table
  * rather than on unstyled text. */
+/* The pill is an inline-block, so line-height sets its height — which is what
+ * gives the wash room to read as a wash rather than a highlighter stripe. */
 .z-cell .z-val {
   display: inline-block;
   min-width: 42px;
   padding: 1px 6px;
   border-radius: 3px;
   font-size: 12px;
+  line-height: 1.6;
   text-align: right;
 }
 
