@@ -41,6 +41,10 @@
        store behind them is Supabase rather than the JSON below. -->
   <script src="/scripts/components/nfl-pickers.js"></script>
   <script src="/scripts/primary/bun-notes.js"></script>
+  <!-- The Board: the table's model and market columns plotted against each
+       other. Reads the same teams array the table does — see the file header
+       for why the y axis stays in composite score. -->
+  <script src="/scripts/primary/bun-charts.js"></script>
   <script>initPage();</script>
 
   <div class="masters-content">
@@ -52,6 +56,7 @@
 
     <nav class="bun-nav">
       <a href="#projections">Projections</a>
+      <a href="#board">The Board</a>
       <a href="#methodology">Methodology</a>
       <a href="#graphs">Graphs</a>
       <a href="#sources">Sources</a>
@@ -65,6 +70,11 @@
       <!-- Filter chips are built from the loaded teams so they can never drift
            from the conferences and divisions actually present in the data. -->
       <div class="proj-controls" id="proj-controls"></div>
+
+      <!-- What the bar under each Rank number means. Stated once here rather
+           than per row, and built by renderMeta() from the JSON's own weights
+           so the percentages can never disagree with the bars they describe. -->
+      <p class="comp-legend" id="comp-legend"></p>
 
       <!--
         First-run hint for the team card, modelled on the Scout page's swipe
@@ -142,6 +152,28 @@
       </svg>
       <span class="sr-only">Take a note</span>
     </button>
+
+    <!-- ================= THE BOARD =================
+      The payoff of the table, and the reason it sits directly under it rather
+      than down in Graphs with the borrowed images: the table's Rank column is
+      the model and its Make / Miss columns are the market, and until now
+      joining them was left to the reader. Everything here is drawn by
+      scripts/primary/bun-charts.js from the same JSON the table renders — the
+      note, the R², the two lists and the axis bounds are all computed, so
+      nothing in this section can go stale when the sheet is re-exported.
+    -->
+    <section class="bun-section" id="board">
+      <h3>The Board</h3>
+      <p class="bun-section-note" id="board-note"></p>
+
+      <!-- Scrolls sideways below 560px rather than squeezing 32 logos into a
+           phone's width — the same trade .bun-table-wrap makes with the table. -->
+      <div class="board-wrap" id="board-chart-wrap">
+        <div class="board-chart" id="board-chart"></div>
+      </div>
+
+      <div id="board-reads"></div>
+    </section>
 
     <!-- ================= METHODOLOGY ================= -->
     <section class="bun-section" id="methodology">
@@ -390,6 +422,7 @@
 
     var teams = [];
     var coaches = null;   // null until loaded; the block simply never renders without it
+    var weights = {};     // the sheet's own blend, read from the JSON rather than hardcoded
     /* filters: a set of selected tokens, each either a conference ("AFC") or a
      * conference-qualified division ("AFC South"). They combine as a union, so
      * "NFC South" + "AFC South" shows both, and an empty set means no
@@ -475,6 +508,98 @@
       return v > 0.05 ? 'luck-hot' : (v < -0.05 ? 'luck-cold' : 'luck-even');
     }
 
+    /* ---------- score composition ----------
+     * The Rank column used to be the composite and nothing else, which meant a
+     * +0.78 built almost entirely on the offensive line and a +0.78 built
+     * evenly across all four inputs printed as the same cell. The bar under the
+     * number is where that went: one segment per input, sized by its weighted
+     * contribution (weight × z) and stacked outward from a centre line, so the
+     * shape of the row says which inputs earned the score and which fought it.
+     *
+     * Segments always stack in weight order — O-Line, SoS, Eye, Rest — so the
+     * innermost band on either side is always the heaviest input pulling that
+     * way, and the ramp in opacity follows the same order. Direction is which
+     * side of centre a segment falls on, never its colour: see the note in
+     * scripts/primary/bun-charts.js for why nothing on this page may lean on
+     * green-versus-orange alone.
+     *
+     * The segments are the raw weighted contributions and are deliberately not
+     * rescaled to land exactly on the printed score. The JSON rounds each z to
+     * one decimal, so the four re-add to the sheet's score with an error of at
+     * most 0.035 — under 1.2px on this track. Stretching them to close a
+     * sub-pixel gap would be inventing precision the inputs do not have. */
+    var COMP = [
+      { key: 'oLine',   label: 'O-Line' },
+      { key: 'sos',     label: 'SoS' },
+      { key: 'eyeTest', label: 'Eye' },
+      { key: 'rest',    label: 'Rest' }
+    ];
+    // Anything smaller than this is under a pixel wide; drawn, it would be a
+    // rounding artefact rather than a contribution.
+    var COMP_MIN = 0.02;
+    var compSpan = 1;
+
+    function contributions(t) {
+      return COMP.map(function (c, i) {
+        var z = t.z ? t.z[c.key] : null;
+        var w = weights[c.key];
+        return {
+          label: c.label,
+          step: i,
+          v: (z == null || w == null) ? 0 : w * z
+        };
+      });
+    }
+
+    // Like computeHeat(), scaled over the whole 32-team field and never the
+    // filtered view, so a team's bar is the same length in its division as it
+    // is in the full table. The scale is the widest one-sided stack in the
+    // league, so that team's bar just fills its half of the track.
+    function computeComposition() {
+      compSpan = teams.reduce(function (m, t) {
+        var pos = 0, neg = 0;
+        contributions(t).forEach(function (c) {
+          if (c.v > 0) pos += c.v; else neg -= c.v;
+        });
+        return Math.max(m, pos, neg);
+      }, 0) || 1;
+    }
+
+    function compBar(t) {
+      var cs = contributions(t);
+      var offPos = 0, offNeg = 0;
+
+      var segs = cs.map(function (c) {
+        if (Math.abs(c.v) < COMP_MIN) return '';
+        var w = (Math.abs(c.v) / compSpan) * 50;    // % of the full track
+        var left, side, style;
+        // The 2px comes off each segment's outward edge, which is what leaves a
+        // gap between it and the next one out. Which edge that is flips with
+        // the side, so the negative stack pays for it in `left` instead.
+        if (c.v > 0) {
+          left = 50 + offPos; offPos += w; side = 'is-up';
+          style = 'left:' + left.toFixed(2) + '%;width:calc(' + w.toFixed(2) + '% - 2px)';
+        } else {
+          offNeg += w; left = 50 - offNeg; side = 'is-down';
+          style = 'left:calc(' + left.toFixed(2) + '% + 2px);width:calc(' + w.toFixed(2) + '% - 2px)';
+        }
+        return '<span class="comp-seg ' + side + ' step-' + c.step + '" ' +
+          'style="' + style + '" ' +
+          'title="' + esc(c.label) + ' ' + signed(c.v, 2) + '"></span>';
+      }).join('');
+
+      // The alternative text is the same reading the bar gives, biggest mover
+      // first — a screen reader gets the story, not a list of empty spans.
+      var read = cs.filter(function (c) { return Math.abs(c.v) >= COMP_MIN; })
+        .sort(function (a, b) { return Math.abs(b.v) - Math.abs(a.v); })
+        .map(function (c) { return c.label + ' ' + signed(c.v, 2); })
+        .join(', ');
+
+      return '<span class="comp-bar" role="img" aria-label="' +
+        esc(read || 'every input at the league average') + '">' +
+        '<span class="comp-zero" aria-hidden="true"></span>' + segs + '</span>';
+    }
+
     /* ---------- row cells ---------- */
 
     // The raw input beneath each z-score, in the units the sheet recorded it in.
@@ -483,8 +608,12 @@
         '<span class="z-raw">' + esc(rawLabel) + '</span></td>';
     }
 
-    function scoreCell(score) {
-      return '<td class="num score-num">' + signed(score, 2) + '</td>';
+    // Two lines, like the z-cells beside it: the number the sheet published,
+    // and beneath it the four contributions that add up to it.
+    function scoreCell(t) {
+      return '<td class="num score-num">' +
+        '<span class="score-val">' + signed(t.score, 2) + '</span>' +
+        compBar(t) + '</td>';
     }
 
     function luckCell(t) {
@@ -679,7 +808,7 @@
         return '<tr class="proj-row" data-team="' + esc(t.team) + '" tabindex="0" ' +
           'aria-haspopup="dialog">' +
           '<td class="col-team">' + logo(t, 'team-logo') + '</td>' +
-          scoreCell(t.score) +
+          scoreCell(t) +
           zCell('eyeTest', t.z.eyeTest, t.raw.eyeTest) +
           zCell('oLine', t.z.oLine, '#' + t.raw.oLineRank) +
           zCell('sos', t.z.sos, '#' + t.raw.sosRank) +
@@ -994,6 +1123,10 @@
       btn.classList.toggle('active', on);
       btn.setAttribute('aria-pressed', String(on));
       render();
+      // Only the chips redraw The Board. Sorting reorders the table without
+      // changing which teams are on it, and rebuilding 32 logos for a reorder
+      // that cannot move any of them would be work the reader sees as a flicker.
+      renderBoard(teams, matchesFilters);
     });
 
     /* ---------- boot ---------- */
@@ -1009,6 +1142,19 @@
             return '<strong>' + Math.round(p[1] * 100) + '%</strong> ' + esc(p[0]);
           })
           .join(' &middot; ');
+
+      /* The Rank-bar key, in the bar's own stacking order and wearing the same
+       * opacity ramp the segments do, so the swatch a reader matches against is
+       * literally the mark they are matching. */
+      document.getElementById('comp-legend').innerHTML =
+        '<span class="comp-legend-lead">Rank bar</span> — each input’s share of the ' +
+        'score, stacked out from the centre: ' +
+        COMP.map(function (c, i) {
+          var pct = w[c.key] == null ? '' : ' ' + Math.round(w[c.key] * 100) + '%';
+          return '<span class="comp-key"><i class="comp-sw step-' + i + '"></i>' +
+            esc(c.label) + pct + '</span>';
+        }).join('') +
+        '<span class="comp-legend-tail">right of centre lifts the score, left drags it</span>';
 
       var legend = document.getElementById('proj-legend');
       if (d.eyeTestLegend) {
@@ -1040,11 +1186,18 @@
         var d = res[0];
         teams = d.teams || [];
         coaches = res[2];
+        weights = d.weights || {};
         renderMeta(d);
         computeHeat();
+        computeComposition();
         buildFilters();
         measurePinTop();
         render();
+        // The Board reads the same array the table just rendered. It is drawn
+        // after the table because it is the table's payoff, and it is handed
+        // matchesFilters rather than a filtered list: the fit is a property of
+        // the whole field, so a chip dims teams rather than removing them.
+        renderBoard(teams, matchesFilters);
         renderLeagueNotes();
         showHint();   // only once there are rows for it to point at
 

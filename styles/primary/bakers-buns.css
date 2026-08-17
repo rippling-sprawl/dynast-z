@@ -475,8 +475,100 @@
 
 .z-val.flat { color: #8b949e; }
 
-/* Composite score: the value alone. */
+/* Composite score: the number, and beneath it the four contributions that add
+ * up to it. Two lines, matching the z-cells either side of it. */
 .score-num { font-weight: 700; color: #f0f0f0; }
+.score-num .score-val { display: block; line-height: 1.6; }
+
+/* --- Rank composition bar ---
+ * A diverging stack centred on zero: each input's weight × z, laid outward
+ * from the middle in weight order. Which side of centre a segment sits on is
+ * the whole direction encoding — the colours reinforce it and are never asked
+ * to carry it, because this page's green and orange are 5.7 ΔE apart under
+ * deuteranopia and a bar, unlike the table cells, prints no number of its own.
+ *
+ * Which input a segment is comes from two redundant channels: its place in the
+ * stack (always O-Line, SoS, Eye, Rest, outward) and the opacity ramp below,
+ * which runs in the same order. The key above the table shows both. */
+.comp-bar {
+  position: relative;
+  display: block;
+  width: 76px;
+  height: 7px;
+  margin: 2px 0 1px auto;
+  border-radius: 2px;
+  background: #1b1b1b;
+}
+
+/* The centre line the segments are measured from, and the only thing on the
+ * bar that says which way is up. It has to be painted over the stack rather
+ * than under it: a team with contributions on both sides butts a segment
+ * against zero from each direction, and a line behind them is a line you
+ * cannot see — which costs the bar its whole direction encoding the moment
+ * colour is taken away. Hence the z-index, and the 2px of overhang top and
+ * bottom that keeps it findable at a glance. */
+.comp-zero {
+  position: absolute;
+  z-index: 1;
+  left: 50%;
+  top: -2px;
+  bottom: -2px;
+  width: 1px;
+  background: #6e7681;
+}
+
+/* Each segment is inset 2px on its outer edge, which is what separates it from
+ * the next one out; min-width keeps the smallest contributions from collapsing
+ * to nothing once that inset is taken off. */
+.comp-seg {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  min-width: 3px;
+  border-radius: 1px;
+}
+
+.comp-seg.is-up { background: #3fb950; }
+.comp-seg.is-down { background: #f0883e; }
+
+/* The weight ramp, shared by the bar and its key. Step 0 is O-Line at 40% and
+ * runs down to Rest at 15%, so a heavier input is always the more solid band. */
+.comp-seg.step-0, .comp-sw.step-0 { opacity: 1; }
+.comp-seg.step-1, .comp-sw.step-1 { opacity: 0.78; }
+.comp-seg.step-2, .comp-sw.step-2 { opacity: 0.58; }
+.comp-seg.step-3, .comp-sw.step-3 { opacity: 0.42; }
+
+/* --- the key above the table --- */
+.comp-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  margin: 0 0 12px;
+  font-family: monospace;
+  font-size: 11px;
+  line-height: 1.5;
+  color: #8b949e;
+}
+
+.comp-legend-lead { color: #c9d1d9; font-weight: 700; }
+.comp-legend-tail { color: #666; }
+
+.comp-key {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+
+/* Green, because the key describes the shape of a lift; a segment that drags
+ * is the same band on the other side of centre, which the tail sentence says. */
+.comp-sw {
+  width: 12px;
+  height: 7px;
+  border-radius: 1px;
+  background: #3fb950;
+}
 
 .proj-empty { padding: 16px 0; font-size: 12px; font-family: monospace; color: #555; }
 
@@ -1135,3 +1227,137 @@ body.modal-open .bn-fab { display: none; }
 @media (prefers-reduced-motion: reduce) {
   .bn-modal[open] { animation: none; }
 }
+
+/* =========================================================================
+   THE BOARD — model vs market
+   The chart itself is built in scripts/primary/bun-charts.js, which owns every
+   colour inside the <svg> because it is measuring pixels there anyway. What is
+   left for the stylesheet is the frame around it: the scroll wrapper, the
+   tooltip, and the two read-out lists underneath.
+   ========================================================================= */
+
+/* Below the chart's 560px floor this scrolls rather than letting 32 logos pile
+   into a phone's width — the same trade .bun-table-wrap makes with the table.
+   Positioned, because the tooltip is placed against it. */
+.board-wrap {
+  position: relative;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 4px 0 2px;
+  background: #1a1a1a;
+  border: 1px solid #1f1f1f;
+  border-radius: 6px;
+}
+
+.board-chart { position: relative; }
+.board-svg { display: block; }
+
+.board-empty {
+  padding: 24px 12px;
+  font-family: monospace;
+  font-size: 12px;
+  color: #555;
+  text-align: center;
+}
+
+/* A logo the filter chips have excluded. It keeps its place — the field is the
+   point of the chart — but stops competing with the teams that were asked for. */
+.board-pt.is-off { opacity: 0.16; }
+
+.board-pt { cursor: default; }
+.board-pt:focus-visible { outline: 1px solid #60a5fa; outline-offset: 2px; }
+
+/* --- tooltip --- */
+.board-tip {
+  position: absolute;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 132px;
+  padding: 6px 8px;
+  pointer-events: none;
+  background: #141414;
+  border: 1px solid #2a2a2a;
+  border-radius: 5px;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.5);
+  font-family: monospace;
+  font-size: 10px;
+  line-height: 1.5;
+  color: #8b949e;
+}
+
+.board-tip[hidden] { display: none; }
+.board-tip strong { font-size: 11px; color: #f0f0f0; }
+.board-tip b { color: #c9d1d9; font-weight: 700; }
+.board-tip .is-over b { color: #3fb950; }
+.board-tip .is-under b { color: #f0883e; }
+
+/* --- the read-out beneath the chart ---
+   The chart's text equivalent, and the part most people will quote. Same
+   auto-fit grid as the team card, so the two columns fold to one at the same
+   width the rest of the page does. */
+.board-reads {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.board-read {
+  padding: 10px 12px 12px;
+  background: #1a1a1a;
+  border: 1px solid #1f1f1f;
+  border-left: 3px solid #2a2a2a;
+  border-radius: 4px;
+}
+
+.board-read.is-over { border-left-color: #2ea043; }
+.board-read.is-under { border-left-color: #f0883e; }
+
+.board-read h4 {
+  margin: 0 0 3px;
+  font-family: monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.board-read.is-over h4 { color: #3fb950; }
+.board-read.is-under h4 { color: #f0883e; }
+
+.board-read p {
+  margin: 0 0 8px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: #666;
+}
+
+.board-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.board-list li {
+  display: grid;
+  grid-template-columns: 18px 1fr auto auto;
+  align-items: center;
+  gap: 8px;
+  font-family: monospace;
+  font-size: 11px;
+}
+
+.board-list img { width: 18px; height: 18px; }
+.board-list .board-abbr { color: #c9d1d9; }
+
+/* The residual is the number the list is sorted on, so it is the one that gets
+   the weight; the market price beside it is context and stays recessive. */
+.board-list .board-resid { font-weight: 700; }
+.board-list.is-over .board-resid { color: #3fb950; }
+.board-list.is-under .board-resid { color: #f0883e; }
+.board-list .board-mkt { min-width: 30px; text-align: right; color: #555; }
