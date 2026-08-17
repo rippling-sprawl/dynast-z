@@ -683,6 +683,7 @@ body.modal-open { overflow: hidden; }
 .tc-block.is-inj h5 { color: #d29922; }
 .tc-block.is-pro h5 { color: #2ea043; }
 .tc-block.is-con h5 { color: #f0883e; }
+.tc-block.is-coach h5 { color: #a371f7; }
 
 .tc-block ul { margin: 0; padding-left: 15px; }
 
@@ -705,6 +706,22 @@ body.modal-open { overflow: hidden; }
 .tc-block .tc-block { margin-top: 8px; }
 
 .tc-verdict { color: #e1e4e8; }
+
+/* The coaching staff: three fixed rows rather than a list of findings, so the
+ * role carries the marker's job and the bullets come off. The prior job is
+ * greyed — it is the footnote to the name, not a second name. */
+.tc-coaches { list-style: none; padding-left: 0; }
+
+.tc-role {
+  font-family: monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: #8b949e;
+  margin-right: 4px;
+}
+
+.tc-coach-prev { color: #8b949e; }
 
 /* The 2025 luck call: the first bullet in the notes list, tinted like its Luck
  * cell. Two classes, so it outranks the plain `.tc-block li` colour. */

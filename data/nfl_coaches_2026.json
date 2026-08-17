@@ -1,0 +1,171 @@
+{
+  "season": 2026,
+  "note": "Head coach, offensive coordinator and defensive coordinator for each team. `since` is the year the coach took the role; `prev` is their prior coaching job, carried only for coaches who arrived in 2026. The head coach list has no previous-position column, so `hc` never carries `prev`.",
+  "sources": [
+    "https://en.wikipedia.org/wiki/List_of_current_NFL_head_coaches",
+    "https://en.wikipedia.org/wiki/List_of_current_NFL_offensive_coordinators",
+    "https://en.wikipedia.org/wiki/List_of_current_NFL_defensive_coordinators"
+  ],
+  "teams": {
+    "ARI": {
+      "hc": { "name": "Mike LaFleur", "since": 2026 },
+      "oc": { "name": "Nathaniel Hackett", "since": 2026, "prev": "GB defensive analyst" },
+      "dc": { "name": "Nick Rallis", "since": 2023 }
+    },
+    "ATL": {
+      "hc": { "name": "Kevin Stefanski", "since": 2026 },
+      "oc": { "name": "Tommy Rees", "since": 2026, "prev": "CLE OC" },
+      "dc": { "name": "Jeff Ulbrich", "since": 2025 }
+    },
+    "BAL": {
+      "hc": { "name": "Jesse Minter", "since": 2026 },
+      "oc": { "name": "Declan Doyle", "since": 2026, "prev": "CHI OC" },
+      "dc": { "name": "Anthony Weaver", "since": 2026, "prev": "MIA DC" }
+    },
+    "BUF": {
+      "hc": { "name": "Joe Brady", "since": 2026 },
+      "oc": { "name": "Pete Carmichael Jr.", "since": 2026, "prev": "DEN sr. offensive asst." },
+      "dc": { "name": "Jim Leonhard", "since": 2026, "prev": "DEN asst. HC & def. pass game coord." }
+    },
+    "CAR": {
+      "hc": { "name": "Dave Canales", "since": 2024 },
+      "oc": { "name": "Brad Idzik", "since": 2024 },
+      "dc": { "name": "Ejiro Evero", "since": 2023 }
+    },
+    "CHI": {
+      "hc": { "name": "Ben Johnson", "since": 2025 },
+      "oc": { "name": "Press Taylor", "since": 2026, "prev": "promoted from pass game coord." },
+      "dc": { "name": "Dennis Allen", "since": 2025 }
+    },
+    "CIN": {
+      "hc": { "name": "Zac Taylor", "since": 2019 },
+      "oc": { "name": "Dan Pitcher", "since": 2024 },
+      "dc": { "name": "Al Golden", "since": 2025 }
+    },
+    "CLE": {
+      "hc": { "name": "Todd Monken", "since": 2026 },
+      "oc": { "name": "Travis Switzer", "since": 2026, "prev": "BAL run game coord." },
+      "dc": { "name": "Mike Rutenberg", "since": 2026, "prev": "ATL def. pass game coord." }
+    },
+    "DAL": {
+      "hc": { "name": "Brian Schottenheimer", "since": 2025 },
+      "oc": { "name": "Klayton Adams", "since": 2025 },
+      "dc": { "name": "Christian Parker", "since": 2026, "prev": "PHI DB coach" }
+    },
+    "DEN": {
+      "hc": { "name": "Sean Payton", "since": 2023 },
+      "oc": { "name": "Davis Webb", "since": 2026, "prev": "promoted from QB coach & pass game coord." },
+      "dc": { "name": "Vance Joseph", "since": 2023 }
+    },
+    "DET": {
+      "hc": { "name": "Dan Campbell", "since": 2021 },
+      "oc": { "name": "Drew Petzing", "since": 2026, "prev": "ARI OC" },
+      "dc": { "name": "Kelvin Sheppard", "since": 2025 }
+    },
+    "GB": {
+      "hc": { "name": "Matt LaFleur", "since": 2019 },
+      "oc": { "name": "Adam Stenavich", "since": 2022 },
+      "dc": { "name": "Jonathan Gannon", "since": 2026, "prev": "ARI HC" }
+    },
+    "HOU": {
+      "hc": { "name": "DeMeco Ryans", "since": 2023 },
+      "oc": { "name": "Nick Caley", "since": 2025 },
+      "dc": { "name": "Matt Burke", "since": 2023 }
+    },
+    "IND": {
+      "hc": { "name": "Shane Steichen", "since": 2023 },
+      "oc": { "name": "Jim Bob Cooter", "since": 2023 },
+      "dc": { "name": "Lou Anarumo", "since": 2025 }
+    },
+    "JAX": {
+      "hc": { "name": "Liam Coen", "since": 2025 },
+      "oc": { "name": "Grant Udinski", "since": 2025 },
+      "dc": { "name": "Anthony Campanile", "since": 2025 }
+    },
+    "KC": {
+      "hc": { "name": "Andy Reid", "since": 2013 },
+      "oc": { "name": "Eric Bieniemy", "since": 2026, "prev": "CHI RB coach" },
+      "dc": { "name": "Steve Spagnuolo", "since": 2019 }
+    },
+    "LV": {
+      "hc": { "name": "Klint Kubiak", "since": 2026 },
+      "oc": { "name": "Andrew Janocko", "since": 2026, "prev": "SEA QB coach" },
+      "dc": { "name": "Rob Leonard", "since": 2026, "prev": "promoted from DL coach" }
+    },
+    "LAC": {
+      "hc": { "name": "Jim Harbaugh", "since": 2024 },
+      "oc": { "name": "Mike McDaniel", "since": 2026, "prev": "MIA HC" },
+      "dc": { "name": "Chris O'Leary", "since": 2026, "prev": "Western Michigan DC" }
+    },
+    "LAR": {
+      "hc": { "name": "Sean McVay", "since": 2017 },
+      "oc": { "name": "Nathan Scheelhaase", "since": 2026, "prev": "promoted from pass game coord." },
+      "dc": { "name": "Chris Shula", "since": 2024 }
+    },
+    "MIA": {
+      "hc": { "name": "Jeff Hafley", "since": 2026 },
+      "oc": { "name": "Bobby Slowik", "since": 2026, "prev": "promoted from sr. pass game coord." },
+      "dc": { "name": "Sean Duggan", "since": 2026, "prev": "GB LB coach" }
+    },
+    "MIN": {
+      "hc": { "name": "Kevin O'Connell", "since": 2022 },
+      "oc": { "name": "Wes Phillips", "since": 2022 },
+      "dc": { "name": "Brian Flores", "since": 2023 }
+    },
+    "NE": {
+      "hc": { "name": "Mike Vrabel", "since": 2025 },
+      "oc": { "name": "Josh McDaniels", "since": 2025 },
+      "dc": { "name": "Zak Kuhr", "since": 2026, "prev": "promoted from inside LB coach" }
+    },
+    "NO": {
+      "hc": { "name": "Kellen Moore", "since": 2025 },
+      "oc": { "name": "Doug Nussmeier", "since": 2025 },
+      "dc": { "name": "Brandon Staley", "since": 2025 }
+    },
+    "NYG": {
+      "hc": { "name": "John Harbaugh", "since": 2026 },
+      "oc": { "name": "Matt Nagy", "since": 2026, "prev": "KC OC" },
+      "dc": { "name": "Dennard Wilson", "since": 2026, "prev": "TEN DC" }
+    },
+    "NYJ": {
+      "hc": { "name": "Aaron Glenn", "since": 2025 },
+      "oc": { "name": "Frank Reich", "since": 2026, "prev": "Stanford interim HC" },
+      "dc": { "name": "Brian Duker", "since": 2026, "prev": "MIA secondary coach & pass game coord." }
+    },
+    "PHI": {
+      "hc": { "name": "Nick Sirianni", "since": 2021 },
+      "oc": { "name": "Sean Mannion", "since": 2026, "prev": "GB QB coach" },
+      "dc": { "name": "Vic Fangio", "since": 2024 }
+    },
+    "PIT": {
+      "hc": { "name": "Mike McCarthy", "since": 2026 },
+      "oc": { "name": "Brian Angelichio", "since": 2026, "prev": "MIN TE coach & pass game coord." },
+      "dc": { "name": "Patrick Graham", "since": 2026, "prev": "LV DC" }
+    },
+    "SF": {
+      "hc": { "name": "Kyle Shanahan", "since": 2017 },
+      "oc": { "name": "Klay Kubiak", "since": 2025 },
+      "dc": { "name": "Raheem Morris", "since": 2026, "prev": "ATL HC" }
+    },
+    "SEA": {
+      "hc": { "name": "Mike Macdonald", "since": 2024 },
+      "oc": { "name": "Brian Fleury", "since": 2026, "prev": "SF TE coach & run game coord." },
+      "dc": { "name": "Aden Durde", "since": 2024 }
+    },
+    "TB": {
+      "hc": { "name": "Todd Bowles", "since": 2022 },
+      "oc": { "name": "Zac Robinson", "since": 2026, "prev": "ATL OC" },
+      "dc": { "name": "Todd Bowles", "since": 2019 }
+    },
+    "TEN": {
+      "hc": { "name": "Robert Saleh", "since": 2026 },
+      "oc": { "name": "Brian Daboll", "since": 2026, "prev": "NYG HC" },
+      "dc": { "name": "Gus Bradley", "since": 2026, "prev": "SF asst. HC" }
+    },
+    "WSH": {
+      "hc": { "name": "Dan Quinn", "since": 2024 },
+      "oc": { "name": "David Blough", "since": 2026, "prev": "promoted from asst. QB coach" },
+      "dc": { "name": "Daronte Jones", "since": 2026, "prev": "MIN DB coach" }
+    }
+  }
+}
