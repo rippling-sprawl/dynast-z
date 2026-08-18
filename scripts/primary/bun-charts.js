@@ -21,10 +21,10 @@
      result.
 
   2. Direction is carried by which side of the line a team sits on, and only
-     after that by colour. The page's green and orange are 5.7 ΔE apart under
+     after that by color. The page's green and orange are 5.7 ΔE apart under
      deuteranopia, below the safe floor; every tinted cell in the table gets
-     away with it because it also prints a signed number beside the colour. A
-     chart mark prints nothing, so here position does the work and the colour
+     away with it because it also prints a signed number beside the color. A
+     chart mark prints nothing, so here position does the work and the color
      is along for the ride.
 
   3. The mark is the team's logo rather than a dot with a label. Thirty-two
@@ -78,12 +78,19 @@
     return a / (a + b);
   }
 
-  function points(teams) {
+  /* The y value comes from an accessor rather than straight off `t.score`,
+   * because the page lets a reader re-weight the blend. When they do, the
+   * sheet's published score is no longer the model's answer and everything
+   * derived from it here — the fit, every residual, both lists — has to be
+   * built from theirs instead. Callers that have no such notion pass nothing
+   * and get `t.score`. */
+  function points(teams, scoreOf) {
     var out = [];
     (teams || []).forEach(function (t) {
       var p = marketProb(t);
-      if (p == null || t.score == null) return;
-      out.push({ abbr: t.abbr, team: t.team, conf: t.conf, div: t.div, x: p, y: t.score });
+      var s = scoreOf ? scoreOf(t) : t.score;
+      if (p == null || s == null) return;
+      out.push({ abbr: t.abbr, team: t.team, conf: t.conf, div: t.div, x: p, y: s });
     });
     return out;
   }
@@ -127,8 +134,8 @@
 
   /* ---------- the chart ---------- */
 
-  function draw(host, teams, matches) {
-    var pts = points(teams);
+  function draw(host, teams, matches, scoreOf) {
+    var pts = points(teams, scoreOf);
     var f = fit(pts);
     if (!pts.length || !f) {
       host.innerHTML = '<p class="board-empty">Not enough priced teams to plot.</p>';
@@ -150,7 +157,7 @@
     }
     xhi = Math.min(1, Math.ceil((xhi + 0.02) * 5) / 5);
     // Symmetric about zero: the axis is a z-score blend whose midpoint is the
-    // league average, and an asymmetric one would put that average off-centre.
+    // league average, and an asymmetric one would put that average off-center.
     ylim = Math.ceil((ylim + 0.05) * 4) / 4;
 
     var sx = function (p) { return x0 + (p / xhi) * plotW; };
@@ -184,7 +191,7 @@
     }));
 
     // --- corner annotations: what each side of the line means ---
-    svg.push(svgText(x0 + 10, yTop + 15, 'model likes · market hasn’t', {
+    svg.push(svgText(x0 + 10, yTop + 15, 'model likes · market doesn’t', {
       size: 9, fill: GREEN, opacity: '0.6'
     }));
     svg.push(svgText(x1 - 10, yBot - 8, 'market likes · model doesn’t', {
@@ -248,7 +255,7 @@
    * numbers above it the way a hand-typed list would. */
   function summary(pts) {
     var by = pts.slice().sort(function (a, b) { return b.resid - a.resid; });
-    var n = Math.min(4, Math.floor(by.length / 2));
+    var n = Math.min(5, Math.floor(by.length / 2));
 
     function chunk(list, cls) {
       return '<ol class="board-list ' + cls + '">' + list.map(function (d) {
@@ -260,7 +267,7 @@
     }
 
     return '<div class="board-reads">' +
-      '<div class="board-read is-over"><h4>Model likes · market hasn’t</h4>' +
+      '<div class="board-read is-over"><h4>Model likes · market doesn’t</h4>' +
       '<p>Rated well above what the price implies for teams at that score.</p>' +
       chunk(by.slice(0, n), 'is-over') + '</div>' +
       '<div class="board-read is-under"><h4>Market likes · model doesn’t</h4>' +
@@ -316,9 +323,9 @@
 
   /* ---------- public ---------- */
 
-  var cache = { teams: null, matches: null, hideTip: null };
+  var cache = { teams: null, matches: null, scoreOf: null, hideTip: null };
 
-  function renderBoard(teams, matches) {
+  function renderBoard(teams, matches, scoreOf) {
     var wrap = document.getElementById('board-chart-wrap');
     var host = document.getElementById('board-chart');
     var reads = document.getElementById('board-reads');
@@ -327,9 +334,10 @@
 
     cache.teams = teams;
     cache.matches = matches;
+    cache.scoreOf = scoreOf;
     if (cache.hideTip) cache.hideTip();
 
-    var out = draw(host, teams, matches);
+    var out = draw(host, teams, matches, scoreOf);
     if (!out) return;
 
     if (!cache.hideTip && wrap) cache.hideTip = initTip(wrap, host);
@@ -351,7 +359,7 @@
     if (!cache.teams) return;
     clearTimeout(resizeTimer);
     resizeTimer = setTimeout(function () {
-      renderBoard(cache.teams, cache.matches);
+      renderBoard(cache.teams, cache.matches, cache.scoreOf);
     }, 150);
   });
 

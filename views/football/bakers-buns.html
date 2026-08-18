@@ -20,8 +20,9 @@
   offensive line, and the doc's notes on it) lives in one place: the row it
   owns in the Projections table, expanded.
 
-  What sits outside that table is only how the score is built (Methodology) and
-  where the numbers came from (Sources).
+  What sits outside that table is only where the numbers came from (Sources).
+  How the score is built is a page of its own now, /football/bakers-buns/methodology,
+  linked from under the heading — it is read once, not returned to.
 
   It is now a real note-taking surface: an admin files a note against a team and
   a week, and it renders into that team's card. The store is Supabase, not this
@@ -57,23 +58,44 @@
     <nav class="bun-nav">
       <a href="#projections">Projections</a>
       <a href="#board">The Board</a>
-      <a href="#methodology">Methodology</a>
       <a href="#graphs">Graphs</a>
       <a href="#sources">Sources</a>
     </nav>
 
     <!-- ================= PROJECTIONS ================= -->
     <section class="bun-section" id="projections">
-      <h3>2026 Projections</h3>
-      <p class="bun-section-note" id="proj-note"></p>
+      <!--
+        The heading carries the one control that changes what the table means.
+        Wrapped in a row rather than left as a bare <h3> because .bun-section > h3
+        owns the underline, so the rule has to be drawn by the row instead —
+        see .bun-head-row in the stylesheet.
+      -->
+      <div class="bun-head-row">
+        <h3>2026 Projections</h3>
+        <span class="wt-flag" id="wt-flag" hidden
+              title="The score below is being blended with your own weights, not the sheet's.">custom</span>
+        <button type="button" class="wt-edit" id="wt-edit" aria-haspopup="dialog" title="Edit weights">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" aria-hidden="true">
+            <path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3"></path>
+            <path d="M1 14h6M9 8h6M17 16h6"></path>
+          </svg>
+          <span class="sr-only">Edit weights</span>
+        </button>
+      </div>
+      <!-- The one line under the heading is the way into how the Rank column
+           was built. Methodology is not a section here any more and not a nav
+           pill either: it is the answer to a question the table raises, asked
+           once, so it has its own route and the table links out to it. -->
+      <p class="bun-section-note"><a href="/football/bakers-buns/methodology">Methodology</a></p>
 
       <!-- Filter chips are built from the loaded teams so they can never drift
            from the conferences and divisions actually present in the data. -->
       <div class="proj-controls" id="proj-controls"></div>
 
       <!-- What the bar under each Rank number means. Stated once here rather
-           than per row, and built by renderMeta() from the JSON's own weights
-           so the percentages can never disagree with the bars they describe. -->
+           than per row, and built by renderWeightText() from the JSON's own
+           weights so the percentages can never disagree with the bars. -->
       <p class="comp-legend" id="comp-legend"></p>
 
       <!--
@@ -122,7 +144,7 @@
         The team card opens here, not as a row inside the table. The table
         scrolls sideways on a phone, and a card rendered inside it slid off with
         the columns; a dialog is anchored to the viewport instead, so the notes
-        stay put and wrap to the screen width. Centred on desktop, a bottom
+        stay put and wrap to the screen width. centerd on desktop, a bottom
         sheet on mobile.
       -->
       <dialog class="tc-modal" id="team-modal" aria-label="Team card">
@@ -153,6 +175,47 @@
       <span class="sr-only">Take a note</span>
     </button>
 
+    <!--
+      Edit weights. The blend is the one thing on this page that is a judgement
+      rather than a source — PFF's ranking is PFF's, but 40% is somebody's
+      opinion — so it is the one thing a reader is handed to argue with. Saving
+      recomputes the score from their weights, which is why the dialog says so
+      plainly: past that point the Rank column is no longer the number the sheet
+      published, and the "custom" flag by the heading stays up to say so.
+
+      The four must total 100%. Save stays disabled until they do rather than
+      normalising them silently — a reader who typed 40/30/20/20 meant something
+      by it, and having it quietly become 36/27/18/18 would be a worse surprise
+      than being told to fix it.
+
+      Structure and buttons are the note dialog's (.bn-modal and friends); only
+      the slider rows are new.
+    -->
+    <dialog class="bn-modal wt-modal" id="wt-modal" aria-labelledby="wt-title">
+      <div class="bn-head">
+        <h3 class="bn-title" id="wt-title">Edit weights</h3>
+        <button type="button" class="bn-close" data-close aria-label="Close">&times;</button>
+      </div>
+
+      <div class="bn-body">
+        <p class="wt-intro">
+          How much each input counts toward the score. Saving stores them on this
+          device and recomputes the Rank column and The Board from them &mdash; the
+          score stops being the sheet&rsquo;s published number and becomes yours.
+        </p>
+
+        <div class="wt-rows" id="wt-rows"></div>
+
+        <p class="wt-total" id="wt-total" role="status"></p>
+      </div>
+
+      <div class="bn-actions">
+        <button type="button" class="bn-btn" id="wt-reset">Reset to sheet</button>
+        <button type="button" class="bn-btn" data-close>Cancel</button>
+        <button type="button" class="bn-btn is-primary" id="wt-save">Save</button>
+      </div>
+    </dialog>
+
     <!-- ================= THE BOARD =================
       The payoff of the table, and the reason it sits directly under it rather
       than down in Graphs with the borrowed images: the table's Rank column is
@@ -173,75 +236,6 @@
       </div>
 
       <div id="board-reads"></div>
-    </section>
-
-    <!-- ================= METHODOLOGY ================= -->
-    <section class="bun-section" id="methodology">
-      <h3>Methodology</h3>
-
-      <div class="bun-grid">
-        <article class="note accent-info">
-          <h4>How the score is built</h4>
-          <span class="note-meta">Weighted z-scores</span>
-          <p id="proj-weights"></p>
-          <p>
-            Each input is converted to a z-score against the 32-team field, then
-            blended. O-Line and SoS ranks are inverted first, so a positive
-            z-score always means &ldquo;better than average.&rdquo;
-          </p>
-          <p class="note-take" id="proj-legend"></p>
-        </article>
-
-        <article class="note accent-good">
-          <h4>Where the inputs come from</h4>
-          <span class="note-meta">Verified against the sources</span>
-          <ul>
-            <li><strong>O-Line</strong> &mdash; the PFF 2026 ranking, 1&ndash;32, matching all 32 rows exactly</li>
-            <li><strong>SoS</strong> &mdash; Sharp Football&rsquo;s odds-based strength of schedule; the five easiest and hardest match exactly</li>
-            <li><strong>Rest</strong> &mdash; Sharp Football&rsquo;s net rest edge in days (Bears +15 to Chargers &minus;24)</li>
-            <li><strong>Eye Test</strong> &mdash; manual, 0&ndash;10</li>
-          </ul>
-        </article>
-
-        <!-- The evidence for the heaviest weight in the score, and the only
-             thing on the page that back-tests it. The chart itself is in
-             Graphs; this is what it says. -->
-        <article class="note accent-info">
-          <h4>Why O-Line carries the most weight</h4>
-          <span class="note-meta">Preseason rank vs playoffs, 2016&ndash;2025</span>
-          <p>
-            Ten years of PFF&rsquo;s preseason ranking, sorted into quartiles and
-            counted on who actually made the playoffs:
-          </p>
-          <ul>
-            <li><strong>Ranks 1&ndash;8</strong> &mdash; 59% made it (the top four alone: 65%)</li>
-            <li><strong>9&ndash;16</strong> &mdash; 48%</li>
-            <li><strong>17&ndash;24</strong> &mdash; 33%</li>
-            <li><strong>25&ndash;32</strong> &mdash; 26%</li>
-          </ul>
-          <p class="note-take">
-            <strong>Edge</strong> in the chart is that quartile base rate minus
-            what FanDuel&rsquo;s price implies (8/13/26), against the raw number
-            rather than a de-vigged one. The widest disagreements: Cardinals
-            <span class="odds odds-plain">+28%</span> and Jets
-            <span class="odds odds-plain">+21%</span> to make, Ravens
-            <span class="odds odds-plain">+39%</span> and Texans
-            <span class="odds odds-plain">+35%</span> to miss. See
-            <a href="#graphs">Graphs</a>.
-          </p>
-        </article>
-
-        <article class="note accent-warn">
-          <h4>Reading the colours</h4>
-          <ul>
-            <li><span class="z-val pos">Green</span> / <span class="z-val neg">orange</span> on the metric columns: better or worse than the 32-team average</li>
-            <li>The colour is a heat map, not a switch &mdash; it deepens with distance from that average, scaled to each column&rsquo;s own spread, so the strongest tint in a column is that column&rsquo;s most extreme team</li>
-            <li><span class="z-val luck-hot">Amber</span> on Luck: won more than their points implied, so due to regress</li>
-            <li><span class="z-val luck-cold">Blue</span> on Luck: won fewer, so due to bounce back</li>
-            <li>Odds columns are left uncoloured &mdash; a plus price means opposite things on Make and Miss</li>
-          </ul>
-        </article>
-      </div>
     </section>
 
     <!-- ================= APPENDIX | GRAPHS ================= -->
@@ -444,10 +438,10 @@
     }
 
     /* American odds: always signed, thousands-separated, and deliberately NOT
-     * colour-coded. The heat map covers the metric columns, where a positive
+     * colors-coded. The heat map covers the metric columns, where a positive
      * always means "better than average". Odds do not work that way: a plus
      * price on Make means unlikely to make, while a plus price on Miss means
-     * unlikely to miss, so colouring both green would read as good news for
+     * unlikely to miss, so colorsing both green would read as good news for
      * opposite outcomes. */
     function fmtOdds(n) {
       if (n == null) return '<span class="muted">&mdash;</span>';
@@ -456,15 +450,15 @@
     }
 
     /* ---------- heat map ----------
-     * Every coloured metric is scaled to its own column's spread rather than
+     * Every colorsed metric is scaled to its own column's spread rather than
      * simply being green above zero and orange below it: the deepest green in
      * a column belongs to that column's best team, and a value a hair above
      * average reads as barely-tinted. The scale is computed over the full
-     * 32-team field, never the filtered view, so a team keeps the same colour
+     * 32-team field, never the filtered view, so a team keeps the same colors
      * when you narrow the table to one division.
      *
      * The intensity is handed to CSS as --heat (0..1) and mixed there, so the
-     * palette stays in the stylesheet with the rest of the colours. */
+     * palette stays in the stylesheet with the rest of the colorss. */
     var HEAT_KEYS = ['eyeTest', 'oLine', 'sos', 'rest'];
     var heatMax = {};
 
@@ -503,7 +497,7 @@
     // The palette is inverted against the z-score columns on purpose: a big
     // positive is luck that tends to regress, so it warns rather than praises.
     // The ±1 line still marks a regression call in the card note; in the table
-    // the colour is continuous like every other column.
+    // the colors is continuous like every other column.
     function luckClass(v) {
       return v > 0.05 ? 'luck-hot' : (v < -0.05 ? 'luck-cold' : 'luck-even');
     }
@@ -513,13 +507,13 @@
      * +0.78 built almost entirely on the offensive line and a +0.78 built
      * evenly across all four inputs printed as the same cell. The bar under the
      * number is where that went: one segment per input, sized by its weighted
-     * contribution (weight × z) and stacked outward from a centre line, so the
+     * contribution (weight × z) and stacked outward from a center line, so the
      * shape of the row says which inputs earned the score and which fought it.
      *
      * Segments always stack in weight order — O-Line, SoS, Eye, Rest — so the
      * innermost band on either side is always the heaviest input pulling that
      * way, and the ramp in opacity follows the same order. Direction is which
-     * side of centre a segment falls on, never its colour: see the note in
+     * side of center a segment falls on, never its colors: see the note in
      * scripts/primary/bun-charts.js for why nothing on this page may lean on
      * green-versus-orange alone.
      *
@@ -529,15 +523,75 @@
      * most 0.035 — under 1.2px on this track. Stretching them to close a
      * sub-pixel gap would be inventing precision the inputs do not have. */
     var COMP = [
-      { key: 'oLine',   label: 'O-Line' },
-      { key: 'sos',     label: 'SoS' },
-      { key: 'eyeTest', label: 'Eye' },
-      { key: 'rest',    label: 'Rest' }
+      { key: 'oLine',   label: 'O-Line', full: 'O-Line' },
+      { key: 'sos',     label: 'SoS',    full: 'SoS' },
+      { key: 'eyeTest', label: 'Eye',    full: 'Eye Test' },
+      { key: 'rest',    label: 'Rest',   full: 'Rest' }
     ];
     // Anything smaller than this is under a pixel wide; drawn, it would be a
     // rounding artefact rather than a contribution.
     var COMP_MIN = 0.02;
     var compSpan = 1;
+
+    /* ---------- whose weights ----------
+     * The sheet ships a blend, and a reader may disagree with it. baseWeights
+     * is what arrived in the JSON and never changes; weights is what the page
+     * is currently scoring with. They are the same object's worth of numbers
+     * until someone saves their own, and `customWeights` is the difference.
+     *
+     * That flag decides where the Rank column's number comes from, and the
+     * distinction matters. On the sheet's own weights the page prints the
+     * sheet's own `score`, because that is the published figure and rebuilding
+     * it here would land 0.01 away from it — the JSON rounds each z to one
+     * decimal. Once the weights are the reader's, there is no published figure
+     * to defer to and the score is recomputed from the blend they chose. */
+    var WEIGHT_KEY = 'dz_buns_weights_v1';
+    var baseWeights = {};
+    var customWeights = false;
+
+    function weightsMatch(a, b) {
+      return COMP.every(function (c) {
+        return Math.abs((a[c.key] || 0) - (b[c.key] || 0)) < 0.0005;
+      });
+    }
+
+    /* Stored as fractions of 1, all four keys present, summing to 1. Anything
+     * else — a hand-edited key, a half-written write, a shape from some future
+     * version of this page — is not something to score 32 teams with, so it is
+     * dropped and the sheet's blend stands. */
+    function loadWeights() {
+      var raw;
+      try { raw = localStorage.getItem(WEIGHT_KEY); } catch (e) { return null; }
+      if (!raw) return null;
+
+      try {
+        var w = JSON.parse(raw), out = {}, sum = 0;
+        for (var i = 0; i < COMP.length; i++) {
+          var v = w[COMP[i].key];
+          if (typeof v !== 'number' || !isFinite(v) || v < 0 || v > 1) return null;
+          out[COMP[i].key] = v;
+          sum += v;
+        }
+        return Math.abs(sum - 1) < 0.005 ? out : null;
+      } catch (e) { return null; }
+    }
+
+    /* Saving the sheet's own blend clears the key rather than pinning it. The
+     * reader's intent there is "go back to the source", and a stored copy of
+     * today's weights would quietly override the sheet the next time it is
+     * re-exported with different ones. */
+    function storeWeights(w) {
+      try {
+        if (weightsMatch(w, baseWeights)) localStorage.removeItem(WEIGHT_KEY);
+        else localStorage.setItem(WEIGHT_KEY, JSON.stringify(w));
+      } catch (e) { /* private mode: the weights hold for this session only */ }
+    }
+
+    // The score in force. See the note above for why this is not always a sum.
+    function scoreOf(t) {
+      if (!customWeights) return t.score;
+      return contributions(t).reduce(function (s, c) { return s + c.v; }, 0);
+    }
 
     function contributions(t) {
       return COMP.map(function (c, i) {
@@ -612,7 +666,7 @@
     // and beneath it the four contributions that add up to it.
     function scoreCell(t) {
       return '<td class="num score-num">' +
-        '<span class="score-val">' + signed(t.score, 2) + '</span>' +
+        '<span class="score-val">' + signed(scoreOf(t), 2) + '</span>' +
         compBar(t) + '</td>';
     }
 
@@ -767,7 +821,7 @@
     // sorts the same direction as every other column.
     var KEYS = {
       team: function (t) { return t.team; },
-      score: function (t) { return t.score; },
+      score: function (t) { return scoreOf(t); },
       eyeTest: function (t) { return t.z.eyeTest; },
       oLine: function (t) { return t.z.oLine; },
       sos: function (t) { return t.z.sos; },
@@ -1050,6 +1104,127 @@
       openCard(tr);
     });
 
+    /* ---------- the weights dialog ----------
+     * Four sliders, a running total, and a Save that will not fire until that
+     * total is 100. The sliders are integer percentages because that is how the
+     * page talks about weights everywhere else; they are converted to fractions
+     * of 1 on the way out, which is the shape the JSON uses and the shape
+     * contributions() multiplies by.
+     *
+     * They move in fives. A weight is a judgement about how much an input ought
+     * to count, and nobody holds one to the percentage point — 1% steps only
+     * offered a hundred positions where twenty will do, and made hitting a
+     * total of exactly 100 fiddlier than the rule deserves. Every multiple of
+     * five that totals 100 is still reachable, the sheet's own 40/25/20/15
+     * among them. */
+    var WT_STEP = 5;
+
+    var wtModal = document.getElementById('wt-modal');
+    var wtRows = document.getElementById('wt-rows');
+    var wtTotal = document.getElementById('wt-total');
+    var wtSave = document.getElementById('wt-save');
+    var wtFlag = document.getElementById('wt-flag');
+
+    /* Snapped to the step on the way in, not just on the way out. A weight
+     * saved before the step was five — or hand-written into storage — would
+     * otherwise put a value on the slider that the slider cannot represent, and
+     * the browser would quietly move the thumb while the number beside it still
+     * read the old figure. Snapping here keeps the two saying the same thing;
+     * if the snap costs the set its hundred, the total line says so and Save
+     * stays shut until it is fixed. */
+    function pctOf(w, key) {
+      return Math.round((w[key] || 0) * 100 / WT_STEP) * WT_STEP;
+    }
+
+    function buildWeightRows(w) {
+      wtRows.innerHTML = COMP.map(function (c, i) {
+        var v = pctOf(w, c.key);
+        return '<div class="wt-row">' +
+          '<label class="wt-name" for="wt-' + c.key + '">' +
+          '<i class="comp-sw step-' + i + '" aria-hidden="true"></i>' + esc(c.full) + '</label>' +
+          '<input type="range" class="wt-range" id="wt-' + c.key + '" data-key="' + c.key + '" ' +
+          'min="0" max="100" step="' + WT_STEP + '" value="' + v + '" ' +
+          'aria-describedby="wt-total">' +
+          '<output class="wt-val" for="wt-' + c.key + '">' + v + '%</output>' +
+          '</div>';
+      }).join('');
+    }
+
+    function wtValues() {
+      var out = {};
+      [].forEach.call(wtRows.querySelectorAll('.wt-range'), function (r) {
+        out[r.dataset.key] = +r.value;
+      });
+      return out;
+    }
+
+    // The gate. Rerun on every slider move, so the reader is told where they
+    // stand while they are dragging rather than when they reach for Save.
+    function syncWeightTotal() {
+      var v = wtValues(), sum = 0;
+      COMP.forEach(function (c) { sum += v[c.key] || 0; });
+
+      [].forEach.call(wtRows.querySelectorAll('.wt-range'), function (r) {
+        r.nextElementSibling.textContent = r.value + '%';
+      });
+
+      var ok = sum === 100;
+      wtTotal.className = 'wt-total ' + (ok ? 'is-ok' : 'is-bad');
+      wtTotal.textContent = ok
+        ? 'Total 100% — ready to save'
+        : 'Total ' + sum + '% — must be 100% to save (' +
+          (sum > 100 ? sum - 100 + '% over' : 100 - sum + '% short') + ')';
+      wtSave.disabled = !ok;
+    }
+
+    wtRows.addEventListener('input', syncWeightTotal);
+
+    document.getElementById('wt-edit').addEventListener('click', function () {
+      buildWeightRows(weights);
+      syncWeightTotal();
+      wtModal.showModal();
+      document.body.classList.add('modal-open');
+    });
+
+    // Puts the sheet's numbers back in the form. It does not save on its own —
+    // the reader still presses Save, which is what makes it undoable by Cancel.
+    document.getElementById('wt-reset').addEventListener('click', function () {
+      buildWeightRows(baseWeights);
+      syncWeightTotal();
+    });
+
+    wtSave.addEventListener('click', function () {
+      var v = wtValues(), sum = 0, next = {};
+      COMP.forEach(function (c) { sum += v[c.key] || 0; });
+      if (sum !== 100) return;    // the button is disabled; this is the backstop
+
+      COMP.forEach(function (c) { next[c.key] = (v[c.key] || 0) / 100; });
+      weights = next;
+      customWeights = !weightsMatch(weights, baseWeights);
+      storeWeights(weights);
+      applyWeights();
+      wtModal.close();
+    });
+
+    /* Everything downstream of the blend, in dependency order: the bar scale is
+     * computed over the new contributions, the table re-sorts on the new score,
+     * and The Board refits — its line, its residuals and its two lists are all
+     * functions of the score, so none of them can be left as they were. */
+    function applyWeights() {
+      renderWeightText();
+      computeComposition();
+      render();
+      renderBoard(teams, matchesFilters, scoreOf);
+    }
+
+    wtModal.addEventListener('close', function () {
+      document.body.classList.remove('modal-open');
+    });
+
+    wtModal.addEventListener('click', function (e) {
+      if (e.target === wtModal || e.target.closest('[data-close]')) wtModal.close();
+    });
+
     /* ---------- the first-run hint ----------
      * A pill above the table saying that a row opens a card, shown until the
      * reader has either opened one or dismissed the pill. The flag is a plain
@@ -1126,43 +1301,33 @@
       // Only the chips redraw The Board. Sorting reorders the table without
       // changing which teams are on it, and rebuilding 32 logos for a reorder
       // that cannot move any of them would be work the reader sees as a flicker.
-      renderBoard(teams, matchesFilters);
+      renderBoard(teams, matchesFilters, scoreOf);
     });
 
     /* ---------- boot ---------- */
 
-    function renderMeta(d) {
-      document.getElementById('proj-note').textContent = d.note || '';
-
-      var w = d.weights || {};
-      document.getElementById('proj-weights').innerHTML = 'Score = ' +
-        [['Eye Test', w.eyeTest], ['O-Line', w.oLine], ['SoS', w.sos], ['Rest', w.rest]]
-          .filter(function (p) { return p[1] != null; })
-          .map(function (p) {
-            return '<strong>' + Math.round(p[1] * 100) + '%</strong> ' + esc(p[0]);
-          })
-          .join(' &middot; ');
-
+    /* The Rank-bar key is built from `weights` rather than from the JSON, which
+     * is the whole point: after a save it has to describe the bars actually on
+     * screen. The Methodology page states the same blend the same way, off the
+     * same stored weights, so the two cannot disagree. */
+    function renderWeightText() {
       /* The Rank-bar key, in the bar's own stacking order and wearing the same
        * opacity ramp the segments do, so the swatch a reader matches against is
        * literally the mark they are matching. */
       document.getElementById('comp-legend').innerHTML =
         '<span class="comp-legend-lead">Rank bar</span> — each input’s share of the ' +
-        'score, stacked out from the centre: ' +
+        'score, stacked out from the center: ' +
         COMP.map(function (c, i) {
-          var pct = w[c.key] == null ? '' : ' ' + Math.round(w[c.key] * 100) + '%';
+          var pct = weights[c.key] == null ? '' : ' ' + Math.round(weights[c.key] * 100) + '%';
           return '<span class="comp-key"><i class="comp-sw step-' + i + '"></i>' +
             esc(c.label) + pct + '</span>';
         }).join('') +
-        '<span class="comp-legend-tail">right of centre lifts the score, left drags it</span>';
+        '<span class="comp-legend-tail">right of center lifts the score, left drags it</span>';
 
-      var legend = document.getElementById('proj-legend');
-      if (d.eyeTestLegend) {
-        legend.innerHTML = '<strong>Eye Test scale:</strong> ' + esc(d.eyeTestLegend);
-      } else {
-        legend.remove();
-      }
-
+      // The flag by the heading is the one that has to be visible without
+      // reading anything, because it is what says the Rank column is no longer
+      // the sheet's published number.
+      wtFlag.hidden = !customWeights;
     }
 
     /* The three loads run together: the projections are the page and the notes
@@ -1186,8 +1351,15 @@
         var d = res[0];
         teams = d.teams || [];
         coaches = res[2];
-        weights = d.weights || {};
-        renderMeta(d);
+        // The sheet's blend first, then this device's override on top of it if
+        // there is a usable one — so a reader who set their own weights last
+        // month lands on their table, not the sheet's.
+        baseWeights = d.weights || {};
+        var saved = loadWeights();
+        weights = saved || baseWeights;
+        customWeights = !!saved && !weightsMatch(weights, baseWeights);
+
+        renderWeightText();
         computeHeat();
         computeComposition();
         buildFilters();
@@ -1197,7 +1369,7 @@
         // after the table because it is the table's payoff, and it is handed
         // matchesFilters rather than a filtered list: the fit is a property of
         // the whole field, so a chip dims teams rather than removing them.
-        renderBoard(teams, matchesFilters);
+        renderBoard(teams, matchesFilters, scoreOf);
         renderLeagueNotes();
         showHint();   // only once there are rows for it to point at
 

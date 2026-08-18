@@ -149,7 +149,7 @@
 }
 
 /* Team overlay: the whole league is too big to hang off a button, so it opens
- * over the page instead — the same fixed, flex-centred box as the image
+ * over the page instead — the same fixed, flex-centerd box as the image
  * lightbox on /football. Centring in the viewport rather than anchoring to the
  * trigger is also what lets the grid be capped against the viewport instead of
  * against whatever room happens to be left below the filter row. */
@@ -252,7 +252,7 @@
   margin-bottom: 1px;
 }
 
-/* Centred rather than stretched: the selected ring is drawn on the button, so
+/* centerd rather than stretched: the selected ring is drawn on the button, so
  * a button as wide as its grid column would put a large empty box around a
  * small logo. The button hugs the logo and the slack sits in the gutters. */
 .tp-teams {
@@ -350,7 +350,7 @@
   /* The week menu drops out of its trigger and spans the content width instead,
    * anchored to the filter row rather than to the button — a menu hung off the
    * second of two buttons would run off the right edge of a phone. (The team
-   * overlay needs none of this: it is centred on the viewport already.) */
+   * overlay needs none of this: it is centerd on the viewport already.) */
   .dd-row { position: relative; }
   .dd { position: static; }
 

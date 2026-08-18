@@ -88,7 +88,7 @@
    * trigger — thirty-two logos is a lightbox-sized thing, not a menu-sized
    * one, and anchored under the button it would either shove the page down or
    * run off the bottom of a phone. Same treatment as the image viewer on
-   * /football: centred over a dimmed page, with the body pinned underneath so
+   * /football: centerd over a dimmed page, with the body pinned underneath so
    * iOS doesn't scroll it behind the overlay. body.lightbox-open and its
    * scroll restore come from lightbox.css. */
   var scrollY = 0;

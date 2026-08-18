@@ -1,8 +1,8 @@
 /* === Shared image lightbox ===
  * Click-to-enlarge for inline content images, paired with scripts/base/lightbox.js.
  *
- * The overlay is a fixed, flex-centred box sized off the viewport, so the image
- * stays vertically and horizontally centred and re-fits itself on rotation with
+ * The overlay is a fixed, flex-centerd box sized off the viewport, so the image
+ * stays vertically and horizontally centerd and re-fits itself on rotation with
  * no JS involved — a landscape phone just gets a wider box for the same image. */
 
 .lightbox {

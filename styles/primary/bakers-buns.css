@@ -57,11 +57,79 @@
   border-bottom: 1px solid #2a2a2a;
 }
 
+/* A heading with a control beside it. The underline belongs to the row now,
+   because .bun-section > h3 draws it and its h3 is no longer a direct child. */
+.bun-head-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #2a2a2a;
+}
+
+.bun-head-row > h3 {
+  margin: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #888;
+  font-family: monospace;
+  font-weight: 700;
+}
+
+/* Says the score is the reader's blend rather than the sheet's. Blue, the
+   page's "this is yours / this is interactive" color, rather than a warning
+   color — re-weighting is the feature, not a fault. */
+.wt-flag {
+  padding: 1px 6px;
+  border: 1px solid rgba(96, 165, 250, 0.4);
+  border-radius: 999px;
+  background: rgba(96, 165, 250, 0.12);
+  font-family: monospace;
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #60a5fa;
+  white-space: nowrap;
+}
+
+.wt-flag[hidden] { display: none; }
+
+.wt-edit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  margin-left: auto;
+  color: #8b949e;
+  background: #1b1b1b;
+  border: 1px solid #2a2a2a;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.wt-edit:hover { color: #e1e4e8; border-color: #3a3a3a; }
+.wt-edit:focus-visible { outline: none; border-color: #60a5fa; color: #60a5fa; }
+
 .bun-section > .bun-section-note {
   margin-top: 6px;
   font-size: 11px;
   font-family: monospace;
   color: #555;
+}
+
+.bun-section > .bun-section-note a {
+  color: #8b949e;
+  text-decoration: none;
+  border-bottom: 1px dotted #3a3a3a;
+}
+
+.bun-section > .bun-section-note a:hover {
+  color: #60a5fa;
+  border-bottom-color: #60a5fa;
 }
 
 /* --- Note cards --- */
@@ -143,7 +211,7 @@
 .odds.minus { color: #f0883e; }
 
 /* Odds inside the projections table sit outside the heat map — see fmtOdds in
- * the view for why a signed price must not be coloured like a metric. */
+ * the view for why a signed price must not be colored like a metric. */
 .odds.odds-plain { color: #c9d1d9; }
 
 /* --- Tables --- */
@@ -444,10 +512,10 @@
  * Each value carries a --heat of 0..1, set inline by the view: 0 at the field
  * average, 1 at the most extreme team in that column (see heat() there). Text
  * and wash both scale with it, so a column reads as a gradient from its best
- * team down to its worst instead of splitting into two flat colours at zero.
+ * team down to its worst instead of splitting into two flat colors at zero.
  *
- * Every rule states its flat colour first and the mix second: a browser
- * without color-mix() drops the mixes and lands on the old two-colour table
+ * Every rule states its flat color first and the mix second: a browser
+ * without color-mix() drops the mixes and lands on the old two-color table
  * rather than on unstyled text. */
 /* The pill is an inline-block, so line-height sets its height — which is what
  * gives the wash room to read as a wash rather than a highlighter stripe. */
@@ -481,9 +549,9 @@
 .score-num .score-val { display: block; line-height: 1.6; }
 
 /* --- Rank composition bar ---
- * A diverging stack centred on zero: each input's weight × z, laid outward
- * from the middle in weight order. Which side of centre a segment sits on is
- * the whole direction encoding — the colours reinforce it and are never asked
+ * A diverging stack centerd on zero: each input's weight × z, laid outward
+ * from the middle in weight order. Which side of center a segment sits on is
+ * the whole direction encoding — the colors reinforce it and are never asked
  * to carry it, because this page's green and orange are 5.7 ΔE apart under
  * deuteranopia and a bar, unlike the table cells, prints no number of its own.
  *
@@ -500,12 +568,12 @@
   background: #1b1b1b;
 }
 
-/* The centre line the segments are measured from, and the only thing on the
+/* The center line the segments are measured from, and the only thing on the
  * bar that says which way is up. It has to be painted over the stack rather
  * than under it: a team with contributions on both sides butts a segment
  * against zero from each direction, and a line behind them is a line you
  * cannot see — which costs the bar its whole direction encoding the moment
- * colour is taken away. Hence the z-index, and the 2px of overhang top and
+ * color is taken away. Hence the z-index, and the 2px of overhang top and
  * bottom that keeps it findable at a glance. */
 .comp-zero {
   position: absolute;
@@ -562,7 +630,7 @@
 }
 
 /* Green, because the key describes the shape of a lift; a segment that drags
- * is the same band on the other side of centre, which the tail sentence says. */
+ * is the same band on the other side of center, which the tail sentence says. */
 .comp-sw {
   width: 12px;
   height: 7px;
@@ -591,8 +659,8 @@
 .z-val.luck-even { color: #8b949e; }
 
 /* Row height here is set by the 40px team logo, not by the text, so top-aligned
- * values sit high against it. Centred, every column reads on one line through
- * the middle of the row — including the two-line z-cells, which centre as a
+ * values sit high against it. centerd, every column reads on one line through
+ * the middle of the row — including the two-line z-cells, which center as a
  * unit. Scoped to this table; .bun-table's default stays top-aligned. */
 #proj-table td { vertical-align: middle; }
 
@@ -644,10 +712,10 @@
 /* --- The card dialog ---
  * The card used to be a row inside .bun-table-wrap, which scrolls sideways on
  * narrow screens — so the card scrolled off with the columns. As a <dialog> it
- * is positioned against the viewport instead: centred on desktop, a bottom
+ * is positioned against the viewport instead: centerd on desktop, a bottom
  * sheet on mobile, and never wider than the screen either way. */
 .tc-modal {
-  /* The site reset zeroes margins, which is also what centres a modal dialog —
+  /* The site reset zeroes margins, which is also what centers a modal dialog —
    * so the centring is restored explicitly here. */
   position: fixed;
   inset: 0;
@@ -816,7 +884,7 @@ body.modal-open { overflow: hidden; }
 .tc-coach-prev { color: #8b949e; }
 
 /* The 2025 luck call: the first bullet in the notes list, tinted like its Luck
- * cell. Two classes, so it outranks the plain `.tc-block li` colour. */
+ * cell. Two classes, so it outranks the plain `.tc-block li` color. */
 .tc-luck.luck-hot { color: #d29922; }
 .tc-luck.luck-cold { color: #58a6ff; }
 .tc-luck.luck-even { color: #8b949e; }
@@ -1229,9 +1297,129 @@ body.modal-open .bn-fab { display: none; }
 }
 
 /* =========================================================================
+   EDIT WEIGHTS
+   Shell, buttons and backdrop are the note dialog's — .bn-modal, .bn-head,
+   .bn-body, .bn-actions, .bn-btn — so only the slider rows live here.
+   ========================================================================= */
+
+.wt-modal { width: min(430px, calc(100vw - 32px)); }
+
+.wt-intro {
+  margin: 0 0 14px;
+  font-size: 11px;
+  line-height: 1.55;
+  color: #8b949e;
+}
+
+.wt-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Name, then the track, then the value. The value column is fixed-width so the
+   numbers stay in a line while a slider is being dragged. */
+.wt-row {
+  display: grid;
+  grid-template-columns: 88px 1fr 40px;
+  align-items: center;
+  gap: 10px;
+}
+
+.wt-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: monospace;
+  font-size: 11px;
+  color: #c9d1d9;
+  cursor: pointer;
+}
+
+/* The same swatch, in the same order and the same opacity ramp, as the key
+   above the table and the segments in the bar — so the row a reader is
+   dragging is visibly the band they are dragging. */
+.wt-name .comp-sw { flex: none; }
+
+.wt-val {
+  font-family: monospace;
+  font-size: 11px;
+  font-weight: 700;
+  color: #f0f0f0;
+  text-align: right;
+}
+
+.wt-range {
+  width: 100%;
+  height: 18px;
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.wt-range:focus-visible { outline: none; }
+
+.wt-range::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 2px;
+  background: #2a2a2a;
+}
+
+.wt-range::-moz-range-track {
+  height: 4px;
+  border-radius: 2px;
+  background: #2a2a2a;
+}
+
+.wt-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 13px;
+  height: 13px;
+  margin-top: -4.5px;
+  border: none;
+  border-radius: 50%;
+  background: #60a5fa;
+}
+
+.wt-range::-moz-range-thumb {
+  width: 13px;
+  height: 13px;
+  border: none;
+  border-radius: 50%;
+  background: #60a5fa;
+}
+
+.wt-range:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.35); }
+.wt-range:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.35); }
+
+/* The gate, in words. role="status" on the element means a screen reader is
+   told the running total as it changes, which is the only way that reader
+   learns why Save is refusing them. */
+.wt-total {
+  margin: 14px 0 0;
+  padding-top: 10px;
+  border-top: 1px solid #1f1f1f;
+  font-family: monospace;
+  font-size: 11px;
+}
+
+.wt-total.is-ok { color: #3fb950; }
+.wt-total.is-bad { color: #f0883e; }
+
+.bn-btn[disabled] {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.bn-btn.is-primary[disabled]:hover { background: #60a5fa; }
+
+/* =========================================================================
    THE BOARD — model vs market
    The chart itself is built in scripts/primary/bun-charts.js, which owns every
-   colour inside the <svg> because it is measuring pixels there anyway. What is
+   color inside the <svg> because it is measuring pixels there anyway. What is
    left for the stylesheet is the frame around it: the scroll wrapper, the
    tooltip, and the two read-out lists underneath.
    ========================================================================= */

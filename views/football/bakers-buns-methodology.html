@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <title>Methodology | Baker&rsquo;s Buns</title>
+  <link rel="stylesheet" href="/styles/base/styles.css">
+  <link rel="stylesheet" href="/styles/base/hub.css">
+  <link rel="stylesheet" href="/styles/primary/bakers-buns.css">
+</head>
+<!--
+  How the Baker's Buns score is built — split out of the table's page.
+
+  It used to be a section there, reached by a nav pill. But it is not somewhere
+  a reader goes: it is the answer to a question the Rank column raises, asked
+  once and then not asked again. So it lives at its own route and the table
+  links to it, which keeps the page that people actually read to the table and
+  its cards.
+
+  The two lines that have to move with the data — the blend and the Eye Test
+  scale — are still built from the JSON rather than typed here, and still read
+  this device's saved weights, so a reader who set their own blend on the table
+  sees that blend described here rather than the sheet's.
+-->
+<body class="masters-body">
+  <div id="header-mount"></div>
+  <div id="nav-drawer-mount"></div>
+  <script src="/scripts/base/auth.js"></script>
+  <script src="/scripts/base/nav.js"></script>
+  <script>initPage();</script>
+
+  <div class="masters-content">
+    <div class="masters-breadcrumbs">
+      <a href="/">Home</a><span class="separator">/</span><a href="/football">Football</a><span class="separator">/</span><a href="/football/bakers-buns">Baker&rsquo;s Buns</a><span class="separator">/</span><span>Methodology</span>
+    </div>
+
+    <h2>Methodology</h2>
+
+    <section class="bun-section" id="methodology">
+      <p class="bun-section-note"><a href="/football/bakers-buns">&larr; Back to the projections</a></p>
+
+      <div class="bun-grid">
+        <article class="note accent-info">
+          <h4>How the score is built</h4>
+          <span class="note-meta">Weighted z-scores</span>
+          <p id="proj-weights"></p>
+          <p>
+            Each input is converted to a z-score against the 32-team field, then
+            blended. O-Line and SoS ranks are inverted first, so a positive
+            z-score always means &ldquo;better than average.&rdquo;
+          </p>
+          <p class="note-take" id="proj-legend"></p>
+        </article>
+
+        <article class="note accent-good">
+          <h4>Where the inputs come from</h4>
+          <span class="note-meta">Verified against the sources</span>
+          <ul>
+            <li><strong>O-Line</strong> &mdash; the PFF 2026 ranking, 1&ndash;32, matching all 32 rows exactly</li>
+            <li><strong>SoS</strong> &mdash; Sharp Football&rsquo;s odds-based strength of schedule; the five easiest and hardest match exactly</li>
+            <li><strong>Rest</strong> &mdash; Sharp Football&rsquo;s net rest edge in days (Bears +15 to Chargers &minus;24)</li>
+            <li><strong>Eye Test</strong> &mdash; manual, 0&ndash;10</li>
+          </ul>
+        </article>
+
+        <!-- The evidence for the heaviest weight in the score, and the only
+             thing on the site that back-tests it. The chart itself is in
+             Graphs, back on the table's page; this is what it says. -->
+        <article class="note accent-info">
+          <h4>Why O-Line carries the most weight</h4>
+          <span class="note-meta">Preseason rank vs playoffs, 2016&ndash;2025</span>
+          <p>
+            Ten years of PFF&rsquo;s preseason ranking, sorted into quartiles and
+            counted on who actually made the playoffs:
+          </p>
+          <ul>
+            <li><strong>Ranks 1&ndash;8</strong> &mdash; 59% made it (the top four alone: 65%)</li>
+            <li><strong>9&ndash;16</strong> &mdash; 48%</li>
+            <li><strong>17&ndash;24</strong> &mdash; 33%</li>
+            <li><strong>25&ndash;32</strong> &mdash; 26%</li>
+          </ul>
+          <p class="note-take">
+            <strong>Edge</strong> in the chart is that quartile base rate minus
+            what FanDuel&rsquo;s price implies (8/13/26), against the raw number
+            rather than a de-vigged one. The widest disagreements: Cardinals
+            <span class="odds odds-plain">+28%</span> and Jets
+            <span class="odds odds-plain">+21%</span> to make, Ravens
+            <span class="odds odds-plain">+39%</span> and Texans
+            <span class="odds odds-plain">+35%</span> to miss. See
+            <a href="/football/bakers-buns#graphs">Graphs</a>.
+          </p>
+        </article>
+
+        <article class="note accent-warn">
+          <h4>Reading the colors</h4>
+          <ul>
+            <li><span class="z-val pos">Green</span> / <span class="z-val neg">orange</span> on the metric columns: better or worse than the 32-team average</li>
+            <li>The colors is a heat map, not a switch &mdash; it deepens with distance from that average, scaled to each column&rsquo;s own spread, so the strongest tint in a column is that column&rsquo;s most extreme team</li>
+            <li><span class="z-val luck-hot">Amber</span> on Luck: won more than their points implied, so due to regress</li>
+            <li><span class="z-val luck-cold">Blue</span> on Luck: won fewer, so due to bounce back</li>
+            <li>Odds columns are left uncolorsed &mdash; a plus price means opposite things on Make and Miss</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+  </div>
+
+  <script>
+  /*
+   * Everything on this page is prose except one sentence, and that sentence is
+   * the blend. It is built here the same way the table builds it — from the
+   * JSON's own weights, with this device's saved override on top — because a
+   * methodology that describes a blend the reader is not scoring with is worse
+   * than no methodology at all.
+   *
+   * The weights key, its shape, and the rules for rejecting a bad stored value
+   * are the table's; see views/football/bakers-buns.html for why a saved blend
+   * that matches the sheet's is cleared rather than pinned.
+   */
+  (function () {
+    'use strict';
+
+    var DATA_URL = '/data/nfl_projections_2026.json';
+
+    var COMP = [
+      { key: 'oLine',   full: 'O-Line' },
+      { key: 'sos',     full: 'SoS' },
+      { key: 'eyeTest', full: 'Eye Test' },
+      { key: 'rest',    full: 'Rest' }
+    ];
+
+    var WEIGHT_KEY = 'dz_buns_weights_v1';
+
+    function esc(s) {
+      return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+      });
+    }
+
+    function weightsMatch(a, b) {
+      return COMP.every(function (c) {
+        return Math.abs((a[c.key] || 0) - (b[c.key] || 0)) < 0.0005;
+      });
+    }
+
+    function loadWeights() {
+      var raw;
+      try { raw = localStorage.getItem(WEIGHT_KEY); } catch (e) { return null; }
+      if (!raw) return null;
+
+      try {
+        var w = JSON.parse(raw), out = {}, sum = 0;
+        for (var i = 0; i < COMP.length; i++) {
+          var v = w[COMP[i].key];
+          if (typeof v !== 'number' || !isFinite(v) || v < 0 || v > 1) return null;
+          out[COMP[i].key] = v;
+          sum += v;
+        }
+        return Math.abs(sum - 1) < 0.005 ? out : null;
+      } catch (e) { return null; }
+    }
+
+    fetch(DATA_URL, { cache: 'no-store' })
+      .then(function (r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      })
+      .then(function (d) {
+        var baseWeights = d.weights || {};
+        var saved = loadWeights();
+        var weights = saved || baseWeights;
+        var customWeights = !!saved && !weightsMatch(weights, baseWeights);
+
+        var byWeight = COMP.slice().sort(function (a, b) {
+          return (weights[b.key] || 0) - (weights[a.key] || 0);
+        });
+
+        document.getElementById('proj-weights').innerHTML = 'Score = ' +
+          byWeight
+            .filter(function (c) { return weights[c.key] != null; })
+            .map(function (c) {
+              return '<strong>' + Math.round(weights[c.key] * 100) + '%</strong> ' + esc(c.full);
+            })
+            .join(' &middot; ') +
+          (customWeights
+            ? ' <span class="wt-flag">custom</span> — your weights, not the sheet’s ' +
+              '(' + COMP.map(function (c) {
+                return Math.round((baseWeights[c.key] || 0) * 100) + '%';
+              }).join('/') + ' in O-Line/SoS/Eye/Rest order).'
+            : '');
+
+        var legend = document.getElementById('proj-legend');
+        if (d.eyeTestLegend) {
+          legend.innerHTML = '<strong>Eye Test scale:</strong> ' + esc(d.eyeTestLegend);
+        } else {
+          legend.remove();
+        }
+      })
+      /* The four cards are the page and they are static markup; a data file
+       * that never arrives costs the blend sentence, not the page. */
+      .catch(function () {
+        document.getElementById('proj-weights').textContent =
+          'Score = a weighted blend of O-Line, SoS, Eye Test and Rest. ' +
+          'The exact percentages could not be loaded.';
+        document.getElementById('proj-legend').remove();
+      });
+  })();
+  </script>
+</body>
+</html>

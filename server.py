@@ -1465,6 +1465,11 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         elif self.path.split("?")[0] == "/football/schedule":
             self.path = "/views/football/schedule.html"
             super().do_GET()
+        # Methodology is its own route rather than a section of the table's
+        # page, so it must be matched before the page it hangs off.
+        elif self.path.split("?")[0] == "/football/bakers-buns/methodology":
+            self.path = "/views/football/bakers-buns-methodology.html"
+            super().do_GET()
         elif self.path.split("?")[0] == "/football/bakers-buns":
             self.path = "/views/football/bakers-buns.html"
             super().do_GET()

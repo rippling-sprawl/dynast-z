@@ -270,7 +270,7 @@
 
       // The picked-team highlight says which side of a home/away pairing is
       // "yours". A neutral-site game has no such pairing — neither team is at
-      // home — so the row carries the venue instead and no side is coloured.
+      // home — so the row carries the venue instead and no side is colored.
       function team(t, side) {
         var picked = !g.neutral && state.team === t.abbr;
         return '<span class="sched-team ' + side + (picked ? ' is-picked' : '') +
