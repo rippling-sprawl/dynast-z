@@ -49,7 +49,15 @@
       "odds": {
         "make": 114.0,
         "miss": -134.0,
-        "division": 340.0
+        "division": 340.0,
+        "winTotal": 9.5,
+        "over": 110,
+        "under": -130,
+        "winBooks": [
+          "dk",
+          "fd",
+          "score"
+        ]
       },
       "oline": {
         "verdict": "Center retirement is the swing factor.",
@@ -104,7 +112,15 @@
       "odds": {
         "make": -210.0,
         "miss": 176.0,
-        "division": 150.0
+        "division": 150.0,
+        "winTotal": 10.5,
+        "over": -120,
+        "under": -100,
+        "winBooks": [
+          "dk",
+          "fd",
+          "score"
+        ]
       },
       "oline": {
         "verdict": "An injury knocked them out of the top tier.",
@@ -163,7 +179,15 @@
       "odds": {
         "make": 148.0,
         "miss": -176.0,
-        "division": 450.0
+        "division": 450.0,
+        "winTotal": 8.5,
+        "over": -108,
+        "under": -111,
+        "winBooks": [
+          "dk",
+          "fd",
+          "score"
+        ]
       },
       "oline": {
         "verdict": "Elite when healthy is the whole story.",
@@ -220,7 +244,14 @@
       "odds": {
         "make": -116.0,
         "miss": -102.0,
-        "division": 260.0
+        "division": 260.0,
+        "winTotal": 9.5,
+        "over": -122,
+        "under": 102,
+        "winBooks": [
+          "dk",
+          "fd"
+        ]
       },
       "oline": {
         "verdict": "One trustworthy starter out of five.",
@@ -276,7 +307,15 @@
       "odds": {
         "make": 142.0,
         "miss": -168.0,
-        "division": 200.0
+        "division": 200.0,
+        "winTotal": 8.5,
+        "over": 113,
+        "under": -134,
+        "winBooks": [
+          "dk",
+          "fd",
+          "score"
+        ]
       },
       "oline": {
         "verdict": "Elite tackle duo carries the unit.",
@@ -326,7 +365,15 @@
       "odds": {
         "make": 180.0,
         "miss": -215.0,
-        "division": 240.0
+        "division": 240.0,
+        "winTotal": 7.5,
+        "over": -117,
+        "under": -103,
+        "winBooks": [
+          "dk",
+          "fd",
+          "score"
+        ]
       },
       "oline": {
         "verdict": "Young tackle plus a stable center.",
@@ -381,7 +428,15 @@
       "odds": {
         "make": 220.0,
         "miss": -270.0,
-        "division": 310.0
+        "division": 310.0,
+        "winTotal": 7.5,
+        "over": 111,
+        "under": -132,
+        "winBooks": [
+          "dk",
+          "fd",
+          "score"
+        ]
       },
       "oline": {
         "verdict": "Elite guard play, coaching turnover.",
@@ -434,7 +489,15 @@
       "odds": {
         "make": 235.0,
         "miss": -290.0,
-        "division": 320.0
+        "division": 320.0,
+        "winTotal": 7.5,
+        "over": 112,
+        "under": -132,
+        "winBooks": [
+          "dk",
+          "fd",
+          "score"
+        ]
       },
       "oline": {
         "verdict": "Both starting tackles unavailable.",
@@ -487,7 +550,15 @@
       "odds": {
         "make": -168.0,
         "miss": 142.0,
-        "division": 125.0
+        "division": 125.0,
+        "winTotal": 10.5,
+        "over": 116,
+        "under": -138,
+        "winBooks": [
+          "dk",
+          "fd",
+          "score"
+        ]
       },
       "oline": {
         "verdict": "Same five starters, but the O-line coach left.",
@@ -544,7 +615,14 @@
       "odds": {
         "make": -108.0,
         "miss": -108.0,
-        "division": 190.0
+        "division": 190.0,
+        "winTotal": 9.5,
+        "over": 107,
+        "under": -130,
+        "winBooks": [
+          "dk",
+          "fd"
+        ]
       },
       "oline": {
         "verdict": "Interior could be the league's best; tackles are not.",
@@ -597,7 +675,15 @@
       "odds": {
         "make": 260.0,
         "miss": -320.0,
-        "division": 550.0
+        "division": 550.0,
+        "winTotal": 7.5,
+        "over": -105,
+        "under": -115,
+        "winBooks": [
+          "dk",
+          "fd",
+          "score"
+        ]
       },
       "oline": {
         "verdict": "One elite player who cannot stay on the field.",
@@ -655,7 +741,15 @@
       "odds": {
         "make": 275.0,
         "miss": -340.0,
-        "division": 600.0
+        "division": 600.0,
+        "winTotal": 7.5,
+        "over": -118,
+        "under": -101,
+        "winBooks": [
+          "dk",
+          "fd",
+          "score"
+        ]
       },
       "oline": {
         "verdict": "A single injury sank the unit.",
@@ -710,7 +804,14 @@
       "odds": {
         "make": -136.0,
         "miss": 116.0,
-        "division": 340.0
+        "division": 340.0,
+        "winTotal": 9.5,
+        "over": -143,
+        "under": 120,
+        "winBooks": [
+          "dk",
+          "fd"
+        ]
       },
       "oline": {
         "verdict": "Leaning hard on a 37-year-old.",
@@ -762,7 +863,15 @@
       "odds": {
         "make": -550.0,
         "miss": 410.0,
-        "division": -115.0
+        "division": -115.0,
+        "winTotal": 11.5,
+        "over": -128,
+        "under": 108,
+        "winBooks": [
+          "dk",
+          "fd",
+          "score"
+        ]
       },
       "oline": {
         "verdict": "Solid guards, availability risk at tackle.",
@@ -815,7 +924,15 @@
       "odds": {
         "make": -220.0,
         "miss": 184.0,
-        "division": 210.0
+        "division": 210.0,
+        "winTotal": 10.5,
+        "over": -123,
+        "under": 103,
+        "winBooks": [
+          "dk",
+          "fd",
+          "score"
+        ]
       },
       "oline": {
         "verdict": "Trending up with one hole.",
@@ -866,7 +983,15 @@
       "odds": {
         "make": 2000.0,
         "miss": -7000.0,
-        "division": 10000.0
+        "division": 10000.0,
+        "winTotal": 4.5,
+        "over": 128,
+        "under": -152,
+        "winBooks": [
+          "dk",
+          "fd",
+          "score"
+        ]
       },
       "oline": {
         "verdict": "Good left side, bad right side.",
@@ -920,7 +1045,14 @@
       "odds": {
         "make": -194.0,
         "miss": 162.0,
-        "division": 170.0
+        "division": 170.0,
+        "winTotal": 10.5,
+        "over": 117,
+        "under": -140,
+        "winBooks": [
+          "dk",
+          "fd"
+        ]
       },
       "oline": {
         "verdict": "Young pieces improving.",
@@ -973,7 +1105,15 @@
       "odds": {
         "make": -300.0,
         "miss": 245.0,
-        "division": 100.0
+        "division": 100.0,
+        "winTotal": 11.5,
+        "over": 117,
+        "under": -138,
+        "winBooks": [
+          "dk",
+          "fd",
+          "score"
+        ]
       },
       "oline": {
         "verdict": "Rebuilt both guard spots out of necessity.",
@@ -1027,7 +1167,14 @@
       "odds": {
         "make": 166.0,
         "miss": -198.0,
-        "division": 550.0
+        "division": 550.0,
+        "winTotal": 8.5,
+        "over": 117,
+        "under": -140,
+        "winBooks": [
+          "dk",
+          "fd"
+        ]
       },
       "oline": {
         "verdict": "Good center, two players switching sides.",
@@ -1081,7 +1228,15 @@
       "odds": {
         "make": 640.0,
         "miss": -950.0,
-        "division": 2000.0
+        "division": 2000.0,
+        "winTotal": 5.5,
+        "over": -114,
+        "under": -105,
+        "winBooks": [
+          "dk",
+          "fd",
+          "score"
+        ]
       },
       "oline": {
         "verdict": "Four new starters, rookie at left tackle.",
@@ -1134,7 +1289,14 @@
       "odds": {
         "make": 158.0,
         "miss": -188.0,
-        "division": 360.0
+        "division": 360.0,
+        "winTotal": 7.5,
+        "over": -132,
+        "under": 110,
+        "winBooks": [
+          "dk",
+          "fd"
+        ]
       },
       "oline": {
         "verdict": "Strong interior, unproven right tackle.",
@@ -1185,7 +1347,15 @@
       "odds": {
         "make": -190.0,
         "miss": 158.0,
-        "division": 115.0
+        "division": 115.0,
+        "winTotal": 9.5,
+        "over": -132,
+        "under": 111,
+        "winBooks": [
+          "dk",
+          "fd",
+          "score"
+        ]
       },
       "oline": {
         "verdict": "Rookie tackle with an unfinished interior.",
@@ -1236,7 +1406,15 @@
       "odds": {
         "make": -102.0,
         "miss": -116.0,
-        "division": 220.0
+        "division": 220.0,
+        "winTotal": 9.5,
+        "over": 117,
+        "under": -138,
+        "winBooks": [
+          "dk",
+          "fd",
+          "score"
+        ]
       },
       "oline": {
         "verdict": "Declining and banged up.",
@@ -1288,7 +1466,15 @@
       "odds": {
         "make": 430.0,
         "miss": -590.0,
-        "division": 950.0
+        "division": 950.0,
+        "winTotal": 6.5,
+        "over": -100,
+        "under": -120,
+        "winBooks": [
+          "dk",
+          "fd",
+          "score"
+        ]
       },
       "oline": {
         "verdict": "One good player, four question marks.",
@@ -1345,7 +1531,15 @@
       "odds": {
         "make": -320.0,
         "miss": 260.0,
-        "division": -130.0
+        "division": -130.0,
+        "winTotal": 10.5,
+        "over": -122,
+        "under": 102,
+        "winBooks": [
+          "dk",
+          "fd",
+          "score"
+        ]
       },
       "oline": {
         "verdict": "Tackles elite, guards thin.",
@@ -1396,7 +1590,14 @@
       "odds": {
         "make": -210.0,
         "miss": 176.0,
-        "division": 130.0
+        "division": 130.0,
+        "winTotal": 10.5,
+        "over": 115,
+        "under": -137,
+        "winBooks": [
+          "dk",
+          "fd"
+        ]
       },
       "oline": {
         "verdict": "Rookie tackle needs a step forward.",
@@ -1453,7 +1654,15 @@
       "odds": {
         "make": 750.0,
         "miss": -1200.0,
-        "division": 1800.0
+        "division": 1800.0,
+        "winTotal": 5.5,
+        "over": -103,
+        "under": -116,
+        "winBooks": [
+          "dk",
+          "fd",
+          "score"
+        ]
       },
       "oline": {
         "verdict": "Promising bookends, hollow middle.",
@@ -1506,7 +1715,15 @@
       "odds": {
         "make": 1500.0,
         "miss": -4000.0,
-        "division": 4000.0
+        "division": 4000.0,
+        "winTotal": 4.5,
+        "over": 116,
+        "under": -136,
+        "winBooks": [
+          "dk",
+          "fd",
+          "score"
+        ]
       },
       "oline": {
         "verdict": "Elite center, unplayable guards.",
@@ -1557,7 +1774,15 @@
       "odds": {
         "make": -146.0,
         "miss": 124.0,
-        "division": 220.0
+        "division": 220.0,
+        "winTotal": 9.5,
+        "over": -113,
+        "under": -107,
+        "winBooks": [
+          "dk",
+          "fd",
+          "score"
+        ]
       },
       "oline": {
         "verdict": "All five 2025 starters return.",
@@ -1610,7 +1835,14 @@
       "odds": {
         "make": -184.0,
         "miss": 154.0,
-        "division": 175.0
+        "division": 175.0,
+        "winTotal": 9.5,
+        "over": -144,
+        "under": 121,
+        "winBooks": [
+          "dk",
+          "fd"
+        ]
       },
       "oline": {
         "verdict": "Best center in football, shuffling around him.",
@@ -1662,7 +1894,15 @@
       "odds": {
         "make": -166.0,
         "miss": 140.0,
-        "division": 190.0
+        "division": 190.0,
+        "winTotal": 9.5,
+        "over": -135,
+        "under": 113,
+        "winBooks": [
+          "dk",
+          "fd",
+          "score"
+        ]
       },
       "oline": {
         "verdict": "Ceiling is high but entirely health-dependent.",
@@ -1715,7 +1955,15 @@
       "odds": {
         "make": 530.0,
         "miss": -750.0,
-        "division": 1500.0
+        "division": 1500.0,
+        "winTotal": 5.5,
+        "over": -138,
+        "under": 117,
+        "winBooks": [
+          "dk",
+          "fd",
+          "score"
+        ]
       },
       "oline": {
         "verdict": "Paid the center, lost the tackle.",
@@ -1773,5 +2021,6 @@
   "pythagSource": {
     "name": "2025 Pythagorean wins",
     "summary": "Pythagorean expectation converts points scored and allowed into the record a team 'should' have had. Wins Above Pythag is actual wins minus that expectation: positive means they won more than their scoring justified (a regression candidate), negative means they were better than their record (a bounce-back candidate)."
-  }
+  },
+  "winTotalSource": "Consensus regular-season win total: the line whose de-vigged Over price sits closest to even across DraftKings, FanDuel and theScore, priced at the average of those books' implied probabilities at that line."
 }

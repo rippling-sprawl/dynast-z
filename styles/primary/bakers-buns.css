@@ -504,9 +504,9 @@
   font-weight: 400;
 }
 
-/* A z-score cell: the normalized value with its raw input beneath. */
+/* A z-score cell: the normalized value alone. The raw input it came from is
+ * in the team's card (`.tc-raw`), not under it here. */
 .z-cell { font-family: monospace; text-align: right; white-space: nowrap; }
-.z-cell .z-raw { display: block; font-size: 9px; color: #555; }
 
 /* --- Heat map ---
  * Each value carries a --heat of 0..1, set inline by the view: 0 at the field
@@ -676,7 +676,73 @@
   left: 0;
   z-index: 2;
   background: #111;
+}
+
+/* Rank is pinned with the logo, not left behind with the metrics. A frozen
+ * crest and nothing else says which team the row is; the number beside it is
+ * what every other column is being compared against, and scrolling it away
+ * costs the reader the one value the sheet is actually sorted on.
+ *
+ * Its offset is the width of the team column, measured after each render and
+ * written onto the table as --pin-rank by syncPinWidth() in the view: the
+ * logo cell's padding changes at the 600px breakpoint, so a number written
+ * here would be wrong on one side of it. The fallback is the desktop width,
+ * used only in the frame before the first measurement lands. */
+#proj-table tr.col-heads th:nth-child(2),
+#proj-table tr.proj-row > td:nth-child(2),
+.proj-float-head tr.col-heads th:nth-child(2) {
+  position: sticky;
+  left: var(--pin-rank, 60px);
+  z-index: 2;
+  background: #111;
+}
+
+/* The edge of the frozen pair — on Rank now, and on the band cell that spans
+ * Team and Rank, so the line runs the full height of the header. */
+#proj-table tr.col-heads th:nth-child(2),
+#proj-table tr.proj-row > td:nth-child(2),
+#proj-table tr.col-bands th:first-child,
+.proj-float-head tr.col-heads th:nth-child(2),
+.proj-float-head tr.col-bands th:first-child {
   border-right: 1px solid #2a2a2a;
+}
+
+/* --- Column bands ---
+ * The row above the headings, saying which half of the table a column belongs
+ * to: Metrics carry the heat map and are scaled against the 32-team field,
+ * Odds are prices and are left uncolored. Smaller and dimmer than the headings
+ * they sit over, because they name a group rather than a sortable column —
+ * nothing in this row responds to a click. */
+#proj-table tr.col-bands th,
+.proj-float-head tr.col-bands th {
+  padding: 4px 10px 3px;
+  font-size: 9px;
+  letter-spacing: 1px;
+  color: #8b949e;
+  text-align: center;
+  border-bottom: 1px solid #1f1f1f;
+}
+
+/* The span over Team and Rank is a spacer, not a band: it gets no rule under
+ * it, so the two labels read as the only things in the row. */
+#proj-table tr.col-bands th.band-none,
+.proj-float-head tr.col-bands th.band-none { border-bottom: none; }
+
+/* Where Metrics ends and Odds begins. The other boundary is already drawn by
+ * the pinned pair's right edge, so this is the only divider the bands need. */
+#proj-table tr.col-bands th:last-child,
+#proj-table tr.col-heads th:nth-child(8),
+#proj-table tr.proj-row > td:nth-child(8),
+.proj-float-head tr.col-bands th:last-child,
+.proj-float-head tr.col-heads th:nth-child(8) {
+  border-left: 1px solid #1f1f1f;
+}
+
+/* The consensus win total: a line rather than a price, so it is set in the
+ * table's own text color instead of the price grey, and never signed. */
+.win-line {
+  font-family: monospace;
+  color: #c9d1d9;
 }
 
 /* --- Pinned header row ---
@@ -706,7 +772,8 @@
 
 /* Re-assert hover on the pinned cell: the rule above carries an ID, so it
  * outranks `.proj-row:hover td` and would otherwise stay unhighlighted. */
-#proj-table tr.proj-row:hover > td:first-child { background: #171717; }
+#proj-table tr.proj-row:hover > td:first-child,
+#proj-table tr.proj-row:hover > td:nth-child(2) { background: #171717; }
 .proj-row:focus-visible { outline: 1px solid #60a5fa; outline-offset: -1px; }
 
 /* --- The card dialog ---
@@ -882,6 +949,72 @@ body.modal-open { overflow: hidden; }
 }
 
 .tc-coach-prev { color: #8b949e; }
+
+/* --- Raw inputs ---
+ * The bottom block of the card: each input in the units the sheet recorded it
+ * in, beside the z-score it normalizes to. It sits below the grid rather than
+ * in it, full width, because it is the card's appendix — the reader who wants
+ * to know what a +1.2 was built from, rather than the first thing anyone came
+ * for. The z column reuses `.z-val`, heat and all, so a number reads the same
+ * here as it does in the row that opened this card. */
+.tc-raw-block {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid #1f1f1f;
+}
+
+.tc-block.is-raw h5 { color: #8b949e; }
+
+.tc-raw {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: monospace;
+}
+
+.tc-raw thead th {
+  padding: 0 0 4px;
+  font-size: 9px;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #555;
+  text-align: right;
+  border-bottom: 1px solid #1f1f1f;
+}
+
+.tc-raw thead th:first-child { text-align: left; }
+
+.tc-raw tbody th {
+  padding: 4px 0;
+  font-size: 11px;
+  font-weight: 400;
+  color: #c9d1d9;
+  text-align: left;
+  white-space: nowrap;
+}
+
+/* The unit rides with the label rather than taking a column of its own: it
+ * never changes between teams, so it is part of the row's name. */
+.tc-raw-unit {
+  margin-left: 6px;
+  font-size: 9px;
+  color: #555;
+}
+
+.tc-raw td {
+  padding: 4px 0;
+  font-size: 11px;
+  color: #e1e4e8;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.tc-raw td.tc-raw-val { padding-right: 10px; }
+
+/* Every row but the last is ruled, so the columns stay tracked across a row
+ * whose label wraps. */
+.tc-raw tbody tr + tr th,
+.tc-raw tbody tr + tr td { border-top: 1px solid #161616; }
 
 /* The 2025 luck call: the first bullet in the notes list, tinted like its Luck
  * cell. Two classes, so it outranks the plain `.tc-block li` color. */
@@ -1424,9 +1557,10 @@ body.modal-open .bn-fab { display: none; }
    tooltip, and the two read-out lists underneath.
    ========================================================================= */
 
-/* Below the chart's 560px floor this scrolls rather than letting 32 logos pile
-   into a phone's width — the same trade .bun-table-wrap makes with the table.
-   Positioned, because the tooltip is placed against it. */
+/* The chart fits a phone on its own now — below 560px bun-charts.js redraws it
+   portrait and compact rather than at a fixed 560 — so overflow-x is a floor of
+   last resort for the handful of viewports under 300px, not the mobile
+   strategy. Positioned, because the tooltip is placed against it. */
 .board-wrap {
   position: relative;
   overflow-x: auto;
@@ -1439,6 +1573,133 @@ body.modal-open .bn-fab { display: none; }
 
 .board-chart { position: relative; }
 .board-svg { display: block; }
+
+/* A halo the color of the plot background. The marks overlap below ~820px wide
+   and always have — see decision (3) in bun-charts.js — and a 1px dark edge is
+   what keeps an overlapping pair as two logos instead of one shape. Cheaper
+   than a backdrop plate, which would cover the residual stem the chart is
+   built to show. */
+.board-pt image { filter: drop-shadow(0 0 1px #1a1a1a); }
+
+/* The axis titles, at the widths too narrow to draw them inside the SVG. Real
+   text rather than SVG glyphs: it wraps, it is selectable, and it scales with
+   the reader's font size. */
+.board-axis-note {
+  margin: 6px 0 0;
+  font-family: monospace;
+  font-size: 10px;
+  line-height: 1.5;
+  color: #555;
+}
+
+.board-axis-note[hidden] { display: none; }
+
+/* --- the two pickers ---
+   Market on the left, team on the right, and they wrap onto separate lines
+   before either one squeezes. The market row reuses .proj-toggle wholesale:
+   it is the same gesture as the conference chips directly above it, and a
+   second chip style would say the two rows work differently when they do not.
+   The one difference is that this row is a single choice, which is carried by
+   only ever having one .active rather than by looking like a different thing. */
+.board-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  margin: 10px 0 4px;
+}
+
+.board-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* A radar already has all five markets on it, so while one is up this row has
+   nothing left to choose. Dimmed rather than hidden: a control that vanishes
+   reads as a bug, one that greys out reads as an explanation. */
+.board-picker.is-off { opacity: 0.35; }
+.board-picker .proj-toggle[disabled] { cursor: not-allowed; }
+
+.board-team-pick {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  font-family: monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #8b949e;
+}
+
+.board-team-pick select {
+  padding: 5px 8px;
+  font-family: monospace;
+  font-size: 11px;
+  color: #e1e4e8;
+  background: #161616;
+  border: 1px solid #2a2a2a;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.board-team-pick select:hover { border-color: #60a5fa; }
+.board-team-pick select:focus-visible { outline: 1px solid #60a5fa; outline-offset: 2px; }
+
+/* --- the one-team radar --- */
+.radar-svg { display: block; margin: 0 auto; }
+.radar-pt { cursor: default; }
+.radar-pt:focus-visible { outline: 1px solid #60a5fa; outline-offset: 2px; }
+
+/* The radar's read-out. A table rather than the scatter's two ranked lists:
+   five markets for one team is a row per market, and there is no over/under
+   split to make two columns out of. */
+.radar-table {
+  width: 100%;
+  margin-top: 12px;
+  border-collapse: collapse;
+  font-family: monospace;
+  font-size: 12px;
+}
+
+.radar-table caption {
+  text-align: left;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #666;
+  padding-bottom: 6px;
+}
+
+.radar-table th {
+  text-align: left;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #666;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-bottom: 1px solid #2a2a2a;
+}
+
+.radar-table td {
+  padding: 6px 8px;
+  color: #c9d1d9;
+  border-bottom: 1px solid #1f1f1f;
+}
+
+.radar-table th:not(:first-child),
+.radar-table .radar-num { text-align: right; }
+
+/* Same colors the scatter's read-outs use, and the same way round: the market
+   sitting above the model is the market liking a team the model does not. */
+.radar-table .is-over { color: #3fb950; }
+.radar-table .is-under { color: #f0883e; }
+
+@media (max-width: 600px) {
+  .board-team-pick { margin-left: 0; }
+}
 
 .board-empty {
   padding: 24px 12px;

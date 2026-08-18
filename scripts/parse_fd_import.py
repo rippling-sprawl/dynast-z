@@ -29,8 +29,9 @@ cards,...} and attachments.{markets,events,competitions,eventTypes} — with the
 freshly-captured entry overriding the stored one on conflict. Nothing is removed.
 List/scalar layout fields (tabsDisplayOrder, defaultTab, page, seo, ...) are taken
 from the fresh snapshot when present, else kept. Finally, live getMarketPrices
-ticks are folded into the matching runners by selectionId so odds are as fresh as
-the capture allows.
+ticks are folded into the matching runners by (marketId, selectionId) so odds are
+as fresh as
+the capture allows. (selectionId alone is reused across markets.)
 """
 import json
 import os
@@ -125,7 +126,7 @@ def merge_fd(out, captures):
 
     kept_hosts, dropped = set(), 0
     page_snapshots = 0
-    price_ticks = {}     # selectionId -> winRunnerOdds (newest capture wins)
+    price_ticks = {}     # (marketId, selectionId) -> runnerDetails (newest wins)
 
     layout_counts = {}   # collection -> (updated, added), aggregated over snapshots
     att_counts = {}
@@ -165,17 +166,23 @@ def merge_fd(out, captures):
                 continue
             kept_hosts.add(host_of(url))
             for mkt in body:
+                mid = mkt.get("marketId")
+                if mid is None:
+                    continue
                 for rd in (mkt.get("runnerDetails") or []):
                     sid = rd.get("selectionId")
                     if sid is not None and rd.get("winRunnerOdds"):
-                        price_ticks[sid] = rd
+                        price_ticks[(str(mid), sid)] = rd
 
-    # Fold live price ticks into the matching runners by selectionId.
+    # Fold live price ticks into the matching runners. selectionId alone is NOT
+    # unique across markets (FanDuel reuses one id for a team/Over runner in every
+    # market it appears in), so a tick must only land on the market it came from.
     priced = 0
     if price_ticks:
-        for m in (att.get("markets") or {}).values():
+        for mid, m in (att.get("markets") or {}).items():
+            key_mid = str(m.get("marketId") or mid)
             for r in (m.get("runners") or []):
-                rd = price_ticks.get(r.get("selectionId"))
+                rd = price_ticks.get((key_mid, r.get("selectionId")))
                 if not rd:
                     continue
                 r["winRunnerOdds"] = rd["winRunnerOdds"]

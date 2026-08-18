@@ -92,14 +92,37 @@
           </p>
         </article>
 
+        <!-- The one column in the table that is computed here rather than
+             copied off a book, so it is the one that owes the reader a note. -->
+        <article class="note accent-info">
+          <h4>Where the win total comes from</h4>
+          <span class="note-meta">DraftKings, FanDuel, theScore</span>
+          <p>
+            The books do not always hang the total on the same number &mdash;
+            DraftKings had the Cardinals at 3.5 while FanDuel and theScore had
+            4.5 &mdash; so the <strong>Wins</strong> column is chosen rather
+            than copied. Of every line the three of them quote, it takes the one
+            whose de-vigged Over price sits closest to even: the number the
+            market cannot lean off, which is what a main line is.
+          </p>
+          <p class="note-take">
+            <strong>Over</strong> and <strong>Under</strong> are the plain
+            average of the books&rsquo; prices at that line with the vig left in
+            &mdash; something to hold up against a screen, not a fair value
+            nobody is offering. Hover a total to see which books priced it;
+            where a market is thin it can be one.
+          </p>
+        </article>
+
         <article class="note accent-warn">
           <h4>Reading the colors</h4>
           <ul>
             <li><span class="z-val pos">Green</span> / <span class="z-val neg">orange</span> on the metric columns: better or worse than the 32-team average</li>
+            <li>The <strong>Metrics</strong> and <strong>Odds</strong> bands above the headings mark that split: everything under Metrics is heat-mapped against the field, everything under Odds is a price and is left alone</li>
             <li>The colors is a heat map, not a switch &mdash; it deepens with distance from that average, scaled to each column&rsquo;s own spread, so the strongest tint in a column is that column&rsquo;s most extreme team</li>
             <li><span class="z-val luck-hot">Amber</span> on Luck: won more than their points implied, so due to regress</li>
             <li><span class="z-val luck-cold">Blue</span> on Luck: won fewer, so due to bounce back</li>
-            <li>Odds columns are left uncolorsed &mdash; a plus price means opposite things on Make and Miss</li>
+            <li>Odds columns are left uncolorsed &mdash; a plus price means opposite things on Make and Miss, and the Wins line is not a price at all, so it carries no sign</li>
           </ul>
         </article>
       </div>

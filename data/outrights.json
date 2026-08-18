@@ -15,7 +15,7 @@
           "prices": {
             "dk": "+550",
             "score": "+550",
-            "fd": "+550"
+            "fd": "+500"
           }
         },
         {
@@ -28,7 +28,7 @@
           "prices": {
             "dk": "+1000",
             "score": "+1000",
-            "fd": "+1100"
+            "fd": "+1200"
           }
         },
         {
@@ -41,7 +41,7 @@
           "prices": {
             "dk": "+1000",
             "score": "+1000",
-            "fd": "+1000"
+            "fd": "+1100"
           }
         },
         {
@@ -54,7 +54,7 @@
           "prices": {
             "dk": "+1100",
             "score": "+1100",
-            "fd": "+1000"
+            "fd": "+1100"
           }
         },
         {
@@ -67,7 +67,7 @@
           "prices": {
             "dk": "+1800",
             "score": "+1400",
-            "fd": "+2200"
+            "fd": "+2000"
           }
         },
         {
@@ -80,7 +80,7 @@
           "prices": {
             "dk": "+1600",
             "score": "+1500",
-            "fd": "+1800"
+            "fd": "+1700"
           }
         },
         {
@@ -93,7 +93,7 @@
           "prices": {
             "dk": "+1700",
             "score": "+1500",
-            "fd": "+1600"
+            "fd": "+1700"
           }
         },
         {
@@ -119,7 +119,7 @@
           "prices": {
             "dk": "+1900",
             "score": "+1600",
-            "fd": "+1700"
+            "fd": "+1800"
           }
         },
         {
@@ -145,7 +145,7 @@
           "prices": {
             "dk": "+1600",
             "score": "+1600",
-            "fd": "+1900"
+            "fd": "+1800"
           }
         },
         {
@@ -158,7 +158,7 @@
           "prices": {
             "dk": "+1900",
             "score": "+1600",
-            "fd": "+1700"
+            "fd": "+1800"
           }
         },
         {
@@ -171,7 +171,7 @@
           "prices": {
             "dk": "+1800",
             "score": "+2000",
-            "fd": "+1900"
+            "fd": "+1700"
           }
         },
         {
@@ -197,7 +197,7 @@
           "prices": {
             "dk": "+2000",
             "score": "+2200",
-            "fd": "+2200"
+            "fd": "+2000"
           }
         },
         {
@@ -210,7 +210,7 @@
           "prices": {
             "dk": "+2500",
             "score": "+2000",
-            "fd": "+2500"
+            "fd": "+2000"
           }
         },
         {
@@ -223,7 +223,7 @@
           "prices": {
             "dk": "+3000",
             "score": "+2500",
-            "fd": "+2500"
+            "fd": "+3000"
           }
         },
         {
@@ -236,7 +236,20 @@
           "prices": {
             "dk": "+6000",
             "score": "+4000",
-            "fd": "+4500"
+            "fd": "+6000"
+          }
+        },
+        {
+          "key": "MIN",
+          "names": {
+            "dk": "MIN Vikings",
+            "score": "MIN Vikings",
+            "fd": "Minnesota Vikings"
+          },
+          "prices": {
+            "dk": "+5000",
+            "score": "+5000",
+            "fd": "+4000"
           }
         },
         {
@@ -253,16 +266,16 @@
           }
         },
         {
-          "key": "MIN",
+          "key": "PIT",
           "names": {
-            "dk": "MIN Vikings",
-            "score": "MIN Vikings",
-            "fd": "Minnesota Vikings"
+            "dk": "PIT Steelers",
+            "score": "PIT Steelers",
+            "fd": "Pittsburgh Steelers"
           },
           "prices": {
             "dk": "+5000",
-            "score": "+5000",
-            "fd": "+4500"
+            "score": "+6000",
+            "fd": "+5500"
           }
         },
         {
@@ -275,20 +288,7 @@
           "prices": {
             "dk": "+6000",
             "score": "+5000",
-            "fd": "+4500"
-          }
-        },
-        {
-          "key": "PIT",
-          "names": {
-            "dk": "PIT Steelers",
-            "score": "PIT Steelers",
-            "fd": "Pittsburgh Steelers"
-          },
-          "prices": {
-            "dk": "+5000",
-            "score": "+6000",
-            "fd": "+6500"
+            "fd": "+7000"
           }
         },
         {
@@ -301,6 +301,19 @@
           "prices": {
             "dk": "+7000",
             "score": "+6000",
+            "fd": "+6000"
+          }
+        },
+        {
+          "key": "ATL",
+          "names": {
+            "dk": "ATL Falcons",
+            "score": "ATL Falcons",
+            "fd": "Atlanta Falcons"
+          },
+          "prices": {
+            "dk": "+13000",
+            "score": "+7500",
             "fd": "+7500"
           }
         },
@@ -314,20 +327,7 @@
           "prices": {
             "dk": "+9000",
             "score": "+7500",
-            "fd": "+7000"
-          }
-        },
-        {
-          "key": "ATL",
-          "names": {
-            "dk": "ATL Falcons",
-            "score": "ATL Falcons",
-            "fd": "Atlanta Falcons"
-          },
-          "prices": {
-            "dk": "+13000",
-            "score": "+7500",
-            "fd": "+8000"
+            "fd": "+10000"
           }
         },
         {
@@ -341,6 +341,19 @@
             "dk": "+9000",
             "score": "+7500",
             "fd": "+8000"
+          }
+        },
+        {
+          "key": "LV",
+          "names": {
+            "dk": "LV Raiders",
+            "score": "LV Raiders",
+            "fd": "Las Vegas Raiders"
+          },
+          "prices": {
+            "dk": "+15000",
+            "score": "+15000",
+            "fd": "+12500"
           }
         },
         {
@@ -366,20 +379,7 @@
           "prices": {
             "dk": "+20000",
             "score": "+15000",
-            "fd": "+25000"
-          }
-        },
-        {
-          "key": "LV",
-          "names": {
-            "dk": "LV Raiders",
-            "score": "LV Raiders",
-            "fd": "Las Vegas Raiders"
-          },
-          "prices": {
-            "dk": "+15000",
-            "score": "+15000",
-            "fd": "+15000"
+            "fd": "+22500"
           }
         },
         {
@@ -392,7 +392,7 @@
           "prices": {
             "dk": "+50000",
             "score": "+20000",
-            "fd": "+25000"
+            "fd": "+100000"
           }
         },
         {
@@ -405,7 +405,7 @@
           "prices": {
             "dk": "+35000",
             "score": "+20000",
-            "fd": "+25000"
+            "fd": "+75000"
           }
         },
         {
@@ -437,7 +437,7 @@
           },
           "prices": {
             "dk": "+320",
-            "fd": "+430",
+            "fd": "+470",
             "score": "+375"
           }
         },
@@ -450,7 +450,7 @@
           },
           "prices": {
             "dk": "+400",
-            "fd": "+430",
+            "fd": "+550",
             "score": "+375"
           }
         },
@@ -463,21 +463,8 @@
           },
           "prices": {
             "dk": "+550",
-            "fd": "+650",
+            "fd": "+550",
             "score": "+650"
-          }
-        },
-        {
-          "key": "jordyn tyson",
-          "names": {
-            "dk": "Jordyn Tyson",
-            "fd": "Jordyn Tyson",
-            "score": "Jordyn Tyson"
-          },
-          "prices": {
-            "dk": "+600",
-            "fd": "+650",
-            "score": "+600"
           }
         },
         {
@@ -489,8 +476,21 @@
           },
           "prices": {
             "dk": "+750",
-            "fd": "+850",
+            "fd": "+550",
             "score": "+750"
+          }
+        },
+        {
+          "key": "jordyn tyson",
+          "names": {
+            "dk": "Jordyn Tyson",
+            "fd": "Jordyn Tyson",
+            "score": "Jordyn Tyson"
+          },
+          "prices": {
+            "dk": "+600",
+            "fd": "+3300",
+            "score": "+600"
           }
         },
         {
@@ -507,6 +507,32 @@
           }
         },
         {
+          "key": "de zhaun stribling",
+          "names": {
+            "dk": "De'Zhaun Stribling",
+            "fd": "De'Zhaun Stribling",
+            "score": "De'Zhaun Stribling"
+          },
+          "prices": {
+            "dk": "+6000",
+            "fd": "+1500",
+            "score": "+5000"
+          }
+        },
+        {
+          "key": "kc concepcion",
+          "names": {
+            "dk": "KC Concepcion",
+            "fd": "KC Concepcion",
+            "score": "KC Concepcion"
+          },
+          "prices": {
+            "dk": "+3000",
+            "fd": "+2000",
+            "score": "+3000"
+          }
+        },
+        {
           "key": "carson beck",
           "names": {
             "dk": "Carson Beck",
@@ -515,7 +541,7 @@
           },
           "prices": {
             "dk": "+2800",
-            "fd": "+2700",
+            "fd": "+2500",
             "score": "+2200"
           }
         },
@@ -528,7 +554,7 @@
           },
           "prices": {
             "dk": "+3500",
-            "fd": "+3500",
+            "fd": "+2200",
             "score": "+2500"
           }
         },
@@ -541,7 +567,7 @@
           },
           "prices": {
             "dk": "+2500",
-            "fd": "+3500",
+            "fd": "+6500",
             "score": "+3000"
           }
         },
@@ -554,21 +580,8 @@
           },
           "prices": {
             "dk": "+2800",
-            "fd": "+3300",
+            "fd": "+5000",
             "score": "+3500"
-          }
-        },
-        {
-          "key": "kc concepcion",
-          "names": {
-            "dk": "KC Concepcion",
-            "fd": "KC Concepcion",
-            "score": "KC Concepcion"
-          },
-          "prices": {
-            "dk": "+3000",
-            "fd": "+3000",
-            "score": "+3000"
           }
         },
         {
@@ -580,8 +593,21 @@
           },
           "prices": {
             "dk": "+3500",
-            "fd": "+3500",
+            "fd": "+5500",
             "score": "+3000"
+          }
+        },
+        {
+          "key": "ja kobi lane",
+          "names": {
+            "dk": "Ja'Kobi Lane",
+            "fd": "Ja'Kobi Lane",
+            "score": "Ja'Kobi Lane"
+          },
+          "prices": {
+            "dk": "+7500",
+            "fd": "+3300",
+            "score": "+7500"
           }
         },
         {
@@ -593,7 +619,7 @@
           },
           "prices": {
             "dk": "+6000",
-            "fd": "+7500",
+            "fd": "+8000",
             "score": "+4000"
           }
         },
@@ -609,28 +635,6 @@
           }
         },
         {
-          "key": "nick singleton",
-          "names": {
-            "fd": "Nick Singleton"
-          },
-          "prices": {
-            "fd": "+4500"
-          }
-        },
-        {
-          "key": "de zhaun stribling",
-          "names": {
-            "dk": "De'Zhaun Stribling",
-            "fd": "De'Zhaun Stribling",
-            "score": "De'Zhaun Stribling"
-          },
-          "prices": {
-            "dk": "+6000",
-            "fd": "+7500",
-            "score": "+5000"
-          }
-        },
-        {
           "key": "eli stowers",
           "names": {
             "dk": "Eli Stowers",
@@ -639,7 +643,7 @@
           },
           "prices": {
             "dk": "+5000",
-            "fd": "+5500",
+            "fd": "+10000",
             "score": "+5000"
           }
         },
@@ -670,6 +674,19 @@
           }
         },
         {
+          "key": "caleb douglas",
+          "names": {
+            "dk": "Caleb Douglas",
+            "fd": "Caleb Douglas",
+            "score": "Caleb Douglas"
+          },
+          "prices": {
+            "dk": "+8000",
+            "fd": "+5500",
+            "score": "+10000"
+          }
+        },
+        {
           "key": "germie bernard",
           "names": {
             "dk": "Germie Bernard",
@@ -678,6 +695,19 @@
           },
           "prices": {
             "dk": "+5500",
+            "fd": "+6500",
+            "score": "+6000"
+          }
+        },
+        {
+          "key": "jonah coleman",
+          "names": {
+            "dk": "Jonah Coleman",
+            "fd": "Jonah Coleman",
+            "score": "Jonah Coleman"
+          },
+          "prices": {
+            "dk": "+6000",
             "fd": "+5500",
             "score": "+6000"
           }
@@ -691,7 +721,7 @@
           },
           "prices": {
             "dk": "+6000",
-            "fd": "+10000",
+            "fd": "+8000",
             "score": "+7500"
           }
         },
@@ -709,6 +739,15 @@
           }
         },
         {
+          "key": "cyrus allen",
+          "names": {
+            "fd": "Cyrus Allen"
+          },
+          "prices": {
+            "fd": "+6000"
+          }
+        },
+        {
           "key": "demond claiborne",
           "names": {
             "dk": "Demond Claiborne",
@@ -717,21 +756,8 @@
           },
           "prices": {
             "dk": "+6000",
-            "fd": "+7500",
+            "fd": "+10000",
             "score": "+7500"
-          }
-        },
-        {
-          "key": "jonah coleman",
-          "names": {
-            "dk": "Jonah Coleman",
-            "fd": "Jonah Coleman",
-            "score": "Jonah Coleman"
-          },
-          "prices": {
-            "dk": "+6000",
-            "fd": "+6000",
-            "score": "+6000"
           }
         },
         {
@@ -743,7 +769,7 @@
           },
           "prices": {
             "dk": "+8000",
-            "fd": "+12500",
+            "fd": "+10000",
             "score": "+6000"
           }
         },
@@ -756,7 +782,7 @@
           },
           "prices": {
             "dk": "+6000",
-            "fd": "+6000",
+            "fd": "+6500",
             "score": "+7500"
           }
         },
@@ -769,7 +795,7 @@
           },
           "prices": {
             "dk": "+7500",
-            "fd": "+10000",
+            "fd": "+8000",
             "score": "+6000"
           }
         },
@@ -826,19 +852,6 @@
           }
         },
         {
-          "key": "ja kobi lane",
-          "names": {
-            "dk": "Ja'Kobi Lane",
-            "fd": "Ja'Kobi Lane",
-            "score": "Ja'Kobi Lane"
-          },
-          "prices": {
-            "dk": "+7500",
-            "fd": "+8000",
-            "score": "+7500"
-          }
-        },
-        {
           "key": "justin joly",
           "names": {
             "dk": "Justin Joly",
@@ -860,8 +873,17 @@
           },
           "prices": {
             "dk": "+8000",
-            "fd": "+8000",
+            "fd": "+10000",
             "score": "+7500"
+          }
+        },
+        {
+          "key": "nick singleton",
+          "names": {
+            "fd": "Nick Singleton"
+          },
+          "prices": {
+            "fd": "+7500"
           }
         },
         {
@@ -873,21 +895,8 @@
           },
           "prices": {
             "dk": "+8000",
-            "fd": "+8000",
-            "score": "+7500"
-          }
-        },
-        {
-          "key": "caleb douglas",
-          "names": {
-            "dk": "Caleb Douglas",
-            "fd": "Caleb Douglas",
-            "score": "Caleb Douglas"
-          },
-          "prices": {
-            "dk": "+8000",
             "fd": "+10000",
-            "score": "+10000"
+            "score": "+7500"
           }
         },
         {
@@ -899,7 +908,7 @@
           },
           "prices": {
             "dk": "+8000",
-            "fd": "+10000",
+            "fd": "+8000",
             "score": "+10000"
           }
         },
@@ -912,8 +921,21 @@
           },
           "prices": {
             "dk": "+10000",
-            "fd": "+10000",
+            "fd": "+12500",
             "score": "+10000"
+          }
+        },
+        {
+          "key": "eli raridon",
+          "names": {
+            "dk": "Eli Raridon",
+            "fd": "Eli Raridon",
+            "score": "Eli Raridon"
+          },
+          "prices": {
+            "dk": "+15000",
+            "fd": "+10000",
+            "score": "+15000"
           }
         },
         {
@@ -927,6 +949,15 @@
             "dk": "+12000",
             "fd": "+20000",
             "score": "+10000"
+          }
+        },
+        {
+          "key": "malik benson",
+          "names": {
+            "fd": "Malik Benson"
+          },
+          "prices": {
+            "fd": "+10000"
           }
         },
         {
@@ -964,7 +995,7 @@
           },
           "prices": {
             "dk": "+15000",
-            "fd": "+17500",
+            "fd": "+10000",
             "score": "+10000"
           }
         },
@@ -989,15 +1020,6 @@
           }
         },
         {
-          "key": "malik benson",
-          "names": {
-            "fd": "Malik Benson"
-          },
-          "prices": {
-            "fd": "+12500"
-          }
-        },
-        {
           "key": "adam randall",
           "names": {
             "dk": "Adam Randall",
@@ -1005,7 +1027,7 @@
           },
           "prices": {
             "dk": "+15000",
-            "fd": "+17500"
+            "fd": "+20000"
           }
         },
         {
@@ -1023,28 +1045,6 @@
           "key": "deion burks",
           "names": {
             "fd": "Deion Burks"
-          },
-          "prices": {
-            "fd": "+15000"
-          }
-        },
-        {
-          "key": "eli raridon",
-          "names": {
-            "dk": "Eli Raridon",
-            "fd": "Eli Raridon",
-            "score": "Eli Raridon"
-          },
-          "prices": {
-            "dk": "+15000",
-            "fd": "+20000",
-            "score": "+15000"
-          }
-        },
-        {
-          "key": "harrison wallace",
-          "names": {
-            "fd": "Harrison Wallace III"
           },
           "prices": {
             "fd": "+15000"
@@ -1150,18 +1150,18 @@
           }
         },
         {
-          "key": "cyrus allen",
+          "key": "dallen bentley",
           "names": {
-            "fd": "Cyrus Allen"
+            "fd": "Dallen Bentley"
           },
           "prices": {
             "fd": "+17500"
           }
         },
         {
-          "key": "dallen bentley",
+          "key": "harrison wallace",
           "names": {
-            "fd": "Dallen Bentley"
+            "fd": "Harrison Wallace III"
           },
           "prices": {
             "fd": "+17500"
@@ -1467,24 +1467,24 @@
       "group": "awards",
       "candidates": [
         {
-          "key": "david bailey",
-          "names": {
-            "dk": "David Bailey",
-            "fd": "David Bailey",
-            "score": "David Bailey"
-          },
-          "prices": {
-            "dk": "+475",
-            "fd": "+500",
-            "score": "+500"
-          }
-        },
-        {
           "key": "rueben bain",
           "names": {
             "dk": "Rueben Bain Jr.",
             "fd": "Rueben Bain Jr.",
             "score": "Rueben Bain Jr."
+          },
+          "prices": {
+            "dk": "+475",
+            "fd": "+470",
+            "score": "+500"
+          }
+        },
+        {
+          "key": "david bailey",
+          "names": {
+            "dk": "David Bailey",
+            "fd": "David Bailey",
+            "score": "David Bailey"
           },
           "prices": {
             "dk": "+475",
@@ -1514,7 +1514,7 @@
           },
           "prices": {
             "dk": "+850",
-            "fd": "+850",
+            "fd": "+700",
             "score": "+750"
           }
         },
@@ -1527,7 +1527,7 @@
           },
           "prices": {
             "dk": "+750",
-            "fd": "+1000",
+            "fd": "+750",
             "score": "+750"
           }
         },
@@ -1540,7 +1540,7 @@
           },
           "prices": {
             "dk": "+850",
-            "fd": "+900",
+            "fd": "+1000",
             "score": "+850"
           }
         },
@@ -1553,8 +1553,21 @@
           },
           "prices": {
             "dk": "+1300",
-            "fd": "+1300",
+            "fd": "+1500",
             "score": "+1500"
+          }
+        },
+        {
+          "key": "jacob rodriguez",
+          "names": {
+            "dk": "Jacob Rodriguez",
+            "fd": "Jacob Rodriguez",
+            "score": "Jacob Rodriguez"
+          },
+          "prices": {
+            "dk": "+2200",
+            "fd": "+1500",
+            "score": "+2000"
           }
         },
         {
@@ -1566,7 +1579,7 @@
           },
           "prices": {
             "dk": "+2000",
-            "fd": "+2700",
+            "fd": "+2500",
             "score": "+1600"
           }
         },
@@ -1579,7 +1592,7 @@
           },
           "prices": {
             "dk": "+2000",
-            "fd": "+2200",
+            "fd": "+3300",
             "score": "+1800"
           }
         },
@@ -1592,20 +1605,7 @@
           },
           "prices": {
             "dk": "+2000",
-            "fd": "+1900",
-            "score": "+2000"
-          }
-        },
-        {
-          "key": "jacob rodriguez",
-          "names": {
-            "dk": "Jacob Rodriguez",
-            "fd": "Jacob Rodriguez",
-            "score": "Jacob Rodriguez"
-          },
-          "prices": {
-            "dk": "+2200",
-            "fd": "+2200",
+            "fd": "+2000",
             "score": "+2000"
           }
         },
@@ -1631,7 +1631,7 @@
           },
           "prices": {
             "dk": "+6000",
-            "fd": "+5000",
+            "fd": "+7500",
             "score": "+3000"
           }
         },
@@ -1644,7 +1644,7 @@
           },
           "prices": {
             "dk": "+3500",
-            "fd": "+4500",
+            "fd": "+5000",
             "score": "+5000"
           }
         },
@@ -1657,7 +1657,7 @@
           },
           "prices": {
             "dk": "+5000",
-            "fd": "+5000",
+            "fd": "+7500",
             "score": "+3500"
           }
         },
@@ -1670,7 +1670,7 @@
           },
           "prices": {
             "dk": "+3500",
-            "fd": "+4000",
+            "fd": "+5500",
             "score": "+4000"
           }
         },
@@ -1683,7 +1683,7 @@
           },
           "prices": {
             "dk": "+7500",
-            "fd": "+7500",
+            "fd": "+8000",
             "score": "+3500"
           }
         },
@@ -1696,7 +1696,7 @@
           },
           "prices": {
             "dk": "+4000",
-            "fd": "+6000",
+            "fd": "+5000",
             "score": "+3500"
           }
         },
@@ -1722,7 +1722,7 @@
           },
           "prices": {
             "dk": "+4000",
-            "fd": "+5000",
+            "fd": "+4000",
             "score": "+4000"
           }
         },
@@ -1748,7 +1748,7 @@
           },
           "prices": {
             "dk": "+6000",
-            "fd": "+7500",
+            "fd": "+5000",
             "score": "+5000"
           }
         },
@@ -1761,7 +1761,7 @@
           },
           "prices": {
             "dk": "+6000",
-            "fd": "+7500",
+            "fd": "+6000",
             "score": "+7500"
           }
         },
@@ -1774,7 +1774,7 @@
           },
           "prices": {
             "dk": "+6000",
-            "fd": "+7500",
+            "fd": "+8000",
             "score": "+7500"
           }
         },
@@ -1887,7 +1887,7 @@
           },
           "prices": {
             "dk": "+7500",
-            "fd": "+7500",
+            "fd": "+8000",
             "score": "+7500"
           }
         },
@@ -1958,6 +1958,15 @@
           }
         },
         {
+          "key": "charles demmings",
+          "names": {
+            "fd": "Charles Demmings"
+          },
+          "prices": {
+            "fd": "+10000"
+          }
+        },
+        {
           "key": "dani dennis sutton",
           "names": {
             "dk": "Dani Dennis-Sutton",
@@ -2011,6 +2020,17 @@
           }
         },
         {
+          "key": "jaishawn barham",
+          "names": {
+            "dk": "Jaishawn Barham",
+            "fd": "Jaishawn Barham"
+          },
+          "prices": {
+            "dk": "+15000",
+            "fd": "+10000"
+          }
+        },
+        {
           "key": "joshua josephs",
           "names": {
             "dk": "Joshua Josephs",
@@ -2019,6 +2039,15 @@
           "prices": {
             "dk": "+10000",
             "fd": "+12500"
+          }
+        },
+        {
+          "key": "kaleb elarms orr",
+          "names": {
+            "fd": "Kaleb Elarms-Orr"
+          },
+          "prices": {
+            "fd": "+10000"
           }
         },
         {
@@ -2229,17 +2258,6 @@
           }
         },
         {
-          "key": "jaishawn barham",
-          "names": {
-            "dk": "Jaishawn Barham",
-            "fd": "Jaishawn Barham"
-          },
-          "prices": {
-            "dk": "+15000",
-            "fd": "+20000"
-          }
-        },
-        {
           "key": "jalon kilgore",
           "names": {
             "dk": "Jalon Kilgore",
@@ -2257,6 +2275,15 @@
           },
           "prices": {
             "dk": "+15000"
+          }
+        },
+        {
+          "key": "kyle louis",
+          "names": {
+            "fd": "Kyle Louis"
+          },
+          "prices": {
+            "fd": "+15000"
           }
         },
         {
@@ -2294,15 +2321,6 @@
           "key": "cameron ball",
           "names": {
             "fd": "Cameron Ball"
-          },
-          "prices": {
-            "fd": "+20000"
-          }
-        },
-        {
-          "key": "charles demmings",
-          "names": {
-            "fd": "Charles Demmings"
           },
           "prices": {
             "fd": "+20000"
@@ -2435,27 +2453,9 @@
           }
         },
         {
-          "key": "kaleb elarms orr",
-          "names": {
-            "fd": "Kaleb Elarms-Orr"
-          },
-          "prices": {
-            "fd": "+20000"
-          }
-        },
-        {
           "key": "keyshaun elliott",
           "names": {
             "fd": "Keyshaun Elliott"
-          },
-          "prices": {
-            "fd": "+20000"
-          }
-        },
-        {
-          "key": "kyle louis",
-          "names": {
-            "fd": "Kyle Louis"
           },
           "prices": {
             "fd": "+20000"
@@ -4432,7 +4432,7 @@
             "score": "BUF Bills"
           },
           "prices": {
-            "dk": "-125",
+            "dk": "-136",
             "fd": "-125",
             "score": "-130"
           }
@@ -4445,7 +4445,7 @@
             "score": "NE Patriots"
           },
           "prices": {
-            "dk": "+120",
+            "dk": "+125",
             "fd": "+125",
             "score": "+130"
           }
@@ -4491,7 +4491,7 @@
             "score": "BAL Ravens"
           },
           "prices": {
-            "dk": "-115",
+            "dk": "-112",
             "fd": "-115",
             "score": "-120"
           }
@@ -4504,7 +4504,7 @@
             "score": "CIN Bengals"
           },
           "prices": {
-            "dk": "+194",
+            "dk": "+184",
             "fd": "+185",
             "score": "+200"
           }
@@ -4668,7 +4668,7 @@
             "score": "PHI Eagles"
           },
           "prices": {
-            "dk": "+110",
+            "dk": "+120",
             "fd": "+135",
             "score": "+130"
           }
@@ -4681,7 +4681,7 @@
             "score": "DAL Cowboys"
           },
           "prices": {
-            "dk": "+235",
+            "dk": "+215",
             "fd": "+200",
             "score": "+200"
           }
@@ -4694,7 +4694,7 @@
             "score": "WSH Commanders"
           },
           "prices": {
-            "dk": "+500",
+            "dk": "+475",
             "fd": "+450",
             "score": "+425"
           }
@@ -4727,7 +4727,7 @@
             "score": "DET Lions"
           },
           "prices": {
-            "dk": "+180",
+            "dk": "+170",
             "fd": "+150",
             "score": "+160"
           }
@@ -4740,7 +4740,7 @@
             "score": "GB Packers"
           },
           "prices": {
-            "dk": "+215",
+            "dk": "+225",
             "fd": "+250",
             "score": "+225"
           }
@@ -4786,7 +4786,7 @@
             "score": "TB Buccaneers"
           },
           "prices": {
-            "dk": "+160",
+            "dk": "+170",
             "fd": "+190",
             "score": "+185"
           }
@@ -4799,7 +4799,7 @@
             "score": "NO Saints"
           },
           "prices": {
-            "dk": "+265",
+            "dk": "+270",
             "fd": "+260",
             "score": "+275"
           }
@@ -4825,7 +4825,7 @@
             "score": "ATL Falcons"
           },
           "prices": {
-            "dk": "+450",
+            "dk": "+400",
             "fd": "+320",
             "score": "+325"
           }
@@ -4845,7 +4845,7 @@
             "score": "LA Rams"
           },
           "prices": {
-            "dk": "+100",
+            "dk": "-105",
             "fd": "-105",
             "score": "+105"
           }
@@ -4858,7 +4858,7 @@
             "score": "SEA Seahawks"
           },
           "prices": {
-            "dk": "+205",
+            "dk": "+215",
             "fd": "+200",
             "score": "+225"
           }
@@ -5334,7 +5334,7 @@
           },
           "prices": {
             "dk": "-460",
-            "fd": "-500"
+            "fd": "-520"
           }
         },
         {
@@ -5345,7 +5345,7 @@
           },
           "prices": {
             "dk": "-390",
-            "fd": "-350"
+            "fd": "-300"
           }
         },
         {
@@ -5356,7 +5356,7 @@
           },
           "prices": {
             "dk": "-320",
-            "fd": "-320"
+            "fd": "-330"
           }
         },
         {
@@ -5367,7 +5367,7 @@
           },
           "prices": {
             "dk": "-225",
-            "fd": "-220"
+            "fd": "-210"
           }
         },
         {
@@ -5378,7 +5378,7 @@
           },
           "prices": {
             "dk": "-225",
-            "fd": "-225"
+            "fd": "-215"
           }
         },
         {
@@ -5388,8 +5388,8 @@
             "fd": "Detroit Lions"
           },
           "prices": {
-            "dk": "-180",
-            "fd": "-205"
+            "dk": "-220",
+            "fd": "-210"
           }
         },
         {
@@ -5400,7 +5400,7 @@
           },
           "prices": {
             "dk": "-205",
-            "fd": "-172"
+            "fd": "-184"
           }
         },
         {
@@ -5410,19 +5410,8 @@
             "fd": "Cincinnati Bengals"
           },
           "prices": {
-            "dk": "-186",
-            "fd": "-178"
-          }
-        },
-        {
-          "key": "PHI",
-          "names": {
-            "dk": "PHI Eagles",
-            "fd": "Philadelphia Eagles"
-          },
-          "prices": {
-            "dk": "-186",
-            "fd": "-148"
+            "dk": "-200",
+            "fd": "-194"
           }
         },
         {
@@ -5433,7 +5422,18 @@
           },
           "prices": {
             "dk": "-180",
-            "fd": "-162"
+            "fd": "-190"
+          }
+        },
+        {
+          "key": "PHI",
+          "names": {
+            "dk": "PHI Eagles",
+            "fd": "Philadelphia Eagles"
+          },
+          "prices": {
+            "dk": "-186",
+            "fd": "-166"
           }
         },
         {
@@ -5444,18 +5444,7 @@
           },
           "prices": {
             "dk": "-168",
-            "fd": "-168"
-          }
-        },
-        {
-          "key": "GB",
-          "names": {
-            "dk": "GB Packers",
-            "fd": "Green Bay Packers"
-          },
-          "prices": {
-            "dk": "-150",
-            "fd": "-118"
+            "fd": "-166"
           }
         },
         {
@@ -5466,7 +5455,18 @@
           },
           "prices": {
             "dk": "-140",
-            "fd": "-148"
+            "fd": "-146"
+          }
+        },
+        {
+          "key": "GB",
+          "names": {
+            "dk": "GB Packers",
+            "fd": "Green Bay Packers"
+          },
+          "prices": {
+            "dk": "-146",
+            "fd": "-116"
           }
         },
         {
@@ -5477,29 +5477,7 @@
           },
           "prices": {
             "dk": "-146",
-            "fd": "-146"
-          }
-        },
-        {
-          "key": "JAX",
-          "names": {
-            "dk": "JAX Jaguars",
-            "fd": "Jacksonville Jaguars"
-          },
-          "prices": {
-            "dk": "+110",
-            "fd": "-116"
-          }
-        },
-        {
-          "key": "CHI",
-          "names": {
-            "dk": "CHI Bears",
-            "fd": "Chicago Bears"
-          },
-          "prices": {
-            "dk": "-108",
-            "fd": "+112"
+            "fd": "-134"
           }
         },
         {
@@ -5509,8 +5487,30 @@
             "fd": "Dallas Cowboys"
           },
           "prices": {
+            "dk": "+100",
+            "fd": "-118"
+          }
+        },
+        {
+          "key": "CHI",
+          "names": {
+            "dk": "CHI Bears",
+            "fd": "Chicago Bears"
+          },
+          "prices": {
+            "dk": "-105",
+            "fd": "+116"
+          }
+        },
+        {
+          "key": "JAX",
+          "names": {
+            "dk": "JAX Jaguars",
+            "fd": "Jacksonville Jaguars"
+          },
+          "prices": {
             "dk": "+105",
-            "fd": "+100"
+            "fd": "-102"
           }
         },
         {
@@ -5520,8 +5520,8 @@
             "fd": "Tampa Bay Buccaneers"
           },
           "prices": {
-            "dk": "+118",
-            "fd": "+136"
+            "dk": "+130",
+            "fd": "+142"
           }
         },
         {
@@ -5532,7 +5532,7 @@
           },
           "prices": {
             "dk": "+140",
-            "fd": "+172"
+            "fd": "+164"
           }
         },
         {
@@ -5543,7 +5543,7 @@
           },
           "prices": {
             "dk": "+154",
-            "fd": "+166"
+            "fd": "+144"
           }
         },
         {
@@ -5554,7 +5554,7 @@
           },
           "prices": {
             "dk": "+170",
-            "fd": "+168"
+            "fd": "+164"
           }
         },
         {
@@ -5569,6 +5569,17 @@
           }
         },
         {
+          "key": "ATL",
+          "names": {
+            "dk": "ATL Falcons",
+            "fd": "Atlanta Falcons"
+          },
+          "prices": {
+            "dk": "+240",
+            "fd": "+215"
+          }
+        },
+        {
           "key": "CAR",
           "names": {
             "dk": "CAR Panthers",
@@ -5576,7 +5587,7 @@
           },
           "prices": {
             "dk": "+220",
-            "fd": "+215"
+            "fd": "+235"
           }
         },
         {
@@ -5586,19 +5597,8 @@
             "fd": "Washington Commanders"
           },
           "prices": {
-            "dk": "+215",
-            "fd": "+215"
-          }
-        },
-        {
-          "key": "ATL",
-          "names": {
-            "dk": "ATL Falcons",
-            "fd": "Atlanta Falcons"
-          },
-          "prices": {
-            "dk": "+310",
-            "fd": "+220"
+            "dk": "+230",
+            "fd": "+280"
           }
         },
         {
@@ -5609,7 +5609,7 @@
           },
           "prices": {
             "dk": "+255",
-            "fd": "+275"
+            "fd": "+260"
           }
         },
         {
@@ -5620,7 +5620,7 @@
           },
           "prices": {
             "dk": "+340",
-            "fd": "+385"
+            "fd": "+430"
           }
         },
         {
@@ -5631,7 +5631,7 @@
           },
           "prices": {
             "dk": "+600",
-            "fd": "+520"
+            "fd": "+530"
           }
         },
         {
@@ -5642,7 +5642,7 @@
           },
           "prices": {
             "dk": "+570",
-            "fd": "+700"
+            "fd": "+640"
           }
         },
         {
@@ -5664,7 +5664,7 @@
           },
           "prices": {
             "dk": "+1400",
-            "fd": "+1200"
+            "fd": "+1500"
           }
         },
         {
@@ -5694,7 +5694,7 @@
           },
           "prices": {
             "score": "+450",
-            "fd": "+430",
+            "fd": "+400",
             "dk": "+450"
           }
         },
@@ -5707,7 +5707,7 @@
           },
           "prices": {
             "score": "+750",
-            "fd": "+2000",
+            "fd": "+2200",
             "dk": "+800"
           }
         },
@@ -5733,7 +5733,7 @@
           },
           "prices": {
             "score": "+850",
-            "fd": "+1200",
+            "fd": "+1000",
             "dk": "+800"
           }
         },
@@ -5759,7 +5759,7 @@
           },
           "prices": {
             "score": "+1200",
-            "fd": "+2700",
+            "fd": "+3000",
             "dk": "+1400"
           }
         },
@@ -5785,7 +5785,7 @@
           },
           "prices": {
             "score": "+1300",
-            "fd": "+2700",
+            "fd": "+4000",
             "dk": "+1300"
           }
         },
@@ -5798,7 +5798,7 @@
           },
           "prices": {
             "score": "+1400",
-            "fd": "+3500",
+            "fd": "+3300",
             "dk": "+1800"
           }
         },
@@ -5811,7 +5811,7 @@
           },
           "prices": {
             "score": "+1600",
-            "fd": "+2700",
+            "fd": "+3000",
             "dk": "+1800"
           }
         },
@@ -5855,41 +5855,6 @@
           }
         },
         {
-          "key": "derek stingley",
-          "names": {
-            "score": "Derek Stingley",
-            "fd": "Derek Stingley Jr.",
-            "dk": "Derek Stingley Jr."
-          },
-          "prices": {
-            "score": "+6000",
-            "fd": "+2700",
-            "dk": "+5000"
-          }
-        },
-        {
-          "key": "pat surtain",
-          "names": {
-            "score": "Pat Surtain II",
-            "fd": "Pat Surtain II"
-          },
-          "prices": {
-            "score": "+4000",
-            "fd": "+2700"
-          }
-        },
-        {
-          "key": "christian gonzalez",
-          "names": {
-            "fd": "Christian Gonzalez",
-            "dk": "Christian Gonzalez"
-          },
-          "prices": {
-            "fd": "+3000",
-            "dk": "+5000"
-          }
-        },
-        {
           "key": "fred warner",
           "names": {
             "score": "Fred Warner",
@@ -5916,16 +5881,16 @@
           }
         },
         {
-          "key": "devon witherspoon",
+          "key": "abdul carter",
           "names": {
-            "score": "Devon Witherspoon",
-            "fd": "Devon Witherspoon",
-            "dk": "Devon Witherspoon"
+            "score": "Abdul Carter",
+            "fd": "Abdul Carter",
+            "dk": "Abdul Carter"
           },
           "prices": {
-            "score": "+7500",
-            "fd": "+3500",
-            "dk": "+5000"
+            "score": "+5000",
+            "fd": "+4000",
+            "dk": "+7000"
           }
         },
         {
@@ -5955,6 +5920,17 @@
           }
         },
         {
+          "key": "pat surtain",
+          "names": {
+            "score": "Pat Surtain II",
+            "fd": "Pat Surtain II"
+          },
+          "prices": {
+            "score": "+4000",
+            "fd": "+5000"
+          }
+        },
+        {
           "key": "quinyon mitchell",
           "names": {
             "score": "Quinyon Mitchell",
@@ -5965,17 +5941,6 @@
             "score": "+5000",
             "fd": "+4000",
             "dk": "+5000"
-          }
-        },
-        {
-          "key": "sauce gardner",
-          "names": {
-            "fd": "Sauce Gardner",
-            "dk": "Sauce Gardner"
-          },
-          "prices": {
-            "fd": "+4000",
-            "dk": "+7000"
           }
         },
         {
@@ -5992,29 +5957,27 @@
           }
         },
         {
-          "key": "kyle hamilton",
+          "key": "derek stingley",
           "names": {
-            "score": "Kyle Hamilton",
-            "fd": "Kyle Hamilton",
-            "dk": "Kyle Hamilton"
+            "score": "Derek Stingley",
+            "fd": "Derek Stingley Jr.",
+            "dk": "Derek Stingley Jr."
           },
           "prices": {
-            "score": "+5000",
+            "score": "+6000",
             "fd": "+4500",
             "dk": "+5000"
           }
         },
         {
-          "key": "abdul carter",
+          "key": "christian gonzalez",
           "names": {
-            "score": "Abdul Carter",
-            "fd": "Abdul Carter",
-            "dk": "Abdul Carter"
+            "fd": "Christian Gonzalez",
+            "dk": "Christian Gonzalez"
           },
           "prices": {
-            "score": "+5000",
             "fd": "+5500",
-            "dk": "+7000"
+            "dk": "+5000"
           }
         },
         {
@@ -6026,6 +5989,19 @@
           },
           "prices": {
             "score": "+6000",
+            "fd": "+6000",
+            "dk": "+5000"
+          }
+        },
+        {
+          "key": "devon witherspoon",
+          "names": {
+            "score": "Devon Witherspoon",
+            "fd": "Devon Witherspoon",
+            "dk": "Devon Witherspoon"
+          },
+          "prices": {
+            "score": "+7500",
             "fd": "+5500",
             "dk": "+5000"
           }
@@ -6044,6 +6020,19 @@
           }
         },
         {
+          "key": "kyle hamilton",
+          "names": {
+            "score": "Kyle Hamilton",
+            "fd": "Kyle Hamilton",
+            "dk": "Kyle Hamilton"
+          },
+          "prices": {
+            "score": "+5000",
+            "fd": "+5500",
+            "dk": "+5000"
+          }
+        },
+        {
           "key": "montez sweat",
           "names": {
             "score": "Montez Sweat",
@@ -6054,19 +6043,6 @@
             "score": "+6000",
             "fd": "+22500",
             "dk": "+5000"
-          }
-        },
-        {
-          "key": "nick emmanwori",
-          "names": {
-            "score": "Nick Emmanwori",
-            "fd": "Nick Emmanwori",
-            "dk": "Nick Emmanwori"
-          },
-          "prices": {
-            "score": "+6000",
-            "fd": "+5000",
-            "dk": "+6000"
           }
         },
         {
@@ -6083,12 +6059,27 @@
           }
         },
         {
-          "key": "byron young rams",
+          "key": "nick emmanwori",
           "names": {
-            "fd": "Byron Young (Rams)"
+            "score": "Nick Emmanwori",
+            "fd": "Nick Emmanwori",
+            "dk": "Nick Emmanwori"
           },
           "prices": {
-            "fd": "+6000"
+            "score": "+6000",
+            "fd": "+5500",
+            "dk": "+6000"
+          }
+        },
+        {
+          "key": "sauce gardner",
+          "names": {
+            "fd": "Sauce Gardner",
+            "dk": "Sauce Gardner"
+          },
+          "prices": {
+            "fd": "+5500",
+            "dk": "+7000"
           }
         },
         {
@@ -6281,6 +6272,15 @@
           }
         },
         {
+          "key": "byron young rams",
+          "names": {
+            "fd": "Byron Young (Rams)"
+          },
+          "prices": {
+            "fd": "+8000"
+          }
+        },
+        {
           "key": "ed oliver",
           "names": {
             "fd": "Ed Oliver",
@@ -6414,6 +6414,15 @@
             "score": "+10000",
             "fd": "+10000",
             "dk": "+10000"
+          }
+        },
+        {
+          "key": "dexter lawrence",
+          "names": {
+            "fd": "Dexter Lawrence II"
+          },
+          "prices": {
+            "fd": "+10000"
           }
         },
         {
@@ -6625,15 +6634,6 @@
           },
           "prices": {
             "dk": "+15000"
-          }
-        },
-        {
-          "key": "dexter lawrence",
-          "names": {
-            "fd": "Dexter Lawrence II"
-          },
-          "prices": {
-            "fd": "+15000"
           }
         },
         {
@@ -7374,6 +7374,15 @@
           }
         },
         {
+          "key": "jalyx hunt",
+          "names": {
+            "fd": "Jalyx Hunt"
+          },
+          "prices": {
+            "fd": "+50000"
+          }
+        },
+        {
           "key": "jamel dean",
           "names": {
             "fd": "Jamel Dean"
@@ -7785,7 +7794,7 @@
           },
           "prices": {
             "score": "+550",
-            "fd": "+600",
+            "fd": "+650",
             "dk": "+550"
           }
         },
@@ -7798,7 +7807,7 @@
           },
           "prices": {
             "score": "+700",
-            "fd": "+750",
+            "fd": "+850",
             "dk": "+650"
           }
         },
@@ -7811,7 +7820,7 @@
           },
           "prices": {
             "score": "+850",
-            "fd": "+850",
+            "fd": "+1000",
             "dk": "+1100"
           }
         },
@@ -7850,7 +7859,7 @@
           },
           "prices": {
             "score": "+1100",
-            "fd": "+1100",
+            "fd": "+1000",
             "dk": "+1000"
           }
         },
@@ -7889,7 +7898,7 @@
           },
           "prices": {
             "score": "+1300",
-            "fd": "+1400",
+            "fd": "+2200",
             "dk": "+1500"
           }
         },
@@ -7915,7 +7924,7 @@
           },
           "prices": {
             "score": "+1500",
-            "fd": "+1600",
+            "fd": "+2000",
             "dk": "+2200"
           }
         },
@@ -7928,7 +7937,7 @@
           },
           "prices": {
             "score": "+2000",
-            "fd": "+2200",
+            "fd": "+2000",
             "dk": "+2000"
           }
         },
@@ -7941,7 +7950,7 @@
           },
           "prices": {
             "score": "+2000",
-            "fd": "+2000",
+            "fd": "+2200",
             "dk": "+2000"
           }
         },
@@ -7954,7 +7963,7 @@
           },
           "prices": {
             "score": "+2200",
-            "fd": "+3500",
+            "fd": "+2500",
             "dk": "+2800"
           }
         },
@@ -7967,8 +7976,21 @@
           },
           "prices": {
             "score": "+2500",
-            "fd": "+2700",
+            "fd": "+2500",
             "dk": "+2800"
+          }
+        },
+        {
+          "key": "baker mayfield",
+          "names": {
+            "score": "Baker Mayfield",
+            "fd": "Baker Mayfield",
+            "dk": "Baker Mayfield"
+          },
+          "prices": {
+            "score": "+4000",
+            "fd": "+3500",
+            "dk": "+4500"
           }
         },
         {
@@ -7998,19 +8020,6 @@
           }
         },
         {
-          "key": "baker mayfield",
-          "names": {
-            "score": "Baker Mayfield",
-            "fd": "Baker Mayfield",
-            "dk": "Baker Mayfield"
-          },
-          "prices": {
-            "score": "+4000",
-            "fd": "+5500",
-            "dk": "+4500"
-          }
-        },
-        {
           "key": "kyler murray",
           "names": {
             "score": "Kyler Murray",
@@ -8019,7 +8028,7 @@
           },
           "prices": {
             "score": "+6000",
-            "fd": "+7000",
+            "fd": "+5000",
             "dk": "+4000"
           }
         },
@@ -8061,16 +8070,12 @@
           }
         },
         {
-          "key": "jahmyr gibbs",
+          "key": "cam ward",
           "names": {
-            "score": "Jahmyr Gibbs",
-            "fd": "Jahmyr Gibbs",
-            "dk": "Jahmyr Gibbs"
+            "fd": "Cam Ward"
           },
           "prices": {
-            "score": "+10000",
-            "fd": "+6500",
-            "dk": "+12000"
+            "fd": "+6500"
           }
         },
         {
@@ -8087,28 +8092,6 @@
           }
         },
         {
-          "key": "bijan robinson",
-          "names": {
-            "score": "Bijan Robinson",
-            "fd": "Bijan Robinson",
-            "dk": "Bijan Robinson"
-          },
-          "prices": {
-            "score": "+10000",
-            "fd": "+8000",
-            "dk": "+10000"
-          }
-        },
-        {
-          "key": "cam ward",
-          "names": {
-            "fd": "Cam Ward"
-          },
-          "prices": {
-            "fd": "+8000"
-          }
-        },
-        {
           "key": "aaron rodgers",
           "names": {
             "score": "Aaron Rodgers",
@@ -8117,6 +8100,19 @@
           },
           "prices": {
             "score": "+15000",
+            "fd": "+10000",
+            "dk": "+10000"
+          }
+        },
+        {
+          "key": "bijan robinson",
+          "names": {
+            "score": "Bijan Robinson",
+            "fd": "Bijan Robinson",
+            "dk": "Bijan Robinson"
+          },
+          "prices": {
+            "score": "+10000",
             "fd": "+10000",
             "dk": "+10000"
           }
@@ -8148,19 +8144,6 @@
           }
         },
         {
-          "key": "fernando mendoza",
-          "names": {
-            "score": "Fernando Mendoza",
-            "fd": "Fernando Mendoza",
-            "dk": "Fernando Mendoza"
-          },
-          "prices": {
-            "score": "+15000",
-            "fd": "+10000",
-            "dk": "+20000"
-          }
-        },
-        {
           "key": "ja marr chase",
           "names": {
             "score": "Ja'Marr Chase",
@@ -8171,6 +8154,19 @@
             "score": "+15000",
             "fd": "+10000",
             "dk": "+20000"
+          }
+        },
+        {
+          "key": "jahmyr gibbs",
+          "names": {
+            "score": "Jahmyr Gibbs",
+            "fd": "Jahmyr Gibbs",
+            "dk": "Jahmyr Gibbs"
+          },
+          "prices": {
+            "score": "+10000",
+            "fd": "+10000",
+            "dk": "+12000"
           }
         },
         {
@@ -8262,6 +8258,19 @@
             "score": "+25000",
             "fd": "+17500",
             "dk": "+15000"
+          }
+        },
+        {
+          "key": "fernando mendoza",
+          "names": {
+            "score": "Fernando Mendoza",
+            "fd": "Fernando Mendoza",
+            "dk": "Fernando Mendoza"
+          },
+          "prices": {
+            "score": "+15000",
+            "fd": "+15000",
+            "dk": "+20000"
           }
         },
         {
@@ -9353,7 +9362,7 @@
           },
           "prices": {
             "score": "+850",
-            "fd": "+950",
+            "fd": "+900",
             "dk": "+800"
           }
         },
@@ -9366,7 +9375,7 @@
           },
           "prices": {
             "score": "+1000",
-            "fd": "+1200",
+            "fd": "+1000",
             "dk": "+950"
           }
         },
@@ -9379,7 +9388,7 @@
           },
           "prices": {
             "score": "+1200",
-            "fd": "+2000",
+            "fd": "+1600",
             "dk": "+1100"
           }
         },
@@ -9405,7 +9414,7 @@
           },
           "prices": {
             "score": "+1200",
-            "fd": "+1400",
+            "fd": "+1800",
             "dk": "+1300"
           }
         },
@@ -9431,7 +9440,7 @@
           },
           "prices": {
             "score": "+1500",
-            "fd": "+2200",
+            "fd": "+2500",
             "dk": "+1700"
           }
         },
@@ -9444,7 +9453,7 @@
           },
           "prices": {
             "score": "+1500",
-            "fd": "+2500",
+            "fd": "+3000",
             "dk": "+1600"
           }
         },
@@ -9470,7 +9479,7 @@
           },
           "prices": {
             "score": "+2000",
-            "fd": "+2500",
+            "fd": "+3000",
             "dk": "+1800"
           }
         },
@@ -9496,7 +9505,7 @@
           },
           "prices": {
             "score": "+2000",
-            "fd": "+2500",
+            "fd": "+2000",
             "dk": "+2200"
           }
         },
@@ -9509,7 +9518,7 @@
           },
           "prices": {
             "score": "+2000",
-            "fd": "+4500",
+            "fd": "+4000",
             "dk": "+3000"
           }
         },
@@ -9522,7 +9531,7 @@
           },
           "prices": {
             "score": "+2500",
-            "fd": "+4500",
+            "fd": "+5000",
             "dk": "+3000"
           }
         },
@@ -9535,7 +9544,7 @@
           },
           "prices": {
             "score": "+3000",
-            "fd": "+5500",
+            "fd": "+6000",
             "dk": "+3500"
           }
         },
@@ -9548,7 +9557,7 @@
           },
           "prices": {
             "score": "+3000",
-            "fd": "+4500",
+            "fd": "+4000",
             "dk": "+3500"
           }
         },
@@ -9600,7 +9609,7 @@
           },
           "prices": {
             "score": "+4000",
-            "fd": "+4500",
+            "fd": "+4000",
             "dk": "+4000"
           }
         },
@@ -9654,19 +9663,6 @@
             "score": "+5000",
             "fd": "+7500",
             "dk": "+5000"
-          }
-        },
-        {
-          "key": "josh jacobs",
-          "names": {
-            "score": "Josh Jacobs",
-            "fd": "Josh Jacobs",
-            "dk": "Josh Jacobs"
-          },
-          "prices": {
-            "score": "+7500",
-            "fd": "+5500",
-            "dk": "+7500"
           }
         },
         {
@@ -9800,6 +9796,19 @@
           }
         },
         {
+          "key": "chris olave",
+          "names": {
+            "score": "Chris Olave",
+            "fd": "Chris Olave",
+            "dk": "Chris Olave"
+          },
+          "prices": {
+            "score": "+10000",
+            "fd": "+7500",
+            "dk": "+10000"
+          }
+        },
+        {
           "key": "emeka egbuka",
           "names": {
             "score": "Emeka Egbuka",
@@ -9863,6 +9872,19 @@
           }
         },
         {
+          "key": "josh jacobs",
+          "names": {
+            "score": "Josh Jacobs",
+            "fd": "Josh Jacobs",
+            "dk": "Josh Jacobs"
+          },
+          "prices": {
+            "score": "+7500",
+            "fd": "+8000",
+            "dk": "+7500"
+          }
+        },
+        {
           "key": "justin herbert",
           "names": {
             "score": "Justin Herbert",
@@ -9897,7 +9919,7 @@
           },
           "prices": {
             "score": "+7500",
-            "fd": "+17500",
+            "fd": "+12500",
             "dk": "+7500"
           }
         },
@@ -10006,19 +10028,6 @@
           }
         },
         {
-          "key": "chris olave",
-          "names": {
-            "score": "Chris Olave",
-            "fd": "Chris Olave",
-            "dk": "Chris Olave"
-          },
-          "prices": {
-            "score": "+10000",
-            "fd": "+10000",
-            "dk": "+10000"
-          }
-        },
-        {
           "key": "christian watson",
           "names": {
             "score": "Christian Watson",
@@ -10116,7 +10125,7 @@
             "dk": "Drake Maye"
           },
           "prices": {
-            "fd": "+12500",
+            "fd": "+10000",
             "dk": "+10000"
           }
         },
@@ -10205,7 +10214,7 @@
           },
           "prices": {
             "score": "+10000",
-            "fd": "+20000",
+            "fd": "+17500",
             "dk": "+15000"
           }
         },
@@ -10347,17 +10356,6 @@
           }
         },
         {
-          "key": "jk dobbins",
-          "names": {
-            "fd": "J.K. Dobbins",
-            "dk": "J.K. Dobbins"
-          },
-          "prices": {
-            "fd": "+12500",
-            "dk": "+15000"
-          }
-        },
-        {
           "key": "alvin kamara",
           "names": {
             "score": "Alvin Kamara",
@@ -10417,6 +10415,17 @@
           },
           "prices": {
             "fd": "+40000",
+            "dk": "+15000"
+          }
+        },
+        {
+          "key": "jk dobbins",
+          "names": {
+            "fd": "J.K. Dobbins",
+            "dk": "J.K. Dobbins"
+          },
+          "prices": {
+            "fd": "+15000",
             "dk": "+15000"
           }
         },
@@ -10528,19 +10537,6 @@
           }
         },
         {
-          "key": "jakobi meyers",
-          "names": {
-            "score": "Jakobi Meyers",
-            "fd": "Jakobi Meyers",
-            "dk": "Jakobi Meyers"
-          },
-          "prices": {
-            "score": "+20000",
-            "fd": "+17500",
-            "dk": "+30000"
-          }
-        },
-        {
           "key": "jaylen warren",
           "names": {
             "score": "Jaylen Warren",
@@ -10554,18 +10550,22 @@
           }
         },
         {
-          "key": "rhamondre stevenson",
+          "key": "jordan love",
           "names": {
-            "fd": "Rhamondre Stevenson"
+            "score": "Jordan Love",
+            "fd": "Jordan Love",
+            "dk": "Jordan Love"
           },
           "prices": {
-            "fd": "+17500"
+            "score": "+20000",
+            "fd": "+17500",
+            "dk": "+20000"
           }
         },
         {
-          "key": "tony pollard",
+          "key": "rhamondre stevenson",
           "names": {
-            "fd": "Tony Pollard"
+            "fd": "Rhamondre Stevenson"
           },
           "prices": {
             "fd": "+17500"
@@ -10604,15 +10604,6 @@
             "score": "+20000",
             "fd": "+40000",
             "dk": "+20000"
-          }
-        },
-        {
-          "key": "blake corum",
-          "names": {
-            "fd": "Blake Corum"
-          },
-          "prices": {
-            "fd": "+20000"
           }
         },
         {
@@ -10686,6 +10677,19 @@
           }
         },
         {
+          "key": "jakobi meyers",
+          "names": {
+            "score": "Jakobi Meyers",
+            "fd": "Jakobi Meyers",
+            "dk": "Jakobi Meyers"
+          },
+          "prices": {
+            "score": "+20000",
+            "fd": "+25000",
+            "dk": "+30000"
+          }
+        },
+        {
           "key": "jared goff",
           "names": {
             "score": "Jared Goff",
@@ -10712,19 +10716,6 @@
           }
         },
         {
-          "key": "jordan love",
-          "names": {
-            "score": "Jordan Love",
-            "fd": "Jordan Love",
-            "dk": "Jordan Love"
-          },
-          "prices": {
-            "score": "+20000",
-            "fd": "+30000",
-            "dk": "+20000"
-          }
-        },
-        {
           "key": "jordyn tyson",
           "names": {
             "dk": "Jordyn Tyson"
@@ -10742,7 +10733,7 @@
           },
           "prices": {
             "score": "+20000",
-            "fd": "+20000",
+            "fd": "+22500",
             "dk": "+25000"
           }
         },
@@ -10782,16 +10773,12 @@
           }
         },
         {
-          "key": "stefon diggs",
+          "key": "tony pollard",
           "names": {
-            "score": "Stefon Diggs",
-            "fd": "Stefon Diggs",
-            "dk": "Stefon Diggs"
+            "fd": "Tony Pollard"
           },
           "prices": {
-            "score": "+30000",
-            "fd": "+20000",
-            "dk": "+50000"
+            "fd": "+20000"
           }
         },
         {
@@ -10857,6 +10844,15 @@
           }
         },
         {
+          "key": "blake corum",
+          "names": {
+            "fd": "Blake Corum"
+          },
+          "prices": {
+            "fd": "+25000"
+          }
+        },
+        {
           "key": "calvin ridley",
           "names": {
             "fd": "Calvin Ridley"
@@ -10895,6 +10891,28 @@
           }
         },
         {
+          "key": "parker washington",
+          "names": {
+            "fd": "Parker Washington"
+          },
+          "prices": {
+            "fd": "+25000"
+          }
+        },
+        {
+          "key": "stefon diggs",
+          "names": {
+            "score": "Stefon Diggs",
+            "fd": "Stefon Diggs",
+            "dk": "Stefon Diggs"
+          },
+          "prices": {
+            "score": "+30000",
+            "fd": "+25000",
+            "dk": "+50000"
+          }
+        },
+        {
           "key": "travis hunter",
           "names": {
             "score": "Travis Hunter",
@@ -10903,7 +10921,7 @@
           },
           "prices": {
             "score": "+25000",
-            "fd": "+30000",
+            "fd": "+40000",
             "dk": "+30000"
           }
         },
@@ -11130,15 +11148,6 @@
           "key": "odell beckham",
           "names": {
             "fd": "Odell Beckham Jr."
-          },
-          "prices": {
-            "fd": "+40000"
-          }
-        },
-        {
-          "key": "parker washington",
-          "names": {
-            "fd": "Parker Washington"
           },
           "prices": {
             "fd": "+40000"
@@ -11893,7 +11902,7 @@
             "score": "John Harbaugh"
           },
           "prices": {
-            "fd": "+900",
+            "fd": "+650",
             "dk": "+600",
             "score": "+550"
           }
@@ -11906,7 +11915,7 @@
             "score": "Jesse Minter"
           },
           "prices": {
-            "fd": "+650",
+            "fd": "+850",
             "dk": "+800",
             "score": "+1000"
           }
@@ -11919,7 +11928,7 @@
             "score": "Robert Saleh"
           },
           "prices": {
-            "fd": "+1700",
+            "fd": "+1600",
             "dk": "+1000",
             "score": "+1200"
           }
@@ -11932,7 +11941,7 @@
             "score": "Joe Brady"
           },
           "prices": {
-            "fd": "+1200",
+            "fd": "+1500",
             "dk": "+1400",
             "score": "+1200"
           }
@@ -11997,7 +12006,7 @@
             "score": "Brian Schottenheimer"
           },
           "prices": {
-            "fd": "+1900",
+            "fd": "+1600",
             "dk": "+1800",
             "score": "+1500"
           }
@@ -12010,7 +12019,7 @@
             "score": "Klint Kubiak"
           },
           "prices": {
-            "fd": "+2000",
+            "fd": "+1700",
             "dk": "+2000",
             "score": "+1500"
           }
@@ -12036,7 +12045,7 @@
             "score": "Aaron Glenn"
           },
           "prices": {
-            "fd": "+2700",
+            "fd": "+2500",
             "dk": "+2000",
             "score": "+1800"
           }
@@ -12049,7 +12058,7 @@
             "score": "Jim Harbaugh"
           },
           "prices": {
-            "fd": "+2200",
+            "fd": "+1900",
             "dk": "+2000",
             "score": "+1800"
           }
@@ -12133,19 +12142,6 @@
           }
         },
         {
-          "key": "demeco ryans",
-          "names": {
-            "fd": "DeMeco Ryans",
-            "dk": "Demeco Ryans",
-            "score": "DeMeco Ryans"
-          },
-          "prices": {
-            "fd": "+2200",
-            "dk": "+4000",
-            "score": "+2500"
-          }
-        },
-        {
           "key": "jeff hafley",
           "names": {
             "fd": "Jeff Hafley",
@@ -12166,7 +12162,7 @@
             "score": "Kyle Shanahan"
           },
           "prices": {
-            "fd": "+2500",
+            "fd": "+2200",
             "dk": "+3500",
             "score": "+2200"
           }
@@ -12179,9 +12175,22 @@
             "score": "Liam Coen"
           },
           "prices": {
-            "fd": "+2500",
+            "fd": "+2200",
             "dk": "+2800",
             "score": "+2200"
+          }
+        },
+        {
+          "key": "demeco ryans",
+          "names": {
+            "fd": "DeMeco Ryans",
+            "dk": "Demeco Ryans",
+            "score": "DeMeco Ryans"
+          },
+          "prices": {
+            "fd": "+2700",
+            "dk": "+4000",
+            "score": "+2500"
           }
         },
         {
@@ -12326,7 +12335,7 @@
             "dk": "MIA Dolphins"
           },
           "prices": {
-            "fd": "-2500",
+            "fd": "-4000",
             "dk": "-4000"
           }
         },
@@ -12348,7 +12357,7 @@
             "dk": "CLE Browns"
           },
           "prices": {
-            "fd": "-1100",
+            "fd": "-950",
             "dk": "-850"
           }
         },
@@ -12359,7 +12368,7 @@
             "dk": "LV Raiders"
           },
           "prices": {
-            "fd": "-720",
+            "fd": "-750",
             "dk": "-900"
           }
         },
@@ -12370,41 +12379,8 @@
             "dk": "TEN Titans"
           },
           "prices": {
-            "fd": "-500",
+            "fd": "-590",
             "dk": "-440"
-          }
-        },
-        {
-          "key": "ATL",
-          "names": {
-            "fd": "Atlanta Falcons",
-            "dk": "ATL Falcons"
-          },
-          "prices": {
-            "fd": "-270",
-            "dk": "-400"
-          }
-        },
-        {
-          "key": "NYG",
-          "names": {
-            "fd": "New York Giants",
-            "dk": "NY Giants"
-          },
-          "prices": {
-            "fd": "-340",
-            "dk": "-320"
-          }
-        },
-        {
-          "key": "CAR",
-          "names": {
-            "fd": "Carolina Panthers",
-            "dk": "CAR Panthers"
-          },
-          "prices": {
-            "fd": "-260",
-            "dk": "-270"
           }
         },
         {
@@ -12414,8 +12390,41 @@
             "dk": "WAS Commanders"
           },
           "prices": {
+            "fd": "-350",
+            "dk": "-290"
+          }
+        },
+        {
+          "key": "NYG",
+          "names": {
+            "fd": "New York Giants",
+            "dk": "NY Giants"
+          },
+          "prices": {
+            "fd": "-320",
+            "dk": "-320"
+          }
+        },
+        {
+          "key": "ATL",
+          "names": {
+            "fd": "Atlanta Falcons",
+            "dk": "ATL Falcons"
+          },
+          "prices": {
             "fd": "-260",
-            "dk": "-265"
+            "dk": "-300"
+          }
+        },
+        {
+          "key": "CAR",
+          "names": {
+            "fd": "Carolina Panthers",
+            "dk": "CAR Panthers"
+          },
+          "prices": {
+            "fd": "-290",
+            "dk": "-270"
           }
         },
         {
@@ -12436,7 +12445,7 @@
             "dk": "IND Colts"
           },
           "prices": {
-            "fd": "-200",
+            "fd": "-196",
             "dk": "-205"
           }
         },
@@ -12447,7 +12456,7 @@
             "dk": "PIT Steelers"
           },
           "prices": {
-            "fd": "-205",
+            "fd": "-196",
             "dk": "-168"
           }
         },
@@ -12458,7 +12467,7 @@
             "dk": "MIN Vikings"
           },
           "prices": {
-            "fd": "-198",
+            "fd": "-172",
             "dk": "-186"
           }
         },
@@ -12469,8 +12478,8 @@
             "dk": "TB Buccaneers"
           },
           "prices": {
-            "fd": "-162",
-            "dk": "-140"
+            "fd": "-168",
+            "dk": "-150"
           }
         },
         {
@@ -12480,8 +12489,8 @@
             "dk": "CHI Bears"
           },
           "prices": {
-            "fd": "-132",
-            "dk": "-110"
+            "fd": "-136",
+            "dk": "-115"
           }
         },
         {
@@ -12491,8 +12500,8 @@
             "dk": "JAX Jaguars"
           },
           "prices": {
-            "fd": "-102",
-            "dk": "-130"
+            "fd": "-116",
+            "dk": "-125"
           }
         },
         {
@@ -12502,8 +12511,8 @@
             "dk": "DAL Cowboys"
           },
           "prices": {
-            "fd": "-118",
-            "dk": "-125"
+            "fd": "+100",
+            "dk": "-120"
           }
         },
         {
@@ -12513,19 +12522,8 @@
             "dk": "GB Packers"
           },
           "prices": {
-            "fd": "+100",
-            "dk": "+125"
-          }
-        },
-        {
-          "key": "DEN",
-          "names": {
-            "fd": "Denver Broncos",
-            "dk": "DEN Broncos"
-          },
-          "prices": {
-            "fd": "+126",
-            "dk": "+118"
+            "fd": "-104",
+            "dk": "+122"
           }
         },
         {
@@ -12535,8 +12533,30 @@
             "dk": "SF 49ers"
           },
           "prices": {
-            "fd": "+124",
+            "fd": "+114",
             "dk": "+122"
+          }
+        },
+        {
+          "key": "DEN",
+          "names": {
+            "fd": "Denver Broncos",
+            "dk": "DEN Broncos"
+          },
+          "prices": {
+            "fd": "+124",
+            "dk": "+118"
+          }
+        },
+        {
+          "key": "LAC",
+          "names": {
+            "fd": "Los Angeles Chargers",
+            "dk": "LA Chargers"
+          },
+          "prices": {
+            "fd": "+140",
+            "dk": "+140"
           }
         },
         {
@@ -12546,7 +12566,7 @@
             "dk": "PHI Eagles"
           },
           "prices": {
-            "fd": "+126",
+            "fd": "+140",
             "dk": "+154"
           }
         },
@@ -12557,19 +12577,8 @@
             "dk": "HOU Texans"
           },
           "prices": {
-            "fd": "+136",
+            "fd": "+160",
             "dk": "+150"
-          }
-        },
-        {
-          "key": "LAC",
-          "names": {
-            "fd": "Los Angeles Chargers",
-            "dk": "LA Chargers"
-          },
-          "prices": {
-            "fd": "+142",
-            "dk": "+140"
           }
         },
         {
@@ -12579,7 +12588,7 @@
             "dk": "KC Chiefs"
           },
           "prices": {
-            "fd": "+144",
+            "fd": "+154",
             "dk": "+170"
           }
         },
@@ -12590,8 +12599,8 @@
             "dk": "CIN Bengals"
           },
           "prices": {
-            "fd": "+150",
-            "dk": "+154"
+            "fd": "+162",
+            "dk": "+160"
           }
         },
         {
@@ -12601,8 +12610,8 @@
             "dk": "DET Lions"
           },
           "prices": {
-            "fd": "+172",
-            "dk": "+150"
+            "fd": "+176",
+            "dk": "+180"
           }
         },
         {
@@ -12612,7 +12621,7 @@
             "dk": "NE Patriots"
           },
           "prices": {
-            "fd": "+184",
+            "fd": "+176",
             "dk": "+184"
           }
         },
@@ -12623,19 +12632,8 @@
             "dk": "SEA Seahawks"
           },
           "prices": {
-            "fd": "+188",
+            "fd": "+180",
             "dk": "+184"
-          }
-        },
-        {
-          "key": "BUF",
-          "names": {
-            "fd": "Buffalo Bills",
-            "dk": "BUF Bills"
-          },
-          "prices": {
-            "fd": "+260",
-            "dk": "+255"
           }
         },
         {
@@ -12645,8 +12643,19 @@
             "dk": "BAL Ravens"
           },
           "prices": {
-            "fd": "+280",
+            "fd": "+245",
             "dk": "+305"
+          }
+        },
+        {
+          "key": "BUF",
+          "names": {
+            "fd": "Buffalo Bills",
+            "dk": "BUF Bills"
+          },
+          "prices": {
+            "fd": "+265",
+            "dk": "+255"
           }
         },
         {
@@ -12656,7 +12665,7 @@
             "dk": "LA Rams"
           },
           "prices": {
-            "fd": "+385",
+            "fd": "+400",
             "dk": "+350"
           }
         }
@@ -12687,7 +12696,7 @@
             "dk": "Jayden Daniels"
           },
           "prices": {
-            "fd": "+430",
+            "fd": "+700",
             "dk": "+450"
           }
         },
@@ -12699,9 +12708,18 @@
             "score": "Kyler Murray"
           },
           "prices": {
-            "fd": "+550",
+            "fd": "+470",
             "dk": "+600",
             "score": "+550"
+          }
+        },
+        {
+          "key": "aaron donald",
+          "names": {
+            "fd": "Aaron Donald"
+          },
+          "prices": {
+            "fd": "+750"
           }
         },
         {
@@ -12712,7 +12730,7 @@
             "score": "Micah Parsons"
           },
           "prices": {
-            "fd": "+1800",
+            "fd": "+3500",
             "dk": "+1000",
             "score": "+800"
           }
@@ -12725,18 +12743,9 @@
             "score": "Malik Nabers"
           },
           "prices": {
-            "fd": "+2500",
+            "fd": "+1900",
             "dk": "+1600",
             "score": "+1000"
-          }
-        },
-        {
-          "key": "aaron donald",
-          "names": {
-            "fd": "Aaron Donald"
-          },
-          "prices": {
-            "fd": "+1400"
           }
         },
         {
@@ -12747,7 +12756,7 @@
             "score": "Daniel Jones"
           },
           "prices": {
-            "fd": "+2500",
+            "fd": "+1200",
             "dk": "+1800",
             "score": "+1500"
           }
@@ -12760,7 +12769,7 @@
             "score": "Fred Warner"
           },
           "prices": {
-            "fd": "+2500",
+            "fd": "+3300",
             "dk": "+2500",
             "score": "+2000"
           }
@@ -12773,7 +12782,7 @@
             "score": "George Kittle"
           },
           "prices": {
-            "fd": "+2500",
+            "fd": "+3300",
             "dk": "+2000",
             "score": "+2500"
           }
@@ -12786,7 +12795,7 @@
             "score": "Nick Bosa"
           },
           "prices": {
-            "fd": "+2700",
+            "fd": "+4000",
             "dk": "+2500",
             "score": "+2000"
           }
@@ -12799,7 +12808,7 @@
             "score": "Cam Skattebo"
           },
           "prices": {
-            "fd": "+3500",
+            "fd": "+4000",
             "dk": "+2800",
             "score": "+2500"
           }
@@ -12812,7 +12821,7 @@
             "score": "Travis Hunter"
           },
           "prices": {
-            "fd": "+2500",
+            "fd": "+4500",
             "dk": "+2500",
             "score": "+2500"
           }
@@ -12825,22 +12834,9 @@
             "score": "Tucker Kraft"
           },
           "prices": {
-            "fd": "+3300",
+            "fd": "+2700",
             "dk": "+2800",
             "score": "+2500"
-          }
-        },
-        {
-          "key": "brock bowers",
-          "names": {
-            "fd": "Brock Bowers",
-            "dk": "Brock Bowers",
-            "score": "Brock Bowers"
-          },
-          "prices": {
-            "fd": "+3000",
-            "dk": "+5000",
-            "score": "+4000"
           }
         },
         {
@@ -12864,7 +12860,7 @@
             "score": "Garrett Wilson"
           },
           "prices": {
-            "fd": "+3500",
+            "fd": "+5500",
             "dk": "+3000",
             "score": "+3000"
           }
@@ -12877,9 +12873,31 @@
             "score": "Trey Hendrickson"
           },
           "prices": {
-            "fd": "+3500",
+            "fd": "+4500",
             "dk": "+3000",
             "score": "+3500"
+          }
+        },
+        {
+          "key": "brock bowers",
+          "names": {
+            "fd": "Brock Bowers",
+            "dk": "Brock Bowers",
+            "score": "Brock Bowers"
+          },
+          "prices": {
+            "fd": "+6000",
+            "dk": "+5000",
+            "score": "+4000"
+          }
+        },
+        {
+          "key": "jonathon brooks",
+          "names": {
+            "fd": "Jonathon Brooks"
+          },
+          "prices": {
+            "fd": "+4000"
           }
         },
         {
@@ -12901,7 +12919,7 @@
             "score": "Michael Penix Jr."
           },
           "prices": {
-            "fd": "+4500",
+            "fd": "+7500",
             "dk": "+4000",
             "score": "+4000"
           }
@@ -12914,7 +12932,7 @@
             "score": "Sam LaPorta"
           },
           "prices": {
-            "fd": "+4500",
+            "fd": "+6000",
             "dk": "+5000",
             "score": "+4000"
           }
@@ -12927,7 +12945,7 @@
             "score": "Tank Dell"
           },
           "prices": {
-            "fd": "+8000",
+            "fd": "+5000",
             "dk": "+4000",
             "score": "+5000"
           }
@@ -12940,44 +12958,9 @@
             "score": "Tua Tagovailoa"
           },
           "prices": {
-            "fd": "+4500",
+            "fd": "+5000",
             "dk": "+4000",
             "score": "+4000"
-          }
-        },
-        {
-          "key": "brian thomas",
-          "names": {
-            "fd": "Brian Thomas Jr."
-          },
-          "prices": {
-            "fd": "+4500"
-          }
-        },
-        {
-          "key": "geno smith",
-          "names": {
-            "fd": "Geno Smith",
-            "dk": "Geno Smith",
-            "score": "Geno Smith"
-          },
-          "prices": {
-            "fd": "+4500",
-            "dk": "+5000",
-            "score": "+6000"
-          }
-        },
-        {
-          "key": "quinshon judkins",
-          "names": {
-            "fd": "Quinshon Judkins",
-            "dk": "Quinshon Judkins",
-            "score": "Quinshon Judkins"
-          },
-          "prices": {
-            "fd": "+4500",
-            "dk": "+5000",
-            "score": "+5000"
           }
         },
         {
@@ -12988,9 +12971,22 @@
             "score": "Anthony Richardson Sr."
           },
           "prices": {
-            "fd": "+10000",
+            "fd": "+12500",
             "dk": "+5000",
             "score": "+7500"
+          }
+        },
+        {
+          "key": "geno smith",
+          "names": {
+            "fd": "Geno Smith",
+            "dk": "Geno Smith",
+            "score": "Geno Smith"
+          },
+          "prices": {
+            "fd": "+5000",
+            "dk": "+5000",
+            "score": "+6000"
           }
         },
         {
@@ -13001,9 +12997,40 @@
             "score": "J.J. McCarthy"
           },
           "prices": {
-            "fd": "+10000",
+            "fd": "+12500",
             "dk": "+5000",
             "score": "+7500"
+          }
+        },
+        {
+          "key": "quinshon judkins",
+          "names": {
+            "fd": "Quinshon Judkins",
+            "dk": "Quinshon Judkins",
+            "score": "Quinshon Judkins"
+          },
+          "prices": {
+            "fd": "+7500",
+            "dk": "+5000",
+            "score": "+5000"
+          }
+        },
+        {
+          "key": "brian thomas",
+          "names": {
+            "fd": "Brian Thomas Jr."
+          },
+          "prices": {
+            "fd": "+6000"
+          }
+        },
+        {
+          "key": "marvin harrison",
+          "names": {
+            "fd": "Marvin Harrison Jr."
+          },
+          "prices": {
+            "fd": "+6000"
           }
         },
         {
@@ -13062,7 +13089,7 @@
             "score": "J.K. Dobbins"
           },
           "prices": {
-            "fd": "+10000",
+            "fd": "+7500",
             "dk": "+7500",
             "score": "+7500"
           }
@@ -13075,7 +13102,7 @@
             "score": "Odell Beckham Jr."
           },
           "prices": {
-            "fd": "+12500",
+            "fd": "+10000",
             "dk": "+7500",
             "score": "+10000"
           }
@@ -13107,6 +13134,19 @@
           }
         },
         {
+          "key": "mykel williams",
+          "names": {
+            "fd": "Mykel Williams",
+            "dk": "Mykel Williams",
+            "score": "Mykel Williams"
+          },
+          "prices": {
+            "fd": "+8000",
+            "dk": "+10000",
+            "score": "+10000"
+          }
+        },
+        {
           "key": "carson wentz",
           "names": {
             "dk": "Carson Wentz"
@@ -13123,7 +13163,7 @@
             "score": "James Conner"
           },
           "prices": {
-            "fd": "+12500",
+            "fd": "+20000",
             "dk": "+10000",
             "score": "+10000"
           }
@@ -13136,20 +13176,7 @@
             "score": "Joe Alt"
           },
           "prices": {
-            "fd": "+12500",
-            "dk": "+10000",
-            "score": "+10000"
-          }
-        },
-        {
-          "key": "mykel williams",
-          "names": {
-            "fd": "Mykel Williams",
-            "dk": "Mykel Williams",
-            "score": "Mykel Williams"
-          },
-          "prices": {
-            "fd": "+10000",
+            "fd": "+15000",
             "dk": "+10000",
             "score": "+10000"
           }
@@ -13162,7 +13189,7 @@
             "score": "Will Levis"
           },
           "prices": {
-            "fd": "+12500",
+            "fd": "+15000",
             "dk": "+10000",
             "score": "+10000"
           }
@@ -13175,9 +13202,18 @@
             "score": "Zach Charbonnet"
           },
           "prices": {
-            "fd": "+12500",
+            "fd": "+15000",
             "dk": "+10000",
             "score": "+10000"
+          }
+        },
+        {
+          "key": "nnamdi madubuike",
+          "names": {
+            "fd": "Nnamdi Madubuike"
+          },
+          "prices": {
+            "fd": "+15000"
           }
         }
       ]
@@ -13188,27 +13224,18 @@
       "group": "leaders",
       "candidates": [
         {
-          "key": "jordyn tyson",
-          "names": {
-            "fd": "Jordyn Tyson"
-          },
-          "prices": {
-            "fd": "+250"
-          }
-        },
-        {
           "key": "carnell tate",
           "names": {
             "fd": "Carnell Tate"
           },
           "prices": {
-            "fd": "+300"
+            "fd": "+135"
           }
         },
         {
-          "key": "makai lemon",
+          "key": "de zhaun stribling",
           "names": {
-            "fd": "Makai Lemon"
+            "fd": "De'Zhaun Stribling"
           },
           "prices": {
             "fd": "+650"
@@ -13220,7 +13247,16 @@
             "fd": "KC Concepcion"
           },
           "prices": {
-            "fd": "+850"
+            "fd": "+800"
+          }
+        },
+        {
+          "key": "makai lemon",
+          "names": {
+            "fd": "Makai Lemon"
+          },
+          "prices": {
+            "fd": "+950"
           }
         },
         {
@@ -13229,25 +13265,7 @@
             "fd": "Denzel Boston"
           },
           "prices": {
-            "fd": "+1600"
-          }
-        },
-        {
-          "key": "omar cooper",
-          "names": {
-            "fd": "Omar Cooper Jr."
-          },
-          "prices": {
-            "fd": "+1600"
-          }
-        },
-        {
-          "key": "antonio williams",
-          "names": {
-            "fd": "Antonio Williams"
-          },
-          "prices": {
-            "fd": "+2500"
+            "fd": "+1000"
           }
         },
         {
@@ -13256,16 +13274,34 @@
             "fd": "Caleb Douglas"
           },
           "prices": {
-            "fd": "+3000"
+            "fd": "+1800"
           }
         },
         {
-          "key": "chris bell",
+          "key": "antonio williams",
           "names": {
-            "fd": "Chris Bell"
+            "fd": "Antonio Williams"
           },
           "prices": {
-            "fd": "+3000"
+            "fd": "+2400"
+          }
+        },
+        {
+          "key": "omar cooper",
+          "names": {
+            "fd": "Omar Cooper Jr."
+          },
+          "prices": {
+            "fd": "+2600"
+          }
+        },
+        {
+          "key": "ja kobi lane",
+          "names": {
+            "fd": "Ja'Kobi Lane"
+          },
+          "prices": {
+            "fd": "+2700"
           }
         },
         {
@@ -13278,30 +13314,48 @@
           }
         },
         {
+          "key": "jordyn tyson",
+          "names": {
+            "fd": "Jordyn Tyson"
+          },
+          "prices": {
+            "fd": "+3400"
+          }
+        },
+        {
+          "key": "cyrus allen",
+          "names": {
+            "fd": "Cyrus Allen"
+          },
+          "prices": {
+            "fd": "+3500"
+          }
+        },
+        {
+          "key": "chris bell",
+          "names": {
+            "fd": "Chris Bell"
+          },
+          "prices": {
+            "fd": "+3800"
+          }
+        },
+        {
           "key": "germie bernard",
           "names": {
             "fd": "Germie Bernard"
           },
           "prices": {
-            "fd": "+3000"
+            "fd": "+3800"
           }
         },
         {
-          "key": "malachi fields",
+          "key": "zachariah branch",
           "names": {
-            "fd": "Malachi Fields"
+            "fd": "Zachariah Branch"
           },
           "prices": {
-            "fd": "+3000"
-          }
-        },
-        {
-          "key": "de zhaun stribling",
-          "names": {
-            "fd": "De'Zhaun Stribling"
-          },
-          "prices": {
-            "fd": "+4000"
+            "fd": "+4100"
           }
         },
         {
@@ -13310,16 +13364,16 @@
             "fd": "Elijah Sarratt"
           },
           "prices": {
-            "fd": "+4000"
+            "fd": "+4800"
           }
         },
         {
-          "key": "ja kobi lane",
+          "key": "malachi fields",
           "names": {
-            "fd": "Ja'Kobi Lane"
+            "fd": "Malachi Fields"
           },
           "prices": {
-            "fd": "+5000"
+            "fd": "+4800"
           }
         },
         {
@@ -13332,21 +13386,12 @@
           }
         },
         {
-          "key": "zachariah branch",
-          "names": {
-            "fd": "Zachariah Branch"
-          },
-          "prices": {
-            "fd": "+5000"
-          }
-        },
-        {
           "key": "jeremiyah love",
           "names": {
             "fd": "Jeremiyah Love"
           },
           "prices": {
-            "fd": "+6000"
+            "fd": "+11000"
           }
         },
         {
