@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Baker&rsquo;s Buns | Projections mock-ups</title>
+  <link rel="icon" type="image/png" href="/favicon.png">
+</head>
+<!--
+  THROWAWAY. Three ways the Projections table could render a team's metrics,
+  built on the real JSON so the shapes are the shapes the actual field makes.
+  Not linked from nav, not routed in vercel.json, not styled from the site
+  sheets — everything it needs is in this file so deleting it costs nothing.
+-->
+<body>
+<style>
+  :root {
+    --bg:#111; --card:#1a1a1a; --line:#2a2a2a; --hair:#1f1f1f;
+    --ink:#c9d1d9; --hi:#f0f0f0; --mute:#8b949e; --dim:#555;
+    --up:#3fb950; --down:#f0883e; --accent:#60a5fa; --zero:#6e7681;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; padding:20px 16px 60px; background:var(--bg); color:var(--ink);
+         font:13px/1.5 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; }
+  .wrap { max-width:960px; margin:0 auto; }
+  h1 { font:700 13px/1.4 monospace; text-transform:uppercase; letter-spacing:.5px;
+       color:#888; margin:0 0 4px; }
+  .sub { font:11px/1.55 monospace; color:var(--dim); margin:0 0 16px; }
+  .sub b { color:var(--mute); font-weight:400; }
+
+  /* tabs */
+  .tabs { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:6px; }
+  .tab { font:11px monospace; padding:6px 11px; color:var(--mute); background:#1b1b1b;
+         border:1px solid var(--line); border-radius:5px; cursor:pointer; }
+  .tab:hover { color:var(--hi); border-color:#3a3a3a; }
+  .tab.on { color:var(--accent); border-color:var(--accent); background:rgba(96,165,250,.12); }
+  .blurb { font:11px/1.6 monospace; color:var(--dim); margin:0 0 14px;
+           padding:9px 11px; background:var(--card); border-left:3px solid var(--line);
+           border-radius:0 4px 4px 0; }
+  .blurb b { color:var(--mute); }
+  .pane { display:none; }
+  .pane.on { display:block; }
+
+  /* shared row furniture */
+  .row { display:grid; align-items:center; gap:10px; padding:8px 10px;
+         border-bottom:1px solid var(--hair); }
+  .row:hover { background:#171717; }
+  .lg { width:26px; height:26px; }
+  .nm { font:11px monospace; color:var(--ink); white-space:nowrap; }
+  .sc { font:700 13px monospace; color:var(--hi); text-align:right; white-space:nowrap; }
+  .neg { color:#b0b6bd; }
+  .hdr { font:700 9px monospace; text-transform:uppercase; letter-spacing:.08em;
+         color:var(--dim); padding:0 10px 6px; }
+
+  /* ---------- A · bar rows ---------- */
+  .a-row { grid-template-columns:26px 92px 1fr 52px; padding:11px 10px; }
+  .a-bars { display:flex; flex-direction:column; gap:3px; }
+  .a-bar { display:grid; grid-template-columns:64px 1fr 44px; align-items:center; gap:8px; }
+  .a-lab { font:9px monospace; color:var(--dim); text-align:right; }
+  .a-track { position:relative; height:9px; background:#1b1b1b; border-radius:2px; }
+  .a-zero { position:absolute; left:50%; top:-2px; bottom:-2px; width:1px;
+            background:var(--zero); z-index:1; }
+  .a-fill { position:absolute; top:0; bottom:0; border-radius:2px; }
+  .a-val { font:9px monospace; color:var(--mute); }
+
+  /* ---------- B · shared rail ---------- */
+  .b-row { grid-template-columns:26px 92px 1fr 52px; }
+  .b-rail { position:relative; height:26px; }
+  .b-grid { position:absolute; inset:0; }
+  .b-tick { position:absolute; top:0; bottom:0; width:1px; background:var(--hair); }
+  .b-tick.mid { background:var(--zero); }
+  .b-span { position:absolute; top:50%; height:1px; background:#333; }
+  .b-mk { position:absolute; top:50%; width:9px; height:9px; margin:-4.5px 0 0 -4.5px; }
+  .b-mk.sq { background:var(--accent); }
+  .b-mk.tr { width:0; height:0; margin:-5px 0 0 -5px;
+             border-left:5px solid transparent; border-right:5px solid transparent;
+             border-bottom:9px solid #d29922; }
+  .b-mk.ci { border-radius:50%; background:#e1e4e8; }
+  .b-mk.di { background:#bc8cff; transform:rotate(45deg); }
+  .b-axis { display:grid; grid-template-columns:26px 92px 1fr 52px; gap:10px;
+            padding:0 10px 4px; }
+  .b-axis-in { position:relative; height:12px; font:9px monospace; color:var(--dim); }
+  .b-axis-in span { position:absolute; transform:translateX(-50%); }
+  .key { display:flex; flex-wrap:wrap; gap:12px; padding:10px; font:10px monospace;
+         color:var(--mute); }
+  .key i { display:inline-block; vertical-align:middle; margin-right:5px; }
+
+  /* ---------- C · barcode ---------- */
+  .c-row { grid-template-columns:26px 92px 1fr 52px 132px; }
+  .c-comp { position:relative; height:12px; background:#1b1b1b; border-radius:2px; }
+  .c-cells { display:grid; grid-template-columns:repeat(4,1fr); gap:3px; }
+  .c-cell { position:relative; height:26px; border-radius:3px; display:flex;
+            align-items:center; justify-content:center;
+            font:700 9px monospace; color:rgba(0,0,0,.62); }
+  .c-cell.lo { color:rgba(255,255,255,.5); }
+  .c-head { display:grid; grid-template-columns:26px 92px 1fr 52px 132px; gap:10px;
+            padding:0 10px 6px; }
+  .c-head .c-cells > span { text-align:center; font:700 8px monospace; white-space:nowrap;
+            text-transform:uppercase; letter-spacing:.04em; color:var(--dim); }
+  .err { padding:30px 10px; font:12px monospace; color:var(--dim); }
+</style>
+
+<div class="wrap">
+  <h1>Projections &mdash; three mock-ups</h1>
+  <p class="sub">Real data, real field. Sorted by composite. <b>Concept only &mdash; not wired into the site.</b></p>
+
+  <div class="tabs">
+    <button class="tab on" data-p="a">A &middot; Bar rows</button>
+    <button class="tab" data-p="b">B &middot; Shared rail</button>
+    <button class="tab" data-p="c">C &middot; Barcode</button>
+  </div>
+
+  <div id="out"><p class="err">Loading&hellip;</p></div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  var LOGO = '/assets/icons/nfl/';
+  var M = [
+    { k:'oLine',   lab:'O-Line', w:'40%', mk:'sq' },
+    { k:'sos',     lab:'SoS',    w:'25%', mk:'tr' },
+    { k:'eyeTest', lab:'Eye',    w:'20%', mk:'ci' },
+    { k:'rest',    lab:'Rest',   w:'15%', mk:'di' }
+  ];
+  var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
+  var sgn = function (v, d) { return (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v).toFixed(d); };
+  var logo = function (t) { return '<img class="lg" src="' + LOGO + esc(t.abbr) + '.svg" alt="">'; };
+  var name = function (t) { return '<span class="nm">' + esc(t.short || t.team) + '</span>'; };
+  var score = function (t) { return '<span class="sc' + (t.score < 0 ? ' neg' : '') + '">' +
+    sgn(t.score, 2) + '</span>'; };
+
+  fetch('/data/nfl_projections_2026.json', { cache:'no-store' })
+    .then(function (r) { return r.json(); })
+    .then(function (d) {
+      var teams = (d.teams || []).slice().sort(function (a, b) { return b.score - a.score; });
+      var W = d.weights || {};
+
+      // field scales, computed over all 32 so a row means the same thing anywhere
+      var maxC = 0, maxZ = 0;
+      teams.forEach(function (t) {
+        M.forEach(function (m) {
+          maxC = Math.max(maxC, Math.abs((W[m.k] || 0) * t.z[m.k]));
+          maxZ = Math.max(maxZ, Math.abs(t.z[m.k]));
+        });
+      });
+      var maxS = teams.reduce(function (n, t) { return Math.max(n, Math.abs(t.score)); }, 0);
+      var Z = Math.ceil(maxZ * 2) / 2;   // rail half-width, to a clean half
+
+      /* ---- A · one horizontal bar per weighted value ---- */
+      function paneA() {
+        return '<div class="blurb"><b>A &mdash; bar rows.</b> Every weighted input gets its own ' +
+          'horizontal bar, all four sharing one centre line, so a team is a small ' +
+          'shape you read top-to-bottom. Bar length is weight &times; z, scaled to the ' +
+          'league’s widest. Most legible, ~4&times; the height.</div>' +
+          '<div class="hdr">Team &middot; inputs &middot; composite</div>' +
+          teams.map(function (t) {
+            var bars = M.map(function (m) {
+              var c = (W[m.k] || 0) * t.z[m.k];
+              var pc = (Math.abs(c) / maxC) * 50;
+              var up = c >= 0;
+              return '<div class="a-bar">' +
+                '<span class="a-lab">' + m.lab + ' <span style="color:#3a3f45">' + m.w + '</span></span>' +
+                '<span class="a-track"><span class="a-zero"></span>' +
+                '<span class="a-fill" style="background:' + (up ? 'var(--up)' : 'var(--down)') +
+                ';' + (up ? 'left:50%' : 'right:50%') + ';width:' + pc.toFixed(2) + '%"></span></span>' +
+                '<span class="a-val" style="color:' + (up ? 'var(--up)' : 'var(--down)') + '">' +
+                sgn(c, 2) + '</span></div>';
+            }).join('');
+            return '<div class="row a-row">' + logo(t) + name(t) +
+              '<div class="a-bars">' + bars + '</div>' + score(t) + '</div>';
+          }).join('');
+      }
+
+      /* ---- B · every input as a mark on one shared z rail ---- */
+      function paneB() {
+        var ticks = [], i;
+        for (i = -Z; i <= Z + 1e-9; i += 0.5) {
+          ticks.push('<span class="b-tick' + (Math.abs(i) < 1e-9 ? ' mid' : '') +
+            '" style="left:' + (((i + Z) / (2 * Z)) * 100).toFixed(2) + '%"></span>');
+        }
+        var axis = [-Z, -Z / 2, 0, Z / 2, Z].map(function (v) {
+          return '<span style="left:' + (((v + Z) / (2 * Z)) * 100).toFixed(2) + '%">' +
+            sgn(v, 1) + '</span>';
+        }).join('');
+
+        return '<div class="blurb"><b>B &mdash; shared rail.</b> One line per team. All four ' +
+          'inputs are marks on a single z axis, so the <b>spread</b> is the story: a tight ' +
+          'cluster is a team the model agrees with itself about, a wide one is an argument. ' +
+          'Shape carries identity, not just colour.</div>' +
+          '<div class="key">' + M.map(function (m) {
+            return '<span><i class="b-mk ' + m.mk + '" style="position:static;margin:0 5px 0 0"></i>' +
+              m.lab + '</span>';
+          }).join('') + '</div>' +
+          '<div class="b-axis"><span></span><span></span>' +
+          '<span class="b-axis-in">' + axis + '</span><span></span></div>' +
+          teams.map(function (t) {
+            var vals = M.map(function (m) { return t.z[m.k]; });
+            var lo = Math.min.apply(null, vals), hi = Math.max.apply(null, vals);
+            var px = function (v) { return (((v + Z) / (2 * Z)) * 100).toFixed(2) + '%'; };
+            var marks = M.map(function (m) {
+              return '<span class="b-mk ' + m.mk + '" style="left:' + px(t.z[m.k]) +
+                '" title="' + m.lab + ' ' + sgn(t.z[m.k], 1) + '"></span>';
+            }).join('');
+            return '<div class="row b-row">' + logo(t) + name(t) +
+              '<span class="b-rail"><span class="b-grid">' + ticks.join('') + '</span>' +
+              '<span class="b-span" style="left:' + px(lo) + ';width:' +
+              (((hi - lo) / (2 * Z)) * 100).toFixed(2) + '%"></span>' + marks + '</span>' +
+              score(t) + '</div>';
+          }).join('');
+      }
+
+      /* ---- C · composite bar + four heat cells ---- */
+      function paneC() {
+        return '<div class="blurb"><b>C &mdash; barcode.</b> Densest: one composite bar, then ' +
+          'four heat cells, one per input. You scan for colour and read the number only ' +
+          'when something catches your eye. Fits about twice as many teams on a screen ' +
+          'as today’s table.</div>' +
+          '<div class="c-head"><span></span><span></span><span></span><span></span>' +
+          '<span class="c-cells">' + M.map(function (m) {
+            return '<span>' + m.lab + '</span>'; }).join('') + '</span></div>' +
+          teams.map(function (t) {
+            var sp = (Math.abs(t.score) / maxS) * 50;
+            var cells = M.map(function (m) {
+              var z = t.z[m.k], a = Math.min(1, Math.abs(z) / maxZ);
+              a = 0.1 + 0.9 * Math.pow(a, 0.7);
+              return '<span class="c-cell' + (a < 0.45 ? ' lo' : '') + '" title="' + m.lab + ' ' +
+                sgn(z, 1) + '" style="background:color-mix(in oklab,' +
+                (z >= 0 ? 'var(--up)' : 'var(--down)') + ' ' + (a * 100).toFixed(0) +
+                '%, #1b1b1b)">' + sgn(z, 1) + '</span>';
+            }).join('');
+            return '<div class="row c-row">' + logo(t) + name(t) +
+              '<span class="c-comp"><span class="a-zero"></span>' +
+              '<span class="a-fill" style="background:' +
+              (t.score >= 0 ? 'var(--up)' : 'var(--down)') + ';' +
+              (t.score >= 0 ? 'left:50%' : 'right:50%') + ';width:' + sp.toFixed(2) + '%"></span></span>' +
+              score(t) + '<span class="c-cells">' + cells + '</span></div>';
+          }).join('');
+      }
+
+      var panes = { a: paneA(), b: paneB(), c: paneC() };
+      document.getElementById('out').innerHTML =
+        '<div class="pane on" id="p-a">' + panes.a + '</div>' +
+        '<div class="pane" id="p-b">' + panes.b + '</div>' +
+        '<div class="pane" id="p-c">' + panes.c + '</div>';
+
+      document.querySelector('.tabs').addEventListener('click', function (e) {
+        var b = e.target.closest('.tab');
+        if (!b) return;
+        [].forEach.call(document.querySelectorAll('.tab'), function (x) {
+          x.classList.toggle('on', x === b); });
+        [].forEach.call(document.querySelectorAll('.pane'), function (p) {
+          p.classList.toggle('on', p.id === 'p-' + b.dataset.p); });
+      });
+    })
+    .catch(function () {
+      document.getElementById('out').innerHTML = '<p class="err">Could not load projections.</p>';
+    });
+})();
+</script>
+</body>
+</html>
