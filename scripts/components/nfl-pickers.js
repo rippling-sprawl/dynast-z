@@ -275,34 +275,51 @@
     }
   }
 
-  /* ---------- the week menu ---------- */
+  /* ---------- the option menu ---------- */
 
-  /* Fill a `.dd-menu` with week options.
+  /* Fill a `.dd-menu` with options.
    *
    *   menu     the .dd-menu element
-   *   options  [{ value, label, note, groupStart }] — the caller decides what a
-   *            week list is. The schedule's is "all weeks" plus the eighteen in
-   *            its data file; the notes modal's also carries the preseason and
-   *            the four playoff rounds, since a note can be about either and
-   *            neither is a numbered week.
+   *   options  [{ value, label, note, groupStart }] — the caller decides what
+   *            the list is. The schedule's week menu is "all weeks" plus the
+   *            eighteen in its data file; the notes modal's also carries the
+   *            preseason and the four playoff rounds, since a note can be about
+   *            either and neither is a numbered week.
+   *   attr     the data-* suffix a pick is read back off, defaulting to "week".
+   *            The schedule has two of these menus side by side — weeks and
+   *            seasons — and each one's click handler looks for its own
+   *            attribute, so a stray click in the wrong panel reads as no pick
+   *            rather than as a week 2026.
    */
-  function buildWeekMenu(menu, options) {
+  function buildOptionMenu(menu, options, attr) {
+    attr = attr || 'week';
     menu.innerHTML = (options || []).map(function (o) {
       return '<button type="button" class="dd-opt' +
         (o.groupStart ? ' is-group-start' : '') +
-        '" data-week="' + esc(o.value) + '" role="menuitem">' +
+        '" data-' + attr + '="' + esc(o.value) + '" role="menuitem">' +
         esc(o.label) +
         (o.note ? '<span class="dd-note">' + esc(o.note) + '</span>' : '') +
         '</button>';
     }).join('');
   }
 
-  function syncWeekMenu(btn, menu, value, label) {
+  function syncOptionMenu(btn, menu, value, label, attr) {
+    attr = attr || 'week';
     btn.querySelector('.dd-value').textContent = label;
     var opts = menu.querySelectorAll('.dd-opt');
     for (var i = 0; i < opts.length; i++) {
-      opts[i].classList.toggle('is-on', opts[i].getAttribute('data-week') === String(value));
+      opts[i].classList.toggle('is-on',
+        opts[i].getAttribute('data-' + attr) === String(value));
     }
+  }
+
+  /* The week menu is the option menu with the attribute it has always used —
+   * kept as its own name because that is what /football/schedule and the notes
+   * modal both call, and because "the week menu" is what it is to them. */
+  function buildWeekMenu(menu, options) { buildOptionMenu(menu, options, 'week'); }
+
+  function syncWeekMenu(btn, menu, value, label) {
+    syncOptionMenu(btn, menu, value, label, 'week');
   }
 
   global.NFL_CONFERENCES = NFL_CONFERENCES;
@@ -313,6 +330,8 @@
   global.anyDropdownOpen = anyDropdownOpen;
   global.buildTeamPicker = buildTeamPicker;
   global.syncTeamPicker = syncTeamPicker;
+  global.buildOptionMenu = buildOptionMenu;
+  global.syncOptionMenu = syncOptionMenu;
   global.buildWeekMenu = buildWeekMenu;
   global.syncWeekMenu = syncWeekMenu;
 })(window);

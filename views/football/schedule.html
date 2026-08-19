@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="/styles/base/styles.css">
   <link rel="stylesheet" href="/styles/base/hub.css">
   <link rel="stylesheet" href="/styles/components/nfl-pickers.css">
+  <link rel="stylesheet" href="/styles/components/nfl-schedule.css">
   <link rel="stylesheet" href="/styles/primary/nfl-schedule.css">
   <link rel="stylesheet" href="/styles/base/lightbox.css">
 </head>
@@ -17,8 +18,10 @@
   <script src="/scripts/base/auth.js"></script>
   <script src="/scripts/base/nav.js"></script>
   <script src="/scripts/base/lightbox.js"></script>
-  <!-- The week menu and the team grid, shared with /football/bakers-buns. -->
+  <!-- Both shared with /football/bakers-buns: the pickers below, and the rows
+       the card renders a team's season with. -->
   <script src="/scripts/components/nfl-pickers.js"></script>
+  <script src="/scripts/components/nfl-schedule.js"></script>
   <script>initPage();</script>
 
   <div class="masters-content">
@@ -46,6 +49,15 @@
         </div>
       </div>
 
+      <!-- Last, not first: the season is the control that moves least, and week
+           and team are where a reader who has been here before expects them. -->
+      <div class="dd" id="dd-season">
+        <button type="button" class="dd-btn" id="f-season" aria-haspopup="true" aria-expanded="false">
+          <span class="dd-value">2026</span>
+        </button>
+        <div class="dd-pop dd-menu" id="season-menu" role="menu" aria-label="Season" hidden></div>
+      </div>
+
       <button type="button" class="sched-reset" id="f-reset" hidden>Reset</button>
     </div>
 
@@ -56,17 +68,26 @@
   (function () {
     'use strict';
 
-    var DATA_URL = '/data/nfl_schedule.json';
+    /* The rows, the time handling and the three lists live in
+     * scripts/components/nfl-schedule.js, because the team card on
+     * /football/bakers-buns renders a team's season too. What stays here is what
+     * is particular to a page with filters on it: which season and week are
+     * being looked at, what the three controls do, and how that survives a
+     * reload in the URL. */
 
-    var data = null;
-    var teamsByAbbr = {};
-    var state = { week: 1, team: '' };   // week: 1-18 or 'all'; team: abbr or ''
+    var doc = null;
+    // The week the clock is in, for the season in view — and null for a season
+    // that has already finished, which has no "this week" to be in.
+    var nowWeek = null;
+    var state = { season: SCHED_CURRENT_SEASON, week: 1, team: '' };
 
     var listEl = document.getElementById('list');
     var weekBtn = document.getElementById('f-week');
     var weekMenu = document.getElementById('week-menu');
     var teamBtn = document.getElementById('f-team');
     var teamPicker = document.getElementById('team-grid');
+    var seasonBtn = document.getElementById('f-season');
+    var seasonMenu = document.getElementById('season-menu');
     var resetBtn = document.getElementById('f-reset');
 
     function esc(s) {
@@ -75,94 +96,17 @@
       });
     }
 
-    /* ---------- time ----------
-     * Every kickoff in the file is a UTC instant; every label on this page is
-     * US Eastern, because that is the timezone the league schedules in and the
-     * one the odd/regular split is defined against (see the fetch script).
-     * Rendering in the viewer's own zone would put a "1:00 PM slate" game at
-     * 10:00 AM for a west-coast reader and make the badges look wrong.
+    /* ---------- params ----------
+     * The season is read before anything loads, since it decides what loads.
+     * The week and the team are read after, because both are only meaningful
+     * against a file: a week has to be one the season has, and a team has to be
+     * one the file knows.
      */
-    var TZ = 'America/New_York';
 
-    function fmt(opts) {
-      opts.timeZone = TZ;
-      return new Intl.DateTimeFormat('en-US', opts);
+    function readSeasonParam() {
+      var v = Number(new URLSearchParams(location.search).get('season'));
+      return SCHED_SEASONS.indexOf(v) >= 0 ? v : SCHED_CURRENT_SEASON;
     }
-
-    var fmtTime = fmt({ hour: 'numeric', minute: '2-digit' });
-    var fmtDayLong = fmt({ weekday: 'long', month: 'long', day: 'numeric' });
-    // The badge label for an odd game: "THU", "MON", "SUN".
-    var fmtDayAbbr = fmt({ weekday: 'short' });
-
-    // ET morning, read off the same formatter that renders the time cell so the
-    // badge and the time it sits next to can never disagree.
-    function isMorningET(d) {
-      return fmtTime.formatToParts(d).some(function (p) {
-        return p.type === 'dayPeriod' && /^a/i.test(p.value);
-      });
-    }
-
-    // The time cell, without the meridiem: every kickoff that renders here is
-    // "1:00" through "9:30" and every one of them is a 4-character string, so
-    // the column is exactly as wide as its content and the AM/PM that used to
-    // follow it said nothing — no NFL game kicks at 1:00 in the morning. The
-    // one genuine morning slot, the 9:30 international, is the case the SUN
-    // A.M. badge exists to mark.
-    function timeLabel(d) {
-      return fmtTime.formatToParts(d).filter(function (p) {
-        return p.type !== 'dayPeriod' && !(p.type === 'literal' && p.value !== ':');
-      }).map(function (p) { return p.value; }).join('');
-    }
-
-    // The per-row date in any all-weeks list: "Sep 14". The weekday is dropped
-    // because the badge column now carries it for every game where it matters —
-    // an unbadged row is a Sunday by definition.
-    var fmtDayRowFmt = fmt({ month: 'short', day: 'numeric' });
-    function fmtDayRow(d) { return fmtDayRowFmt.format(d); }
-    // en-CA yields YYYY-MM-DD, which is the calendar-day grouping key.
-    var fmtDayKey = new Intl.DateTimeFormat('en-CA',
-      { timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit' });
-    // 24-hour ET, for the slate boundary below. en-GB so the hour is plain
-    // "16" rather than en-US's "16" plus a meridiem to strip.
-    var fmtHour24 = new Intl.DateTimeFormat('en-GB',
-      { timeZone: TZ, hour: '2-digit', hour12: false });
-    function etHour(d) { return Number(fmtHour24.format(d)); }
-
-    /* The Sunday slate break. The early games all kick at 1:00 and the late
-     * ones at 4:05/4:25, and they are two separate blocks of the afternoon
-     * rather than one continuous run of rows — the rule is drawn at 4:00 ET,
-     * between the last of the early games and the first of the late ones.
-     * Same calendar day only, so it never fires across a day or week boundary
-     * in the all-weeks lists. */
-    function isSlateBreak(prev, cur) {
-      return !!prev && fmtDayKey.format(prev) === fmtDayKey.format(cur) &&
-        etHour(prev) < 16 && etHour(cur) >= 16;
-    }
-
-    function toDate(iso) {
-      // "2026-09-10T00:20Z" — Safari parses this, but be explicit about the
-      // zone rather than relying on it.
-      return new Date(iso.replace(' ', 'T'));
-    }
-
-    /* ---------- which week is it right now? ----------
-     * The file ships each week's window as [start, end) in UTC: midnight ET on
-     * the day of that week's first game, to midnight ET after its last. The
-     * windows never overlap and the only uncovered days are Tuesdays, so the
-     * first week that has not yet ended is unambiguously "now" — including
-     * during a Tuesday, when it correctly reads as the week about to start.
-     *
-     * Before the season that is week 1, which is also the plain default. After
-     * the last game it falls through to week 18 rather than to nothing.
-     */
-    function currentWeek(now) {
-      for (var i = 0; i < data.weeks.length; i++) {
-        if (now < toDate(data.weeks[i].end)) return data.weeks[i].week;
-      }
-      return data.weeks[data.weeks.length - 1].week;
-    }
-
-    /* ---------- filters ---------- */
 
     function readParams() {
       var q = new URLSearchParams(location.search);
@@ -170,20 +114,24 @@
       var t = (q.get('team') || '').toUpperCase();
 
       if (w === 'all') state.week = 'all';
-      else if (w && data.weeks.some(function (x) { return String(x.week) === w; })) state.week = Number(w);
+      else if (w && doc.weeks.some(function (x) { return String(x.week) === w; })) state.week = Number(w);
 
-      if (t && teamsByAbbr[t]) state.team = t;
+      if (t && schedTeamsByAbbr(doc)[t]) state.team = t;
     }
 
+    // The season is written only when it is not the current one, so every URL
+    // that worked before this page had seasons still reads the same and still
+    // means the same thing.
     function writeParams() {
       var q = new URLSearchParams();
       q.set('week', String(state.week));
       if (state.team) q.set('team', state.team);
+      if (state.season !== SCHED_CURRENT_SEASON) q.set('season', String(state.season));
       history.replaceState(null, '', location.pathname + '?' + q.toString());
     }
 
     /* ---------- the filter controls ----------
-     * The two controls themselves — the week menu, the league's logo grid, and
+     * The controls themselves — the option menus, the league's logo grid, and
      * the open/shut behaviour they share — live in
      * scripts/components/nfl-pickers.js, because /football/bakers-buns files a
      * note against the same team and the same week this page filters by. What
@@ -191,9 +139,9 @@
      * actually has, which one is "now", and what picking one means.
      */
 
-    function weekOptions(nowWeek) {
+    function weekOptions() {
       return [{ value: 'all', label: 'All weeks' }].concat(
-        data.weeks.map(function (w) {
+        doc.weeks.map(function (w) {
           return {
             value: w.week,
             label: 'Week ' + w.week,
@@ -202,22 +150,50 @@
         }));
     }
 
-    function weekLabel(nowWeek) {
+    function weekLabel() {
       if (state.week === 'all') return 'All weeks';
       return 'Week ' + state.week + (state.week === nowWeek ? ' — this week' : '');
     }
 
-    function syncFilters(nowWeek) {
-      syncWeekMenu(weekBtn, weekMenu, state.week, weekLabel(nowWeek));
-      syncTeamPicker(teamBtn, teamPicker, state.team, data.teams);
+    function seasonOptions() {
+      return SCHED_SEASONS.map(function (s) {
+        return {
+          value: s,
+          label: String(s),
+          note: s === SCHED_CURRENT_SEASON ? 'current' : ''
+        };
+      });
     }
 
-    function buildFilters(nowWeek) {
-      buildWeekMenu(weekMenu, weekOptions(nowWeek));
-      buildTeamPicker(teamPicker, data.teams);
+    // The week the page opens a season on. For the season in progress that is
+    // whichever week the clock is in — the page is read during the season far
+    // more often than before it, and week 1 in December is never what was
+    // wanted. A finished season has no such week, so it opens at its start.
+    function defaultWeek() {
+      return nowWeek || 1;
+    }
+
+    function syncFilters() {
+      syncWeekMenu(weekBtn, weekMenu, state.week, weekLabel());
+      syncTeamPicker(teamBtn, teamPicker, state.team, doc.teams);
+      syncOptionMenu(seasonBtn, seasonMenu, state.season, String(state.season), 'season');
+    }
+
+    // Rebuilt on every load: the week list is the file's, and a season the page
+    // has not shown yet has its own.
+    function refreshPanels() {
+      buildWeekMenu(weekMenu, weekOptions());
+      buildTeamPicker(teamPicker, doc.teams);
+    }
+
+    // Wired once. The panels below them are replaced on every season change, so
+    // every handler here is delegated to the panel rather than to its options.
+    function wireFilters() {
+      buildOptionMenu(seasonMenu, seasonOptions(), 'season');
 
       var weekDd = registerDropdown(document.getElementById('dd-week'));
       var teamDd = registerDropdown(document.getElementById('dd-team'));
+      var seasonDd = registerDropdown(document.getElementById('dd-season'));
 
       weekMenu.addEventListener('click', function (e) {
         var opt = e.target.closest ? e.target.closest('.dd-opt') : null;
@@ -225,7 +201,7 @@
         var v = opt.getAttribute('data-week');
         state.week = v === 'all' ? 'all' : Number(v);
         closeDropdown(weekDd, true);
-        apply(nowWeek);
+        apply();
       });
 
       // Picking a team means looking for that team, and a team plays once a
@@ -240,220 +216,69 @@
         state.team = state.team === abbr ? '' : abbr;
         if (state.team) state.week = 'all';
         closeDropdown(teamDd, true);
-        apply(nowWeek);
+        apply();
+      });
+
+      // The team survives a season change — comparing a team's two seasons is
+      // the reason to have both — but the week cannot: "this week" means
+      // something different in each, and week 1 of a finished season is not the
+      // week the reader was just looking at either.
+      seasonMenu.addEventListener('click', function (e) {
+        var opt = e.target.closest ? e.target.closest('.dd-opt') : null;
+        if (!opt || !seasonMenu.contains(opt)) return;
+        var season = Number(opt.getAttribute('data-season'));
+        closeDropdown(seasonDd, true);
+        if (season !== state.season) load(season, false);
       });
 
       resetBtn.addEventListener('click', function () {
-        state.week = nowWeek;
         state.team = '';
         closeAllDropdowns();
-        apply(nowWeek);
-      });
-    }
-
-    function matches(g) {
-      return !state.team || g.away === state.team || g.home === state.team;
-    }
-
-    /* ---------- render ---------- */
-
-    /* One game, one line. `opts` adds leading columns for the lists that need
-     * them: `week` for a team's season, where the week number is the only
-     * ordering the reader has, and `date` for any all-weeks list, where the
-     * rows are no longer under a day header that says which day it is. */
-    function gameRow(g, opts) {
-      opts = opts || {};
-      var d = toDate(g.kickoff);
-      var tbd = g.slot === 'tbd';
-      var away = teamsByAbbr[g.away] || { abbr: g.away };
-      var home = teamsByAbbr[g.home] || { abbr: g.home };
-
-      // The picked-team highlight says which side of a home/away pairing is
-      // "yours". A neutral-site game has no such pairing — neither team is at
-      // home — so the row carries the venue instead and no side is colored.
-      function team(t, side) {
-        var picked = !g.neutral && state.team === t.abbr;
-        return '<span class="sched-team ' + side + (picked ? ' is-picked' : '') +
-          '" title="' + esc(t.name || t.abbr) + '">' + esc(t.abbr) + '</span>';
-      }
-
-      // A neutral-site game has no true home team, so "@" would be a lie and
-      // the venue is the whole point of the row — it's the only case where the
-      // stadium earns its space in a condensed list.
-      var sep = g.neutral ? 'vs' : '@';
-      var venue = g.neutral && g.venue
-        ? '<span class="sched-venue">' + esc(g.venue) + '</span>' : '';
-
-      // Only the exceptions are labelled. A regular Sunday-afternoon game is
-      // the default case on 181 of 272 rows, and stamping every one of them
-      // "regular" would bury the ~67 that are actually worth noticing — the
-      // badge means something precisely because most rows don't have one.
-      //
-      // The label is the day the game is played, which is what makes the game
-      // odd in the first place. Sunday is the exception that needs a second
-      // word: the odd Sundays are the morning international kickoffs and the
-      // night game, so "SUN" alone would not say which — hence "SUN A.M." on
-      // the morning ones. The night games keep a bare "SUN"; their time cell
-      // already reads 8:20 PM.
-      var badge = '';
-      if (g.slot === 'odd') {
-        var day = fmtDayAbbr.format(d);
-        badge = '<span class="sched-slot odd">' +
-          esc(day + (day === 'Sun' && isMorningET(d) ? ' a.m.' : '')) + '</span>';
-      } else if (g.slot !== 'regular') {
-        badge = '<span class="sched-slot ' + g.slot + '">' + g.slot + '</span>';
-      }
-
-      // A TBD game still has a known calendar day — only the kickoff time is
-      // unset — so the date cell is real even where the time cell isn't.
-      return '<div class="sched-game' + (tbd ? ' is-tbd' : '') +
-          (opts.week ? ' has-week' : '') + (opts.date ? ' has-date' : '') +
-          (opts.slateBreak ? ' is-slate-break' : '') + '">' +
-        (opts.week ? '<span class="sched-wk">' + esc(opts.week) + '</span>' : '') +
-        (opts.date ? '<span class="sched-date">' + esc(fmtDayRow(d)) + '</span>' : '') +
-        '<span class="sched-time">' + (tbd ? 'TBD' : esc(timeLabel(d))) + '</span>' +
-        '<span class="sched-matchup">' +
-          '<span class="sched-teams">' + team(away, 'away') +
-            '<span class="sched-at">' + sep + '</span>' + team(home, 'home') + '</span>' +
-          badge + venue + '</span>' +
-        '</div>';
-    }
-
-    /* ---------- per-team links ----------
-     * Pro-Football-Reference keys teams by their own three-letter code, which
-     * predates several relocations and rebrands and so disagrees with the
-     * league's abbreviation on a third of the league — the Cardinals are still
-     * "crd", the Chargers still "sdg". Only the codes that differ are listed;
-     * everything else is the lowercased abbreviation. */
-    var PFR_CODES = {
-      ARI: 'crd', BAL: 'rav', GB: 'gnb', HOU: 'htx', IND: 'clt', KC: 'kan',
-      LAC: 'sdg', LAR: 'ram', LV: 'rai', NE: 'nwe', NO: 'nor', SF: 'sfo',
-      TB: 'tam', TEN: 'oti', WSH: 'was'
-    };
-
-    // The season the schedule file is for, which is the year PFR files these
-    // games under — not the calendar year, which is the wrong one for every
-    // January game and for the whole offseason.
-    function teamLinks(abbr) {
-      var t = teamsByAbbr[abbr] || { abbr: abbr };
-      var pfr = PFR_CODES[abbr] || abbr.toLowerCase();
-      var links = [
-        { label: 'Pro-Football-Reference',
-          href: 'https://www.pro-football-reference.com/teams/' + pfr + '/' +
-            data.season + '.htm' }
-      ];
-      return '<div class="sched-links">' +
-        '<span class="sched-links-label">' + esc(t.name || abbr) + '</span>' +
-        links.map(function (l) {
-          return '<a href="' + esc(l.href) + '" target="_blank" rel="noopener">' +
-            esc(l.label) + '</a>';
-        }).join('') +
-        '</div>';
-    }
-
-    function groupHeader(title, sub) {
-      return '<div class="sched-group"><h3>' + esc(title) + '</h3>' +
-        (sub ? '<span class="sched-group-sub">' + esc(sub) + '</span>' : '') + '</div>';
-    }
-
-    // One week: group by ET calendar day, so a week reads Thu / Sun / Mon.
-    function renderWeek(wk) {
-      var games = wk.games.filter(matches);
-      if (!games.length) {
-        return '<p class="sched-empty">' + (state.team
-          ? esc((teamsByAbbr[state.team] || {}).name || state.team) +
-            ' are on bye in week ' + wk.week + '.'
-          : 'No games in week ' + wk.week + '.') + '</p>';
-      }
-      // Rows are wrapped per day so the zebra striping restarts with each
-      // group — counted across the whole list, the headers are siblings too and
-      // the stripes land on arbitrary rows.
-      var html = '', lastKey = null, prev = null;
-      games.forEach(function (g) {
-        var d = toDate(g.kickoff);
-        var key = fmtDayKey.format(d);
-        if (key !== lastKey) {
-          if (lastKey !== null) html += '</div>';
-          html += groupHeader(fmtDayLong.format(d)) + '<div class="sched-rows">';
-          lastKey = key;
+        if (state.season !== SCHED_CURRENT_SEASON) {
+          load(SCHED_CURRENT_SEASON, false);
+        } else {
+          state.week = defaultWeek();
+          apply();
         }
-        html += gameRow(g, { slateBreak: isSlateBreak(prev, d) });
-        prev = d;
       });
-      return html + '</div>';
     }
 
-    // A team across all weeks — one game a week, so eighteen week headers would
-    // be eighteen headers over eighteen rows. The week number becomes a column
-    // instead and the whole season renders as one uninterrupted block, at the
-    // same density as a single week of the all-teams view. Byes are rows rather
-    // than omissions: a missing week 7 would otherwise read as a data gap.
-    function renderSeason() {
-      var rows = data.weeks.map(function (wk) {
-        var g = wk.games.filter(matches)[0];
-        return g
-          ? gameRow(g, { week: wk.week, date: true })
-          : '<div class="sched-game sched-bye has-week has-date">' +
-              '<span class="sched-wk">' + wk.week + '</span>' +
-              '<span class="sched-date">—</span><span class="sched-time"></span>' +
-              '<span class="sched-matchup">Bye week</span></div>';
-      }).join('');
-      return '<div class="sched-rows">' + rows + '</div>';
-    }
-
-    // All weeks, all teams: still grouped by week, because 272 rows need the
-    // breaks. Each row carries its own date — the week's date range said less
-    // than the day the game is actually on.
-    function renderAll() {
-      if (state.team) return renderSeason();
-      return data.weeks.map(function (wk) {
-        var games = wk.games.filter(matches);
-        if (!games.length) return '';
-        var prev = null;
-        return groupHeader('Week ' + wk.week) + '<div class="sched-rows">' +
-          games.map(function (g) {
-            var d = toDate(g.kickoff);
-            var row = gameRow(g, { date: true, slateBreak: isSlateBreak(prev, d) });
-            prev = d;
-            return row;
-          }).join('') + '</div>';
-      }).join('');
-    }
-
-    function apply(nowWeek) {
-      syncFilters(nowWeek);
-      resetBtn.hidden = (state.week === nowWeek && !state.team);
+    function apply() {
+      syncFilters();
+      resetBtn.hidden = state.season === SCHED_CURRENT_SEASON &&
+        state.week === nowWeek && !state.team;
       var html = state.week === 'all'
-        ? renderAll()
-        : renderWeek(data.weeks.filter(function (w) { return w.week === state.week; })[0]);
+        ? schedRenderAll(doc, { team: state.team })
+        : schedRenderWeek(doc, state.week, { team: state.team });
       // Below the schedule, not above it: the games are what was asked for and
       // the links are where to go next.
-      listEl.innerHTML = html + (state.team ? teamLinks(state.team) : '');
+      listEl.innerHTML = html + (state.team ? schedTeamLinks(doc, state.team) : '');
       writeParams();
     }
 
-    fetch(DATA_URL)
-      .then(function (r) {
-        if (!r.ok) throw new Error('schedule data unavailable (' + r.status + ')');
-        return r.json();
-      })
-      .then(function (doc) {
-        data = doc;
-        data.teams.forEach(function (t) { teamsByAbbr[t.abbr] = t; });
+    /* `fromParams` is the first load only: an explicit ?week=/?team= is the
+     * reader arriving with a question already asked, and it outranks the
+     * defaults. A season picked from the menu is a question asked here, and
+     * carrying the old URL's week into it would be answering the wrong one. */
+    function load(season, fromParams) {
+      listEl.innerHTML = '<p class="sched-empty">Loading schedule…</p>';
+      schedLoad(season).then(function (d) {
+        doc = d;
+        state.season = season;
+        nowWeek = season === SCHED_CURRENT_SEASON ? schedCurrentWeek(doc) : null;
+        state.week = state.team ? 'all' : defaultWeek();
 
-        // The default is week 1, then moved to whichever week the clock is
-        // actually in — the page is read during the season far more often than
-        // before it, and week 1 in December is never what was wanted.
-        var nowWeek = currentWeek(new Date());
-        state.week = nowWeek;
-        readParams();          // an explicit ?week=/?team= still wins
-
-        buildFilters(nowWeek);
-        apply(nowWeek);
-      })
-      .catch(function (e) {
+        if (fromParams) readParams();
+        refreshPanels();
+        apply();
+      }).catch(function (e) {
         listEl.innerHTML = '<p class="sched-empty">Error: ' + esc(e.message) + '</p>';
       });
+    }
+
+    state.season = readSeasonParam();
+    wireFilters();
+    load(state.season, true);
   })();
   </script>
 </body>

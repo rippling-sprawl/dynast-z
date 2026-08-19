@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="/styles/base/styles.css">
   <link rel="stylesheet" href="/styles/base/hub.css">
   <link rel="stylesheet" href="/styles/components/nfl-pickers.css">
+  <link rel="stylesheet" href="/styles/components/nfl-schedule.css">
   <link rel="stylesheet" href="/styles/primary/bakers-buns.css">
   <link rel="stylesheet" href="/styles/base/lightbox.css">
 </head>
@@ -42,6 +43,10 @@
        store behind them is Supabase rather than the JSON below. -->
   <script src="/scripts/components/nfl-pickers.js"></script>
   <script src="/scripts/primary/bun-notes.js"></script>
+  <!-- A team's season, in the card, from the same renderer
+       /football/schedule is built out of. Its data files are fetched only
+       once a schedule tab is actually clicked. -->
+  <script src="/scripts/components/nfl-schedule.js"></script>
   <!-- The Board: the table's model and market columns plotted against each
        other. Reads the same teams array the table does — see the file header
        for why the y axis stays in composite score. -->
@@ -709,16 +714,25 @@
       var segs = cs.map(function (c) {
         if (Math.abs(c.v) < COMP_MIN) return '';
         var w = (Math.abs(c.v) / compSpan) * 50;    // % of the full track
-        var left, side, style;
-        // The 2px comes off each segment's outward edge, which is what leaves a
-        // gap between it and the next one out. Which edge that is flips with
-        // the side, so the negative stack pays for it in `left` instead.
+        var side, style;
+        /* Each segment is anchored by its inner edge — `left` on the positive
+         * side, `right` on the negative — so that everything which can widen a
+         * segment beyond the width asked for widens it outward, away from
+         * zero. Two things can: the 2px gap subtracted for the next segment
+         * out, which goes negative once a contribution is under 2px wide, and
+         * the 3px min-width that keeps the smallest ones visible. Anchored by
+         * `left`, a negative segment grew rightward under both and could end
+         * up drawn entirely on the positive side of the zero rule — a −0.05
+         * SoS reading as a lift. Anchoring the inner edge makes the side of
+         * zero a segment sits on independent of how small it is. */
         if (c.v > 0) {
-          left = 50 + offPos; offPos += w; side = 'is-up';
-          style = 'left:' + left.toFixed(2) + '%;width:calc(' + w.toFixed(2) + '% - 2px)';
+          side = 'is-up';
+          style = 'left:' + (50 + offPos).toFixed(2) + '%;width:calc(' + w.toFixed(2) + '% - 2px)';
+          offPos += w;
         } else {
-          offNeg += w; left = 50 - offNeg; side = 'is-down';
-          style = 'left:calc(' + left.toFixed(2) + '% + 2px);width:calc(' + w.toFixed(2) + '% - 2px)';
+          side = 'is-down';
+          style = 'right:' + (50 + offNeg).toFixed(2) + '%;width:calc(' + w.toFixed(2) + '% - 2px)';
+          offNeg += w;
         }
         return '<span class="comp-seg ' + side + ' step-' + c.step + '" ' +
           'style="' + style + '" ' +
@@ -803,6 +817,34 @@
       return '<li class="tc-luck ' + luckClass(v) + '">' + esc(verdict) + '</li>';
     }
 
+    /* Two derived reads about the staff, filed as notes rather than as a line
+     * in the Coaches block: the block already prints every tenure year, and
+     * what this says is the thing you would otherwise have to read all three
+     * of them to notice. Only the unanimous cases get a note. A staff that
+     * turned over in part is the ordinary state of the league — 17 teams this
+     * season — and labelling it would be labelling nothing.
+     *
+     * `since` is compared against the season rather than the printed year so
+     * this stays in step with coachLine(): year 1 is a coach hired for this
+     * season, so all-new is every `since` at the season and all-returning is
+     * every `since` before it. A staff missing a role is left alone; two of
+     * three agreeing is not a reading about all three. */
+    function staffNote(t) {
+      if (!coaches) return '';
+      var staff = (coaches.teams || {})[t.abbr];
+      if (!staff) return '';
+
+      var crew = [staff.hc, staff.oc, staff.dc];
+      if (crew.some(function (c) { return !c || c.since == null; })) return '';
+
+      var isNew = crew.every(function (c) { return c.since >= coaches.season; });
+      var isBack = crew.every(function (c) { return c.since < coaches.season; });
+      if (!isNew && !isBack) return '';
+
+      return '<li class="tc-staff">' +
+        (isNew ? 'New Coaching Staff' : 'Returning Coaching Staff') + '</li>';
+    }
+
     /* Whether this reader can write. The store has to have loaded first: an
      * "add a note" button over a list that failed to arrive would be offering
      * to append to notes nobody can see. */
@@ -820,15 +862,18 @@
       }).join('');
     }
 
-    // One list, so the luck read sits among the notes rather than above them.
-    // It leads, because it is the season the rest of them are written against.
+    // One list, so the derived reads sit among the notes rather than above
+    // them. They lead: the luck call is the season the filed notes are written
+    // against, and the staff call is who is writing this one.
     function notesInner(t) {
       var body = bunNotesLoaded()
         ? bunNotesFor(t.abbr).map(bunNoteBullet).join('')
         : fallbackNotes(t);
 
       var luck = luckNote(t.pythag);
-      body = (luck || body) ? '<ul class="tc-notes">' + luck + body + '</ul>' : '';
+      var staff = staffNote(t);
+      var lead = luck + staff;
+      body = (lead || body) ? '<ul class="tc-notes">' + lead + body + '</ul>' : '';
 
       // Deliberately outside that test: cardBlock() drops a block with nothing
       // in it, so a team the doc never wrote about would otherwise be the one
@@ -914,12 +959,28 @@
         '</tbody></table>';
     }
 
+    /* The two seasons a card can show, beside the team's name. They used to be
+     * one link out to /football/schedule, which answered the question by
+     * closing the card that raised it — the reader wanted the schedule *of the
+     * team they were reading about*, and came back to a page scrolled somewhere
+     * else. Now the card shows it in place, and the notes it opens on stay one
+     * click away. */
+    function schedTabs() {
+      return '<div class="tc-sched-tabs">' +
+        '<span class="tc-sched-label">Schedule:</span>' +
+        SCHED_SEASONS.map(function (season, i) {
+          return (i ? '<span class="tc-tab-sep" aria-hidden="true">|</span>' : '') +
+            '<button type="button" class="tc-tab" data-sched-season="' + season +
+            '" aria-pressed="false">' + season + '</button>';
+        }).join('') +
+        '</div>';
+    }
+
     function cardHtml(t) {
       var head =
         '<div class="tc-head">' + logo(t, 'tc-logo') +
         '<div class="tc-id"><h4>' + esc(t.team) + '</h4></div>' +
-        '<a class="tc-sched-link" href="/football/schedule?week=all&amp;team=' +
-        esc(t.abbr) + '">Schedule &rarr;</a></div>';
+        schedTabs() + '</div>';
 
       // Offensive line leads the grid: it is the heaviest input into the score,
       // so it reads first. The playoff/division prices are omitted here — they
@@ -930,10 +991,18 @@
         cardBlock('Coaches', 'is-coach', coachesInner(t)) +
         cardBlock('Schedule', 'is-sched', scheduleInner(t));
 
+      /* Two views under the one head. The notes are the default and always the
+       * default — the card is rebuilt from scratch on every open, so there is no
+       * tab state to remember and no way to land back on a schedule you were
+       * looking at four teams ago. */
       return '<div class="team-card">' + head +
-        '<div class="tc-grid">' + body + '</div>' +
-        '<div class="tc-block is-raw tc-raw-block"><h5>Inputs</h5>' + rawInner(t) +
-        '</div></div>';
+        '<div class="tc-view is-notes">' +
+          '<div class="tc-grid">' + body + '</div>' +
+          '<div class="tc-block is-raw tc-raw-block"><h5>Inputs</h5>' + rawInner(t) +
+          '</div>' +
+        '</div>' +
+        '<div class="tc-view is-sched" hidden></div>' +
+      '</div>';
     }
 
     /* ---------- sort / filter / render ---------- */
@@ -1145,6 +1214,9 @@
     var modal = document.getElementById('team-modal');
     var modalBody = document.getElementById('team-modal-body');
     var lastOpener = null;
+    // The team the card is currently showing. The schedule tabs are handled by a
+    // delegated listener, which sees the button and not the team it belongs to.
+    var cardTeam = null;
 
     function openCard(tr) {
       var name = tr.dataset.team;
@@ -1155,11 +1227,69 @@
       modalBody.scrollTop = 0;
       modal.setAttribute('aria-label', name);
       lastOpener = tr;
+      cardTeam = t;
       dismissHint();   // the hint has been obeyed; it has nothing left to say
       modal.showModal();
       // The page behind a modal dialog still scrolls in some browsers.
       document.body.classList.add('modal-open');
     }
+
+    /* ---------- the schedule tabs ----------
+     * Delegated to the card body, because the card is rebuilt on every open and
+     * a listener bound to a button would be bound to a button that no longer
+     * exists. Which season is showing lives in the DOM — on aria-pressed, which
+     * has to be right for a screen reader anyway — rather than in a variable
+     * that would then have to be reset in openCard alongside it.
+     */
+
+    function showNotes() {
+      var tabs = modalBody.querySelectorAll('.tc-tab');
+      for (var i = 0; i < tabs.length; i++) tabs[i].setAttribute('aria-pressed', 'false');
+      modalBody.querySelector('.tc-view.is-notes').hidden = false;
+      modalBody.querySelector('.tc-view.is-sched').hidden = true;
+    }
+
+    function showSchedule(season) {
+      var t = cardTeam;
+      if (!t) return;
+
+      var tabs = modalBody.querySelectorAll('.tc-tab');
+      for (var i = 0; i < tabs.length; i++) {
+        tabs[i].setAttribute('aria-pressed',
+          tabs[i].getAttribute('data-sched-season') === String(season) ? 'true' : 'false');
+      }
+
+      var view = modalBody.querySelector('.tc-view.is-sched');
+      modalBody.querySelector('.tc-view.is-notes').hidden = true;
+      view.hidden = false;
+      view.innerHTML = '<p class="sched-empty">Loading schedule…</p>';
+
+      // The file is fetched at most once per season and cached in the component,
+      // so switching back and forth between the two costs nothing after the
+      // first click of each — but the card may have been closed and another team
+      // opened while the first fetch was in flight, so both the team and the
+      // tab are re-checked before anything is written.
+      schedLoad(season).then(function (doc) {
+        if (cardTeam !== t) return;
+        var tab = modalBody.querySelector('.tc-tab[data-sched-season="' + season + '"]');
+        if (!tab || tab.getAttribute('aria-pressed') !== 'true') return;
+        view.innerHTML = schedRenderSeason(doc, { team: t.abbr }) +
+          schedTeamLinks(doc, t.abbr);
+      }).catch(function (e) {
+        if (cardTeam !== t) return;
+        view.innerHTML = '<p class="sched-empty">Error: ' + esc(e.message) + '</p>';
+      });
+    }
+
+    // Clicking the season already showing puts the notes back — the same
+    // re-tap-to-clear the team picker on /football/schedule uses, and the only
+    // way back that does not cost the head a third control.
+    modalBody.addEventListener('click', function (e) {
+      var tab = e.target.closest ? e.target.closest('.tc-tab') : null;
+      if (!tab || !modalBody.contains(tab)) return;
+      if (tab.getAttribute('aria-pressed') === 'true') showNotes();
+      else showSchedule(Number(tab.getAttribute('data-sched-season')));
+    });
 
     modal.addEventListener('close', function () {
       document.body.classList.remove('modal-open');

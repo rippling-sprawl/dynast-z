@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Fetch the full NFL regular-season schedule and save to data/nfl_schedule.json.
+Fetch a full NFL regular season and save to data/nfl_schedule_{season}.json.
 
 Why this source
 ---------------
@@ -15,10 +15,17 @@ it — 272 games. The alternative sources are all worse for this: nflverse ships
 CSVs but lags the release, the NFL's own shield API needs a rotating token, and
 anything HTML-based breaks on the next redesign.
 
-Only the schedule is kept — who plays whom, when, and where. Scores and status
-are deliberately dropped: this file is committed and served from the CDN, so it
-must describe things that do not change. A schedule does change (flex), but on a
-timescale of weeks, not minutes; re-run this script when it does.
+One file per season, because the views show more than one: the team card on
+/football/bakers-buns puts last season beside this one, and re-running with a
+different --season used to clobber the file it had just written.
+
+What is kept is who plays whom, when, where, and — for a game that has already
+finished — the final score. Live status is deliberately dropped: this file is
+committed and served from the CDN with an hour of cache, so anything in it has
+to be a thing that does not change on a timescale of minutes. A schedule does
+change (flex), but on a timescale of weeks; a final score never does. Re-run
+this script when a week gets flexed, and once after a season ends to fill in the
+last of its scores — after that its file is static forever.
 
 Kickoff slots
 -------------
@@ -45,6 +52,7 @@ which leaves the 9:30am international window and the night game as odd.
 Usage:
     python3 scripts/fetch_nfl_schedule.py              # current season
     python3 scripts/fetch_nfl_schedule.py --season 2026
+    python3 scripts/fetch_nfl_schedule.py --season 2025   # last season, with scores
 """
 
 import argparse
@@ -120,6 +128,24 @@ def classify(kickoff_utc, time_valid):
     return "regular" if 12 <= et.hour < 18 else "odd"
 
 
+def final_score(comp, away_score, home_score):
+    """-> [away, home] for a finished game, else None.
+
+    ESPN sends the score as a string on every competitor from the moment the
+    event exists — "0" for a game that has not kicked off. So the number alone
+    says nothing; the gate is status.type.completed, which is only true once the
+    game is final. Anything that fails to parse as an integer is treated as no
+    score rather than as a zero.
+    """
+    status = (comp.get("status") or {}).get("type") or {}
+    if not status.get("completed"):
+        return None
+    try:
+        return [int(away_score), int(home_score)]
+    except (TypeError, ValueError):
+        return None
+
+
 def parse_event(ev):
     comps = ev.get("competitions") or []
     if not comps:
@@ -127,6 +153,7 @@ def parse_event(ev):
     comp = comps[0]
 
     home = away = None
+    home_score = away_score = None
     for c in comp.get("competitors") or []:
         team = c.get("team") or {}
         abbr = team.get("abbreviation")
@@ -134,9 +161,9 @@ def parse_event(ev):
             continue
         entry = (abbr, team.get("displayName") or abbr, team.get("shortDisplayName") or abbr)
         if c.get("homeAway") == "home":
-            home = entry
+            home, home_score = entry, c.get("score")
         elif c.get("homeAway") == "away":
-            away = entry
+            away, away_score = entry, c.get("score")
     if not home or not away:
         return None
 
@@ -159,6 +186,15 @@ def parse_event(ev):
     # uses to mark the six international games and the Melbourne opener.
     if comp.get("neutralSite"):
         game["neutral"] = True
+
+    # Away first, then home — the order the row reads them in ("NE @ SEA",
+    # "17-31"), so the view never has to reorder and can never silently invert
+    # them. Only for a finished game: a game in progress has a score too, and
+    # that one is a live number this file has no business carrying.
+    final = final_score(comp, away_score, home_score)
+    if final:
+        game["score"] = final
+
     return game, {t[0]: {"abbr": t[0], "name": t[1], "short": t[2]} for t in (home, away)}
 
 
@@ -281,7 +317,21 @@ def verify(weeks, teams):
                       f"{g['away']}@{g['home']} {et:%a %H:%M} ET", file=sys.stderr)
                 ok = False
 
-    return ok, total, slots
+    # Scores are not an error either way — a season that has not started has
+    # none and a finished one has all of them, and both are files worth writing.
+    # Only the in-between is worth saying out loud, because a season fetched
+    # mid-way ships a file that is half results and half fixtures, and whoever
+    # runs this in January should know they will want to run it again.
+    scored = sum(1 for w in weeks for g in w["games"] if g.get("score"))
+    if scored == 0:
+        print("Scores: none — no game has finished yet")
+    elif scored == total:
+        print(f"Scores: all {total} games final")
+    else:
+        print(f"Scores: {scored} of {total} final — season in progress, "
+              f"re-run once it ends", file=sys.stderr)
+
+    return ok, total, slots, scored
 
 
 def main():
@@ -298,7 +348,7 @@ def main():
     print(f"Fetching the {args.season} NFL regular-season schedule from ESPN\n")
     weeks, teams = build(args.season)
 
-    ok, total, slots = verify(weeks, teams)
+    ok, total, slots, scored = verify(weeks, teams)
     if not ok:
         print("\nRefusing to overwrite good data.", file=sys.stderr)
         return 1
@@ -313,14 +363,17 @@ def main():
     data_dir = repo_path("data")
     os.makedirs(data_dir, exist_ok=True)
 
-    out_path = os.path.join(data_dir, "nfl_schedule.json")
+    # One file per season, named for it. The views know which seasons exist from
+    # SCHED_SEASONS in scripts/components/nfl-schedule.js — add a season here and
+    # it has to be added there too.
+    out_path = os.path.join(data_dir, f"nfl_schedule_{args.season}.json")
     with open(out_path, "w") as f:
         # Compact: this ships to every schedule page load.
         json.dump(out, f, separators=(",", ":"))
     size_kb = os.path.getsize(out_path) / 1024
     print(f"\nWrote {total} games to {os.path.abspath(out_path)} ({size_kb:.0f} KB)")
 
-    meta_path = os.path.join(data_dir, "nfl_schedule_meta.json")
+    meta_path = os.path.join(data_dir, f"nfl_schedule_{args.season}_meta.json")
     with open(meta_path, "w") as f:
         json.dump({
             "source": "ESPN",
@@ -329,6 +382,7 @@ def main():
             "weeks": len(weeks),
             "game_count": total,
             "team_count": len(teams),
+            "scored_count": scored,
             "slots": slots,
             "size_bytes": os.path.getsize(out_path),
             "fetched_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),

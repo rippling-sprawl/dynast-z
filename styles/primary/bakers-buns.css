@@ -874,20 +874,57 @@ body.modal-open { overflow: hidden; }
   color: #666;
 }
 
-/* Pushed to the trailing edge of the head, clear of the close button. */
-.tc-sched-link {
+/* --- The schedule tabs ---
+ * Pushed to the trailing edge of the head, clear of the close button, where the
+ * link out to /football/schedule used to sit. Same 10px monospace caps it had:
+ * this is a label on the head, not a control bar, and it should not compete
+ * with the team's name for the eye.
+ *
+ * The two views they switch between are .tc-view; the rows one of them renders
+ * are the shared ones in styles/components/nfl-schedule.css. */
+
+.tc-sched-tabs {
   margin-left: auto;
   flex: none;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
   font-family: monospace;
   font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: #60a5fa;
-  text-decoration: none;
   white-space: nowrap;
 }
 
-.tc-sched-link:hover { color: #8ec0ff; text-decoration: underline; }
+.tc-sched-label { color: #666; }
+
+.tc-tab {
+  background: none;
+  border: none;
+  padding: 2px 1px;
+  font: inherit;
+  letter-spacing: inherit;
+  color: #6e7681;
+  cursor: pointer;
+}
+
+.tc-tab:hover { color: #8ec0ff; }
+
+/* The active season takes the blue the link used to have, and an underline —
+ * colour alone would make the pressed state the only thing distinguishing two
+ * otherwise identical years. */
+.tc-tab[aria-pressed="true"] {
+  color: #60a5fa;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.tc-tab-sep { color: #333; }
+
+/* Only ever one of the two is on screen; the other is `hidden`, which the
+ * reset in styles/base/styles.css does not cover for a div. */
+.tc-view[hidden] { display: none; }
 
 .tc-grid {
   display: grid;
@@ -1022,6 +1059,20 @@ body.modal-open { overflow: hidden; }
 .tc-luck.luck-cold { color: #58a6ff; }
 .tc-luck.luck-even { color: #8b949e; }
 
+/* The all-new / all-returning staff call, which sits beside the luck note and
+ * is deliberately not tinted like it. Luck's color is a direction — hot, cold,
+ * even — and a staff in its first year is neither good nor bad, so it takes
+ * the purple the Coaches block's heading already uses instead. That is where
+ * the reader goes to check it, and it is the one thing on this list that
+ * points somewhere else in the card. Two selectors for the same reason the
+ * luck rules carry two classes: it has to outrank the plain `.tc-block li`. */
+.tc-notes .tc-staff {
+  color: #a371f7;
+  font-family: monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.3px;
+}
+
 @media (max-width: 600px) {
   .bun-grid { grid-template-columns: 1fr; }
   .bun-table th, .bun-table td { padding: 6px 8px; }
@@ -1043,6 +1094,21 @@ body.modal-open { overflow: hidden; }
   .tc-modal[open] { animation: tc-sheet-up 0.18s ease-out; }
 
   .team-card { padding: 12px 14px calc(16px + env(safe-area-inset-bottom)); }
+
+  /* The logo, a full team name and "Schedule: 2026 | 2025" do not share a line
+   * at this width. The tabs wrap under the name rather than squeezing it, and
+   * lose the auto margin that was pushing them right — wrapped, that would
+   * strand them under the close button instead. */
+  .tc-head { flex-wrap: wrap; }
+
+  .tc-sched-tabs {
+    /* Indented past the logo so the tabs line up under the team name rather
+     * than under the crest. The width is the line less that indent — a flat
+     * 100% is measured before the margin is added and runs the row off the
+     * card's right edge by exactly the indent. */
+    margin-left: 44px;   /* the logo's width plus the head's gap */
+    width: calc(100% - 44px);
+  }
 }
 
 @keyframes tc-sheet-up {
