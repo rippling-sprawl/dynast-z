@@ -1,0 +1,22 @@
+{
+  "sources": {
+    "onField": "https://github.com/nflverse/nflverse-data/releases/download/pbp/play_by_play_2025.csv.gz",
+    "deadCap": "https://overthecap.com/salary-cap-space"
+  },
+  "stats_season": 2025,
+  "cap_season": 2026,
+  "team_count": 32,
+  "game_count": 272,
+  "play_count": 46452,
+  "league": {
+    "pressureRate": 14.9,
+    "sackRate": 6.5,
+    "fourthDownPct": 55.9,
+    "oneScoreGames": 9.1,
+    "deadCap": 43720809,
+    "deadCapMedian": 35230539
+  },
+  "size_bytes": 12487,
+  "fetched_at": "2026-08-20T22:10:52+00:00",
+  "fetched_ts": 1787263858
+}

@@ -1053,6 +1053,177 @@ body:has(.bn-modal[open]) .tc-modal-scroll { overflow: hidden; }
 
 .tc-coach-prev { color: #8b949e; }
 
+/* --- Stats & regression ---
+ * The block between the grid and the inputs: five 2025 numbers, each tinted by
+ * which way it points into 2026. It sits full width for the same reason the
+ * inputs do — it is a worksheet, not a column of prose — but above them,
+ * because it is an argument about the season behind the score rather than an
+ * itemisation of the score itself.
+ *
+ * The palette is the Luck column's, not the z-score columns': green is a
+ * tailwind and orange is last year's bounce. That inversion matters here more
+ * than anywhere else on the page, because the orange tiles are frequently the
+ * *good* numbers — a 13-win team living off one-score games is exactly the
+ * thing this block was built to flag, and colouring its record green would say
+ * the opposite of what is meant.
+ *
+ * Two rows. The three tiles that are regression calls lead, then havoc and dead
+ * cap under them in a flatter treatment — see .tc-reg-context. Tiles are
+ * auto-fit rather than a fixed count: the card is a dialog that ranges from a
+ * phone's full width to 760px, and the row has to fall to two columns and then
+ * one without any of it being placed by rule. */
+.tc-reg-block {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid #1f1f1f;
+}
+
+/* The legend, and the only place the colours are explained. One line, above
+ * the tiles rather than under them, because a reader meeting a green tile for
+ * the first time needs the key before the tile and not after it. */
+.tc-block .tc-reg-note {
+  font-size: 10px;
+  line-height: 1.45;
+  color: #6e7681;
+  margin: -2px 0 9px;
+}
+
+.tc-reg-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(148px, 1fr));
+  gap: 8px;
+}
+
+/* Each tile carries its lean as a left edge and a wash rather than as coloured
+ * text: the value is the thing being read, so it stays the same near-white in
+ * every tile and the direction is said around it. A tinted number would put the
+ * two on the same channel and make an orange 11-2 look like a bad record. */
+.tc-reg-tile {
+  border: 1px solid #1f1f1f;
+  border-left: 2px solid #30363d;
+  border-radius: 4px;
+  padding: 7px 9px 6px;
+  background: #0d0d0d;
+}
+
+.tc-reg-label {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px;
+  font-family: monospace;
+  font-size: 9.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 700;
+  color: #8b949e;
+}
+
+/* Where the number sits in the field of 32 — the context that turns a bare
+ * "14.6%" into a read. Dimmer than the label it shares a line with: it is the
+ * footnote to the tile, and every tile has one, so it must not compete. */
+.tc-reg-rank {
+  font-weight: 400;
+  letter-spacing: 0;
+  color: #555;
+  white-space: nowrap;
+}
+
+.tc-reg-val {
+  font-family: monospace;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.25;
+  color: #e1e4e8;
+  margin-top: 3px;
+}
+
+/* What the number is made of: the sacks behind the havoc rate, the takeaways
+ * behind the margin. Always present, always one line, so the tiles keep a
+ * common height without a min-height to enforce it. */
+.tc-reg-sub {
+  font-size: 10px;
+  line-height: 1.4;
+  color: #8b949e;
+  margin-top: 1px;
+}
+
+.tc-reg-lean {
+  font-family: monospace;
+  font-size: 9.5px;
+  letter-spacing: 0.3px;
+  color: #6e7681;
+  margin-top: 4px;
+}
+
+/* Green: the number is either sustainable or was a headwind that should ease.
+ * Orange: 2025 was kind here and is unlikely to be again. Grey (`lean-flat`) is
+ * the default the tile already carries, so it needs no rule — most teams are
+ * unremarkable on most of these, and a card of five coloured tiles would say
+ * nothing. */
+.tc-reg-tile.lean-up {
+  border-left-color: #2ea043;
+  background: color-mix(in oklab, #2ea043 7%, #0d0d0d);
+}
+
+.tc-reg-tile.lean-up .tc-reg-lean { color: #3fb950; }
+
+.tc-reg-tile.lean-down {
+  border-left-color: #bb8009;
+  background: color-mix(in oklab, #d29922 7%, #0d0d0d);
+}
+
+.tc-reg-tile.lean-down .tc-reg-lean { color: #d29922; }
+
+/* The second row: the two numbers that are not regression calls. Everything
+ * that says "finding" on the tiles above is taken away here — the accent edge,
+ * the wash, the arrow — and what is left is a plain bordered box with the
+ * league's middle under it. The demotion is the whole point: these two are the
+ * ground the three above are read against, not four and five in a list of five.
+ *
+ * The rule and the heading are what actually separate them; the tile styling
+ * alone was too quiet to carry it, because a grey tile is also what a
+ * regression tile with nothing to say looks like. */
+.tc-reg-context {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px dashed #1f1f1f;
+}
+
+/* The h5 the offensive line already uses for its two boards, reused rather than
+ * restyled: this is the same relationship — one block, two things under it that
+ * need naming. */
+.tc-reg-context h5 { margin-bottom: 4px; }
+
+/* Wider than a regression tile and never more than two across, so the row reads
+ * as a footnote to the one above rather than as a second set of findings. */
+.tc-reg-grid.is-context {
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+}
+
+.tc-reg-tile.is-context {
+  border: 1px solid #1a1a1a;
+  background: none;
+}
+
+.tc-reg-tile.is-context .tc-reg-val {
+  font-size: 15px;
+  font-weight: 400;
+  color: #c9d1d9;
+}
+
+/* Where a regression tile puts its arrow. The league's middle is the only
+ * context either of these numbers needs, and reading it as a comparison rather
+ * than a verdict is the point — whether a team's pressure rate is good news
+ * depends entirely on the three tiles above it. */
+.tc-reg-vs {
+  font-family: monospace;
+  font-size: 9.5px;
+  letter-spacing: 0.3px;
+  color: #555;
+  margin-top: 4px;
+}
+
 /* --- Raw inputs ---
  * The bottom block of the card: each input in the units the sheet recorded it
  * in, beside the z-score it normalizes to. It sits below the grid rather than
@@ -1122,6 +1293,35 @@ body:has(.bn-modal[open]) .tc-modal-scroll { overflow: hidden; }
 .tc-luck.luck-hot { color: #d29922; }
 .tc-luck.luck-cold { color: #58a6ff; }
 .tc-luck.luck-even { color: #8b949e; }
+
+/* The standouts: every metric the team is top or bottom five of the league in,
+ * opening its notes. There can be several on one team, which rules out the
+ * treatment the two calls above them get — a whole bullet tinted a colour works
+ * for one line and turns a run of six into a wall.
+ *
+ * So only the discriminating part is lit. The metric's name stays the ordinary
+ * note colour because it is the ordinary kind of thing to say; the placing is
+ * cyan, because it is the new information and the only part of the line a
+ * reader is scanning for; and the value trails in grey as the receipt. Cyan
+ * rather than green or orange on purpose: a placing is not a verdict. Being
+ * first in turnover margin is bad news for next season and first in dead cap is
+ * good news, and the same colour has to carry both.
+ *
+ * Two classes on each, like the luck and staff rules, to outrank `.tc-block li`. */
+.tc-notes .tc-standout { color: #c9d1d9; }
+
+.tc-notes .tc-standout-rank {
+  color: #39c5cf;
+  font-family: monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.3px;
+}
+
+.tc-notes .tc-standout-val {
+  color: #6e7681;
+  font-family: monospace;
+  font-size: 10.5px;
+}
 
 /* The all-new / all-returning staff call, which sits beside the luck note and
  * is deliberately not tinted like it. Luck's color is a direction — hot, cold,

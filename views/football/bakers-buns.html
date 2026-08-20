@@ -442,6 +442,16 @@
           <p>Tracks previously-fired offensive coaches into their 2026 jobs: Shane Waldron to Jacksonville, Nathaniel Hackett to Arizona, Kevin Patullo to Miami, Matt Nagy to the Giants. A fade list for those offenses.</p>
         </li>
         <li>
+          <a href="https://github.com/nflverse/nflverse-data/releases/tag/pbp" target="_blank" rel="noopener">nflverse &mdash; 2025 play-by-play</a>
+          <span class="link-src">Feeds four of the five Stats &amp; Regression tiles</span>
+          <p>Every regular-season play of 2025 as a table, which is the only free source that carries <code>qb_hit</code> &mdash; and pressure is the one number in that block that repeats, so the block does not work without it. <code>scripts/fetch_nfl_regression.py</code> makes one pass over the file for havoc rate, turnover margin, the one-score record and fourth-down conversions, and writes <code>data/nfl_regression_2026.json</code>. A pressure here is a dropback ending in a sack or a hit: hurries are charted by hand and are in no free feed, so the rate is a floor rather than PFF&rsquo;s number. Turnovers are counted from scrimmage only, a one-score game is decided by eight or fewer, and fourth down counts the plays a team chose to run rather than punts and field goals.</p>
+        </li>
+        <li>
+          <a href="https://overthecap.com/salary-cap-space" target="_blank" rel="noopener">Over The Cap &mdash; salary cap space</a>
+          <span class="link-src">Feeds the Dead cap tile</span>
+          <p>2026 cap charged to players who are no longer on the roster, scraped from the same page&rsquo;s first table by the script above. It is the odd one out in that block &mdash; dead money does not regress, it is spent &mdash; and it is carried because it answers the question the other four raise: whether a team that got unlucky has the room to do anything about it. The league pays about $44M a head, but the mean is nearly meaningless here: the spread runs from Seattle&rsquo;s $0.7M to Miami&rsquo;s $179M.</p>
+        </li>
+        <li>
           <a href="https://en.wikipedia.org/wiki/List_of_current_NFL_head_coaches" target="_blank" rel="noopener">Wikipedia &mdash; current NFL head coaches</a>
           <span class="link-src">Feeds the Coaches block</span>
           <p>With the <a href="https://en.wikipedia.org/wiki/List_of_current_NFL_offensive_coordinators" target="_blank" rel="noopener">offensive</a> and <a href="https://en.wikipedia.org/wiki/List_of_current_NFL_defensive_coordinators" target="_blank" rel="noopener">defensive coordinator</a> lists, the whole of each team&rsquo;s Coaches block. Ten teams changed head coach for 2026 and 25 changed at least one coordinator, so the tenure year is the number to read first. The coordinator lists carry a previous-position column and the head coach list does not, which is why only coordinators show where they came from.</p>
@@ -481,6 +491,10 @@
 
     var DATA_URL = '/data/nfl_projections_2026.json';
     var COACH_URL = '/data/nfl_coaches_2026.json';
+    // Built by scripts/fetch_nfl_regression.py. Named for the cap year it
+    // carries, not the season its on-field numbers come from, because it is
+    // filed beside the 2026 projections it exists to argue with.
+    var REG_URL = '/data/nfl_regression_2026.json';
     var LOGO_DIR = '/assets/icons/nfl/';   // same files the schedule picker uses
 
     var tbody = document.getElementById('proj-body');
@@ -489,6 +503,7 @@
 
     var teams = [];
     var coaches = null;   // null until loaded; the block simply never renders without it
+    var regression = null;   // same contract as coaches: absent file, absent block
     var weights = {};     // the sheet's own blend, read from the JSON rather than hardcoded
     /* filters: a set of selected tokens, each either a conference ("AFC") or a
      * conference-qualified division ("AFC South"). They combine as a union, so
@@ -844,6 +859,240 @@
         cardBlock('Brandon Anderson', 'is-an', anderson, 'h5');
     }
 
+    /* ---------- standouts ----------
+     * A team's Notes open with every metric on this page it is top five or
+     * bottom five of the league in. The middle of a distribution is not worth a
+     * sentence — a team 17th in havoc is a team you learn nothing about by
+     * being told so — but the tails are the whole reason a metric was collected,
+     * and before this they were only findable by opening the card and reading
+     * every block in it against a memory of the other 31 teams.
+     *
+     * This is a standing arrangement, not a one-off: every data source added to
+     * this page from here on gets an entry below, so that being extreme in it
+     * surfaces in the notes automatically rather than waiting for someone to
+     * write the note by hand.
+     *
+     * Two ways to supply a metric, and the choice is not stylistic:
+     *
+     *   rank()   the source already publishes one (PFF's board, SoS, the
+     *            regression file). Use it. Ranking the values again here would
+     *            be a second opinion that can drift from the block printing the
+     *            first one.
+     *   value()  the source publishes numbers only. Higher sorts to rank 1, so
+     *            a metric whose good end is low is negated here rather than
+     *            handled by a flag.
+     *
+     * `hi` and `lo` are the adjectives for the two ends — always written from
+     * the end the team is actually on, so a bad dead-cap number reads "2nd
+     * highest" rather than "31st lowest".
+     *
+     * Deliberately absent: 2025 luck, which is a rank like any other but
+     * already has luckNote() above it saying the more useful thing. "4th in
+     * wins above pythag" is the same sentence as "regression candidate" with
+     * the meaning taken out. */
+
+    var STANDOUT_END = 5;   // top five and bottom five
+
+    var STANDOUTS = [
+      {
+        key: 'oline', label: 'Offensive line', hi: 'best', lo: 'worst',
+        rank: function (t) { return (t.raw || {}).oLineRank; },
+        fmt: function (t) { return 'PFF #' + t.raw.oLineRank; }
+      },
+      {
+        key: 'sos', label: 'Schedule', hi: 'easiest', lo: 'toughest',
+        // Rank 1 is the easiest schedule in the field, which is why the
+        // adjectives run the way they do.
+        rank: function (t) { return (t.raw || {}).sosRank; },
+        fmt: function () { return ''; }
+      },
+      {
+        key: 'rest', label: 'Rest', hi: 'best', lo: 'worst',
+        value: function (t) { return (t.raw || {}).rest; },
+        fmt: function (t) { return signed(t.raw.rest) + ' days'; }
+      },
+      {
+        key: 'eye', label: 'Eye test', hi: 'highest', lo: 'lowest',
+        value: function (t) { return (t.raw || {}).eyeTest; },
+        fmt: function (t) { return t.raw.eyeTest + ' of 10'; }
+      },
+      {
+        key: 'havoc', label: 'Havoc rate', hi: 'highest', lo: 'lowest',
+        rank: function (t) { return regTeam(t, 'havoc').rank; },
+        fmt: function (t) { return regTeam(t, 'havoc').pressureRate.toFixed(1) + '%'; }
+      },
+      {
+        key: 'turnovers', label: 'Turnover margin', hi: 'best', lo: 'worst',
+        rank: function (t) { return regTeam(t, 'turnovers').rank; },
+        fmt: function (t) { return signed(regTeam(t, 'turnovers').diff); }
+      },
+      {
+        key: 'oneScore', label: 'One-score record', hi: 'best', lo: 'worst',
+        rank: function (t) { return regTeam(t, 'oneScore').rank; },
+        fmt: function (t) {
+          var o = regTeam(t, 'oneScore');
+          return o.w + '-' + o.l + (o.t ? '-' + o.t : '');
+        }
+      },
+      {
+        key: 'fourthDown', label: '4th down rate', hi: 'highest', lo: 'lowest',
+        rank: function (t) { return regTeam(t, 'fourthDown').rank; },
+        fmt: function (t) { return regTeam(t, 'fourthDown').pct.toFixed(1) + '%'; }
+      },
+      {
+        key: 'deadCap', label: 'Dead cap', hi: 'lowest', lo: 'highest',
+        // The file already ranks this with 1 as the least dead money, which is
+        // the same direction the tile prints.
+        rank: function (t) { return regTeam(t, 'deadCap').rank; },
+        fmt: function (t) {
+          var d = regTeam(t, 'deadCap');
+          return d.amount == null ? '' : millions(d.amount);
+        }
+      }
+    ];
+
+    // The regression file is optional, so every reader of it goes through one
+    // place that hands back an empty object rather than throwing.
+    function regTeam(t, block) {
+      var r = regression && (regression.teams || {})[t.abbr];
+      return (r && r[block]) || {};
+    }
+
+    var standoutScores = {};   // key -> { ABBR: score }, higher is nearer 1st
+
+    /* Scores every metric once against the whole league, not the filtered view:
+     * a chip narrows what is on screen, it does not narrow the field a team is
+     * 3rd of.
+     *
+     * Everything is stored as a score where higher is better, because a
+     * published rank and a raw value are the same thing pointed opposite ways —
+     * negating the rank is cheaper than carrying a direction flag through every
+     * comparison below, and it means one placing routine serves both. */
+    function computeStandouts() {
+      standoutScores = {};
+      STANDOUTS.forEach(function (d) {
+        var scores = {};
+        teams.forEach(function (t) {
+          var v = d.rank ? d.rank(t) : d.value(t);
+          if (v != null) scores[t.abbr] = d.rank ? -v : v;
+        });
+        standoutScores[d.key] = scores;
+      });
+    }
+
+    /* Where a team sits in one field of scores, and whether that is an end of
+     * it worth saying out loud. Returns the placing counted from whichever end
+     * the team is on, or null for the middle.
+     *
+     * The tie rule is the part that matters. A whole tied block has to fit
+     * inside the five, not merely start inside it: the eye test is scored in
+     * whole numbers from 1 to 10, so eight teams can share a 7, and a plain
+     * "rank <= 5" reported all eight as 2nd-highest in the league. Eight teams
+     * tied is not a top five — it is a metric too coarse to have one, and the
+     * right output is silence.
+     *
+     * This is also why the count comes from the scores rather than from
+     * teams.length: a metric missing a few teams has a smaller field, and five
+     * of thirty-two is a different claim from five of twelve. */
+    function placeIn(scores, abbr) {
+      var mine = scores[abbr];
+      if (mine == null) return null;
+
+      var abbrs = Object.keys(scores);
+      if (abbrs.length < 2 * STANDOUT_END) return null;
+
+      var better = 0, equal = 0;
+      abbrs.forEach(function (a) {
+        if (scores[a] > mine) better++;
+        else if (scores[a] === mine) equal++;
+      });
+      var worse = abbrs.length - better - equal;
+
+      if (better + equal <= STANDOUT_END) return { place: better + 1, top: true };
+      if (worse + equal <= STANDOUT_END) return { place: worse + 1, top: false };
+      return null;
+    }
+
+    /* "best in the league" for the very top, "3rd best" below it. The bare
+     * superlative is worth the special case: "1st best" is not something
+     * anybody writes, and the one team it applies to is the one most worth
+     * naming plainly. */
+    function extremePhrase(place, adj) {
+      return place === 1 ? adj + ' in the league' : ordinal(place) + ' ' + adj;
+    }
+
+    function standoutLi(label, phrase, value) {
+      return '<li class="tc-standout">' + esc(label) +
+        ' <span class="tc-standout-rank">' + esc(phrase) + '</span>' +
+        (value ? ' <span class="tc-standout-val">' + esc(value) + '</span>' : '') +
+        '</li>';
+    }
+
+    function standoutNotes(t) {
+      var out = STANDOUTS.map(function (d) {
+        var at = placeIn(standoutScores[d.key] || {}, t.abbr);
+        if (!at) return '';
+        // Written from the end the team is on, so the adjective and the number
+        // always agree: 2nd highest dead cap, never 31st lowest.
+        return standoutLi(d.label, extremePhrase(at.place, at.top ? d.hi : d.lo),
+          d.fmt(t));
+      }).join('');
+
+      return out + marketStandout(t);
+    }
+
+    /* The five outright markets, deliberately collapsed into one line instead
+     * of five. They are five prices on one opinion — a team the market loves is
+     * top five in most of them at once — so a bullet apiece would say the same
+     * thing five times and drown the metrics that are actually independent of
+     * each other. Which markets is worth carrying; five separate placings are
+     * not.
+     *
+     * They go through the same placeIn() as everything else, on the de-vigged
+     * price rather than a rank, which matters more here than anywhere: books
+     * hang the same number on a lot of teams, and four clubs the market cannot
+     * separate must not read as four different placings.
+     *
+     * The two ends are separate lines rather than one sentence with a "but":
+     * a team can be top five to win its division and bottom five to win the
+     * Super Bowl, and that gap is a real read about a weak division rather than
+     * a contradiction to be smoothed over. */
+    // The markets' own labels are sentence-case headings ("Win total", "Win
+    // Super Bowl") and do not survive being dropped into the middle of a line.
+    // These are the same five named the way you would say them.
+    var MARKET_SHORT = {
+      winTotal: 'win total', playoffs: 'playoffs', division: 'division',
+      conference: 'conference', superBowl: 'Super Bowl'
+    };
+
+    function marketStandout(t) {
+      if (!markets) return '';
+      var live = 0, top = [], bottom = [];
+
+      markets.forEach(function (m) {
+        if (!m.ok) return;
+        live++;
+        var at = placeIn(m.value, t.abbr);
+        if (!at) return;
+        (at.top ? top : bottom).push(MARKET_SHORT[m.key] || m.label.toLowerCase());
+      });
+
+      // Naming all five is longer than saying all five, and the sweep is the
+      // read anyway: a team the whole board agrees on is a different statement
+      // from one two markets like.
+      function line(hits, end) {
+        if (!hits.length) return '';
+        // The sweep takes the label rather than the value: "Market top five in
+        // every market" says market twice, and naming all five is longer than
+        // saying all five. A board that agrees unanimously is its own read.
+        return hits.length === live
+          ? standoutLi('Every market', end + ' five', '')
+          : standoutLi('Market', end + ' five', hits.join(', '));
+      }
+
+      return line(top, 'top') + line(bottom, 'bottom');
+    }
+
     /* The 2025 luck read, as a note rather than a block of its own: only the
      * regression / bounce-back call, since the record and the points behind it
      * are already in the Luck column of the row above. A team whose record
@@ -905,7 +1154,10 @@
 
     // One list, so the derived reads sit among the notes rather than above
     // them. They lead: the luck call is the season the filed notes are written
-    // against, and the staff call is who is writing this one.
+    // against, the staff call is who is writing this one, and the standouts are
+    // every metric on the page this team is at an end of — which is the context
+    // a filed note is read in, and would otherwise have to be written by hand
+    // into the note itself.
     function notesInner(t) {
       var body = bunNotesLoaded()
         ? bunNotesFor(t.abbr).map(bunNoteBullet).join('')
@@ -913,7 +1165,9 @@
 
       var luck = luckNote(t.pythag);
       var staff = staffNote(t);
-      var lead = luck + staff;
+      // Standouts last of the three derived groups: luck and the staff are
+      // verdicts about the team, and this is the evidence file under them.
+      var lead = luck + staff + standoutNotes(t);
       body = (lead || body) ? '<ul class="tc-notes">' + lead + body + '</ul>' : '';
 
       // Deliberately outside that test: cardBlock() drops a block with nothing
@@ -961,6 +1215,212 @@
         coachLine('DC', staff.dc, coaches.season);
 
       return body ? '<ul class="tc-coaches">' + body + '</ul>' : '';
+    }
+
+    /* ---------- stats & regression ----------
+     * The card's other worksheet, and the only block on it that looks
+     * backwards. Everything above is an argument about what a team is; this is
+     * an argument about which parts of last season were the team and which
+     * parts were the bounce of the ball.
+     *
+     * Two rows, because the numbers are two kinds of thing and used to be laid
+     * out as though they were one. The three that regress lead:
+     *
+     *   Turnovers  Fumble recoveries are a coin flip and interception rate
+     *              barely correlates season to season, which makes a big margin
+     *              either way the loudest single regression signal there is.
+     *   One-score  Over a career every team is about .500 in games decided by a
+     *              possession. 11-2 is not a skill.
+     *   4th down   Twenty-odd attempts in a season. There is no sample there to
+     *              be good at.
+     *
+     * Under them, set apart, the two that do not regress and are only there to
+     * be read against the three that do: havoc, which is the opposite case —
+     * pressure is the stickiest thing a defense does — and dead cap, which is
+     * money already spent and the answer to whether any of this can be fixed
+     * this year. They carry the league's middle where a regression tile carries
+     * an arrow. Sharing one row with one arrow made five findings of a kind out
+     * of them and implied, wrongly, that a low pressure rate predicts a fall.
+     *
+     * The colours say direction, not quality, and they are the Luck column's
+     * palette rather than the z-score columns': green is a tailwind into 2026,
+     * orange is 2025 flattery that is unlikely to come again. A team can
+     * therefore be excellent and orange, which is the entire point — that is
+     * what a 13-win team living off one-score games looks like. */
+
+    function ordinal(n) {
+      if (n == null) return '';
+      var hundreds = n % 100;
+      if (hundreds >= 11 && hundreds <= 13) return n + 'th';
+      return n + ({ 1: 'st', 2: 'nd', 3: 'rd' }[n % 10] || 'th');
+    }
+
+    // Dead money is quoted to the dollar by the source and read to the million:
+    // the gap between $36.5M and $36,520,240 is noise in a block whose job is a
+    // glance.
+    function millions(n) {
+      return '$' + (n / 1e6).toFixed(1) + 'M';
+    }
+
+    function leanOf(up, down) {
+      return up ? 'up' : (down ? 'down' : 'flat');
+    }
+
+    /* One builder per tile, in reading order, each handed the team's row and
+     * the league's middle. They return the tile rather than its markup so the
+     * lean rules stay together and readable — which is where the block's whole
+     * argument lives, and the part most likely to be argued with.
+     *
+     * The thresholds are quintile-ish on purpose: a turnover margin outside ±7,
+     * a one-score record outside .375-.625, a fourth-down rate outside 45-65%.
+     * Anything tighter than that is inside the noise the block exists to warn
+     * about, and gets no arrow at all. */
+    var REG_TILES = [
+      function (r) {
+        var v = r.turnovers;
+        return {
+          label: 'Turnover margin',
+          rank: v.rank,
+          val: signed(v.diff),
+          sub: v.takeaways + ' takeaways · ' + v.giveaways + ' giveaways',
+          // Inverted against the rank it prints: ranking first here is the
+          // thing most likely to be handed back.
+          lean: leanOf(v.diff <= -7, v.diff >= 7),
+          why: 'Takeaways less giveaways from scrimmage, 2025. Fumble recoveries ' +
+            'are close to a coin flip and interception rate barely carries over, ' +
+            'so a margin this far from zero is mostly last season’s luck ' +
+            'rather than next season’s defense.'
+        };
+      },
+      function (r) {
+        var o = r.oneScore;
+        return {
+          label: 'One-score games',
+          rank: o.rank,
+          val: o.w + '-' + o.l + (o.t ? '-' + o.t : ''),
+          sub: o.games + ' of 17 inside 8 points',
+          lean: leanOf(o.pct <= 0.375, o.pct >= 0.625),
+          why: 'Record in games decided by 8 or fewer — one possession — in ' +
+            'the 2025 regular season. Teams converge on .500 here over time, so a ' +
+            'record far off it is the clearest place a win total was borrowed from ' +
+            'or lent to the following year.'
+        };
+      },
+      function (r, lg) {
+        var f = r.fourthDown;
+        return {
+          label: '4th down rate',
+          rank: f.rank,
+          val: f.pct.toFixed(1) + '%',
+          sub: f.conv + ' of ' + f.att + ' converted',
+          lean: leanOf(f.pct <= 45, f.pct >= 65),
+          why: 'Fourth-down conversion rate on plays the team chose to run — ' +
+            'punts and field goals excluded. League average ' + lg.fourthDownPct +
+            '%. A season is barely two dozen attempts, which is far too few for ' +
+            'the rate to be a property of the offense.'
+        };
+      }
+    ];
+
+    /* The two that are not regression calls, and are therefore not tiles of the
+     * same kind. Havoc is the opposite of the three above — it is the thing that
+     * repeats — and dead cap does not regress at all, it is already spent. Both
+     * used to sit in the same row with the same green-or-orange arrow, which
+     * read as five findings of one type and quietly claimed that a low pressure
+     * rate predicts decline, which it does not.
+     *
+     * So they carry a comparison instead of a lean: the league's middle, which
+     * is the only context either number needs. Whether that is good or bad is
+     * the reader's call and depends entirely on the three tiles above it — a
+     * high pressure rate beside a poor turnover margin is a bill coming due,
+     * and beside a good one it is a margin that was earned. */
+    var CONTEXT_TILES = [
+      function (r, lg) {
+        var h = r.havoc;
+        return {
+          label: 'Havoc rate',
+          rank: h.rank,
+          val: h.pressureRate.toFixed(1) + '%',
+          sub: h.sacks + ' sacks · ' + h.pressures + ' pressures',
+          vs: 'league ' + lg.pressureRate + '%',
+          why: 'Share of dropbacks faced that ended in a sack or a QB hit, 2025 ' +
+            'regular season. Hurries are hand-charted and in no free feed, so this ' +
+            'is a floor on real pressure. It is the stickiest thing a defense does ' +
+            'and so is not a regression call itself — it is what says whether the ' +
+            'turnover margin above was earned or borrowed.'
+        };
+      },
+      function (r, lg) {
+        var d = r.deadCap;
+        if (d.amount == null) return null;
+        return {
+          label: '2026 dead cap',
+          rank: d.rank,
+          val: millions(d.amount),
+          sub: d.capSpace == null ? '' : millions(d.capSpace) + ' cap space',
+          // Median, not the mean the other tile quotes: dead money is a long
+          // right tail, and one team eating a franchise quarterback drags the
+          // average past where any team actually sits.
+          vs: 'median ' + millions(lg.deadCapMedian),
+          why: 'Cap charged in 2026 to players no longer on the roster, with the ' +
+            'room left beside it. Nothing here regresses — the money is spent — so ' +
+            'it is carried as the answer to what the three tiles above raise, ' +
+            'which is whether the roster can be fixed this year at all. Rank 1 is ' +
+            'the team paying the least of it.'
+        };
+      }
+    ];
+
+    var LEAN_NOTE = {
+      up: '↑ positive regression',
+      down: '↓ negative regression',
+      flat: '· in line'
+    };
+
+    /* Both kinds of tile are built here, because they differ in one line: the
+     * regression tiles close on a lean, the context tiles close on the league's
+     * middle. Splitting them into two near-identical builders would have made
+     * the difference harder to see than it is. */
+    function regTile(tile, context) {
+      if (!tile) return '';
+      var rank = tile.rank
+        ? '<span class="tc-reg-rank">' + esc(ordinal(tile.rank)) + '</span>'
+        : '';
+      var sub = tile.sub
+        ? '<div class="tc-reg-sub">' + esc(tile.sub) + '</div>'
+        : '';
+      var foot = context
+        ? '<div class="tc-reg-vs">' + esc(tile.vs) + '</div>'
+        : '<div class="tc-reg-lean">' + LEAN_NOTE[tile.lean] + '</div>';
+      return '<div class="tc-reg-tile ' +
+        (context ? 'is-context' : 'lean-' + tile.lean) + '" title="' +
+        esc(tile.why) + '">' +
+        '<div class="tc-reg-label">' + esc(tile.label) + rank + '</div>' +
+        '<div class="tc-reg-val">' + esc(tile.val) + '</div>' + sub + foot +
+        '</div>';
+    }
+
+    function regRow(builders, r, lg, context) {
+      return '<div class="tc-reg-grid' + (context ? ' is-context' : '') + '">' +
+        builders.map(function (build) {
+          return regTile(build(r, lg), context);
+        }).join('') + '</div>';
+    }
+
+    function regressionInner(t) {
+      // Whole block or nothing: the file is one fetch, and half a worksheet
+      // would read as a team with nothing to say about it rather than as a
+      // file that did not arrive.
+      if (!regression) return '';
+      var r = (regression.teams || {})[t.abbr];
+      if (!r) return '';
+      var lg = regression.league || {};
+
+      return regRow(REG_TILES, r, lg, false) +
+        '<div class="tc-reg-context">' +
+          '<h5>More Stats</h5>' +
+          regRow(CONTEXT_TILES, r, lg, true) +
+        '</div>';
     }
 
     /* ---------- raw inputs ----------
@@ -1062,6 +1522,11 @@
       return '<div class="team-card">' + head +
         '<div class="tc-view is-notes">' +
           '<div class="tc-grid">' + body + '</div>' +
+          /* Full width under the grid and above the inputs, which is where it
+           * belongs in the argument: the blocks above say what the team is, the
+           * inputs below say how the score was built out of that, and this says
+           * which parts of the record behind both of them were real. */
+          cardBlock('2025 Stats → 2026 Regression', 'is-reg tc-reg-block', regressionInner(t)) +
           '<div class="tc-block is-raw tc-raw-block"><h4>Inputs</h4>' + rawInner(t) +
           '</div>' +
         '</div>' +
@@ -1764,13 +2229,14 @@
       wtFlag.hidden = !customWeights;
     }
 
-    /* The three loads run together: the projections are the page and the notes
-     * are what the cards are opened for, and neither needs the other to start.
+    /* The loads run together: the projections are the page and the notes are
+     * what the cards are opened for, and neither needs the other to start.
      * bunNotesLoad() never rejects — a store that could not be reached reports
      * itself as not loaded, and every note renderer falls back to the copy in
      * the projections file. The coaching staffs swallow their own failure for
-     * the same reason: they are one block of a card, not the page, so a file
-     * that never arrives drops that block rather than the table. */
+     * the same reason, and so does the regression worksheet: they are one
+     * block of a card, not the page, so a file that never arrives drops that
+     * block rather than the table. */
     Promise.all([
       fetch(DATA_URL, { cache: 'no-store' }).then(function (r) {
         if (!r.ok) throw new Error('HTTP ' + r.status);
@@ -1783,12 +2249,19 @@
       // Joins the same wait rather than chaining after it: the outright prices
       // are needed at the same moment the projections are, and a second round
       // trip would leave The Board holding two of its five markets.
-      bunMarkets.load()
+      bunMarkets.load(),
+      // Same swallow-your-own-failure contract as the coaching staffs: one
+      // block of a card, so a file that never arrives costs that block and
+      // nothing else.
+      fetch(REG_URL, { cache: 'no-store' })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .catch(function () { return null; })
     ])
       .then(function (res) {
         var d = res[0];
         teams = d.teams || [];
         coaches = res[2];
+        regression = res[4];
         // Resolves to null if the feed is unreachable, in which case win total
         // and make-playoffs still build off the projections and the other
         // three markets come back `ok: false` and show as disabled chips.
@@ -1804,6 +2277,10 @@
         renderWeightText();
         computeHeat();
         computeComposition();
+        // Ranks the whole field on every metric the cards can call a team
+        // extreme in. Whole-field, so it belongs beside the other two passes
+        // that read all 32 teams rather than inside the card that shows one.
+        computeStandouts();
         buildFilters();
         buildMarketPicker();
         buildTeamPicker();
