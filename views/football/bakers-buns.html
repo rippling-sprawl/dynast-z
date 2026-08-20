@@ -37,6 +37,9 @@
   <div id="nav-drawer-mount"></div>
   <script src="/scripts/base/auth.js"></script>
   <script src="/scripts/base/nav.js"></script>
+  <!-- The page is pinned while any of the three dialogs is up, and only put
+       back once the last of them closes. -->
+  <script src="/scripts/base/scroll-lock.js"></script>
   <!-- Any <figure> img is lightboxable for free — see scripts/base/lightbox.js. -->
   <script src="/scripts/base/lightbox.js"></script>
   <!-- Taking a note: the team and week pickers are the schedule page's, and the
@@ -392,6 +395,11 @@
           <a href="https://www.pff.com/news/nfl-offensive-line-rankings-2026" target="_blank" rel="noopener">PFF &mdash; 2026 offensive line rankings</a>
           <span class="link-src">Feeds the 40% O-Line input</span>
           <p>All 32 lines graded off individual player grades weighted toward pass protection, over three years of history. Rankings move weekly with injuries; results start counting after Week 4. The per-team read is on each team&rsquo;s card above.</p>
+        </li>
+        <li>
+          <a href="https://www.actionnetwork.com/nfl/2026-nfl-offensive-line-rankings-for-every-team" target="_blank" rel="noopener">Action Network &mdash; 2026 offensive line rankings</a>
+          <span class="link-src">Qualitative only &mdash; does not feed the O-Line input</span>
+          <p>Brandon Anderson ranks all 32 lines into named tiers on four criteria: the unit over its best individual, continuity, depth and versatility, and scheme fit. Read against PFF it is a second opinion rather than a replacement &mdash; the 40% O-Line input stays PFF&rsquo;s rank &mdash; and the teams the two boards disagree about are the ones worth a second look. They agree almost exactly at the top (Broncos 1st, Bills 6th, Chiefs 8th) and the bottom (Packers 28th, Jaguars 30th), so the gaps stand out: the Ravens are 15th here against PFF&rsquo;s 24th, the Patriots 21st against 13th, and the Cowboys, Giants, Steelers and Raiders all move four or five spots. The Ravens and Patriots are the two teams whose 40% input would look materially different on the other board. Each team&rsquo;s summary sits inside its Offensive line block above.</p>
         </li>
         <li>
           <a href="https://www.sharpfootballanalysis.com/betting/nfl-schedule-rest-disparity/" target="_blank" rel="noopener">Sharp Football &mdash; schedule rest disparity</a>
@@ -783,24 +791,57 @@
      * the doc never wrote about shows its metrics and nothing else rather than
      * a column of empty headings. */
 
-    function cardBlock(label, cls, inner) {
+    /* `tag` is the block's heading level, defaulting to the top one. Everything
+     * on the card is a top-level block except the offensive line, which nests
+     * two boards and their findings underneath it and needs the depth to say
+     * so. */
+    function cardBlock(label, cls, inner, tag) {
       if (!inner) return '';
-      return '<div class="tc-block ' + cls + '"><h5>' + esc(label) + '</h5>' + inner + '</div>';
+      tag = tag || 'h4';
+      return '<div class="tc-block ' + cls + '"><' + tag + '>' + esc(label) +
+        '</' + tag + '>' + inner + '</div>';
     }
 
-    function bullets(items) {
+    /* `lede` marks how many opening items are the summary rather than a finding
+     * — the offensive line's verdicts, which sit at the head of their board's
+     * list and are lit a shade brighter than what follows them. */
+    function bullets(items, lede) {
       if (!items || !items.length) return '';
-      return '<ul>' + items.map(function (s) {
-        return '<li>' + esc(s) + '</li>';
+      return '<ul>' + items.map(function (s, i) {
+        return '<li' + (i < (lede || 0) ? ' class="tc-verdict"' : '') + '>' +
+          esc(s) + '</li>';
       }).join('') + '</ul>';
     }
 
-    function olineInner(ol) {
+    /* The offensive line: one headline, both boards under it, and the two ranks
+     * on a single line between them.
+     *
+     * Only PFF's number feeds the score — it is the 40% input — so it is named
+     * first and Anderson's is set beside it rather than under his own heading,
+     * which keeps the gap between the two boards readable at a glance without
+     * implying the second one moves anything. Nothing below the rank line
+     * touches a z-score. */
+    function olineInner(t) {
+      var ol = t.oline;
       if (!ol) return '';
-      return '<p class="tc-verdict">' + esc(ol.verdict) + '</p>' +
-        cardBlock('Injuries', 'is-inj', bullets(ol.injuries)) +
-        cardBlock('Pros', 'is-pro', bullets(ol.pros)) +
-        cardBlock('Risks & cons', 'is-con', bullets(ol.cons));
+      var a = ol.action;
+
+      /* One list per board rather than a heading per kind of finding. Splitting
+       * PFF's read into Injuries / Pros / Risks made three headings out of what
+       * is often one bullet each, and the split stopped being the useful one the
+       * moment a second board arrived: what a reader compares now is PFF's whole
+       * read against Anderson's, not this line's pros against its cons. The
+       * verdict leads its list as the summary bullet it already was. */
+      var pff = bullets([ol.verdict].concat(
+        ol.injuries || [], ol.pros || [], ol.cons || []), 1);
+
+      var anderson = a ? bullets([a.verdict].concat(a.notes || []), 1) : '';
+
+      return '<p class="tc-ol-ranks">PFF #' + t.raw.oLineRank +
+        (a ? ' <span class="tc-ol-sep" aria-hidden="true">|</span> Anderson: #' +
+          a.rank : '') + '</p>' +
+        cardBlock('PFF', 'is-pff', pff, 'h5') +
+        cardBlock('Brandon Anderson', 'is-an', anderson, 'h5');
     }
 
     /* The 2025 luck read, as a note rather than a block of its own: only the
@@ -959,14 +1000,22 @@
         '</tbody></table>';
     }
 
-    /* The two seasons a card can show, beside the team's name. They used to be
-     * one link out to /football/schedule, which answered the question by
-     * closing the card that raised it — the reader wanted the schedule *of the
-     * team they were reading about*, and came back to a page scrolled somewhere
-     * else. Now the card shows it in place, and the notes it opens on stay one
-     * click away. */
+    /* The views a card can show, beside the team's name: the notes it opens on,
+     * and the two seasons of schedule. The seasons used to be one link out to
+     * /football/schedule, which answered the question by closing the card that
+     * raised it — the reader wanted the schedule *of the team they were reading
+     * about*, and came back to a page scrolled somewhere else. Now the card
+     * shows it in place.
+     *
+     * Notes leads, and is a tab of its own rather than a re-tap of the season
+     * already showing: the way back has to be visible from the schedule, or the
+     * reader who came for a game and then wanted the write-up has to close the
+     * card and open it again. */
     function schedTabs() {
       return '<div class="tc-sched-tabs">' +
+        '<button type="button" class="tc-tab" data-view="notes" ' +
+        'aria-pressed="true">Notes</button>' +
+        '<span class="tc-tab-sep" aria-hidden="true">|</span>' +
         '<span class="tc-sched-label">Schedule:</span>' +
         SCHED_SEASONS.map(function (season, i) {
           return (i ? '<span class="tc-tab-sep" aria-hidden="true">|</span>' : '') +
@@ -982,14 +1031,29 @@
         '<div class="tc-id"><h4>' + esc(t.team) + '</h4></div>' +
         schedTabs() + '</div>';
 
-      // Offensive line leads the grid: it is the heaviest input into the score,
-      // so it reads first. The playoff/division prices are omitted here — they
-      // are already columns in the table above.
+      /* Coaches, then notes, then the offensive line. The line used to lead on
+       * the argument that it is the heaviest input into the score, but it is
+       * also the longest block by some distance — leading with it pushed the two
+       * short blocks below the fold on a phone, so the reader paid for the
+       * ranking twice, once in the table row that opened this card and again
+       * here. The short context reads first now and the line gets the whole
+       * second column to itself on a wide screen (see .tc-grid).
+       *
+       * The short blocks are wrapped rather than placed by rule, because a grid
+       * row is as tall as its tallest cell: with the line in row 1 of column 2,
+       * notes could not start until the whole line had finished, which opened a
+       * chasm under the coaches. Wrapped, the two sides are independent columns
+       * and the wrapper's gap matches the grid's, so on a phone — where it
+       * collapses to one column — the stack is indistinguishable from four
+       * loose blocks. The playoff/division prices are omitted here: they are
+       * already columns in the table above. */
       var body =
-        cardBlock('Offensive line — PFF #' + t.raw.oLineRank, 'is-ol', olineInner(t.oline)) +
-        cardBlock('Notes', 'is-note', notesInner(t)) +
-        cardBlock('Coaches', 'is-coach', coachesInner(t)) +
-        cardBlock('Schedule', 'is-sched', scheduleInner(t));
+        '<div class="tc-col">' +
+          cardBlock('Coaches', 'is-coach', coachesInner(t)) +
+          cardBlock('Notes', 'is-note', notesInner(t)) +
+          cardBlock('Schedule', 'is-sched', scheduleInner(t)) +
+        '</div>' +
+        cardBlock('Offensive line', 'is-ol', olineInner(t));
 
       /* Two views under the one head. The notes are the default and always the
        * default — the card is rebuilt from scratch on every open, so there is no
@@ -998,7 +1062,7 @@
       return '<div class="team-card">' + head +
         '<div class="tc-view is-notes">' +
           '<div class="tc-grid">' + body + '</div>' +
-          '<div class="tc-block is-raw tc-raw-block"><h5>Inputs</h5>' + rawInner(t) +
+          '<div class="tc-block is-raw tc-raw-block"><h4>Inputs</h4>' + rawInner(t) +
           '</div>' +
         '</div>' +
         '<div class="tc-view is-sched" hidden></div>' +
@@ -1230,8 +1294,9 @@
       cardTeam = t;
       dismissHint();   // the hint has been obeyed; it has nothing left to say
       modal.showModal();
-      // The page behind a modal dialog still scrolls in some browsers.
-      document.body.classList.add('modal-open');
+      // The page behind a modal dialog still scrolls in some browsers, and
+      // always on iOS — see scripts/base/scroll-lock.js.
+      ScrollLock.lock();
     }
 
     /* ---------- the schedule tabs ----------
@@ -1244,7 +1309,10 @@
 
     function showNotes() {
       var tabs = modalBody.querySelectorAll('.tc-tab');
-      for (var i = 0; i < tabs.length; i++) tabs[i].setAttribute('aria-pressed', 'false');
+      for (var i = 0; i < tabs.length; i++) {
+        tabs[i].setAttribute('aria-pressed',
+          tabs[i].getAttribute('data-view') === 'notes' ? 'true' : 'false');
+      }
       modalBody.querySelector('.tc-view.is-notes').hidden = false;
       modalBody.querySelector('.tc-view.is-sched').hidden = true;
     }
@@ -1281,18 +1349,18 @@
       });
     }
 
-    // Clicking the season already showing puts the notes back — the same
-    // re-tap-to-clear the team picker on /football/schedule uses, and the only
-    // way back that does not cost the head a third control.
+    // Notes has its own tab; clicking the season already showing goes back there
+    // too, the re-tap-to-clear the team picker on /football/schedule uses.
     modalBody.addEventListener('click', function (e) {
       var tab = e.target.closest ? e.target.closest('.tc-tab') : null;
       if (!tab || !modalBody.contains(tab)) return;
-      if (tab.getAttribute('aria-pressed') === 'true') showNotes();
+      if (tab.getAttribute('data-view') === 'notes') showNotes();
+      else if (tab.getAttribute('aria-pressed') === 'true') showNotes();
       else showSchedule(Number(tab.getAttribute('data-sched-season')));
     });
 
     modal.addEventListener('close', function () {
-      document.body.classList.remove('modal-open');
+      ScrollLock.unlock();
       // The row may have been re-rendered away by a sort or filter, in which
       // case there is nothing to return focus to.
       if (lastOpener && lastOpener.isConnected) lastOpener.focus();
@@ -1457,7 +1525,7 @@
       buildWeightRows(weights);
       syncWeightTotal();
       wtModal.showModal();
-      document.body.classList.add('modal-open');
+      ScrollLock.lock();
     });
 
     // Puts the sheet's numbers back in the form. It does not save on its own —
@@ -1495,7 +1563,7 @@
     }
 
     wtModal.addEventListener('close', function () {
-      document.body.classList.remove('modal-open');
+      ScrollLock.unlock();
     });
 
     wtModal.addEventListener('click', function (e) {

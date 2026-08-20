@@ -320,7 +320,7 @@
     });
 
     dlg.addEventListener('close', function () {
-      document.body.classList.remove('modal-open');
+      ScrollLock.unlock();
       closeAllDropdowns();
     });
 
@@ -404,7 +404,9 @@
     syncDraft();
 
     dlg.showModal();
-    document.body.classList.add('modal-open');
+    // Taken after showModal so a double-open — which throws — cannot take a
+    // lock nothing will release. See scripts/base/scroll-lock.js.
+    ScrollLock.lock();
     rowsEl.querySelector('input').focus();
   }
 

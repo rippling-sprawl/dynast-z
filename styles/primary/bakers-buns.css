@@ -832,9 +832,17 @@
 
 .tc-modal-close:hover { color: #e1e4e8; border-color: #3a3a3a; }
 
-/* Locked while the dialog is open — a modal dialog does not stop the page
- * behind it from scrolling in every browser. */
-body.modal-open { overflow: hidden; }
+/* The page behind the dialog is locked by scripts/base/scroll-lock.js — a modal
+ * dialog does not stop the page behind it from scrolling in every browser, and
+ * on iOS it does not stop it in any. The rule that does the pinning is
+ * body.scroll-locked in styles/base/styles.css.
+ *
+ * The note form opens over the card, so while it is up the card's scroller is
+ * frozen too: only the form should move. It is a plain overflow:hidden rather
+ * than a lock because the card is not the page — it has no scroll position that
+ * has to survive being pinned, and the browser keeps its scrollTop across the
+ * change. */
+body:has(.bn-modal[open]) .tc-modal-scroll { overflow: hidden; }
 
 /* The team card. Every fact about a team renders here — the doc's notes, the
  * offensive line and the 2025 luck read — so the page never has to repeat a
@@ -874,11 +882,12 @@ body.modal-open { overflow: hidden; }
   color: #666;
 }
 
-/* --- The schedule tabs ---
- * Pushed to the trailing edge of the head, clear of the close button, where the
- * link out to /football/schedule used to sit. Same 10px monospace caps it had:
- * this is a label on the head, not a control bar, and it should not compete
- * with the team's name for the eye.
+/* --- The view tabs ---
+ * Notes, then the two schedule seasons. Pushed to the trailing edge of the
+ * head, clear of the close button, where the link out to /football/schedule
+ * used to sit. Same 10px monospace caps it had: this is a label on the head,
+ * not a control bar, and it should not compete with the team's name for the
+ * eye.
  *
  * The two views they switch between are .tc-view; the rows one of them renders
  * are the shared ones in styles/components/nfl-schedule.css. */
@@ -926,28 +935,56 @@ body.modal-open { overflow: hidden; }
  * reset in styles/base/styles.css does not cover for a div. */
 .tc-view[hidden] { display: none; }
 
+/* Two fixed columns rather than as many 215px ones as fit. The blocks are not
+ * interchangeable tiles: the offensive line carries two boards and a dozen
+ * bullets while coaches and notes are a few lines each, so an auto-fit row
+ * dealt them out three-across and left two columns of whitespace under the
+ * short ones. Coaches and notes stack down the first column, the line takes the
+ * second on its own, and the two sides finish at roughly the same depth.
+ *
+ * Everything is pinned to column 1 and the line overrides itself into column 2,
+ * so auto-placement can never wrap a block around it. */
 .tc-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(215px, 1fr));
+  grid-template-columns: 1fr 1fr;
   gap: 14px 20px;
   align-items: start;
 }
 
+/* Column one, holding the short blocks. Its gap matches the grid's row gap, so
+ * once the grid drops to one column the wrapper leaves no trace. */
+.tc-col {
+  display: grid;
+  gap: 14px;
+  align-content: start;
+}
+
+/* One heading style for every block in the card, Inputs included. The blocks
+ * used to each take their own colour, which made five hues compete for the eye
+ * in a card whose content is already colour-coded; the heading's job is only to
+ * name the block, so it is one grey and a size up from the body it heads. */
+.tc-block h4 {
+  font-family: monospace;
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 700;
+  margin: 0 0 6px;
+  color: #8b949e;
+}
+
+/* One level below it, used only by the offensive line — the one block that
+ * carries two boards and needs to name each. The ramp is size on the same grey
+ * rather than a colour per level, so the nesting still reads as one column. */
 .tc-block h5 {
   font-family: monospace;
-  font-size: 10px;
+  font-size: 10.5px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   font-weight: 700;
   margin: 0 0 5px;
-  color: #666;
+  color: #8b949e;
 }
-
-.tc-block.is-note h5 { color: #60a5fa; }
-.tc-block.is-inj h5 { color: #d29922; }
-.tc-block.is-pro h5 { color: #2ea043; }
-.tc-block.is-con h5 { color: #f0883e; }
-.tc-block.is-coach h5 { color: #a371f7; }
 
 .tc-block ul { margin: 0; padding-left: 15px; }
 
@@ -969,7 +1006,24 @@ body.modal-open { overflow: hidden; }
  * ones, so the card reads as one column rather than six loose fragments. */
 .tc-block .tc-block { margin-top: 8px; }
 
-.tc-verdict { color: #e1e4e8; }
+/* The bullet each board's list opens on: its one-line summary, lit a shade
+ * brighter than the findings under it. Two classes, so it outranks the plain
+ * `.tc-block li` colour. */
+.tc-block .tc-verdict { color: #e1e4e8; }
+
+/* Both ranks on one line, above the two boards that gave them. Carrying them
+ * together is the point — the gap between them is the read — so the separator
+ * is what gets dimmed rather than the second number. Two classes, because the
+ * plain `.tc-block p` colour would otherwise outrank one. */
+.tc-block .tc-ol-ranks {
+  font-family: monospace;
+  font-size: 11px;
+  letter-spacing: 0.3px;
+  color: #e1e4e8;
+  margin-bottom: 9px;
+}
+
+.tc-ol-sep { color: #444; padding: 0 3px; }
 
 /* The coaching staff: three fixed rows rather than a list of findings, so the
  * role carries the marker's job and the bullets come off. The prior job is
@@ -999,8 +1053,6 @@ body.modal-open { overflow: hidden; }
   padding-top: 12px;
   border-top: 1px solid #1f1f1f;
 }
-
-.tc-block.is-raw h5 { color: #8b949e; }
 
 .tc-raw {
   width: 100%;
@@ -1077,6 +1129,11 @@ body.modal-open { overflow: hidden; }
   .bun-grid { grid-template-columns: 1fr; }
   .bun-table th, .bun-table td { padding: 6px 8px; }
 
+  /* One column, in source order — coaches, notes, offensive line. The line's
+   * explicit placement has to be undone or it would sit on top of the coaches
+   * block in the single column it now shares with it. */
+  .tc-grid { grid-template-columns: 1fr; }
+
   /* Bottom sheet: pinned to the bottom edge, full width, and tall enough to
    * read without covering the whole screen. */
   .tc-modal {
@@ -1095,13 +1152,16 @@ body.modal-open { overflow: hidden; }
 
   .team-card { padding: 12px 14px calc(16px + env(safe-area-inset-bottom)); }
 
-  /* The logo, a full team name and "Schedule: 2026 | 2025" do not share a line
-   * at this width. The tabs wrap under the name rather than squeezing it, and
-   * lose the auto margin that was pushing them right — wrapped, that would
-   * strand them under the close button instead. */
+  /* The logo, a full team name and "Notes | Schedule: 2026 | 2025" do not share
+   * a line at this width. The tabs wrap under the name rather than squeezing
+   * it, and lose the auto margin that was pushing them right — wrapped, that
+   * would strand them under the close button instead. */
   .tc-head { flex-wrap: wrap; }
 
   .tc-sched-tabs {
+    /* The row is four controls wide now; on the narrowest phones it breaks
+       rather than running off the card. */
+    flex-wrap: wrap;
     /* Indented past the logo so the tabs line up under the team name rather
      * than under the crest. The width is the line less that indent — a flat
      * 100% is measured before the margin is added and runs the row off the
@@ -1260,8 +1320,10 @@ li:hover > .tc-note-edit,
 .bn-fab:focus-visible { outline: 2px solid #8ec0ff; outline-offset: 2px; }
 
 /* A dialog is on the top layer and the button is not, so while one is open the
- * button would sit under the backdrop as a dimmed disc. */
-body.modal-open .bn-fab { display: none; }
+ * button would sit under the backdrop as a dimmed disc. Keyed off the open
+ * dialog itself rather than a class the page has to remember to take back off:
+ * there are three dialogs here and one of them closes another on its way open. */
+body:has(dialog[open]) .bn-fab { display: none; }
 
 /* --- The note modal ---
  * Same shape as the team card's dialog, because it is the other half of the

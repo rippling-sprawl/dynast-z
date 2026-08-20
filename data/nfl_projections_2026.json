@@ -69,7 +69,19 @@
         ],
         "cons": [
           "Drew Dalman's retirement is a significant blow"
-        ]
+        ],
+        "action": {
+          "rank": 7,
+          "prevRank": 4,
+          "tier": "The Ol' Stalwarts",
+          "verdict": "Last year's sleeper delivered; the center's retirement is the tax.",
+          "notes": [
+            "Finished third in PFF's rank by the end of last season",
+            "C Drew Dalman's unexpected retirement is the setback",
+            "LG Joe Thuney is a stud and RT Darnell Wright anchors the league's best run-blocking right side",
+            "Caleb Williams' improved pocket management is partly a line story"
+          ]
+        }
       },
       "pythag": {
         "w": 11,
@@ -133,7 +145,19 @@
         "cons": [
           "Mays' injury is the main reason for the drop",
           "Rookie Blake Miller thrown in"
-        ]
+        ],
+        "action": {
+          "rank": 17,
+          "prevRank": 8,
+          "tier": "Wild Cards I'm Skeptical Of",
+          "verdict": "A real fall from grace after three straight years in the top three.",
+          "notes": [
+            "Penei Sewell moves back to left tackle, one of three starters in new spots",
+            "First-rounder Blake Miller starts at right tackle",
+            "C Cade Mays misses the first half of the season, and the interior looks particularly shaky",
+            "Jared Goff is great in a clean pocket and struggles badly with quick pressure"
+          ]
+        }
       },
       "pythag": {
         "w": 9,
@@ -200,7 +224,19 @@
         ],
         "cons": [
           "Darrisaw availability"
-        ]
+        ],
+        "action": {
+          "rank": 13,
+          "prevRank": 3,
+          "tier": "Wild Cards I Believe In",
+          "verdict": "Huge investment, never healthy enough to show it.",
+          "notes": [
+            "C Ryan Kelly retired",
+            "LT Christian Darrisaw is a top-10 lineman when healthy but has played only 17 games in two years",
+            "Darrisaw and Brian O'Neill are an excellent run-blocking tackle duo",
+            "Frank Smith's zone background should suit them"
+          ]
+        }
       },
       "pythag": {
         "w": 9,
@@ -261,7 +297,18 @@
         ],
         "cons": [
           "The other four starters have one combined season above a 65.0 grade"
-        ]
+        ],
+        "action": {
+          "rank": 28,
+          "prevRank": 10,
+          "tier": "All Downside",
+          "verdict": "A gigantic drop off from what Green Bay usually works with.",
+          "notes": [
+            "The line ranked 7th to 13th reliably for half a decade before cratering last season",
+            "RT Zach Bako-Bewele is the real strength but is coming off a late-season patella tear",
+            "Everything else is near the bottom of the league, including a disappointing Jordan Morgan at left tackle"
+          ]
+        }
       },
       "pythag": {
         "w": 9,
@@ -324,7 +371,18 @@
           "Wirfs career-high 92.7",
           "Goedeke allowed no sack or hit on 416 pass-block snaps"
         ],
-        "cons": []
+        "cons": [],
+        "action": {
+          "rank": 2,
+          "prevRank": 5,
+          "tier": "Could End the Year No. 1",
+          "verdict": "Healthy again after 27 games lost at right tackle and both guards.",
+          "notes": [
+            "Tristan Wirfs is arguably the best tackle in football and especially elite in pass protection",
+            "Luke Goedeke is back healthy at right tackle and Cody Mauch is a rising star at right guard",
+            "Better at pass blocking than run blocking"
+          ]
+        }
       },
       "pythag": {
         "w": 8,
@@ -382,7 +440,18 @@
           "Kelvin Banks Jr. led all rookies at 73.5",
           "Erik McCoy returns at center"
         ],
-        "cons": []
+        "cons": [],
+        "action": {
+          "rank": 14,
+          "prevRank": 25,
+          "tier": "Wild Cards I Believe In",
+          "verdict": "On the rise off a heavy investment.",
+          "notes": [
+            "Four starters return, with new LG David Edwards the only change",
+            "Both tackles were the last two first-round picks",
+            "Balanced with no stars and no glaring weakness beyond health"
+          ]
+        }
       },
       "pythag": {
         "w": 6,
@@ -446,7 +515,18 @@
         ],
         "cons": [
           "OL coach Dwayne Ledford left for Baltimore"
-        ]
+        ],
+        "action": {
+          "rank": 11,
+          "prevRank": 9,
+          "tier": "Good Not Great",
+          "verdict": "Four straight seasons parked in the 7-to-11 range.",
+          "notes": [
+            "LT Jake Matthews is dependable and RG Chris Lindstrom is strong",
+            "Much better at run blocking, especially inside",
+            "New OL coach Bill Callahan replaces Dwayne Ledford, and Jawaan Taylor is the new starting RT"
+          ]
+        }
       },
       "pythag": {
         "w": 8,
@@ -507,7 +587,19 @@
         "pros": [],
         "cons": [
           "Walker and Freeling stepping into both tackle spots"
-        ]
+        ],
+        "action": {
+          "rank": 27,
+          "prevRank": 13,
+          "tier": "All Downside",
+          "verdict": "Heavily invested and injured at four of five spots.",
+          "notes": [
+            "LT Ikem Ekwonu is back from a torn Achilles and RT Taylor Moton is out indefinitely with blood clots",
+            "Guards Damien Lewis and Robert Hunt are both nursing injuries",
+            "Rasheed Walker is a forced short-term start and raw first-rounder Monroe Freeling has to play",
+            "If it does not get healthy, this could end the Bryce Young era"
+          ]
+        }
       },
       "pythag": {
         "w": 8,
@@ -569,7 +661,19 @@
         ],
         "cons": [
           "Loss of OL coach Jeff Stoutland"
-        ]
+        ],
+        "action": {
+          "rank": 5,
+          "prevRank": 1,
+          "tier": "The Ol' Stalwarts",
+          "verdict": "Still loaded, but written up as a step back from No. 1.",
+          "notes": [
+            "LT Jordan Mailata is an elite run blocker and RT Lane Johnson an excellent pass blocker",
+            "Legendary OL coach Jeff Stoutland retired",
+            "RG Tyler Steen is the weak link, and depth plus injury concerns are mounting",
+            "Sean Mannion's zone-run and play-action system should help"
+          ]
+        }
       },
       "pythag": {
         "w": 11,
@@ -632,7 +736,18 @@
         ],
         "cons": [
           "Tackle play, Tyler Guyton in particular"
-        ]
+        ],
+        "action": {
+          "rank": 12,
+          "prevRank": 20,
+          "tier": "Good Not Great",
+          "verdict": "A unit the scheme is doing a lot for.",
+          "notes": [
+            "Klayton Adams' system helps, and Dak Prescott handles pressure well",
+            "Tyler Smith and Tyler Booker are one of the league's better guard duos",
+            "Tackles Tyler Guyton and Terence Steele are the weak point on pass plays"
+          ]
+        }
       },
       "pythag": {
         "w": 7,
@@ -696,7 +811,19 @@
         ],
         "cons": [
           "Thomas availability"
-        ]
+        ],
+        "action": {
+          "rank": 19,
+          "prevRank": 29,
+          "tier": "Much Improved",
+          "verdict": "Can be decent, but only with Andrew Thomas on the field.",
+          "notes": [
+            "Thomas is a top-five superstar when healthy and has played 29 games in three years",
+            "No. 10 pick RG Francis Mauigoa should help",
+            "Still projects as a poor run-blocking unit",
+            "New OC Matt Nagy did not help the Chiefs' line in recent years"
+          ]
+        }
       },
       "pythag": {
         "w": 4,
@@ -760,7 +887,19 @@
         "cons": [
           "Tunsil's loss is catastrophic for the group",
           "Conerly Jr. unproven at right tackle"
-        ]
+        ],
+        "action": {
+          "rank": 29,
+          "prevRank": 17,
+          "tier": "All Downside",
+          "verdict": "Losing Laremy Tunsil may be the biggest O-line loss of the season.",
+          "notes": [
+            "Tunsil is one of the best pass blockers in the league",
+            "Brandon Thorn dropped them 11th to 22nd; PFF dropped them from inside the top 20 to dead last",
+            "Young tackles Brandon Coleman and Josh Conerly have upside but are huge variables",
+            "A real chance the loss has doomed the season before it started"
+          ]
+        }
       },
       "pythag": {
         "w": 5,
@@ -822,7 +961,18 @@
         "cons": [
           "Unit falls off sharply without him",
           "Interior unsettled"
-        ]
+        ],
+        "action": {
+          "rank": 9,
+          "prevRank": 15,
+          "tier": "Good Not Great",
+          "verdict": "Give them the benefit of the doubt until Trent Williams retires or Shanahan leaves.",
+          "notes": [
+            "Williams is 38 with injury history but has played 14-plus games in five of the last six seasons, and is still an elite run blocker",
+            "Brock Purdy is 44-10 with Williams in the lineup and 2-7 without him",
+            "Shanahan's efficient, run-first offense does real work for the unit"
+          ]
+        }
       },
       "pythag": {
         "w": 12,
@@ -881,7 +1031,18 @@
         ],
         "cons": [
           "Alaric Jackson faces a potential suspension"
-        ]
+        ],
+        "action": {
+          "rank": 10,
+          "prevRank": 18,
+          "tier": "Good Not Great",
+          "verdict": "Every starter returns off a top-10 PFF grade at his position.",
+          "notes": [
+            "Sean McVay runs one of the most line-friendly systems in the league",
+            "RG Kevin Dotson excels at run blocking",
+            "Tackle is the weak spot, especially LT Alaric Jackson on health and off-field concerns, and depth is thin"
+          ]
+        }
       },
       "pythag": {
         "w": 12,
@@ -942,7 +1103,19 @@
         ],
         "cons": [
           "Anthony Bradford remains the weak link"
-        ]
+        ],
+        "action": {
+          "rank": 16,
+          "prevRank": 31,
+          "tier": "Wild Cards I'm Skeptical Of",
+          "verdict": "A big jump in the rankings, written up as a candidate to fall back.",
+          "notes": [
+            "Klint Kubiak's system lifted this line and he is gone, though all five starters return",
+            "LG Grey Zabel should improve in year two",
+            "Right guard is one of the more glaring weak spots in the league",
+            "If they trail and have to throw, the line could look significantly worse"
+          ]
+        }
       },
       "pythag": {
         "w": 14,
@@ -1001,7 +1174,19 @@
         ],
         "cons": [
           "Isaiah Adams graded below 60 on the right"
-        ]
+        ],
+        "action": {
+          "rank": 24,
+          "prevRank": 22,
+          "tier": "League Average Would Be a Surprise",
+          "verdict": "Five straight seasons opening 22nd or worse.",
+          "notes": [
+            "Lost OL coach Klayton Adams",
+            "LT Paris Johnson has become a real strength and the left side is pretty good",
+            "The right side is just as bad, with No. 34 pick RG Chase Bisontis out for the season",
+            "Mike LaFleur comes from the Shanahan tree, which typically helps a line"
+          ]
+        }
       },
       "pythag": {
         "w": 3,
@@ -1062,7 +1247,18 @@
         ],
         "cons": [
           "Still largely unproven"
-        ]
+        ],
+        "action": {
+          "rank": 20,
+          "prevRank": 30,
+          "tier": "Much Improved",
+          "verdict": "All five starters return for the first time in Burrow's career.",
+          "notes": [
+            "The unit found success late last season, especially in the run game",
+            "Playing Burrow under center more often should help",
+            "No real strength yet, but finally maybe no glaring weakness"
+          ]
+        }
       },
       "pythag": {
         "w": 6,
@@ -1124,7 +1320,18 @@
         "cons": [
           "2025 guard play graded 55.2 combined, sixth worst",
           "Both replacements unproven"
-        ]
+        ],
+        "action": {
+          "rank": 15,
+          "prevRank": 7,
+          "tier": "Wild Cards I Believe In",
+          "verdict": "Hard to pin down; the ranking has swung from 6th to 27th in recent years.",
+          "notes": [
+            "Entirely new interior, with C Ethan Pocic a worthy replacement for Tyler Linderbaum",
+            "Rookie LG Vega Ioane is a tone setter and a fit to bring attitude back",
+            "New OL coach Dwayne Ledford and Declan Doyle's run-friendly scheme should help"
+          ]
+        }
       },
       "pythag": {
         "w": 8,
@@ -1184,7 +1391,19 @@
         ],
         "cons": [
           "Fautanu and McCormick both moving from the right side to the left"
-        ]
+        ],
+        "action": {
+          "rank": 18,
+          "prevRank": 19,
+          "tier": "Wild Cards I'm Skeptical Of",
+          "verdict": "Bullish on the direction, but it will take time.",
+          "notes": [
+            "Four of five starters are in new positions",
+            "Raw first-rounder Max Iheanachor is fighting for playing time at right tackle",
+            "C Zach Frazier has a mean streak in the middle and should anchor it",
+            "Aaron Rodgers no longer lifts the line with his play"
+          ]
+        }
       },
       "pythag": {
         "w": 10,
@@ -1245,7 +1464,19 @@
         "cons": [
           "Four new starters in 2026",
           "Spencer Fano needs development time at LT"
-        ]
+        ],
+        "action": {
+          "rank": 32,
+          "prevRank": 23,
+          "tier": "Dregs of the League",
+          "verdict": "Returns zero starters, and that is the best thing you can say.",
+          "notes": [
+            "Last year's unit was a disaster, so a fresh start makes sense",
+            "Most of the new names are past-prime veterans with injury issues fighting for spots",
+            "No. 9 pick Spencer Fano is super athletic but could take time to develop",
+            "It is hard to have continuity when you return nothing"
+          ]
+        }
       },
       "pythag": {
         "w": 5,
@@ -1306,7 +1537,18 @@
         ],
         "cons": [
           "Rookie RT Jalen Travis took the job late in 2025"
-        ]
+        ],
+        "action": {
+          "rank": 3,
+          "prevRank": 16,
+          "tier": "Could End the Year No. 1",
+          "verdict": "Projected as the league's best run-blocking line.",
+          "notes": [
+            "Four of five starters return, and Quenton Nelson is a future Hall of Famer at left guard",
+            "Tony Sparano's coaching has elevated the unit, and the scheme fits it",
+            "The right side is not the left's equal and depth is limited"
+          ]
+        }
       },
       "pythag": {
         "w": 8,
@@ -1365,7 +1607,19 @@
         ],
         "cons": [
           "Interior needs development"
-        ]
+        ],
+        "action": {
+          "rank": 25,
+          "prevRank": 32,
+          "tier": "League Average Would Be a Surprise",
+          "verdict": "Reaching 25th would honestly be an accomplishment.",
+          "notes": [
+            "Rookie C Keylan Rutledge has culture-changing potential",
+            "RT Braden Smith can be top 10 at the position if he plays more than the 35 games he managed in three years",
+            "Guards Ed Ingram and Wyatt Teller have had peak moments",
+            "A piecemeal unit that will take time to find itself"
+          ]
+        }
       },
       "pythag": {
         "w": 12,
@@ -1425,7 +1679,19 @@
         "cons": [
           "Mekari declining",
           "Hainsey unreliable at center"
-        ]
+        ],
+        "action": {
+          "rank": 30,
+          "prevRank": 27,
+          "tier": "Dregs of the League",
+          "verdict": "The whole is far less than the sum of its parts.",
+          "notes": [
+            "Plenty of known names, none of it adding up",
+            "T Cole Van Lanen is the relative strength but opens on PUP returning from a late-season injury",
+            "Liam Coen's scheme and Trevor Lawrence's quick release help",
+            "The offense has to succeed in spite of its line, not because of it"
+          ]
+        }
       },
       "pythag": {
         "w": 13,
@@ -1484,7 +1750,19 @@
         ],
         "cons": [
           "Every other spot is questionable"
-        ]
+        ],
+        "action": {
+          "rank": 31,
+          "prevRank": 12,
+          "tier": "Dregs of the League",
+          "verdict": "One genuine strength and then the list of positives ends.",
+          "notes": [
+            "LG Peter Skoronski is a real strength, especially in pass protection",
+            "Kevin Zeitler's departure leaves a hole at guard",
+            "LT Dan Moore has not paid off the investment and RT J.C. Latham has not progressed",
+            "OL coach Bill Callahan departed, and Cam Ward is not getting much help"
+          ]
+        }
       },
       "pythag": {
         "w": 3,
@@ -1549,7 +1827,18 @@
         ],
         "cons": [
           "Minimal experience at both guard spots"
-        ]
+        ],
+        "action": {
+          "rank": 6,
+          "prevRank": 6,
+          "tier": "The Ol' Stalwarts",
+          "verdict": "Continuity was the edge, and some of it just walked out.",
+          "notes": [
+            "Lost OL coach Aaron Kromer and one starting guard",
+            "Joe Brady's run-heavy attack suits them",
+            "Good blocking receivers and tight ends give the line plenty of help"
+          ]
+        }
       },
       "pythag": {
         "w": 12,
@@ -1609,7 +1898,19 @@
         ],
         "cons": [
           "Will Campbell faded badly late in his rookie year"
-        ]
+        ],
+        "action": {
+          "rank": 21,
+          "prevRank": 24,
+          "tier": "Much Improved",
+          "verdict": "No line made a bigger leap last season.",
+          "notes": [
+            "Jumped from dead last in PFF's rankings to 11th",
+            "Rookie LT Will Campbell was up and down all year and dreadful in the playoffs",
+            "New LG Alijah Vera-Tucker is a top-10 guard when healthy but has played 29 games in four years",
+            "Better at run than pass blocking, so Drake Maye has to keep playing at an MVP level"
+          ]
+        }
       },
       "pythag": {
         "w": 14,
@@ -1672,7 +1973,18 @@
         ],
         "cons": [
           "Interior depth is questionable"
-        ]
+        ],
+        "action": {
+          "rank": 23,
+          "prevRank": 11,
+          "tier": "League Average Would Be a Surprise",
+          "verdict": "Two first-round tackles and not much behind them.",
+          "notes": [
+            "Olu Fashanu and Armand Membou are a young duo with upside, still improving",
+            "The interior is weaker, C Josh Myers especially",
+            "New OC Frank Reich's lines were terrible at his last two stops and jumped right after he left"
+          ]
+        }
       },
       "pythag": {
         "w": 3,
@@ -1733,7 +2045,18 @@
         ],
         "cons": [
           "Savaiinaea graded 28.4, the worst of any starting lineman"
-        ]
+        ],
+        "action": {
+          "rank": 26,
+          "prevRank": 28,
+          "tier": "All Downside",
+          "verdict": "Has to prove it was not just system and scheme.",
+          "notes": [
+            "First-round G Kadyn Proctor could build a serious strength on the left with Patrick Paul and C Aaron Brewer",
+            "The right side is in rough shape, RG Jonah Savaiinaea especially",
+            "Loses both McDaniel's system and Tua Tagovailoa's hyper-quick release"
+          ]
+        }
       },
       "pythag": {
         "w": 7,
@@ -1792,7 +2115,18 @@
           "Meinerz 91.0 run blocking",
           "Total continuity"
         ],
-        "cons": []
+        "cons": [],
+        "action": {
+          "rank": 1,
+          "prevRank": 2,
+          "tier": "Consensus No. 1",
+          "verdict": "The one line every board agrees on.",
+          "notes": [
+            "All five starters return for a third straight season",
+            "LT Garett Bolles and RG Quinn Meinerz are the standouts",
+            "A quick-game scheme helps, and the unit pass blocks better than it run blocks"
+          ]
+        }
       },
       "pythag": {
         "w": 14,
@@ -1853,7 +2187,18 @@
         "cons": [
           "Josh Simmons adjusting to left tackle",
           "Suamataia moved inside"
-        ]
+        ],
+        "action": {
+          "rank": 8,
+          "prevRank": 14,
+          "tier": "Good Not Great",
+          "verdict": "Losing the right tackle counts as addition by subtraction.",
+          "notes": [
+            "Jawaan Taylor's departure removes his mistakes from the equation",
+            "C Creed Humphrey is the league's best center",
+            "LT Josh Simmons settled in as a rookie and RG Trey Smith should benefit with Taylor gone"
+          ]
+        }
       },
       "pythag": {
         "w": 6,
@@ -1914,7 +2259,19 @@
         ],
         "cons": [
           "No margin if either tackle misses time"
-        ]
+        ],
+        "action": {
+          "rank": 4,
+          "prevRank": 26,
+          "tier": "Could End the Year No. 1",
+          "verdict": "Potentially the biggest single-unit improvement in the NFL, if it holds together.",
+          "notes": [
+            "Rashawn Slater missed all of last season and Joe Alt missed half; healthy, they could be the best tackle duo in the league",
+            "C Tyler Biadasz is out indefinitely with a knee injury, leaving rookie Jake Slaughter to snap",
+            "The Biadasz news is flagged in-article as reason enough to drop them toward the back of the top 10",
+            "New OC Mike McDaniel lifted under-talented lines in Miami"
+          ]
+        }
       },
       "pythag": {
         "w": 11,
@@ -1975,7 +2332,19 @@
         ],
         "cons": [
           "No proven replacement for Miller"
-        ]
+        ],
+        "action": {
+          "rank": 22,
+          "prevRank": 21,
+          "tier": "League Average Would Be a Surprise",
+          "verdict": "Escaping the 20s by season's end would be a win.",
+          "notes": [
+            "Invested in C Tyler Linderbaum, a good run grader",
+            "LT Kolton Miller can be a top-10 tackle and is especially good in pass protection, but played four games last season",
+            "The other three starters are subpar, RT DJ Glaze especially",
+            "Rick Dennison and Klint Kubiak should help"
+          ]
+        }
       },
       "pythag": {
         "w": 3,
@@ -2016,7 +2385,14 @@
         "title": "Coaching churn",
         "body": "Jeff Stoutland leaving Philadelphia and Dwayne Ledford leaving Atlanta for Baltimore are flagged as real disruptors."
       }
-    ]
+    ],
+    "secondOpinion": {
+      "name": "Action Network \u2014 2026 NFL offensive line rankings",
+      "url": "https://www.actionnetwork.com/nfl/2026-nfl-offensive-line-rankings-for-every-team",
+      "author": "Brandon Anderson",
+      "published": "2026-08-20",
+      "summary": "Ranks all 32 lines into named tiers on four criteria: the unit over its best individual, continuity, depth and versatility, and scheme fit. Qualitative only \u2014 the O-Line input on this page stays PFF's rank."
+    }
   },
   "pythagSource": {
     "name": "2025 Pythagorean wins",

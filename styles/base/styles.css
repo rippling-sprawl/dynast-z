@@ -10,6 +10,19 @@ body {
   padding: 0;
 }
 
+/* The page while something modal is open over it. Pinned rather than merely
+ * `overflow: hidden`, since iOS keeps scrolling the body behind a fixed overlay
+ * otherwise; the offset it was pinned at is re-applied on release. Taken and
+ * released by scripts/base/scroll-lock.js, which is where the pairing rules
+ * are. */
+body.scroll-locked {
+  position: fixed;
+  left: 0;
+  right: 0;
+  width: 100%;
+  overflow: hidden;
+}
+
 header {
   background: #161b22;
   border-bottom: 1px solid #30363d;
