@@ -101,8 +101,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 26px;
+  gap: 6px;
   height: 26px;
+  padding: 0 8px;
   margin-left: auto;
   color: #8b949e;
   background: #1b1b1b;
@@ -111,23 +112,34 @@
   cursor: pointer;
 }
 
+.wt-edit-label {
+  font-family: monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  line-height: 1;
+}
+
 .wt-edit:hover { color: #e1e4e8; border-color: #3a3a3a; }
 .wt-edit:focus-visible { outline: none; border-color: #60a5fa; color: #60a5fa; }
 
-.bun-section > .bun-section-note {
+.bun-section > .bun-section-note,
+.masters-content > .bun-section-note {
   margin-top: 6px;
   font-size: 11px;
   font-family: monospace;
   color: #555;
 }
 
-.bun-section > .bun-section-note a {
+.bun-section > .bun-section-note a,
+.masters-content > .bun-section-note a {
   color: #8b949e;
   text-decoration: none;
   border-bottom: 1px dotted #3a3a3a;
 }
 
-.bun-section > .bun-section-note a:hover {
+.bun-section > .bun-section-note a:hover,
+.masters-content > .bun-section-note a:hover {
   color: #60a5fa;
   border-bottom-color: #60a5fa;
 }
@@ -612,7 +624,7 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 4px 10px;
-  margin: 0 0 12px;
+  margin: 20px 0 12px;
   font-family: monospace;
   font-size: 11px;
   line-height: 1.5;

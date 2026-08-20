@@ -67,6 +67,12 @@
 
     <h2>🍞 Baker&rsquo;s Buns</h2>
 
+    <!-- The one line under the page heading is the way into how the Rank column
+         was built. Methodology is not a section here any more and not a nav
+         pill either: it is the answer to a question the table raises, asked
+         once, so it has its own route and the page links out to it. -->
+    <p class="bun-section-note"><a href="/football/bakers-buns/methodology">Methodology</a></p>
+
     <nav class="bun-nav">
       <a href="#projections">Projections</a>
       <a href="#board">The Board</a>
@@ -87,20 +93,14 @@
         <span class="wt-flag" id="wt-flag" hidden
               title="The score below is being blended with your own weights, not the sheet's.">custom</span>
         <button type="button" class="wt-edit" id="wt-edit" aria-haspopup="dialog" title="Edit weights">
+          <span class="wt-edit-label">Edit Weights</span>
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                stroke-width="2" stroke-linecap="round" aria-hidden="true">
             <path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3"></path>
             <path d="M1 14h6M9 8h6M17 16h6"></path>
           </svg>
-          <span class="sr-only">Edit weights</span>
         </button>
       </div>
-      <!-- The one line under the heading is the way into how the Rank column
-           was built. Methodology is not a section here any more and not a nav
-           pill either: it is the answer to a question the table raises, asked
-           once, so it has its own route and the table links out to it. -->
-      <p class="bun-section-note"><a href="/football/bakers-buns/methodology">Methodology</a></p>
-
       <!-- Filter chips are built from the loaded teams so they can never drift
            from the conferences and divisions actually present in the data. -->
       <div class="proj-controls" id="proj-controls"></div>
@@ -1751,14 +1751,12 @@
        * opacity ramp the segments do, so the swatch a reader matches against is
        * literally the mark they are matching. */
       document.getElementById('comp-legend').innerHTML =
-        '<span class="comp-legend-lead">Rank bar</span> — each input’s share of the ' +
-        'score, stacked out from the center: ' +
+        '<span class="comp-legend-lead">Rank bar</span>' +
         COMP.map(function (c, i) {
           var pct = weights[c.key] == null ? '' : ' ' + Math.round(weights[c.key] * 100) + '%';
           return '<span class="comp-key"><i class="comp-sw step-' + i + '"></i>' +
             esc(c.label) + pct + '</span>';
-        }).join('') +
-        '<span class="comp-legend-tail">right of center lifts the score, left drags it</span>';
+        }).join('');
 
       // The flag by the heading is the one that has to be visible without
       // reading anything, because it is what says the Rank column is no longer
