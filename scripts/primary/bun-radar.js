@@ -31,12 +31,30 @@
 (function () {
   'use strict';
 
-  var ORANGE = '#f0883e';
-  var GREEN = '#3fb950';
-  var AXIS = '#2a2a2a';
-  var GUIDE = '#484f58';
-  var INK = '#8b949e';
-  var INK_HI = '#f0f0f0';
+  /* The chart's palette, read from the theme tokens rather than fixed, because
+   * an SVG built by string concatenation cannot spend `var(--x)` the way a
+   * stylesheet can. Refreshed at the top of every draw() and after a theme
+   * change, so the same constants below stay correct in both themes. The
+   * fallbacks are the dark values, which is what a page with no theme.js
+   * loaded should still get. */
+  var ORANGE, GREEN, AXIS, GUIDE, INK, INK_HI, BUB_RING, BUB_INK;
+
+  function refreshPalette() {
+    var c = (window.Theme && window.Theme.color) || function (t, f) { return f; };
+    ORANGE = c('--orange', '#f0883e');
+    GREEN = c('--good', '#3fb950');
+    AXIS = c('--hairline', '#2a2a2a');
+    GUIDE = c('--text-5', '#484f58');
+    INK = c('--text-3', '#8b949e');
+    INK_HI = c('--text-bright', '#f0f0f0');
+    /* The bubble's ring is the panel behind it, so the mark reads as punched
+     * out of the chart rather than outlined on it; its number stays white
+     * because it sits on the fill, not on the page. */
+    BUB_RING = c('--panel-hi', '#1a1a1a');
+    BUB_INK = c('--on-accent', '#fff');
+  }
+
+  refreshPalette();
 
   var MIN_W = 280;
   var FALLBACK_W = 560;
@@ -91,6 +109,7 @@
   };
 
   function draw(host, team, markets, teams, scoreOf) {
+    refreshPalette();
     var usable = (markets || []).filter(function (m) {
       return m.ok && m.pct[team.abbr] != null;
     });
@@ -218,9 +237,9 @@
         ', market rank ' + Math.round(v) + ', model rank ' + Math.round(mp) + ', ' +
         signed(gap, 0) + ' versus the model">' +
         '<circle cx="' + bx.toFixed(1) + '" cy="' + by.toFixed(1) + '" r="' + BUB +
-        '" fill="' + ORANGE + '" stroke="#1a1a1a" stroke-width="2"/>' +
+        '" fill="' + ORANGE + '" stroke="' + BUB_RING + '" stroke-width="2"/>' +
         svgText(bx.toFixed(1), (by + FS / 3).toFixed(1), String(Math.round(v)), {
-          anchor: 'middle', size: FS, fill: '#fff', weight: '700'
+          anchor: 'middle', size: FS, fill: BUB_INK, weight: '700'
         }) +
         '</g>');
     });
@@ -298,6 +317,12 @@
       if (host && cache.width != null && Math.floor(host.clientWidth) === cache.width) return;
       renderRadar(cache.team, cache.markets, cache.teams, cache.scoreOf);
     }, 150);
+  });
+
+  /* Same reason as the Board's: the colours are strings inside the SVG. */
+  window.addEventListener('themechange', function () {
+    if (!cache.team) return;
+    renderRadar(cache.team, cache.markets, cache.teams, cache.scoreOf);
   });
 
   window.renderTeamRadar = renderRadar;

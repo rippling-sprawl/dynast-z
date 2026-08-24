@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <link rel="icon" type="image/png" href="/favicon.png">
   <title>Baker&rsquo;s Buns | Dynast-Z</title>
+  <!-- Theme first: theme.js sets <html data-theme> before the first paint,
+       theme.css holds every colour token the sheets below spend. -->
+  <script src="/scripts/base/theme.js"></script>
+  <link rel="stylesheet" href="/styles/base/theme.css">
   <link rel="stylesheet" href="/styles/base/styles.css">
   <link rel="stylesheet" href="/styles/base/hub.css">
   <link rel="stylesheet" href="/styles/components/nfl-pickers.css">
@@ -192,9 +196,11 @@
 
     <!--
       Take a note. Starts hidden for everyone and is unhidden by
-      initBunNotes() only for an admin — the same conditional reveal /bets uses
-      for its admin card. The gate that matters is the server's: /api/bun-notes
-      refuses a write from anyone else regardless of what the page shows.
+      initBunNotes() once there is someone signed in to write one — the same
+      conditional reveal /bets uses for its admin card. The gate that matters is
+      the server's: /api/bun-notes refuses a write from a signed-out visitor,
+      and an edit of a note the writer does not own, regardless of what the page
+      shows.
     -->
     <button type="button" class="bn-fab" id="bn-fab" aria-haspopup="dialog" hidden>
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -1135,11 +1141,13 @@
         (isNew ? 'New Coaching Staff' : 'Returning Coaching Staff') + '</li>';
     }
 
-    /* Whether this reader can write. The store has to have loaded first: an
-     * "add a note" button over a list that failed to arrive would be offering
-     * to append to notes nobody can see. */
-    function canEdit() {
-      return typeof isAdmin === 'function' && isAdmin() && bunNotesLoaded();
+    /* Whether this reader can file a note — anyone signed in can. Whether they
+     * can change one that already exists is per note and belongs to the bullet,
+     * so canEditNote() in bun-notes.js answers that. The store has to have
+     * loaded either way: an "add a note" button over a list that failed to
+     * arrive would be offering to append to notes nobody can see. */
+    function canAdd() {
+      return typeof canAddNote === 'function' && canAddNote() && bunNotesLoaded();
     }
 
     /* The doc's own notes, for when the store is unreachable. Plain strings
@@ -1173,7 +1181,7 @@
       // Deliberately outside that test: cardBlock() drops a block with nothing
       // in it, so a team the doc never wrote about would otherwise be the one
       // team with no way to start writing about it.
-      if (canEdit()) {
+      if (canAdd()) {
         body += '<button type="button" class="tc-note-add" data-note-add="' +
           esc(t.abbr) + '">+ Add note</button>';
       }
@@ -1881,7 +1889,7 @@
       var list = bunNotesLoaded() ? bunNotesLeague() : [];
       // Nothing to show and nothing to add: the section is not a placeholder,
       // it is a section that only exists once there is league-wide writing.
-      if (!list.length && !canEdit()) {
+      if (!list.length && !canAdd()) {
         el.hidden = true;
         el.innerHTML = '';
         return;
@@ -1892,7 +1900,7 @@
         (list.length
           ? bunNoteList(list)
           : '<p class="bun-section-note">Nothing filed against the league yet.</p>') +
-        (canEdit()
+        (canAdd()
           ? '<button type="button" class="tc-note-add" data-note-add="">+ Add note</button>'
           : '');
     }

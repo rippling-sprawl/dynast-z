@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <link rel="icon" type="image/png" href="/favicon.png">
   <title>Scout | Dynast-Z</title>
+  <!-- Theme first: theme.js sets <html data-theme> before the first paint,
+       theme.css holds every colour token the sheets below spend. -->
+  <script src="/scripts/base/theme.js"></script>
+  <link rel="stylesheet" href="/styles/base/theme.css">
   <link rel="stylesheet" href="/styles/base/styles.css">
   <link rel="stylesheet" href="/styles/primary/league.css">
   <link rel="stylesheet" href="/styles/primary/scout.css">
@@ -28,7 +32,7 @@
 
       <!-- Step 1: Pick Team A -->
       <div id="scout-select">
-        <p style="color: #8b949e; font-size: 13px; margin-bottom: 12px;">Select a team to compare to the rest of the teams:</p>
+        <p style="color: var(--text-3); font-size: 13px; margin-bottom: 12px;">Select a team to compare to the rest of the teams:</p>
         <div id="team-picker" class="team-grid"></div>
       </div>
 
@@ -102,9 +106,12 @@
       return Math.round(z).toString();
     }
 
-    function zColor(z) {
-      if (z == null) return '';
-      return `rgba(34, 197, 94, ${Math.min(z / globalZMax, 1).toFixed(2)})`;
+    function zHeat(z) {
+      /* The intensity only. The colour it drives lives in CSS as --heat-z-fill,
+       * so a z-score wash that reads on the dark page also reads on the light
+       * one without this table being rebuilt. */
+      if (z == null || z <= 0) return '0';
+      return Math.min(z / globalZMax, 1).toFixed(2);
     }
 
     const sourceAbbr = {'keeptradecut.com':'KTC','fantasypros.com':'FP','fantasycalc.com':'FC'};
@@ -142,7 +149,7 @@
             <div class="player-name">${fmtName(p.name, p.position)}</div>
             <div class="player-team">${p.team || ''}${rookieLabel}${taxiLabel}</div>
           </div>
-          <span class="player-value${zClass}" style="background:${zColor(p.aggregate)}" ${tooltip ? `data-sources="${tooltip}"` : ''}>${fmtZ(p.aggregate)}</span>
+          <span class="player-value${zClass}" style="--z:${zHeat(p.aggregate)}" ${tooltip ? `data-sources="${tooltip}"` : ''}>${fmtZ(p.aggregate)}</span>
         </div>
       `;
     }
@@ -254,7 +261,7 @@
 
       const pinnedEl = document.getElementById('pinned-team');
       const othersEl = document.getElementById('other-teams');
-      pinnedEl.innerHTML = teamHeader(team) + '<div style="text-align:center;padding:24px;color:#8b949e;font-size:13px;">Loading...</div>';
+      pinnedEl.innerHTML = teamHeader(team) + '<div style="text-align:center;padding:24px;color:var(--text-3);font-size:13px;">Loading...</div>';
       othersEl.innerHTML = '';
       allTeamData = [];
 
@@ -273,7 +280,7 @@
       othersEl.innerHTML = otherTeams.map(t => `
         <div class="scout-team-col" id="scout-col-${t.roster_id}">
           ${teamHeader(t)}
-          <div style="text-align:center;padding:24px;color:#8b949e;font-size:13px;">Loading...</div>
+          <div style="text-align:center;padding:24px;color:var(--text-3);font-size:13px;">Loading...</div>
         </div>
       `).join('');
 
@@ -372,7 +379,7 @@
             <div class="player-name">${fmtName(p.name, p.position)}</div>
             <div class="player-meta"><span class="player-pos pos-${p.position}">${fmtPos(p.position)}</span><span class="player-team">${p.team || ''}</span>${p.rookie ? '<span class="taxi-label">R</span>' : ''}${p.taxi ? '<span class="taxi-label">PS</span>' : ''}</div>
           </div>
-          <span class="player-value" style="background:${zColor(p.aggregate)}" ${sourcesTooltip(p.sources) ? `data-sources="${sourcesTooltip(p.sources)}"` : ''}>${fmtZ(p.aggregate)}</span>
+          <span class="player-value" style="--z:${zHeat(p.aggregate)}" ${sourcesTooltip(p.sources) ? `data-sources="${sourcesTooltip(p.sources)}"` : ''}>${fmtZ(p.aggregate)}</span>
           <button class="trade-remove-btn" data-name="${p.name.replace(/"/g, '&quot;')}">&times;</button>
         `;
         el.querySelector('.trade-remove-btn').addEventListener('click', () => {
@@ -403,7 +410,7 @@
                   <div class="player-name">${fmtName(p.name, p.position)}</div>
                   <div class="player-team">${p.team || ''}${p.rookie ? '<span class="taxi-label">R</span>' : ''}${p.taxi ? '<span class="taxi-label">PS</span>' : ''}</div>
                 </div>
-                <span class="player-value" style="background:${zColor(p.aggregate)}" ${sourcesTooltip(p.sources) ? `data-sources="${sourcesTooltip(p.sources)}"` : ''}>${fmtZ(p.aggregate)}</span>
+                <span class="player-value" style="--z:${zHeat(p.aggregate)}" ${sourcesTooltip(p.sources) ? `data-sources="${sourcesTooltip(p.sources)}"` : ''}>${fmtZ(p.aggregate)}</span>
               </div>
             `;
           } else {

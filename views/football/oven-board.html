@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <link rel="icon" type="image/png" href="/favicon.png">
   <title>Big Board | Baker's Oven</title>
+  <!-- Theme first: theme.js sets <html data-theme> before the first paint,
+       theme.css holds every colour token the sheets below spend. -->
+  <script src="/scripts/base/theme.js"></script>
+  <link rel="stylesheet" href="/styles/base/theme.css">
   <link rel="stylesheet" href="/styles/base/styles.css">
   <link rel="stylesheet" href="/styles/primary/bakers-oven.css">
   <link rel="stylesheet" href="/styles/base/lightbox.css">
@@ -28,7 +32,7 @@
 
   <main class="oven-content">
     <div class="oven-breadcrumbs">
-      <a href="/football">Football</a><span class="sep">/</span><a href="/bakers-oven">Baker's Oven</a><span class="sep">/</span><a id="crumb-league" href="/bakers-oven">League</a><span class="sep">/</span><span id="crumb-team">Board</span>
+      <a href="/football">Football</a><span class="sep">/</span><a href="/football/bakers-oven">Baker's Oven</a><span class="sep">/</span><a id="crumb-league" href="/football/bakers-oven">League</a><span class="sep">/</span><span id="crumb-team">Board</span>
     </div>
 
     <div id="loading">Loading draft board…</div>
@@ -133,7 +137,7 @@
 
     // Both segments come from the route, which only matches digits — no
     // fallback roster, because there is no longer a "my" roster to fall back to.
-    var seg = location.pathname.match(/\/bakers-oven\/(\d+)\/(\d+)/) || [];
+    var seg = location.pathname.match(/\/football\/bakers-oven\/(\d+)\/(\d+)/) || [];
     var leagueId = seg[1];
     var rosterId = parseInt(seg[2], 10);
 
@@ -306,7 +310,7 @@
     async function boot() {
       try {
         if (!leagueId || !rosterId || isNaN(rosterId)) {
-          loading.innerHTML = 'Not a board URL. <a href="/bakers-oven">Pick a league →</a>';
+          loading.innerHTML = 'Not a board URL. <a href="/football/bakers-oven">Pick a league →</a>';
           return;
         }
 
@@ -316,7 +320,7 @@
         // ctx.league.name replaces it below if the league was renamed.
         var rec = OvenLeagues.get(leagueId);
         var leagueCrumb = document.getElementById('crumb-league');
-        leagueCrumb.href = '/bakers-oven/' + leagueId;
+        leagueCrumb.href = '/football/bakers-oven/' + leagueId;
         if (rec) leagueCrumb.textContent = rec.name;
 
         bk = OvenLeagues.boardKeys(leagueId);
@@ -441,7 +445,7 @@
             'They stay in your saved rankings.');
         }
         if (!board || !board.rows || !board.rows.length) {
-          notes.push('Showing <strong>FantasyPros half-PPR ranks</strong> — <a href="/bakers-oven/' + leagueId + '">import your rankings for this league</a> to use your own board.');
+          notes.push('Showing <strong>FantasyPros half-PPR ranks</strong> — <a href="/football/bakers-oven/' + leagueId + '">import your rankings for this league</a> to use your own board.');
         }
         if (fpMeta) {
           var ageDays = (Date.now() / 1000 - (fpMeta.fetched_ts || 0)) / 86400;

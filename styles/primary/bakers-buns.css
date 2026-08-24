@@ -26,18 +26,18 @@
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: #8b949e;
+  color: var(--text-3);
   text-decoration: none;
   padding: 5px 10px;
-  border: 1px solid #2a2a2a;
+  border: 1px solid var(--hairline);
   border-radius: 999px;
-  background: #161616;
+  background: var(--panel);
   transition: color 0.15s, border-color 0.15s;
 }
 
 .bun-nav a:hover {
-  color: #e1e4e8;
-  border-color: #60a5fa;
+  color: var(--text);
+  border-color: var(--accent-2);
 }
 
 /* --- Section --- */
@@ -50,11 +50,11 @@
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: #888;
+  color: var(--text-3);
   font-family: monospace;
   font-weight: 700;
   padding-bottom: 6px;
-  border-bottom: 1px solid #2a2a2a;
+  border-bottom: 1px solid var(--hairline);
 }
 
 /* A heading with a control beside it. The underline belongs to the row now,
@@ -64,7 +64,7 @@
   align-items: center;
   gap: 8px;
   padding-bottom: 6px;
-  border-bottom: 1px solid #2a2a2a;
+  border-bottom: 1px solid var(--hairline);
 }
 
 .bun-head-row > h3 {
@@ -74,7 +74,7 @@
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: #888;
+  color: var(--text-3);
   font-family: monospace;
   font-weight: 700;
 }
@@ -84,14 +84,14 @@
    color — re-weighting is the feature, not a fault. */
 .wt-flag {
   padding: 1px 6px;
-  border: 1px solid rgba(96, 165, 250, 0.4);
+  border: 1px solid var(--accent-line);
   border-radius: 999px;
-  background: rgba(96, 165, 250, 0.12);
+  background: var(--accent-soft-2);
   font-family: monospace;
   font-size: 9px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: #60a5fa;
+  color: var(--accent-2);
   white-space: nowrap;
 }
 
@@ -105,9 +105,9 @@
   height: 26px;
   padding: 0 8px;
   margin-left: auto;
-  color: #8b949e;
-  background: #1b1b1b;
-  border: 1px solid #2a2a2a;
+  color: var(--text-3);
+  background: var(--panel-hi);
+  border: 1px solid var(--hairline);
   border-radius: 5px;
   cursor: pointer;
 }
@@ -120,28 +120,28 @@
   line-height: 1;
 }
 
-.wt-edit:hover { color: #e1e4e8; border-color: #3a3a3a; }
-.wt-edit:focus-visible { outline: none; border-color: #60a5fa; color: #60a5fa; }
+.wt-edit:hover { color: var(--text); border-color: var(--hairline-hi); }
+.wt-edit:focus-visible { outline: none; border-color: var(--accent-2); color: var(--accent-2); }
 
 .bun-section > .bun-section-note,
 .masters-content > .bun-section-note {
   margin-top: 6px;
   font-size: 11px;
   font-family: monospace;
-  color: #555;
+  color: var(--text-5);
 }
 
 .bun-section > .bun-section-note a,
 .masters-content > .bun-section-note a {
-  color: #8b949e;
+  color: var(--text-3);
   text-decoration: none;
-  border-bottom: 1px dotted #3a3a3a;
+  border-bottom: 1px dotted var(--hairline-hi);
 }
 
 .bun-section > .bun-section-note a:hover,
 .masters-content > .bun-section-note a:hover {
-  color: #60a5fa;
-  border-bottom-color: #60a5fa;
+  color: var(--accent-2);
+  border-bottom-color: var(--accent-2);
 }
 
 /* --- Note cards --- */
@@ -154,21 +154,21 @@
 }
 
 .note {
-  background: #1a1a1a;
-  border: 1px solid #2a2a2a;
-  border-left: 3px solid #2a2a2a;
+  background: var(--panel-hi);
+  border: 1px solid var(--hairline);
+  border-left: 3px solid var(--hairline);
   border-radius: 6px;
   padding: 14px 16px;
 }
 
-.note.accent-warn { border-left-color: #b8860b; }
-.note.accent-good { border-left-color: #2ea043; }
-.note.accent-info { border-left-color: #60a5fa; }
+.note.accent-warn { border-left-color: var(--warn-deep); }
+.note.accent-good { border-left-color: var(--good-strong); }
+.note.accent-info { border-left-color: var(--accent-2); }
 
 .note h4 {
   font-size: 13px;
   font-weight: 600;
-  color: #f0f0f0;
+  color: var(--text-bright);
   margin: 0;
 }
 
@@ -179,7 +179,7 @@
   font-family: monospace;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: #555;
+  color: var(--text-5);
 }
 
 .note ul {
@@ -190,14 +190,14 @@
 .note li {
   font-size: 12px;
   line-height: 1.5;
-  color: #c9d1d9;
+  color: var(--text-2);
   margin-bottom: 3px;
 }
 
 .note p {
   font-size: 12px;
   line-height: 1.5;
-  color: #c9d1d9;
+  color: var(--text-2);
   margin: 8px 0 0;
 }
 
@@ -205,12 +205,12 @@
 .note .note-take {
   margin-top: 10px;
   padding-top: 8px;
-  border-top: 1px solid #2a2a2a;
+  border-top: 1px solid var(--hairline);
   font-size: 12px;
-  color: #e1e4e8;
+  color: var(--text);
 }
 
-.note .note-take strong { color: #f0f0f0; }
+.note .note-take strong { color: var(--text-bright); }
 
 /* --- Odds pill --- */
 .odds {
@@ -219,12 +219,12 @@
   white-space: nowrap;
 }
 
-.odds.plus { color: #2ea043; }
-.odds.minus { color: #f0883e; }
+.odds.plus { color: var(--good-strong); }
+.odds.minus { color: var(--orange); }
 
 /* Odds inside the projections table sit outside the heat map — see fmtOdds in
  * the view for why a signed price must not be colored like a metric. */
-.odds.odds-plain { color: #c9d1d9; }
+.odds.odds-plain { color: var(--text-2); }
 
 /* --- Tables --- */
 .bun-table-wrap {
@@ -244,7 +244,7 @@
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: #666;
+  color: var(--text-4);
   padding-bottom: 6px;
 }
 
@@ -254,24 +254,24 @@
   font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: #666;
+  color: var(--text-4);
   font-weight: 700;
   padding: 6px 10px;
-  border-bottom: 1px solid #2a2a2a;
+  border-bottom: 1px solid var(--hairline);
   white-space: nowrap;
 }
 
 .bun-table td {
   padding: 8px 10px;
-  border-bottom: 1px solid #1f1f1f;
-  color: #c9d1d9;
+  border-bottom: 1px solid var(--panel-hi2);
+  color: var(--text-2);
   vertical-align: top;
 }
 
 .bun-table tbody tr:last-child td { border-bottom: none; }
 
 .bun-table .col-team {
-  color: #f0f0f0;
+  color: var(--text-bright);
   font-weight: 600;
   white-space: nowrap;
 }
@@ -293,7 +293,7 @@
   margin-bottom: 2px;
 }
 
-.bun-table .muted { color: #555; font-style: italic; }
+.bun-table .muted { color: var(--text-5); font-style: italic; }
 
 
 /* --- Appendix graphs ---
@@ -309,8 +309,8 @@
 
 .graph {
   margin: 0;
-  background: #1a1a1a;
-  border: 1px solid #2a2a2a;
+  background: var(--panel-hi);
+  border: 1px solid var(--hairline);
   border-radius: 6px;
   padding: 12px;
 }
@@ -327,7 +327,7 @@
 .graph img:hover { opacity: 0.88; }
 
 .graph img:focus-visible {
-  outline: 2px solid #60a5fa;
+  outline: 2px solid var(--accent-2);
   outline-offset: 2px;
 }
 
@@ -335,12 +335,12 @@
   margin-top: 8px;
   font-size: 11px;
   font-family: monospace;
-  color: #666;
+  color: var(--text-4);
   line-height: 1.5;
 }
 
 .graph figcaption strong {
-  color: #c9d1d9;
+  color: var(--text-2);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -354,7 +354,7 @@
 
 .bun-links li {
   padding: 10px 0;
-  border-bottom: 1px solid #1f1f1f;
+  border-bottom: 1px solid var(--panel-hi2);
 }
 
 .bun-links li:last-child { border-bottom: none; }
@@ -362,7 +362,7 @@
 .bun-links > li > a {
   font-size: 13px;
   font-weight: 600;
-  color: #60a5fa;
+  color: var(--accent-2);
   text-decoration: none;
 }
 
@@ -374,7 +374,7 @@
   font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: #555;
+  color: var(--text-5);
   margin-left: 8px;
 }
 
@@ -383,7 +383,7 @@
   margin: 4px 0 0;
   font-size: 12px;
   line-height: 1.5;
-  color: #c9d1d9;
+  color: var(--text-2);
 }
 
 .bun-links p a { font-size: inherit; font-weight: 400; }
@@ -413,21 +413,21 @@
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: #8b949e;
-  background: #161616;
-  border: 1px solid #2a2a2a;
+  color: var(--text-3);
+  background: var(--panel);
+  border: 1px solid var(--hairline);
   border-radius: 999px;
   padding: 5px 12px;
   cursor: pointer;
   transition: color 0.15s, border-color 0.15s, background 0.15s;
 }
 
-.proj-toggle:hover { color: #e1e4e8; border-color: #3a3a3a; }
+.proj-toggle:hover { color: var(--text); border-color: var(--hairline-hi); }
 
 .proj-toggle.active {
-  color: #111;
-  background: #60a5fa;
-  border-color: #60a5fa;
+  color: var(--panel-lo);
+  background: var(--accent-2);
+  border-color: var(--accent-2);
   font-weight: 700;
 }
 
@@ -436,11 +436,11 @@
  * after .active so a selected conference still turns blue like any other chip. */
 .proj-toggle.is-conf {
   min-width: 58px;
-  color: #c9d1d9;
-  border-color: #3a3a3a;
+  color: var(--text-2);
+  border-color: var(--hairline-hi);
 }
 
-.proj-toggle.is-conf.active { color: #111; border-color: #60a5fa; }
+.proj-toggle.is-conf.active { color: var(--panel-lo); border-color: var(--accent-2); }
 
 /* The first-run hint. Shaped like a selected filter chip rather than invented
  * fresh — it sits directly under that row, so a second pill vocabulary here
@@ -458,9 +458,9 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: #111;
-  background: #60a5fa;
-  border: 1px solid #60a5fa;
+  color: var(--panel-lo);
+  background: var(--accent-2);
+  border: 1px solid var(--accent-2);
   border-radius: 999px;
   padding: 5px 12px;
   cursor: pointer;
@@ -500,17 +500,17 @@
   user-select: none;
 }
 
-.bun-table th.sortable:hover { color: #c9d1d9; }
+.bun-table th.sortable:hover { color: var(--text-2); }
 
 .bun-table th.sortable .sort-caret {
-  color: #60a5fa;
+  color: var(--accent-2);
   margin-left: 3px;
 }
 
 .bun-table th .th-sub {
   display: block;
   font-size: 9px;
-  color: #4a4a4a;
+  color: var(--text-5);
   letter-spacing: 0;
   text-transform: none;
   font-weight: 400;
@@ -528,7 +528,12 @@
  *
  * Every rule states its flat color first and the mix second: a browser
  * without color-mix() drops the mixes and lands on the old two-color table
- * rather than on unstyled text. */
+ * rather than on unstyled text.
+ *
+ * The four colors, the gray they fade to, and how hard the wash tints are
+ * all --heat-* tokens in styles/base/theme.css. Light mode does not just
+ * darken them: the text darkens to stay legible on white while the wash
+ * stays bright, since a 24% mix of a dark green over white reads gray. */
 /* The pill is an inline-block, so line-height sets its height — which is what
  * gives the wash room to read as a wash rather than a highlighter stripe. */
 .z-cell .z-val {
@@ -542,22 +547,22 @@
 }
 
 .z-val.pos {
-  color: #2ea043;
-  color: color-mix(in oklab, #3fb950 calc(var(--heat, 1) * 100%), #6e7681);
-  background: color-mix(in oklab, #2ea043 calc(var(--heat, 0) * 24%), transparent);
+  color: var(--heat-good);
+  color: color-mix(in oklab, var(--heat-good) calc(var(--heat, 1) * 100%), var(--heat-base));
+  background: color-mix(in oklab, var(--heat-good-fill) calc(var(--heat, 0) * var(--heat-fill-max)), transparent);
 }
 
 .z-val.neg {
-  color: #f0883e;
-  color: color-mix(in oklab, #f0883e calc(var(--heat, 1) * 100%), #6e7681);
-  background: color-mix(in oklab, #f0883e calc(var(--heat, 0) * 24%), transparent);
+  color: var(--heat-bad);
+  color: color-mix(in oklab, var(--heat-bad) calc(var(--heat, 1) * 100%), var(--heat-base));
+  background: color-mix(in oklab, var(--heat-bad-fill) calc(var(--heat, 0) * var(--heat-fill-max)), transparent);
 }
 
-.z-val.flat { color: #8b949e; }
+.z-val.flat { color: var(--text-3); }
 
 /* Composite score: the number, and beneath it the four contributions that add
  * up to it. Two lines, matching the z-cells either side of it. */
-.score-num { font-weight: 700; color: #f0f0f0; }
+.score-num { font-weight: 700; color: var(--text-bright); }
 .score-num .score-val { display: block; line-height: 1.6; }
 
 /* --- Rank composition bar ---
@@ -577,7 +582,7 @@
   height: 7px;
   margin: 2px 0 1px auto;
   border-radius: 2px;
-  background: #1b1b1b;
+  background: var(--panel-hi);
 }
 
 /* The center line the segments are measured from, and the only thing on the
@@ -594,7 +599,7 @@
   top: -2px;
   bottom: -2px;
   width: 1px;
-  background: #6e7681;
+  background: var(--text-4);
 }
 
 /* Each segment is inset 2px on its outer edge, which is what separates it from
@@ -608,8 +613,8 @@
   border-radius: 1px;
 }
 
-.comp-seg.is-up { background: #3fb950; }
-.comp-seg.is-down { background: #f0883e; }
+.comp-seg.is-up { background: var(--good); }
+.comp-seg.is-down { background: var(--orange); }
 
 /* The weight ramp, shared by the bar and its key. Step 0 is O-Line at 40% and
  * runs down to Rest at 15%, so a heavier input is always the more solid band. */
@@ -628,11 +633,11 @@
   font-family: monospace;
   font-size: 11px;
   line-height: 1.5;
-  color: #8b949e;
+  color: var(--text-3);
 }
 
-.comp-legend-lead { color: #c9d1d9; font-weight: 700; }
-.comp-legend-tail { color: #666; }
+.comp-legend-lead { color: var(--text-2); font-weight: 700; }
+.comp-legend-tail { color: var(--text-4); }
 
 .comp-key {
   display: inline-flex;
@@ -647,28 +652,28 @@
   width: 12px;
   height: 7px;
   border-radius: 1px;
-  background: #3fb950;
+  background: var(--good);
 }
 
-.proj-empty { padding: 16px 0; font-size: 12px; font-family: monospace; color: #555; }
+.proj-empty { padding: 16px 0; font-size: 12px; font-family: monospace; color: var(--text-5); }
 
 /* Wins above pythag. Inverted against the z-score palette on purpose: a large
  * positive is luck that regresses, so it warns rather than praises. Heat-scaled
  * like the metric columns, against the widest gap between record and pythag in
  * the field, so a half-win of luck is a tint and three wins is a klaxon. */
 .z-val.luck-hot {
-  color: #d29922;
-  color: color-mix(in oklab, #d29922 calc(var(--heat, 1) * 100%), #6e7681);
-  background: color-mix(in oklab, #d29922 calc(var(--heat, 0) * 24%), transparent);
+  color: var(--heat-warn);
+  color: color-mix(in oklab, var(--heat-warn) calc(var(--heat, 1) * 100%), var(--heat-base));
+  background: color-mix(in oklab, var(--heat-warn-fill) calc(var(--heat, 0) * var(--heat-fill-max)), transparent);
 }
 
 .z-val.luck-cold {
-  color: #58a6ff;
-  color: color-mix(in oklab, #58a6ff calc(var(--heat, 1) * 100%), #6e7681);
-  background: color-mix(in oklab, #58a6ff calc(var(--heat, 0) * 24%), transparent);
+  color: var(--heat-info);
+  color: color-mix(in oklab, var(--heat-info) calc(var(--heat, 1) * 100%), var(--heat-base));
+  background: color-mix(in oklab, var(--heat-info-fill) calc(var(--heat, 0) * var(--heat-fill-max)), transparent);
 }
 
-.z-val.luck-even { color: #8b949e; }
+.z-val.luck-even { color: var(--text-3); }
 
 /* Row height here is set by the 40px team logo, not by the text, so top-aligned
  * values sit high against it. centerd, every column reads on one line through
@@ -687,7 +692,7 @@
   position: sticky;
   left: 0;
   z-index: 2;
-  background: #111;
+  background: var(--panel-lo);
 }
 
 /* Rank is pinned with the logo, not left behind with the metrics. A frozen
@@ -706,7 +711,7 @@
   position: sticky;
   left: var(--pin-rank, 60px);
   z-index: 2;
-  background: #111;
+  background: var(--panel-lo);
 }
 
 /* The edge of the frozen pair — on Rank now, and on the band cell that spans
@@ -716,7 +721,7 @@
 #proj-table tr.col-bands th:first-child,
 .proj-float-head tr.col-heads th:nth-child(2),
 .proj-float-head tr.col-bands th:first-child {
-  border-right: 1px solid #2a2a2a;
+  border-right: 1px solid var(--hairline);
 }
 
 /* --- Column bands ---
@@ -730,9 +735,9 @@
   padding: 4px 10px 3px;
   font-size: 9px;
   letter-spacing: 1px;
-  color: #8b949e;
+  color: var(--text-3);
   text-align: center;
-  border-bottom: 1px solid #1f1f1f;
+  border-bottom: 1px solid var(--panel-hi2);
 }
 
 /* The span over Team and Rank is a spacer, not a band: it gets no rule under
@@ -747,14 +752,14 @@
 #proj-table tr.proj-row > td:nth-child(8),
 .proj-float-head tr.col-bands th:last-child,
 .proj-float-head tr.col-heads th:nth-child(8) {
-  border-left: 1px solid #1f1f1f;
+  border-left: 1px solid var(--panel-hi2);
 }
 
 /* The consensus win total: a line rather than a price, so it is set in the
  * table's own text color instead of the price grey, and never signed. */
 .win-line {
   font-family: monospace;
-  color: #c9d1d9;
+  color: var(--text-2);
 }
 
 /* --- Pinned header row ---
@@ -770,8 +775,8 @@
   z-index: 50;
   display: none;
   overflow: hidden;
-  background: #111;
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.45);
+  background: var(--panel-lo);
+  box-shadow: 0 6px 14px var(--shadow-color);
 }
 
 .proj-float-head.is-pinned { display: block; }
@@ -780,13 +785,13 @@
 
 /* --- Expandable team card --- */
 .proj-row { cursor: pointer; }
-.proj-row:hover td { background: #171717; }
+.proj-row:hover td { background: var(--panel); }
 
 /* Re-assert hover on the pinned cell: the rule above carries an ID, so it
  * outranks `.proj-row:hover td` and would otherwise stay unhighlighted. */
 #proj-table tr.proj-row:hover > td:first-child,
-#proj-table tr.proj-row:hover > td:nth-child(2) { background: #171717; }
-.proj-row:focus-visible { outline: 1px solid #60a5fa; outline-offset: -1px; }
+#proj-table tr.proj-row:hover > td:nth-child(2) { background: var(--panel); }
+.proj-row:focus-visible { outline: 1px solid var(--accent-2); outline-offset: -1px; }
 
 /* --- The card dialog ---
  * The card used to be a row inside .bun-table-wrap, which scrolls sideways on
@@ -800,15 +805,15 @@
   inset: 0;
   margin: auto;
   padding: 0;
-  border: 1px solid #2a2a2a;
+  border: 1px solid var(--hairline);
   border-radius: 10px;
-  background: #141414;
-  color: #c9d1d9;
+  background: var(--panel-lo);
+  color: var(--text-2);
   width: min(760px, calc(100vw - 32px));
   max-width: none;
   max-height: min(86vh, 860px);
   overflow: hidden;              /* the rounded corners clip the scroller */
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 24px 60px var(--shadow-color-lg);
 }
 
 /* dialog is display:none until opened, so the layout mode belongs on [open]. */
@@ -817,7 +822,7 @@
   flex-direction: column;
 }
 
-.tc-modal::backdrop { background: rgba(0, 0, 0, 0.66); }
+.tc-modal::backdrop { background: var(--overlay-strong); }
 
 .tc-modal-scroll {
   overflow-y: auto;
@@ -835,14 +840,14 @@
   height: 30px;
   line-height: 1;
   font-size: 20px;
-  color: #8b949e;
-  background: #1b1b1b;
-  border: 1px solid #2a2a2a;
+  color: var(--text-3);
+  background: var(--panel-hi);
+  border: 1px solid var(--hairline);
   border-radius: 50%;
   cursor: pointer;
 }
 
-.tc-modal-close:hover { color: #e1e4e8; border-color: #3a3a3a; }
+.tc-modal-close:hover { color: var(--text); border-color: var(--hairline-hi); }
 
 /* The page behind the dialog is locked by scripts/base/scroll-lock.js — a modal
  * dialog does not stop the page behind it from scrolling in every browser, and
@@ -871,8 +876,8 @@ body:has(.bn-modal[open]) .tc-modal-scroll { overflow: hidden; }
   gap: 10px;
   padding: 2px 40px 10px 0;
   margin-bottom: 12px;
-  background: #141414;
-  border-bottom: 1px solid #1f1f1f;
+  background: var(--panel-lo);
+  border-bottom: 1px solid var(--panel-hi2);
 }
 
 .tc-logo { width: 34px; height: 34px; flex: none; }
@@ -880,7 +885,7 @@ body:has(.bn-modal[open]) .tc-modal-scroll { overflow: hidden; }
 .tc-id h4 {
   font-size: 15px;
   font-weight: 700;
-  color: #f0f0f0;
+  color: var(--text-bright);
   margin: 0;
 }
 
@@ -891,7 +896,7 @@ body:has(.bn-modal[open]) .tc-modal-scroll { overflow: hidden; }
   font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: #666;
+  color: var(--text-4);
 }
 
 /* --- The view tabs ---
@@ -917,7 +922,7 @@ body:has(.bn-modal[open]) .tc-modal-scroll { overflow: hidden; }
   white-space: nowrap;
 }
 
-.tc-sched-label { color: #666; }
+.tc-sched-label { color: var(--text-4); }
 
 .tc-tab {
   background: none;
@@ -925,23 +930,23 @@ body:has(.bn-modal[open]) .tc-modal-scroll { overflow: hidden; }
   padding: 2px 1px;
   font: inherit;
   letter-spacing: inherit;
-  color: #6e7681;
+  color: var(--text-4);
   cursor: pointer;
 }
 
-.tc-tab:hover { color: #8ec0ff; }
+.tc-tab:hover { color: var(--accent-hover); }
 
 /* The active season takes the blue the link used to have, and an underline —
  * colour alone would make the pressed state the only thing distinguishing two
  * otherwise identical years. */
 .tc-tab[aria-pressed="true"] {
-  color: #60a5fa;
+  color: var(--accent-2);
   font-weight: 700;
   text-decoration: underline;
   text-underline-offset: 3px;
 }
 
-.tc-tab-sep { color: #333; }
+.tc-tab-sep { color: var(--hairline); }
 
 /* Only ever one of the two is on screen; the other is `hidden`, which the
  * reset in styles/base/styles.css does not cover for a div. */
@@ -982,7 +987,7 @@ body:has(.bn-modal[open]) .tc-modal-scroll { overflow: hidden; }
   letter-spacing: 0.5px;
   font-weight: 700;
   margin: 0 0 6px;
-  color: #8b949e;
+  color: var(--text-3);
 }
 
 /* One level below it, used only by the offensive line — the one block that
@@ -995,7 +1000,7 @@ body:has(.bn-modal[open]) .tc-modal-scroll { overflow: hidden; }
   letter-spacing: 0.5px;
   font-weight: 700;
   margin: 0 0 5px;
-  color: #8b949e;
+  color: var(--text-3);
 }
 
 .tc-block ul { margin: 0; padding-left: 15px; }
@@ -1003,7 +1008,7 @@ body:has(.bn-modal[open]) .tc-modal-scroll { overflow: hidden; }
 .tc-block li {
   font-size: 11.5px;
   line-height: 1.45;
-  color: #c9d1d9;
+  color: var(--text-2);
   margin-bottom: 3px;
 }
 
@@ -1011,7 +1016,7 @@ body:has(.bn-modal[open]) .tc-modal-scroll { overflow: hidden; }
   margin: 0 0 6px;
   font-size: 11.5px;
   line-height: 1.45;
-  color: #c9d1d9;
+  color: var(--text-2);
 }
 
 /* Nested blocks inside the offensive-line block sit tighter than top-level
@@ -1021,7 +1026,7 @@ body:has(.bn-modal[open]) .tc-modal-scroll { overflow: hidden; }
 /* The bullet each board's list opens on: its one-line summary, lit a shade
  * brighter than the findings under it. Two classes, so it outranks the plain
  * `.tc-block li` colour. */
-.tc-block .tc-verdict { color: #e1e4e8; }
+.tc-block .tc-verdict { color: var(--text); }
 
 /* Both ranks on one line, above the two boards that gave them. Carrying them
  * together is the point — the gap between them is the read — so the separator
@@ -1031,11 +1036,11 @@ body:has(.bn-modal[open]) .tc-modal-scroll { overflow: hidden; }
   font-family: monospace;
   font-size: 11px;
   letter-spacing: 0.3px;
-  color: #e1e4e8;
+  color: var(--text);
   margin-bottom: 9px;
 }
 
-.tc-ol-sep { color: #444; padding: 0 3px; }
+.tc-ol-sep { color: var(--hairline-hi); padding: 0 3px; }
 
 /* The coaching staff: three fixed rows rather than a list of findings, so the
  * role carries the marker's job and the bullets come off. The prior job is
@@ -1047,11 +1052,11 @@ body:has(.bn-modal[open]) .tc-modal-scroll { overflow: hidden; }
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.5px;
-  color: #8b949e;
+  color: var(--text-3);
   margin-right: 4px;
 }
 
-.tc-coach-prev { color: #8b949e; }
+.tc-coach-prev { color: var(--text-3); }
 
 /* --- Stats & regression ---
  * The block between the grid and the inputs: five 2025 numbers, each tinted by
@@ -1075,7 +1080,7 @@ body:has(.bn-modal[open]) .tc-modal-scroll { overflow: hidden; }
 .tc-reg-block {
   margin-top: 16px;
   padding-top: 12px;
-  border-top: 1px solid #1f1f1f;
+  border-top: 1px solid var(--panel-hi2);
 }
 
 /* The legend, and the only place the colours are explained. One line, above
@@ -1084,7 +1089,7 @@ body:has(.bn-modal[open]) .tc-modal-scroll { overflow: hidden; }
 .tc-block .tc-reg-note {
   font-size: 10px;
   line-height: 1.45;
-  color: #6e7681;
+  color: var(--text-4);
   margin: -2px 0 9px;
 }
 
@@ -1099,11 +1104,11 @@ body:has(.bn-modal[open]) .tc-modal-scroll { overflow: hidden; }
  * every tile and the direction is said around it. A tinted number would put the
  * two on the same channel and make an orange 11-2 look like a bad record. */
 .tc-reg-tile {
-  border: 1px solid #1f1f1f;
-  border-left: 2px solid #30363d;
+  border: 1px solid var(--panel-hi2);
+  border-left: 2px solid var(--border);
   border-radius: 4px;
   padding: 7px 9px 6px;
-  background: #0d0d0d;
+  background: var(--bg);
 }
 
 .tc-reg-label {
@@ -1116,7 +1121,7 @@ body:has(.bn-modal[open]) .tc-modal-scroll { overflow: hidden; }
   text-transform: uppercase;
   letter-spacing: 0.5px;
   font-weight: 700;
-  color: #8b949e;
+  color: var(--text-3);
 }
 
 /* Where the number sits in the field of 32 — the context that turns a bare
@@ -1125,7 +1130,7 @@ body:has(.bn-modal[open]) .tc-modal-scroll { overflow: hidden; }
 .tc-reg-rank {
   font-weight: 400;
   letter-spacing: 0;
-  color: #555;
+  color: var(--text-5);
   white-space: nowrap;
 }
 
@@ -1134,7 +1139,7 @@ body:has(.bn-modal[open]) .tc-modal-scroll { overflow: hidden; }
   font-size: 17px;
   font-weight: 700;
   line-height: 1.25;
-  color: #e1e4e8;
+  color: var(--text);
   margin-top: 3px;
 }
 
@@ -1144,7 +1149,7 @@ body:has(.bn-modal[open]) .tc-modal-scroll { overflow: hidden; }
 .tc-reg-sub {
   font-size: 10px;
   line-height: 1.4;
-  color: #8b949e;
+  color: var(--text-3);
   margin-top: 1px;
 }
 
@@ -1152,7 +1157,7 @@ body:has(.bn-modal[open]) .tc-modal-scroll { overflow: hidden; }
   font-family: monospace;
   font-size: 9.5px;
   letter-spacing: 0.3px;
-  color: #6e7681;
+  color: var(--text-4);
   margin-top: 4px;
 }
 
@@ -1162,18 +1167,18 @@ body:has(.bn-modal[open]) .tc-modal-scroll { overflow: hidden; }
  * unremarkable on most of these, and a card of five coloured tiles would say
  * nothing. */
 .tc-reg-tile.lean-up {
-  border-left-color: #2ea043;
-  background: color-mix(in oklab, #2ea043 7%, #0d0d0d);
+  border-left-color: var(--good-strong);
+  background: color-mix(in oklab, var(--good-strong) 7%, var(--bg));
 }
 
-.tc-reg-tile.lean-up .tc-reg-lean { color: #3fb950; }
+.tc-reg-tile.lean-up .tc-reg-lean { color: var(--good); }
 
 .tc-reg-tile.lean-down {
-  border-left-color: #bb8009;
-  background: color-mix(in oklab, #d29922 7%, #0d0d0d);
+  border-left-color: var(--warn-deep);
+  background: color-mix(in oklab, var(--warn) 7%, var(--bg));
 }
 
-.tc-reg-tile.lean-down .tc-reg-lean { color: #d29922; }
+.tc-reg-tile.lean-down .tc-reg-lean { color: var(--warn); }
 
 /* The second row: the two numbers that are not regression calls. Everything
  * that says "finding" on the tiles above is taken away here — the accent edge,
@@ -1187,7 +1192,7 @@ body:has(.bn-modal[open]) .tc-modal-scroll { overflow: hidden; }
 .tc-reg-context {
   margin-top: 12px;
   padding-top: 10px;
-  border-top: 1px dashed #1f1f1f;
+  border-top: 1px dashed var(--panel-hi2);
 }
 
 /* The h5 the offensive line already uses for its two boards, reused rather than
@@ -1202,14 +1207,14 @@ body:has(.bn-modal[open]) .tc-modal-scroll { overflow: hidden; }
 }
 
 .tc-reg-tile.is-context {
-  border: 1px solid #1a1a1a;
+  border: 1px solid var(--panel-hi);
   background: none;
 }
 
 .tc-reg-tile.is-context .tc-reg-val {
   font-size: 15px;
   font-weight: 400;
-  color: #c9d1d9;
+  color: var(--text-2);
 }
 
 /* Where a regression tile puts its arrow. The league's middle is the only
@@ -1220,7 +1225,7 @@ body:has(.bn-modal[open]) .tc-modal-scroll { overflow: hidden; }
   font-family: monospace;
   font-size: 9.5px;
   letter-spacing: 0.3px;
-  color: #555;
+  color: var(--text-5);
   margin-top: 4px;
 }
 
@@ -1234,7 +1239,7 @@ body:has(.bn-modal[open]) .tc-modal-scroll { overflow: hidden; }
 .tc-raw-block {
   margin-top: 16px;
   padding-top: 12px;
-  border-top: 1px solid #1f1f1f;
+  border-top: 1px solid var(--panel-hi2);
 }
 
 .tc-raw {
@@ -1249,9 +1254,9 @@ body:has(.bn-modal[open]) .tc-modal-scroll { overflow: hidden; }
   font-weight: 400;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: #555;
+  color: var(--text-5);
   text-align: right;
-  border-bottom: 1px solid #1f1f1f;
+  border-bottom: 1px solid var(--panel-hi2);
 }
 
 .tc-raw thead th:first-child { text-align: left; }
@@ -1260,7 +1265,7 @@ body:has(.bn-modal[open]) .tc-modal-scroll { overflow: hidden; }
   padding: 4px 0;
   font-size: 11px;
   font-weight: 400;
-  color: #c9d1d9;
+  color: var(--text-2);
   text-align: left;
   white-space: nowrap;
 }
@@ -1270,13 +1275,13 @@ body:has(.bn-modal[open]) .tc-modal-scroll { overflow: hidden; }
 .tc-raw-unit {
   margin-left: 6px;
   font-size: 9px;
-  color: #555;
+  color: var(--text-5);
 }
 
 .tc-raw td {
   padding: 4px 0;
   font-size: 11px;
-  color: #e1e4e8;
+  color: var(--text);
   text-align: right;
   white-space: nowrap;
 }
@@ -1286,13 +1291,13 @@ body:has(.bn-modal[open]) .tc-modal-scroll { overflow: hidden; }
 /* Every row but the last is ruled, so the columns stay tracked across a row
  * whose label wraps. */
 .tc-raw tbody tr + tr th,
-.tc-raw tbody tr + tr td { border-top: 1px solid #161616; }
+.tc-raw tbody tr + tr td { border-top: 1px solid var(--panel); }
 
 /* The 2025 luck call: the first bullet in the notes list, tinted like its Luck
  * cell. Two classes, so it outranks the plain `.tc-block li` color. */
-.tc-luck.luck-hot { color: #d29922; }
-.tc-luck.luck-cold { color: #58a6ff; }
-.tc-luck.luck-even { color: #8b949e; }
+.tc-luck.luck-hot { color: var(--warn); }
+.tc-luck.luck-cold { color: var(--accent); }
+.tc-luck.luck-even { color: var(--text-3); }
 
 /* The standouts: every metric the team is top or bottom five of the league in,
  * opening its notes. There can be several on one team, which rules out the
@@ -1308,17 +1313,17 @@ body:has(.bn-modal[open]) .tc-modal-scroll { overflow: hidden; }
  * good news, and the same colour has to carry both.
  *
  * Two classes on each, like the luck and staff rules, to outrank `.tc-block li`. */
-.tc-notes .tc-standout { color: #c9d1d9; }
+.tc-notes .tc-standout { color: var(--text-2); }
 
 .tc-notes .tc-standout-rank {
-  color: #39c5cf;
+  color: var(--cyan);
   font-family: monospace;
   font-size: 10.5px;
   letter-spacing: 0.3px;
 }
 
 .tc-notes .tc-standout-val {
-  color: #6e7681;
+  color: var(--text-4);
   font-family: monospace;
   font-size: 10.5px;
 }
@@ -1331,7 +1336,7 @@ body:has(.bn-modal[open]) .tc-modal-scroll { overflow: hidden; }
  * points somewhere else in the card. Two selectors for the same reason the
  * luck rules carry two classes: it has to outrank the plain `.tc-block li`. */
 .tc-notes .tc-staff {
-  color: #a371f7;
+  color: var(--purple-2);
   font-family: monospace;
   font-size: 10.5px;
   letter-spacing: 0.3px;
@@ -1410,7 +1415,7 @@ body:has(.bn-modal[open]) .tc-modal-scroll { overflow: hidden; }
 .bun-league-notes h3 {
   font-size: 13px;
   font-weight: 700;
-  color: #f0f0f0;
+  color: var(--text-bright);
   margin: 0 0 6px;
 }
 
@@ -1419,7 +1424,7 @@ body:has(.bn-modal[open]) .tc-modal-scroll { overflow: hidden; }
 .bun-league-notes li {
   font-size: 12px;
   line-height: 1.5;
-  color: #c9d1d9;
+  color: var(--text-2);
   margin-bottom: 3px;
 }
 
@@ -1435,9 +1440,9 @@ body:has(.bn-modal[open]) .tc-modal-scroll { overflow: hidden; }
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: #8b949e;
-  background: #1f1f1f;
-  border: 1px solid #2a2a2a;
+  color: var(--text-3);
+  background: var(--panel-hi2);
+  border: 1px solid var(--hairline);
   border-radius: 4px;
   padding: 0 4px;
   vertical-align: 1px;
@@ -1449,7 +1454,7 @@ body:has(.bn-modal[open]) .tc-modal-scroll { overflow: hidden; }
   margin-left: 5px;
   font-family: monospace;
   font-size: 10px;
-  color: #60a5fa;
+  color: var(--accent-2);
   text-decoration: none;
   white-space: nowrap;
 }
@@ -1464,7 +1469,7 @@ body:has(.bn-modal[open]) .tc-modal-scroll { overflow: hidden; }
   padding: 0 2px;
   background: none;
   border: none;
-  color: #484f58;
+  color: var(--text-5);
   cursor: pointer;
   vertical-align: 1px;
   opacity: 0;
@@ -1474,9 +1479,9 @@ body:has(.bn-modal[open]) .tc-modal-scroll { overflow: hidden; }
 li:hover > .tc-note-edit,
 .tc-note-edit:focus-visible { opacity: 1; }
 
-.tc-note-edit:hover { color: #60a5fa; }
+.tc-note-edit:hover { color: var(--accent-2); }
 
-.tc-note-edit:focus-visible { outline: none; color: #60a5fa; }
+.tc-note-edit:focus-visible { outline: none; color: var(--accent-2); }
 
 /* Coarse pointers have no hover to reveal it with. */
 @media (hover: none) {
@@ -1492,15 +1497,15 @@ li:hover > .tc-note-edit,
   font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: #60a5fa;
+  color: var(--accent-2);
   background: none;
-  border: 1px dashed #2f3b4a;
+  border: 1px dashed var(--accent-line-soft);
   border-radius: 6px;
   padding: 3px 8px;
   cursor: pointer;
 }
 
-.tc-note-add:hover { border-color: #60a5fa; background: rgba(96, 165, 250, 0.08); }
+.tc-note-add:hover { border-color: var(--accent-2); background: var(--accent-faint); }
 
 /* --- The floating "take a note" button ---
  * The one control on the page that is not about reading it, so it does not sit
@@ -1517,19 +1522,19 @@ li:hover > .tc-note-edit,
   width: 52px;
   height: 52px;
   border-radius: 50%;
-  color: #111;
-  background: #60a5fa;
-  border: 1px solid #60a5fa;
+  color: var(--panel-lo);
+  background: var(--accent-2);
+  border: 1px solid var(--accent-2);
   cursor: pointer;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 8px 24px var(--shadow-color);
   transition: transform 0.12s ease, background-color 0.12s ease;
 }
 
 .bn-fab[hidden] { display: none; }
 
-.bn-fab:hover { background: #8ec0ff; transform: translateY(-1px); }
+.bn-fab:hover { background: var(--accent-hover); transform: translateY(-1px); }
 
-.bn-fab:focus-visible { outline: 2px solid #8ec0ff; outline-offset: 2px; }
+.bn-fab:focus-visible { outline: 2px solid var(--accent-hover); outline-offset: 2px; }
 
 /* A dialog is on the top layer and the button is not, so while one is open the
  * button would sit under the backdrop as a dimmed disc. Keyed off the open
@@ -1545,15 +1550,15 @@ body:has(dialog[open]) .bn-fab { display: none; }
   inset: 0;
   margin: auto;
   padding: 0;
-  border: 1px solid #2a2a2a;
+  border: 1px solid var(--hairline);
   border-radius: 10px;
-  background: #141414;
-  color: #c9d1d9;
+  background: var(--panel-lo);
+  color: var(--text-2);
   width: min(520px, calc(100vw - 32px));
   max-width: none;
   max-height: min(86vh, 760px);
   overflow: hidden;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 24px 60px var(--shadow-color-lg);
 }
 
 .bn-modal[open] {
@@ -1561,7 +1566,7 @@ body:has(dialog[open]) .bn-fab { display: none; }
   flex-direction: column;
 }
 
-.bn-modal::backdrop { background: rgba(0, 0, 0, 0.66); }
+.bn-modal::backdrop { background: var(--overlay-strong); }
 
 /* Saving locks the form rather than closing it: a write that fails has to be
  * able to hand the text back. */
@@ -1573,14 +1578,14 @@ body:has(dialog[open]) .bn-fab { display: none; }
   align-items: center;
   gap: 10px;
   padding: 12px 14px 10px;
-  border-bottom: 1px solid #1f1f1f;
+  border-bottom: 1px solid var(--panel-hi2);
 }
 
 .bn-title {
   margin: 0;
   font-size: 14px;
   font-weight: 700;
-  color: #f0f0f0;
+  color: var(--text-bright);
 }
 
 .bn-close {
@@ -1590,14 +1595,14 @@ body:has(dialog[open]) .bn-fab { display: none; }
   justify-content: center;
   width: 28px;
   height: 28px;
-  color: #8b949e;
-  background: #1b1b1b;
-  border: 1px solid #2a2a2a;
+  color: var(--text-3);
+  background: var(--panel-hi);
+  border: 1px solid var(--hairline);
   border-radius: 50%;
   cursor: pointer;
 }
 
-.bn-close:hover { color: #e1e4e8; border-color: #3a3a3a; }
+.bn-close:hover { color: var(--text); border-color: var(--hairline-hi); }
 
 .bn-body {
   padding: 12px 14px;
@@ -1608,16 +1613,16 @@ body:has(dialog[open]) .bn-fab { display: none; }
 /* The shared pickers carry the schedule page's palette; this dialog is a shade
  * darker, so only the surfaces are restated — the behaviour and the layout are
  * the component's. */
-.bn-modal .dd-btn { background: #1b1b1b; border-color: #2a2a2a; }
-.bn-modal .dd-btn:hover { border-color: #3a3a3a; }
+.bn-modal .dd-btn { background: var(--panel-hi); border-color: var(--hairline); }
+.bn-modal .dd-btn:hover { border-color: var(--hairline-hi); }
 
 .bn-modal .dd-btn:focus-visible,
-.bn-modal .dd-btn[aria-expanded="true"] { border-color: #60a5fa; }
+.bn-modal .dd-btn[aria-expanded="true"] { border-color: var(--accent-2); }
 
-.bn-modal .dd-menu { background: #141414; border-color: #2a2a2a; }
-.bn-modal .dd-opt:hover { background: #1b1b1b; }
-.bn-modal .dd-opt.is-on { color: #60a5fa; background: rgba(96, 165, 250, 0.12); }
-.bn-modal .dd-overlay .tp { background: #141414; border-color: #2a2a2a; }
+.bn-modal .dd-menu { background: var(--panel-lo); border-color: var(--hairline); }
+.bn-modal .dd-opt:hover { background: var(--panel-hi); }
+.bn-modal .dd-opt.is-on { color: var(--accent-2); background: var(--accent-soft-2); }
+.bn-modal .dd-overlay .tp { background: var(--panel-lo); border-color: var(--hairline); }
 
 .bn-row {
   display: flex;
@@ -1629,20 +1634,20 @@ body:has(dialog[open]) .bn-fab { display: none; }
 .bn-input {
   flex: 1;
   min-width: 0;
-  background: #1b1b1b;
-  border: 1px solid #2a2a2a;
+  background: var(--panel-hi);
+  border: 1px solid var(--hairline);
   border-radius: 6px;
-  color: #e1e4e8;
+  color: var(--text);
   font-family: inherit;
   font-size: 13px;
   padding: 7px 9px;
 }
 
-.bn-input::placeholder { color: #565656; }
+.bn-input::placeholder { color: var(--text-5); }
 
 .bn-input:focus {
   outline: none;
-  border-color: #60a5fa;
+  border-color: var(--accent-2);
 }
 
 /* The "+" on the first row and the "×" on the rest: same box, so the column of
@@ -1653,16 +1658,16 @@ body:has(dialog[open]) .bn-fab { display: none; }
   height: 30px;
   font-size: 16px;
   line-height: 1;
-  color: #8b949e;
-  background: #1b1b1b;
-  border: 1px solid #2a2a2a;
+  color: var(--text-3);
+  background: var(--panel-hi);
+  border: 1px solid var(--hairline);
   border-radius: 6px;
   cursor: pointer;
 }
 
-.bn-row-btn:hover { color: #e1e4e8; border-color: #3a3a3a; }
+.bn-row-btn:hover { color: var(--text); border-color: var(--hairline-hi); }
 
-.bn-row-btn:focus-visible { outline: none; border-color: #60a5fa; }
+.bn-row-btn:focus-visible { outline: none; border-color: var(--accent-2); }
 
 .bn-label {
   display: block;
@@ -1671,10 +1676,10 @@ body:has(dialog[open]) .bn-fab { display: none; }
   font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: #666;
+  color: var(--text-4);
 }
 
-.bn-label span { color: #484f58; text-transform: none; letter-spacing: 0; }
+.bn-label span { color: var(--text-5); text-transform: none; letter-spacing: 0; }
 
 #bn-src { width: 100%; }
 
@@ -1685,17 +1690,17 @@ body:has(dialog[open]) .bn-fab { display: none; }
   min-height: 14px;
   font-family: monospace;
   font-size: 10px;
-  color: #666;
+  color: var(--text-4);
 }
 
-.bn-hint.is-ok { color: #2ea043; }
-.bn-hint.is-bad { color: #f0883e; }
+.bn-hint.is-ok { color: var(--good-strong); }
+.bn-hint.is-bad { color: var(--orange); }
 
 .bn-error {
   margin: 0;
   padding: 0 14px 10px;
   font-size: 12px;
-  color: #f85149;
+  color: var(--bad);
 }
 
 .bn-error[hidden] { display: none; }
@@ -1704,40 +1709,40 @@ body:has(dialog[open]) .bn-fab { display: none; }
   display: flex;
   gap: 8px;
   padding: 10px 14px calc(12px + env(safe-area-inset-bottom));
-  border-top: 1px solid #1f1f1f;
+  border-top: 1px solid var(--panel-hi2);
 }
 
 .bn-btn {
-  background: #1b1b1b;
-  border: 1px solid #2a2a2a;
+  background: var(--panel-hi);
+  border: 1px solid var(--hairline);
   border-radius: 6px;
-  color: #c9d1d9;
+  color: var(--text-2);
   font-family: inherit;
   font-size: 13px;
   padding: 7px 14px;
   cursor: pointer;
 }
 
-.bn-btn:hover { border-color: #3a3a3a; color: #e1e4e8; }
+.bn-btn:hover { border-color: var(--hairline-hi); color: var(--text); }
 
-.bn-btn:focus-visible { outline: none; border-color: #60a5fa; }
+.bn-btn:focus-visible { outline: none; border-color: var(--accent-2); }
 
 /* Save is the last thing in the row and the only filled control in the dialog.
  * Delete leads it from the far end, so the destructive action is nowhere near
  * the one the writer is aiming for. */
 .bn-btn.is-primary {
   margin-left: auto;
-  color: #111;
-  background: #60a5fa;
-  border-color: #60a5fa;
+  color: var(--panel-lo);
+  background: var(--accent-2);
+  border-color: var(--accent-2);
   font-weight: 700;
 }
 
-.bn-btn.is-primary:hover { background: #8ec0ff; color: #111; }
+.bn-btn.is-primary:hover { background: var(--accent-hover); color: var(--panel-lo); }
 
-.bn-btn.is-danger { color: #f85149; }
+.bn-btn.is-danger { color: var(--bad); }
 
-.bn-btn.is-danger:hover { color: #ff7b72; border-color: #f85149; }
+.bn-btn.is-danger:hover { color: var(--bad-bright); border-color: var(--bad); }
 
 /* Delete sits alone on the left; Cancel and Save keep the right. */
 .bn-btn.is-danger + .bn-btn { margin-left: auto; }
@@ -1781,7 +1786,7 @@ body:has(dialog[open]) .bn-fab { display: none; }
   margin: 0 0 14px;
   font-size: 11px;
   line-height: 1.55;
-  color: #8b949e;
+  color: var(--text-3);
 }
 
 .wt-rows {
@@ -1805,7 +1810,7 @@ body:has(dialog[open]) .bn-fab { display: none; }
   gap: 6px;
   font-family: monospace;
   font-size: 11px;
-  color: #c9d1d9;
+  color: var(--text-2);
   cursor: pointer;
 }
 
@@ -1818,7 +1823,7 @@ body:has(dialog[open]) .bn-fab { display: none; }
   font-family: monospace;
   font-size: 11px;
   font-weight: 700;
-  color: #f0f0f0;
+  color: var(--text-bright);
   text-align: right;
 }
 
@@ -1837,13 +1842,13 @@ body:has(dialog[open]) .bn-fab { display: none; }
 .wt-range::-webkit-slider-runnable-track {
   height: 4px;
   border-radius: 2px;
-  background: #2a2a2a;
+  background: var(--hairline);
 }
 
 .wt-range::-moz-range-track {
   height: 4px;
   border-radius: 2px;
-  background: #2a2a2a;
+  background: var(--hairline);
 }
 
 .wt-range::-webkit-slider-thumb {
@@ -1854,7 +1859,7 @@ body:has(dialog[open]) .bn-fab { display: none; }
   margin-top: -4.5px;
   border: none;
   border-radius: 50%;
-  background: #60a5fa;
+  background: var(--accent-2);
 }
 
 .wt-range::-moz-range-thumb {
@@ -1862,11 +1867,11 @@ body:has(dialog[open]) .bn-fab { display: none; }
   height: 13px;
   border: none;
   border-radius: 50%;
-  background: #60a5fa;
+  background: var(--accent-2);
 }
 
-.wt-range:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.35); }
-.wt-range:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.35); }
+.wt-range:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px var(--accent-ring); }
+.wt-range:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 3px var(--accent-ring); }
 
 /* The gate, in words. role="status" on the element means a screen reader is
    told the running total as it changes, which is the only way that reader
@@ -1874,20 +1879,20 @@ body:has(dialog[open]) .bn-fab { display: none; }
 .wt-total {
   margin: 14px 0 0;
   padding-top: 10px;
-  border-top: 1px solid #1f1f1f;
+  border-top: 1px solid var(--panel-hi2);
   font-family: monospace;
   font-size: 11px;
 }
 
-.wt-total.is-ok { color: #3fb950; }
-.wt-total.is-bad { color: #f0883e; }
+.wt-total.is-ok { color: var(--good); }
+.wt-total.is-bad { color: var(--orange); }
 
 .bn-btn[disabled] {
   opacity: 0.4;
   cursor: not-allowed;
 }
 
-.bn-btn.is-primary[disabled]:hover { background: #60a5fa; }
+.bn-btn.is-primary[disabled]:hover { background: var(--accent-2); }
 
 /* =========================================================================
    THE BOARD — model vs market
@@ -1906,8 +1911,8 @@ body:has(dialog[open]) .bn-fab { display: none; }
   overflow-x: auto;
   overflow-y: hidden;
   padding: 4px 0 2px;
-  background: #1a1a1a;
-  border: 1px solid #1f1f1f;
+  background: var(--panel-hi);
+  border: 1px solid var(--panel-hi2);
   border-radius: 6px;
 }
 
@@ -1919,7 +1924,7 @@ body:has(dialog[open]) .bn-fab { display: none; }
    what keeps an overlapping pair as two logos instead of one shape. Cheaper
    than a backdrop plate, which would cover the residual stem the chart is
    built to show. */
-.board-pt image { filter: drop-shadow(0 0 1px #1a1a1a); }
+.board-pt image { filter: drop-shadow(0 0 1px var(--panel-hi)); }
 
 /* The axis titles, at the widths too narrow to draw them inside the SVG. Real
    text rather than SVG glyphs: it wraps, it is selectable, and it scales with
@@ -1929,7 +1934,7 @@ body:has(dialog[open]) .bn-fab { display: none; }
   font-family: monospace;
   font-size: 10px;
   line-height: 1.5;
-  color: #555;
+  color: var(--text-5);
 }
 
 .board-axis-note[hidden] { display: none; }
@@ -1970,27 +1975,27 @@ body:has(dialog[open]) .bn-fab { display: none; }
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: #8b949e;
+  color: var(--text-3);
 }
 
 .board-team-pick select {
   padding: 5px 8px;
   font-family: monospace;
   font-size: 11px;
-  color: #e1e4e8;
-  background: #161616;
-  border: 1px solid #2a2a2a;
+  color: var(--text);
+  background: var(--panel);
+  border: 1px solid var(--hairline);
   border-radius: 999px;
   cursor: pointer;
 }
 
-.board-team-pick select:hover { border-color: #60a5fa; }
-.board-team-pick select:focus-visible { outline: 1px solid #60a5fa; outline-offset: 2px; }
+.board-team-pick select:hover { border-color: var(--accent-2); }
+.board-team-pick select:focus-visible { outline: 1px solid var(--accent-2); outline-offset: 2px; }
 
 /* --- the one-team radar --- */
 .radar-svg { display: block; margin: 0 auto; }
 .radar-pt { cursor: default; }
-.radar-pt:focus-visible { outline: 1px solid #60a5fa; outline-offset: 2px; }
+.radar-pt:focus-visible { outline: 1px solid var(--accent-2); outline-offset: 2px; }
 
 /* The radar's read-out. A table rather than the scatter's two ranked lists:
    five markets for one team is a row per market, and there is no over/under
@@ -2008,7 +2013,7 @@ body:has(dialog[open]) .bn-fab { display: none; }
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: #666;
+  color: var(--text-4);
   padding-bottom: 6px;
 }
 
@@ -2017,16 +2022,16 @@ body:has(dialog[open]) .bn-fab { display: none; }
   font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: #666;
+  color: var(--text-4);
   font-weight: 700;
   padding: 4px 8px;
-  border-bottom: 1px solid #2a2a2a;
+  border-bottom: 1px solid var(--hairline);
 }
 
 .radar-table td {
   padding: 6px 8px;
-  color: #c9d1d9;
-  border-bottom: 1px solid #1f1f1f;
+  color: var(--text-2);
+  border-bottom: 1px solid var(--panel-hi2);
 }
 
 .radar-table th:not(:first-child),
@@ -2034,8 +2039,8 @@ body:has(dialog[open]) .bn-fab { display: none; }
 
 /* Same colors the scatter's read-outs use, and the same way round: the market
    sitting above the model is the market liking a team the model does not. */
-.radar-table .is-over { color: #3fb950; }
-.radar-table .is-under { color: #f0883e; }
+.radar-table .is-over { color: var(--good); }
+.radar-table .is-under { color: var(--orange); }
 
 @media (max-width: 600px) {
   .board-team-pick { margin-left: 0; }
@@ -2045,7 +2050,7 @@ body:has(dialog[open]) .bn-fab { display: none; }
   padding: 24px 12px;
   font-family: monospace;
   font-size: 12px;
-  color: #555;
+  color: var(--text-5);
   text-align: center;
 }
 
@@ -2054,7 +2059,7 @@ body:has(dialog[open]) .bn-fab { display: none; }
 .board-pt.is-off { opacity: 0.16; }
 
 .board-pt { cursor: default; }
-.board-pt:focus-visible { outline: 1px solid #60a5fa; outline-offset: 2px; }
+.board-pt:focus-visible { outline: 1px solid var(--accent-2); outline-offset: 2px; }
 
 /* --- tooltip --- */
 .board-tip {
@@ -2066,21 +2071,21 @@ body:has(dialog[open]) .bn-fab { display: none; }
   min-width: 132px;
   padding: 6px 8px;
   pointer-events: none;
-  background: #141414;
-  border: 1px solid #2a2a2a;
+  background: var(--panel-lo);
+  border: 1px solid var(--hairline);
   border-radius: 5px;
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 6px 14px var(--shadow-color);
   font-family: monospace;
   font-size: 10px;
   line-height: 1.5;
-  color: #8b949e;
+  color: var(--text-3);
 }
 
 .board-tip[hidden] { display: none; }
-.board-tip strong { font-size: 11px; color: #f0f0f0; }
-.board-tip b { color: #c9d1d9; font-weight: 700; }
-.board-tip .is-over b { color: #3fb950; }
-.board-tip .is-under b { color: #f0883e; }
+.board-tip strong { font-size: 11px; color: var(--text-bright); }
+.board-tip b { color: var(--text-2); font-weight: 700; }
+.board-tip .is-over b { color: var(--good); }
+.board-tip .is-under b { color: var(--orange); }
 
 /* --- the read-out beneath the chart ---
    The chart's text equivalent, and the part most people will quote. Same
@@ -2095,14 +2100,14 @@ body:has(dialog[open]) .bn-fab { display: none; }
 
 .board-read {
   padding: 10px 12px 12px;
-  background: #1a1a1a;
-  border: 1px solid #1f1f1f;
-  border-left: 3px solid #2a2a2a;
+  background: var(--panel-hi);
+  border: 1px solid var(--panel-hi2);
+  border-left: 3px solid var(--hairline);
   border-radius: 4px;
 }
 
-.board-read.is-over { border-left-color: #2ea043; }
-.board-read.is-under { border-left-color: #f0883e; }
+.board-read.is-over { border-left-color: var(--good-strong); }
+.board-read.is-under { border-left-color: var(--orange); }
 
 .board-read h4 {
   margin: 0 0 3px;
@@ -2113,14 +2118,14 @@ body:has(dialog[open]) .bn-fab { display: none; }
   text-transform: uppercase;
 }
 
-.board-read.is-over h4 { color: #3fb950; }
-.board-read.is-under h4 { color: #f0883e; }
+.board-read.is-over h4 { color: var(--good); }
+.board-read.is-under h4 { color: var(--orange); }
 
 .board-read p {
   margin: 0 0 8px;
   font-size: 11px;
   line-height: 1.5;
-  color: #666;
+  color: var(--text-4);
 }
 
 .board-list {
@@ -2142,11 +2147,11 @@ body:has(dialog[open]) .bn-fab { display: none; }
 }
 
 .board-list img { width: 18px; height: 18px; }
-.board-list .board-abbr { color: #c9d1d9; }
+.board-list .board-abbr { color: var(--text-2); }
 
 /* The residual is the number the list is sorted on, so it is the one that gets
    the weight; the market price beside it is context and stays recessive. */
 .board-list .board-resid { font-weight: 700; }
-.board-list.is-over .board-resid { color: #3fb950; }
-.board-list.is-under .board-resid { color: #f0883e; }
-.board-list .board-mkt { min-width: 30px; text-align: right; color: #555; }
+.board-list.is-over .board-resid { color: var(--good); }
+.board-list.is-under .board-resid { color: var(--orange); }
+.board-list .board-mkt { min-width: 30px; text-align: right; color: var(--text-5); }

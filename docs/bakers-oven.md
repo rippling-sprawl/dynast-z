@@ -11,9 +11,9 @@ Routes:
 
 | URL | Page |
 |---|---|
-| `/bakers-oven` | Your saved leagues + add-a-league. Nothing else. |
-| `/bakers-oven/{leagueId}` | That league's draft status, **My Rankings** (CSV import), and **Open Draft Board** |
-| `/bakers-oven/{leagueId}/{rosterId}` | The big board for that team |
+| `/football/bakers-oven` | Your saved leagues + add-a-league. Nothing else. |
+| `/football/bakers-oven/{leagueId}` | That league's draft status, **My Rankings** (CSV import), and **Open Draft Board** |
+| `/football/bakers-oven/{leagueId}/{rosterId}` | The big board for that team |
 
 Everything league-scoped lives on the league page, including the CSV. There is no team grid —
 **Open Draft Board** is a single link to your own team, resolved from the saved league's
@@ -23,12 +23,14 @@ Everything league-scoped lives on the league page, including the CSV. There is n
 not the draft slot and not a user id. Both route segments match digits only — a non-numeric
 segment 404s rather than booting a page destined to fail against Sleeper.
 
-The route used to be `/the-bakers-oven`. `vercel.json` and `server.py` both 301 the old prefix
-to the new one, path and query preserved, so shared board links and bookmarks still land.
+The route has moved twice: `/the-bakers-oven` → `/bakers-oven` → today's
+`/football/bakers-oven`, which nests the tool under the section it belongs to. `vercel.json` and
+`server.py` both 301 **each** old prefix straight to the current path — one hop, never a chain —
+with path and query preserved, so shared board links and bookmarks still land.
 
-A bare one-segment `/bakers-oven/{rosterId}` is a **legacy link** from before leagues
+A bare one-segment `/football/bakers-oven/{rosterId}` is a **legacy link** from before leagues
 existed. `oven-league.html` recognizes it by length (≤ 5 digits) and redirects: to
-`/bakers-oven/{onlyLeague}/{rosterId}` when the account has exactly one saved league,
+`/football/bakers-oven/{onlyLeague}/{rosterId}` when the account has exactly one saved league,
 otherwise back to the league list. The redirect can't live in `vercel.json` or `server.py` —
 which league a bare roster id belongs to is per-account data the server never sees.
 
@@ -759,7 +761,7 @@ seam above or below another row moves that player there. On drop:
    necessarily restates it — his and everyone he displaced. That is the point: drag someone up and
    watch the number climb into flame.
 4. **Hand the rows to the host.** `onReorder(rows)` receives them in the exact shape a CSV import
-   writes, and `/bakers-oven/{leagueId}/{rosterId}` writes them straight back into the same
+   writes, and `/football/bakers-oven/{leagueId}/{rosterId}` writes them straight back into the same
    per-league blob under `oven_board:{leagueId}`. A board still seeded from FantasyPros (nothing
    imported for this league yet) becomes a real saved board on the first move — dragging a player
    *is* authoring your rankings. `Export My Rankings` on the league page then gives you the board
@@ -1157,12 +1159,12 @@ and been scored, and a 404 on the data file degrades to no column rather than a 
 Run `python3 server.py`, open `http://localhost:8000`.
 
 **Routes**
-1. `/bakers-oven` is the league list; `/bakers-oven/1384025526670233600` is that
-   league's team picker; `/bakers-oven/1384025526670233600/1` is roster 1's board.
+1. `/football/bakers-oven` is the league list; `/football/bakers-oven/1384025526670233600` is that
+   league's team picker; `/football/bakers-oven/1384025526670233600/1` is roster 1's board.
    Check with `curl -s localhost:8000/… | grep -c 'id="leagues"'` — only the list page has it.
-2. `/bakers-oven/abc` and `/bakers-oven/{id}/1/2` both 404.
-3. Legacy `/bakers-oven/1` redirects to `/bakers-oven/{onlyLeague}/1` with one saved
-   league, and to `/bakers-oven` with two.
+2. `/football/bakers-oven/abc` and `/football/bakers-oven/{id}/1/2` both 404.
+3. Legacy `/football/bakers-oven/1` redirects to `/football/bakers-oven/{onlyLeague}/1` with one saved
+   league, and to `/football/bakers-oven` with two.
 4. Signed out, every Oven URL bounces to `/account`. Signed in as a **non-admin**, all three
    render, "Baker's Oven" appears in the hamburger drawer, and `/football` shows its card.
 
@@ -1248,8 +1250,8 @@ also checkable headlessly by loading `oven-config.js` + `oven-csv.js` + `oven-bo
 24. Offline → "Reconnecting (n) · last update Nm ago", backoff widens; online → recovers.
 
 **Targets & Projections**
-25. The tab sits on the right edge of both `/bakers-oven/{leagueId}` and
-    `/bakers-oven/{leagueId}/1` — but **not** the top-level league list, which has no draft
+25. The tab sits on the right edge of both `/football/bakers-oven/{leagueId}` and
+    `/football/bakers-oven/{leagueId}/1` — but **not** the top-level league list, which has no draft
     context to project from. It opens on **Projections**, with that tab active. Opening it on a
     wide screen leaves the board fully clickable.
 26. The pin at the end of a board row adds him: it flips to `✓`, the row gains a flame inner rail,

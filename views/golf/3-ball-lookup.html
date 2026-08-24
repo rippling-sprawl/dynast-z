@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <link rel="icon" type="image/png" href="/favicon.png">
   <title>3-Ball Lookup | Dynast-Z</title>
+  <!-- Theme first: theme.js sets <html data-theme> before the first paint,
+       theme.css holds every colour token the sheets below spend. -->
+  <script src="/scripts/base/theme.js"></script>
+  <link rel="stylesheet" href="/styles/base/theme.css">
   <link rel="stylesheet" href="/styles/base/styles.css">
   <link rel="stylesheet" href="/styles/base/hub.css">
   <link rel="stylesheet" href="/styles/primary/golf.css">
@@ -31,7 +35,7 @@
 
     <div id="error" class="masters-empty" style="display:none"></div>
     <div id="user-results" style="display:none">
-      <h3 id="user-label" style="margin:16px 0 8px;color:#ccc"></h3>
+      <h3 id="user-label" style="margin:16px 0 8px;color:var(--text-2)"></h3>
       <div class="round-selector" id="round-sel"></div>
       <div id="loading" class="masters-loading" style="display:none">Loading scores...</div>
       <div id="results"></div>
@@ -48,15 +52,15 @@
       flex: 1;
       padding: 10px 12px;
       border-radius: 6px;
-      border: 1px solid #444;
-      background: #1a1a1a;
-      color: #f0f0f0;
+      border: 1px solid var(--hairline-hi);
+      background: var(--panel-hi);
+      color: var(--text-bright);
       font-size: 14px;
       font-family: inherit;
     }
     .lookup-search input:focus {
       outline: none;
-      border-color: #60a5fa;
+      border-color: var(--accent-2);
     }
   </style>
 
@@ -190,7 +194,7 @@
         const opponents = (group.opponents || []).filter(Boolean).map(findPlayer).filter(Boolean);
 
         if (!myPlayer) {
-          html += `<div class="three-ball-group"><div class="group-row"><span class="golfer-name" style="color:#f87171">${group.myGolfer} \u2014 not found</span></div></div>`;
+          html += `<div class="three-ball-group"><div class="group-row"><span class="golfer-name" style="color:var(--bad-soft)">${group.myGolfer} \u2014 not found</span></div></div>`;
           return;
         }
 
@@ -221,7 +225,7 @@
 
         oppResults.forEach(opp => {
           html += '<div class="group-row">';
-          html += `<span class="golfer-name" style="font-weight:400;color:#aaa">${opp.player.full_name}</span>`;
+          html += `<span class="golfer-name" style="font-weight:400;color:var(--text-2)">${opp.player.full_name}</span>`;
           html += `<span class="round-score ${scoreClass(opp.score)}">${formatScore(opp.score)}</span>`;
           html += `<span class="thru-col">${opp.thru || ''}</span>`;
           html += '</div>';

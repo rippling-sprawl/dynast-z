@@ -5,14 +5,14 @@
  * former styles/masters.css so all conditional formatting lives under style/. */
 
 /* --- To-par score --- */
-.score-under { color: #4ade80; }
-.score-over { color: #f87171; }
-.score-even { color: #aaa; }
+.score-under { color: var(--good); }
+.score-over { color: var(--bad-soft); }
+.score-even { color: var(--text-2); }
 
 /* --- Hole-by-hole relative-to-par --- */
-.hole-cell.birdie { background: rgba(74, 222, 128, 0.25); color: #4ade80; }
-.hole-cell.eagle { background: rgba(74, 222, 128, 0.45); color: #22c55e; }
-.hole-cell.bogey { background: rgba(248, 113, 113, 0.25); color: #f87171; }
-.hole-cell.double-plus { background: rgba(248, 113, 113, 0.4); color: #ef4444; }
-.hole-cell.par { color: #666; }
-.hole-cell.no-score { color: #333; }
+.hole-cell.birdie { background: var(--hole-good); color: var(--good); }
+.hole-cell.eagle { background: var(--hole-good-hi); color: var(--good-strong); }
+.hole-cell.bogey { background: var(--hole-bad); color: var(--bad-soft); }
+.hole-cell.double-plus { background: var(--hole-bad-hi); color: var(--bad-bright); }
+.hole-cell.par { color: var(--text-4); }
+.hole-cell.no-score { color: var(--hairline); }

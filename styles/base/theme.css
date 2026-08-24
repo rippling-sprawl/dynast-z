@@ -1,0 +1,306 @@
+/* === Theme tokens ===
+ * The single place a color is decided. Every other stylesheet spends tokens
+ * from here and never writes a raw hex for a surface, a rule, or body text.
+ *
+ * Dark is the default and lives on `:root`, so a page that never runs JS still
+ * renders the way the site always has. Light is an override keyed off
+ * `<html data-theme="light">`, set by scripts/base/theme.js before first paint
+ * and remembered in localStorage.
+ *
+ * Two neutral families, not one. The site grew a blue-grey GitHub-ish set
+ * (--bg / --surface / --border) for its chrome and a flat neutral set
+ * (--panel / --hairline) inside Baker's Buns and the bet cards. They are
+ * genuinely different in the dark, so both are kept and both are exact — no
+ * dark surface shifted when this file was introduced. In the light they
+ * collapse onto near-identical whites, which is why light-mode rules rarely
+ * need to know which family they are on.
+ *
+ * The palette in the light is the one asked for: white page, grey surfaces,
+ * a single deep blue that carries every link, control and accent.
+ *
+ * Contrast: every --text-* value clears 4.5:1 on its own surface in both
+ * themes, and the accent clears it on --bg and --surface alike. Keep it that
+ * way — the muted end of the ramp is where that is easiest to lose.
+ */
+
+:root {
+  color-scheme: dark;
+
+  /* --- Surfaces: blue-grey family (header, drawer, tables, league, golf) --- */
+  --bg: #0f1117;
+  --bg-alt: #0d1117;
+  --surface: #161b22;
+  --surface-2: #21262d;
+  --surface-3: #1c2128;
+  --border: #30363d;
+  --border-soft: #21262d;
+
+  /* --- Surfaces: flat neutral family (Baker's Buns, bet tiles, note cards) --- */
+  --panel: #161616;
+  --panel-lo: #111111;
+  --panel-hi: #1b1b1b;
+  --panel-hi2: #1f1f1f;
+  --hairline: #2a2a2a;
+  --hairline-hi: #3a3a3a;
+
+  /* --- Text ramp, brightest to faintest --- */
+  --text-hi: #f0f6fc;
+  --text-bright: #f0f0f0;
+  --text: #e1e4e8;
+  --text-2: #c9d1d9;
+  --text-3: #8b949e;
+  --text-4: #6e7681;
+  --text-5: #484f58;
+
+  /* --- Accent. Two blues in the dark because the site uses both; one in the
+   * light, because the reference palette has exactly one. --- */
+  --accent: #58a6ff;
+  --accent-2: #60a5fa;
+  --accent-hover: #8ec0ff;
+  --accent-strong: #1f6feb;
+  --accent-soft: rgba(88, 166, 255, 0.12);
+  --accent-soft-2: rgba(96, 165, 250, 0.12);
+  --accent-faint: rgba(96, 165, 250, 0.08);
+  --accent-line: rgba(96, 165, 250, 0.4);
+  --accent-line-soft: #2f3b4a;
+  --accent-ring: rgba(96, 165, 250, 0.35);
+  --on-accent: #ffffff;
+  /* Text that reads ON a filled --accent. Not the same as --on-accent, which
+   * is the white the site has always put on its blue buttons: in the dark the
+   * accent is a light blue, so anything sitting on a solid fill of it wants
+   * ink rather than more white. */
+  --accent-ink: #0d1117;
+
+  /* --- Semantic --- */
+  --good: #3fb950;
+  --good-strong: #2ea043;
+  --good-bright: #7ee787;
+  --good-vivid: #22c55e;
+  --good-vivid-rgb: 34, 197, 94;
+  --bad: #f85149;
+  --bad-soft: #f87171;
+  --bad-bright: #ff7b72;
+  --warn: #d29922;
+  --warn-deep: #b8860b;
+  --warn-soft: rgba(210, 153, 34, 0.12);
+  --warn-line: rgba(210, 153, 34, 0.45);
+  --orange: #f0883e;
+  --orange-soft: #f78166;
+  --purple: #a78bfa;
+  --purple-2: #a371f7;
+  --cyan: #39c5cf;
+
+  /* Alternating table row. A lift off --bg in the dark, a settle onto it in
+   * the light — both about one step, so a striped table never looks banded. */
+  --zebra: #14171d;
+
+  /* --- Heat map. Foreground is what a cell's text mixes toward at heat 1;
+   * -fill is what tints its background; -base is the colour at heat 0, i.e.
+   * a value sitting on the field average. --heat-fill-max is how strong the
+   * tint gets, and it is a token because a wash that reads on black is
+   * invisible on white. See the .z-val rules in bakers-buns.css. --- */
+  --heat-base: #6e7681;
+  --heat-good: #3fb950;
+  --heat-good-fill: #2ea043;
+  --heat-bad: #f0883e;
+  --heat-bad-fill: #f0883e;
+  --heat-warn: #d29922;
+  --heat-warn-fill: #d29922;
+  --heat-info: #58a6ff;
+  --heat-info-fill: #58a6ff;
+  --heat-fill-max: 24%;
+
+  /* The sequential (green→red) and diverging (green wash) scales the league
+   * pages draw with. Both are built in CSS from a value the view hands over as
+   * a custom property — a hue for the first, a 0..1 intensity for the second —
+   * so the scale re-colours with the theme without the table being rebuilt.
+   * Light mode drops the lightness rather than changing the hues: the same
+   * green has to be the same green, just dark enough to read on white. */
+  --heat-seq-sat: 70%;
+  --heat-seq-light: 45%;
+  --heat-null: #8b949e;
+  --heat-z-fill: #22c55e;
+  --heat-z-rgb: 34, 197, 94;
+  --heat-z-max: 100%;
+
+  /* --- Status tints ---
+   * A tinted plate plus its hairline, for the chips and banners that say what
+   * happened to a bet or a hole. In the dark these are a saturated colour
+   * dragged down toward the page; in the light they are the same hue dragged
+   * up toward white, which is why they cannot simply be an opacity of the
+   * semantic colours above. -ink is the text that goes on the plate. */
+  --good-tint: #10251a;
+  --good-line: #1f6f33;
+  --good-solid: #238636;
+  --good-solid-2: #1f6f43;
+  --bad-tint: #2a1516;
+  --bad-tint-hi: #3d1d1d;
+  --bad-line: #6e2a2a;
+  --bad-line-hi: #8e3a3a;
+  --warn-tint: #2d2410;
+  --warn-line-2: #6b4f1a;
+  --warn-line-3: #9e7b1f;
+  --warn-ink: #f0d98c;
+  --info-tint: #1f2d3d;
+  --info-tint-2: #1f2b4d;
+  --info-line: #2f4574;
+  --info-line-2: #1f4068;
+  --info-ink: #79c0ff;
+  --surface-hover: #1c2230;
+  /* The two washes under the cumulative P/L line, above and below zero. */
+  --pl-up-fill: rgba(46, 160, 67, 0.13);
+  --pl-down-fill: rgba(248, 81, 73, 0.13);
+
+  /* Golf's live-round green, and the lime the leaderboard marks a win with.
+   * The lime is a signal colour rather than a brand one, so in the light it
+   * becomes the darkest olive that still reads as the same mark. */
+  --lime: #c8f542;
+  --lime-ink: #111111;
+
+  /* The plate behind a transparent team logo. Those PNGs are drawn for a light
+   * background, so this is white in the dark; in the light it steps off white
+   * instead, or the tile it sits in would have no edge at all. */
+  --logo-plate: #ffffff;
+
+  /* Hole-by-hole wash on the leaderboard — same idea as --heat-*-fill, and
+   * for the same reason it is a token: an 0.25 alpha green reads on black and
+   * disappears on white. */
+  --hole-good: rgba(74, 222, 128, 0.25);
+  --hole-good-hi: rgba(74, 222, 128, 0.45);
+  --hole-bad: rgba(248, 113, 113, 0.25);
+  --hole-bad-hi: rgba(248, 113, 113, 0.4);
+
+  /* --- Depth --- */
+  --overlay: rgba(0, 0, 0, 0.5);
+  --overlay-strong: rgba(0, 0, 0, 0.7);
+  --scrim: rgba(8, 10, 14, 0.94);
+  --shadow-color: rgba(0, 0, 0, 0.5);
+  --shadow-color-lg: rgba(0, 0, 0, 0.6);
+  --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.45);
+  --shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.6);
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+
+  /* The whites stay white and the greys step down off them, so a card, a
+   * table header and a rule each read as their own surface rather than as a
+   * slightly-off shade of the page. The muted end of the text ramp is pulled
+   * down with them: --text-4 and --text-5 have to clear 4.5:1 on --surface,
+   * not just on --bg, and --surface is the darker surface now. */
+  --bg: #ffffff;
+  --bg-alt: #eef1f5;
+  --surface: #eaeef3;
+  --surface-2: #dae1e9;
+  --surface-3: #e2e7ee;
+  --border: #c3ccd8;
+  --border-soft: #c8d1db;
+
+  --panel: #ffffff;
+  --panel-lo: #f3f6f9;
+  --panel-hi: #eaeef3;
+  --panel-hi2: #e2e7ee;
+  --hairline: #c6cfda;
+  --hairline-hi: #b6c0cd;
+
+  --text-hi: #0b1219;
+  --text-bright: #0b1219;
+  --text: #1f2937;
+  --text-2: #374151;
+  --text-3: #4d5a67;
+  --text-4: #586470;
+  --text-5: #5b646f;
+
+  --accent: #1a5fb4;
+  --accent-2: #1a5fb4;
+  --accent-hover: #12447f;
+  --accent-strong: #12447f;
+  --accent-soft: rgba(26, 95, 180, 0.09);
+  --accent-soft-2: rgba(26, 95, 180, 0.09);
+  --accent-faint: rgba(26, 95, 180, 0.06);
+  --accent-line: rgba(26, 95, 180, 0.32);
+  --accent-line-soft: #c2d3e8;
+  --accent-ring: rgba(26, 95, 180, 0.28);
+  --on-accent: #ffffff;
+  --accent-ink: #ffffff;
+
+  --good: #147236;
+  --good-strong: #147236;
+  --good-bright: #0f6b2e;
+  --good-vivid: #147236;
+  --good-vivid-rgb: 23, 128, 61;
+  --bad: #bc2921;
+  --bad-soft: #bc2921;
+  --bad-bright: #a8201a;
+  --warn: #865a00;
+  --warn-deep: #7a5200;
+  --warn-soft: rgba(180, 122, 10, 0.12);
+  --warn-line: rgba(180, 122, 10, 0.42);
+  --orange: #a04a08;
+  --orange-soft: #b45309;
+  --purple: #5b3fc4;
+  --purple-2: #5b3fc4;
+  --cyan: #0d6b84;
+
+  --zebra: #eff2f6;
+
+  /* Foregrounds darken so they read on white; fills stay bright, because a
+   * 24%-of-dark-green wash turns grey rather than green. The tint is pushed a
+   * little harder to survive the white behind it. */
+  --heat-base: #5b646d;
+  --heat-good: #17803d;
+  --heat-good-fill: #35c05f;
+  --heat-bad: #b4530a;
+  --heat-bad-fill: #f2942f;
+  --heat-warn: #8a5d00;
+  --heat-warn-fill: #e0b13a;
+  --heat-info: #1a5fb4;
+  --heat-info-fill: #4d94f0;
+  --heat-fill-max: 34%;
+  --heat-seq-sat: 64%;
+  --heat-seq-light: 31%;
+  --heat-null: #767f8b;
+  --heat-z-fill: #35c05f;
+  --heat-z-rgb: 53, 192, 95;
+  --heat-z-max: 78%;
+
+  --good-tint: #e7f4ec;
+  --good-line: #a8d3b8;
+  --good-solid: #1a7f37;
+  --good-solid-2: #17803d;
+  --bad-tint: #fdeceb;
+  --bad-tint-hi: #fbdcda;
+  --bad-line: #f0b8b3;
+  --bad-line-hi: #e08b85;
+  --warn-tint: #fbf3e0;
+  --warn-line-2: #ddc48a;
+  --warn-line-3: #d3b878;
+  --warn-ink: #7a5200;
+  --info-tint: #eaf1fb;
+  --info-tint-2: #e4edfb;
+  --info-line: #bcd2ec;
+  --info-line-2: #bcd2ec;
+  --info-ink: #1a5fb4;
+  --surface-hover: #e2e7ee;
+  --pl-up-fill: rgba(23, 128, 61, 0.12);
+  --pl-down-fill: rgba(192, 42, 34, 0.1);
+
+  --lime: #4d6b00;
+  --lime-ink: #ffffff;
+  --logo-plate: #e6eaf0;
+
+  --hole-good: rgba(23, 128, 61, 0.16);
+  --hole-good-hi: rgba(23, 128, 61, 0.3);
+  --hole-bad: rgba(192, 42, 34, 0.14);
+  --hole-bad-hi: rgba(192, 42, 34, 0.26);
+
+  --overlay: rgba(20, 28, 38, 0.26);
+  --overlay-strong: rgba(20, 28, 38, 0.5);
+  --scrim: rgba(255, 255, 255, 0.94);
+  --shadow-color: rgba(16, 24, 40, 0.12);
+  --shadow-color-lg: rgba(16, 24, 40, 0.18);
+  --shadow-sm: 0 1px 3px rgba(16, 24, 40, 0.08);
+  --shadow: 0 4px 14px rgba(16, 24, 40, 0.1);
+  --shadow-lg: 0 10px 28px rgba(16, 24, 40, 0.14);
+}

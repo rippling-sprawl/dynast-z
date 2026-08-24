@@ -13,7 +13,7 @@
   align-items: center;
   justify-content: center;
   padding: 32px;
-  background: rgba(8, 10, 14, 0.94);
+  background: var(--scrim);
   cursor: zoom-out;
   opacity: 0;
   transition: opacity 0.15s ease;
@@ -43,12 +43,12 @@
   padding: 4px 10px;
   font-size: 30px;
   line-height: 1;
-  color: #8b949e;
+  color: var(--text-3);
   cursor: pointer;
 }
 
-.lightbox-close:hover { color: #f0f6fc; }
-.lightbox-close:focus-visible { outline: 2px solid #58a6ff; outline-offset: 2px; }
+.lightbox-close:hover { color: var(--text-hi); }
+.lightbox-close:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 /* The page underneath is pinned rather than merely `overflow: hidden`, since
  * iOS keeps scrolling the body behind a fixed overlay otherwise. The scroll
@@ -87,7 +87,7 @@ img[data-no-lightbox] {
 img[data-lightbox]:focus-visible,
 img.lightboxable:focus-visible,
 figure img:focus-visible {
-  outline: 2px solid #58a6ff;
+  outline: 2px solid var(--accent);
   outline-offset: 3px;
 }
 

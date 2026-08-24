@@ -65,12 +65,25 @@
   /* Borrowed wholesale from the table's palette — see the file comment for why
    * none of these are new. GUIDE is the fit line and the zero rule; they are
    * scenery, and sit a step below the axis labels on purpose. */
-  var GREEN = '#3fb950';
-  var ORANGE = '#f0883e';
-  var AXIS = '#2a2a2a';
-  var GUIDE = '#484f58';
-  var INK = '#8b949e';
-  var INK_HI = '#f0f0f0';
+  /* The chart's palette, read from the theme tokens rather than fixed, because
+   * an SVG built by string concatenation cannot spend `var(--x)` the way a
+   * stylesheet can. Refreshed at the top of every draw() and after a theme
+   * change, so the same constants below stay correct in both themes. The
+   * fallbacks are the dark values, which is what a page with no theme.js
+   * loaded should still get. */
+  var GREEN, ORANGE, AXIS, GUIDE, INK, INK_HI;
+
+  function refreshPalette() {
+    var c = (window.Theme && window.Theme.color) || function (t, f) { return f; };
+    GREEN = c('--good', '#3fb950');
+    ORANGE = c('--orange', '#f0883e');
+    AXIS = c('--hairline', '#2a2a2a');
+    GUIDE = c('--text-5', '#484f58');
+    INK = c('--text-3', '#8b949e');
+    INK_HI = c('--text-bright', '#f0f0f0');
+  }
+
+  refreshPalette();
 
   /* Three widths doing three different jobs, which used to be one constant.
    * COMPACT_W is where the layout changes shape; MIN_W is where it stops
@@ -194,6 +207,7 @@
   /* ---------- the chart ---------- */
 
   function draw(host, teams, matches, scoreOf, market) {
+    refreshPalette();
     market = market || fallbackMarket(teams);
     var pts = points(teams, scoreOf, market);
     var f = fit(pts);
@@ -555,6 +569,13 @@
       if (host && cache.width != null && Math.floor(host.clientWidth) === cache.width) return;
       renderBoard(cache.teams, cache.matches, cache.scoreOf, cache.market);
     }, 150);
+  });
+
+  /* The theme is not a resize, but it lands the same way: every colour in the
+   * SVG was baked in as a string, so the chart has to be drawn again. */
+  window.addEventListener('themechange', function () {
+    if (!cache.teams) return;
+    renderBoard(cache.teams, cache.matches, cache.scoreOf, cache.market);
   });
 
   window.renderBoard = renderBoard;

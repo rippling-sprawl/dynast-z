@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <link rel="icon" type="image/png" href="/favicon.png">
   <title>2026 Golf Season | Dynast-Z</title>
+  <!-- Theme first: theme.js sets <html data-theme> before the first paint,
+       theme.css holds every colour token the sheets below spend. -->
+  <script src="/scripts/base/theme.js"></script>
+  <link rel="stylesheet" href="/styles/base/theme.css">
   <link rel="stylesheet" href="/styles/base/styles.css">
   <link rel="stylesheet" href="/styles/base/hub.css">
   <link rel="stylesheet" href="/styles/primary/golf.css">
@@ -30,32 +34,32 @@
 
   <style>
     .tournament-card {
-      background: #1a1a1a;
-      border: 1px solid #2a2a2a;
+      background: var(--panel-hi);
+      border: 1px solid var(--hairline);
       border-radius: 6px;
       padding: 16px;
       text-decoration: none;
-      color: #e0e0e0;
+      color: var(--text);
       transition: border-color 0.15s;
       display: block;
     }
     .tournament-card:hover {
-      border-color: #60a5fa;
+      border-color: var(--accent-2);
     }
     .tournament-card h3 {
       font-size: 14px;
       font-weight: 600;
-      color: #f0f0f0;
+      color: var(--text-bright);
       margin-bottom: 4px;
     }
     .tournament-card .venue {
       font-size: 11px;
-      color: #888;
+      color: var(--text-3);
       margin: 0 0 8px;
     }
     .tournament-card .dates {
       font-size: 11px;
-      color: #aaa;
+      color: var(--text-2);
       font-family: monospace;
     }
     .status-badge {
@@ -67,9 +71,9 @@
       border-radius: 3px;
       margin-left: 8px;
     }
-    .status-badge.complete { background: #4ade80; color: #111; }
-    .status-badge.live { background: #f59e0b; color: #111; }
-    .status-badge.upcoming { background: #333; color: #888; }
+    .status-badge.complete { background: var(--good); color: var(--panel-lo); }
+    .status-badge.live { background: var(--warn); color: var(--panel-lo); }
+    .status-badge.upcoming { background: var(--hairline); color: var(--text-3); }
   </style>
 
   <script>

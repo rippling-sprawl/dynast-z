@@ -21,7 +21,7 @@
   gap: 8px;
   margin: 13px 0 2px;
   padding-bottom: 2px;
-  border-bottom: 1px solid #21262d;
+  border-bottom: 1px solid var(--surface-2);
 }
 
 .sched-group:first-child { margin-top: 0; }
@@ -31,7 +31,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.7px;
-  color: #8b949e;
+  color: var(--text-3);
   font-family: monospace;
   margin: 0;
   line-height: 1.4;
@@ -39,7 +39,7 @@
 
 .sched-group .sched-group-sub {
   font-size: 10px;
-  color: #484f58;
+  color: var(--text-5);
   font-family: monospace;
 }
 
@@ -78,22 +78,22 @@
 }
 
 .sched-game .sched-wk {
-  color: #484f58;
+  color: var(--text-5);
   text-align: right;
 }
 
 /* Right-aligned so the gap to the time column is the same on a "Sep 9" row as
  * on a "Sep 14" one. */
 .sched-game .sched-date {
-  color: #8b949e;
+  color: var(--text-3);
   text-align: right;
 }
 
-.sched-game.is-tbd .sched-date { color: #6e7681; }
+.sched-game.is-tbd .sched-date { color: var(--text-4); }
 
 /* Striping restarts inside each .sched-rows group — the day/week headers are
  * siblings of the rows, so counting across the whole list stripes arbitrarily. */
-.sched-rows .sched-game:nth-child(even) { background: #14171d; }
+.sched-rows .sched-game:nth-child(even) { background: var(--zebra); }
 
 /* --- Slate break ---
  * The rule between the 1:00 games and the 4:00 ones. A Sunday is two blocks of
@@ -101,7 +101,7 @@
  * are one level up. Heavier than the header underline so it reads as a divider
  * inside the day rather than as the start of a new one. */
 .sched-rows .sched-game.is-slate-break {
-  border-top: 2px solid #30363d;
+  border-top: 2px solid var(--border);
   margin-top: 4px;
   padding-top: 4px;
   border-radius: 0 0 4px 4px;
@@ -110,12 +110,12 @@
 .sched-game .sched-time {
   font-family: monospace;
   font-size: 11px;
-  color: #8b949e;
+  color: var(--text-3);
   text-align: right;
   white-space: nowrap;
 }
 
-.sched-game.is-tbd .sched-time { color: #484f58; }
+.sched-game.is-tbd .sched-time { color: var(--text-5); }
 
 .sched-matchup {
   display: flex;
@@ -140,7 +140,7 @@
   width: 3ch;
   font-weight: 600;
   font-size: 12px;
-  color: #e1e4e8;
+  color: var(--text);
 }
 
 .sched-team.away { text-align: right; }
@@ -148,18 +148,18 @@
 
 /* The filtered team, so a single row still reads at a glance which side is
  * "yours" when the matchup is scanned in a list of seventeen. */
-.sched-team.is-picked { color: #58a6ff; }
+.sched-team.is-picked { color: var(--accent); }
 
 .sched-at {
   width: 2ch;
   text-align: center;
-  color: #484f58;
+  color: var(--text-5);
   font-size: 10px;
 }
 
 .sched-venue {
   font-size: 10px;
-  color: #484f58;
+  color: var(--text-5);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -179,7 +179,7 @@
   font-size: 11px;
   font-weight: 600;
   min-width: 7ch;
-  color: #8b949e;
+  color: var(--text-3);
   white-space: nowrap;
   flex: none;
 }
@@ -187,8 +187,8 @@
 /* The verdict is the thing being read, so it carries the colour — the same
  * green and red the score cells elsewhere on the site use. A tie keeps the
  * neutral grey above: it is neither, and there have been two since 2020. */
-.sched-result.is-w { color: #3fb950; }
-.sched-result.is-l { color: #f85149; }
+.sched-result.is-w { color: var(--good); }
+.sched-result.is-l { color: var(--bad); }
 
 /* --- Slot badge ---
  * There is deliberately no `.regular` rule: a regular game renders no badge at
@@ -208,14 +208,14 @@
 }
 
 .sched-slot.odd {
-  color: #d29922;
-  border-color: rgba(210, 153, 34, 0.45);
-  background: rgba(210, 153, 34, 0.12);
+  color: var(--warn);
+  border-color: var(--warn-line);
+  background: var(--warn-soft);
 }
 
 .sched-slot.tbd {
-  color: #6e7681;
-  border-color: #30363d;
+  color: var(--text-4);
+  border-color: var(--border);
   border-style: dashed;
 }
 
@@ -225,13 +225,13 @@
  * it is a week of the season, just one with no game in it. */
 .sched-bye,
 .sched-bye .sched-date {
-  color: #484f58;
+  color: var(--text-5);
   font-style: italic;
 }
 
 .sched-empty {
   font-size: 13px;
-  color: #8b949e;
+  color: var(--text-3);
   padding: 16px 8px;
 }
 
@@ -248,7 +248,7 @@
   gap: 6px 14px;
   margin-top: 14px;
   padding-top: 9px;
-  border-top: 1px solid #21262d;
+  border-top: 1px solid var(--surface-2);
 }
 
 .sched-links-label {
@@ -256,13 +256,13 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.7px;
-  color: #8b949e;
+  color: var(--text-3);
   font-family: monospace;
 }
 
 .sched-links a {
   font-size: 12px;
-  color: #58a6ff;
+  color: var(--accent);
   text-decoration: none;
 }
 

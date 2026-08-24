@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <link rel="icon" type="image/png" href="/favicon.png">
   <title>Football | Dynast-Z</title>
+  <!-- Theme first: theme.js sets <html data-theme> before the first paint,
+       theme.css holds every colour token the sheets below spend. -->
+  <script src="/scripts/base/theme.js"></script>
+  <link rel="stylesheet" href="/styles/base/theme.css">
   <link rel="stylesheet" href="/styles/base/styles.css">
   <link rel="stylesheet" href="/styles/base/hub.css">
 </head>
@@ -23,15 +27,15 @@
     
     <h3 class="hub-section">NFL & Betting</h3>
     <div class="hub-grid">
-      <a class="hub-card" href="/football/bakers-buns"><h3><span class="hub-emoji">📝</span>Baker&rsquo;s Buns</h3><p>Season notes, projections &amp; open positions</p></a>
+      <a class="hub-card" href="/football/bakers-buns"><h3><span class="hub-emoji">🍞</span>Baker&rsquo;s Buns</h3><p>Season notes, projections &amp; open positions</p></a>
       <a class="hub-card" href="/football/schedule"><h3><span class="hub-emoji">📅</span>NFL Schedule</h3><p>The full season by week &amp; team, primetime flagged</p></a>
       <!--<a class="hub-card" href="/odds"><h3><span class="hub-emoji">🎲</span>NFL Odds</h3><p>From Fanduel, Draft Kings, and The Score</p></a>-->
     </div>
 
     <h3 class="hub-section">Fantasy Tools</h3>
     <div class="hub-grid">
-      <a class="hub-card" href="/bakers-oven"><h3><span class="hub-emoji">🔥</span>Baker&rsquo;s Oven</h3><p>Live draft companion &mdash; your leagues, big board &amp; next pick</p></a>
-      <a class="hub-card" href="/trade-calculator"><h3><span class="hub-emoji">⚖️</span>Trade Calculator</h3><p>Value any dynasty trade with blended rankings</p></a>
+      <a class="hub-card" href="/football/bakers-oven"><h3><span class="hub-emoji">🔥</span>Baker&rsquo;s Oven</h3><p>Live draft companion &mdash; your leagues, big board &amp; next pick</p></a>
+      <a class="hub-card" href="/football/trade-calculator"><h3><span class="hub-emoji">⚖️</span>Trade Calculator</h3><p>Value any dynasty trade with blended rankings</p></a>
       <a class="hub-card" href="/football/grading-system"><h3><span class="hub-emoji">📊</span>Grading System</h3><p>How player &amp; pick values are calculated</p></a>
     </div>
     
@@ -48,7 +52,7 @@
       font-size: 12px;
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      color: #888;
+      color: var(--text-3);
       font-family: monospace;
       font-weight: 700;
       margin: 28px 0 0;
@@ -61,11 +65,11 @@
     .fp-stale-banner {
       margin: 16px 0 4px;
       padding: 10px 14px;
-      border: 1px solid #b8860b;
+      border: 1px solid var(--warn-deep);
       border-left-width: 4px;
       border-radius: 6px;
-      background: rgba(184, 134, 11, 0.12);
-      color: #b8860b;
+      background: var(--warn-soft);
+      color: var(--warn-deep);
       font-size: 13px;
       line-height: 1.4;
     }

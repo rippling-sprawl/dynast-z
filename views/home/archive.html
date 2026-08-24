@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <link rel="icon" type="image/png" href="/favicon.png">
   <title>Archive | Dynast-Z</title>
+  <!-- Theme first: theme.js sets <html data-theme> before the first paint,
+       theme.css holds every colour token the sheets below spend. -->
+  <script src="/scripts/base/theme.js"></script>
+  <link rel="stylesheet" href="/styles/base/theme.css">
   <link rel="stylesheet" href="/styles/base/styles.css">
   <link rel="stylesheet" href="/styles/base/hub.css">
   <link rel="stylesheet" href="/styles/base/lightbox.css">
@@ -33,33 +37,33 @@
     .archive-season h3 {
       font-size: 16px;
       font-weight: 700;
-      color: #f0f0f0;
+      color: var(--text-bright);
       margin-bottom: 8px;
       padding-bottom: 8px;
-      border-bottom: 1px solid #2a2a2a;
+      border-bottom: 1px solid var(--hairline);
     }
     .archive-tournament {
       display: block;
       padding: 12px;
       margin-bottom: 4px;
-      background: #1a1a1a;
-      border: 1px solid #2a2a2a;
+      background: var(--panel-hi);
+      border: 1px solid var(--hairline);
       border-radius: 6px;
       text-decoration: none;
-      color: #e0e0e0;
+      color: var(--text);
       transition: border-color 0.15s;
     }
     .archive-tournament:hover {
-      border-color: #60a5fa;
+      border-color: var(--accent-2);
     }
     .archive-tournament .name {
       font-weight: 600;
       font-size: 13px;
-      color: #f0f0f0;
+      color: var(--text-bright);
     }
     .archive-tournament .meta {
       font-size: 11px;
-      color: #888;
+      color: var(--text-3);
       margin-top: 2px;
     }
   </style>

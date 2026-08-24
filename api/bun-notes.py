@@ -5,8 +5,9 @@ GET    : every note, oldest first. `?team=CHI` narrows to one team, `?team=` to
          the league-wide ones. Public, because the notes are published reading
          for everyone; the page renders them for signed-out visitors too.
 PUT    : create or update. Body is one note object or {"notes": [...]} so the
-         modal's multi-bullet save is a single request. Admin only.
-DELETE : ?id=n_x, one note. Admin only.
+         modal's multi-bullet save is a single request. Any active account may
+         write; an existing note needs its author or an admin.
+DELETE : ?id=n_x, one note. Its author or an admin.
 
 Storage: a Supabase table `bun_notes(id text pk, team, week, data jsonb, ...)`.
 See scripts/sql/bun_notes.sql for the schema and scripts/seed_bun_notes.py for
@@ -16,6 +17,7 @@ from http.server import BaseHTTPRequestHandler
 from datetime import datetime, timezone
 import json
 import os
+import re
 import urllib.parse
 import urllib.request
 
@@ -29,6 +31,11 @@ WEEKS = {"all", "pre", "wc", "div", "conf", "sb"} | {str(n) for n in range(1, 19
 KINDS = {"note", "schedule"}
 MAX_TEXT = 2000
 MAX_BATCH = 50
+
+# Ids are minted by the client ('n_...') or by the seeder ('seed_CHI_note_0'),
+# so they are only ever this alphabet. Pinning that down is also what makes them
+# safe to interpolate into the `id=in.(...)` filter the ownership pre-read uses.
+NOTE_ID = re.compile(r"^[A-Za-z0-9_-]{1,64}$")
 
 
 def supabase_request(path, method="GET", body=None, headers=None):
@@ -53,6 +60,56 @@ def fetch_user(user_id):
 
 def now_iso():
     return datetime.now(timezone.utc).isoformat()
+
+
+# ---- who may write what -----------------------------------------------------
+# The notes are a shared, published store: anyone signed in may file one, and
+# owns what they filed. An admin owns everything. These three live at module
+# level rather than on the handler because server.py loads this file to mirror
+# the rule locally — see bun_notes_api() there.
+
+
+def resolve_actor(user_id):
+    """Returns (user_id, is_admin, error), error being None or (status, body).
+
+    Any active account may write notes; the admin flag decides whose notes they
+    may touch besides their own.
+    """
+    if not user_id:
+        return None, False, (401, {"error": "Not authenticated"})
+    user = fetch_user(user_id)
+    if not user or user.get("status") is not True:
+        return None, False, (403, {"error": "Account is inactive"})
+    return user_id, user.get("role") == "admin", None
+
+
+def fetch_authors(ids):
+    """Map of note id -> authorId, for the ids that already exist.
+
+    One query for the whole batch. A missing key means the note is new; a None
+    value means an unowned note — the seeded import filed those with no author
+    (see scripts/seed_bun_notes.py), so only an admin can touch them.
+    """
+    ids = [i for i in ids if i]
+    if not ids:
+        return {}
+    quoted = ",".join('"' + i + '"' for i in ids)
+    rows = supabase_request(
+        "bun_notes?id=in.(" + urllib.parse.quote(quoted) + ")&select=id,data")
+    return {r["id"]: (r.get("data") or {}).get("authorId") for r in (rows or [])}
+
+
+def may_write(authors, note_id, user_id, is_admin):
+    """None when the write is allowed, else the message to 403 with.
+
+    A note whose id is not in `authors` does not exist yet, and creating one is
+    always allowed.
+    """
+    if is_admin or note_id not in authors:
+        return None
+    if authors[note_id] and authors[note_id] == user_id:
+        return None
+    return "You can only edit your own notes"
 
 
 def clean_source(src):
@@ -82,14 +139,32 @@ def clean_source(src):
     return {"url": url, "handle": parts[0]}
 
 
-def normalize(note, author_id):
-    """Validate one note off the wire. Returns (row, error_message)."""
+def note_id_of(note):
+    """Pull the id off a note from the wire. Returns (id, error_message).
+
+    Split out of normalize() because the ids have to be read and checked before
+    anything else: they are what the ownership pre-read asks about, and its
+    answer is what normalize() then stamps as the author.
+    """
     if not isinstance(note, dict):
         return None, "note must be an object"
-
     note_id = (note.get("id") or "").strip()
     if not note_id:
         return None, "note id is required"
+    if not NOTE_ID.match(note_id):
+        return None, f"invalid note id {note_id!r}"
+    return note_id, None
+
+
+def normalize(note, author_id):
+    """Validate one note off the wire. Returns (row, error_message).
+
+    `author_id` is the note's owner as resolved by the caller: the requester for
+    a new note, the original author for an edit.
+    """
+    note_id, error = note_id_of(note)
+    if error:
+        return None, error
 
     text = (note.get("text") or "").strip()
     if not text:
@@ -114,8 +189,9 @@ def normalize(note, author_id):
         "kind": kind,
         "text": text,
         # The author and the timestamps are stamped here, not accepted from the
-        # client. createdAt is only taken from the body when the client is
-        # editing a note it already has, so an edit keeps its original date.
+        # client. Both the author and createdAt are carried forward on an edit
+        # rather than restamped: an admin correcting someone's note must not
+        # take it off them, and an edit keeps its original date.
         "authorId": author_id,
         "createdAt": note.get("createdAt") or now_iso(),
         "updatedAt": now_iso(),
@@ -138,15 +214,8 @@ def normalize(note, author_id):
 
 
 class handler(BaseHTTPRequestHandler):
-    def _admin(self):
-        """Returns (user_id, error) where error is None or a (status, body) tuple."""
-        user_id = self.headers.get("X-User-Id")
-        if not user_id:
-            return None, (401, {"error": "Not authenticated"})
-        user = fetch_user(user_id)
-        if not user or user.get("status") is not True or user.get("role") != "admin":
-            return None, (403, {"error": "Not authorized to edit notes"})
-        return user_id, None
+    def _actor(self):
+        return resolve_actor(self.headers.get("X-User-Id"))
 
     def do_GET(self):
         params = urllib.parse.parse_qs(
@@ -162,7 +231,7 @@ class handler(BaseHTTPRequestHandler):
             self._json(500, {"error": str(e)})
 
     def do_PUT(self):
-        user_id, err = self._admin()
+        user_id, is_admin, err = self._actor()
         if err:
             self._json(*err)
             return
@@ -182,9 +251,29 @@ class handler(BaseHTTPRequestHandler):
             self._json(400, {"error": f"At most {MAX_BATCH} notes per request"})
             return
 
-        rows = []
+        ids = []
         for note in notes:
-            row, error = normalize(note, user_id)
+            note_id, error = note_id_of(note)
+            if error:
+                self._json(400, {"error": error})
+                return
+            ids.append(note_id)
+
+        try:
+            authors = fetch_authors(ids)
+        except Exception as e:
+            self._json(500, {"error": str(e)})
+            return
+
+        rows = []
+        for note, note_id in zip(notes, ids):
+            refused = may_write(authors, note_id, user_id, is_admin)
+            if refused:
+                self._json(403, {"error": refused})
+                return
+            # An existing note keeps the author it was filed under; a new one is
+            # owned by whoever is writing it.
+            row, error = normalize(note, authors.get(note_id, user_id))
             if error:
                 self._json(400, {"error": error})
                 return
@@ -204,14 +293,26 @@ class handler(BaseHTTPRequestHandler):
             self._json(500, {"error": str(e)})
 
     def do_DELETE(self):
-        _, err = self._admin()
+        user_id, is_admin, err = self._actor()
         if err:
             self._json(*err)
             return
         params = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
-        note_id = params.get("id", [None])[0]
+        note_id = (params.get("id", [None])[0] or "").strip()
         if not note_id:
             self._json(400, {"error": "id parameter is required"})
+            return
+        if not NOTE_ID.match(note_id):
+            self._json(400, {"error": f"invalid note id {note_id!r}"})
+            return
+        try:
+            # An id that matches nothing stays a 200 no-op, as it always was.
+            refused = may_write(fetch_authors([note_id]), note_id, user_id, is_admin)
+        except Exception as e:
+            self._json(500, {"error": str(e)})
+            return
+        if refused:
+            self._json(403, {"error": refused})
             return
         try:
             supabase_request(

@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <link rel="icon" type="image/png" href="/favicon.png">
   <title>Schedule | Dynast-Z</title>
+  <!-- Theme first: theme.js sets <html data-theme> before the first paint,
+       theme.css holds every colour token the sheets below spend. -->
+  <script src="/scripts/base/theme.js"></script>
+  <link rel="stylesheet" href="/styles/base/theme.css">
   <link rel="stylesheet" href="/styles/base/styles.css">
   <link rel="stylesheet" href="/styles/primary/league.css">
   <link rel="stylesheet" href="/styles/primary/league-schedule.css">
@@ -33,12 +37,21 @@
 
     const WEEKS = 14;
 
-    // HSL hue interpolation: green (140) → yellow (60) → red (0)
-    function gradientColor(value, min, max) {
-      if (value == null || max === min) return '#8b949e';
+    // HSL hue interpolation: green (140) → yellow (60) → red (0).
+    // Only the hue is decided here — the saturation and lightness that turn it
+    // into a colour are --heat-seq-* in styles/base/theme.css, because the same
+    // hue needs a darker lightness to read on a white page than on a black one.
+    // A null value gets no hue and falls back to --heat-null via .grad-null.
+    function gradientHue(value, min, max) {
+      if (value == null || max === min) return null;
       const t = Math.max(0, Math.min(1, (value - min) / (max - min)));
-      const hue = 140 - t * 140;
-      return `hsl(${hue.toFixed(0)}, 70%, 45%)`;
+      return (140 - t * 140).toFixed(0);
+    }
+
+    // The style/class pair a gradient-coloured number carries.
+    function gradAttrs(value, min, max) {
+      const hue = gradientHue(value, min, max);
+      return hue == null ? 'class="grad grad-null"' : `class="grad" style="--hue:${hue}"`;
     }
 
     function fmtPr(pr) { return pr == null ? '—' : String(pr); }
@@ -131,7 +144,7 @@
 
       for (const t of sortedTeams) {
         const sos = t._sos;
-        const sosColor = gradientColor(sos, sosMin, sosMax);
+        const sosAttrs = gradAttrs(sos, sosMin, sosMax);
         const avatar = t.avatar
           ? `<img class="team-avatar" src="${t.avatar}" alt="" referrerpolicy="no-referrer">`
           : `<div class="team-avatar"></div>`;
@@ -142,7 +155,7 @@
               <div class="team-col-name">${t.team_name}</div>
               <div class="team-col-meta">
                 <span>PR: <strong>${fmtPr(t.pr)}</strong></span>
-                <span>SoS: <strong style="color:${sosColor}">${fmtSos(sos)}</strong></span>
+                <span>SoS: <strong ${sosAttrs}>${fmtSos(sos)}</strong></span>
               </div>
             </div>
           </div>
@@ -160,14 +173,14 @@
             html += '<td class="opp-cell opp-missing">?</td>';
             continue;
           }
-          const oppPrColor = gradientColor(opp.pr, prMin, prMax);
+          const oppPrAttrs = gradAttrs(opp.pr, prMin, prMax);
           const oppAvatar = opp.avatar
             ? `<img class="team-avatar" src="${opp.avatar}" alt="" referrerpolicy="no-referrer">`
             : `<div class="team-avatar"></div>`;
           html += `<td class="opp-cell">
             <div class="opp-cell-content">
               ${oppAvatar}
-              <div class="opp-pr"><strong style="color:${oppPrColor}">${fmtPr(opp.pr)}</strong></div>
+              <div class="opp-pr"><strong ${oppPrAttrs}>${fmtPr(opp.pr)}</strong></div>
             </div>
           </td>`;
         }

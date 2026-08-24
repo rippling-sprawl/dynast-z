@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <link rel="icon" type="image/png" href="/favicon.png">
   <title>Bets | Dynast-Z</title>
+  <!-- Theme first: theme.js sets <html data-theme> before the first paint,
+       theme.css holds every colour token the sheets below spend. -->
+  <script src="/scripts/base/theme.js"></script>
+  <link rel="stylesheet" href="/styles/base/theme.css">
   <link rel="stylesheet" href="/styles/base/styles.css">
   <link rel="stylesheet" href="/styles/primary/bets.css">
   <link rel="stylesheet" href="/styles/base/lightbox.css">
@@ -64,7 +68,7 @@
         .sort((a, b) => (a.event_date || '').localeCompare(b.event_date || ''));
       const list = document.getElementById('pending-list');
       if (!pending.length) {
-        list.innerHTML = '<div class="bets-empty">No pending bets. <a href="/bets/place" style="color:#58a6ff">Track one →</a></div>';
+        list.innerHTML = '<div class="bets-empty">No pending bets. <a href="/bets/place" style="color:var(--accent)">Track one →</a></div>';
         return;
       }
       list.innerHTML = pending.map(renderBetTile).join('');

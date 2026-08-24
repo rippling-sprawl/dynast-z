@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <link rel="icon" type="image/png" href="/favicon.png">
   <title>Trades | Dynast-Z</title>
+  <!-- Theme first: theme.js sets <html data-theme> before the first paint,
+       theme.css holds every colour token the sheets below spend. -->
+  <script src="/scripts/base/theme.js"></script>
+  <link rel="stylesheet" href="/styles/base/theme.css">
   <link rel="stylesheet" href="/styles/base/styles.css">
   <link rel="stylesheet" href="/styles/primary/filters.css">
   <link rel="stylesheet" href="/styles/primary/trades.css">
@@ -25,9 +29,9 @@
     <div id="sections" style="display: none;">
       <div class="tabs" id="tab-bar"></div>
 
-      <a id="past-trades-link" href="#" style="display: inline-block; margin: 4px 0 8px; font-size: 13px; color: #58a6ff; text-decoration: none;">View Past Trades &rarr;</a>
+      <a id="past-trades-link" href="#" style="display: inline-block; margin: 4px 0 8px; font-size: 13px; color: var(--accent); text-decoration: none;">View Past Trades &rarr;</a>
 
-      <em style="color: #8b949e; font-size: 12px;">This is connected to the Sleeper API, rather than Sal's sheet</em>
+      <em style="color: var(--text-3); font-size: 12px;">This is connected to the Sleeper API, rather than Sal's sheet</em>
       
       <div class="filters">
         <select id="filter-team" class="filter-select">

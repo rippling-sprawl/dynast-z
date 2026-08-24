@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <link rel="icon" type="image/png" href="/favicon.png">
   <title>Tournament | Dynast-Z</title>
+  <!-- Theme first: theme.js sets <html data-theme> before the first paint,
+       theme.css holds every colour token the sheets below spend. -->
+  <script src="/scripts/base/theme.js"></script>
+  <link rel="stylesheet" href="/styles/base/theme.css">
   <link rel="stylesheet" href="/styles/base/styles.css">
   <link rel="stylesheet" href="/styles/base/hub.css">
   <link rel="stylesheet" href="/styles/primary/golf.css">
@@ -41,12 +45,12 @@
     .upcoming-banner {
       text-align: center;
       padding: 32px 16px;
-      color: #888;
+      color: var(--text-3);
       font-size: 13px;
       font-family: monospace;
     }
     .upcoming-banner .upcoming-date {
-      color: #60a5fa;
+      color: var(--accent-2);
       margin-top: 4px;
     }
     .hub-card.disabled {

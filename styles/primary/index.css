@@ -8,7 +8,7 @@
 .home-title {
   font-size: 22px;
   font-weight: 700;
-  color: #f0f6fc;
+  color: var(--text-hi);
   margin-bottom: 20px;
 }
 
@@ -24,16 +24,16 @@
   align-items: center;
   gap: 16px;
   padding: 24px;
-  background: #161b22;
-  border: 1px solid #30363d;
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 12px;
   text-decoration: none;
   transition: background 0.15s, border-color 0.15s, transform 0.15s;
 }
 
 .home-tile:hover {
-  background: #1c2128;
-  border-color: #58a6ff;
+  background: var(--surface-3);
+  border-color: var(--accent);
   transform: translateY(-2px);
 }
 
@@ -49,7 +49,7 @@
   height: 40px;
   object-fit: contain;
   border-radius: 6px;
-  background: #fff;
+  background: var(--logo-plate);
 }
 
 .home-tile-text {
@@ -60,13 +60,13 @@
 .home-tile-title {
   font-size: 18px;
   font-weight: 700;
-  color: #f0f6fc;
+  color: var(--text-hi);
   margin-bottom: 4px;
 }
 
 .home-tile-desc {
   font-size: 13px;
-  color: #8b949e;
+  color: var(--text-3);
 }
 
 @media (max-width: 520px) {

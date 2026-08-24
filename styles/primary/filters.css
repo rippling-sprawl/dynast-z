@@ -7,9 +7,9 @@
 }
 
 .filter-select {
-  background: #21262d;
-  border: 1px solid #30363d;
-  color: #e1e4e8;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text);
   font-size: 13px;
   padding: 6px 10px;
   border-radius: 6px;
@@ -18,19 +18,19 @@
 
 .filter-select:focus {
   outline: none;
-  border-color: #58a6ff;
+  border-color: var(--accent);
 }
 
 .filter-bar {
   padding: 8px 16px;
-  border-bottom: 1px solid #30363d;
+  border-bottom: 1px solid var(--border);
   flex-shrink: 0;
   overflow-x: auto;
 }
 
 .filter-bar::-webkit-scrollbar { height: 4px; }
 .filter-bar::-webkit-scrollbar-track { background: transparent; }
-.filter-bar::-webkit-scrollbar-thumb { background: #30363d; border-radius: 2px; }
+.filter-bar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
 .position-filters {
   display: flex;
@@ -39,9 +39,9 @@
 }
 
 .pos-filter {
-  background: #21262d;
-  border: 1px solid #30363d;
-  color: #8b949e;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text-3);
   font-size: 11px;
   padding: 4px 8px;
   border-radius: 4px;
@@ -50,7 +50,7 @@
 }
 
 .pos-filter.active {
-  background: #1f6feb;
-  border-color: #1f6feb;
-  color: #fff;
+  background: var(--accent-strong);
+  border-color: var(--accent-strong);
+  color: var(--on-accent);
 }

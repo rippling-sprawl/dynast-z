@@ -153,17 +153,16 @@ def bun_notes_api():
     return _bun_notes_api
 
 
-def resolve_notes_admin(headers):
+def resolve_notes_actor(headers):
     """Baker's Buns notes are a published, global store: anyone may read them,
-    only an active admin may write. No audit-target indirection — a note has no
-    owner to manage on behalf of."""
-    user_id = headers.get("X-User-Id")
-    if not user_id:
-        return None, (401, {"error": "Not authenticated"})
-    user = fetch_user(user_id)
-    if not user or user.get("status") is not True or user.get("role") != "admin":
-        return None, (403, {"error": "Not authorized to edit notes"})
-    return user_id, None
+    any active account may add to them, and a note belongs to whoever filed it.
+    Returns (user_id, is_admin, error) — the ownership check itself is
+    api.may_write, against the authors api.fetch_authors reads back.
+
+    Delegated to the deployed function so the two can never disagree about who
+    may write. No audit-target indirection: a note's owner writes it directly,
+    and an admin can already edit any of them."""
+    return bun_notes_api().resolve_actor(headers.get("X-User-Id"))
 
 
 def read_cache(name, ttl=None):
@@ -1473,29 +1472,39 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         elif self.path.split("?")[0] == "/football/bakers-buns":
             self.path = "/views/football/bakers-buns.html"
             super().do_GET()
-        # Baker's Oven — live draft companion. /bakers-oven is the
+        # Baker's Oven — live draft companion. /football/bakers-oven is the
         # account's saved-league list; /{leagueId} is that league's draft and
         # team picker; /{leagueId}/{rosterId} is that team's big board. Only
         # digits match: Sleeper ids are always numeric, and a junk segment
         # should 404 rather than boot a page that will fail against Sleeper.
         # A legacy one-segment roster id lands on oven-league.html, which
         # detects it by length and redirects.
-        #
-        # The route used to be /the-bakers-oven. Saved bookmarks and any board
-        # link already shared keep working via a 301 that drops the article.
-        elif self.path.split("?")[0] == "/the-bakers-oven" or self.path.startswith("/the-bakers-oven/"):
-            self.send_response(301)
-            self.send_header("Location", "/bakers-oven" + self.path[len("/the-bakers-oven"):])
-            self.end_headers()
-        elif self.path.split("?")[0] == "/bakers-oven":
+        elif self.path.split("?")[0] == "/football/bakers-oven":
             self.path = "/views/football/oven-leagues.html"
             super().do_GET()
-        elif re.match(r"^/bakers-oven/\d+/\d+/?$", self.path.split("?")[0]):
+        elif re.match(r"^/football/bakers-oven/\d+/\d+/?$", self.path.split("?")[0]):
             self.path = "/views/football/oven-board.html"
             super().do_GET()
-        elif re.match(r"^/bakers-oven/\d+/?$", self.path.split("?")[0]):
+        elif re.match(r"^/football/bakers-oven/\d+/?$", self.path.split("?")[0]):
             self.path = "/views/football/oven-league.html"
             super().do_GET()
+        elif self.path.split("?")[0] == "/football/trade-calculator":
+            self.path = "/views/football/trade-calculator.html"
+            super().do_GET()
+        # Both tools used to live at the top level, and the Oven before that at
+        # /the-bakers-oven. Saved bookmarks and any board link already shared
+        # keep working via a 301 onto the nested route. Mirrors the redirects
+        # block in vercel.json — the old prefixes go straight to the final
+        # path, so there is never a second hop.
+        elif self.path.split("?")[0] in ("/the-bakers-oven", "/bakers-oven") or (
+            self.path.startswith("/the-bakers-oven/") or self.path.startswith("/bakers-oven/")
+        ):
+            article = "/the-bakers-oven" if self.path.startswith("/the-bakers-oven") else "/bakers-oven"
+            self.send_response(301)
+            self.send_header(
+                "Location", "/football/bakers-oven" + self.path[len(article):]
+            )
+            self.end_headers()
         elif self.path == "/odds":
             self.path = "/views/odds/index.html"
             super().do_GET()
@@ -1574,9 +1583,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         elif self.path == "/acknowledgements":
             self.path = "/views/home/acknowledgements.html"
             super().do_GET()
-        elif self.path == "/trade-calculator":
-            self.path = "/views/tools/trade-calculator.html"
-            super().do_GET()
+        elif self.path.split("?")[0] == "/trade-calculator":
+            self.send_response(301)
+            self.send_header("Location", "/football/trade-calculator")
+            self.end_headers()
         elif self.path == "/" or self.path == "":
             self.path = "/views/index.html"
             super().do_GET()
@@ -1690,11 +1700,11 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             except Exception as e:
                 self._json_response(500, {"error": str(e)})
         elif self.path.startswith("/api/bun-notes"):
-            user_id, err = resolve_notes_admin(self.headers)
+            api = bun_notes_api()
+            user_id, is_admin, err = resolve_notes_actor(self.headers)
             if err:
                 self._json_response(*err)
                 return
-            api = bun_notes_api()
             try:
                 length = int(self.headers.get("Content-Length", 0))
                 body = json.loads(self.rfile.read(length)) if length else {}
@@ -1708,9 +1718,27 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             if len(notes) > api.MAX_BATCH:
                 self._json_response(400, {"error": f"At most {api.MAX_BATCH} notes per request"})
                 return
-            rows = []
+            ids = []
             for note in notes:
-                row, error = api.normalize(note, user_id)
+                note_id, error = api.note_id_of(note)
+                if error:
+                    self._json_response(400, {"error": error})
+                    return
+                ids.append(note_id)
+            try:
+                authors = api.fetch_authors(ids)
+            except Exception as e:
+                self._json_response(500, {"error": str(e)})
+                return
+            rows = []
+            for note, note_id in zip(notes, ids):
+                refused = api.may_write(authors, note_id, user_id, is_admin)
+                if refused:
+                    self._json_response(403, {"error": refused})
+                    return
+                # An existing note keeps the author it was filed under; a new
+                # one is owned by whoever is writing it.
+                row, error = api.normalize(note, authors.get(note_id, user_id))
                 if error:
                     self._json_response(400, {"error": error})
                     return
@@ -1754,14 +1782,28 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
     def do_DELETE(self):
         if self.path.startswith("/api/bun-notes"):
-            _, err = resolve_notes_admin(self.headers)
+            api = bun_notes_api()
+            user_id, is_admin, err = resolve_notes_actor(self.headers)
             if err:
                 self._json_response(*err)
                 return
             params = parse_qs(urlparse(self.path).query)
-            note_id = params.get("id", [None])[0]
+            note_id = (params.get("id", [None])[0] or "").strip()
             if not note_id:
                 self._json_response(400, {"error": "id parameter is required"})
+                return
+            if not api.NOTE_ID.match(note_id):
+                self._json_response(400, {"error": f"invalid note id {note_id!r}"})
+                return
+            try:
+                # An id that matches nothing stays a 200 no-op, as it always was.
+                refused = api.may_write(
+                    api.fetch_authors([note_id]), note_id, user_id, is_admin)
+            except Exception as e:
+                self._json_response(500, {"error": str(e)})
+                return
+            if refused:
+                self._json_response(403, {"error": refused})
                 return
             try:
                 supabase_request(

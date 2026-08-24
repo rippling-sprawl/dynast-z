@@ -36,12 +36,55 @@
   --oven-flame:    #FF7A18;  /* the accent — mine, hot, now */
   --oven-ember:    #C2410C;  /* flame, load-bearing (borders, fills) */
   --oven-frost:    #6AA9D0;  /* counter-accent — cold, stale, offline */
+  --oven-flame-txt:#E08A46;  /* flame as small text, where the full one glares */
+  --oven-ink:      #1A0D03;  /* what goes ON a flame fill */
+
+  /* The same colours as bare channels, so the dozens of alpha tints below can
+   * be one value each instead of one per theme. Anything of the form
+   * `rgba(var(--oven-*-rgb), .n)` follows its parent automatically. */
+  --oven-flame-rgb:  255, 122, 24;
+  --oven-ember-rgb:  194, 65, 12;
+  --oven-frost-rgb:  106, 169, 208;
+  --oven-kiln-rgb:   20, 16, 14;
+  --oven-mortar-rgb: 58, 44, 36;
+  --oven-sheen-rgb:  230, 222, 210;
+  --oven-shadow-rgb: 0, 0, 0;
+  --oven-scrim:      rgba(10, 7, 5, .93);
 
   /* Data first: the chrome of a draft board is numbers, so mono is the default
    * and the sans face is reserved for the one thing that is not a number. */
   --oven-data: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
   --oven-name: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --oven-sign: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+}
+
+/* Baker's Oven in the light. The two axes are unchanged — flame is still mine
+ * and frost is still stale — but every value is re-fired against paper instead
+ * of charcoal. The accent drops to ember, because the full flame reads at
+ * 2.4:1 on white and is a highlighter rather than a colour there. */
+:root[data-theme="light"] {
+  --oven-kiln:     #FBF8F5;  /* page — warm paper, not the site's white */
+  --oven-brick:    #FFFFFF;
+  --oven-brick-hi: #F4EEE8;
+  --oven-mortar:   #E4DAD1;
+  --oven-ash:      #6B5C51;  /* 6.6:1 on kiln */
+  --oven-ash-dim:  #7C6D61;  /* 5.3:1 on kiln, 5.6:1 on brick */
+  --oven-bone:     #201814;
+
+  --oven-flame:    #C2410C;
+  --oven-ember:    #9A3412;
+  --oven-frost:    #2C6F94;
+  --oven-flame-txt:#9A3412;
+  --oven-ink:      #FFF7F1;
+
+  --oven-flame-rgb:  194, 65, 12;
+  --oven-ember-rgb:  154, 52, 18;
+  --oven-frost-rgb:  44, 111, 148;
+  --oven-kiln-rgb:   214, 199, 187;
+  --oven-mortar-rgb: 228, 218, 209;
+  --oven-sheen-rgb:  32, 24, 20;
+  --oven-shadow-rgb: 60, 42, 30;
+  --oven-scrim:      rgba(251, 248, 245, .95);
 }
 
 .oven-content {
@@ -60,7 +103,7 @@ body:has(.oven-content) header {
   border-bottom-color: var(--oven-mortar);
 }
 
-.oven-content ::selection { background: rgba(255, 122, 24, .28); color: var(--oven-bone); }
+.oven-content ::selection { background: rgba(var(--oven-flame-rgb), .28); color: var(--oven-bone); }
 
 /* Focus is never removed, only restyled — this page is keyboard-navigable at
  * 250 rows and the accent is the clearest thing on it. */
@@ -181,9 +224,9 @@ body:has(.oven-content) header {
   border: 1px solid;
 }
 .oven-pill.pre_draft { color: var(--oven-ash);   border-color: var(--oven-mortar); background: var(--oven-brick); }
-.oven-pill.drafting  { color: var(--oven-flame); border-color: var(--oven-ember);  background: rgba(255, 122, 24, .12); }
+.oven-pill.drafting  { color: var(--oven-flame); border-color: var(--oven-ember);  background: rgba(var(--oven-flame-rgb), .12); }
 .oven-pill.paused    { color: var(--oven-ash-dim); border-color: var(--oven-mortar); background: transparent; }
-.oven-pill.complete  { color: var(--oven-frost); border-color: rgba(106, 169, 208, .45); background: rgba(106, 169, 208, .1); }
+.oven-pill.complete  { color: var(--oven-frost); border-color: rgba(var(--oven-frost-rgb), .45); background: rgba(var(--oven-frost-rgb), .1); }
 
 .oven-team-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .oven-team-card {
@@ -288,7 +331,7 @@ button.oven-team-card {
   position: fixed; inset: 0; z-index: 200;
   display: flex; align-items: center; justify-content: center;
   padding: 32px;
-  background: rgba(10, 7, 5, .93);
+  background: var(--oven-scrim);
   cursor: zoom-out;
 }
 .oven-lightbox[hidden] { display: none; }
@@ -327,7 +370,7 @@ button.oven-team-card {
   cursor: pointer;
   transition: border-color .15s, background .15s, color .15s;
 }
-.oven-rank-tile:hover { border-color: var(--oven-flame); background: rgba(255, 122, 24, .05); color: var(--oven-bone); }
+.oven-rank-tile:hover { border-color: var(--oven-flame); background: rgba(var(--oven-flame-rgb), .05); color: var(--oven-bone); }
 .oven-rank-tile svg { width: 16px; height: 16px; flex: none; color: var(--oven-ash-dim); }
 .oven-rank-tile:hover svg { color: var(--oven-flame); }
 .oven-rank-tile .label {
@@ -338,7 +381,7 @@ button.oven-team-card {
 
 .oven-drop { border-style: dashed; }
 .oven-drop.dragover {
-  border-color: var(--oven-flame); background: rgba(255, 122, 24, .08); color: var(--oven-bone);
+  border-color: var(--oven-flame); background: rgba(var(--oven-flame-rgb), .08); color: var(--oven-bone);
 }
 .oven-drop input[type=file] { display: none; }
 
@@ -350,9 +393,9 @@ button.oven-team-card {
   padding: 7px 13px; border-radius: 2px; cursor: pointer; text-decoration: none;
   transition: border-color .15s, color .15s, background .15s;
 }
-.oven-btn:hover { border-color: var(--oven-ember); color: var(--oven-bone); background: rgba(255, 122, 24, .07); }
+.oven-btn:hover { border-color: var(--oven-ember); color: var(--oven-bone); background: rgba(var(--oven-flame-rgb), .07); }
 .oven-btn.primary { background: var(--oven-ember); border-color: var(--oven-ember); color: var(--oven-bone); }
-.oven-btn.primary:hover { background: var(--oven-flame); border-color: var(--oven-flame); color: #1A0D03; }
+.oven-btn.primary:hover { background: var(--oven-flame); border-color: var(--oven-flame); color: var(--oven-ink); }
 .oven-btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
 /* Icon + label buttons — the icon rides at the label's cap height, never larger. */
 .oven-btn.with-icon { display: inline-flex; align-items: center; gap: 7px; }
@@ -375,7 +418,7 @@ button.oven-team-card {
 }
 .oven-msg.ok   { color: var(--oven-bone);  background: var(--oven-brick); border-color: var(--oven-flame); }
 .oven-msg.warn { color: var(--oven-ash);   background: var(--oven-brick); border-color: var(--oven-frost); }
-.oven-msg.err  { color: var(--oven-bone);  background: rgba(194, 65, 12, .15); border-color: var(--oven-ember); }
+.oven-msg.err  { color: var(--oven-bone);  background: rgba(var(--oven-ember-rgb), .15); border-color: var(--oven-ember); }
 
 /* The import's confirm step. A panel, not a message: it owns controls, and
  * #import-msg beside it is a one-shot innerHTML blitz that the next status line
@@ -484,7 +527,7 @@ button.oven-team-card {
   transition: border-color .15s, color .15s, background .15s;
 }
 .oven-refresh svg { width: 13px; height: 13px; }
-.oven-refresh:hover { border-color: var(--oven-ember); color: var(--oven-flame); background: rgba(255, 122, 24, .07); }
+.oven-refresh:hover { border-color: var(--oven-ember); color: var(--oven-flame); background: rgba(var(--oven-flame-rgb), .07); }
 .oven-refresh:disabled { cursor: default; color: var(--oven-flame); border-color: var(--oven-mortar); background: transparent; }
 .oven-refresh.spinning svg { animation: ovenSpin .8s linear infinite; }
 
@@ -534,7 +577,7 @@ button.oven-team-card {
 .oven-chip.active {
   background: var(--oven-flame);
   border-color: var(--oven-flame);
-  color: #1A0D03;
+  color: var(--oven-ink);
 }
 /* Text-input shell. The board's player search is gone; the only thing still
  * wearing this is the CSV paste box on the setup page, which sizes itself. */
@@ -586,9 +629,9 @@ button.oven-team-card {
 .oven-select-chip.active {
   background-color: var(--oven-flame);
   border-color: var(--oven-flame);
-  color: #1A0D03;
-  background-image: linear-gradient(45deg, transparent 50%, #1A0D03 50%),
-                    linear-gradient(135deg, #1A0D03 50%, transparent 50%);
+  color: var(--oven-ink);
+  background-image: linear-gradient(45deg, transparent 50%, var(--oven-ink) 50%),
+                    linear-gradient(135deg, var(--oven-ink) 50%, transparent 50%);
 }
 .oven-select-chip.active:focus { background-color: var(--oven-flame); }
 /* The popup is a native menu, so it draws in the platform's colors unless the
@@ -646,7 +689,7 @@ button.oven-team-card {
   align-items: center;
   gap: 9px;
   padding: 7px 10px;
-  border-bottom: 1px solid rgba(58, 44, 36, .5);
+  border-bottom: 1px solid rgba(var(--oven-mortar-rgb), .5);
   position: relative;
   font-size: 13px;
   /* Most of virtualization's benefit for one CSS line; ignored where unsupported.
@@ -830,7 +873,7 @@ button.oven-team-card {
   background: var(--oven-brick);
   border: 1px solid var(--oven-mortar);
   border-radius: 3px;
-  box-shadow: 0 10px 28px rgba(0, 0, 0, .6);
+  box-shadow: 0 10px 28px rgba(var(--oven-shadow-rgb), .6);
 }
 .oven-grade-menu button {
   display: flex; align-items: center; gap: 9px;
@@ -1167,7 +1210,7 @@ button.oven-team-card {
   background: var(--oven-brick); color: var(--oven-ash-dim);
 }
 .oven-taken.keeper { background: transparent; color: var(--oven-ash-dim); border: 1px solid var(--oven-mortar); }
-.oven-taken.mine   { background: var(--oven-flame); color: #1A0D03; }
+.oven-taken.mine   { background: var(--oven-flame); color: var(--oven-ink); }
 
 /* ---------- pulled from the oven ---------- */
 
@@ -1314,12 +1357,12 @@ body.oven-reordering .oven-grade-btn { pointer-events: none; }
  * not as a rule floating between two equal neighbors. */
 .oven-marker:not(.next) {
   margin: 22px 0 11px;
-  background: linear-gradient(90deg, rgba(255, 122, 24, .09), rgba(255, 122, 24, .02) 70%);
-  border-top: 2px solid rgba(194, 65, 12, .6);
-  border-bottom: 1px solid rgba(194, 65, 12, .3);
+  background: linear-gradient(90deg, rgba(var(--oven-flame-rgb), .09), rgba(var(--oven-flame-rgb), .02) 70%);
+  border-top: 2px solid rgba(var(--oven-ember-rgb), .6);
+  border-bottom: 1px solid rgba(var(--oven-ember-rgb), .3);
 }
 .oven-marker:not(.next) .oven-marker-line {
-  background: linear-gradient(90deg, rgba(194, 65, 12, .55), rgba(194, 65, 12, 0));
+  background: linear-gradient(90deg, rgba(var(--oven-ember-rgb), .55), rgba(var(--oven-ember-rgb), 0));
 }
 .oven-marker:not(.next) .oven-marker-label {
   font-family: var(--oven-sign);
@@ -1335,14 +1378,14 @@ body.oven-reordering .oven-grade-btn { pointer-events: none; }
   font-size: 12px; font-weight: 700; letter-spacing: .02em;
   /* Damped flame, not ash — the numeral is the one thing on the rule you'd
    * actually go looking for, and it ties back to the ember border. */
-  color: #E08A46;
+  color: var(--oven-flame-txt);
   font-variant-numeric: tabular-nums;
 }
 
 .oven-marker.next {
   padding: 13px 10px;
   color: var(--oven-flame);
-  background: linear-gradient(90deg, rgba(255, 122, 24, .14), rgba(255, 122, 24, 0) 70%);
+  background: linear-gradient(90deg, rgba(var(--oven-flame-rgb), .14), rgba(var(--oven-flame-rgb), 0) 70%);
   border-top: 1px solid var(--oven-ember);
   border-bottom: 1px solid var(--oven-ember);
 }
@@ -1361,7 +1404,7 @@ body.oven-reordering .oven-grade-btn { pointer-events: none; }
   color: var(--oven-flame);
   font-variant-numeric: tabular-nums;
 }
-.oven-marker.next .oven-marker-line { background: linear-gradient(90deg, var(--oven-ember), rgba(194, 65, 12, 0)); }
+.oven-marker.next .oven-marker-line { background: linear-gradient(90deg, var(--oven-ember), rgba(var(--oven-ember-rgb), 0)); }
 
 /* ---------- The Chalk ----------
  * The territory above your first horizon: players who will almost certainly be
@@ -1399,7 +1442,7 @@ body.oven-reordering .oven-grade-btn { pointer-events: none; }
   background: repeating-linear-gradient(
     -45deg,
     transparent, transparent 6px,
-    rgba(20, 16, 14, .7) 6px, rgba(20, 16, 14, .7) 9px
+    rgba(var(--oven-kiln-rgb), .7) 6px, rgba(var(--oven-kiln-rgb), .7) 9px
   );
 }
 
@@ -1437,7 +1480,7 @@ body.oven-reordering .oven-grade-btn { pointer-events: none; }
 .oven-row.is-target .oven-pin {
   color: var(--oven-flame);
   border-color: var(--oven-ember);
-  background: rgba(255, 122, 24, .1);
+  background: rgba(var(--oven-flame-rgb), .1);
 }
 /* Targeted rows carry a left rail. It is the row's only one — heat used to own
  * this edge and no longer exists — so it means exactly one thing: intent. */
@@ -1471,7 +1514,7 @@ body.oven-reordering .oven-grade-btn { pointer-events: none; }
   writing-mode: vertical-rl;
   font-family: var(--oven-data);
   font-size: 10px; font-weight: 700;
-  color: #1A0D03; background: var(--oven-flame);
+  color: var(--oven-ink); background: var(--oven-flame);
   border-radius: 2px; padding: 4px 2px;
   font-variant-numeric: tabular-nums;
 }
@@ -1487,7 +1530,7 @@ body.oven-tp-open .oven-tp-tab { opacity: 0; pointer-events: none; }
   display: flex; flex-direction: column;
   background: var(--oven-brick);
   border-left: 1px solid var(--oven-mortar);
-  box-shadow: -18px 0 40px rgba(0, 0, 0, .45);
+  box-shadow: -18px 0 40px rgba(var(--oven-shadow-rgb), .45);
   transform: translateX(100%);
   transition: transform .22s ease;
   visibility: hidden;
@@ -1569,14 +1612,14 @@ body.oven-tp-open .oven-tp { transform: translateX(0); visibility: visible; }
 .oven-tp-row {
   display: flex; align-items: center; gap: 9px;
   padding: 8px 12px;
-  border-bottom: 1px solid rgba(58, 44, 36, .5);
+  border-bottom: 1px solid rgba(var(--oven-mortar-rgb), .5);
 }
 .oven-tp-row:hover { background: var(--oven-brick-hi); }
 .oven-tp-row.compact { padding: 6px 12px; }
 .oven-tp-row.is-gone { opacity: .4; }
 .oven-tp-row.is-gone .oven-tp-name-text { text-decoration: line-through; text-decoration-thickness: 1px; }
 .oven-tp-row.is-target { box-shadow: inset 2px 0 0 var(--oven-flame); }
-.oven-tp-row.filled { background: rgba(20, 16, 14, .5); }
+.oven-tp-row.filled { background: rgba(var(--oven-kiln-rgb), .5); }
 /* Positional-floor rows answer "and if the room runs my position?" — they are
  * fallbacks, not recommendations, so they recede by weight rather than by
  * dimming the name below contrast. */
@@ -1600,7 +1643,7 @@ body.oven-tp-open .oven-tp { transform: translateX(0); visibility: visible; }
 /* An unfilled slot is a fact about the roster, not an error — it recedes, but
  * the slot label stays at full strength because that column is the point. */
 .oven-tm-row.is-empty { background: repeating-linear-gradient(
-    -45deg, transparent 0 6px, rgba(230, 222, 210, .022) 6px 12px); }
+    -45deg, transparent 0 6px, rgba(var(--oven-sheen-rgb), .022) 6px 12px); }
 .oven-tm-row.is-empty:hover { background: var(--oven-brick-hi); }
 .oven-tm-open { color: var(--oven-ash-dim); font-weight: 400; font-style: italic; }
 .oven-tm-note {
@@ -1641,12 +1684,12 @@ body.oven-tp-open .oven-tp { transform: translateX(0); visibility: visible; }
   border-color: transparent; background: none;
   padding: 0 1px; font-size: 12px; line-height: 1.3; letter-spacing: 0;
 }
-.oven-tp-chip.proj   { border-color: transparent; background: rgba(106, 169, 208, .14); color: var(--oven-frost); }
-.oven-tp-chip.hot    { border-color: var(--oven-ember); background: rgba(255, 122, 24, .16); color: var(--oven-flame); }
-.oven-tp-chip.warn   { border-color: rgba(255, 122, 24, .4); color: #E08A46; }
+.oven-tp-chip.proj   { border-color: transparent; background: rgba(var(--oven-frost-rgb), .14); color: var(--oven-frost); }
+.oven-tp-chip.hot    { border-color: var(--oven-ember); background: rgba(var(--oven-flame-rgb), .16); color: var(--oven-flame); }
+.oven-tp-chip.warn   { border-color: rgba(var(--oven-flame-rgb), .4); color: var(--oven-flame-txt); }
 .oven-tp-chip.gone   { border-color: transparent; color: var(--oven-ash-dim); }
 .oven-tp-chip.kept   { border-color: var(--oven-mortar); color: var(--oven-ash); }
-.oven-tp-chip.picked { border-color: transparent; background: var(--oven-flame); color: #1A0D03; }
+.oven-tp-chip.picked { border-color: transparent; background: var(--oven-flame); color: var(--oven-ink); }
 
 .oven-tp-x {
   flex-shrink: 0;
@@ -1717,7 +1760,7 @@ body.oven-tp-open .oven-tp { transform: translateX(0); visibility: visible; }
   body.oven-tp-open::after {
     content: '';
     position: fixed; inset: 0; z-index: 149;
-    background: rgba(0, 0, 0, .55);
+    background: rgba(var(--oven-shadow-rgb), .55);
   }
   .oven-tp-tab { top: auto; bottom: 76px; transform: none; }
   .oven-tp-chips { max-width: 50%; }

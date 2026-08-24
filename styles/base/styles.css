@@ -3,8 +3,8 @@
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: #0f1117;
-  color: #e1e4e8;
+  background: var(--bg);
+  color: var(--text);
   height: auto;
   overflow: auto;
   padding: 0;
@@ -24,8 +24,8 @@ body.scroll-locked {
 }
 
 header {
-  background: #161b22;
-  border-bottom: 1px solid #30363d;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
   padding: 12px 24px;
   display: flex;
   align-items: center;
@@ -38,21 +38,21 @@ header {
 header h1 {
   font-size: 18px;
   font-weight: 600;
-  color: #f0f6fc;
+  color: var(--text-hi);
 }
 
 header a {
-  color: #8b949e;
+  color: var(--text-3);
   text-decoration: none;
   font-size: 13px;
 }
 
-header a:hover { color: #58a6ff; }
+header a:hover { color: var(--accent); }
 
 #loading {
   text-align: center;
   padding: 48px 16px;
-  color: #8b949e;
+  color: var(--text-3);
   font-size: 14px;
 }
 
@@ -67,7 +67,7 @@ header a:hover { color: #58a6ff; }
   display: flex;
   text-align: center;
   gap: 0;
-  border-bottom: 1px solid #30363d;
+  border-bottom: 1px solid var(--border);
   margin-bottom: 16px;
 }
 
@@ -76,26 +76,26 @@ header a:hover { color: #58a6ff; }
   padding: 10px 20px;
   font-size: 14px;
   font-weight: 500;
-  color: #8b949e;
+  color: var(--text-3);
   text-decoration: none;
   border-bottom: 2px solid transparent;
   transition: color 0.15s, border-color 0.15s;
 }
 
-.tab:hover { color: #e1e4e8; }
+.tab:hover { color: var(--text); }
 
 .tab.active {
-  color: #f0f6fc;
-  border-bottom-color: #58a6ff;
+  color: var(--text-hi);
+  border-bottom-color: var(--accent);
 }
 
 .placeholder {
   padding: 24px 16px;
   text-align: center;
-  color: #484f58;
+  color: var(--text-5);
   font-size: 14px;
-  background: #161b22;
-  border: 1px solid #30363d;
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 8px;
 }
 
@@ -112,9 +112,9 @@ header a:hover { color: #58a6ff; }
   display: inline-block;
   font-size: 9px;
   font-weight: 700;
-  color: #8b949e;
-  background: #21262d;
-  border: 1px solid #30363d;
+  color: var(--text-3);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
   padding: 0 4px;
   border-radius: 3px;
   vertical-align: middle;
@@ -124,9 +124,9 @@ header a:hover { color: #58a6ff; }
 
 /* Share trade button */
 .share-btn {
-  background: #21262d;
-  border: 1px solid #30363d;
-  color: #8b949e;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text-3);
   font-size: 12px;
   font-weight: 600;
   font-family: inherit;
@@ -138,9 +138,9 @@ header a:hover { color: #58a6ff; }
 }
 
 .share-btn:hover {
-  background: #58a6ff;
-  color: #fff;
-  border-color: #58a6ff;
+  background: var(--accent);
+  color: var(--on-accent);
+  border-color: var(--accent);
 }
 
 .share-btn:disabled {
@@ -154,8 +154,8 @@ header a:hover { color: #58a6ff; }
   bottom: 24px;
   left: 50%;
   transform: translateX(-50%) translateY(8px);
-  background: #f0f6fc;
-  color: #0d1117;
+  background: var(--text-hi);
+  color: var(--bg-alt);
   padding: 8px 16px;
   border-radius: 8px;
   font-size: 13px;
@@ -175,7 +175,7 @@ header a:hover { color: #58a6ff; }
 .hamburger {
   background: none;
   border: none;
-  color: #8b949e;
+  color: var(--text-3);
   font-size: 22px;
   cursor: pointer;
   padding: 4px;
@@ -184,14 +184,14 @@ header a:hover { color: #58a6ff; }
   align-items: center;
 }
 
-.hamburger:hover { color: #f0f6fc; }
+.hamburger:hover { color: var(--text-hi); }
 
 .nav-overlay {
   display: none;
   position: fixed;
   inset: 0;
   z-index: 200;
-  background: rgba(0, 0, 0, 0.5);
+  background: var(--overlay);
 }
 
 .nav-overlay.open { display: block; }
@@ -203,8 +203,8 @@ header a:hover { color: #58a6ff; }
   width: 280px;
   max-width: 80vw;
   height: 100%;
-  background: #161b22;
-  border-right: 1px solid #30363d;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
   z-index: 201;
   padding: 16px 0;
   overflow-y: auto;
@@ -221,27 +221,27 @@ header a:hover { color: #58a6ff; }
   align-items: center;
   justify-content: space-between;
   padding: 0 16px 12px;
-  border-bottom: 1px solid #30363d;
+  border-bottom: 1px solid var(--border);
   margin-bottom: 8px;
 }
 
 .nav-drawer-header h2 {
   font-size: 16px;
   font-weight: 600;
-  color: #f0f6fc;
+  color: var(--text-hi);
 }
 
 .nav-close {
   background: none;
   border: none;
-  color: #8b949e;
+  color: var(--text-3);
   font-size: 20px;
   cursor: pointer;
   padding: 4px;
   line-height: 1;
 }
 
-.nav-close:hover { color: #f0f6fc; }
+.nav-close:hover { color: var(--text-hi); }
 
 .nav-drawer ul {
   list-style: none;
@@ -254,14 +254,14 @@ header a:hover { color: #58a6ff; }
 .nav-drawer a {
   display: block;
   padding: 10px 20px;
-  color: #58a6ff;
+  color: var(--accent);
   text-decoration: none;
   font-size: 14px;
   transition: background 0.1s;
 }
 
 .nav-drawer a:hover {
-  background: #1c2128;
+  background: var(--surface-3);
 }
 
 .nav-drawer .nav-section-label {
@@ -269,7 +269,7 @@ header a:hover { color: #58a6ff; }
   padding: 10px 20px 4px;
   font-size: 12px;
   font-weight: 600;
-  color: #484f58;
+  color: var(--text-5);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -288,3 +288,72 @@ header a:hover { color: #58a6ff; }
     overflow-x: auto;
   }
 }
+
+/* --- Theme switch (nav drawer footer) ---
+ * A setting, not a destination, so it sits below the links behind a rule
+ * rather than joining the list. Two explicit options rather than one toggle:
+ * the reader can see which theme is on without having to work out which way
+ * the switch points. Markup comes from Theme.controlHTML(). */
+.theme-toggle {
+  margin-top: 16px;
+  padding: 12px 20px calc(12px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--border);
+}
+
+.theme-toggle-label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-5);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.theme-switch {
+  display: flex;
+  gap: 4px;
+  padding: 3px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.theme-opt {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 8px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-3);
+  background: none;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.theme-opt:hover { color: var(--text); }
+
+.theme-opt.is-active {
+  color: var(--accent-ink);
+  background: var(--accent);
+}
+
+.theme-opt.is-active:hover { color: var(--accent-ink); }
+
+.theme-opt-icon { font-size: 13px; line-height: 1; }
+
+/* The drawer is a flex column so the switch can be pushed to the bottom on a
+ * tall screen and simply follow the links on a short one. */
+.nav-drawer {
+  display: flex;
+  flex-direction: column;
+}
+
+.nav-drawer ul { flex: 1 0 auto; }
+.theme-toggle { flex: 0 0 auto; }

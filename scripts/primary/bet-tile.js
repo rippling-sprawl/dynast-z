@@ -19,7 +19,7 @@ function renderBetTile(bet, opts) {
   const pl = profitLoss(bet);
 
   const pick = escapeHtml(bet.side || 'Bet') +
-    (bet.selection ? ' <span style="color:#8b949e;font-weight:400">' + escapeHtml(bet.selection) + '</span>' : '');
+    (bet.selection ? ' <span style="color:var(--text-3);font-weight:400">' + escapeHtml(bet.selection) + '</span>' : '');
 
   // Match (emphasized) with the event date pinned to its right (MM.DD.YY).
   const matchText = bet.match ? escapeHtml(bet.match)

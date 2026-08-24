@@ -18,8 +18,8 @@ function buildNavItems() {
     // Baker's Oven holds per-account leagues and boards, but the landing
     // page is public and pitches itself to signed-out visitors, so it is
     // listed for everyone.
-    { type: 'link', label: "Baker's Oven", href: '/bakers-oven' },
-    { type: 'link', label: 'Trade Calculator', href: '/trade-calculator' },
+    { type: 'link', label: "Baker's Oven", href: '/football/bakers-oven' },
+    { type: 'link', label: 'Trade Calculator', href: '/football/trade-calculator' },
     { type: 'link', label: 'NFL Schedule', href: '/football/schedule' },
     { type: 'link', label: "Baker's Buns", href: '/football/bakers-buns' },
     { type: 'link', label: 'NFL Odds', href: '/odds' },
@@ -54,6 +54,11 @@ function buildNavDrawerHTML() {
     return `<li${cls}><a href="${item.href}"${target}>${item.label}</a></li>`;
   }).join('\n        ');
 
+  // The theme switch is a setting rather than a destination, so it sits under
+  // the links in its own footer instead of joining the list. Its markup comes
+  // from scripts/base/theme.js — see mountToggle() there for the wiring.
+  const themeHTML = typeof Theme !== 'undefined' ? Theme.controlHTML() : '';
+
   return `<div class="nav-overlay" id="nav-overlay">
     <div class="nav-drawer">
       <div class="nav-drawer-header">
@@ -63,6 +68,7 @@ function buildNavDrawerHTML() {
       <ul>
         ${items}
       </ul>
+      ${themeHTML}
     </div>
   </div>`;
 }
@@ -70,8 +76,8 @@ function buildNavDrawerHTML() {
 function buildHeaderHTML() {
   const user = typeof getUser === 'function' ? getUser() : null;
   const acctHTML = user
-    ? `<a href="/account" style="font-size:11px;font-family:monospace;color:#60a5fa;text-decoration:none">${user.username}</a>`
-    : `<a href="/account" style="font-size:11px;font-family:monospace;color:#555;text-decoration:none">Sign In</a>`;
+    ? `<a href="/account" style="font-size:11px;font-family:monospace;color:var(--accent-2);text-decoration:none">${user.username}</a>`
+    : `<a href="/account" style="font-size:11px;font-family:monospace;color:var(--text-4);text-decoration:none">Sign In</a>`;
   return `<header>
     <div style="display: flex; align-items: center; gap: 12px;">
       <button class="hamburger" id="nav-toggle" aria-label="Menu">&#9776;</button>
@@ -92,6 +98,8 @@ function initPage() {
     drawerMount.outerHTML = buildNavDrawerHTML();
   }
 
+  if (typeof Theme !== 'undefined') Theme.mountToggle();
+
   document.getElementById('nav-toggle').addEventListener('click', () => {
     document.getElementById('nav-overlay').classList.add('open');
   });
@@ -108,6 +116,8 @@ function initNavDrawer() {
   if (placeholder) {
     placeholder.innerHTML = buildNavDrawerHTML();
   }
+
+  if (typeof Theme !== 'undefined') Theme.mountToggle();
 
   document.getElementById('nav-toggle').addEventListener('click', () => {
     document.getElementById('nav-overlay').classList.add('open');

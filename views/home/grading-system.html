@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <link rel="icon" type="image/png" href="/favicon.png">
   <title>Grading System | Dynast-Z</title>
+  <!-- Theme first: theme.js sets <html data-theme> before the first paint,
+       theme.css holds every colour token the sheets below spend. -->
+  <script src="/scripts/base/theme.js"></script>
+  <link rel="stylesheet" href="/styles/base/theme.css">
   <link rel="stylesheet" href="/styles/base/styles.css">
   <link rel="stylesheet" href="/styles/base/hub.css">
   <link rel="stylesheet" href="/styles/base/lightbox.css">
@@ -124,7 +128,7 @@
         var anno = '<text x="' + px(0.05) + '" y="' + (py(grade(0.05)) - 12) + '" class="cg-anno">gentle at the top</text>';
         var svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="xMidYMid meet">'
           + '<defs><linearGradient id="cgFill" x1="0" y1="0" x2="0" y2="1">'
-          + '<stop offset="0" stop-color="rgba(34,197,94,0.35)"/><stop offset="1" stop-color="rgba(34,197,94,0)"/>'
+          + '<stop offset="0" stop-color="color-mix(in oklab, var(--good-vivid) 35%, transparent)"/><stop offset="1" stop-color="transparent"/>'
           + '</linearGradient></defs>'
           + band + grid + xlab
           + '<path d="' + area + '" fill="url(#cgFill)"/>'
@@ -181,79 +185,79 @@
   </div>
 
   <style>
-    .grading { max-width: 760px; line-height: 1.6; color: #d5d9df; }
+    .grading { max-width: 760px; line-height: 1.6; color: var(--text-2); }
     .grading .crumbs {
-      font-family: monospace; font-size: 12px; color: #666; margin-bottom: 18px;
+      font-family: monospace; font-size: 12px; color: var(--text-4); margin-bottom: 18px;
     }
-    .grading .crumbs a { color: #8b949e; text-decoration: none; }
-    .grading .crumbs a:hover { color: #22c55e; }
-    .grading .crumbs span { margin: 0 4px; color: #444; }
+    .grading .crumbs a { color: var(--text-3); text-decoration: none; }
+    .grading .crumbs a:hover { color: var(--good-vivid); }
+    .grading .crumbs span { margin: 0 4px; color: var(--hairline-hi); }
     .grading h1 {
-      font-size: 30px; font-weight: 800; color: #f0f6fc; margin: 0 0 4px; letter-spacing: -0.3px;
+      font-size: 30px; font-weight: 800; color: var(--text-hi); margin: 0 0 4px; letter-spacing: -0.3px;
     }
-    .grading .lede { color: #8b949e; font-size: 15px; margin: 0 0 28px; }
+    .grading .lede { color: var(--text-3); font-size: 15px; margin: 0 0 28px; }
     .grading h2 {
-      font-size: 21px; font-weight: 700; color: #f0f6fc; margin: 34px 0 10px;
+      font-size: 21px; font-weight: 700; color: var(--text-hi); margin: 34px 0 10px;
     }
     .grading h3 {
-      font-size: 16px; font-weight: 700; color: #22c55e; margin: 26px 0 8px;
+      font-size: 16px; font-weight: 700; color: var(--good-vivid); margin: 26px 0 8px;
       text-transform: uppercase; letter-spacing: 0.4px;
     }
     .grading p { margin: 0 0 14px; }
     .grading ul { margin: 0 0 16px; padding-left: 20px; }
     .grading li { margin-bottom: 8px; }
-    .grading strong { color: #f0f6fc; }
-    .grading em { color: #c9d1d9; font-style: italic; }
+    .grading strong { color: var(--text-hi); }
+    .grading em { color: var(--text-2); font-style: italic; }
     .grading code {
-      font-family: monospace; background: #1b2029; border: 1px solid #2a2f3a;
-      border-radius: 4px; padding: 1px 5px; color: #22c55e; font-size: 13px;
+      font-family: monospace; background: var(--surface); border: 1px solid var(--border);
+      border-radius: 4px; padding: 1px 5px; color: var(--good-vivid); font-size: 13px;
     }
 
     /* Abstract callout */
     .abstract {
-      background: linear-gradient(180deg, rgba(34,197,94,0.07), rgba(34,197,94,0.02));
-      border: 1px solid rgba(34,197,94,0.28); border-left-width: 4px;
+      background: linear-gradient(180deg, color-mix(in oklab, var(--good-vivid) 7%, transparent), transparent);
+      border: 1px solid color-mix(in oklab, var(--good-vivid) 28%, transparent); border-left-width: 4px;
       border-radius: 10px; padding: 18px 22px; margin: 0 0 20px;
     }
     .abstract-h {
       font-size: 12px !important; text-transform: uppercase; letter-spacing: 1px;
-      color: #22c55e !important; margin: 0 0 12px !important; font-family: monospace; font-weight: 700;
+      color: var(--good-vivid) !important; margin: 0 0 12px !important; font-family: monospace; font-weight: 700;
     }
     .abstract .kicker {
-      margin: 14px 0 0; font-style: italic; color: #8b949e; font-size: 14px;
+      margin: 14px 0 0; font-style: italic; color: var(--text-3); font-size: 14px;
     }
 
     /* Formula block */
     .formula {
-      font-family: "SF Mono", ui-monospace, monospace; font-size: 19px; color: #f0f6fc;
-      background: #12161d; border: 1px solid #2a2f3a; border-radius: 10px;
+      font-family: "SF Mono", ui-monospace, monospace; font-size: 19px; color: var(--text-hi);
+      background: var(--panel-lo); border: 1px solid var(--border); border-radius: 10px;
       padding: 20px; text-align: center; margin: 4px 0 8px; overflow-x: auto;
     }
     .formula .e { font-style: italic; }
-    .formula i { font-style: italic; color: #d5d9df; }
-    .formula sup { font-size: 12px; color: #22c55e; }
-    .formula sup i { color: #22c55e; }
+    .formula i { font-style: italic; color: var(--text-2); }
+    .formula sup { font-size: 12px; color: var(--good-vivid); }
+    .formula sup i { color: var(--good-vivid); }
     .formula-note {
-      text-align: center; font-size: 13px; color: #8b949e; margin: 0 0 18px !important;
+      text-align: center; font-size: 13px; color: var(--text-3); margin: 0 0 18px !important;
     }
 
     /* Curve graph */
     .curve-graph {
-      background: #12161d; border: 1px solid #2a2f3a; border-radius: 10px;
+      background: var(--panel-lo); border: 1px solid var(--border); border-radius: 10px;
       padding: 10px 8px 4px; margin: 6px 0 20px;
     }
     .curve-graph svg { width: 100%; height: auto; display: block; }
-    .cg-grid { stroke: #242a33; stroke-width: 1; }
-    .cg-ylab { fill: #6e7681; font-size: 11px; text-anchor: end; font-family: monospace; }
-    .cg-xlab { fill: #8b949e; font-size: 11px; text-anchor: middle; font-family: monospace; }
-    .cg-line { fill: none; stroke: #22c55e; stroke-width: 2.5; stroke-linejoin: round; }
-    .cg-band { fill: rgba(220, 70, 70, 0.09); }
+    .cg-grid { stroke: var(--hairline); stroke-width: 1; }
+    .cg-ylab { fill: var(--text-4); font-size: 11px; text-anchor: end; font-family: monospace; }
+    .cg-xlab { fill: var(--text-3); font-size: 11px; text-anchor: middle; font-family: monospace; }
+    .cg-line { fill: none; stroke: var(--good-vivid); stroke-width: 2.5; stroke-linejoin: round; }
+    .cg-band { fill: var(--bad-tint); }
     .cg-bandlab {
-      fill: #cd7b7b; font-size: 11px; text-anchor: middle; font-family: monospace;
+      fill: var(--bad-soft); font-size: 11px; text-anchor: middle; font-family: monospace;
       text-transform: uppercase; letter-spacing: 0.5px;
     }
-    .cg-anno { fill: #9aa4af; font-size: 12px; text-anchor: start; font-style: italic; }
-    .cg-axistitle { fill: #6e7681; font-size: 11px; text-anchor: middle; font-family: monospace; }
+    .cg-anno { fill: var(--text-3); font-size: 12px; text-anchor: start; font-style: italic; }
+    .cg-axistitle { fill: var(--text-4); font-size: 11px; text-anchor: middle; font-family: monospace; }
 
     /* Curve table */
     table.curve {
@@ -261,22 +265,22 @@
       font-variant-numeric: tabular-nums;
     }
     table.curve th, table.curve td {
-      padding: 8px 14px; text-align: left; border-bottom: 1px solid #22272e;
+      padding: 8px 14px; text-align: left; border-bottom: 1px solid var(--surface-2);
     }
     table.curve th {
       font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;
-      color: #8b949e; font-weight: 700;
+      color: var(--text-3); font-weight: 700;
     }
-    table.curve td:first-child { font-family: monospace; color: #c9d1d9; }
+    table.curve td:first-child { font-family: monospace; color: var(--text-2); }
     table.curve .g {
       display: inline-block; min-width: 42px; text-align: center; font-weight: 700;
-      color: #0f1117; border-radius: 5px; padding: 2px 8px;
-      background: rgba(34, 197, 94, calc(0.15 + var(--g) * 0.85));
+      color: var(--bg); border-radius: 5px; padding: 2px 8px;
+      background: rgba(var(--good-vivid-rgb), calc(0.15 + var(--g) * 0.85));
     }
 
     .grading .footnote {
-      margin-top: 30px; padding-top: 16px; border-top: 1px solid #22272e;
-      font-size: 13px; color: #6e7681; font-style: italic;
+      margin-top: 30px; padding-top: 16px; border-top: 1px solid var(--surface-2);
+      font-size: 13px; color: var(--text-4); font-style: italic;
     }
 
     @media (max-width: 500px) {

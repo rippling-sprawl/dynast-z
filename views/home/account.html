@@ -5,44 +5,48 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <link rel="icon" type="image/png" href="/favicon.png">
   <title>Account | Dynast-Z</title>
+  <!-- Theme first: theme.js sets <html data-theme> before the first paint,
+       theme.css holds every colour token the sheets below spend. -->
+  <script src="/scripts/base/theme.js"></script>
+  <link rel="stylesheet" href="/styles/base/theme.css">
   <link rel="stylesheet" href="/styles/base/styles.css">
   <link rel="stylesheet" href="/styles/base/hub.css">
   <link rel="stylesheet" href="/styles/primary/golf.css">
   <link rel="stylesheet" href="/styles/style/score-colors.css">
   <style>
     /* Lighter, higher-contrast treatment scoped to the account page only. */
-    body.account-page { background: #1c2027; }
+    body.account-page { background: var(--panel-hi); }
 
-    .account-page .masters-content h2 { color: #f7f9fc; }
-    .account-page .masters-content .subtitle { color: #9aa4b2; }
-    .account-page .masters-breadcrumbs { color: #8a93a3; }
+    .account-page .masters-content h2 { color: var(--text-hi); }
+    .account-page .masters-content .subtitle { color: var(--text-3); }
+    .account-page .masters-breadcrumbs { color: var(--text-3); }
 
     .account-page .group-form {
-      background: #252b35;
-      border: 1px solid #3a424f;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+      background: var(--panel-hi2);
+      border: 1px solid var(--hairline-hi);
+      box-shadow: 0 1px 3px var(--shadow-color);
     }
     /* "CREATE ACCOUNT" / "SIGN IN" eyebrow labels */
-    .account-page .group-form > span { color: #9aa4b2 !important; }
-    .account-page .group-form label { color: #aeb6c2; }
+    .account-page .group-form > span { color: var(--text-3) !important; }
+    .account-page .group-form label { color: var(--text-2); }
 
     .account-page .masters-search {
-      background: #2e3640;
-      border-color: #444d5b;
-      color: #f0f2f5;
+      background: var(--hairline);
+      border-color: var(--hairline-hi);
+      color: var(--text-bright);
     }
-    .account-page .masters-search::placeholder { color: #7c8595; }
-    .account-page .masters-search:focus { border-color: #60a5fa; }
+    .account-page .masters-search::placeholder { color: var(--text-4); }
+    .account-page .masters-search:focus { border-color: var(--accent-2); }
 
     .account-page .masters-btn:not(.danger) {
-      background: #60a5fa;
-      border-color: #60a5fa;
-      color: #0f1117;
+      background: var(--accent-2);
+      border-color: var(--accent-2);
+      color: var(--bg);
     }
-    .account-page .masters-btn:not(.danger):hover { background: #7cb6fb; border-color: #7cb6fb; }
+    .account-page .masters-btn:not(.danger):hover { background: var(--accent-hover); border-color: var(--accent-hover); }
     .account-page .masters-btn:disabled { opacity: 0.55; cursor: default; }
 
-    .account-page #acct-name { color: #f7f9fc !important; }
+    .account-page #acct-name { color: var(--text-hi) !important; }
   </style>
   <link rel="stylesheet" href="/styles/base/lightbox.css">
 </head>
@@ -59,7 +63,7 @@
     <!-- Logged-in state -->
     <div id="logged-in" style="display:none">
       <h2>Your Account</h2>
-      <p class="subtitle">Signed in as <strong id="acct-name" style="color:#f0f0f0"></strong></p>
+      <p class="subtitle">Signed in as <strong id="acct-name" style="color:var(--text-bright)"></strong></p>
 
       <button class="masters-btn danger" id="sign-out" style="margin-top:16px;width:100%;padding:10px">Sign Out</button>
     </div>
@@ -71,7 +75,7 @@
 
       <!-- Sign in -->
       <div class="group-form" style="margin-top:12px">
-        <span style="font-size:11px;color:#555;font-family:monospace;display:block;margin-bottom:8px">SIGN IN</span>
+        <span style="font-size:11px;color:var(--text-5);font-family:monospace;display:block;margin-bottom:8px">SIGN IN</span>
         <div class="form-row">
           <label>USERNAME</label>
           <input type="text" class="masters-search" id="login-name" placeholder="Username" autocomplete="username" style="margin:0;max-width:none;flex:1">
@@ -81,12 +85,12 @@
           <input type="password" class="masters-search" id="login-password" placeholder="Password" autocomplete="current-password" style="margin:0;max-width:none;flex:1">
         </div>
         <button class="masters-btn" id="login-btn" style="width:100%;padding:8px;margin-top:4px">Sign In</button>
-        <div id="login-error" style="color:#f87171;font-size:11px;font-family:monospace;margin-top:6px;display:none"></div>
+        <div id="login-error" style="color:var(--bad-soft);font-size:11px;font-family:monospace;margin-top:6px;display:none"></div>
       </div>
 
       <!-- Create account -->
       <div class="group-form" style="margin-top:16px">
-        <span style="font-size:11px;color:#555;font-family:monospace;display:block;margin-bottom:8px">CREATE ACCOUNT</span>
+        <span style="font-size:11px;color:var(--text-5);font-family:monospace;display:block;margin-bottom:8px">CREATE ACCOUNT</span>
         <div class="form-row">
           <label>USERNAME</label>
           <input type="text" class="masters-search" id="reg-name" placeholder="Username" autocomplete="username" style="margin:0;max-width:none;flex:1">
@@ -96,7 +100,7 @@
           <input type="password" class="masters-search" id="reg-password" placeholder="At least 8 characters" autocomplete="new-password" style="margin:0;max-width:none;flex:1">
         </div>
         <button class="masters-btn" id="reg-btn" style="width:100%;padding:8px;margin-top:4px">Create Account</button>
-        <div id="reg-error" style="color:#f87171;font-size:11px;font-family:monospace;margin-top:6px;display:none"></div>
+        <div id="reg-error" style="color:var(--bad-soft);font-size:11px;font-family:monospace;margin-top:6px;display:none"></div>
       </div>
 
     </div>

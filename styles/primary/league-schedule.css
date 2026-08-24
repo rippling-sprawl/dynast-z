@@ -6,13 +6,13 @@
 
 .schedule-intro {
   font-size: 13px;
-  color: #8b949e;
+  color: var(--text-3);
   margin: 0 0 12px;
   line-height: 1.5;
 }
 
 .schedule-intro a {
-  color: #58a6ff;
+  color: var(--accent);
   text-decoration: none;
 }
 
@@ -22,9 +22,9 @@
 
 .schedule-scroll {
   overflow-x: auto;
-  border: 1px solid #30363d;
+  border: 1px solid var(--border);
   border-radius: 8px;
-  background: #0f1117;
+  background: var(--bg);
 }
 
 .schedule-table {
@@ -37,15 +37,15 @@
 .schedule-table th,
 .schedule-table td {
   padding: 8px 10px;
-  border-bottom: 1px solid #21262d;
-  border-right: 1px solid #21262d;
+  border-bottom: 1px solid var(--surface-2);
+  border-right: 1px solid var(--surface-2);
   text-align: left;
   vertical-align: middle;
 }
 
 .schedule-table thead th {
-  background: #161b22;
-  color: #8b949e;
+  background: var(--surface);
+  color: var(--text-3);
   font-weight: 600;
   font-size: 11px;
   text-transform: uppercase;
@@ -79,15 +79,15 @@
   position: sticky;
   left: 0;
   z-index: 1;
-  background: #0f1117;
+  background: var(--bg);
   width: 1%;
   white-space: nowrap;
-  box-shadow: 1px 0 0 #30363d;
+  box-shadow: 1px 0 0 var(--border);
 }
 
 .schedule-table thead th.team-col {
   z-index: 3;
-  background: #161b22;
+  background: var(--surface);
 }
 
 .team-col-header {
@@ -102,9 +102,9 @@
 }
 
 .sort-chip {
-  background: #21262d;
-  border: 1px solid #30363d;
-  color: #8b949e;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text-3);
   font-size: 10px;
   font-weight: 600;
   font-family: inherit;
@@ -117,14 +117,14 @@
 }
 
 .sort-chip:hover {
-  color: #f0f6fc;
-  border-color: #58a6ff;
+  color: var(--text-hi);
+  border-color: var(--accent);
 }
 
 .sort-chip.active {
-  background: #1f2d3d;
-  color: #f0f6fc;
-  border-color: #58a6ff;
+  background: var(--info-tint);
+  color: var(--text-hi);
+  border-color: var(--accent);
 }
 
 .team-col-content {
@@ -150,26 +150,26 @@
 .team-col-name {
   font-size: 13px;
   font-weight: 500;
-  color: #f0f6fc;
+  color: var(--text-hi);
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .team-col-meta {
   font-size: 11px;
-  color: #8b949e;
+  color: var(--text-3);
   display: flex;
   gap: 10px;
 }
 
 .team-col-meta span strong {
-  color: #e1e4e8;
+  color: var(--text);
   font-weight: 600;
 }
 
 /* Opponent cells: avatar left + PR right, vertically centered */
 .opp-cell {
-  color: #e1e4e8;
+  color: var(--text);
 }
 
 .opp-cell-content {
@@ -188,7 +188,7 @@
 
 .opp-pr {
   font-size: 12px;
-  color: #8b949e;
+  color: var(--text-3);
   white-space: nowrap;
 }
 
@@ -197,7 +197,7 @@
 }
 
 .opp-cell.opp-missing {
-  color: #484f58;
+  color: var(--text-5);
   text-align: center;
 }
 
@@ -224,3 +224,9 @@
     height: 22px;
   }
 }
+
+/* The strength-of-schedule gradient. The view hands over a hue (140 green →
+ * 0 red); saturation and lightness are the theme's, so the same scale is
+ * legible on white and on black. See gradAttrs() in views/league/schedule.html. */
+.grad { color: hsl(var(--hue, 0), var(--heat-seq-sat), var(--heat-seq-light)); }
+.grad-null { color: var(--heat-null); }

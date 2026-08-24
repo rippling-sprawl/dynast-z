@@ -26,7 +26,7 @@ graph TD
 
         subgraph STATIC["Static CDN assets"]
             VIEWS["/views/*.html<br/>(page templates)"]
-            STYLES["/styles/*.css"]
+            STYLES["/styles/*.css<br/>(theme.css = color tokens)"]
             SCRIPTS["/scripts/*.js"]
             DATAJSON["/data/*.json<br/>(odds + fantasy snapshots)"]
         end
@@ -142,7 +142,7 @@ flowchart TD
 
     subgraph LANE_RUNTIME["② Runtime page load — every visit"]
         B0 --> B1["vercel.json rewrites clean URL<br/>→ /views/<page>.html"]
-        B1 --> B2["Browser loads shared JS:<br/>nav.js · auth.js · sync.js<br/>+ page-specific bundle"]
+        B1 --> B2["theme.js sets data-theme (pre-paint),<br/>then nav.js · auth.js · sync.js<br/>+ page-specific bundle"]
         B2 --> B3{Page type?}
 
         B3 -->|Odds| C1["fetch /data/{dk,fd,score,outrights}.json<br/>→ build merged book columns"]
@@ -194,6 +194,7 @@ Pages split into a few **correlated families** plus standalone pages. Families s
 
 | File | Role | Used by |
 |---|---|---|
+| `theme.js` | Dark (default) / light, remembered in `localStorage`; renders the drawer's theme switch and fires `themechange` | **every** page, from `<head>` |
 | `nav.js` | Shared nav + hamburger drawer | **every** page |
 | `auth.js` | Account (display name + claim code) on top of `localStorage` | most pages |
 | `sync.js` | Bridges `localStorage` ⇄ Supabase via `/api/sync` | pages with savable picks |
@@ -203,6 +204,30 @@ Pages split into a few **correlated families** plus standalone pages. Families s
 | `odds-recorder.js` | **Bookmarklet source** — fetch/XHR hooks that capture sportsbook JSON (compiled to `odds-recorder.bookmarklet.txt`, installed via `odds-recorder.install.html`) | runs in the sportsbook tab, not on DynastZ |
 
 ### Styles (`/styles`)
+
+`theme.css` is the color layer: every surface, rule, text tone and accent in the
+app is a custom property declared there once for dark (on `:root`) and once for
+light (on `:root[data-theme="light"]`). No other stylesheet writes a raw hex for
+a theme-able color — the exceptions are position badges and white-on-fill
+foregrounds, which are the same in both themes. Two neutral families are kept
+apart on purpose (`--bg`/`--surface`/`--border` for the blue-grey chrome,
+`--panel`/`--hairline` for the flat-grey card surfaces) so introducing the token
+layer shifted no dark surface; in the light they collapse onto near-identical
+whites. `bakers-oven.css` keeps its own `--oven-*` kiln palette and declares its
+own light block, because that page is a deliberate exception to the site
+palette.
+
+**Heat maps** are the one place color carries data, so they get their own
+tokens rather than reusing the semantic ones: `--heat-*` for the Buns table,
+`--heat-seq-*` for the schedule gradient, `--heat-z-*` for the scout/calculator
+z-wash, `--hole-*` for the golf leaderboard. Light mode does not simply darken
+them — a cell's *text* darkens to stay legible on white while its *wash* stays
+bright, since a 24% mix of a dark green over white reads grey. Where a scale can
+be driven from CSS it is: the view hands over a bare number (`--heat`, `--z`,
+`--hue`) and the color is mixed in the stylesheet, so a scale re-colors on a
+theme change without its table being rebuilt. Charts that build SVG or canvas
+cannot do that — they read tokens through `Theme.color()` and redraw on
+`themechange`.
 
 `styles.css` is the global base loaded everywhere. The rest are scoped: `index.css` (landing), `masters.css` (all golf/masters), `league.css` + `league-schedule.css` + `scout.css` (league family), `trades.css` + `filters.css` (trade browsing), `calculator.css` (trade calculator), `team.css` (roster view).
 

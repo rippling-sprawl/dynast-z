@@ -8,10 +8,12 @@
  * notes across, and the JSON copy stays only as the fallback this file's
  * consumer renders when the API cannot be reached.
  *
- * Reading is public. Writing is admin-only — enforced on the server, with the
- * UI here merely declining to show controls that would 403 anyway.
+ * Reading is public. Any signed-in reader can file a note, and owns the ones
+ * they filed: they alone can edit or delete them, and an admin can edit or
+ * delete any. Enforced on the server, with the UI here merely declining to show
+ * controls that would 403 anyway.
  *
- * Depends on: scripts/base/auth.js (getUser / isAdmin) and
+ * Depends on: scripts/base/auth.js (getUser / isLoggedIn / isAdmin) and
  * scripts/components/nfl-pickers.js (the team grid and week menu). Styles for
  * the modal and the bullets live in styles/primary/bakers-buns.css.
  */
@@ -28,6 +30,22 @@
 
   function admin() {
     return typeof isAdmin === 'function' && isAdmin();
+  }
+
+  /* ---------- who may write ----------
+   * Two questions, asked separately because they have different answers.
+   * Filing a note needs nothing but an account; changing one that already
+   * exists needs to be its author, or an admin. A note with no authorId is one
+   * of the seeded doc imports — nobody claims those, so they are admin-only. */
+
+  function canAddNote() {
+    return typeof isLoggedIn === 'function' && isLoggedIn();
+  }
+
+  function canEditNote(note) {
+    if (admin()) return true;
+    var user = typeof getUser === 'function' ? getUser() : null;
+    return !!(user && note && note.authorId && note.authorId === user.user_id);
   }
 
   /* ---------- the season, as one list ----------
@@ -188,7 +206,7 @@
       ? ' <a class="tc-note-src" href="' + esc(note.source.url) + '" target="_blank" ' +
         'rel="noopener">@' + esc(note.source.handle || 'link') + '</a>'
       : '';
-    var edit = admin()
+    var edit = canEditNote(note)
       ? ' <button type="button" class="tc-note-edit" data-note-edit="' + esc(note.id) +
         '" title="Edit note" aria-label="Edit note">' +
         '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
@@ -394,7 +412,7 @@
 
     titleEl.textContent = editing ? 'Edit note' : 'Add notes';
     dlg.setAttribute('aria-label', titleEl.textContent);
-    deleteBtn.hidden = !editing;
+    deleteBtn.hidden = !(editing && canEditNote(editing));
 
     rowsEl.innerHTML = '';
     addRow(editing ? editing.text : '', false);
@@ -472,9 +490,10 @@
   }
 
   /* ---------- wiring ----------
-   * Called by the page once its team list has landed. Everything admin-only —
-   * the floating button, the per-bullet pencils — is wired here and simply
-   * never built for anyone else; the server is what actually refuses the write.
+   * Called by the page once its team list has landed. Everything that writes —
+   * the floating button, the modal, the per-bullet pencils — is wired here and
+   * simply never built for a signed-out visitor; the server is what actually
+   * refuses the write.
    */
   function initBunNotes(opts) {
     opts = opts || {};
@@ -483,7 +502,7 @@
     // Nothing that writes is offered while the store is unreachable: the page is
     // showing the JSON fallback then, and a note saved against it would vanish
     // into a list the reader cannot see.
-    if (!admin() || !loaded) return;
+    if (!canAddNote() || !loaded) return;
 
     build();
     buildTeamPicker(teamGrid, teams, { anyLabel: 'League-wide — no team' });
@@ -500,7 +519,12 @@
       var edit = e.target.closest ? e.target.closest('[data-note-edit]') : null;
       if (edit) {
         var note = bunNoteById(edit.getAttribute('data-note-edit'));
-        if (note) { if (opts.beforeOpen) opts.beforeOpen(); open({ note: note }); }
+        // The pencil is not rendered on someone else's note; this keeps the
+        // handler honest if a stale render leaves one behind.
+        if (note && canEditNote(note)) {
+          if (opts.beforeOpen) opts.beforeOpen();
+          open({ note: note });
+        }
         return;
       }
       var add = e.target.closest ? e.target.closest('[data-note-add]') : null;
@@ -518,6 +542,8 @@
   global.bunNotesFor = bunNotesFor;
   global.bunNotesLeague = bunNotesLeague;
   global.bunNoteById = bunNoteById;
+  global.canAddNote = canAddNote;
+  global.canEditNote = canEditNote;
   global.bunNoteBullet = bunNoteBullet;
   global.bunNoteList = bunNoteList;
   global.bunNotesSave = bunNotesSave;

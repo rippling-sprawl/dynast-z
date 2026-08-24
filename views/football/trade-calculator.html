@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <link rel="icon" type="image/png" href="/favicon.png">
   <title>Trade Calculator | Dynast-Z</title>
+  <!-- Theme first: theme.js sets <html data-theme> before the first paint,
+       theme.css holds every colour token the sheets below spend. -->
+  <script src="/scripts/base/theme.js"></script>
+  <link rel="stylesheet" href="/styles/base/theme.css">
   <link rel="stylesheet" href="/styles/base/styles.css">
   <link rel="stylesheet" href="/styles/primary/filters.css">
   <link rel="stylesheet" href="/styles/primary/calculator.css">
@@ -139,9 +143,12 @@
       return Math.round(z).toString();
     }
 
-    function zColor(z) {
-      if (z == null) return '';
-      return `rgba(34, 197, 94, ${Math.min(z / zMax, 1).toFixed(2)})`;
+    function zHeat(z) {
+      /* The intensity only. The colour it drives lives in CSS as --heat-z-fill,
+       * so a z-score wash that reads on the dark page also reads on the light
+       * one without this table being rebuilt. */
+      if (z == null || z <= 0) return '0';
+      return Math.min(z / zMax, 1).toFixed(2);
     }
 
     const sourceAbbr = {'keeptradecut.com':'KTC','fantasypros.com':'FP','fantasycalc.com':'FC'};
@@ -163,7 +170,7 @@
             <div class="player-name">${p.name}</div>
             <div class="player-team">${p.team || ''}${rookieBadge(p)}</div>
           </div>
-          <span class="player-value" style="background:${zColor(p.aggregate)}" data-sources="${sourcesTooltip(p.sources)}">${fmtZ(p.aggregate)}</span>
+          <span class="player-value" style="--z:${zHeat(p.aggregate)}" data-sources="${sourcesTooltip(p.sources)}">${fmtZ(p.aggregate)}</span>
           <div class="add-btns">
             <button class="add-btn add-a" data-name="${p.name.replace(/"/g, '&quot;')}" data-team="a">A</button>
             <button class="add-btn add-b" data-name="${p.name.replace(/"/g, '&quot;')}" data-team="b">B</button>
@@ -209,7 +216,7 @@
             <div class="player-name">${p.name}</div>
             <div class="player-team">${p.team || ''}${rookieBadge(p)}</div>
           </div>
-          <span class="player-value" style="background:${zColor(p.aggregate)}">${fmtZ(p.aggregate)}</span>
+          <span class="player-value" style="--z:${zHeat(p.aggregate)}">${fmtZ(p.aggregate)}</span>
           <button class="remove-btn">&times;</button>
         `;
         el.querySelector('.remove-btn').addEventListener('click', () => {

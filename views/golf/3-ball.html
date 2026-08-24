@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <link rel="icon" type="image/png" href="/favicon.png">
   <title>3-Ball Setup | Dynast-Z</title>
+  <!-- Theme first: theme.js sets <html data-theme> before the first paint,
+       theme.css holds every colour token the sheets below spend. -->
+  <script src="/scripts/base/theme.js"></script>
+  <link rel="stylesheet" href="/styles/base/theme.css">
   <link rel="stylesheet" href="/styles/base/styles.css">
   <link rel="stylesheet" href="/styles/base/hub.css">
   <link rel="stylesheet" href="/styles/primary/golf.css">
@@ -25,7 +29,7 @@
     <p class="subtitle">Select your golfer and opponents for each matchup</p>
 
     <div style="margin-bottom:16px">
-      <label style="font-size:10px;color:#444;font-family:monospace;display:block;margin-bottom:6px">ROUND</label>
+      <label style="font-size:10px;color:var(--hairline-hi);font-family:monospace;display:block;margin-bottom:6px">ROUND</label>
       <div class="round-selector" id="round-sel"></div>
     </div>
 
@@ -121,7 +125,7 @@
       container.innerHTML = groups.map((g, i) => `
         <div class="group-form">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-            <span style="font-size:11px;color:#555;font-family:monospace">GROUP ${i + 1}</span>
+            <span style="font-size:11px;color:var(--text-5);font-family:monospace">GROUP ${i + 1}</span>
             <button class="masters-btn danger" data-remove="${i}" style="padding:2px 8px;font-size:11px">&times;</button>
           </div>
           <div class="form-row">

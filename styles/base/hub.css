@@ -4,7 +4,7 @@
  * Class names kept (`masters-*`) to avoid churning markup. Split out of the
  * former styles/masters.css. */
 body.masters-body {
-  background: #111;
+  background: var(--panel-lo);
 }
 
 .masters-content {
@@ -16,13 +16,13 @@ body.masters-body {
 .masters-content h2 {
   font-size: 20px;
   font-weight: 700;
-  color: #f0f0f0;
+  color: var(--text-bright);
   margin-bottom: 4px;
 }
 
 .masters-content .subtitle {
   font-size: 11px;
-  color: #555;
+  color: var(--text-5);
   font-family: monospace;
   margin-bottom: 16px;
 }
@@ -31,12 +31,12 @@ body.masters-body {
 .masters-breadcrumbs {
   padding: 0 0 12px;
   font-size: 12px;
-  color: #555;
+  color: var(--text-5);
   font-family: monospace;
 }
 
 .masters-breadcrumbs a {
-  color: #60a5fa;
+  color: var(--accent-2);
   text-decoration: none;
 }
 
@@ -46,20 +46,20 @@ body.masters-body {
 
 .masters-breadcrumbs .separator {
   margin: 0 6px;
-  color: #444;
+  color: var(--hairline-hi);
 }
 
 .masters-page-nav {
   display: flex;
   gap: 12px;
   padding-bottom: 12px;
-  border-top: 1px solid #2a2a2a;
+  border-top: 1px solid var(--hairline);
   padding-top: 8px;
   font-size: 12px;
   font-family: monospace;
 }
 .masters-page-nav a {
-  color: #60a5fa;
+  color: var(--accent-2);
   text-decoration: none;
 }
 .masters-page-nav a:hover {
@@ -73,8 +73,8 @@ body.masters-body {
   top: 66vh;
   display: inline-flex;
   align-items: center;
-  background: #58a6ff;
-  color: #fff;
+  background: var(--accent);
+  color: var(--on-accent);
   font-size: 11px;
   font-family: monospace;
   padding: 5px 10px;
@@ -92,8 +92,8 @@ body.masters-body {
   text-align: center;
   padding: 10px 16px;
   margin-top: 16px;
-  background: #60a5fa;
-  color: #111;
+  background: var(--accent-2);
+  color: var(--panel-lo);
   font-weight: 700;
   font-size: 13px;
   border-radius: 6px;
@@ -103,14 +103,14 @@ body.masters-body {
 }
 
 .masters-cta:hover {
-  background: #93c5fd;
+  background: var(--accent-hover);
 }
 
 .subtle-link {
   display: block;
   font-size: 12px;
   font-family: monospace;
-  color: #888;
+  color: var(--text-3);
   text-decoration: none;
   padding: 4px 0;
   margin-bottom: 8px;
@@ -118,7 +118,7 @@ body.masters-body {
 }
 
 .subtle-link:hover {
-  color: #ccc;
+  color: var(--text-2);
 }
 
 /* --- Hub cards --- */
@@ -130,29 +130,29 @@ body.masters-body {
 }
 
 .hub-card {
-  background: #1a1a1a;
-  border: 1px solid #2a2a2a;
+  background: var(--panel-hi);
+  border: 1px solid var(--hairline);
   border-radius: 6px;
   padding: 16px;
   text-decoration: none;
-  color: #e0e0e0;
+  color: var(--text);
   transition: border-color 0.15s;
 }
 
 .hub-card:hover {
-  border-color: #60a5fa;
+  border-color: var(--accent-2);
 }
 
 .hub-card h3 {
   font-size: 14px;
   font-weight: 600;
-  color: #f0f0f0;
+  color: var(--text-bright);
   margin-bottom: 4px;
 }
 
 .hub-card p {
   font-size: 11px;
-  color: #888;
+  color: var(--text-3);
   margin: 0;
 }
 

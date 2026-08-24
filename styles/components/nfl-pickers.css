@@ -28,9 +28,9 @@
   display: flex;
   align-items: center;
   gap: 7px;
-  background: #21262d;
-  border: 1px solid #30363d;
-  color: #e1e4e8;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text);
   font-size: 13px;
   font-family: inherit;
   padding: 5px 9px;
@@ -39,12 +39,12 @@
   line-height: 1.5;
 }
 
-.dd-btn:hover { border-color: #484f58; }
+.dd-btn:hover { border-color: var(--text-5); }
 
 .dd-btn:focus-visible,
 .dd-btn[aria-expanded="true"] {
   outline: none;
-  border-color: #58a6ff;
+  border-color: var(--accent);
 }
 
 .dd-value {
@@ -69,8 +69,8 @@
   width: 7px;
   height: 7px;
   margin-left: auto;
-  border-right: 1.5px solid #8b949e;
-  border-bottom: 1.5px solid #8b949e;
+  border-right: 1.5px solid var(--text-3);
+  border-bottom: 1.5px solid var(--text-3);
   transform: translateY(-2px) rotate(45deg);
   flex: none;
 }
@@ -88,10 +88,10 @@
   top: calc(100% + 5px);
   left: 0;
   z-index: 30;
-  background: #0d1117;
-  border: 1px solid #30363d;
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
   border-radius: 8px;
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 10px 28px var(--shadow-color-lg);
   padding: 6px;
   min-width: 100%;
   width: max-content;
@@ -107,7 +107,7 @@
   background: none;
   border: none;
   border-radius: 5px;
-  color: #e1e4e8;
+  color: var(--text);
   font-size: 13px;
   font-family: inherit;
   text-align: left;
@@ -116,16 +116,16 @@
   white-space: nowrap;
 }
 
-.dd-opt:hover { background: #161b22; }
+.dd-opt:hover { background: var(--surface); }
 
 .dd-opt:focus-visible {
   outline: none;
-  background: #161b22;
+  background: var(--surface);
 }
 
 .dd-opt.is-on {
-  color: #58a6ff;
-  background: rgba(88, 166, 255, 0.12);
+  color: var(--accent);
+  background: var(--accent-soft);
 }
 
 .dd-note {
@@ -133,18 +133,18 @@
   font-family: monospace;
   text-transform: uppercase;
   letter-spacing: 0.6px;
-  color: #6e7681;
+  color: var(--text-4);
   margin-left: auto;
 }
 
-.dd-opt.is-on .dd-note { color: #58a6ff; }
+.dd-opt.is-on .dd-note { color: var(--accent); }
 
 /* A rule between groups of weeks — the preseason, the regular season and the
  * playoffs read as three runs rather than one list of twenty-three entries. */
 .dd-opt.is-group-start {
   margin-top: 5px;
   padding-top: 8px;
-  border-top: 1px solid #21262d;
+  border-top: 1px solid var(--surface-2);
   border-radius: 0 0 5px 5px;
 }
 
@@ -161,7 +161,7 @@
   align-items: center;
   justify-content: center;
   padding: 5vh 5vw;
-  background: rgba(8, 10, 14, 0.94);
+  background: var(--scrim);
   overscroll-behavior: contain;
   -webkit-tap-highlight-color: transparent;
 }
@@ -179,7 +179,7 @@
   width: min(320px, 90vw);
   max-width: 90vw;
   max-height: min(70vh, 520px);
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.7);
+  box-shadow: 0 16px 48px var(--overlay-strong);
 }
 
 /* The card. Never more than 90% of the viewport in either direction, and it
@@ -189,10 +189,10 @@
   max-width: 90vw;
   max-height: 90vh;
   overflow: auto;
-  background: #0d1117;
-  border: 1px solid #30363d;
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
   border-radius: 10px;
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.7);
+  box-shadow: 0 16px 48px var(--overlay-strong);
   padding: 14px 16px;
 }
 
@@ -224,7 +224,7 @@
 /* The NFC column reads as its own half of the league rather than as more of
  * the AFC's list. The rule is the divider; the gap alone was ambiguous. */
 .tp-conf + .tp-conf {
-  border-left: 1px solid #21262d;
+  border-left: 1px solid var(--surface-2);
   padding-left: 22px;
   margin-left: -22px;
 }
@@ -234,11 +234,11 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.7px;
-  color: #8b949e;
+  color: var(--text-3);
   font-family: monospace;
   margin: 0;
   padding-bottom: 2px;
-  border-bottom: 1px solid #21262d;
+  border-bottom: 1px solid var(--surface-2);
   line-height: 1.4;
 }
 
@@ -247,7 +247,7 @@
   font-size: 9px;
   text-transform: uppercase;
   letter-spacing: 0.7px;
-  color: #484f58;
+  color: var(--text-5);
   font-family: monospace;
   margin-bottom: 1px;
 }
@@ -290,11 +290,11 @@
   pointer-events: none;
 }
 
-.tp-team:hover { opacity: 1; background: #161b22; }
+.tp-team:hover { opacity: 1; background: var(--surface); }
 
 .tp-team:focus-visible {
   outline: none;
-  border-color: #58a6ff;
+  border-color: var(--accent);
   opacity: 1;
 }
 
@@ -308,8 +308,8 @@
 .tp .tp-team.is-on,
 .tp.has-pick .tp-team.is-on {
   opacity: 1;
-  border-color: #58a6ff;
-  background: rgba(88, 166, 255, 0.12);
+  border-color: var(--accent);
+  background: var(--accent-soft);
 }
 
 /* The no-team choice, for a picker where "no team" is a real answer rather than
@@ -320,9 +320,9 @@
   display: block;
   width: 100%;
   background: none;
-  border: 1px solid #30363d;
+  border: 1px solid var(--border);
   border-radius: 8px;
-  color: #c9d1d9;
+  color: var(--text-2);
   font-family: inherit;
   font-size: 12px;
   padding: 6px 9px;
@@ -330,17 +330,17 @@
   text-align: left;
 }
 
-.tp-any:hover { border-color: #484f58; background: #161b22; }
+.tp-any:hover { border-color: var(--text-5); background: var(--surface); }
 
 .tp-any:focus-visible {
   outline: none;
-  border-color: #58a6ff;
+  border-color: var(--accent);
 }
 
 .tp-any.is-on {
-  color: #58a6ff;
-  border-color: #58a6ff;
-  background: rgba(88, 166, 255, 0.12);
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--accent-soft);
 }
 
 /* Full strength even when a team is picked — it is how you get back. */

@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <link rel="icon" type="image/png" href="/favicon.png">
   <title>Baker's Oven | Dynast-Z</title>
+  <!-- Theme first: theme.js sets <html data-theme> before the first paint,
+       theme.css holds every colour token the sheets below spend. -->
+  <script src="/scripts/base/theme.js"></script>
+  <link rel="stylesheet" href="/styles/base/theme.css">
   <link rel="stylesheet" href="/styles/base/styles.css">
   <link rel="stylesheet" href="/styles/primary/bakers-oven.css">
   <link rel="stylesheet" href="/styles/base/lightbox.css">
@@ -26,7 +30,7 @@
 
   <main class="oven-content">
     <div class="oven-breadcrumbs">
-      <a href="/">Home</a><span class="sep">/</span><a href="/football">Football</a><span class="sep">/</span><a href="/bakers-oven">Baker's Oven</a><span class="sep">/</span><span id="crumb-league">League</span>
+      <a href="/">Home</a><span class="sep">/</span><a href="/football">Football</a><span class="sep">/</span><a href="/football/bakers-oven">Baker's Oven</a><span class="sep">/</span><span id="crumb-league">League</span>
     </div>
     <h2 class="oven-h2">🔥 Baker's Oven</h2>
 
@@ -103,7 +107,7 @@
     var ctx = null, board = null, fp = [], draft = null, rec = null;
     var leagueId = null, myRosterId = null;
 
-    var seg = (location.pathname.match(/\/bakers-oven\/([^/?#]+)/) || [])[1] || '';
+    var seg = (location.pathname.match(/\/football\/bakers-oven\/([^/?#]+)/) || [])[1] || '';
 
     // The Targets & Projections drawer mounts here too — the queue and the round
     // plan are worth reading before draft night, not only during it. Same
@@ -186,7 +190,7 @@
           stat('Scoring', (draft.metadata && draft.metadata.scoring_type || '').replace('_', ' ') || '—', true)
         ) +
         row(
-          stat('Draft Date', fmtStart(draft.start_time) + ' <span style="color:#6e7681;font-size:12px">' + countdown(draft.start_time) + '</span>') +
+          stat('Draft Date', fmtStart(draft.start_time) + ' <span style="color:var(--text-4);font-size:12px">' + countdown(draft.start_time) + '</span>') +
           (keepersEnabled() ? stat('Keepers set', keepers + ' league-wide', true) : '')
         );
     }
@@ -226,7 +230,7 @@
         // if (mine.length) sub += ' · 1st at ' + OvenDraft.roundPickLabel(mine[0].pick_no, draft.settings.teams);
       }
 
-      el.innerHTML = '<a class="oven-team-card is-me oven-open-board" href="/bakers-oven/' + leagueId + '/' + myRosterId + '">' +
+      el.innerHTML = '<a class="oven-team-card is-me oven-open-board" href="/football/bakers-oven/' + leagueId + '/' + myRosterId + '">' +
         (me.avatar
           ? '<img class="oven-team-avatar" src="' + OvenBoard.esc(me.avatar) + '" alt="" referrerpolicy="no-referrer">'
           : '<div class="oven-team-avatar"></div>') +
@@ -633,15 +637,15 @@
       });
     }
 
-    /* Legacy /bakers-oven/{rosterId} links, from before leagues existed.
+    /* Legacy /football/bakers-oven/{rosterId} links, from before leagues existed.
      * League ids are 18-19 digits and roster ids are one or two, so the shape
      * disambiguates. The server can't do this redirect — which league a bare
      * roster id belongs to is per-account data it never sees. */
     function handleLegacySegment() {
       var saved = OvenLeagues.list();
       location.replace(saved.length === 1
-        ? '/bakers-oven/' + saved[0].league_id + '/' + seg
-        : '/bakers-oven');
+        ? '/football/bakers-oven/' + saved[0].league_id + '/' + seg
+        : '/football/bakers-oven');
     }
 
     async function boot() {

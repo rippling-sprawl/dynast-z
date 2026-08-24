@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <link rel="icon" type="image/png" href="/favicon.png">
   <title>Leaderboard | Dynast-Z</title>
+  <!-- Theme first: theme.js sets <html data-theme> before the first paint,
+       theme.css holds every colour token the sheets below spend. -->
+  <script src="/scripts/base/theme.js"></script>
+  <link rel="stylesheet" href="/styles/base/theme.css">
   <link rel="stylesheet" href="/styles/base/styles.css">
   <link rel="stylesheet" href="/styles/base/hub.css">
   <link rel="stylesheet" href="/styles/primary/golf.css">
@@ -179,7 +183,7 @@
           html += `<td>${p.pos || ''}</td>`;
           html += `<td class="player-name">${p.full_name}${getStreakEmoji(p, pars)}</td>`;
           if (!p.today && !p.thru && p.teetime) {
-            html += `<td colspan="2" style="text-align:right;color:#888;font-size:11px">${p.teetime}</td>`;
+            html += `<td colspan="2" style="text-align:right;color:var(--text-3);font-size:11px">${p.teetime}</td>`;
           } else {
             html += `<td class="${scoreClass(p.today)}" style="text-align:right">${formatScore(p.today)}</td>`;
             html += `<td style="text-align:right">${p.thru || ''}</td>`;
@@ -405,36 +409,36 @@
     #player-menu.open { display: block; }
     .player-menu-backdrop {
       position: fixed; inset: 0;
-      background: rgba(0,0,0,0.5);
+      background: var(--overlay);
       z-index: 1000;
     }
     .player-menu-sheet {
       position: fixed; bottom: 0; left: 0; right: 0;
-      background: #1a1a1a;
+      background: var(--panel-hi);
       border-radius: 12px 12px 0 0;
       padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
       z-index: 1001;
     }
     .player-menu-name {
       font-weight: 700; font-size: 15px;
-      color: #f0f0f0;
+      color: var(--text-bright);
       padding-bottom: 12px;
-      border-bottom: 1px solid #2a2a2a;
+      border-bottom: 1px solid var(--hairline);
       margin-bottom: 8px;
     }
     .player-menu-item {
       display: block;
       padding: 12px 0;
-      color: #60a5fa;
+      color: var(--accent-2);
       text-decoration: none;
       font-size: 14px;
     }
     .player-menu-cancel {
       display: block; width: 100%;
       margin-top: 8px; padding: 12px 0;
-      background: #2a2a2a;
+      background: var(--hairline);
       border: none; border-radius: 8px;
-      color: #aaa; font-size: 14px;
+      color: var(--text-2); font-size: 14px;
       cursor: pointer;
     }
   </style>

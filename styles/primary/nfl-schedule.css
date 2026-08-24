@@ -10,7 +10,7 @@
 .sched-reset {
   background: none;
   border: none;
-  color: #58a6ff;
+  color: var(--accent);
   font-size: 12px;
   cursor: pointer;
   padding: 5px 2px;
