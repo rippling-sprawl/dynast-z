@@ -219,7 +219,19 @@
       latestPicks = picks || [];
       plan = OvenDraft.buildPickPlan(draft, ctx.tradedPicks);
       S.clock = OvenDraft.computeClock(plan, picks, rosterId, S.teamsCount * draft.settings.rounds);
-      OvenBoard.applyDraftState(newly, Object.keys(prevDrafted).length === 0);
+      /* A poll normally patches classes and leaves the list standing — that is
+       * what keeps your scroll and the cross-off animation. But under
+       * Hide: Drafted, "he's gone" means the row has to LEAVE, and no class
+       * patch removes a row; only a re-filter does. So a poll that actually
+       * moved the drafted set re-renders instead of patching. That is also the
+       * boot case: picks land after the first render, so without this the chip
+       * comes up lit over a board that still shows all forty taken players.
+       * Polls where nothing moved — including refreshNow's unconditional
+       * refetch — still take the cheap path. */
+      var moved = Object.keys(newly).length > 0 ||
+        Object.keys(drafted).length !== Object.keys(prevDrafted).length;
+      if (S.filters.hideDrafted && moved) OvenBoard.render(listEl);
+      else OvenBoard.applyDraftState(newly, Object.keys(prevDrafted).length === 0);
       prevDrafted = drafted;
       renderClock();
       OvenTargets.refresh();

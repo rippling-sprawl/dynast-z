@@ -400,6 +400,16 @@ it the same way if the draft goes live (or finishes) while you sit on the page, 
 the moment you touch the chip yourself — `hideDraftedTouched`. `Fade` is unaffected: it is a claim
 about the players, not about the clock.
 
+One consequence, and it is the whole reason the default works at all: **a poll that moves the
+drafted set re-renders under this filter instead of patching.** `applyDraftState()` patches classes,
+and no class removes a row — only `visibleRows()` does. Picks also land *after* boot's first
+`render()`, so without the re-render the chip would come up lit over a board still showing every
+taken player. `onPicks` takes the render path when `hideDrafted` is on and the drafted set actually
+moved (a new pick, or a commissioner undo changing the count); everything else — including
+`refreshNow()`'s unconditional refetch of unchanged picks — still takes the cheap patch. The
+cross-off animation is not lost by this: with the filter on, the row it would have played on is
+leaving.
+
 The team filter is `S.filters.team` — an NFL abbreviation or `null` — and it *composes* with the
 positions rather than resetting them, because `RB` + `BUF` ("who's left in that backfield") is a
 question draft night actually asks. Its options come from `OvenBoard.boardTeams()`, which reads the
