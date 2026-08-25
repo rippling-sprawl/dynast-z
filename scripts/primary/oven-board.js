@@ -438,6 +438,9 @@
     // `team` is an NFL abbreviation (uppercase, as the rows carry it) or null
     // for all — the same shape as `pos`, and for the same reason: both say
     // "this screen is about X" rather than taking rows away.
+    // `hideDrafted` starts off here because a module can't know what the draft
+    // is doing; the board page sets it from the draft's status at boot (a live
+    // draft opens with the taken players hidden) and paints the chip from it.
     filters: { pos: null, team: null, hideDrafted: false, hideFade: false, showHistory: false, showOdds: false },
     clock: null, teamsCount: 12, myRosterId: null,
     onReorder: null, reorderWired: false,

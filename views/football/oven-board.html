@@ -161,6 +161,26 @@
     // plan (which rounds I actually own after trades).
     var latestPicks = [], plan = [];
 
+    /* A live draft opens with the drafted players hidden. Mid-draft the board is
+     * a list of who is still THERE, and the forty names already off it are
+     * scrolling between you and your own next pick. Before the draft starts
+     * nothing is drafted, so the filter would only be a chip lit for no reason;
+     * after it finishes the board is a record of the draft and the picks are the
+     * whole point of reading it. So the default is on for exactly the window
+     * where it's the answer.
+     *
+     * Paused is underway: the picks are in, somebody just stepped away. */
+    var LIVE_STATUS = { drafting: true, paused: true };
+    /* Set the moment you touch the chip yourself. After that the draft going
+     * live can't overrule what you just said you wanted to see. */
+    var hideDraftedTouched = false;
+
+    function syncHideChip(btn, key) {
+      var on = !!S.filters[key];
+      btn.classList.toggle('active', on);
+      btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    }
+
     function renderClock() {
       var c = S.clock;
       var nextEl = document.getElementById('next-pick');
@@ -274,10 +294,14 @@
       // positions — each names one filter key on S.filters.
       document.querySelectorAll('.oven-chip[data-hide]').forEach(function (btn) {
         var key = btn.getAttribute('data-hide');
+        // Painted from the filter, not from the markup: Drafted comes up already
+        // on in a live draft, and a chip that lies about the filter behind it is
+        // worse than no chip.
+        syncHideChip(btn, key);
         btn.addEventListener('click', function () {
           S.filters[key] = !S.filters[key];
-          btn.classList.toggle('active', S.filters[key]);
-          btn.setAttribute('aria-pressed', S.filters[key] ? 'true' : 'false');
+          if (key === 'hideDrafted') hideDraftedTouched = true;
+          syncHideChip(btn, key);
           OvenBoard.render(listEl);
         });
       });
@@ -371,6 +395,9 @@
         setTitle(ctx.league.name);
 
         draft = await OvenDraft.loadDraft(ctx.draftId);
+        // Underway means the board opens on what's left — see LIVE_STATUS. Set
+        // before wireControls(), which paints the chip from this.
+        S.filters.hideDrafted = !!LIVE_STATUS[draft.status];
         S.teamsCount = draft.settings.teams;
         S.myRosterId = rosterId;
         ctx.teams.forEach(function (t) { S.teams[t.roster_id] = t; });
@@ -477,6 +504,21 @@
         poller = OvenDraft.createPoller({
           draftId: ctx.draftId,
           onPicks: onPicks,
+          /* Boards get opened early and left open. When the commissioner hits
+           * go, the default flips under you exactly as it would have on a fresh
+           * load — and flips back when the draft finishes, since a finished
+           * draft is a record and hiding the picks hides the record. Silent when
+           * the value already agrees, which is what makes the poller's opening
+           * null -> status transition a no-op over what boot already set. */
+          onStatusChange: function (prev, status) {
+            if (hideDraftedTouched) return;
+            var live = !!LIVE_STATUS[status];
+            if (live === !!S.filters.hideDrafted) return;
+            S.filters.hideDrafted = live;
+            var chip = document.querySelector('.oven-chip[data-hide="hideDrafted"]');
+            if (chip) syncHideChip(chip, 'hideDrafted');
+            OvenBoard.render(listEl);
+          },
         });
         poller.start();
       } catch (e) {

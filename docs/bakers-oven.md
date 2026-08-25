@@ -390,6 +390,16 @@ not in `visibleRows()`: a Hide toggle that would leave one of your picks with no
 hands that pick its best available back — see
 [A pick is never empty](#a-pick-is-never-empty--rescued-rows).
 
+**`Hide: Drafted` is on by default while the draft is live.** The board page sets
+`S.filters.hideDrafted` from the draft's status at boot — on for `drafting` and `paused`, off for
+`pre_draft` and `complete` — and `wireControls()` paints the chip from the filter rather than from
+the markup. Mid-draft the board is a list of who is still there, and forty struck-through names
+between you and your next pick is the one thing that default buys back; before the draft nothing is
+drafted, and after it the picks are the record you came to read. The poller's `onStatusChange` flips
+it the same way if the draft goes live (or finishes) while you sit on the page, and stops doing so
+the moment you touch the chip yourself — `hideDraftedTouched`. `Fade` is unaffected: it is a claim
+about the players, not about the clock.
+
 The team filter is `S.filters.team` — an NFL abbreviation or `null` — and it *composes* with the
 positions rather than resetting them, because `RB` + `BUF` ("who's left in that backfield") is a
 question draft night actually asks. Its options come from `OvenBoard.boardTeams()`, which reads the
