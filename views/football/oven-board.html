@@ -142,6 +142,15 @@
     var rosterId = parseInt(seg[2], 10);
 
     var ctx = null, draft = null, poller = null;
+    /* The tab title carries the league, because draft night is the one time
+     * several of these boards are open at once and the tabs are all the same
+     * width. Set from the saved record first, then from ctx.league.name the
+     * moment the network says the league was renamed. */
+    var leagueName = '';
+    function setTitle(name) {
+      if (name) leagueName = name;
+      document.title = (leagueName ? leagueName + ' - ' : '') + "Big Board | Baker's Oven";
+    }
     // The per-league rankings blob and its storage keys, held at page scope so a
     // drag-reorder can write the new order back into the same object the CSV
     // import wrote.
@@ -173,9 +182,12 @@
           '<span class="oven-pick-label">' + label + '</span>' +
           (onClock ? '' : '<span class="oven-pick-away">' + away + ' away</span>');
         consoleEl.classList.toggle('is-live', onClock);
+        // The two urgent states stay short on purpose — a truncated tab has to
+        // show the alert, not the league name. Idle goes back to the full title.
         var base = "Baker's Oven";
-        document.title = onClock ? 'ON THE CLOCK — ' + base
-          : (away <= 5 ? '(' + away + ') ' + base : 'Big Board | ' + base);
+        if (onClock) document.title = 'ON THE CLOCK — ' + base;
+        else if (away <= 5) document.title = '(' + away + ') ' + base;
+        else setTitle();
       }
     }
 
@@ -321,7 +333,7 @@
         var rec = OvenLeagues.get(leagueId);
         var leagueCrumb = document.getElementById('crumb-league');
         leagueCrumb.href = '/football/bakers-oven/' + leagueId;
-        if (rec) leagueCrumb.textContent = rec.name;
+        if (rec) { leagueCrumb.textContent = rec.name; setTitle(rec.name); }
 
         bk = OvenLeagues.boardKeys(leagueId);
         var results = await Promise.all([
@@ -356,6 +368,7 @@
         var posRanks = results[4];
         var propLines = results[5];
         leagueCrumb.textContent = ctx.league.name;
+        setTitle(ctx.league.name);
 
         draft = await OvenDraft.loadDraft(ctx.draftId);
         S.teamsCount = draft.settings.teams;

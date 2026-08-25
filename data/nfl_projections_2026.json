@@ -1,18 +1,21 @@
 {
   "title": "2026 Projections Weighted by the Best Sources",
   "note": "Each team has a 25% chance to win their Division. They have a 100% chance of making the Playoffs, if they win that. Conference champs and Super Bowl should be an after thought after betting \"to make the playoffs\"",
-  "eyeTestLegend": "0: ass \u00b7 5: Shakeys",
+  "eyeTestLegend": "1: Let\u2019s Run It Back, Shall We? \u00b7 9: No Ceiling in Sight",
   "source": "Google Sheet \u2014 Projections tab",
   "weights": {
     "eyeTest": 0.2,
-    "oLine": 0.4,
-    "sos": 0.25,
-    "rest": 0.15
+    "oLine": 0.25,
+    "sos": 0.15,
+    "rest": 0.1,
+    "havoc": 0.15,
+    "coaches": 0.1,
+    "luck": 0.05
   },
   "stats": {
     "eyeTest": {
-      "avg": 5.09,
-      "std": 1.89
+      "avg": 5.19,
+      "std": 2.35
     },
     "oLineRank": {
       "avg": 16.5,
@@ -25,6 +28,18 @@
     "rest": {
       "avg": 0.0,
       "std": 8.67
+    },
+    "havoc": {
+      "avg": 14.82,
+      "std": 2.35
+    },
+    "coachTier": {
+      "avg": 4.62,
+      "std": 2.2
+    },
+    "winsAbovePythag": {
+      "avg": 0.03,
+      "std": 1.47
     }
   },
   "teams": [
@@ -32,19 +47,25 @@
       "team": "Chicago Bears",
       "conf": "NFC",
       "div": "North",
-      "score": 0.78,
+      "score": 0.69,
       "z": {
-        "eyeTest": 1.0,
+        "eyeTest": 1.4,
         "oLine": 1.2,
         "sos": -0.7,
-        "rest": 1.7
+        "rest": 1.7,
+        "havoc": -0.1,
+        "coaches": 1.2,
+        "luck": -1.3
       },
       "raw": {
-        "eyeTest": 7.0,
+        "eyeTest": 2.0,
         "oLineRank": 5.0,
         "sos": 3.0,
         "sosRank": 26.0,
-        "rest": 15.0
+        "rest": 15.0,
+        "havoc": 14.5,
+        "coachTier": 2,
+        "winsAbovePythag": 1.9
       },
       "odds": {
         "make": 114.0,
@@ -107,19 +128,25 @@
       "team": "Detroit Lions",
       "conf": "NFC",
       "div": "North",
-      "score": 0.75,
+      "score": 0.49,
       "z": {
-        "eyeTest": 1.0,
+        "eyeTest": 0.1,
         "oLine": -0.3,
         "sos": 2.5,
-        "rest": 0.1
+        "rest": 0.1,
+        "havoc": 0.5,
+        "coaches": 0.3,
+        "luck": 0.7
       },
       "raw": {
-        "eyeTest": 7.0,
+        "eyeTest": 5.0,
         "oLineRank": 19.0,
         "sos": 10.0,
         "sosRank": 1.0,
-        "rest": 1.0
+        "rest": 1.0,
+        "havoc": 15.9,
+        "coachTier": 4,
+        "winsAbovePythag": -1.0
       },
       "odds": {
         "make": -210.0,
@@ -186,19 +213,25 @@
       "team": "Minnesota Vikings",
       "conf": "NFC",
       "div": "North",
-      "score": -0.02,
+      "score": 0.51,
       "z": {
-        "eyeTest": -1.1,
+        "eyeTest": 0.5,
         "oLine": 0.5,
         "sos": -0.2,
-        "rest": 0.5
+        "rest": 0.5,
+        "havoc": 1.4,
+        "coaches": 0.7,
+        "luck": -0.1
       },
       "raw": {
-        "eyeTest": 3.0,
+        "eyeTest": 4.0,
         "oLineRank": 12.0,
         "sos": 4.0,
         "sosRank": 15.0,
-        "rest": 4.0
+        "rest": 4.0,
+        "havoc": 18.1,
+        "coachTier": 3,
+        "winsAbovePythag": 0.2
       },
       "odds": {
         "make": 148.0,
@@ -263,19 +296,25 @@
       "team": "Green Bay Packers",
       "conf": "NFC",
       "div": "North",
-      "score": -0.54,
+      "score": -0.19,
       "z": {
         "eyeTest": 0.5,
         "oLine": -1.2,
         "sos": -0.5,
-        "rest": -0.2
+        "rest": -0.2,
+        "havoc": 0.3,
+        "coaches": 0.7,
+        "luck": -0.1
       },
       "raw": {
-        "eyeTest": 6.0,
+        "eyeTest": 4.0,
         "oLineRank": 28.0,
         "sos": 3.5,
         "sosRank": 24.0,
-        "rest": -2.0
+        "rest": -2.0,
+        "havoc": 15.6,
+        "coachTier": 3,
+        "winsAbovePythag": 0.2
       },
       "odds": {
         "make": -116.0,
@@ -337,19 +376,25 @@
       "team": "Tampa Bay Buccaneers",
       "conf": "NFC",
       "div": "South",
-      "score": 0.47,
+      "score": 0.22,
       "z": {
         "eyeTest": 0.5,
         "oLine": 1.4,
         "sos": -0.7,
-        "rest": -0.2
+        "rest": -0.2,
+        "havoc": -0.3,
+        "coaches": -0.6,
+        "luck": -0.2
       },
       "raw": {
-        "eyeTest": 6.0,
+        "eyeTest": 4.0,
         "oLineRank": 3.0,
         "sos": 3.0,
         "sosRank": 25.0,
-        "rest": -2.0
+        "rest": -2.0,
+        "havoc": 14.0,
+        "coachTier": 6,
+        "winsAbovePythag": 0.3
       },
       "odds": {
         "make": 142.0,
@@ -406,19 +451,25 @@
       "team": "New Orleans Saints",
       "conf": "NFC",
       "div": "South",
-      "score": 0.31,
+      "score": 0.09,
       "z": {
-        "eyeTest": -0.6,
+        "eyeTest": -0.3,
         "oLine": 0.1,
         "sos": 2.1,
-        "rest": -0.8
+        "rest": -0.8,
+        "havoc": -0.4,
+        "coaches": -0.2,
+        "luck": 0.2
       },
       "raw": {
-        "eyeTest": 4.0,
+        "eyeTest": 6.0,
         "oLineRank": 16.0,
         "sos": 9.0,
         "sosRank": 3.0,
-        "rest": -7.0
+        "rest": -7.0,
+        "havoc": 13.9,
+        "coachTier": 5,
+        "winsAbovePythag": -0.3
       },
       "odds": {
         "make": 180.0,
@@ -480,19 +531,25 @@
       "team": "Atlanta Falcons",
       "conf": "NFC",
       "div": "South",
-      "score": 0.27,
+      "score": -0.18,
       "z": {
-        "eyeTest": -0.6,
+        "eyeTest": -1.2,
         "oLine": 0.8,
         "sos": -0.2,
-        "rest": 0.8
+        "rest": 0.8,
+        "havoc": -0.4,
+        "coaches": -1.1,
+        "luck": -0.5
       },
       "raw": {
-        "eyeTest": 4.0,
+        "eyeTest": 8.0,
         "oLineRank": 9.0,
         "sos": 4.0,
         "sosRank": 19.0,
-        "rest": 7.0
+        "rest": 7.0,
+        "havoc": 13.8,
+        "coachTier": 7,
+        "winsAbovePythag": 0.8
       },
       "odds": {
         "make": 220.0,
@@ -552,19 +609,25 @@
       "team": "Carolina Panthers",
       "conf": "NFC",
       "div": "South",
-      "score": -0.51,
+      "score": -0.97,
       "z": {
-        "eyeTest": 0.0,
+        "eyeTest": -1.2,
         "oLine": -1.0,
         "sos": -0.9,
-        "rest": 0.9
+        "rest": 0.9,
+        "havoc": -2.1,
+        "coaches": -0.6,
+        "luck": -1.0
       },
       "raw": {
-        "eyeTest": 5.0,
+        "eyeTest": 8.0,
         "oLineRank": 26.0,
         "sos": 2.5,
         "sosRank": 30.0,
-        "rest": 8.0
+        "rest": 8.0,
+        "havoc": 9.8,
+        "coachTier": 6,
+        "winsAbovePythag": 1.5
       },
       "odds": {
         "make": 235.0,
@@ -625,19 +688,25 @@
       "team": "Philadelphia Eagles",
       "conf": "NFC",
       "div": "East",
-      "score": 0.57,
+      "score": 0.35,
       "z": {
-        "eyeTest": 0.5,
+        "eyeTest": 0.1,
         "oLine": 1.5,
         "sos": 0.5,
-        "rest": -1.7
+        "rest": -1.7,
+        "havoc": 0.4,
+        "coaches": 0.3,
+        "luck": -0.7
       },
       "raw": {
-        "eyeTest": 6.0,
+        "eyeTest": 5.0,
         "oLineRank": 2.0,
         "sos": 5.5,
         "sosRank": 8.0,
-        "rest": -15.0
+        "rest": -15.0,
+        "havoc": 15.7,
+        "coachTier": 4,
+        "winsAbovePythag": 1.0
       },
       "odds": {
         "make": -168.0,
@@ -702,19 +771,25 @@
       "team": "Dallas Cowboys",
       "conf": "NFC",
       "div": "East",
-      "score": 0.01,
+      "score": 0.45,
       "z": {
-        "eyeTest": 0.0,
+        "eyeTest": 1.4,
         "oLine": -0.1,
         "sos": -0.7,
-        "rest": 1.4
+        "rest": 1.4,
+        "havoc": 1.0,
+        "coaches": -0.2,
+        "luck": 0.2
       },
       "raw": {
-        "eyeTest": 5.0,
+        "eyeTest": 2.0,
         "oLineRank": 17.0,
         "sos": 3.0,
         "sosRank": 28.0,
-        "rest": 12.0
+        "rest": 12.0,
+        "havoc": 17.2,
+        "coachTier": 5,
+        "winsAbovePythag": -0.2
       },
       "odds": {
         "make": -108.0,
@@ -773,19 +848,25 @@
       "team": "New York Giants",
       "conf": "NFC",
       "div": "East",
-      "score": -0.45,
+      "score": -0.26,
       "z": {
-        "eyeTest": -0.6,
+        "eyeTest": -1.2,
         "oLine": -0.7,
         "sos": -0.5,
-        "rest": 0.3
+        "rest": 0.3,
+        "havoc": 0.3,
+        "coaches": 0.3,
+        "luck": 2.1
       },
       "raw": {
-        "eyeTest": 4.0,
+        "eyeTest": 8.0,
         "oLineRank": 23.0,
         "sos": 3.5,
         "sosRank": 21.0,
-        "rest": 3.0
+        "rest": 3.0,
+        "havoc": 15.4,
+        "coachTier": 4,
+        "winsAbovePythag": -3.1
       },
       "odds": {
         "make": 260.0,
@@ -851,19 +932,25 @@
       "team": "Washington Commanders",
       "conf": "NFC",
       "div": "East",
-      "score": -0.85,
+      "score": -0.53,
       "z": {
-        "eyeTest": -0.6,
+        "eyeTest": -0.3,
         "oLine": -1.7,
         "sos": -0.9,
-        "rest": 1.0
+        "rest": 1.0,
+        "havoc": -0.1,
+        "coaches": -0.6,
+        "luck": 0.8
       },
       "raw": {
-        "eyeTest": 4.0,
+        "eyeTest": 6.0,
         "oLineRank": 32.0,
         "sos": 2.5,
         "sosRank": 29.0,
-        "rest": 9.0
+        "rest": 9.0,
+        "havoc": 14.6,
+        "coachTier": 6,
+        "winsAbovePythag": -1.2
       },
       "odds": {
         "make": 275.0,
@@ -926,19 +1013,25 @@
       "team": "San Francisco 49ers",
       "conf": "NFC",
       "div": "West",
-      "score": 0.6,
+      "score": 0.35,
       "z": {
-        "eyeTest": 1.0,
+        "eyeTest": 1.4,
         "oLine": 0.7,
         "sos": 0.5,
-        "rest": 0.0
+        "rest": 0.0,
+        "havoc": -1.8,
+        "coaches": 1.7,
+        "luck": -1.3
       },
       "raw": {
-        "eyeTest": 7.0,
+        "eyeTest": 2.0,
         "oLineRank": 10.0,
         "sos": 5.5,
         "sosRank": 7.0,
-        "rest": 0.0
+        "rest": 0.0,
+        "havoc": 10.5,
+        "coachTier": 1,
+        "winsAbovePythag": 1.9
       },
       "odds": {
         "make": -136.0,
@@ -996,19 +1089,25 @@
       "team": "Los Angeles Rams",
       "conf": "NFC",
       "div": "West",
-      "score": 0.37,
+      "score": 0.61,
       "z": {
-        "eyeTest": 2.1,
+        "eyeTest": 1.8,
         "oLine": 0.6,
         "sos": -0.7,
-        "rest": -0.7
+        "rest": -0.7,
+        "havoc": 0.6,
+        "coaches": 1.7,
+        "luck": 0.2
       },
       "raw": {
-        "eyeTest": 9.0,
+        "eyeTest": 1.0,
         "oLineRank": 11.0,
         "sos": 3.0,
         "sosRank": 27.0,
-        "rest": -6.0
+        "rest": -6.0,
+        "havoc": 16.3,
+        "coachTier": 1,
+        "winsAbovePythag": -0.3
       },
       "odds": {
         "make": -550.0,
@@ -1068,19 +1167,25 @@
       "team": "Seattle Seahawks",
       "conf": "NFC",
       "div": "West",
-      "score": 0.31,
+      "score": 0.2,
       "z": {
-        "eyeTest": 1.0,
+        "eyeTest": -0.3,
         "oLine": 0.2,
         "sos": -0.5,
-        "rest": 1.0
+        "rest": 1.0,
+        "havoc": 0.7,
+        "coaches": 1.2,
+        "luck": -0.7
       },
       "raw": {
-        "eyeTest": 7.0,
+        "eyeTest": 6.0,
         "oLineRank": 15.0,
         "sos": 3.5,
         "sosRank": 23.0,
-        "rest": 9.0
+        "rest": 9.0,
+        "havoc": 16.4,
+        "coachTier": 2,
+        "winsAbovePythag": 1.0
       },
       "odds": {
         "make": -220.0,
@@ -1139,19 +1244,25 @@
       "team": "Arizona Cardinals",
       "conf": "NFC",
       "div": "West",
-      "score": -0.96,
+      "score": -0.82,
       "z": {
-        "eyeTest": -1.1,
+        "eyeTest": -0.8,
         "oLine": -0.6,
         "sos": -2.1,
-        "rest": 0.1
+        "rest": 0.1,
+        "havoc": -1.3,
+        "coaches": -1.1,
+        "luck": 1.7
       },
       "raw": {
-        "eyeTest": 3.0,
+        "eyeTest": 7.0,
         "oLineRank": 22.0,
         "sos": 0.0,
         "sosRank": 32.0,
-        "rest": 1.0
+        "rest": 1.0,
+        "havoc": 11.8,
+        "coachTier": 7,
+        "winsAbovePythag": -2.4
       },
       "odds": {
         "make": 2000.0,
@@ -1213,19 +1324,25 @@
       "team": "Cincinnati Bengals",
       "conf": "AFC",
       "div": "North",
-      "score": 0.35,
+      "score": 0.21,
       "z": {
-        "eyeTest": 0.0,
+        "eyeTest": 0.9,
         "oLine": -0.4,
         "sos": 2.3,
-        "rest": -0.5
+        "rest": -0.5,
+        "havoc": -0.5,
+        "coaches": -1.5,
+        "luck": 0.6
       },
       "raw": {
-        "eyeTest": 5.0,
+        "eyeTest": 3.0,
         "oLineRank": 20.0,
         "sos": 9.5,
         "sosRank": 2.0,
-        "rest": -4.0
+        "rest": -4.0,
+        "havoc": 13.7,
+        "coachTier": 8,
+        "winsAbovePythag": -0.8
       },
       "odds": {
         "make": -194.0,
@@ -1284,19 +1401,25 @@
       "team": "Baltimore Ravens",
       "conf": "AFC",
       "div": "North",
-      "score": 0.0,
+      "score": 0.09,
       "z": {
-        "eyeTest": 1.0,
+        "eyeTest": 0.9,
         "oLine": -0.8,
         "sos": 0.7,
-        "rest": -0.3
+        "rest": -0.3,
+        "havoc": -0.0,
+        "coaches": -0.2,
+        "luck": 0.8
       },
       "raw": {
-        "eyeTest": 7.0,
+        "eyeTest": 3.0,
         "oLineRank": 24.0,
         "sos": 6.0,
         "sosRank": 5.0,
-        "rest": -3.0
+        "rest": -3.0,
+        "havoc": 14.8,
+        "coachTier": 5,
+        "winsAbovePythag": -1.1
       },
       "odds": {
         "make": -300.0,
@@ -1357,19 +1480,25 @@
       "team": "Pittsburgh Steelers",
       "conf": "AFC",
       "div": "North",
-      "score": -0.06,
+      "score": -0.26,
       "z": {
-        "eyeTest": 0.0,
+        "eyeTest": -0.8,
         "oLine": 0.3,
         "sos": -0.2,
-        "rest": -0.7
+        "rest": -0.7,
+        "havoc": 0.6,
+        "coaches": -1.1,
+        "luck": -0.8
       },
       "raw": {
-        "eyeTest": 5.0,
+        "eyeTest": 7.0,
         "oLineRank": 14.0,
         "sos": 4.0,
         "sosRank": 17.0,
-        "rest": -6.0
+        "rest": -6.0,
+        "havoc": 16.2,
+        "coachTier": 7,
+        "winsAbovePythag": 1.2
       },
       "odds": {
         "make": 166.0,
@@ -1430,19 +1559,25 @@
       "team": "Cleveland Browns",
       "conf": "AFC",
       "div": "North",
-      "score": -0.88,
+      "score": -0.46,
       "z": {
-        "eyeTest": -2.2,
+        "eyeTest": -1.6,
         "oLine": -1.5,
         "sos": 0.7,
-        "rest": 0.0
+        "rest": 0.0,
+        "havoc": 1.6,
+        "coaches": -1.1,
+        "luck": 0.4
       },
       "raw": {
-        "eyeTest": 1.0,
+        "eyeTest": 9.0,
         "oLineRank": 31.0,
         "sos": 6.0,
         "sosRank": 6.0,
-        "rest": 0.0
+        "rest": 0.0,
+        "havoc": 18.5,
+        "coachTier": 7,
+        "winsAbovePythag": -0.5
       },
       "odds": {
         "make": 640.0,
@@ -1503,19 +1638,25 @@
       "team": "Indianapolis Colts",
       "conf": "AFC",
       "div": "South",
-      "score": 0.54,
+      "score": 0.39,
       "z": {
-        "eyeTest": 0.0,
+        "eyeTest": 0.1,
         "oLine": 1.3,
         "sos": 0.5,
-        "rest": -0.7
+        "rest": -0.7,
+        "havoc": -0.6,
+        "coaches": 0.7,
+        "luck": 1.2
       },
       "raw": {
         "eyeTest": 5.0,
         "oLineRank": 4.0,
         "sos": 5.5,
         "sosRank": 9.0,
-        "rest": -6.0
+        "rest": -6.0,
+        "havoc": 13.5,
+        "coachTier": 3,
+        "winsAbovePythag": -1.7
       },
       "odds": {
         "make": 158.0,
@@ -1572,19 +1713,25 @@
       "team": "Houston Texans",
       "conf": "AFC",
       "div": "South",
-      "score": -0.33,
+      "score": -0.34,
       "z": {
-        "eyeTest": 0.5,
+        "eyeTest": -0.8,
         "oLine": -1.1,
         "sos": -0.5,
-        "rest": 0.9
+        "rest": 0.9,
+        "havoc": 0.1,
+        "coaches": 0.7,
+        "luck": -0.3
       },
       "raw": {
-        "eyeTest": 6.0,
+        "eyeTest": 7.0,
         "oLineRank": 27.0,
         "sos": 3.5,
         "sosRank": 22.0,
-        "rest": 8.0
+        "rest": 8.0,
+        "havoc": 15.1,
+        "coachTier": 3,
+        "winsAbovePythag": 0.5
       },
       "odds": {
         "make": -190.0,
@@ -1643,19 +1790,25 @@
       "team": "Jacksonville Jaguars",
       "conf": "AFC",
       "div": "South",
-      "score": -0.59,
+      "score": -0.49,
       "z": {
-        "eyeTest": 0.5,
+        "eyeTest": 0.1,
         "oLine": -1.4,
         "sos": -0.2,
-        "rest": -0.3
+        "rest": -0.3,
+        "havoc": -1.0,
+        "coaches": 1.2,
+        "luck": -0.8
       },
       "raw": {
-        "eyeTest": 6.0,
+        "eyeTest": 5.0,
         "oLineRank": 30.0,
         "sos": 4.0,
         "sosRank": 18.0,
-        "rest": -3.0
+        "rest": -3.0,
+        "havoc": 12.5,
+        "coachTier": 2,
+        "winsAbovePythag": 1.2
       },
       "odds": {
         "make": -102.0,
@@ -1715,19 +1868,25 @@
       "team": "Tennessee Titans",
       "conf": "AFC",
       "div": "South",
-      "score": -0.71,
+      "score": -0.69,
       "z": {
-        "eyeTest": -1.1,
+        "eyeTest": -1.6,
         "oLine": -1.3,
         "sos": -0.2,
-        "rest": 0.7
+        "rest": 0.7,
+        "havoc": 0.1,
+        "coaches": -1.1,
+        "luck": 0.6
       },
       "raw": {
-        "eyeTest": 3.0,
+        "eyeTest": 9.0,
         "oLineRank": 29.0,
         "sos": 4.0,
         "sosRank": 16.0,
-        "rest": 6.0
+        "rest": 6.0,
+        "havoc": 15.1,
+        "coachTier": 7,
+        "winsAbovePythag": -0.8
       },
       "odds": {
         "make": 430.0,
@@ -1792,19 +1951,25 @@
       "team": "Buffalo Bills",
       "conf": "AFC",
       "div": "East",
-      "score": 0.84,
+      "score": 0.65,
       "z": {
-        "eyeTest": 1.0,
+        "eyeTest": 1.4,
         "oLine": 1.1,
         "sos": -0.2,
-        "rest": 1.6
+        "rest": 1.6,
+        "havoc": 0.7,
+        "coaches": -1.1,
+        "luck": -0.5
       },
       "raw": {
-        "eyeTest": 7.0,
+        "eyeTest": 2.0,
         "oLineRank": 6.0,
         "sos": 4.0,
         "sosRank": 14.0,
-        "rest": 14.0
+        "rest": 14.0,
+        "havoc": 16.4,
+        "coachTier": 7,
+        "winsAbovePythag": 0.8
       },
       "odds": {
         "make": -320.0,
@@ -1862,19 +2027,25 @@
       "team": "New England Patriots",
       "conf": "AFC",
       "div": "East",
-      "score": 0.44,
+      "score": 0.24,
       "z": {
         "eyeTest": 0.5,
         "oLine": 0.4,
         "sos": 0.2,
-        "rest": 0.9
+        "rest": 0.9,
+        "havoc": -0.4,
+        "coaches": 0.3,
+        "luck": -1.0
       },
       "raw": {
-        "eyeTest": 6.0,
+        "eyeTest": 4.0,
         "oLineRank": 13.0,
         "sos": 5.0,
         "sosRank": 10.0,
-        "rest": 8.0
+        "rest": 8.0,
+        "havoc": 13.9,
+        "coachTier": 4,
+        "winsAbovePythag": 1.5
       },
       "odds": {
         "make": -210.0,
@@ -1938,19 +2109,25 @@
       "team": "New York Jets",
       "conf": "AFC",
       "div": "East",
-      "score": -0.33,
+      "score": -0.62,
       "z": {
-        "eyeTest": -1.6,
+        "eyeTest": -1.2,
         "oLine": -0.5,
         "sos": 1.4,
-        "rest": -1.0
+        "rest": -1.0,
+        "havoc": -1.6,
+        "coaches": -1.5,
+        "luck": 0.6
       },
       "raw": {
-        "eyeTest": 2.0,
+        "eyeTest": 8.0,
         "oLineRank": 21.0,
         "sos": 7.5,
         "sosRank": 4.0,
-        "rest": -9.0
+        "rest": -9.0,
+        "havoc": 11.0,
+        "coachTier": 8,
+        "winsAbovePythag": -0.9
       },
       "odds": {
         "make": 750.0,
@@ -2010,19 +2187,25 @@
       "team": "Miami Dolphins",
       "conf": "AFC",
       "div": "East",
-      "score": -1.14,
+      "score": -1.08,
       "z": {
         "eyeTest": -1.6,
         "oLine": -0.9,
         "sos": -1.4,
-        "rest": -0.7
+        "rest": -0.7,
+        "havoc": -0.8,
+        "coaches": -1.1,
+        "luck": -0.3
       },
       "raw": {
-        "eyeTest": 2.0,
+        "eyeTest": 9.0,
         "oLineRank": 25.0,
         "sos": 1.5,
         "sosRank": 31.0,
-        "rest": -6.0
+        "rest": -6.0,
+        "havoc": 12.9,
+        "coachTier": 7,
+        "winsAbovePythag": 0.5
       },
       "odds": {
         "make": 1500.0,
@@ -2080,19 +2263,25 @@
       "team": "Denver Broncos",
       "conf": "AFC",
       "div": "West",
-      "score": 0.87,
+      "score": 0.86,
       "z": {
-        "eyeTest": 0.5,
+        "eyeTest": 0.1,
         "oLine": 1.7,
         "sos": 0.2,
-        "rest": 0.3
+        "rest": 0.3,
+        "havoc": 2.6,
+        "coaches": 0.7,
+        "luck": -2.0
       },
       "raw": {
-        "eyeTest": 6.0,
+        "eyeTest": 5.0,
         "oLineRank": 1.0,
         "sos": 5.0,
         "sosRank": 11.0,
-        "rest": 3.0
+        "rest": 3.0,
+        "havoc": 21.0,
+        "coachTier": 3,
+        "winsAbovePythag": 3.0
       },
       "odds": {
         "make": -146.0,
@@ -2152,19 +2341,25 @@
       "team": "Kansas City Chiefs",
       "conf": "AFC",
       "div": "West",
-      "score": 0.48,
+      "score": 0.81,
       "z": {
-        "eyeTest": 0.5,
+        "eyeTest": 0.9,
         "oLine": 0.9,
         "sos": 0.2,
-        "rest": -0.2
+        "rest": -0.2,
+        "havoc": 1.0,
+        "coaches": 1.2,
+        "luck": 2.4
       },
       "raw": {
-        "eyeTest": 6.0,
+        "eyeTest": 3.0,
         "oLineRank": 8.0,
         "sos": 5.0,
         "sosRank": 12.0,
-        "rest": -2.0
+        "rest": -2.0,
+        "havoc": 17.2,
+        "coachTier": 2,
+        "winsAbovePythag": -3.5
       },
       "odds": {
         "make": -184.0,
@@ -2222,19 +2417,25 @@
       "team": "Los Angeles Chargers",
       "conf": "AFC",
       "div": "West",
-      "score": 0.08,
+      "score": 0.18,
       "z": {
-        "eyeTest": 1.0,
+        "eyeTest": 0.9,
         "oLine": 1.0,
         "sos": -0.5,
-        "rest": -2.8
+        "rest": -2.8,
+        "havoc": 0.1,
+        "coaches": 1.2,
+        "luck": -1.1
       },
       "raw": {
-        "eyeTest": 7.0,
+        "eyeTest": 3.0,
         "oLineRank": 7.0,
         "sos": 3.5,
         "sosRank": 20.0,
-        "rest": -24.0
+        "rest": -24.0,
+        "havoc": 15.0,
+        "coachTier": 2,
+        "winsAbovePythag": 1.7
       },
       "odds": {
         "make": -166.0,
@@ -2295,19 +2496,25 @@
       "team": "Las Vegas Raiders",
       "conf": "AFC",
       "div": "West",
-      "score": -0.67,
+      "score": -0.44,
       "z": {
-        "eyeTest": -1.6,
+        "eyeTest": -0.3,
         "oLine": -0.2,
         "sos": -0.2,
-        "rest": -1.5
+        "rest": -1.5,
+        "havoc": -0.5,
+        "coaches": -1.1,
+        "luck": 0.3
       },
       "raw": {
-        "eyeTest": 2.0,
+        "eyeTest": 6.0,
         "oLineRank": 18.0,
         "sos": 4.0,
         "sosRank": 13.0,
-        "rest": -13.0
+        "rest": -13.0,
+        "havoc": 13.8,
+        "coachTier": 7,
+        "winsAbovePythag": -0.4
       },
       "odds": {
         "make": 530.0,
@@ -2398,5 +2605,45 @@
     "name": "2025 Pythagorean wins",
     "summary": "Pythagorean expectation converts points scored and allowed into the record a team 'should' have had. Wins Above Pythag is actual wins minus that expectation: positive means they won more than their scoring justified (a regression candidate), negative means they were better than their record (a bounce-back candidate)."
   },
-  "winTotalSource": "Consensus regular-season win total: the line whose de-vigged Over price sits closest to even across DraftKings, FanDuel and theScore, priced at the average of those books' implied probabilities at that line."
+  "winTotalSource": "Consensus regular-season win total: the line whose de-vigged Over price sits closest to even across DraftKings, FanDuel and theScore, priced at the average of those books' implied probabilities at that line.",
+  "havocInput": {
+    "seasons": [
+      2025,
+      2024
+    ],
+    "blend": [
+      0.75,
+      0.25
+    ],
+    "weight": 0.15,
+    "takenFrom": {
+      "oLine": 0.1,
+      "sos": 0.05
+    },
+    "source": "data/nfl_regression_2026.json",
+    "note": "Pressure rate blended 75% 2025 / 25% 2024, z-scored against the field. Rank 1 is the highest rate. Its weight was taken 10 points from oLine and 5 points from sos."
+  },
+  "coachInput": {
+    "tiers": 8,
+    "weight": 0.1,
+    "takenFrom": {
+      "oLine": 0.05,
+      "rest": 0.05
+    },
+    "source": "https://www.actionnetwork.com/nfl/2026-nfl-coaching-staff-rankings-for-all-32-teams",
+    "file": "data/nfl_coaches_2026.json",
+    "note": "Action Network's 2026 coaching-staff tier, z-scored against the field. Tier 1 is the best staff, so the z is inverted. The tier is scored rather than the 1-32 rank because the tier is the grouping the source stands behind. Its weight was taken from O-Line and Rest, 5 points each."
+  },
+  "luckInput": {
+    "season": 2025,
+    "weight": 0.05,
+    "takenFrom": {
+      "sos": 0.05
+    },
+    "source": {
+      "name": "2025 Pythagorean wins",
+      "summary": "Pythagorean expectation converts points scored and allowed into the record a team 'should' have had. Wins Above Pythag is actual wins minus that expectation: positive means they won more than their scoring justified (a regression candidate), negative means they were better than their record (a bounce-back candidate)."
+    },
+    "note": "2025 wins above Pythagorean expectation, z-scored against the field and inverted: a team that won more than its points implied is the one due to regress, so it scores as a negative. It is the lightest input in the blend because it is one season of one team's point differential. Its weight was taken from SoS, which drops to 15%."
+  }
 }

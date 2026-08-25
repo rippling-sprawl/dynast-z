@@ -2,42 +2,105 @@
 
 A block inside every team card on `/football/bakers-buns`, between **Notes** and **Inputs**.
 
-Everything else on that card is an argument about what a team *is* — the eye test, the offensive
-line, the schedule, the rest. This block is the only one that looks backwards, and it asks the
+Everything else on that card is an argument about what a team *is* — the offense tier, the
+offensive line, the schedule, the rest. This block is the only one that looks backwards, and it asks the
 other question: **which parts of last season were the team, and which parts were the bounce of
 the ball.**
 
-Five tiles in **two rows**, each showing a 2025 number, what it is made of, and where it ranks in
-the field of 32.
+Three parts, each showing a 2025 number, what it is made of, and where it ranks in the field of 32
+— plus, in the middle, four seasons of the two numbers that only mean anything as a pair.
 
 ---
 
-## Two rows, because these are two kinds of number
+## Three parts, because these are three kinds of number
 
-### Row one — the three that regress
+### The two that regress
 
-These carry a lean: ↑ positive regression, ↓ negative regression, or nothing.
+Tiles, and they carry a lean: ↑ positive regression, ↓ negative regression, or nothing.
 
 | Tile | The read |
 |---|---|
-| **Turnover margin** | Fumble recoveries are close to a coin flip and interception rate barely correlates season to season. A margin far from zero is the loudest single regression signal there is. |
 | **One-score games** | Over time every team is about .500 in games decided by a possession. 11-2 is not a skill. |
 | **4th down rate** | Roughly two dozen attempts in a season. There is no sample there to be good at. |
 
-### Row two — the two that don't
+### The trend — havoc rate and turnover margin, four seasons, by rank
 
-Set apart under a dashed rule and a **Context** heading, in a flatter treatment. Neither is a
-regression call, so neither carries a lean; each carries the league's middle instead.
+Not tiles. A chart, under its own heading, and the centre of gravity of the block. **The lines are
+NFL rank, 1 to 32, not the numbers themselves** — see below for why.
+
+| Series | The read |
+|---|---|
+| **Havoc rate** | The sticky one — pressure is the stickiest thing a defense does, so it *repeats*. |
+| **Turnover margin** | The noisy one — fumble recoveries are close to a coin flip and interception rate barely correlates season to season. A margin far from zero is the loudest single regression signal there is. |
+
+Both were tiles once, the margin up with the regression calls and the pressure rate demoted below
+them. As tiles each could state a level and neither could state the thing that actually matters
+about them: **one of them holds and the other does not.** A team 3rd in pressure for four straight
+years beside a margin that has been 4th, 27th, 2nd, 22nd is the whole argument in one picture, and
+no pair of single-season boxes can make it. High pressure beside a poor margin is a bill coming
+due; beside a good one, a margin that holds up — and *that* is the read the chart hands over
+directly.
+
+The tiles' values, ranks, counts and league middles did not go anywhere: they are the legend above
+the chart, which is what keeps this from having traded numbers for a picture. **What is drawn is
+the placing; what is printed is the number.**
+
+### And two that don't regress at all
+
+Set apart under a dashed rule and a **More Stats** heading, in a flatter treatment. Neither is a
+regression call, so neither carries a lean; each carries a league comparison instead.
 
 | Tile | Why it isn't a regression call |
 |---|---|
-| **Havoc rate** | The opposite case — pressure is the stickiest thing a defense does, so it *repeats*. It is what says whether the turnover margin above it was earned or borrowed: high pressure beside a poor margin is a bill coming due; beside a good one, a margin that holds up. |
-| **2026 dead cap** | Already spent. Nothing about it regresses. It is carried as the answer to what the three above raise — *can this actually be fixed this year?* |
+| **Run stuff rate** | The opposite problem to the tiles above: it is *sticky*. A front that met a fifth of carries at the line will do it again, so there is no bounce here to warn about. Carried because havoc rate covers only the pass rush, and the two halves of a front come apart — the 2025 Rams were 4th in pressure rate and 31st in this. |
+| **2026 dead cap** | Already spent. Nothing about it regresses. It is carried as the answer to what everything above it raises — *can this actually be fixed this year?* |
 
-These two originally sat in the same row with the same green-or-orange arrow. That made five
-findings of one type out of them, and quietly claimed that a low pressure rate predicts decline,
-which it does not. Whether a context number is good news depends entirely on the row above it,
-which is the reader's call to make and not the tile's.
+Note the two get here by opposite routes. Dead cap does not regress because it has already happened;
+stuff rate does not regress because it is a real property of the defense that will still be there in
+September. What they share is that neither is a finding about next season, which is the only thing
+the lean arrow is for.
+
+Dead cap originally sat in the row above with the same green-or-orange arrow, which made findings of
+one type out of a list that was never one. Whether a context number is good news depends entirely on
+what sits above it, which is the reader's call to make and not the tile's. Stuff rate was put here
+from the start for the same reason: an arrow on a sticky number tells the reader to expect a change
+that is not coming.
+
+### Why the chart plots rank and not the numbers
+
+**A rate in percent and a margin in whole turnovers do not share a number line.** Drawing both
+meant two scales, one per side, and where two scales cross is an artefact of where each was pinned
+rather than a fact about the team — the standard objection to a dual axis, and correct.
+
+Rank is the one unit both already have. One axis, one meaning for height, and a crossing that
+finally says something real: the season the defense started getting home faster than the ball was
+bouncing for it.
+
+It also settles what four seasons of raw numbers could not. **The league moves under both of
+these** — pressure rates drift with the rules and with how quickly the ball comes out — so 14.2% is
+not the same thing in 2022 as in 2025, while 9th is. A line that climbs here is a team climbing
+past other teams, which is the only reading a multi-season view was wanted for in the first place.
+
+**The bounds are 1 to 32 and cannot be anything else.** That is the constant frame every card is
+drawn in: a flat line is a team that held its place, and two cards opened one after the other
+compare directly. **1 is at the top**, and the axis says so (`NFL RANK · 1 BEST`) rather than
+leaving it to be inferred from the tick column.
+
+Gridlines are at 1 / 8 / 16 / 24 / 32 — quarters of the field, because that is where "top ten" and
+"bottom third" actually fall. The numbers are mirrored to **both edges of the plot**: that is not a
+second axis, it is the same axis put where the reader's eye already is when it reaches the most
+recent season.
+
+Because both series are ranks, the axis belongs to neither and is drawn in plain ink. The two
+colours are spent entirely on the lines.
+
+Colours are `--series-a` (blue, havoc) and `--series-b` (orange, margin) — deliberately **not**
+`--good`/`--orange`, which this page spends on direction everywhere else and which sit 5.7 ΔE apart
+under deuteranopia. The pair here clears 24 ΔE under every simulated deficiency in both themes, and
+carries shape as a second channel: a circle on a solid line, a square on a dashed one.
+
+Hovering a season gives that season's raw numbers back — `2023 · havoc 15th (15.6%) · turnover
+margin 11th (+4)` — since the chart itself now shows only the placing.
 
 ### Colour semantics
 
@@ -50,23 +113,53 @@ block exists to flag — colouring its record green would say the opposite of wh
 11-2 in one-score games reads ↓ orange, sitting above a Context row that shows the league's best
 pressure rate: a very good team, with the softest part of its record named.
 
-Turnover margin is the one tile whose lean is inverted against its own rank: ranking 1st is the
-thing most likely to be handed back.
-
 ### Lean thresholds
 
-Row one only. Deliberately quintile-ish: anything tighter is inside the noise the block exists to
-warn about, and gets no arrow at all — most teams are unremarkable on most of these, and a card of
-three coloured tiles would say nothing.
+The two lean tiles only. Deliberately quintile-ish: anything tighter is inside the noise the block
+exists to warn about, and gets no arrow at all — most teams are unremarkable on both of these, and
+a card of coloured tiles would say nothing.
 
 | Tile | ↑ positive | ↓ negative |
 |---|---|---|
-| Turnover margin | diff ≤ −7 | diff ≥ +7 |
 | One-score games | win pct ≤ .375 | win pct ≥ .625 |
 | 4th down rate | ≤ 45% | ≥ 65% |
 
-Across the 96 regression tiles in the league this lands at **26 up / 23 down / 47 neutral** — the
-tiles that light up mean something.
+The turnover margin used to carry a lean here too, inverted against its own rank — ranking 1st was
+the thing most likely to be handed back. Four seasons of the line say that better than one arrow
+did, so it is now made by the chart rather than stated by a tile.
+
+---
+
+## Havoc also feeds the score
+
+Since the Projections table gained a **Havoc** column, the pressure rate in this file is no longer
+only a card number. `scripts/build_bun_havoc.py` reads the `history` block written here, blends
+**75% of the most recent season with 25% of the one before**, z-scores that against the field, and
+writes it into `data/nfl_projections_2026.json` as a fifth model input carrying **15%** of the
+score — taken 10 points off O-Line (40 → 30) and 5 off SoS (25 → 20). Both land lower still once
+the other add-on scripts take their own points: O-Line at 25% after `build_bun_coaches.py`, SoS at
+15% after `build_bun_luck.py`.
+
+Two seasons, weighted toward the recent one, because pressure is sticky but a roster is not. One
+season alone takes every injury and every soft schedule at face value; an even split argues that a
+two-year-old front tells you as much as the current one, which is more than the numbers support.
+
+The weight is still short of the line's on purpose. This is a *floor* on pressure — hurries are
+hand-charted and in no free feed — and one defensive number is not a defense. 15% says the model
+was blind on this side of the ball and is now looking: enough to move a team a place or two, never
+enough to carry one.
+
+**The published score is moved, not rebuilt.** The sheet computes it from full-precision z-scores
+while the JSON rounds each z to one decimal, so recomputing the whole sum would land every team
+about 0.01 off its own published figure for nothing. Each team's score takes
+`0.15·z_havoc − 0.10·z_oLine − 0.05·z_sos`, rounded to the two decimals the score is quoted in,
+which leaves the four original terms at exactly the precision the sheet computed them with. The
+script records what it did in `havocInput` and reverses itself exactly on a re-run, so it is safe
+to run again every time this file is refreshed — and `--remove` puts the score back as it was.
+
+Note the two havoc numbers on the page are **not** the same number and are not meant to be: the
+table's column is the blend the model scores on, and the card's chart is each season's own placing,
+which is how you see what the blend was arrived at. The Notes standout follows the table.
 
 ---
 
@@ -89,8 +182,9 @@ Registered today, in card order:
 | Offensive line | PFF board | published `oLineRank` |
 | Schedule | odds-based SoS | published `sosRank` (1 = easiest) |
 | Rest | Sharp Football rest disparity | value, net days |
-| Eye test | the sheet | value, 0-10 |
-| Havoc rate | regression file | published rank |
+| Offense | Action Network offense tiers | published `eyeTest` tier (1 = best) |
+| Havoc rate | projections file | value, the 2-season blend the score uses |
+| Run stuff rate | regression file | published rank |
 | Turnover margin | regression file | published rank |
 | One-score record | regression file | published rank |
 | 4th down rate | regression file | published rank |
@@ -112,10 +206,11 @@ and rank 1 drops the ordinal entirely: *"best in the league"*, not *"1st best"*.
 
 ### The tie rule
 
-A tied block must fit **entirely inside** the five, not merely start inside it. The eye test is
-scored in whole numbers, so eight teams can share a 7 — and a plain `rank <= 5` reported all eight
-as *2nd-highest in the league*. Eight teams tied is not a top five; it is a metric too coarse to
-have one, and the right output is silence. `placeIn()` enforces this for every metric including
+A tied block must fit **entirely inside** the five, not merely start inside it. A coarse metric
+hands the same number to a whole block of teams — the offense tiers arrive in blocks of four and
+five — and a plain `rank <= 5` reported every one of them as *2nd-highest in the league*. A block
+that overruns the five is not a top five; it is a metric too coarse to have one, and the right
+output is silence. `placeIn()` enforces this for every metric including
 the markets, where books routinely hang the same price on four teams.
 
 The field size also comes from the metric's own scores rather than `teams.length` — five of
@@ -164,6 +259,20 @@ sample would make the twelve teams that reached it incomparable with the twenty 
   put a defender's hands on the passer. The rate is per **dropback** — scrambles included, since a
   scramble is a dropback that broke down — which is the denominator that keeps a team facing 700
   dropbacks comparable with one facing 550.
+- **A stuff** is a carry the defense held to **zero yards or fewer**. Zero and not minus one: a run
+  met at the line for no gain is the same defensive win as one met a yard behind it, and drawing
+  the line at zero nearly doubles the sample — about 2,030 stuffs in 2025 against the 1,195 plays
+  nflverse flags `tackled_for_loss`, every one of which lost yardage. That column is accurate but
+  it answers a different question, which is why this is computed from `yards_gained` instead.
+
+  The denominator is **running-back and fullback carries only**, joined by `rusher_player_id`
+  against nflverse's players release. Scrambles are obviously somebody else's stat, but so are
+  designed quarterback runs: a team that keeps the ball with its quarterback twenty times a game is
+  describing its own offense, not the defense that met it. Leaving them in moves teams a mean of
+  1.75 places and the 2025 Broncos nine of them. It is also what the published versions of this
+  metric do — filtered this way the 2025 Rams come out second-lowest at 12.1%, which is where FTN
+  has them, and that agreement is the check that the definition is right rather than merely
+  arithmetically consistent.
 - **Turnovers** are counted **from scrimmage**: interceptions and fumbles lost on run or pass plays.
   Muffed punts and kick fumbles are left out on purpose — on a kicking play nflverse's `posteam` is
   the kicking team, so the muff belongs to the side listed as the defense, and attributing it
@@ -181,8 +290,15 @@ sample would make the twelve teams that reached it incomparable with the twenty 
 
 | Source | Feeds | URL |
 |---|---|---|
-| nflverse play-by-play | Havoc, turnovers, one-score, 4th down | `github.com/nflverse/nflverse-data/releases/download/pbp/play_by_play_{season}.csv.gz` |
+| nflverse play-by-play | Havoc, run stuff rate, turnovers, one-score, 4th down | `github.com/nflverse/nflverse-data/releases/download/pbp/play_by_play_{season}.csv.gz` |
+| nflverse play-by-play, ×3 prior seasons | The trend's havoc and turnover margin | same URL, one release per season |
+| nflverse players | Ball-carrier position, for the stuff-rate denominator | `github.com/nflverse/nflverse-data/releases/download/players/players.csv` |
 | Over The Cap | Dead cap, cap space, active spending | `overthecap.com/salary-cap-space` |
+
+The players file is all-time and about 7 MB, so it is fetched **once per run** and handed to every
+season's pass rather than pulled per season. It exists only because the play-by-play names the ball
+carrier with a `gsis_id` and never a position, and stuff rate cannot tell a running back's carry
+from a quarterback's without that join.
 
 ### Why nflverse and not ESPN
 
@@ -193,8 +309,19 @@ expose — opponent dropbacks faced. Deriving one by summing each opponent's ful
 attempts overcounts, because a team plays most opponents once.
 
 nflverse ships the plays themselves, which makes every number here exact rather than approximate,
-and it is **the only free feed carrying `qb_hit`** — without which the pressure column, the one
-sticky number in the block, cannot be computed at all.
+and it is **the only free feed carrying `qb_hit`** — without which the pressure column cannot be
+computed at all. The same argument covers stuff rate, which needs per-play rushing yardage that no
+box-score API exposes.
+
+The rest of the field was checked and rejected for the stuff-rate column specifically:
+
+| Rejected | Why |
+|---|---|
+| nflverse `stats_team` | Has `def_tackles_for_loss`, but as a season total that folds in sacks and ships no run denominator. Not convertible to a rate. |
+| nflverse `ftn_charting` | Carries `n_defense_box`, `n_blitzers` and similar — good run-defense *context* for some later feature, but no run outcome. |
+| nflverse `pbp_participation`, `pfr_advstats` | Personnel and coverage respectively. Neither carries run outcomes. |
+| FTN adjusted line yards | The canonical published Stuffed Rate, and the number this column agrees with — but the page 403s to scripts and sits behind a subscription. |
+| PFF run-defense win rate, ESPN run stop win rate, TruMedia | All paywalled, no public API. |
 
 ### Why the OTC page and not a dead-money page
 
@@ -217,7 +344,9 @@ scripts/fetch_nfl_regression.py  ──▶  data/nfl_regression_2026.json
 ```bash
 python3 scripts/fetch_nfl_regression.py                  # last season + this cap year
 python3 scripts/fetch_nfl_regression.py --season 2024 --cap-season 2025
-python3 scripts/fetch_nfl_regression.py --keep-pbp       # leave the CSV in /cache
+python3 scripts/fetch_nfl_regression.py --history 1      # skip the trend downloads
+python3 scripts/fetch_nfl_regression.py --reuse-cap      # keep the dead money already on disk
+python3 scripts/fetch_nfl_regression.py --keep-pbp       # leave the CSVs in /cache
 ```
 
 **Defaults** resolve to the last *finished* season and the following league year. A season is named
@@ -234,6 +363,25 @@ cached copy rather than pulling 19 MB again.
 offense's giveaway is the defense's takeaway — so the league's margins sum to zero by construction
 rather than by coincidence.
 
+**The trend costs one download per extra season** and nothing else. `--history N` sets the span
+(default 4, the current season included); the current season is *not* re-downloaded, because it has
+already been tallied for the worksheet. Each prior season goes through the same `tally()` and then
+through `season_trend()`, which keeps only the two numbers the chart plots and **ranks each within
+that season's field** — four seasons of the full block would be four times the file for numbers no
+card reads. The ranks are computed here, by the same `rank_by()` the worksheet uses, rather than
+derived in the page at render time: a rank recomputed at render is a second opinion that can drift
+from the one printed beside it in the legend. A season that will not parse, or
+that fails the 32-team or margins-sum check, is **skipped rather than fatal**: the card plots
+whatever seasons it is handed, and one bad 2022 is no reason to refuse to publish 2025. The count
+is printed, because a silently two-year "last four years" is worse than a loud one.
+
+**`--reuse-cap`** takes dead money from the JSON already on disk instead of scraping Over The Cap,
+and rebuilds every on-field number as normal. OTC has no API and drops connections from whole
+networks, which would otherwise make a machine that can reach nflverse unable to rebuild anything
+at all. It is a flag and not a silent fallback: the money is the one column here that moves between
+runs, and a run that quietly shipped March's cap sheet in September would be worse than one that
+failed.
+
 **Both fetches shell out to `curl -sL`.** Over The Cap serves an interstitial to curl's default
 user-agent, so that request passes a browser string; the nflverse asset redirects to a signed S3
 URL and does not care either way. (Note the opposite constraint in `fetch_nfl_schedule.py`, where a
@@ -244,13 +392,29 @@ else already agrees across the schedule, logo and projection files.
 
 ### Verification before writing
 
-The script refuses to overwrite a good file unless all four hold:
+The script refuses to overwrite a good file unless all of these hold:
 
 - 32 teams
 - 272 scored games
 - **league turnover margins sum to exactly 0** — if they do not, a play was attributed to one side
   and not the other
 - every team has a dead-money figure
+- **every team faced at least 200 running-back carries**, and **no more than 25 ball carriers went
+  unmatched** against the players file
+
+The last one is there because the stuff-rate denominator is the only number in the block that
+depends on a second file, and its failure mode is silent. A `players.csv` that arrived empty, or
+that has drifted off the play-by-play's ids, matches nobody — every carry is skipped, every team
+ships a tidy `0.0%`, and every other gate on this page passes. So both ends are checked: that
+carriers were found at all, and that the ones that were not are a handful rather than the league.
+The floors are loose on purpose — a real team faces around 370 carries and the thinnest in 2025
+faced 299, while 2025 matched every single id.
+
+And, once the trend is built, `verify_history()` checks that **the last point of every line is the
+worksheet's number and rank exactly** — value and placing, both series, all 32 teams. Both are
+computed from the same tally by the same helpers, so a mismatch means one of the two paths was
+edited and the other was not, which would put a chart on the card that quietly disagrees with the
+legend directly above it. That is the one failure here a reader would never catch.
 
 ### Output shape
 
@@ -259,14 +423,33 @@ The script refuses to overwrite a good file unless all four hold:
   "statsSeason": 2025,
   "capSeason": 2026,
   "note": "…definitions, in the file itself…",
-  "sources": { "onField": "…", "deadCap": "…" },
-  "league": { "pressureRate": 14.9, "sackRate": 6.5, "fourthDownPct": 55.9,
-              "oneScoreGames": 9.1,
+  "sources": { "onField": "…", "players": "…", "deadCap": "…",
+               "trend": ["…", "…", "…", "…"] },
+  "league": { "pressureRate": 14.9, "sackRate": 6.5, "stuffRate": 17.1,
+              "fourthDownPct": 55.9, "oneScoreGames": 9.1,
               "deadCap": 43720809, "deadCapMedian": 35230539 },
+
+  // The chart's series, oldest season first, keyed by team rather than by
+  // season because that is how a card reads it: one team's four points, not
+  // four leagues. The chart plots the two *Rank* fields; the raw values ride
+  // along for the hover tooltip. For the current season `havoc`/`havocRank`
+  // must equal `pressureRate`/`rank` below, and `margin`/`marginRank` must
+  // equal `diff`/`rank` — verify_history() refuses to write a file where they
+  // disagree.
+  "historySeasons": [2022, 2023, 2024, 2025],
+  "history": {
+    "SEA": [{ "season": 2022, "havoc": 15.8, "margin":  2, "havocRank": 12, "marginRank": 13 },
+            { "season": 2023, "havoc": 15.0, "margin":  4, "havocRank": 18, "marginRank": 11 },
+            { "season": 2024, "havoc": 17.5, "margin": -1, "havocRank":  3, "marginRank": 17 },
+            { "season": 2025, "havoc": 16.0, "margin":  0, "havocRank": 13, "marginRank": 13 }]
+  },
+
   "teams": {
     "SEA": {
       "havoc":      { "pressureRate": 16.0, "sackRate": 6.8, "pressures": 111,
                       "sacks": 47, "dropbacks": 693, "rank": 13 },
+      // rushes is RB/FB carries faced, not every run play — see Definitions.
+      "runDefense": { "stuffRate": 19.7, "stuffs": 69, "rushes": 350, "rank": 7 },
       "turnovers":  { "diff": 0, "takeaways": 26, "giveaways": 26, "rank": 13 },
       "oneScore":   { "w": 6, "l": 3, "t": 0, "games": 9, "pct": 0.667, "rank": 7 },
       "fourthDown": { "pct": 58.3, "conv": 7, "att": 12, "rank": 15 },
@@ -278,7 +461,8 @@ The script refuses to overwrite a good file unless all four hold:
 ```
 
 `rank` is **1 = highest value** in every block except `deadCap`, where **1 = lowest** (the team
-paying the least). The rank is a statement about the field, so it is computed after the whole field
+paying the least). `havocRank` and `marginRank` follow the same rule and the same tie handling —
+1 is the highest pressure rate and the best margin. The rank is a statement about the field, so it is computed after the whole field
 is built. Ties share the better number and the ones behind them skip — two teams at −2 are both
 18th and the next is 20th, the way a standings table reads.
 
@@ -305,7 +489,7 @@ near would be worse than showing nothing.
 
 | File | What it holds |
 |---|---|
-| `views/football/bakers-buns.html` | `REG_TILES`, `CONTEXT_TILES`, `regTile()`, `regRow()`, `regressionInner()`, and the `REG_URL` fetch |
+| `views/football/bakers-buns.html` | `REG_TILES`, `CONTEXT_TILES` (run stuff rate, then dead cap), `regTile()`, `regRow()`, `regressionInner()`, and the `REG_URL` fetch |
 | `styles/primary/bakers-buns.css` | `.tc-reg-block`, `.tc-reg-grid`, `.tc-reg-tile`, `.lean-up` / `.lean-down`, `.tc-reg-context`, `.tc-reg-vs` |
 
 The file joins the page's existing `Promise.all` rather than chaining after it, and **swallows its
@@ -331,7 +515,7 @@ The value stays the same near-white in every regression tile; the lean is carrie
 faint wash, and the caption. A tinted number would put value and direction on the same channel and
 make an orange 11-2 look like a bad record. The context tiles have all three of those signals taken
 away — no accent edge, no wash, no arrow, and a lighter value — leaving a plain bordered box. The
-dashed rule and the `Context` heading do the actual separating, because tile styling alone was too
+dashed rule and the `More Stats` heading do the actual separating, because tile styling alone was too
 quiet to carry it: a grey tile is also what a regression tile with nothing to say looks like.
 
 ---

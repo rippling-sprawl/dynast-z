@@ -22,7 +22,7 @@
   links to it, which keeps the page that people actually read to the table and
   its cards.
 
-  The two lines that have to move with the data — the blend and the Eye Test
+  The two lines that have to move with the data — the blend and the OFF Tier
   scale — are still built from the JSON rather than typed here, and still read
   this device's saved weights, so a reader who set their own blend on the table
   sees that blend described here rather than the sheet's.
@@ -51,8 +51,40 @@
           <p id="proj-weights"></p>
           <p>
             Each input is converted to a z-score against the 32-team field, then
-            blended. O-Line and SoS ranks are inverted first, so a positive
-            z-score always means &ldquo;better than average.&rdquo;
+            blended. The ones that count down &mdash; O-Line and SoS ranks, the
+            two tiers, and last season&rsquo;s luck &mdash; are inverted first,
+            so a positive z-score always means &ldquo;better than average.&rdquo;
+          </p>
+          <p>
+            Four of the seven describe an offense and its circumstances.
+            <strong>Havoc</strong> is the one that describes a defense, which is
+            why it carries 15% &mdash; the only look the model gets at the other
+            side of the ball, and pressure is the stickiest thing a defense does.
+            It is still short of the line because one pressure rate is not a
+            defense and the rate here is a floor on the real thing. Its 15% came
+            ten points off O-Line and five off SoS.
+          </p>
+          <p>
+            <strong>Coaches</strong> is the one that describes neither &mdash;
+            the people deciding what the players run, in a year when ten teams
+            changed head coach and 25 changed at least one coordinator. It is
+            light for a different reason: it is one outlet&rsquo;s opinion rather
+            than a measurement, and 10% says the model has a view here, not that
+            it knows. Its five points each came off O-Line and Rest. The line is
+            still the heaviest input in the blend after both of them.
+          </p>
+          <p>
+            <strong>Luck</strong> is the last in and the lightest at
+            <strong>5%</strong>, taken off SoS, which drops to 15%. It is 2025
+            wins above Pythagorean expectation &mdash; what a team actually won
+            minus what its points scored and allowed said it should have &mdash;
+            and it is inverted, so the team that won <em>fewer</em> games than
+            its points implied scores as the positive. That is the claim: a
+            record ahead of its points is carried, not established, and the
+            league&rsquo;s history is that it does not repeat. It is 5% rather
+            than more because it is a single season of a single point
+            differential, the noisiest input here, and some real part of it
+            &mdash; close-game coaching, a kicker &mdash; is not luck at all.
           </p>
           <p class="note-take" id="proj-legend"></p>
         </article>
@@ -64,7 +96,10 @@
             <li><strong>O-Line</strong> &mdash; the PFF 2026 ranking, 1&ndash;32, matching all 32 rows exactly</li>
             <li><strong>SoS</strong> &mdash; Sharp Football&rsquo;s odds-based strength of schedule; the five easiest and hardest match exactly</li>
             <li><strong>Rest</strong> &mdash; Sharp Football&rsquo;s net rest edge in days (Bears +15 to Chargers &minus;24)</li>
-            <li><strong>Eye Test</strong> &mdash; manual, 0&ndash;10</li>
+            <li><strong>OFF Tier</strong> &mdash; <a href="https://www.actionnetwork.com/nfl/2026-nfl-offense-rankings-all-32-teams-ranked">Action Network&rsquo;s 2026 offense rankings</a>, tiers 1&ndash;9; tier 1 is the best offense, so the tier is inverted into its z-score the way the O-Line rank is</li>
+            <li><strong>Coaches</strong> &mdash; <a href="https://www.actionnetwork.com/nfl/2026-nfl-coaching-staff-rankings-for-all-32-teams" target="_blank" rel="noopener">Action Network&rsquo;s 2026 coaching staff rankings</a>, head coach and both coordinators judged together. The <em>tier</em> is scored, not the 1&ndash;32 order: the gap between the 13th and 14th staff is a tie broken inside one bucket, while the gap between two tiers is the claim being made. Tier 1 is the best staff, so it is inverted. The eight tiers are uneven on purpose &mdash; two teams at the top, eight in tier 7 &mdash; and z-scoring keeps that</li>
+            <li><strong>Luck</strong> &mdash; 2025 wins above Pythagorean expectation, from each team&rsquo;s own points scored and allowed. Inverted, so a bounce-back candidate scores positive and a regression candidate scores negative; the raw gap, the record and the expected wins are all in the <strong>Inputs</strong> worksheet on the team card</li>
+            <li><strong>Havoc</strong> &mdash; share of dropbacks faced ending in a sack or a QB hit, from <a href="https://github.com/nflverse/nflverse-data/releases/tag/pbp" target="_blank" rel="noopener">nflverse</a> play-by-play, blended <strong>75% last season / 25% the season before</strong>. Higher is better, so nothing is inverted. It is a floor on pressure rather than PFF&rsquo;s number &mdash; hurries are hand-charted and in no free feed &mdash; which is part of why it sits at 15% rather than level with the line</li>
           </ul>
         </article>
 
@@ -124,8 +159,7 @@
             <li><span class="z-val pos">Green</span> / <span class="z-val neg">orange</span> on the metric columns: better or worse than the 32-team average</li>
             <li>The <strong>Metrics</strong> and <strong>Odds</strong> bands above the headings mark that split: everything under Metrics is heat-mapped against the field, everything under Odds is a price and is left alone</li>
             <li>The colors is a heat map, not a switch &mdash; it deepens with distance from that average, scaled to each column&rsquo;s own spread, so the strongest tint in a column is that column&rsquo;s most extreme team</li>
-            <li><span class="z-val luck-hot">Amber</span> on Luck: won more than their points implied, so due to regress</li>
-            <li><span class="z-val luck-cold">Blue</span> on Luck: won fewer, so due to bounce back</li>
+            <li><strong>Luck</strong> is heat-mapped like everything else beside it, because it is inverted before it is scored: <span class="z-val pos">green</span> means they won fewer games than their points implied and are due to bounce back, <span class="z-val neg">orange</span> means they won more and are due to regress. The team card puts that in words &mdash; a <span class="tc-luck luck-cold">bounce-back</span> or <span class="tc-luck luck-hot">regression</span> candidate, for anyone a full win either side of their expectation</li>
             <li>Odds columns are left uncolorsed &mdash; a plus price means opposite things on Make and Miss, and the Wins line is not a price at all, so it carries no sign</li>
           </ul>
         </article>
@@ -152,12 +186,15 @@
 
     var COMP = [
       { key: 'oLine',   full: 'O-Line' },
+      { key: 'eyeTest', full: 'OFF Tier' },
       { key: 'sos',     full: 'SoS' },
-      { key: 'eyeTest', full: 'Eye Test' },
-      { key: 'rest',    full: 'Rest' }
+      { key: 'havoc',   full: 'Havoc' },
+      { key: 'rest',    full: 'Rest' },
+      { key: 'coaches', full: 'Coaches' },
+      { key: 'luck',    full: 'Luck' }
     ];
 
-    var WEIGHT_KEY = 'dz_buns_weights_v1';
+    var WEIGHT_KEY = 'dz_buns_weights_v2';
 
     function esc(s) {
       return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
@@ -214,12 +251,13 @@
             ? ' <span class="wt-flag">custom</span> — your weights, not the sheet’s ' +
               '(' + COMP.map(function (c) {
                 return Math.round((baseWeights[c.key] || 0) * 100) + '%';
-              }).join('/') + ' in O-Line/SoS/Eye/Rest order).'
+              }).join('/') + ' in ' + COMP.map(function (c) { return c.full; }).join('/') +
+              ' order).'
             : '');
 
         var legend = document.getElementById('proj-legend');
         if (d.eyeTestLegend) {
-          legend.innerHTML = '<strong>Eye Test scale:</strong> ' + esc(d.eyeTestLegend);
+          legend.innerHTML = '<strong>OFF Tier scale:</strong> ' + esc(d.eyeTestLegend);
         } else {
           legend.remove();
         }
@@ -228,7 +266,8 @@
        * that never arrives costs the blend sentence, not the page. */
       .catch(function () {
         document.getElementById('proj-weights').textContent =
-          'Score = a weighted blend of O-Line, SoS, Eye Test and Rest. ' +
+          'Score = a weighted blend of O-Line, OFF Tier, SoS, Havoc, Rest, '
+          + 'Coaches and Luck. ' +
           'The exact percentages could not be loaded.';
         document.getElementById('proj-legend').remove();
       });

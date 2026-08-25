@@ -7,12 +7,18 @@ Why this exists
 ---------------
 The Projections table scores a team on what it *is* — the eye test, the line,
 the schedule, the rest. This file answers the other question: which parts of
-last season were the team, and which parts were the bounce of the ball. Five
+last season were the team, and which parts were the bounce of the ball. Six
 numbers, chosen because each is either famously sticky or famously not:
 
     Havoc rate         sticky.  A defense that pressured the quarterback on a
                                 fifth of his dropbacks will do it again. If the
                                 takeaways did not follow, they are coming.
+    Run stuff rate     sticky.  The other half of a front. A defense that met a
+                                fifth of carries at the line will do that again
+                                too, and it is close to uncorrelated with the
+                                pass rush — the 2025 Rams were 4th in havoc and
+                                31st here. Carried as description, not as a
+                                regression call.
     Turnover margin    noisy.   Fumble recoveries are close to a coin flip and
                                 interception rate barely correlates year to
                                 year. A big margin in either direction is the
@@ -22,16 +28,23 @@ numbers, chosen because each is either famously sticky or famously not:
     4th-down rate      noisy.   Twenty-odd attempts a year. Nothing about a
                                 season's worth of them predicts the next.
     Dead cap           real.    Not regression at all — the constraint the other
-                                four get spent under. Carried here because it is
+                                five get spent under. Carried here because it is
                                 the answer to "so can they fix it?"
 
 Sources
 -------
 On-field numbers come from nflverse's play-by-play release, which is the only
-free feed with a real play table: pressure needs qb_hit, and no box-score API
-carries it. One gzipped CSV per season, ~19 MB, parsed streaming.
+free feed with a real play table: pressure needs qb_hit, stuff rate needs
+per-play rushing yards, and no box-score API carries either. One gzipped CSV
+per season, ~19 MB, parsed streaming.
 
     https://github.com/nflverse/nflverse-data/releases/download/pbp/play_by_play_{season}.csv.gz
+
+Stuff rate additionally needs to know who carried the ball, which the play-by-
+play does not say — it gives an id, not a position. That join comes from the
+same release family, once, for every season at a time.
+
+    https://github.com/nflverse/nflverse-data/releases/download/players/players.csv
 
 Dead money is scraped from Over The Cap's cap-space page, which publishes three
 league years as three tables under one URL; the first is the current one.
@@ -51,6 +64,21 @@ is per dropback (scrambles included, since a scramble is a dropback that broke
 down), which is the denominator that keeps a team that faces 700 dropbacks
 comparable with one that faces 550.
 
+*A stuff* is a carry the defense held to zero yards or fewer. Zero and not
+minus one: a run met at the line for no gain is the same defensive win as one
+met a yard behind it, and drawing the line at zero nearly doubles the sample —
+about 2,030 stuffs in 2025 against 1,195 plays nflverse flags tackled_for_loss,
+which is why that column is not what this counts.
+
+The denominator is carries by a running back or fullback, which is what makes
+this a run-defense number rather than a QB-rushing one. Scrambles are somebody
+else's stat, but so are designed quarterback runs: a team that keeps the ball
+with its quarterback twenty times a game is describing its own offense, not the
+defense it ran into, and leaving those in moves teams a couple of places and
+the 2025 Broncos nine of them. It is also the definition the published versions
+of this stat use — filtered this way the 2025 Rams come out second-lowest in
+the league at 12.1%, which is where FTN has them.
+
 *Turnovers* are counted from scrimmage — interceptions and fumbles lost on run
 or pass plays. Muffed punts and kick fumbles are left out on purpose: on a
 kicking play nflverse's posteam is the kicking team, so the muff belongs to the
@@ -64,10 +92,17 @@ two-point conversion, the largest deficit that is still one possession.
 fourth down. Punts and field goals are not conversion attempts, and a kneel is
 not one either.
 
+Havoc rate and turnover margin are also carried back four seasons, because the
+card plots them against each other over time rather than printing each as a
+number: the sticky one and the noisy one only make their argument as a pair, and
+a single season of either shows neither the level nor the bounce. That costs one
+play-by-play download per extra season and nothing else — see build_history.
+
 Usage:
     python3 scripts/fetch_nfl_regression.py                  # last season + this cap year
     python3 scripts/fetch_nfl_regression.py --season 2024 --cap-season 2025
-    python3 scripts/fetch_nfl_regression.py --keep-pbp       # leave the CSV in /cache
+    python3 scripts/fetch_nfl_regression.py --history 1      # skip the trend downloads
+    python3 scripts/fetch_nfl_regression.py --keep-pbp       # leave the CSVs in /cache
 """
 
 import argparse
@@ -84,7 +119,14 @@ from datetime import datetime, timezone
 
 PBP_URL = ("https://github.com/nflverse/nflverse-data/releases/download/pbp/"
            "play_by_play_{season}.csv.gz")
+PLAYERS_URL = ("https://github.com/nflverse/nflverse-data/releases/download/"
+               "players/players.csv")
 OTC_URL = "https://overthecap.com/salary-cap-space"
+
+# Who counts as a ball carrier for stuff rate. Fullbacks are in because a
+# fullback dive is a run play in every sense the metric cares about; the
+# quarterback is out for the reason the module docstring gives.
+RUSHER_POSITIONS = ("RB", "FB")
 
 # nflverse abbreviations are not this site's for two clubs. Everything else
 # already agrees, and the schedule/logo/projection files all key on ours.
@@ -105,6 +147,20 @@ OTC_TEAM = {
 
 EXPECTED_TEAMS = 32
 EXPECTED_GAMES = 272
+
+# Floors for the stuff-rate denominator. A team faces roughly 370 running-back
+# carries in a season and the thinnest in 2025 faced 299, so 200 is well clear
+# of a real team and nowhere near the zero a broken position join produces.
+# The unknown-carrier limit is generous for the same reason it exists at all:
+# 2025 matched every id, so anything above a couple of dozen is the join
+# breaking rather than a rookie nflverse has not filed yet.
+MIN_CARRIES = 200
+MAX_UNKNOWN_RUSHERS = 25
+
+# How many seasons the trend on each team card plots, the current one included.
+# Four is what the card can draw legibly at the width it gets and is about as
+# far back as a roster is still recognisably the same team.
+HISTORY_SEASONS = 4
 
 
 def repo_path(*parts):
@@ -146,6 +202,29 @@ def load_pbp(season, cache_path):
     return blob
 
 
+def load_positions(cache_path):
+    """gsis id -> position, for every player nflverse has ever listed.
+
+    The play-by-play names the ball carrier with an id and nothing else, so
+    stuff rate cannot tell a running back's carry from a quarterback's without
+    this. One 7 MB file covers every season the trend reaches, which is why it
+    is loaded once in main() and handed to each tally() rather than fetched
+    per season."""
+    if os.path.exists(cache_path):
+        print(f"  using cached {os.path.basename(cache_path)}")
+        blob = open(cache_path, "rb").read()
+    else:
+        print(f"  downloading {PLAYERS_URL}")
+        blob = curl_bytes(PLAYERS_URL)
+        os.makedirs(os.path.dirname(cache_path), exist_ok=True)
+        with open(cache_path, "wb") as f:
+            f.write(blob)
+        print(f"  {len(blob) / 1024 / 1024:.1f} MB")
+
+    reader = csv.DictReader(io.StringIO(blob.decode("utf-8", "replace")))
+    return {r["gsis_id"]: r["position"] for r in reader if r.get("gsis_id")}
+
+
 def flag(row, key):
     """nflverse writes its booleans as 0/1, but a play that cannot have the
     property at all (a kickoff, for a fourth-down flag) gets NA. Anything that
@@ -153,19 +232,37 @@ def flag(row, key):
     return row.get(key) == "1"
 
 
-def tally(blob):
+def number(text):
+    """A play's yardage as a float, or None where nflverse left it blank. Every
+    row of a finished season carries one, but a rate that silently counted a
+    missing value as a stuff would be wrong in the direction nobody checks."""
+    if text in (None, "", "NA"):
+        return None
+    try:
+        return float(text)
+    except ValueError:
+        return None
+
+
+def tally(blob, positions):
     """One pass over the season. Every counter is per team, and a play feeds
     both sides of it: the offense's giveaway is the defense's takeaway, so they
     are incremented together and the league's margins sum to zero by
-    construction."""
+    construction.
+
+    Returns the ball carriers it could not find a position for alongside the
+    counters — an empty or stale players file would otherwise quietly empty
+    every stuff-rate denominator, and verify() is where that gets caught."""
     stats = {}
     games = {}
+    unknown_rushers = set()
 
     def team(t):
         t = PBP_ABBR.get(t, t)
         if t not in stats:
             stats[t] = dict(dropbacks=0, sacks=0, pressures=0, takeaways=0,
-                            giveaways=0, fourth_conv=0, fourth_att=0)
+                            giveaways=0, fourth_conv=0, fourth_att=0,
+                            rushes=0, stuffs=0)
         return stats[t]
 
     reader = csv.DictReader(io.TextIOWrapper(gzip.open(io.BytesIO(blob)), encoding="utf-8"))
@@ -202,6 +299,22 @@ def tally(blob):
             if flag(row, "sack") or flag(row, "qb_hit"):
                 dfn["pressures"] += 1
 
+        # A carry, by the definition in the docstring: a running back or
+        # fullback with the ball on a play from scrimmage. Two-point tries are
+        # dropped because they are not scrimmage downs and their yardage is not
+        # a gain — thirty-odd a season, but they would all count as stuffs.
+        if row["play_type"] == "run" and flag(row, "rush_attempt") \
+                and not flag(row, "two_point_attempt"):
+            carrier = row.get("rusher_player_id") or ""
+            pos = positions.get(carrier)
+            if carrier and pos is None:
+                unknown_rushers.add(carrier)
+            yards = number(row["yards_gained"])
+            if pos in RUSHER_POSITIONS and yards is not None:
+                dfn["rushes"] += 1
+                if yards <= 0:
+                    dfn["stuffs"] += 1
+
         turnovers = flag(row, "interception") + flag(row, "fumble_lost")
         off["giveaways"] += turnovers
         dfn["takeaways"] += turnovers
@@ -229,7 +342,7 @@ def tally(blob):
             team(home)["os_t"] += 1
             team(away)["os_t"] += 1
 
-    return stats, games, plays
+    return stats, games, plays, unknown_rushers
 
 
 # ---------- Over The Cap ----------
@@ -274,6 +387,24 @@ def parse_otc(html, cap_season):
     return out
 
 
+def reuse_caps(cap_season):
+    """Dead money as the last good run recorded it. Over The Cap has no API and
+    drops connections from whole networks, so a machine that can reach nflverse
+    but not OTC would otherwise be unable to rebuild any of the on-field numbers
+    at all. Carried under a flag rather than as a silent fallback: the money is
+    the one column here that moves between runs, and a run that quietly shipped
+    March's cap sheet in September would be worse than one that failed."""
+    path = repo_path("data", f"nfl_regression_{cap_season}.json")
+    if not os.path.exists(path):
+        raise RuntimeError(f"--reuse-cap needs {path}, which does not exist")
+    with open(path) as f:
+        prev = json.load(f)
+    return {abbr: {"dead": t["deadCap"]["amount"],
+                   "capSpace": t["deadCap"]["capSpace"],
+                   "spending": t["deadCap"]["spending"]}
+            for abbr, t in prev.get("teams", {}).items()}
+
+
 # ---------- assembly ----------
 
 def rank_by(rows, key, high_is_first=True):
@@ -294,6 +425,7 @@ def build(stats, caps):
     for abbr, s in stats.items():
         db = s["dropbacks"] or 1
         att = s["fourth_att"] or 1
+        car = s["rushes"] or 1
         cap = caps.get(abbr, {})
         teams[abbr] = {
             "havoc": {
@@ -302,6 +434,11 @@ def build(stats, caps):
                 "pressures": s["pressures"],
                 "sacks": s["sacks"],
                 "dropbacks": s["dropbacks"],
+            },
+            "runDefense": {
+                "stuffRate": round(100 * s["stuffs"] / car, 1),
+                "stuffs": s["stuffs"],
+                "rushes": s["rushes"],
             },
             "turnovers": {
                 "diff": s["takeaways"] - s["giveaways"],
@@ -330,6 +467,7 @@ def build(stats, caps):
     # about the field, so it cannot be computed until the whole field is built.
     ranks = [
         ("havoc", "pressureRate", True),
+        ("runDefense", "stuffRate", True),
         ("turnovers", "diff", True),
         ("oneScore", "pct", True),
         ("fourthDown", "pct", True),
@@ -342,6 +480,86 @@ def build(stats, caps):
             t[block]["rank"] = table.get(v)
 
     return teams
+
+
+def season_trend(stats):
+    """The two numbers the team card plots, for one season: the rate a defense
+    got hands on the quarterback, and what the ball did for it. Everything else
+    tally() counts is dropped here — a trend line wants the series, not the
+    worksheet, and four seasons of the full block would be four times the file
+    for numbers no card reads.
+
+    Each comes with its rank in that season's field, because the rank is what
+    the card actually plots — a pressure rate and a turnover margin do not share
+    a number line, and the league moves under both of them from year to year, so
+    a place in the field is the only thing about them that can be drawn on one
+    axis and compared across seasons. Ranked here rather than in the page for
+    the same reason every other rank on this card is: a second opinion computed
+    at render time can drift from the one printed beside it."""
+    out = {}
+    for abbr, s in stats.items():
+        db = s["dropbacks"] or 1
+        out[abbr] = {
+            "havoc": round(100 * s["pressures"] / db, 1),
+            "margin": s["takeaways"] - s["giveaways"],
+        }
+    # Same helper, same direction and same tie rule as the worksheet's ranks, so
+    # the current season's two points land on exactly the ranks the legend above
+    # the chart prints. verify_history checks that they do.
+    for field, rank_field in (("havoc", "havocRank"), ("margin", "marginRank")):
+        table = rank_by(out, lambda t, f=field: t[f], True)
+        for t in out.values():
+            t[rank_field] = table[t[field]]
+    return out
+
+
+def build_history(seasons, current_season, current_stats, positions, keep_pbp):
+    """Havoc rate and turnover margin per team for the last few seasons, oldest
+    first, so the card can draw the pair as lines instead of as two numbers with
+    no yesterday.
+
+    Only the seasons before the current one are downloaded: the current one has
+    already been tallied for the worksheet above, and a second 19 MB pull for
+    numbers already in memory would double the run for nothing.
+
+    A season that will not parse is skipped rather than fatal. The card plots
+    whatever seasons it is handed, and one bad year in 2022 is not a reason to
+    refuse to publish 2025 — but the count is printed, because a silently
+    two-year "last four years" is worse than a loud one."""
+    per_season = {current_season: season_trend(current_stats)}
+
+    for season in seasons:
+        if season == current_season:
+            continue
+        print(f"  {season} regular season")
+        cache_path = repo_path("cache", f"pbp_{season}.csv.gz")
+        try:
+            stats, _games, _plays, _unknown = tally(load_pbp(season, cache_path),
+                                                    positions)
+        except Exception as exc:                      # noqa: BLE001 - see docstring
+            print(f"  ! {season} unavailable ({exc}); skipped", file=sys.stderr)
+            continue
+        finally:
+            if not keep_pbp and os.path.exists(cache_path):
+                os.remove(cache_path)
+        if len(stats) != EXPECTED_TEAMS:
+            print(f"  ! {season} has {len(stats)} teams; skipped", file=sys.stderr)
+            continue
+        trend = season_trend(stats)
+        margin = sum(t["margin"] for t in trend.values())
+        if margin != 0:
+            print(f"  ! {season} margins sum to {margin}, not 0; skipped", file=sys.stderr)
+            continue
+        per_season[season] = trend
+
+    have = sorted(per_season)
+    # Keyed by team rather than by season because that is how the card reads it:
+    # one team's four points, not four leagues.
+    history = {}
+    for season in have:
+        for abbr, row in per_season[season].items():
+            history.setdefault(abbr, []).append(dict(season=season, **row))
+    return have, dict(sorted(history.items()))
 
 
 def league_means(teams):
@@ -372,6 +590,7 @@ def league_means(teams):
     return {
         "pressureRate": round(mean(lambda t: t["havoc"]["pressureRate"]), 1),
         "sackRate": round(mean(lambda t: t["havoc"]["sackRate"]), 1),
+        "stuffRate": round(mean(lambda t: t["runDefense"]["stuffRate"]), 1),
         "fourthDownPct": round(mean(lambda t: t["fourthDown"]["pct"]), 1),
         "oneScoreGames": round(mean(lambda t: t["oneScore"]["games"]), 1),
         "deadCap": int(mean(lambda t: t["deadCap"]["amount"])),
@@ -379,13 +598,60 @@ def league_means(teams):
     }
 
 
-def verify(teams, games, stats):
+def verify_history(teams, history, current_season):
+    """The trend's last point has to be the worksheet's number, rank and all.
+    Both are computed from the same tally by the same helpers, so a mismatch
+    means one of the two paths has been edited and the other has not — which
+    would put a chart on the card that quietly disagrees with the legend
+    directly above it, the one failure here that a reader would never catch."""
+    ok = True
+    for abbr, rows in history.items():
+        last = rows[-1]
+        if last["season"] != current_season:
+            print(f"! {abbr} trend ends at {last['season']}, not {current_season}",
+                  file=sys.stderr)
+            ok = False
+            continue
+        t = teams.get(abbr)
+        if not t:
+            print(f"! {abbr} has a trend but no worksheet", file=sys.stderr)
+            ok = False
+            continue
+        want = [t["havoc"]["pressureRate"], t["havoc"]["rank"],
+                t["turnovers"]["diff"], t["turnovers"]["rank"]]
+        got = [last["havoc"], last["havocRank"], last["margin"], last["marginRank"]]
+        if want != got:
+            print(f"! {abbr} trend {got} disagrees with worksheet {want}",
+                  file=sys.stderr)
+            ok = False
+    return ok
+
+
+def verify(teams, games, stats, unknown_rushers):
     ok = True
     if len(teams) != EXPECTED_TEAMS:
         print(f"! {len(teams)} teams, expected {EXPECTED_TEAMS}", file=sys.stderr)
         ok = False
     if len(games) != EXPECTED_GAMES:
         print(f"! {len(games)} scored games, expected {EXPECTED_GAMES}", file=sys.stderr)
+        ok = False
+
+    # The stuff-rate denominator is the one number here that depends on a
+    # second file, and its failure mode is silent: a players.csv that arrived
+    # empty, or that has drifted off the play-by-play's ids, matches nobody,
+    # every carry is skipped and every team ships a tidy 0.0% that passes every
+    # other gate on this page. So both ends are checked — that carriers were
+    # found at all, and that the ones that were not are a handful rather than
+    # the league.
+    thin = sorted(a for a, t in teams.items()
+                  if t["runDefense"]["rushes"] < MIN_CARRIES)
+    if thin:
+        print(f"! fewer than {MIN_CARRIES} carries faced by "
+              f"{', '.join(thin)} — check the players file", file=sys.stderr)
+        ok = False
+    if len(unknown_rushers) > MAX_UNKNOWN_RUSHERS:
+        print(f"! {len(unknown_rushers)} ball carriers have no position "
+              f"(limit {MAX_UNKNOWN_RUSHERS})", file=sys.stderr)
         ok = False
 
     # Every giveaway is somebody's takeaway, so the league's margins must cancel.
@@ -413,23 +679,54 @@ def main():
                     help="finished season the on-field stats come from")
     ap.add_argument("--cap-season", type=int, default=last_done + 1,
                     help="league year the dead money comes from")
+    ap.add_argument("--reuse-cap", action="store_true",
+                    help="take dead money from the existing JSON instead of "
+                         "scraping Over The Cap (which blocks some networks "
+                         "outright); on-field numbers are still rebuilt")
+    ap.add_argument("--history", type=int, default=HISTORY_SEASONS, metavar="N",
+                    help="seasons of havoc/turnover trend to plot, this one included "
+                         f"(default {HISTORY_SEASONS}; 1 skips the extra downloads)")
     ap.add_argument("--keep-pbp", action="store_true",
-                    help="leave the play-by-play CSV in /cache for the next run")
+                    help="leave the play-by-play and players CSVs in /cache "
+                         "for the next run")
     args = ap.parse_args()
+
+    print("Ball carriers: nflverse players release")
+    players_path = repo_path("cache", "players.csv")
+    positions = load_positions(players_path)
+    print(f"  {len(positions)} players")
 
     print(f"Play-by-play: {args.season} regular season (nflverse)")
     cache_path = repo_path("cache", f"pbp_{args.season}.csv.gz")
     blob = load_pbp(args.season, cache_path)
-    stats, games, plays = tally(blob)
+    stats, games, plays, unknown = tally(blob, positions)
+    carries = sum(t["rushes"] for t in stats.values())
     print(f"  {plays} plays, {len(games)} games, {len(stats)} teams")
+    print(f"  {carries} RB/FB carries, {len(unknown)} carriers without a position")
 
-    print(f"Dead money: {args.cap_season} league year (Over The Cap)")
-    caps = parse_otc(curl_bytes(OTC_URL, browser_ua=True).decode("utf-8", "replace"),
-                     args.cap_season)
+    if args.reuse_cap:
+        print(f"Dead money: {args.cap_season} league year (existing JSON)")
+        caps = reuse_caps(args.cap_season)
+    else:
+        print(f"Dead money: {args.cap_season} league year (Over The Cap)")
+        caps = parse_otc(curl_bytes(OTC_URL, browser_ua=True).decode("utf-8", "replace"),
+                         args.cap_season)
     print(f"  {len(caps)} teams")
 
     teams = build(stats, caps)
-    if not verify(teams, games, stats):
+    if not verify(teams, games, stats, unknown):
+        print("\nRefusing to overwrite good data.", file=sys.stderr)
+        return 1
+
+    # After the verify, not before: the trend is an addendum to the worksheet,
+    # and there is no reason to spend three more downloads on a run that is
+    # about to refuse to write anything.
+    span = list(range(args.season - args.history + 1, args.season + 1))
+    print(f"Trend: {span[0]}-{args.season} havoc and turnover margin, by rank")
+    seasons, history = build_history(span, args.season, stats, positions,
+                                     args.keep_pbp)
+    print(f"  {len(seasons)} of {len(span)} seasons, {len(history)} teams")
+    if not verify_history(teams, history, args.season):
         print("\nRefusing to overwrite good data.", file=sys.stderr)
         return 1
 
@@ -440,15 +737,26 @@ def main():
                  f"On-field numbers are {args.season} regular season only. "
                  "A pressure is a dropback ending in a sack or a QB hit — hurries "
                  "are hand-charted and in no free feed, so this is a floor. "
+                 "A stuff is a carry held to zero yards or fewer, counted over "
+                 "running-back and fullback carries only: quarterback runs, "
+                 "scrambled or designed, describe an offense rather than the "
+                 "defense that met it. "
                  "Turnovers are from scrimmage. A one-score game is decided by 8 "
                  "or fewer. Fourth down counts pass and run attempts only. Rank 1 "
                  "is the highest value in every block except deadCap, where it is "
-                 "the lowest."),
+                 "the lowest. history carries the same havoc rate and turnover "
+                 "margin back " + str(len(seasons)) + " seasons, oldest first, "
+                 "each with its rank in that season's field of 32 — 1 is the "
+                 "highest rate and the best margin."),
         "sources": {
             "onField": PBP_URL.format(season=args.season),
+            "players": PLAYERS_URL,
             "deadCap": OTC_URL,
+            "trend": [PBP_URL.format(season=y) for y in seasons],
         },
         "league": league_means(teams),
+        "historySeasons": seasons,
+        "history": history,
         "teams": dict(sorted(teams.items())),
     }
 
@@ -467,6 +775,8 @@ def main():
             "team_count": len(teams),
             "game_count": len(games),
             "play_count": plays,
+            "carry_count": carries,
+            "history_seasons": seasons,
             "league": out["league"],
             "size_bytes": os.path.getsize(out_path),
             "fetched_at": now.isoformat(timespec="seconds"),
@@ -474,8 +784,13 @@ def main():
         }, f, indent=2)
     print(f"Wrote metadata to {os.path.abspath(meta_path)}")
 
-    if not args.keep_pbp and os.path.exists(cache_path):
-        os.remove(cache_path)
+    # The players file goes with them: it is a tenth the size of one season's
+    # play-by-play, but leaving it behind is how a stale position map survives
+    # into a run that would otherwise have fetched a fresh one.
+    if not args.keep_pbp:
+        for path in (cache_path, players_path):
+            if os.path.exists(path):
+                os.remove(path)
     return 0
 
 

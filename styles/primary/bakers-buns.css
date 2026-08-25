@@ -388,6 +388,21 @@
 
 .bun-links p a { font-size: inherit; font-weight: 400; }
 
+/* A second heading inside a section that already opened with one — the Links
+   index under Sources. The look comes from .bun-section > h3; all this adds is
+   the air that a mid-section heading needs and the first one does not. */
+.bun-sub { margin-top: 24px; }
+
+/* The index repeats what the list above says, so it carries the URL in full:
+   readable off the page, and copyable without following the link. */
+.bun-links-index .link-url {
+  margin-top: 4px;
+  font-family: monospace;
+  font-size: 11px;
+  color: var(--text-4);
+  overflow-wrap: anywhere;
+}
+
 /* --- Projections table ---
  * Rendered from /data/nfl_projections_2026.json by the inline script in
  * views/football/bakers-buns.html. */
@@ -616,12 +631,24 @@
 .comp-seg.is-up { background: var(--good); }
 .comp-seg.is-down { background: var(--orange); }
 
-/* The weight ramp, shared by the bar and its key. Step 0 is O-Line at 40% and
- * runs down to Rest at 15%, so a heavier input is always the more solid band. */
+/* The weight ramp, shared by the bar and its key. Step 0 is O-Line at 25% and
+ * runs down to Luck at 5%, so a heavier input is always the more solid band.
+ * The middle of the ramp is tighter than its ends because the inputs there are
+ * tied — SoS with Havoc, Rest with Coaches: the ramp separates them enough to
+ * be told apart in a stack without claiming one outweighs another.
+ * The steps are COMP's order, which orderMetrics() takes from the sheet's own
+ * weights at boot — never from the live ones. A reader who re-weights the blend
+ * would otherwise watch the bands swap shades under them, and the key above the
+ * table would be describing a different bar every time a slider moved. It is
+ * the same order the columns are in, so a swatch and its column always line
+ * up. */
 .comp-seg.step-0, .comp-sw.step-0 { opacity: 1; }
 .comp-seg.step-1, .comp-sw.step-1 { opacity: 0.78; }
 .comp-seg.step-2, .comp-sw.step-2 { opacity: 0.58; }
 .comp-seg.step-3, .comp-sw.step-3 { opacity: 0.42; }
+.comp-seg.step-4, .comp-sw.step-4 { opacity: 0.30; }
+.comp-seg.step-5, .comp-sw.step-5 { opacity: 0.22; }
+.comp-seg.step-6, .comp-sw.step-6 { opacity: 0.16; }
 
 /* --- the key above the table --- */
 .comp-legend {
@@ -657,23 +684,12 @@
 
 .proj-empty { padding: 16px 0; font-size: 12px; font-family: monospace; color: var(--text-5); }
 
-/* Wins above pythag. Inverted against the z-score palette on purpose: a large
- * positive is luck that regresses, so it warns rather than praises. Heat-scaled
- * like the metric columns, against the widest gap between record and pythag in
- * the field, so a half-win of luck is a tint and three wins is a klaxon. */
-.z-val.luck-hot {
-  color: var(--heat-warn);
-  color: color-mix(in oklab, var(--heat-warn) calc(var(--heat, 1) * 100%), var(--heat-base));
-  background: color-mix(in oklab, var(--heat-warn-fill) calc(var(--heat, 0) * var(--heat-fill-max)), transparent);
-}
-
-.z-val.luck-cold {
-  color: var(--heat-info);
-  color: color-mix(in oklab, var(--heat-info) calc(var(--heat, 1) * 100%), var(--heat-base));
-  background: color-mix(in oklab, var(--heat-info-fill) calc(var(--heat, 0) * var(--heat-fill-max)), transparent);
-}
-
-.z-val.luck-even { color: var(--text-3); }
+/* Luck carries no palette of its own. It is an inverted z-score like the O-Line
+ * and SoS ranks, so .pos and .neg say the same true thing about it that they
+ * say about every other metric column: green is better than the field, orange
+ * is worse. The amber-and-blue pair that used to live here is still the right
+ * mark for a direction rather than a grade, and it survives on .tc-luck below,
+ * where the card calls a team a regression or a bounce-back candidate. */
 
 /* Row height here is set by the 40px team logo, not by the text, so top-aligned
  * values sit high against it. centerd, every column reads on one line through
@@ -748,10 +764,10 @@
 /* Where Metrics ends and Odds begins. The other boundary is already drawn by
  * the pinned pair's right edge, so this is the only divider the bands need. */
 #proj-table tr.col-bands th:last-child,
-#proj-table tr.col-heads th:nth-child(8),
-#proj-table tr.proj-row > td:nth-child(8),
+#proj-table tr.col-heads th:nth-child(10),
+#proj-table tr.proj-row > td:nth-child(10),
 .proj-float-head tr.col-bands th:last-child,
-.proj-float-head tr.col-heads th:nth-child(8) {
+.proj-float-head tr.col-heads th:nth-child(10) {
   border-left: 1px solid var(--panel-hi2);
 }
 
@@ -1042,6 +1058,20 @@ body:has(.bn-modal[open]) .tc-modal-scroll { overflow: hidden; }
 
 .tc-ol-sep { color: var(--hairline-hi); padding: 0 3px; }
 
+/* Action Network's tier, set like the O-Line block's rank line above it: the
+ * two blocks both open with the number the score was built from, so they should
+ * read the same way. The tier's name is the source's own and is dimmed to sit
+ * under the number rather than beside it. */
+.tc-block .tc-coach-tier {
+  font-family: monospace;
+  font-size: 11px;
+  letter-spacing: 0.3px;
+  color: var(--text);
+  margin-bottom: 9px;
+}
+
+.tc-coach-tier-name { color: var(--text-3); }
+
 /* The coaching staff: three fixed rows rather than a list of findings, so the
  * role carries the marker's job and the bullets come off. The prior job is
  * greyed — it is the footnote to the name, not a second name. */
@@ -1200,10 +1230,12 @@ body:has(.bn-modal[open]) .tc-modal-scroll { overflow: hidden; }
  * need naming. */
 .tc-reg-context h5 { margin-bottom: 4px; }
 
-/* Wider than a regression tile and never more than two across, so the row reads
- * as a footnote to the one above rather than as a second set of findings. */
+/* Wider than a regression tile and capped rather than stretched. Since havoc
+ * left for the trend above, dead cap is alone in this row, and a 1fr column
+ * would have run one tile the full 760px of the card — which would have made
+ * the block's quietest number its widest object. */
 .tc-reg-grid.is-context {
-  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(210px, 320px));
 }
 
 .tc-reg-tile.is-context {
@@ -1227,6 +1259,197 @@ body:has(.bn-modal[open]) .tc-modal-scroll { overflow: hidden; }
   letter-spacing: 0.3px;
   color: var(--text-5);
   margin-top: 4px;
+}
+
+/* --- The four-year trend ---
+ * Where the team placed in havoc rate and in turnover margin, as two lines over
+ * four seasons, between the regression tiles and the dead-cap footnote. It
+ * replaces the two tiles that used to print those numbers once each; see
+ * trendChart in the view for why the lines are ranks and not the numbers
+ * themselves, which the legend above the chart still prints.
+ *
+ * Everything with a colour lives here rather than in the SVG's attributes, so
+ * the two themes are one rule apiece and a theme flipped under an open card
+ * re-paints without the card being rebuilt. --series-a is havoc, --series-b is
+ * the margin, and neither is --good or --orange: those two are spent on
+ * direction everywhere else on this page, and a reader meeting a green line
+ * would read "good" where only "which one" is meant. */
+.tc-reg-trend {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--panel-hi2);
+}
+
+.tc-reg-trend h5 { margin-bottom: 6px; }
+
+/* The legend, above the chart rather than under it: a reader meeting two
+ * unlabelled lines needs the key before them. It is also where the ranks and
+ * the counts the old tiles carried now live, which is what keeps this from
+ * being a picture that costs the block its numbers. */
+.tc-trend-legend {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(228px, 1fr));
+  gap: 4px 14px;
+  margin-bottom: 6px;
+}
+
+.tc-trend-key {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0 6px;
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+/* The swatch repeats the mark on the line, shape and all — a round one for
+ * havoc, a square for the margin — so the pair is told apart in greyscale, in
+ * print, and by a reader who cannot separate the hues. */
+.tc-trend-swatch {
+  width: 8px;
+  height: 8px;
+  flex: none;
+  align-self: center;
+}
+
+.tc-trend-swatch.is-dot { border-radius: 50%; }
+.tc-trend-swatch.is-a { background: var(--series-a); }
+.tc-trend-swatch.is-b { background: var(--series-b); }
+
+/* The name is ink, not the series colour: the swatch beside it already carries
+ * identity, and colouring the text as well would put a legend's two labels on
+ * the same channel as the page's good/bad tinting. */
+.tc-trend-name {
+  font-family: monospace;
+  font-size: 9.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 700;
+  color: var(--text-3);
+}
+
+.tc-trend-val {
+  font-family: monospace;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.tc-trend-rank {
+  font-family: monospace;
+  font-size: 9.5px;
+  color: var(--text-5);
+  white-space: nowrap;
+}
+
+/* Its own line under the rest, because the counts are the footnote to the value
+ * and wrapping them mid-phrase between "30 sacks" and "72 pressures" read as
+ * two separate facts. */
+.tc-trend-sub {
+  flex: 1 0 100%;
+  padding-left: 14px;
+  font-size: 10px;
+  color: var(--text-4);
+}
+
+/* Let out to the card's width against a fixed viewBox: four points across do
+ * not need the tick density rethought at every breakpoint the way the page's
+ * 32-team scatter does, and the card ranges from a phone to 760px. */
+.tc-trend-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.tt-grid {
+  stroke: var(--hairline);
+  stroke-width: 1;
+}
+
+.tt-tick,
+.tt-season,
+.tt-axis {
+  font-family: monospace;
+  fill: var(--text-5);
+}
+
+.tt-tick { font-size: 9px; }
+.tt-season { font-size: 9.5px; fill: var(--text-4); }
+
+/* Both series are ranks now, so there is one scale and the axis belongs to
+ * neither of them. It is scenery in the same ink as the ticks and the seasons —
+ * the two colours on this chart are spent entirely on the lines, which is where
+ * identity is decided, and the legend above repeats both of them. An axis
+ * tinted to a series would be claiming a side it no longer has. */
+.tt-axis {
+  font-size: 9.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  font-weight: 700;
+}
+
+.tt-line {
+  fill: none;
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.tt-line.is-a { stroke: var(--series-a); }
+
+/* Dashed as well as orange. Redundant on a colour screen and the only thing
+ * separating the two lines on a monochrome one. */
+.tt-line.is-b {
+  stroke: var(--series-b);
+  stroke-dasharray: 6 3.5;
+}
+
+/* The ring is the card's own background, so where the two series cross, the
+ * mark on top reads as in front of the other line rather than merged into it. */
+.tt-dot {
+  stroke: var(--bg);
+  stroke-width: 2;
+  paint-order: stroke;
+}
+
+.tt-dot.is-a { fill: var(--series-a); }
+.tt-dot.is-b { fill: var(--series-b); }
+
+/* One hit column per season, invisible and the full height of the plot: the
+ * marks are 8px and nobody is hitting one with a thumb. The native tooltip is
+ * deliberate — every other explanation on this card is a title attribute, and a
+ * bespoke hover layer inside a dialog would be the only one. */
+.tt-hit {
+  fill: transparent;
+  cursor: help;
+}
+
+/* Below 600px the card goes full width of the phone, and the SVG is then drawn
+ * at anything from 1.0 down to about 0.6 of its viewBox — which takes a 9px
+ * tick to 5.5px and a 2px line to a hairline. Everything in the frame is sized
+ * back up in user units rather than the chart being redrawn portrait the way
+ * the page's 32-team scatter is: four points across a card have no crowding to
+ * resolve, only legibility, and legibility is a font size.
+ *
+ * Two steps rather than one, because one covered a scale range wide enough that
+ * whatever size fixed the 390px phone was visibly chunky at 600px, where the
+ * SVG is barely scaled at all. Each step aims for about 9px on the glass across
+ * the widths it owns. */
+@media (max-width: 600px) {
+  .tt-tick { font-size: 10.5px; }
+  .tt-season { font-size: 11px; }
+  .tt-axis { font-size: 10.5px; letter-spacing: 0.5px; }
+  .tt-line { stroke-width: 2.2; }
+  .tt-dot { stroke-width: 2.2; }
+}
+
+@media (max-width: 430px) {
+  .tt-tick { font-size: 13px; }
+  .tt-season { font-size: 13.5px; }
+  .tt-axis { font-size: 13px; letter-spacing: 0.4px; }
+  .tt-line { stroke-width: 2.9; }
+  .tt-line.is-b { stroke-dasharray: 7 4; }
+  .tt-dot { stroke-width: 2.9; }
 }
 
 /* --- Raw inputs ---
@@ -1293,8 +1516,10 @@ body:has(.bn-modal[open]) .tc-modal-scroll { overflow: hidden; }
 .tc-raw tbody tr + tr th,
 .tc-raw tbody tr + tr td { border-top: 1px solid var(--panel); }
 
-/* The 2025 luck call: the first bullet in the notes list, tinted like its Luck
- * cell. Two classes, so it outranks the plain `.tc-block li` color. */
+/* The 2025 luck call: the first bullet in the notes list. Amber for a team due
+ * to regress, blue for one due to bounce back — a direction rather than a
+ * grade, which is why it does not use the green-and-orange its Luck cell now
+ * carries. Two classes, so it outranks the plain `.tc-block li` color. */
 .tc-luck.luck-hot { color: var(--warn); }
 .tc-luck.luck-cold { color: var(--accent); }
 .tc-luck.luck-even { color: var(--text-3); }

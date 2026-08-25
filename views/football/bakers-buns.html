@@ -140,17 +140,28 @@
             -->
             <tr class="col-bands">
               <th colspan="2" class="band band-none"><span class="sr-only">Team and rank</span></th>
-              <th scope="colgroup" colspan="5" class="band">Metrics</th>
+              <th scope="colgroup" colspan="7" class="band">Metrics</th>
               <th scope="colgroup" colspan="6" class="band">Odds</th>
             </tr>
-            <tr class="col-heads">
+            <!--
+              The metric headings between Rank and Make are rewritten at boot by
+              buildMetricHeads(), in the order the JSON's own weights put them —
+              heaviest input first. What is written here is that same order as
+              the sheet currently ships it, so the table reads correctly in the
+              frame before the data lands and in a view with no script at all;
+              the boot pass is what keeps it true after the sheet is re-exported
+              with a different blend.
+            -->
+            <tr class="col-heads" id="col-heads">
               <th scope="col" class="sortable" data-sort="team"><span class="sr-only">Team</span></th>
               <th scope="col" class="num sortable" data-sort="score">Rank</th>
-              <th scope="col" class="num sortable" data-sort="eyeTest">Eye<span class="th-sub">of 10</span></th>
-              <th scope="col" class="num sortable" data-sort="oLine">O-Line<span class="th-sub">rank</span></th>
-              <th scope="col" class="num sortable" data-sort="sos">SoS<span class="th-sub">rank</span></th>
-              <th scope="col" class="num sortable" data-sort="rest">Rest<span class="th-sub">net</span></th>
-              <th scope="col" class="num sortable" data-sort="luck">Luck<span class="th-sub">vs pythag</span></th>
+              <th scope="col" class="num sortable is-metric" data-sort="oLine">O-Line<span class="th-sub">rank</span></th>
+              <th scope="col" class="num sortable is-metric" data-sort="eyeTest">OFF<span class="th-sub">tier</span></th>
+              <th scope="col" class="num sortable is-metric" data-sort="sos">SoS<span class="th-sub">rank</span></th>
+              <th scope="col" class="num sortable is-metric" data-sort="havoc">Havoc<span class="th-sub">2-yr %</span></th>
+              <th scope="col" class="num sortable is-metric" data-sort="rest">Rest<span class="th-sub">net</span></th>
+              <th scope="col" class="num sortable is-metric" data-sort="coaches">Coaches<span class="th-sub">tier</span></th>
+              <th scope="col" class="num sortable is-metric" data-sort="luck">Luck<span class="th-sub">vs pythag</span></th>
               <th scope="col" class="num sortable" data-sort="make">Make</th>
               <th scope="col" class="num sortable" data-sort="miss">Miss</th>
               <th scope="col" class="num sortable" data-sort="division">Div</th>
@@ -160,7 +171,7 @@
             </tr>
           </thead>
           <tbody id="proj-body">
-            <tr><td colspan="13" class="proj-empty">Loading projections&hellip;</td></tr>
+            <tr><td colspan="15" class="proj-empty">Loading projections&hellip;</td></tr>
           </tbody>
         </table>
       </div>
@@ -212,16 +223,16 @@
 
     <!--
       Edit weights. The blend is the one thing on this page that is a judgement
-      rather than a source — PFF's ranking is PFF's, but 40% is somebody's
+      rather than a source — PFF's ranking is PFF's, but 30% is somebody's
       opinion — so it is the one thing a reader is handed to argue with. Saving
       recomputes the score from their weights, which is why the dialog says so
       plainly: past that point the Rank column is no longer the number the sheet
       published, and the "custom" flag by the heading stays up to say so.
 
-      The four must total 100%. Save stays disabled until they do rather than
-      normalising them silently — a reader who typed 40/30/20/20 meant something
-      by it, and having it quietly become 36/27/18/18 would be a worse surprise
-      than being told to fix it.
+      The seven must total 100%. Save stays disabled until they do rather than
+      normalising them silently — a reader who typed 40/30/20/20/10/10/5 meant
+      something by it, and having it quietly become 30/22/15/15/7/7/4 would be a
+      worse surprise than being told to fix it.
 
       Structure and buttons are the note dialog's (.bn-modal and friends); only
       the slider rows are new.
@@ -324,7 +335,7 @@
           <img src="/assets/images/nfl-sos-2026.png"
                alt="2026 NFL Strength of Schedule based on Vegas forecasted win totals, ranking all 32 teams from easiest (Lions) to hardest (Cardinals)"
                loading="lazy" width="2421" height="1205">
-          <figcaption><strong>Strength of Schedule</strong> &mdash; feeds the 25% SoS input &middot; Sharp Football Analysis</figcaption>
+          <figcaption><strong>Strength of Schedule</strong> &mdash; feeds the 15% SoS input &middot; Sharp Football Analysis</figcaption>
         </figure>
 
         <figure class="graph">
@@ -399,13 +410,13 @@
       <ul class="bun-links">
         <li>
           <a href="https://www.pff.com/news/nfl-offensive-line-rankings-2026" target="_blank" rel="noopener">PFF &mdash; 2026 offensive line rankings</a>
-          <span class="link-src">Feeds the 40% O-Line input</span>
+          <span class="link-src">Feeds the 25% O-Line input</span>
           <p>All 32 lines graded off individual player grades weighted toward pass protection, over three years of history. Rankings move weekly with injuries; results start counting after Week 4. The per-team read is on each team&rsquo;s card above.</p>
         </li>
         <li>
           <a href="https://www.actionnetwork.com/nfl/2026-nfl-offensive-line-rankings-for-every-team" target="_blank" rel="noopener">Action Network &mdash; 2026 offensive line rankings</a>
           <span class="link-src">Qualitative only &mdash; does not feed the O-Line input</span>
-          <p>Brandon Anderson ranks all 32 lines into named tiers on four criteria: the unit over its best individual, continuity, depth and versatility, and scheme fit. Read against PFF it is a second opinion rather than a replacement &mdash; the 40% O-Line input stays PFF&rsquo;s rank &mdash; and the teams the two boards disagree about are the ones worth a second look. They agree almost exactly at the top (Broncos 1st, Bills 6th, Chiefs 8th) and the bottom (Packers 28th, Jaguars 30th), so the gaps stand out: the Ravens are 15th here against PFF&rsquo;s 24th, the Patriots 21st against 13th, and the Cowboys, Giants, Steelers and Raiders all move four or five spots. The Ravens and Patriots are the two teams whose 40% input would look materially different on the other board. Each team&rsquo;s summary sits inside its Offensive line block above.</p>
+          <p>Brandon Anderson ranks all 32 lines into named tiers on four criteria: the unit over its best individual, continuity, depth and versatility, and scheme fit. Read against PFF it is a second opinion rather than a replacement &mdash; the 25% O-Line input stays PFF&rsquo;s rank &mdash; and the teams the two boards disagree about are the ones worth a second look. They agree almost exactly at the top (Broncos 1st, Bills 6th, Chiefs 8th) and the bottom (Packers 28th, Jaguars 30th), so the gaps stand out: the Ravens are 15th here against PFF&rsquo;s 24th, the Patriots 21st against 13th, and the Cowboys, Giants, Steelers and Raiders all move four or five spots. The Ravens and Patriots are the two teams whose 25% input would look materially different on the other board. Each team&rsquo;s summary sits inside its Offensive line block above.</p>
         </li>
         <li>
           <a href="https://www.sharpfootballanalysis.com/betting/nfl-schedule-rest-disparity/" target="_blank" rel="noopener">Sharp Football &mdash; schedule rest disparity</a>
@@ -414,7 +425,7 @@
         </li>
         <li>
           <a href="https://x.com/sharpfootball/status/2082119731826618393" target="_blank" rel="noopener">@sharpfootball &mdash; strength of schedule</a>
-          <span class="link-src">Feeds the 25% SoS input</span>
+          <span class="link-src">Feeds the 15% SoS input</span>
           <p>Odds-based SoS refreshed once all 32 teams were in camp. Easiest: Lions, Bengals, Saints, Jets, Ravens. Hardest: Cardinals, Dolphins, Panthers, Commanders, Cowboys &mdash; matching the sheet exactly.</p>
         </li>
         <li>
@@ -448,19 +459,29 @@
           <p>Tracks previously-fired offensive coaches into their 2026 jobs: Shane Waldron to Jacksonville, Nathaniel Hackett to Arizona, Kevin Patullo to Miami, Matt Nagy to the Giants. A fade list for those offenses.</p>
         </li>
         <li>
-          <a href="https://github.com/nflverse/nflverse-data/releases/tag/pbp" target="_blank" rel="noopener">nflverse &mdash; 2025 play-by-play</a>
-          <span class="link-src">Feeds four of the five Stats &amp; Regression tiles</span>
-          <p>Every regular-season play of 2025 as a table, which is the only free source that carries <code>qb_hit</code> &mdash; and pressure is the one number in that block that repeats, so the block does not work without it. <code>scripts/fetch_nfl_regression.py</code> makes one pass over the file for havoc rate, turnover margin, the one-score record and fourth-down conversions, and writes <code>data/nfl_regression_2026.json</code>. A pressure here is a dropback ending in a sack or a hit: hurries are charted by hand and are in no free feed, so the rate is a floor rather than PFF&rsquo;s number. Turnovers are counted from scrimmage only, a one-score game is decided by eight or fewer, and fourth down counts the plays a team chose to run rather than punts and field goals.</p>
+          <a href="https://github.com/nflverse/nflverse-data/releases/tag/pbp" target="_blank" rel="noopener">nflverse &mdash; play-by-play, 2022&ndash;2025</a>
+          <span class="link-src">Feeds the Havoc column, and everything in Stats &amp; Regression except the cap</span>
+          <p>Every regular-season play as a table, which is the only free source that carries <code>qb_hit</code> &mdash; and pressure is the one number in that block that repeats, so the block does not work without it. <code>scripts/fetch_nfl_regression.py</code> makes one pass over the 2025 file for havoc rate, run stuff rate, turnover margin, the one-score record and fourth-down conversions, then one pass over each of the three seasons before it for the havoc and turnover trend the team cards plot, and writes <code>data/nfl_regression_2026.json</code>. <code>scripts/build_bun_havoc.py</code> then blends the last two seasons of pressure rate &mdash; 75% the most recent, 25% the one before &mdash; into the Havoc z-score in the table above, which carries 15% of the score. A pressure here is a dropback ending in a sack or a hit: hurries are charted by hand and are in no free feed, so the rate is a floor rather than PFF&rsquo;s number. Turnovers are counted from scrimmage only, a one-score game is decided by eight or fewer, and fourth down counts the plays a team chose to run rather than punts and field goals. A stuff is a carry held to no gain or a loss &mdash; zero yards counts, since a run met at the line is the same stop as one met behind it &mdash; over running-back and fullback carries only.</p>
+        </li>
+        <li>
+          <a href="https://github.com/nflverse/nflverse-data/releases/tag/players" target="_blank" rel="noopener">nflverse &mdash; players</a>
+          <span class="link-src">Feeds the Run stuff rate tile</span>
+          <p>The play-by-play names the ball carrier with an id and never a position, so on its own it cannot tell a running back&rsquo;s carry from a quarterback&rsquo;s. This file is the join that does &mdash; every player nflverse has ever listed, keyed by <code>gsis_id</code>, fetched once per run. It matters because the denominator is the definition: scrambles are plainly somebody else&rsquo;s stat, but so are designed quarterback runs, which describe an offense rather than the defense that met it. Filtered to backs and fullbacks the 2025 Rams come out second-lowest in the league at 12.1%, which is where the published versions of this metric have them; leaving quarterback runs in moves teams a couple of places and Denver nine of them.</p>
         </li>
         <li>
           <a href="https://overthecap.com/salary-cap-space" target="_blank" rel="noopener">Over The Cap &mdash; salary cap space</a>
           <span class="link-src">Feeds the Dead cap tile</span>
-          <p>2026 cap charged to players who are no longer on the roster, scraped from the same page&rsquo;s first table by the script above. It is the odd one out in that block &mdash; dead money does not regress, it is spent &mdash; and it is carried because it answers the question the other four raise: whether a team that got unlucky has the room to do anything about it. The league pays about $44M a head, but the mean is nearly meaningless here: the spread runs from Seattle&rsquo;s $0.7M to Miami&rsquo;s $179M.</p>
+          <p>2026 cap charged to players who are no longer on the roster, scraped from the same page&rsquo;s first table by the script above. It is the odd one out in that block &mdash; dead money does not regress, it is spent &mdash; and it is carried because it answers the question the rest of the block raises: whether a team that got unlucky has the room to do anything about it. The league pays about $44M a head, but the mean is nearly meaningless here: the spread runs from Seattle&rsquo;s $0.7M to Miami&rsquo;s $179M.</p>
         </li>
         <li>
           <a href="https://en.wikipedia.org/wiki/List_of_current_NFL_head_coaches" target="_blank" rel="noopener">Wikipedia &mdash; current NFL head coaches</a>
-          <span class="link-src">Feeds the Coaches block</span>
+          <span class="link-src">Feeds the Coaches block &mdash; the names, not the tier</span>
           <p>With the <a href="https://en.wikipedia.org/wiki/List_of_current_NFL_offensive_coordinators" target="_blank" rel="noopener">offensive</a> and <a href="https://en.wikipedia.org/wiki/List_of_current_NFL_defensive_coordinators" target="_blank" rel="noopener">defensive coordinator</a> lists, the whole of each team&rsquo;s Coaches block. Ten teams changed head coach for 2026 and 25 changed at least one coordinator, so the tenure year is the number to read first. The coordinator lists carry a previous-position column and the head coach list does not, which is why only coordinators show where they came from.</p>
+        </li>
+        <li>
+          <a href="https://www.actionnetwork.com/nfl/2026-nfl-coaching-staff-rankings-for-all-32-teams" target="_blank" rel="noopener">Action Network &mdash; 2026 coaching staff rankings</a>
+          <span class="link-src">Feeds the Coaches column</span>
+          <p>All 32 staffs ranked and then grouped into eight tiers, head coach and both coordinators judged together. <code>scripts/build_bun_coaches.py</code> z-scores the <em>tier</em> &mdash; not the 1&ndash;32 order &mdash; into the Coaches column above, which carries 10% of the score, taken five points each from O-Line and Rest. The tier is the resolution the source stands behind: the gap between the 13th and 14th staff is a tie broken inside one bucket, while the gap between tier 4 and tier 5 is the claim the article is making. The buckets are deliberately uneven &mdash; two teams in tier 1, eight in tier 7 &mdash; and z-scoring keeps that, so a tier-1 staff scores as the rare thing it is. In a year with ten new head coaches and 25 teams changing a coordinator, it is the one input on this page about the people calling the plays.</p>
         </li>
         <li>
           <a href="https://x.com/lordreebs/status/2076727636022206935" target="_blank" rel="noopener">@lordreebs &mdash; league-wide offensive trends</a>
@@ -475,7 +496,52 @@
         <li>
           <a href="https://x.com/fball_insights/status/2074590563093893554" target="_blank" rel="noopener">@fball_insights &mdash; O-line consensus rankings</a>
           <span class="link-src">Cross-check on the O-Line input</span>
-          <p>Averages six preseason offensive line rankings (Clay, Sharp, 4for4, FTN, USA, FPTS) into one table with a standard deviation per team, as of 7 July. Agrees with PFF at the top (Broncos 1st, Eagles 2nd) and the bottom (Browns last), but the SD column is the useful part: the Colts, Chiefs and Jaguars carry the widest disagreement between sources, so their 40%-weighted O-Line input is the least settled. Chart in <a href="#graphs">Graphs</a>.</p>
+          <p>Averages six preseason offensive line rankings (Clay, Sharp, 4for4, FTN, USA, FPTS) into one table with a standard deviation per team, as of 7 July. Agrees with PFF at the top (Broncos 1st, Eagles 2nd) and the bottom (Browns last), but the SD column is the useful part: the Colts, Chiefs and Jaguars carry the widest disagreement between sources, so their 25%-weighted O-Line input is the least settled. Chart in <a href="#graphs">Graphs</a>.</p>
+        </li>
+      </ul>
+
+      <!-- The five feeds the score is actually built on, pulled out of the list
+           above as a plain index: title, the URL in full, and one line on what
+           it does. Everything here is annotated at length further up; this is
+           the version you can read or copy without scrolling. -->
+      <h3 class="bun-sub">Links</h3>
+
+      <ul class="bun-links bun-links-index">
+        <li>
+          <a href="https://www.actionnetwork.com/nfl/2026-nfl-coaching-staff-rankings-for-all-32-teams" target="_blank" rel="noopener">Brandon Anderson &mdash; 2026 NFL coaching staff rankings</a>
+          <span class="link-src">Feeds Coaches &middot; 10%</span>
+          <p class="link-url">https://www.actionnetwork.com/nfl/2026-nfl-coaching-staff-rankings-for-all-32-teams</p>
+          <p>All 32 staffs ranked and grouped into eight tiers, head coach and both coordinators judged together. The tier &mdash; not the 1&ndash;32 order &mdash; is what gets z-scored into the Coaches column.</p>
+        </li>
+        <li>
+          <a href="https://www.actionnetwork.com/nfl/2026-nfl-offensive-line-rankings-for-every-team" target="_blank" rel="noopener">Brandon Anderson &mdash; 2026 NFL offensive line rankings</a>
+          <span class="link-src">Qualitative cross-check &middot; no weight</span>
+          <p class="link-url">https://www.actionnetwork.com/nfl/2026-nfl-offensive-line-rankings-for-every-team</p>
+          <p>All 32 lines put in named tiers on continuity, depth and versatility, and scheme fit. Read as a second opinion against PFF; the teams the two boards disagree about are the ones worth a look.</p>
+        </li>
+        <li>
+          <a href="https://www.actionnetwork.com/nfl/2026-nfl-offense-rankings-all-32-teams-ranked" target="_blank" rel="noopener">Brandon Anderson &mdash; 2026 NFL offense rankings</a>
+          <span class="link-src">Feeds Off Tier &middot; 20%</span>
+          <p class="link-url">https://www.actionnetwork.com/nfl/2026-nfl-offense-rankings-all-32-teams-ranked</p>
+          <p>All 32 offenses ranked into tiers 1&ndash;9. Tier 1 is the best offense, so the tier is inverted into its z-score the way the O-Line rank is.</p>
+        </li>
+        <li>
+          <a href="https://www.pff.com/news/nfl-offensive-line-rankings-2026" target="_blank" rel="noopener">PFF &mdash; 2026 NFL offensive line rankings</a>
+          <span class="link-src">Feeds O-Line &middot; 25%</span>
+          <p class="link-url">https://www.pff.com/news/nfl-offensive-line-rankings-2026</p>
+          <p>All 32 lines graded off individual player grades weighted toward pass protection over three years of history. The rank, 1&ndash;32, is the O-Line input exactly as published.</p>
+        </li>
+        <li>
+          <a href="https://github.com/nflverse/nflverse-data/releases/tag/pbp" target="_blank" rel="noopener">nflverse &mdash; play-by-play, 2022&ndash;2025</a>
+          <span class="link-src">Feeds Havoc &middot; 15%, and Stats &amp; Regression</span>
+          <p class="link-url">https://github.com/nflverse/nflverse-data/releases/tag/pbp</p>
+          <p>Every regular-season play as a table, and the only free source carrying <code>qb_hit</code>. Read by <code>scripts/fetch_nfl_regression.py</code> and <code>scripts/build_bun_havoc.py</code>.</p>
+        </li>
+        <li>
+          <a href="https://github.com/nflverse/nflverse-data/releases/tag/players" target="_blank" rel="noopener">nflverse &mdash; players</a>
+          <span class="link-src">Feeds the Run stuff rate tile</span>
+          <p class="link-url">https://github.com/nflverse/nflverse-data/releases/tag/players</p>
+          <p>Every player nflverse has listed, keyed by <code>gsis_id</code>. The join that turns a ball carrier&rsquo;s id into a position, so run stuff rate can be held to backs and fullbacks.</p>
         </li>
       </ul>
     </section>
@@ -485,7 +551,7 @@
   /* Projections table — the page's primary surface.
    *
    * Reads the snapshot exported from the "Projections" tab of the source sheet,
-   * whose composite is 0.20*EyeTest + 0.40*OLine + 0.25*SoS + 0.15*Rest over
+   * whose composite is 0.20*OffTier + 0.40*OLine + 0.25*SoS + 0.15*Rest over
    * z-scores. `score` is carried through as the sheet computed it rather than
    * recomputed here, so this page can never disagree with the sheet.
    *
@@ -576,7 +642,7 @@
      *
      * The intensity is handed to CSS as --heat (0..1) and mixed there, so the
      * palette stays in the stylesheet with the rest of the colorss. */
-    var HEAT_KEYS = ['eyeTest', 'oLine', 'sos', 'rest'];
+    var HEAT_KEYS = ['eyeTest', 'oLine', 'sos', 'rest', 'havoc', 'coaches', 'luck'];
     var heatMax = {};
 
     function computeHeat() {
@@ -586,9 +652,6 @@
           return v == null ? m : Math.max(m, Math.abs(v));
         }, 0) || 1;
       });
-      heatMax.luck = teams.reduce(function (m, t) {
-        return t.pythag ? Math.max(m, Math.abs(t.pythag.winsAbovePythag)) : m;
-      }, 0) || 1;
     }
 
     // 0 at the field average, 1 at the column's extreme. The exponent lifts the
@@ -610,11 +673,16 @@
       return (n > 0 ? '+' : '') + n.toFixed(digits || 0);
     }
 
-    // Wins above pythag drives two different displays, so its class lives here.
-    // The palette is inverted against the z-score columns on purpose: a big
-    // positive is luck that tends to regress, so it warns rather than praises.
-    // The ±1 line still marks a regression call in the card note; in the table
-    // the colors is continuous like every other column.
+    // The card's regression verdict, and only that: the Luck column and the
+    // worksheet row both read green-and-orange off the z-score now, like every
+    // other metric on the page. What is left here is a one-line call — a team
+    // is due to regress or due to bounce back — and it wants amber and blue
+    // because those are the two directions, not two grades.
+    //
+    // It takes the *raw* gap, not the z. The z is the inverted one (see
+    // scripts/build_bun_luck.py), so a class function that flipped with
+    // whichever of the two it was handed would be a bug waiting on the next
+    // caller.
     function luckClass(v) {
       return v > 0.05 ? 'luck-hot' : (v < -0.05 ? 'luck-cold' : 'luck-even');
     }
@@ -622,29 +690,94 @@
     /* ---------- score composition ----------
      * The Rank column used to be the composite and nothing else, which meant a
      * +0.78 built almost entirely on the offensive line and a +0.78 built
-     * evenly across all four inputs printed as the same cell. The bar under the
+     * evenly across all seven inputs printed as the same cell. The bar under the
      * number is where that went: one segment per input, sized by its weighted
      * contribution (weight × z) and stacked outward from a center line, so the
      * shape of the row says which inputs earned the score and which fought it.
      *
-     * Segments always stack in weight order — O-Line, SoS, Eye, Rest — so the
-     * innermost band on either side is always the heaviest input pulling that
-     * way, and the ramp in opacity follows the same order. Direction is which
-     * side of center a segment falls on, never its colors: see the note in
+     * Segments always stack in weight order — O-Line, OFF, SoS, Havoc, Rest,
+     * Coaches, Luck as the sheet currently ships it — so the innermost band on
+     * either side is always the heaviest input pulling that way, and the ramp in
+     * opacity follows the same order. That order is COMP's, and orderMetrics()
+     * re-derives it from the JSON at boot rather than trusting the order these
+     * entries happen to be typed in.
+     * Direction is which side of center a segment falls on, never its colors:
+     * see the note in
      * scripts/primary/bun-charts.js for why nothing on this page may lean on
      * green-versus-orange alone.
      *
      * The segments are the raw weighted contributions and are deliberately not
      * rescaled to land exactly on the printed score. The JSON rounds each z to
-     * one decimal, so the four re-add to the sheet's score with an error of at
-     * most 0.035 — under 1.2px on this track. Stretching them to close a
+     * one decimal, so the seven re-add to the sheet's score with an error of at
+     * most 0.04 — under 1.4px on this track. Stretching them to close a
      * sub-pixel gap would be inventing precision the inputs do not have. */
     var COMP = [
-      { key: 'oLine',   label: 'O-Line', full: 'O-Line' },
-      { key: 'sos',     label: 'SoS',    full: 'SoS' },
-      { key: 'eyeTest', label: 'Eye',    full: 'Eye Test' },
-      { key: 'rest',    label: 'Rest',   full: 'Rest' }
+      { key: 'oLine',   label: 'O-Line', full: 'O-Line',   head: 'O-Line',  sub: 'rank' },
+      { key: 'eyeTest', label: 'OFF',    full: 'OFF Tier', head: 'OFF',     sub: 'tier' },
+      { key: 'sos',     label: 'SoS',    full: 'SoS',      head: 'SoS',     sub: 'rank' },
+      // The one input that is about a defense, and lighter than the line for
+      // it: a floor on pressure rather than the real number, blended across two
+      // seasons. See scripts/build_bun_havoc.py for the blend and for where its
+      // 15% was taken from.
+      { key: 'havoc',   label: 'Havoc',  full: 'Havoc',    head: 'Havoc',   sub: '2-yr %' },
+      { key: 'rest',    label: 'Rest',   full: 'Rest',     head: 'Rest',    sub: 'net' },
+      // The only input that is about people rather than players, the schedule
+      // or a rate. Its raw value is Action Network's staff tier, 1 at the top,
+      // and it is light for the same reason the eye test is: an opinion, well
+      // argued, is still an opinion. See scripts/build_bun_coaches.py for why
+      // the tier is scored rather than the 1-32 rank, and where its 10% came
+      // from.
+      { key: 'coaches', label: 'Coach',  full: 'Coaches',  head: 'Coaches', sub: 'tier' },
+      // The lightest input in the blend, and the only one about a season
+      // already played. Its raw value is 2025 wins above Pythagorean
+      // expectation and its z is inverted, so a team that won more games than
+      // its points implied contributes a negative: the record is the thing that
+      // regresses, not the level. 5%, taken off SoS — one season of one team's
+      // point differential is the noisiest number here, and some part of what
+      // it measures is a real skill rather than variance. See
+      // scripts/build_bun_luck.py.
+      { key: 'luck',    label: 'Luck',   full: 'Luck',     head: 'Luck',    sub: 'vs pythag' }
     ];
+    /* COMP's order is the page's column order, its bar-stacking order, its
+     * opacity ramp and the order of the rows in the weights dialog — one order
+     * for all four, so a reader matching a swatch to a column never has to
+     * translate between two of them.
+     *
+     * It is sorted once, at boot, by the *sheet's* weights: heaviest input
+     * first, so the table reads left to right in order of how much each column
+     * counts. Deliberately the sheet's and not the reader's. A reader who
+     * re-weights the blend is answering "how much should this count", and
+     * having the columns slide sideways under that answer would scramble the
+     * table exactly when they are trying to read what they just did to it — so
+     * a save moves the bars and the percentages, and nothing moves a column.
+     *
+     * Ties keep the order the entries are written in, which is why they are
+     * written in the shipped order: SoS and Havoc are both 15%, Rest and
+     * Coaches both 10%, and this is the only thing that decides which of each
+     * pair comes first. */
+    function orderMetrics() {
+      var typed = COMP.map(function (c) { return c.key; });
+      COMP.sort(function (a, b) {
+        var d = (baseWeights[b.key] || 0) - (baseWeights[a.key] || 0);
+        return d || (typed.indexOf(a.key) - typed.indexOf(b.key));
+      });
+    }
+
+    /* The headings between Rank and Make, rewritten from that order. The band
+     * row above them spans a count rather than naming columns, so it does not
+     * move; nothing else in the header does either. */
+    function buildMetricHeads() {
+      var row = document.getElementById('col-heads');
+      var old = row.querySelectorAll('th.is-metric');
+      if (!old.length) return;
+      var at = old[0];
+      for (var i = 1; i < old.length; i++) old[i].remove();
+      at.outerHTML = COMP.map(function (c) {
+        return '<th scope="col" class="num sortable is-metric" data-sort="' + c.key + '">' +
+          esc(c.head) + '<span class="th-sub">' + esc(c.sub) + '</span></th>';
+      }).join('');
+    }
+
     // Anything smaller than this is under a pixel wide; drawn, it would be a
     // rounding artefact rather than a contribution.
     var COMP_MIN = 0.02;
@@ -662,7 +795,7 @@
      * it here would land 0.01 away from it — the JSON rounds each z to one
      * decimal. Once the weights are the reader's, there is no published figure
      * to defer to and the score is recomputed from the blend they chose. */
-    var WEIGHT_KEY = 'dz_buns_weights_v1';
+    var WEIGHT_KEY = 'dz_buns_weights_v2';
     var baseWeights = {};
     var customWeights = false;
 
@@ -672,7 +805,7 @@
       });
     }
 
-    /* Stored as fractions of 1, all four keys present, summing to 1. Anything
+    /* Stored as fractions of 1, every key in COMP present, summing to 1. Anything
      * else — a hand-edited key, a half-written write, a shape from some future
      * version of this page — is not something to score 32 teams with, so it is
      * dropped and the sheet's blend stands. */
@@ -791,20 +924,11 @@
     }
 
     // Two lines, like the z-cells beside it: the number the sheet published,
-    // and beneath it the four contributions that add up to it.
+    // and beneath it the seven contributions that add up to it.
     function scoreCell(t) {
       return '<td class="num score-num">' +
         '<span class="score-val">' + signed(scoreOf(t), 2) + '</span>' +
         compBar(t) + '</td>';
-    }
-
-    function luckCell(t) {
-      var p = t.pythag;
-      if (!p) return '<td class="z-cell"></td>';
-      var v = p.winsAbovePythag;
-      return '<td class="z-cell">' +
-        '<span class="z-val ' + luckClass(v) + '" style="--heat:' + heat(v, 'luck') + '">' +
-        signed(v, 1) + '</span></td>';
     }
 
     /* ---------- team card (the expanded row) ----------
@@ -837,7 +961,7 @@
     /* The offensive line: one headline, both boards under it, and the two ranks
      * on a single line between them.
      *
-     * Only PFF's number feeds the score — it is the 40% input — so it is named
+     * Only PFF's number feeds the score — it is the 30% input — so it is named
      * first and Anderson's is set beside it rather than under his own heading,
      * which keeps the gap between the two boards readable at a glance without
      * implying the second one moves anything. Nothing below the rank line
@@ -892,10 +1016,11 @@
      * the end the team is actually on, so a bad dead-cap number reads "2nd
      * highest" rather than "31st lowest".
      *
-     * Deliberately absent: 2025 luck, which is a rank like any other but
-     * already has luckNote() above it saying the more useful thing. "4th in
-     * wins above pythag" is the same sentence as "regression candidate" with
-     * the meaning taken out. */
+     * Deliberately absent: 2025 luck. It is a scored input now like the six
+     * around it, and it is still the one that does not belong in this list,
+     * because luckNote() sits directly above the list saying the more useful
+     * thing. "4th in wins above pythag" is the same sentence as "regression
+     * candidate" with the meaning taken out. */
 
     var STANDOUT_END = 5;   // top five and bottom five
 
@@ -918,14 +1043,54 @@
         fmt: function (t) { return signed(t.raw.rest) + ' days'; }
       },
       {
-        key: 'eye', label: 'Eye test', hi: 'highest', lo: 'lowest',
-        value: function (t) { return (t.raw || {}).eyeTest; },
-        fmt: function (t) { return t.raw.eyeTest + ' of 10'; }
+        // Action Network's offense tier, where 1 is the best offense in the
+        // field: a published rank in all but name, so it goes in as one.
+        key: 'eye', label: 'Offense', hi: 'best', lo: 'worst',
+        rank: function (t) { return (t.raw || {}).eyeTest; },
+        fmt: function (t) { return 'Tier ' + t.raw.eyeTest; }
       },
       {
+        // The blend the score is built on, not the regression file's single
+        // season — the two disagree by a place or two most years, and a note
+        // saying "3rd highest havoc rate" above a table column built from a
+        // different number would be the page arguing with itself. The card's
+        // trend chart still carries each season's own rank, which is where a
+        // reader goes to see how the blend was arrived at.
+        //
+        // value() rather than rank() because the projections file publishes no
+        // rank for it: the blend is computed at build time and only ever
+        // existed as a number. See scripts/build_bun_havoc.py.
         key: 'havoc', label: 'Havoc rate', hi: 'highest', lo: 'lowest',
-        rank: function (t) { return regTeam(t, 'havoc').rank; },
-        fmt: function (t) { return regTeam(t, 'havoc').pressureRate.toFixed(1) + '%'; }
+        value: function (t) { return (t.raw || {}).havoc; },
+        fmt: function (t) { return t.raw.havoc.toFixed(1) + '%, 2-yr'; }
+      },
+      {
+        // The tier rather than Action Network's 1-32 order, because the tier is
+        // what the score is built on and printing the order here would be the
+        // page scoring one number and reporting another. It is a coarse metric
+        // and the tie rule in placeIn() is what makes that safe: only tier 1
+        // and tier 8 hold few enough teams to fit inside the five, so the two
+        // ends speak and the six tiers in the middle stay silent — which is the
+        // honest reading of a bucket eight teams deep.
+        key: 'coaches', label: 'Coaching staff', hi: 'best', lo: 'worst',
+        rank: function (t) { return (t.raw || {}).coachTier; },
+        fmt: function (t) { return 'Tier ' + t.raw.coachTier; }
+      },
+      {
+        // Beside havoc because they are the two halves of a front, and far
+        // enough apart to be worth both lines rather than one: in the 2025
+        // regression file the Rams are 4th in pressure rate and 31st here.
+        //
+        // rank() and a single season, unlike the blend above it, because the
+        // projections file carries no stuff rate to blend with — this number
+        // only exists in the regression file, and the rank used here is the
+        // one the More Stats tile on the same card prints.
+        key: 'stuffRate', label: 'Run stuff rate', hi: 'highest', lo: 'lowest',
+        rank: function (t) { return regTeam(t, 'runDefense').rank; },
+        fmt: function (t) {
+          var d = regTeam(t, 'runDefense');
+          return d.stuffRate == null ? '' : d.stuffRate.toFixed(1) + '%';
+        }
       },
       {
         key: 'turnovers', label: 'Turnover margin', hi: 'best', lo: 'worst',
@@ -991,11 +1156,12 @@
      * the team is on, or null for the middle.
      *
      * The tie rule is the part that matters. A whole tied block has to fit
-     * inside the five, not merely start inside it: the eye test is scored in
-     * whole numbers from 1 to 10, so eight teams can share a 7, and a plain
-     * "rank <= 5" reported all eight as 2nd-highest in the league. Eight teams
-     * tied is not a top five — it is a metric too coarse to have one, and the
-     * right output is silence.
+     * inside the five, not merely start inside it: a coarse metric hands out
+     * the same number to whole blocks of teams — the offense tiers arrive in
+     * blocks of four and five — and a plain "rank <= 5" reported every one of
+     * them as 2nd-highest in the league. A block that overruns the five is not
+     * a top five; it is a metric too coarse to have one, and the right output
+     * is silence.
      *
      * This is also why the count comes from the scores rather than from
      * teams.length: a metric missing a few teams has a smaller field, and five
@@ -1213,6 +1379,28 @@
         ', year ' + (season - c.since + 1) + prev + '</li>';
     }
 
+    /* The tier line above the three names, and the reason the block is worth
+     * opening now rather than a directory of who works where: the tier is a
+     * scored input, so the card has to show what the table's Coaches column was
+     * built from. Its name is carried too — a tier called "Whole Lotta New Head
+     * Coaches" says why a staff placed there in a way the number 7 cannot, and
+     * it is the source's own label rather than this page's gloss on it.
+     *
+     * Everything in it is optional. The staff list came from Wikipedia and the
+     * tier from Action Network, and a file carrying only the first is a file
+     * this block still renders. */
+    function tierLine(staff) {
+      if (staff.tier == null) return '';
+      var named = (coaches.tiers || []).filter(function (x) {
+        return x.tier === staff.tier;
+      })[0];
+      return '<p class="tc-coach-tier">Tier ' + staff.tier +
+        (named ? ' <span class="tc-coach-tier-name">' + esc(named.name) + '</span>' : '') +
+        (staff.rank == null ? '' :
+          ' <span class="tc-ol-sep" aria-hidden="true">|</span> #' + staff.rank + ' of 32') +
+        '</p>';
+    }
+
     function coachesInner(t) {
       if (!coaches) return '';
       var staff = (coaches.teams || {})[t.abbr];
@@ -1222,7 +1410,8 @@
         coachLine('OC', staff.oc, coaches.season) +
         coachLine('DC', staff.dc, coaches.season);
 
-      return body ? '<ul class="tc-coaches">' + body + '</ul>' : '';
+      return tierLine(staff) +
+        (body ? '<ul class="tc-coaches">' + body + '</ul>' : '');
     }
 
     /* ---------- stats & regression ----------
@@ -1231,24 +1420,29 @@
      * an argument about which parts of last season were the team and which
      * parts were the bounce of the ball.
      *
-     * Two rows, because the numbers are two kinds of thing and used to be laid
-     * out as though they were one. The three that regress lead:
+     * Three parts, because the numbers are three kinds of thing and used to be
+     * laid out as though they were one. The two that regress lead:
      *
-     *   Turnovers  Fumble recoveries are a coin flip and interception rate
-     *              barely correlates season to season, which makes a big margin
-     *              either way the loudest single regression signal there is.
      *   One-score  Over a career every team is about .500 in games decided by a
      *              possession. 11-2 is not a skill.
      *   4th down   Twenty-odd attempts in a season. There is no sample there to
      *              be good at.
      *
-     * Under them, set apart, the two that do not regress and are only there to
-     * be read against the three that do: havoc, which is the opposite case —
-     * pressure is the stickiest thing a defense does — and dead cap, which is
-     * money already spent and the answer to whether any of this can be fixed
-     * this year. They carry the league's middle where a regression tile carries
-     * an arrow. Sharing one row with one arrow made five findings of a kind out
-     * of them and implied, wrongly, that a low pressure rate predicts a fall.
+     * Then the trend, which is the block's centre of gravity: havoc rate and
+     * turnover margin over four seasons, drawn rather than printed. Both used
+     * to be tiles — the margin up with the regression calls, the pressure rate
+     * demoted below them — and as tiles they could each state a level and
+     * neither could state the thing that actually matters about them, which is
+     * that one of them holds and the other does not. A team at 18% pressure for
+     * four straight years beside a margin that has been +9, -6, +11, -3 is the
+     * whole argument in one picture, and no pair of single-season boxes can
+     * make it. See trendChart.
+     *
+     * Under both, dead cap: money already spent, no regression call of any
+     * kind, and the answer to whether any of this can be fixed this year. It
+     * carries the league's middle where a regression tile carries an arrow.
+     * Sharing one row with one arrow made findings of a kind out of them and
+     * implied, wrongly, that a low pressure rate predicts a fall.
      *
      * The colours say direction, not quality, and they are the Luck column's
      * palette rather than the z-score columns': green is a tailwind into 2026,
@@ -1279,27 +1473,11 @@
      * lean rules stay together and readable — which is where the block's whole
      * argument lives, and the part most likely to be argued with.
      *
-     * The thresholds are quintile-ish on purpose: a turnover margin outside ±7,
-     * a one-score record outside .375-.625, a fourth-down rate outside 45-65%.
-     * Anything tighter than that is inside the noise the block exists to warn
-     * about, and gets no arrow at all. */
+     * The thresholds are quintile-ish on purpose: a one-score record outside
+     * .375-.625, a fourth-down rate outside 45-65%. Anything tighter than that
+     * is inside the noise the block exists to warn about, and gets no arrow at
+     * all. */
     var REG_TILES = [
-      function (r) {
-        var v = r.turnovers;
-        return {
-          label: 'Turnover margin',
-          rank: v.rank,
-          val: signed(v.diff),
-          sub: v.takeaways + ' takeaways · ' + v.giveaways + ' giveaways',
-          // Inverted against the rank it prints: ranking first here is the
-          // thing most likely to be handed back.
-          lean: leanOf(v.diff <= -7, v.diff >= 7),
-          why: 'Takeaways less giveaways from scrimmage, 2025. Fumble recoveries ' +
-            'are close to a coin flip and interception rate barely carries over, ' +
-            'so a margin this far from zero is mostly last season’s luck ' +
-            'rather than next season’s defense.'
-        };
-      },
       function (r) {
         var o = r.oneScore;
         return {
@@ -1330,32 +1508,39 @@
       }
     ];
 
-    /* The two that are not regression calls, and are therefore not tiles of the
-     * same kind. Havoc is the opposite of the three above — it is the thing that
-     * repeats — and dead cap does not regress at all, it is already spent. Both
-     * used to sit in the same row with the same green-or-orange arrow, which
-     * read as five findings of one type and quietly claimed that a low pressure
-     * rate predicts decline, which it does not.
+    /* The ones that are not regression calls, and are therefore not tiles of
+     * the same kind. Dead cap does not regress at all, it is already spent;
+     * run stuff rate does not regress either, for the opposite reason — it is
+     * sticky, and a front that met a fifth of carries at the line will do it
+     * again. Both used to be the sort of number that went in the row above
+     * with the same green-or-orange arrow, which read as a list of findings of
+     * one type when only some of them were.
      *
      * So they carry a comparison instead of a lean: the league's middle, which
      * is the only context either number needs. Whether that is good or bad is
-     * the reader's call and depends entirely on the three tiles above it — a
-     * high pressure rate beside a poor turnover margin is a bill coming due,
-     * and beside a good one it is a margin that was earned. */
+     * the reader's call and depends entirely on everything above it.
+     *
+     * On-field first, money second — the run defense is a fact about last
+     * season like everything above it, and dead cap is the constraint the
+     * whole card gets spent under, which is the note to end on. */
     var CONTEXT_TILES = [
       function (r, lg) {
-        var h = r.havoc;
+        var d = r.runDefense || {};
+        if (d.stuffRate == null) return null;
         return {
-          label: 'Havoc rate',
-          rank: h.rank,
-          val: h.pressureRate.toFixed(1) + '%',
-          sub: h.sacks + ' sacks · ' + h.pressures + ' pressures',
-          vs: 'league ' + lg.pressureRate + '%',
-          why: 'Share of dropbacks faced that ended in a sack or a QB hit, 2025 ' +
-            'regular season. Hurries are hand-charted and in no free feed, so this ' +
-            'is a floor on real pressure. It is the stickiest thing a defense does ' +
-            'and so is not a regression call itself — it is what says whether the ' +
-            'turnover margin above was earned or borrowed.'
+          label: 'Run stuff rate',
+          rank: d.rank,
+          val: d.stuffRate.toFixed(1) + '%',
+          sub: d.stuffs + ' of ' + d.rushes + ' carries held to no gain',
+          vs: 'league ' + lg.stuffRate + '%',
+          why: 'Share of running-back and fullback carries the defense held to ' +
+            'zero yards or fewer in the 2025 regular season. Quarterback runs are ' +
+            'out, scrambled or designed — those describe an offense rather than ' +
+            'the defense that met it. Nothing here is a regression call: unlike ' +
+            'the tiles above, this one is sticky and is expected to hold. It is ' +
+            'carried because havoc rate only covers the pass rush, and the two ' +
+            'come apart — Rank 1 is the league\'s best run defense by this ' +
+            'measure.'
         };
       },
       function (r, lg) {
@@ -1372,12 +1557,205 @@
           vs: 'median ' + millions(lg.deadCapMedian),
           why: 'Cap charged in 2026 to players no longer on the roster, with the ' +
             'room left beside it. Nothing here regresses — the money is spent — so ' +
-            'it is carried as the answer to what the three tiles above raise, ' +
+            'it is carried as the answer to what everything above it raises, ' +
             'which is whether the roster can be fixed this year at all. Rank 1 is ' +
             'the team paying the least of it.'
         };
       }
     ];
+
+    /* ---------- the four-year trend ----------
+     * Havoc rate and turnover margin as where the team placed in the league,
+     * four seasons wide.
+     *
+     * Rank rather than the numbers themselves, and everything else here follows
+     * from that. A pressure rate in percent and a turnover margin in whole
+     * takeaways do not share a number line, so drawing both meant two scales,
+     * and where two scales cross is an artefact of where each was pinned rather
+     * than a fact about the team. Rank is the one unit both already have: one
+     * axis, one meaning for height, and a crossing that finally says something
+     * — the season a defense started getting home faster than the ball was
+     * bouncing for it.
+     *
+     * It also settles what four seasons of raw numbers could not. The league
+     * moves under both of these: pressure rates drift with the rules and with
+     * how fast the ball comes out, so 14.2% is not the same thing in 2022 as in
+     * 2025, while 9th is. A line that climbs here is a team climbing past other
+     * teams, which is the only reading a multi-season view was wanted for.
+     *
+     * The bounds are 1 to the size of the field and cannot be anything else,
+     * which is the constant frame every card is drawn in — a flat line is a team
+     * that held its place, and two cards opened one after the other compare
+     * directly. 1 is at the top, because a rank read downward is the one thing
+     * on this page nobody needs told.
+     *
+     * What is drawn is the placing; what is printed is the number. The legend
+     * above the chart still carries the rate, the margin, the counts behind
+     * them and the league's middle, so the change of unit cost the block
+     * nothing. */
+
+    // Quarters of the field rather than a round-number step: 8, 16 and 24 are
+    // where "top ten" and "bottom third" actually fall, which is how a reader
+    // holds a 32-team rank in their head.
+    function rankTicks(n) {
+      return [1, Math.round(n / 4), Math.round(n / 2), Math.round(3 * n / 4), n];
+    }
+
+    // Read once off the whole file and kept: the field's size is a statement
+    // about the league, and every card that asked would get the same answer.
+    var TREND = null;
+
+    function trendScales() {
+      if (TREND) return TREND;
+      var hist = (regression && regression.history) || {};
+      var seasons = (regression && regression.historySeasons) || [];
+      var teams = Object.keys(hist).length;
+      if (teams < 2 || seasons.length < 2) return null;
+      TREND = { seasons: seasons, teams: teams, ticks: rankTicks(teams) };
+      return TREND;
+    }
+
+    /* Drawn into a viewBox and let out to the card's width, rather than
+     * measured: the card is a dialog that opens at anything from a phone to
+     * 760px, and four points across do not need the tick density rethought at
+     * each of them the way the page's 32-team scatter does. Everything with a
+     * colour is a class rather than an attribute, so the two themes are one
+     * stylesheet rule apiece and a theme flipped under an open card follows. */
+    var TR = { w: 560, h: 216, l: 52, r: 34, t: 12, b: 30, pad: 26 };
+
+    function trendChart(t) {
+      var ax = trendScales();
+      if (!ax) return '';
+      var rows = ((regression.history || {})[t.abbr]) || [];
+      if (rows.length < 2) return '';
+
+      var x0 = TR.l, x1 = TR.w - TR.r, y0 = TR.t, y1 = TR.h - TR.b;
+      var span = ax.seasons.length - 1;
+      // Indexed by season, not by position in the row: a season the fetch
+      // dropped must leave a gap where it belongs rather than slide the rest of
+      // the line left onto the wrong years.
+      function xAt(season) {
+        var i = ax.seasons.indexOf(season);
+        return x0 + TR.pad + (i / span) * (x1 - x0 - 2 * TR.pad);
+      }
+      // Inverted, which is the whole reason the axis needs no explaining: 1st
+      // is the top of the frame and a line that rises is a team improving.
+      function yAt(rank) {
+        return y0 + ((rank - 1) / (ax.teams - 1)) * (y1 - y0);
+      }
+
+      var svg = '';
+
+      // One scale, so one set of gridlines and one set of numbers — mirrored to
+      // both edges rather than repeated in two colours. The right-hand column
+      // is not a second axis; it is the same axis, put where the reader's eye
+      // already is when it reaches the most recent season.
+      ax.ticks.forEach(function (rank) {
+        var gy = yAt(rank);
+        svg += '<line class="tt-grid" x1="' + x0 + '" x2="' + x1 +
+          '" y1="' + gy + '" y2="' + gy + '"/>' +
+          '<text class="tt-tick" x="' + (x0 - 8) + '" y="' + (gy + 3.5) +
+          '" text-anchor="end">' + rank + '</text>' +
+          '<text class="tt-tick" x="' + (x1 + 8) + '" y="' + (gy + 3.5) +
+          '" text-anchor="start">' + rank + '</text>';
+      });
+
+      // Season labels, and a hit column apiece: the tooltip is the whole
+      // vertical strip rather than the two 8px marks in it, because on a card
+      // this size hitting a mark with a finger is not a thing that happens. It
+      // is also where the season's raw numbers are, since the chart itself now
+      // shows only the placing.
+      var pts = {};
+      rows.forEach(function (p) { pts[p.season] = p; });
+      ax.seasons.forEach(function (season) {
+        var cx = xAt(season);
+        var half = (x1 - x0) / (span + 1) / 2;
+        var p = pts[season];
+        svg += '<text class="tt-season" x="' + cx + '" y="' + (y1 + 18) +
+          '" text-anchor="middle">' + season + '</text>';
+        if (!p) return;
+        svg += '<rect class="tt-hit" x="' + (cx - half) + '" y="' + y0 +
+          '" width="' + (half * 2) + '" height="' + (y1 - y0) + '"><title>' +
+          esc(season +
+            ' · havoc ' + ordinal(p.havocRank) + ' (' + p.havoc.toFixed(1) + '%)' +
+            ' · turnover margin ' + ordinal(p.marginRank) +
+            ' (' + signed(p.margin) + ')') +
+          '</title></rect>';
+      });
+
+      // Both series drawn the same way, which is now literally true — with one
+      // axis under them there is no per-series scale left to differ.
+      [['a', 'havocRank'], ['b', 'marginRank']].forEach(function (ser) {
+        var cls = ser[0], key = ser[1];
+        var line = rows.map(function (p) {
+          return xAt(p.season) + ',' + yAt(p[key]);
+        }).join(' ');
+        svg += '<polyline class="tt-line is-' + cls + '" points="' + line + '"/>';
+        rows.forEach(function (p) {
+          var cx = xAt(p.season), cy = yAt(p[key]);
+          // A circle against a square, so the pair survives a greyscale print
+          // and a reader who cannot separate the hues.
+          svg += cls === 'a'
+            ? '<circle class="tt-dot is-a" cx="' + cx + '" cy="' + cy + '" r="4"/>'
+            : '<rect class="tt-dot is-b" x="' + (cx - 3.6) + '" y="' + (cy - 3.6) +
+              '" width="7.2" height="7.2"/>';
+        });
+      });
+
+      // The direction is on the axis rather than left to the ticks. "1" at the
+      // top of a column of numbers is unambiguous once you have read it, and
+      // this is the half-second before that.
+      svg += '<text class="tt-axis" transform="translate(13,' + ((y0 + y1) / 2) +
+        ') rotate(-90)" text-anchor="middle">NFL Rank · 1 best</text>';
+
+      return '<svg class="tc-trend-svg" viewBox="0 0 ' + TR.w + ' ' + TR.h +
+        '" role="img" aria-label="' +
+        esc(t.team + ' league rank in havoc rate and turnover margin, ' +
+          ax.seasons[0] + ' to ' + ax.seasons[ax.seasons.length - 1] +
+          ', 1 best of ' + ax.teams) + '">' + svg + '</svg>';
+    }
+
+    /* The legend, which is also where the two numbers keep everything the tiles
+     * used to say: the rank in the field of 32, what the number is made of, and
+     * the league's middle. A swatch in the series' colour and shape sits beside
+     * each name, so identity is never carried by the line colour alone — and
+     * the detail under it means the block did not trade a rank and a takeaway
+     * count for a picture, which would have been a bad trade. */
+    function trendKey(cls, mark, label, val, rank, sub, why) {
+      return '<div class="tc-trend-key" title="' + esc(why) + '">' +
+        '<span class="tc-trend-swatch is-' + cls + ' is-' + mark +
+        '" aria-hidden="true"></span>' +
+        '<span class="tc-trend-name">' + esc(label) + '</span>' +
+        '<span class="tc-trend-val">' + esc(val) + '</span>' +
+        (rank ? '<span class="tc-trend-rank">' + esc(ordinal(rank)) + '</span>' : '') +
+        '<span class="tc-trend-sub">' + esc(sub) + '</span></div>';
+    }
+
+    function trendInner(t, r, lg) {
+      var chart = trendChart(t);
+      if (!chart) return '';
+      var h = r.havoc, v = r.turnovers;
+      return '<div class="tc-trend">' +
+        '<div class="tc-trend-legend">' +
+          trendKey('a', 'dot', 'Havoc %', h.pressureRate.toFixed(1) + '%', h.rank,
+            h.sacks + ' sacks · ' + h.pressures + ' pressures · league ' +
+            lg.pressureRate + '%',
+            'Share of dropbacks faced that ended in a sack or a QB hit. Hurries ' +
+            'are hand-charted and in no free feed, so this is a floor on real ' +
+            'pressure. It is the stickiest thing a defense does, which is why it ' +
+            'is plotted rather than called: a line that holds for four years is ' +
+            'what says whether the turnover margin beside it was earned or ' +
+            'borrowed. Value and rank are ' + (regression.statsSeason || '') + '.') +
+          trendKey('b', 'sq', 'Turnover margin', signed(v.diff), v.rank,
+            v.takeaways + ' takeaways · ' + v.giveaways + ' giveaways',
+            'Takeaways less giveaways from scrimmage. Fumble recoveries are close ' +
+            'to a coin flip and interception rate barely carries over, so a margin ' +
+            'far from zero is mostly one season’s luck rather than the next ' +
+            'season’s defense — which is the reason it is drawn across four of ' +
+            'them instead of printed as one. Value and rank are ' +
+            (regression.statsSeason || '') + '.') +
+        '</div>' + chart + '</div>';
+    }
 
     var LEAN_NOTE = {
       up: '↑ positive regression',
@@ -1425,6 +1803,8 @@
       var lg = regression.league || {};
 
       return regRow(REG_TILES, r, lg, false) +
+        cardBlock('Havoc & Turnover Margin', 'is-trend tc-reg-trend',
+          trendInner(t, r, lg), 'h5') +
         '<div class="tc-reg-context">' +
           '<h5>More Stats</h5>' +
           regRow(CONTEXT_TILES, r, lg, true) +
@@ -1446,13 +1826,13 @@
         '<td class="tc-raw-z">' + valHtml + '</td></tr>';
     }
 
-    function rawLuckRow(p) {
+    function rawLuckRow(t, p) {
       if (!p) return '';
       var v = p.winsAbovePythag;
       var record = p.w + '-' + p.l + (p.t ? '-' + p.t : '');
-      return rawRow('Luck', '2025 record', record + ' vs ' + p.pythagW.toFixed(1) + ' exp',
-        '<span class="z-val ' + luckClass(v) + '" style="--heat:' + heat(v, 'luck') + '">' +
-        signed(v, 1) + '</span>');
+      return rawRow('Luck', '2025 record',
+        record + ' vs ' + p.pythagW.toFixed(1) + ' exp (' + signed(v, 1) + ')',
+        fmtZ(t.z.luck, 'luck'));
     }
 
     function rawInner(t) {
@@ -1460,11 +1840,16 @@
       return '<table class="tc-raw">' +
         '<thead><tr><th scope="col">Input</th><th scope="col">Raw</th>' +
         '<th scope="col">z</th></tr></thead><tbody>' +
-        rawRow('Eye test', 'of 10', r.eyeTest, fmtZ(t.z.eyeTest, 'eyeTest')) +
+        rawRow('OFF Tier', 'Action Network', 'Tier ' + r.eyeTest,
+          fmtZ(t.z.eyeTest, 'eyeTest')) +
         rawRow('O-Line', 'PFF rank', '#' + r.oLineRank, fmtZ(t.z.oLine, 'oLine')) +
         rawRow('SoS', 'rank', '#' + r.sosRank, fmtZ(t.z.sos, 'sos')) +
         rawRow('Rest', 'net days', signed(r.rest), fmtZ(t.z.rest, 'rest')) +
-        rawLuckRow(t.pythag) +
+        rawRow('Havoc', '2-yr pressure', r.havoc == null ? '' : r.havoc.toFixed(1) + '%',
+          fmtZ(t.z.havoc, 'havoc')) +
+        rawRow('Coaches', 'Action Network', r.coachTier == null ? '' : 'Tier ' + r.coachTier,
+          fmtZ(t.z.coaches, 'coaches')) +
+        rawLuckRow(t, t.pythag) +
         '</tbody></table>';
     }
 
@@ -1553,7 +1938,9 @@
       oLine: function (t) { return t.z.oLine; },
       sos: function (t) { return t.z.sos; },
       rest: function (t) { return t.z.rest; },
-      luck: function (t) { return t.pythag ? t.pythag.winsAbovePythag : null; },
+      havoc: function (t) { return t.z.havoc; },
+      coaches: function (t) { return t.z.coaches; },
+      luck: function (t) { return t.z.luck; },
       make: function (t) { return t.odds.make; },
       miss: function (t) { return t.odds.miss; },
       division: function (t) { return t.odds.division; },
@@ -1583,7 +1970,7 @@
       });
 
       if (!rows.length) {
-        tbody.innerHTML = '<tr><td colspan="13" class="proj-empty">No teams match.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="15" class="proj-empty">No teams match.</td></tr>';
         refreshPin();
         return;
       }
@@ -1593,11 +1980,7 @@
           'aria-haspopup="dialog">' +
           '<td class="col-team">' + logo(t, 'team-logo') + '</td>' +
           scoreCell(t) +
-          zCell('eyeTest', t.z.eyeTest) +
-          zCell('oLine', t.z.oLine) +
-          zCell('sos', t.z.sos) +
-          zCell('rest', t.z.rest) +
-          luckCell(t) +
+          COMP.map(function (c) { return zCell(c.key, t.z[c.key]); }).join('') +
           '<td class="num">' + fmtOdds(t.odds.make) + '</td>' +
           '<td class="num">' + fmtOdds(t.odds.miss) + '</td>' +
           '<td class="num">' + fmtOdds(t.odds.division) + '</td>' +
@@ -1637,8 +2020,12 @@
       render();
     }
 
-    table.querySelectorAll('th.sortable').forEach(function (th) {
-      th.addEventListener('click', function () { applySort(th.dataset.sort); });
+    /* Delegated rather than bound per heading: buildMetricHeads() replaces the
+     * seven metric <th>s at boot, and listeners attached to the ones that
+     * shipped in the markup would be thrown away with them. */
+    table.tHead.addEventListener('click', function (e) {
+      var th = e.target.closest('th.sortable');
+      if (th) applySort(th.dataset.sort);
     });
 
     /* ---------- pinned header row ----------
@@ -1920,8 +2307,8 @@
     });
 
     /* ---------- the weights dialog ----------
-     * Four sliders, a running total, and a Save that will not fire until that
-     * total is 100. The sliders are integer percentages because that is how the
+     * One slider per input, a running total, and a Save that will not fire
+     * until that total is 100. The sliders are integer percentages because that is how the
      * page talks about weights everywhere else; they are converted to fractions
      * of 1 on the way out, which is the shape the JSON uses and the shape
      * contributions() multiplies by.
@@ -1930,8 +2317,8 @@
      * to count, and nobody holds one to the percentage point — 1% steps only
      * offered a hundred positions where twenty will do, and made hitting a
      * total of exactly 100 fiddlier than the rule deserves. Every multiple of
-     * five that totals 100 is still reachable, the sheet's own 40/25/20/15
-     * among them. */
+     * five that totals 100 is still reachable, the shipped
+     * 25/20/15/15/10/10/5 among them. */
     var WT_STEP = 5;
 
     var wtModal = document.getElementById('wt-modal');
@@ -2282,6 +2669,12 @@
         weights = saved || baseWeights;
         customWeights = !!saved && !weightsMatch(weights, baseWeights);
 
+        // Before anything reads COMP: it is the column order, the bar's
+        // stacking order and the dialog's row order, and all three follow the
+        // sheet's blend rather than the one in force.
+        orderMetrics();
+        buildMetricHeads();
+
         renderWeightText();
         computeHeat();
         computeComposition();
@@ -2314,7 +2707,7 @@
       })
       .catch(function () {
         tbody.innerHTML =
-          '<tr><td colspan="13" class="proj-empty">Could not load projections.</td></tr>';
+          '<tr><td colspan="15" class="proj-empty">Could not load projections.</td></tr>';
       });
   })();
   </script>

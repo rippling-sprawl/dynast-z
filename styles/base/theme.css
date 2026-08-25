@@ -90,6 +90,18 @@
   --purple-2: #a371f7;
   --cyan: #39c5cf;
 
+  /* --- Series colours ---
+   * Identity, not judgement: the two lines of the team card's four-year trend,
+   * where one is a rate and the other a margin and neither is good or bad on
+   * its own. Deliberately not --good/--orange, which this site spends on
+   * direction everywhere else and which sit 5.7 dE apart under deuteranopia —
+   * a legend cannot rescue a pair a reader cannot separate. Blue against orange
+   * clears 25 dE under every simulated deficiency, and both steps sit inside
+   * the lightness band for the surface they are drawn on, which is why the two
+   * themes carry different values rather than one shared pair. */
+  --series-a: #1f6feb;
+  --series-b: #db6d28;
+
   /* Alternating table row. A lift off --bg in the dark, a settle onto it in
    * the light — both about one step, so a striped table never looks banded. */
   --zebra: #14171d;
@@ -242,6 +254,12 @@
   --purple: #5b3fc4;
   --purple-2: #5b3fc4;
   --cyan: #0d6b84;
+
+  /* Both a shade deeper than the dark theme's, because a line that reads on
+   * #0f1117 is a line that vanishes on white. Revalidated as a pair, not
+   * darkened by eye: 27.6 dE normal, 23.9 under protanopia. */
+  --series-a: #1a5fb4;
+  --series-b: #a04a08;
 
   --zebra: #eff2f6;
 
