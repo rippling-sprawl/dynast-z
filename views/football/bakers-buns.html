@@ -62,6 +62,10 @@
        the one-team radar that plots all five at once. -->
   <script src="/scripts/primary/bun-markets.js"></script>
   <script src="/scripts/primary/bun-radar.js"></script>
+  <!-- The model played against the schedule rather than against a price: 32
+       ratings, 272 games, six thousand seasons, and the conference tables that
+       fall out of them. -->
+  <script src="/scripts/primary/bun-standings.js"></script>
   <script>initPage();</script>
 
   <div class="masters-content">
@@ -80,6 +84,7 @@
     <nav class="bun-nav">
       <a href="#projections">Projections</a>
       <a href="#board">The Board</a>
+      <a href="#standings">Standings</a>
       <a href="#graphs">Graphs</a>
       <a href="#sources">Sources</a>
     </nav>
@@ -161,7 +166,7 @@
               <th scope="col" class="num sortable is-metric" data-sort="havoc">Havoc<span class="th-sub">2-yr %</span></th>
               <th scope="col" class="num sortable is-metric" data-sort="rest">Rest<span class="th-sub">net</span></th>
               <th scope="col" class="num sortable is-metric" data-sort="coaches">Coaches<span class="th-sub">tier</span></th>
-              <th scope="col" class="num sortable is-metric" data-sort="luck">Luck<span class="th-sub">vs pythag</span></th>
+              <th scope="col" class="num sortable is-metric" data-sort="luck">Luck<span class="th-sub">pythag</span></th>
               <th scope="col" class="num sortable" data-sort="make">Make</th>
               <th scope="col" class="num sortable" data-sort="miss">Miss</th>
               <th scope="col" class="num sortable" data-sort="division">Div</th>
@@ -256,7 +261,7 @@
       </div>
 
       <div class="bn-actions">
-        <button type="button" class="bn-btn" id="wt-reset">Reset to sheet</button>
+        <button type="button" class="bn-btn" id="wt-reset">Reset</button>
         <button type="button" class="bn-btn" data-close>Cancel</button>
         <button type="button" class="bn-btn is-primary" id="wt-save">Save</button>
       </div>
@@ -315,6 +320,31 @@
           <div class="board-chart" id="radar-chart"></div>
         </div>
         <div id="radar-reads"></div>
+      </div>
+    </section>
+
+    <!-- ================= PROJECTED STANDINGS =================
+      The Board asks what the model is worth against a price. This asks what it
+      is worth against a schedule, which is the question a ranked list cannot
+      answer: being first by a distance says nothing about how many games that
+      distance actually wins. Everything here — the ratings, the seventeen
+      games, the seeding and both notes — is computed by
+      scripts/primary/bun-standings.js off the same teams array the table
+      renders and the same 2026 schedule the team cards show, so it moves with
+      the reader's weights exactly as The Board does and can never go stale
+      against the sheet.
+
+      It sits under The Board rather than beside the table because it is the
+      furthest thing on the page from the sheet: the table is what was
+      published, The Board is that against a price, and this is that played out.
+    -->
+    <section class="bun-section" id="standings">
+      <h3>Projected 2026 Standings</h3>
+      <!-- Written by bun-standings.js, and a direct child of the section so it
+           picks up .bun-section-note the way The Board's note does. -->
+      <p class="bun-section-note" id="standings-note"></p>
+      <div id="standings-host">
+        <p class="proj-empty">Playing out the season&hellip;</p>
       </div>
     </section>
 
@@ -590,6 +620,15 @@
     var markets = [];
     var board = { market: 'playoffs', team: null };
 
+    /* The season played out. `schedule` is the 2026 file; `forecast` is what
+     * bun-standings.js makes of it against the score in force, and is null
+     * whenever the schedule could not be reached — which costs that section and
+     * the projected-wins standout, and nothing else. Each team's own slice is
+     * hung on the team object too, so the standouts list can read it the same
+     * way it reads every other metric. */
+    var schedule = null;
+    var forecast = null;
+
     var DIV_ORDER = ['East', 'North', 'South', 'West'];
 
     function esc(s) {
@@ -603,16 +642,17 @@
         'alt="' + esc(t.team) + '" title="' + esc(t.team) + '">';
     }
 
-    /* American odds: always signed, thousands-separated, and deliberately NOT
-     * colors-coded. The heat map covers the metric columns, where a positive
-     * always means "better than average". Odds do not work that way: a plus
-     * price on Make means unlikely to make, while a plus price on Miss means
-     * unlikely to miss, so colorsing both green would read as good news for
-     * opposite outcomes. */
+    /* American odds: always signed, never thousands-separated (a price reads as
+     * one token, "+1400" not "+1,400", which is how every book prints it), and
+     * deliberately NOT colors-coded. The heat map covers the metric columns,
+     * where a positive always means "better than average". Odds do not work
+     * that way: a plus price on Make means unlikely to make, while a plus price
+     * on Miss means unlikely to miss, so colorsing both green would read as
+     * good news for opposite outcomes. */
     function fmtOdds(n) {
       if (n == null) return '<span class="muted">&mdash;</span>';
       return '<span class="odds odds-plain">' + (n > 0 ? '+' : '-') +
-        Math.abs(n).toLocaleString('en-US') + '</span>';
+        Math.abs(n) + '</span>';
     }
 
     /* The consensus win total is a line, not a price, so it is the one number
@@ -713,7 +753,7 @@
      * sub-pixel gap would be inventing precision the inputs do not have. */
     var COMP = [
       { key: 'oLine',   label: 'O-Line', full: 'O-Line',   head: 'O-Line',  sub: 'rank' },
-      { key: 'eyeTest', label: 'OFF',    full: 'OFF Tier', head: 'OFF',     sub: 'tier' },
+      { key: 'eyeTest', label: 'Offense',    full: 'Off. Tier', head: 'Offense',     sub: 'tier' },
       { key: 'sos',     label: 'SoS',    full: 'SoS',      head: 'SoS',     sub: 'rank' },
       // The one input that is about a defense, and lighter than the line for
       // it: a floor on pressure rather than the real number, blended across two
@@ -727,7 +767,7 @@
       // argued, is still an opinion. See scripts/build_bun_coaches.py for why
       // the tier is scored rather than the 1-32 rank, and where its 10% came
       // from.
-      { key: 'coaches', label: 'Coach',  full: 'Coaches',  head: 'Coaches', sub: 'tier' },
+      { key: 'coaches', label: 'Coaches',  full: 'Coaches',  head: 'Coaches', sub: 'tier' },
       // The lightest input in the blend, and the only one about a season
       // already played. Its raw value is 2025 wins above Pythagorean
       // expectation and its z is inverted, so a team that won more games than
@@ -736,7 +776,7 @@
       // point differential is the noisiest number here, and some part of what
       // it measures is a real skill rather than variance. See
       // scripts/build_bun_luck.py.
-      { key: 'luck',    label: 'Luck',   full: 'Luck',     head: 'Luck',    sub: 'vs pythag' }
+      { key: 'luck',    label: 'Luck',   full: 'Luck',     head: 'Luck',    sub: 'pythag' }
     ];
     /* COMP's order is the page's column order, its bar-stacking order, its
      * opacity ramp and the order of the rows in the weights dialog — one order
@@ -1109,6 +1149,48 @@
         key: 'fourthDown', label: '4th down rate', hi: 'highest', lo: 'lowest',
         rank: function (t) { return regTeam(t, 'fourthDown').rank; },
         fmt: function (t) { return regTeam(t, 'fourthDown').pct.toFixed(1) + '%'; }
+      },
+      {
+        /* The only entry here that is an output rather than an input: the score
+         * and the schedule, played. It earns its place because it is the one
+         * number on the page in units a reader already has an opinion in — a
+         * card that says "2nd fewest projected wins" says something "-0.97
+         * composite" does not — and because it moves when the reader's weights
+         * do, which is why computeStandouts() is re-run on a save.
+         *
+         * Silent when the schedule file did not load: value() returns null for
+         * all thirty-two, and placeIn() will not call a field of nothing a top
+         * five. */
+        key: 'projWins', label: 'Projected wins', hi: 'most', lo: 'fewest',
+        value: function (t) { return (t.forecast || {}).wins; },
+        // The wins alone: the label already says which number this is, and
+        // the standings table it is read off now prints the same one column.
+        fmt: function (t) { return t.forecast.wins.toFixed(1); }
+      },
+      {
+        /* The gap between this page's model and the price on the same event —
+         * the one metric here that is about neither of them on its own, and so
+         * the one a card most wants to lead with when a team is at an end of it.
+         *
+         * One entry and not two, though the standings tables print two edges.
+         * A division edge and a playoff edge are the same disagreement read at
+         * two resolutions — a team the model likes more than the book does is
+         * almost always both — so a bullet apiece would say it twice, the way
+         * a bullet per outright market would (see marketStandout).
+         *
+         * Playoffs is the one carried because it is the one that survives:
+         * make/miss comes off the projections file, so it is there whenever the
+         * page is, while the division prices come from the outrights feed and
+         * can be absent. Silent when neither is — value() returns null for all
+         * thirty-two and placeIn() will not call a field of nothing a top five.
+         */
+        key: 'mktEdge', label: 'Model vs market', hi: 'highest', lo: 'lowest',
+        value: function (t) { return (t.forecast || {}).edgePlayoff; },
+        // Points of probability, the same units the standings cell prints, and
+        // named as such: a bare "+12" under a Notes heading could be anything.
+        fmt: function (t) {
+          return signed(t.forecast.edgePlayoff * 100) + ' pts to make it';
+        }
       },
       {
         key: 'deadCap', label: 'Dead cap', hi: 'lowest', lo: 'highest',
@@ -2415,6 +2497,11 @@
     function applyWeights() {
       renderWeightText();
       computeComposition();
+      // Before computeStandouts(), which now has a metric that reads it: the
+      // projected-wins standout is the score played against the schedule, so a
+      // re-weight changes which teams are at the ends of it.
+      buildForecast();
+      computeStandouts();
       render();
       // drawBoard rather than renderBoard: the radar's dashed ring is the
       // model's percentile, so a re-weight moves it exactly as it moves the
@@ -2508,6 +2595,30 @@
       // that cannot move any of them would be work the reader sees as a flicker.
       drawBoard();
     });
+
+    /* ---------- the projected standings ----------
+     * Ratings, 272 games and six thousand seasons, then the two conference
+     * tables. Re-run rather than cached on a weight change for the same reason
+     * The Board refits: the ratings are the score, so a moved slider is a
+     * different league.
+     *
+     * The per-team slice is hung back on the team object because two other
+     * things read it — the standouts list and, through it, every team card —
+     * and threading a second lookup table through them would be carrying the
+     * same fact twice.
+     */
+    function buildForecast() {
+      // The markets go in with the schedule: the two percentage columns print
+      // the model's number against the books' de-vigged price for the same
+      // event, and that is the same array The Board argues one team at a time.
+      // Built before this runs on both paths that reach it — the boot chain
+      // below, and applyWeights(), which cannot change a price.
+      forecast = bunStandings.forecast(teams, schedule, weights, markets);
+      teams.forEach(function (t) {
+        t.forecast = forecast ? forecast.teams[t.abbr] : null;
+      });
+      bunStandings.render(teams, forecast);
+    }
 
     /* ---------- the board ---------- */
 
@@ -2650,13 +2761,18 @@
       // nothing else.
       fetch(REG_URL, { cache: 'no-store' })
         .then(function (r) { return r.ok ? r.json() : null; })
-        .catch(function () { return null; })
+        .catch(function () { return null; }),
+      // The 2026 schedule, through the same cached loader the card's schedule
+      // tab uses — so whichever asks first pays for it. Resolves to null rather
+      // than rejecting: no schedule means no standings section, not no page.
+      bunStandings.load()
     ])
       .then(function (res) {
         var d = res[0];
         teams = d.teams || [];
         coaches = res[2];
         regression = res[4];
+        schedule = res[5];
         // Resolves to null if the feed is unreachable, in which case win total
         // and make-playoffs still build off the projections and the other
         // three markets come back `ok: false` and show as disabled chips.
@@ -2678,6 +2794,9 @@
         renderWeightText();
         computeHeat();
         computeComposition();
+        // Ahead of computeStandouts() for the reason given in applyWeights():
+        // projected wins is one of the metrics it ranks the field on.
+        buildForecast();
         // Ranks the whole field on every metric the cards can call a team
         // extreme in. Whole-field, so it belongs beside the other two passes
         // that read all 32 teams rather than inside the card that shows one.

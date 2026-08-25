@@ -2380,3 +2380,235 @@ body:has(dialog[open]) .bn-fab { display: none; }
 .board-list.is-over .board-resid { color: var(--good); }
 .board-list.is-under .board-resid { color: var(--orange); }
 .board-list .board-mkt { min-width: 30px; text-align: right; color: var(--text-5); }
+
+
+/* --- Projected 2026 Standings ---
+ * Two conference tables, the model played against the schedule rather than
+ * against a price. Built by scripts/primary/bun-standings.js.
+ *
+ * The whole visual argument of the section is the two rules inside each table.
+ * A ranked list of sixteen teams says nothing about January; the heavy rule
+ * after the seventh row says the thing the numbers beside it cannot, which is
+ * where the field closes. The light rule after the fourth is the smaller of the
+ * two claims — division winner or wild card — so it is drawn as the smaller
+ * mark, and neither of them is a color: the section has to keep working for a
+ * reader who cannot separate this page's green from its orange, and a border
+ * weight is the one encoding that never asks them to.
+ *
+ * Both are drawn as a top border on the row that opens a block rather than a
+ * bottom border on the row that closes one, so a conference whose table is a
+ * row short still puts its rules in the right place.
+ */
+.ps-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 12px 28px;
+  margin-top: 14px;
+}
+
+/* Each conference gets its own scroll box. Side by side the pair is wide, and
+ * a single wrapper around both would scroll the AFC sideways to read the NFC. */
+.ps-conf { min-width: 0; overflow-x: auto; }
+
+.ps-table { table-layout: auto; }
+
+.ps-table caption {
+  padding-bottom: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-2);
+  letter-spacing: 0.08em;
+}
+
+.ps-table th { padding: 6px 8px; }
+.ps-table td { padding: 5px 8px; vertical-align: middle; }
+
+/* The seed number, and the column that holds it for the nine teams that have
+ * none. Fixed width so the team column starts in the same place in both
+ * halves of the table and in both conferences. */
+.ps-table .ps-seed {
+  width: 22px;
+  padding-right: 0;
+  font-family: monospace;
+  font-size: 11px;
+  text-align: right;
+  color: var(--text-4);
+}
+
+/* The cell stays a table cell; the flex row is the span inside it. A <td> set
+ * to display:flex is no longer a table cell, so it drops out of the table's
+ * border collapsing and paints its top rule on its own box edge — which put
+ * this section's two dividers a pixel or two below the rest of the row they
+ * belong to. */
+.ps-team {
+  color: var(--text-bright);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.ps-team-in {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+/* Name and division tag, boxed together so that when the tag has to drop to a
+ * second line it lands under the name rather than under the logo. Which is the
+ * whole reason this span exists: wrapping the outer row instead put "SOUTH"
+ * hard against the left edge of the cell, reading as a label for the crest. */
+.ps-label {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+}
+
+.ps-logo { width: 20px; height: 20px; flex: none; }
+
+.ps-name { overflow: hidden; text-overflow: ellipsis; }
+
+/* Which division a champion won. Only on the top four rows, because it is the
+ * one fact those rows carry that their placing does not — a wild card's
+ * division has no bearing on why it is seeded where it is. */
+.ps-div {
+  font-family: monospace;
+  font-size: 9px;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-5);
+}
+
+/* The projection is the column the table is sorted on, so it gets the weight.
+ * cursor: help because the cell carries something the number does not: the
+ * 10th-to-90th percentile of the simulated seasons behind it, as a title. */
+.ps-rec {
+  font-weight: 700;
+  color: var(--text-bright);
+  cursor: help;
+}
+
+/* nowrap so the edge stays on the number's line: these two cells now hold two
+ * things, and an edge that wrapped underneath would read as a second row of
+ * the table rather than as an annotation on the percentage above it. */
+.ps-pct { color: var(--text-4); white-space: nowrap; }
+.ps-pct.is-po { color: var(--text-3); }
+
+/* cursor: help for the same reason .ps-rec has it — the cell carries the price
+ * the edge was measured against, which is not printed. Attribute selector
+ * rather than a class, so a cell with no market behind it does not offer a
+ * tooltip it has nothing to put in. */
+.ps-pct[title] { cursor: help; }
+
+/* --- The edge ---
+ * The model's percentage against the books' de-vigged price for the same
+ * event, in points of probability. Smaller than the number beside it because
+ * it is the second thing in the cell: the column is the model's forecast, and
+ * the disagreement is the annotation on it, not a rival for it.
+ *
+ * Heat-mapped on the same --heat-* tokens and the same inline 0..1 --heat as
+ * the projections table's z columns, so a green here means what a green means
+ * two sections up. The scale is per column and set in bun-standings.js.
+ *
+ * Text only, no wash. Every other heat-mapped number on this page is a pill,
+ * but these sit five pixels from the number they qualify inside a table whose
+ * whole visual argument is two horizontal rules — thirty-two tinted boxes
+ * running down the middle of it would compete with the lines, and the sign is
+ * already carrying the direction for anyone the color does not reach.
+ *
+ * Fixed width, and the reason is the column to its left. These cells are
+ * right-aligned, so an edge that sized itself to its own text would push the
+ * percentage a different distance in every row — "+9" and "−29" are two
+ * glyphs apart, which is enough to make a column of thirty-two percentages
+ * read as ragged. The width is set for the widest thing the cell can hold
+ * (three glyphs: sign and two digits) with tabular figures underneath it, so
+ * the percentages stay in one line down the table and the edges stay in
+ * another. Wide enough that nothing clips; nothing here has ever needed more,
+ * since the two ends of a de-vigged market cannot be a hundred points apart in
+ * a column whose values both sum to a structural total. */
+.ps-edge {
+  display: inline-block;
+  width: 19px;
+  margin-left: 5px;
+  font-size: 9.5px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+  text-align: right;
+}
+
+/* Flat color first, mix second — same contract as .z-val: a browser without
+ * color-mix() lands on the two-color version rather than on unstyled text. */
+.ps-edge.pos {
+  color: var(--heat-good);
+  color: color-mix(in oklab, var(--heat-good) calc(var(--heat, 1) * 100%), var(--heat-base));
+}
+
+.ps-edge.neg {
+  color: var(--heat-bad);
+  color: color-mix(in oklab, var(--heat-bad) calc(var(--heat, 1) * 100%), var(--heat-base));
+}
+
+/* Under half a point of probability. The two numbers round to the same
+ * percent, so the cell says so rather than picking a side. */
+.ps-edge.flat { color: var(--text-5); }
+
+/* Both rules are two pixels or more, which is not a taste call: under
+ * border-collapse a 1px top border ties with the 1px bottom border of the row
+ * above it, and a tie is broken in favour of the earlier cell — so a hairline
+ * rule drawn this way is simply not drawn at all in some of the columns. Being
+ * strictly wider than the row separators is what makes each of these one line
+ * across the whole table instead of a line across some of it. */
+.ps-row.is-wildcard td { border-top: 2px solid var(--hairline-hi); }
+
+/* The cut. Three pixels of the brightest gray the theme has for a rule, which
+ * makes it the heaviest line anywhere on this page — nothing else here divides
+ * a table into two things that mean different things. */
+.ps-row.is-cut td { border-top: 3px solid var(--text-4); }
+
+/* Below the line the rows step back rather than disappearing: they are the
+ * same forecast, they just did not clear it. */
+.ps-row.is-cut ~ .ps-row .ps-team,
+.ps-row.is-cut .ps-team { color: var(--text-2); font-weight: 500; }
+
+.ps-row.is-cut ~ .ps-row .ps-rec,
+.ps-row.is-cut .ps-rec { color: var(--text-2); font-weight: 600; }
+
+/* The arithmetic checks, in the same monospace footnote voice The Board's
+ * de-vig total uses — a thing to be verified, not a thing to be read. */
+.ps-check {
+  margin: 14px 0 0;
+  font-family: monospace;
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--text-5);
+}
+
+@media (max-width: 700px) {
+  .ps-grid { gap: 22px; }
+  .ps-table td, .ps-table th { padding-left: 6px; padding-right: 6px; }
+  /* Both tables fit a 390px screen as they stand. These two are what happens
+   * if that ever stops being true — a heading and a division tag are the only
+   * things here that can afford a second line, so they are what gives rather
+   * than the table taking a sideways scroll. Neither wraps at any width the
+   * current labels and team names produce. */
+  .ps-table th { white-space: normal; }
+  .ps-team { white-space: normal; }
+  .ps-label { flex-wrap: wrap; row-gap: 0; }
+}
+
+/* The rank-vs-finish read-out under the two tables. Borrowed wholesale from
+ * The Board's .board-read cards — same two-column grid, same over/orange and
+ * under/green edges, same list geometry — because it is the same move: two
+ * ranked lists of where a model and the thing it is being measured against
+ * came apart. A second vocabulary for the same idea, two sections apart, would
+ * read as two different claims. */
+.ps-reads { margin-top: 18px; }
+
+/* The from → to pair. Wider than the market price this column normally holds,
+ * so the min-width goes and the text is left to size itself; it stays
+ * recessive because the number that ranks the list is the move beside it. */
+.ps-reads .ps-move-from {
+  min-width: 0;
+  letter-spacing: -0.02em;
+}
