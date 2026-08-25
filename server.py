@@ -1482,6 +1482,13 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         elif self.path.split("?")[0] == "/football/bakers-oven":
             self.path = "/views/football/oven-leagues.html"
             super().do_GET()
+        # Ahead of the roster-id branch below, and ahead of the equivalent
+        # rewrite in vercel.json for the same reason: Vercel's :rosterId is a
+        # wildcard that would swallow "week-1". The regex here is digits-only
+        # and could not, but the two files should read alike.
+        elif re.match(r"^/football/bakers-oven/\d+/week-1/?$", self.path.split("?")[0]):
+            self.path = "/views/football/oven-week1.html"
+            super().do_GET()
         elif re.match(r"^/football/bakers-oven/\d+/\d+/?$", self.path.split("?")[0]):
             self.path = "/views/football/oven-board.html"
             super().do_GET()

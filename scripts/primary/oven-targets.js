@@ -66,15 +66,6 @@
     return FLOOR_POS.filter(function (p) { return allowed.indexOf(p) !== -1; });
   }
 
-  // Sleeper's slot names are wide enough to break the label column; these are
-  // the only ones that need shortening.
-  var SLOT_LABEL = { SUPER_FLEX: 'SFLEX', WRRB_FLEX: 'W/R', REC_FLEX: 'W/T', IDP_FLEX: 'IDP' };
-
-  // Reserve slots exist on the roster but are never drafted into — showing an
-  // always-empty IR row would read as a lineup hole. BN is handled separately by
-  // buildTeam (it gets a section), so it isn't one of these.
-  var RESERVE_SLOTS = { IR: true, TAXI: true };
-
   var state = {
     mounted: false,   // the drawer is built and on the page
     bound: false,     // syncKey/storageKey resolved — the queue can be read and written
@@ -506,7 +497,7 @@
 
   /* ---------- view 3: team ---------- */
 
-  function slotLabel(pos) { return SLOT_LABEL[pos] || pos; }
+  function slotLabel(pos) { return C.SLOT_LABEL[pos] || pos; }
 
   /* Every pick that ended up on my roster, keepers first and then in draft
    * order — which is exactly the fill order the lineup wants.
@@ -528,23 +519,14 @@
 
   /* Fill the league's lineup from my picks.
    *
-   * Greedy, one player at a time in keeper-then-draft order, into the most
-   * specific empty slot he's eligible for. Specificity is what stops the first
-   * RB drafted from landing in FLEX and leaving RB2 to spill onto the bench —
-   * the flex slots are deliberately filled last, by whoever is left over. */
+   * The assignment itself is OVEN.fillLineup — shared with the Week 1
+   * projections view, which runs the same greedy most-specific-slot pass over a
+   * differently ordered list. All this decides is the order: keepers first and
+   * then draft order, because the question here is where my picks LANDED. The
+   * first RB taken is RB1 and the third receiver spills to the flex, which is
+   * how the roster reads back on Sleeper.
+   */
   function buildTeam(s) {
-    var starters = [], benchSlots = 0, declared = false;
-
-    (s.rosterPositions || []).forEach(function (raw) {
-      var v = String(raw || '').toUpperCase();
-      if (!v) return;
-      declared = true;
-      if (v === 'BN') { benchSlots++; return; }
-      if (RESERVE_SLOTS[v]) return;
-      starters.push({ pos: v, elig: C.SLOT_ELIGIBLE[v] || [v], player: null });
-    });
-    if (!declared) return null;
-
     // The board row, when the player is on it, so a rostered player carries the
     // same grade badge and personal rank he wears everywhere else. A keeper
     // need not be on my CSV at all, hence the null-tolerant lookup.
@@ -554,28 +536,16 @@
       if (p && p.pick_no != null) rowByPick[p.pick_no] = map[k];
     });
 
-    var bench = [];
-    myPicks(s).forEach(function (p) {
+    return C.fillLineup(s.rosterPositions, myPicks(s).map(function (p) {
       var m = p.metadata || {};
-      var player = {
+      return {
         pick: p,
         row: rowByPick[p.pick_no] || null,
         name: pickName(p),
         pos: global.OvenBoard.normPos(m.position),
         team: m.team || '',
       };
-
-      var best = -1;
-      starters.forEach(function (sl, i) {
-        if (sl.player || sl.elig.indexOf(player.pos) === -1) return;
-        if (best === -1 || sl.elig.length < starters[best].elig.length) best = i;
-      });
-
-      if (best !== -1) starters[best].player = player;
-      else bench.push(player);
-    });
-
-    return { starters: starters, bench: bench, benchSlots: benchSlots };
+    }));
   }
 
   function teamSlotHTML(slotPos, player, s) {

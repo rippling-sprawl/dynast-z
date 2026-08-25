@@ -224,6 +224,38 @@
     // reaches that far.
     WEEKLY_SINGLE_TIER_POS: ['TE', 'K', 'DEF'],
 
+    // What Sleeper's own projection provider expects each player to do in ONE
+    // week, as a raw stat line rather than a points total.
+    //
+    // Raw is the point. Sleeper hands back pts_ppr / pts_half_ppr / pts_std
+    // alongside the stats, and all three are somebody else's league — the same
+    // reason the weekly finishes above are computed here instead of read off
+    // pos_rank_ppr. A stat line's keys are the same vocabulary as
+    // scoring_settings, so scoring it under THIS league's rules is the dot
+    // product OvenWeekly.score() already performs.
+    //
+    // Called straight from the browser: Sleeper sends
+    // `access-control-allow-origin: *` and an s-maxage of 600 on this path, so
+    // it is fetched with default caching rather than no-store — it is ~580 KB
+    // and a reload inside ten minutes should cost nothing.
+    SLEEPER_PROJ: 'https://api.sleeper.app/v1/projections/nfl/regular/{season}/{week}',
+
+    // Week 1 and only week 1. The view exists to price a draft the moment it
+    // closes, when week 1 is the only week anyone has an opinion about; a week
+    // picker would be a control with nothing behind it until the season starts.
+    PROJ_WEEK: 1,
+
+    // Who each NFL team plays that week. ESPN-sourced (see
+    // scripts/fetch_nfl_schedule.py), which is why it needs SCHEDULE_ALIAS
+    // below before a Sleeper roster can be looked up in it.
+    SCHEDULE_DATA: '/data/nfl_schedule_2026.json',
+
+    // ESPN's abbreviation, spelled the way Sleeper spells it. One entry, and it
+    // has been one entry for years — but a Washington player with a blank
+    // opponent is a silent wrong answer rather than a visible break, so the map
+    // is named and sits here where the next mismatch has somewhere to go.
+    SCHEDULE_ALIAS: { WSH: 'WAS' },
+
     /* ---------- the league's own lineup vocabulary ---------- */
 
     /* Which players a lineup slot accepts, keyed by Sleeper's `roster_positions`
@@ -237,6 +269,12 @@
      * OVEN.startablePositions() below turns it into the set of positions a
      * league actually starts — which is what keeps kickers and defenses off the
      * board of a league that rosters neither. */
+    /* Sleeper's slot names are wide enough to break a 39px label column; these
+     * are the only ones that need shortening. Beside SLOT_ELIGIBLE for the same
+     * reason it is here — the drawer's Team view and the Week 1 view both draw
+     * this column, and two spellings of SFLEX would be two lineups. */
+    SLOT_LABEL: { SUPER_FLEX: 'SFLEX', WRRB_FLEX: 'W/R', REC_FLEX: 'W/T', IDP_FLEX: 'IDP' },
+
     SLOT_ELIGIBLE: {
       QB: ['QB'], RB: ['RB'], WR: ['WR'], TE: ['TE'], K: ['K'], DEF: ['DEF'],
       FLEX: ['RB', 'WR', 'TE'],
@@ -276,5 +314,61 @@
       });
     });
     return out.length ? out : null;
+  };
+
+  /* Fill a league's declared lineup with a list of players.
+   *
+   * Greedy, one player at a time IN THE ORDER GIVEN, into the most specific
+   * empty slot he is eligible for. Specificity is `elig.length` — that is what
+   * stops the first RB placed from landing in FLEX and leaving RB2 to spill
+   * onto the bench, because it fills the flex slots last, with whoever is left.
+   *
+   * The order is the caller's, and the order is the whole model. The drawer's
+   * Team view hands its picks over keepers-first-then-draft-order, because it
+   * answers "where did my picks land". The Week 1 view hands them over
+   * projection-descending, because it answers "what would this roster score" —
+   * and under SLOT_ELIGIBLE the sets nest (QB in SUPER_FLEX; RB/WR/TE in FLEX
+   * in SUPER_FLEX), which makes that pass the OPTIMAL assignment rather than a
+   * good guess. A league declaring both WRRB_FLEX and REC_FLEX breaks the
+   * nesting and turns it back into a heuristic; no league here declares both.
+   *
+   * Each player needs a `pos` and nothing else — whatever else the caller hangs
+   * on him rides along untouched, which is how one lineup fill serves a view
+   * built from draft picks and a view built from board rows.
+   *
+   * Returns **null**, not an empty lineup, when the league declares no roster
+   * positions at all — the same "no opinion yet" signal startablePositions()
+   * sends, and for the same reason: an unloaded league must not render as a
+   * team that starts nobody.
+   */
+  global.OVEN.fillLineup = function (rosterPositions, players) {
+    var O = global.OVEN, starters = [], benchSlots = 0, declared = false;
+
+    (rosterPositions || []).forEach(function (raw) {
+      var v = String(raw || '').toUpperCase();
+      if (!v) return;
+      declared = true;
+      // Bench gets counted, not slotted — it is a section under the lineup
+      // rather than a row in it. The rest of NON_STARTING_SLOTS (IR, TAXI) is
+      // dropped outright: nobody is drafted onto IR, and an always-empty row
+      // labelled IR reads as a hole in the lineup.
+      if (v === 'BN') { benchSlots++; return; }
+      if (O.NON_STARTING_SLOTS[v]) return;
+      starters.push({ pos: v, elig: O.SLOT_ELIGIBLE[v] || [v], player: null });
+    });
+    if (!declared) return null;
+
+    var bench = [];
+    (players || []).forEach(function (player) {
+      var best = -1;
+      starters.forEach(function (sl, i) {
+        if (sl.player || sl.elig.indexOf(player.pos) === -1) return;
+        if (best === -1 || sl.elig.length < starters[best].elig.length) best = i;
+      });
+      if (best !== -1) starters[best].player = player;
+      else bench.push(player);
+    });
+
+    return { starters: starters, bench: bench, benchSlots: benchSlots };
   };
 })(window);

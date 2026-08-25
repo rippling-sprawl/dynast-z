@@ -1752,6 +1752,130 @@ body.oven-tp-open .oven-tp { transform: translateX(0); visibility: visible; }
   font-size: 11px; color: var(--oven-ash-dim); font-style: italic;
 }
 
+/* ================== week 1 projections ==================
+ *
+ * The whole league's drafted lineups, priced for one week and sorted uphill.
+ * Every row inside a card is the drawer's Team view verbatim — .oven-tp-row
+ * .compact .oven-tm-row, a .oven-tm-slot label, a .player-pos badge, an
+ * .oven-tp-name — because it is the same object being drawn, and a lineup that
+ * looked different on two pages would read as two different lineups. What is
+ * new here is only the card that holds them and the pill on its header.
+ */
+
+/* The header strip. .oven-status-grid normally sits inside a card that gives it
+ * an edge; standing on the page it needs its own, and the six numbers are the
+ * headline here rather than a footnote to a status line, so they take a size. */
+.oven-w1-stats {
+  margin: 6px 0 0;
+  padding: 15px 0;
+  border-top: 1px solid var(--oven-mortar);
+  border-bottom: 1px solid var(--oven-mortar);
+}
+.oven-w1-stats .oven-stat-value { font-size: 18px; letter-spacing: -.02em; }
+
+/* Wider than .oven-team-grid's fixed 2-up: cards are a fixed-ish width and the
+ * count per row is whatever fits, so an 18-team league fills the page and a
+ * 10-team one doesn't stretch to cover it. align-items:start keeps a short card
+ * short instead of stretching it to its row's tallest sibling. */
+.oven-w1-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(252px, 1fr));
+  align-items: start;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.oven-w1-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--oven-brick);
+  border: 1px solid var(--oven-mortar);
+  border-left: 2px solid var(--oven-mortar);
+  border-radius: 3px;
+  overflow: hidden;
+}
+/* Same flame left edge every other Oven surface uses for "this one is yours". */
+.oven-w1-card.is-me { border-left-color: var(--oven-flame); }
+
+.oven-w1-head {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 10px 9px 11px;
+  border-bottom: 1px solid var(--oven-mortar);
+}
+/* Present, not loud. The rank is a landmark for finding your way back to a card
+ * you already looked at, and the totals beside it are the actual ordering — so
+ * it takes the mortar it is drawn on rather than a text colour. */
+.oven-w1-rank {
+  flex: 0 0 auto; min-width: 22px;
+  font-family: var(--oven-data);
+  font-size: 19px; font-weight: 700; line-height: 1;
+  letter-spacing: -.03em;
+  color: var(--oven-mortar);
+  font-variant-numeric: tabular-nums;
+}
+:root[data-theme="light"] .oven-w1-rank { color: var(--oven-ash-dim); opacity: .55; }
+.oven-w1-head .oven-team-name { flex: 1; min-width: 0; }
+
+/* Frost at the coldest lineup, flame at the hottest, --w1-heat set per card.
+ * The Oven has exactly two hue axes and this is the one that means hot — the
+ * red-to-green ramp this view arrived with was a third, and would have been the
+ * only place on the site where green meant good. color-mix over the tokens
+ * rather than a computed hex, so the theme toggle carries it with no listener. */
+.oven-w1-total {
+  flex: 0 0 auto;
+  font-family: var(--oven-data);
+  font-size: 15px; font-weight: 700; line-height: 1;
+  font-variant-numeric: tabular-nums;
+  padding: 5px 7px; border-radius: 2px;
+  color: var(--oven-ink);
+  background: color-mix(in oklab,
+    var(--oven-flame) calc(var(--w1-heat, 1) * 100%), var(--oven-frost));
+}
+/* No color-mix, no ramp — the number still reads, on the accent that means
+ * "this league's own". Everything the ramp adds is redundant with the sort. */
+@supports not (background: color-mix(in oklab, red 50%, blue)) {
+  .oven-w1-total { background: var(--oven-flame); }
+}
+
+.oven-w1-rows { flex: 1; }
+.oven-w1-rows .oven-tp-row:last-child { border-bottom: 0; }
+/* The drawer's group header is sticky against a scrolling panel; in a card it
+ * has nothing to stick to and the offset would just float it. */
+.oven-w1-rows .oven-tp-group { position: static; padding-top: 10px; }
+
+/* Its own column, not a tail on the name line. Right-aligned and fixed-width so
+ * the team codes stack into a readable stripe down the card and the "vs"/"@"
+ * hangs off the left of it — which is the only place the home/away distinction
+ * can live without spending a second glyph column on it. */
+.oven-w1-opp {
+  flex: 0 0 auto;
+  min-width: 42px; text-align: right;
+  font-family: var(--oven-data);
+  font-size: 9px; font-weight: 700; letter-spacing: .08em;
+  color: var(--oven-ash-dim);
+  white-space: nowrap;
+}
+
+.oven-w1-pts {
+  min-width: 34px; text-align: right;
+  font-size: 11px; letter-spacing: 0;
+  border-color: transparent; padding-right: 0;
+  color: var(--oven-bone);
+  font-variant-numeric: tabular-nums;
+}
+.oven-tm-row.is-empty .oven-w1-pts { color: var(--oven-ash-dim); }
+
+/* Drafted but outside the total: bench overflow, and whatever the filters took
+ * out. Both are the same fact — not in this number — so both recede. The
+ * filtered ones recede further, because that one is a fact about the controls
+ * above rather than about the roster, and unchecking a chip should be visible
+ * as something you did. */
+.oven-w1-out { opacity: .62; }
+.oven-w1-out.is-cut { opacity: .34; }
+.oven-w1-out .oven-tm-slot { color: var(--oven-ash-dim); }
+
 /* ---------- mobile ---------- */
 
 @media (max-width: 720px) {
@@ -1773,6 +1897,7 @@ body.oven-tp-open .oven-tp { transform: translateX(0); visibility: visible; }
 
 @media (max-width: 560px) {
   .oven-team-grid { grid-template-columns: 1fr; }
+  .oven-w1-grid { grid-template-columns: 1fr; }
   .oven-pick-label { font-size: 27px; }
   .oven-rk { width: 25px; font-size: 10px; }
   .oven-name-main { font-size: 12.5px; }

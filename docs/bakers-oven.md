@@ -97,14 +97,16 @@ Not a bottleneck by roughly three orders of magnitude.
 | `views/football/oven-leagues.html` | Saved leagues, add-a-league |
 | `views/football/oven-league.html` | One league: draft status, My Rankings import, Open Draft Board |
 | `views/football/oven-board.html` | The board; boot sequence and poller wiring |
+| `views/football/oven-week1.html` | Week 1 projections — the whole league's drafted lineups, priced |
 | `styles/primary/bakers-oven.css` | All `.oven-*` styles |
-| `scripts/primary/oven-config.js` | `window.OVEN` — storage key bases, tuning constants, the lineup-slot vocabulary and `startablePositions()` |
+| `scripts/primary/oven-config.js` | `window.OVEN` — storage key bases, tuning constants, the lineup-slot vocabulary, `startablePositions()` and `fillLineup()` |
 | `scripts/primary/oven-leagues.js` | `window.OvenLeagues` — saved leagues, Sleeper metadata, every storage key |
 | `scripts/primary/oven-csv.js` | `window.OvenCSV` — RFC-4180 parser, template, export |
 | `scripts/primary/oven-draft.js` | `window.OvenDraft` — Sleeper client, pick math, poller |
 | `scripts/primary/oven-board.js` | `window.OvenBoard` — the two merges (`buildBoard` against FantasyPros, `mergeImport` against an incoming CSV), render, patch, re-rank |
 | `scripts/primary/oven-targets.js` | `window.OvenTargets` — mountable Targets / Projections / Team drawer |
 | `scripts/primary/oven-weekly.js` | `window.OvenWeekly` — last season's finishes, scored by this league |
+| `scripts/primary/oven-week1.js` | `window.OvenWeek1` — Week 1 lineup pricing, the round/position filters, the card grid |
 | `scripts/fetch_fp_redraft.py` | Offline FantasyPros half-PPR scrape |
 | `data/fp_redraft.json` · `data/fp_redraft_meta.json` | Generated, committed |
 | `scripts/fetch_nfl_weekly.py` | Offline Sleeper weekly stat-line pull |
@@ -114,7 +116,7 @@ Not a bottleneck by roughly three orders of magnitude.
 | `scripts/build_prop_lines.py` | Offline reduction of the three book snapshots to one consensus yards + TD line per player |
 | `data/nfl_prop_lines.json` · `data/nfl_prop_lines_meta.json` | Generated, committed |
 
-Modified: `vercel.json` (rewrites), `server.py` (3 view branches + `/api/football/resolve` +
+Modified: `vercel.json` (rewrites), `server.py` (4 view branches + `/api/football/resolve` +
 a `log_message` fix), `scripts/base/auth.js` (`requireLogin`, the `clearUser` sweep),
 `scripts/base/nav.js`, `views/home/football.html`.
 
@@ -667,11 +669,15 @@ verbatim — never a default guessed from the draft's round count — so a super
 second-flex league renders its own shape without a code change. `BN` becomes the bench section;
 `IR` and `TAXI` are dropped, because a slot nobody drafts into would read as a lineup hole.
 
-Filling is greedy, one player at a time, **keepers first and then picks in draft order**, into
-the most specific empty slot he's eligible for. Specificity is the whole trick: `FLEX` accepts
-three positions and `RB` accepts one, so the first RB lands at RB and the flex spots go to
-whoever is left over. Filling in pick order alone would drop RB1 into FLEX and spill RB2 onto
-the bench.
+Filling is greedy, one player at a time, into the most specific empty slot he's eligible for.
+Specificity is the whole trick: `FLEX` accepts three positions and `RB` accepts one, so the
+first RB lands at RB and the flex spots go to whoever is left over.
+
+The pass itself is `OVEN.fillLineup(rosterPositions, players)`, shared with the Week 1 view.
+All this view decides is the **order** it hands players over: **keepers first and then picks in
+draft order**, because the question here is where your picks *landed*. Filling in pick order
+alone would drop RB1 into FLEX and spill RB2 onto the bench; ordering by projection instead —
+which is what Week 1 does — answers a different question and gets this one wrong.
 
 Ownership of a pick is `pick.roster_id` when Sleeper sets it, and the pick plan (which already
 honors traded picks) when it doesn't — mock drafts leave `roster_id` null.
@@ -683,6 +689,99 @@ Bench overflow past the declared `BN` count still renders: a lineup that quietly
 player you drafted would be worse than one that runs long.
 
 Exported as `OvenTargets.team(state)` for the same reason `project` is.
+
+---
+
+## Week 1 projections
+
+`/football/bakers-oven/{leagueId}/week-1`. Every team in the league, its drafted lineup priced
+against Sleeper's Week 1 projections under **this league's** scoring, sorted **ascending** by
+total so the winner is the last card and the rank numeral counts down beside it. One card per
+team, rows drawn from the Team view's vocabulary verbatim — same slot label, same position
+badge, same name cell — because it is the same object, and a lineup that looked different on
+two pages would read as two lineups.
+
+The rewrite must sit **above** `:leagueId/:rosterId` in `vercel.json`: Vercel's `:rosterId` is a
+wildcard and would swallow `week-1`. `server.py`'s regex is digits-only and could not, but the
+branch is ordered the same way so the two files read alike.
+
+### Raw stat lines, not Sleeper's point totals
+
+`/v1/projections/nfl/regular/{season}/{week}` returns a **stat line** per player, the same shape
+and the same key vocabulary as `scoring_settings`. That is the whole reason this view can be
+honest: the three point totals Sleeper ships alongside (`pts_ppr` / `pts_half_ppr` / `pts_std`)
+are three fixed formats and none of them is your league, but the stat line dotted with your
+scoring table is. `OvenWeekly.score()` already performs exactly that product — it was written
+for last season's finishes and the arithmetic is identical for a projection.
+
+Fetched from the browser with **default caching**, deliberately not `no-store`: `~580 KB`,
+`s-maxage=600`, and a projection for a game nobody has played does not move minute to minute.
+Contrast `OvenDraft.api()`, which is `no-store` because picks move every eight seconds.
+
+Nothing here needs the 5 MB player database. A pick carries name, position and NFL team in its
+metadata and the Sleeper id as `player_id`, which is all it takes to price a man and find his
+opponent.
+
+### `gp` separates "no opinion" from "an opinion of zero"
+
+Sleeper returns an entry for all ~9,400 players, but only ~980 carry a projected line; the rest
+hold nothing but an ADP. Scoring one of those would produce a confident `0.0` for every
+undrafted rookie on the board. Verified against the live payload: **no entry without `gp`
+carries a single scorable stat, and every entry with it does** — including the IDP-only lines,
+which score in a league that starts them and legitimately score 0 in one that doesn't.
+
+So no `gp` means `pts: null`, which renders as an em dash and says nobody has an opinion. `gp`
+and no points under these rules means `0.0`, which is an opinion. Both add nothing to a total.
+
+### The lineup is filled by projection, not by draft order
+
+Same `OVEN.fillLineup` the Team view uses, handed a **projection-descending** list. This view
+asks what a roster *scores*, so the best eligible leftover takes the flex — filling in draft
+order would sit a 7-point RB2 in front of a 17-point third receiver.
+
+Under `SLOT_ELIGIBLE` the eligibility sets nest (`QB` inside `SUPER_FLEX`; `RB`/`WR`/`TE` inside
+`FLEX` inside `SUPER_FLEX`), and with nested sets that greedy pass is the **optimal** assignment
+rather than a good guess. A league declaring both `WRRB_FLEX` and `REC_FLEX` breaks the nesting
+and turns it back into a heuristic; no league here declares both.
+
+### Opponents come from the committed ESPN schedule, through one alias
+
+`data/nfl_schedule_2026.json`, week 1, both sides of every game. It is ESPN-sourced and spells
+Washington **`WSH`**; Sleeper spells it `WAS`, so `OVEN.SCHEDULE_ALIAS` maps it — on the key
+*and* on the opponent value, or half the fix is invisible. One entry, and it has been one entry
+for years, but a Washington player with a blank opponent is a silent wrong answer rather than a
+visible break, so the map is named and has somewhere for the next mismatch to go.
+
+The opponent gets its **own right-aligned column**, not a tail on the name line where the NFL
+team sits in the drawer. The name line ellipsizes, and at three cards across that was eating
+the opponent off the end of every long name. A name survives being cut short — you still
+recognise `De'Zhaun Stribling…` — and `vs …` is nothing at all.
+
+### Rounds and positions are include-lists
+
+Two `.oven-filter-row`s of `.oven-chip`, everything checked at rest, offering only the rounds
+and positions the draft **actually contains** — a league scheduled for 18 rounds that has run
+five would otherwise show three chips wired to nothing.
+
+Unchecking one does not hide those players. It takes them out of the lineup and out of the
+total, every team re-ranks against what is left, and the removed players drop to a **Not
+counted** section on their own card, faded, labelled with the round they cost instead of a slot.
+That is the point: "what does this roster score without its quarterbacks" and "who won rounds
+1–3" are questions about the same board, and a filter that hid its own inputs would show you
+the arithmetic you asked for and not the players it removed.
+
+`All` is a chip rather than a reset link so the row has one vocabulary, and it lights up only
+when nothing is excluded — which makes it a readout of whether a filter is on as well as the
+way to clear it.
+
+### The total pill runs frost to flame
+
+The page this view replaced encoded each total as a red-to-green HSL sweep. The Oven has exactly
+two hue axes — flame for hot/mine/now, frost for cold/stale/market — and green would have been a
+third, and the only place on the site where green meant good. Same idea, different axis:
+`color-mix(in oklab, …)` between the two tokens by the total's position in the league's range,
+with `--w1-heat` set inline per card. No JS colour maths and no `themechange` listener; mixing
+over the tokens means the theme toggle carries it for free.
 
 ---
 

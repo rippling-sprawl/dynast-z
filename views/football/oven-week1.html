@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <title>Week 1 Projections | Baker's Oven</title>
+  <!-- Theme first: theme.js sets <html data-theme> before the first paint,
+       theme.css holds every colour token the sheets below spend. -->
+  <script src="/scripts/base/theme.js"></script>
+  <link rel="stylesheet" href="/styles/base/theme.css">
+  <link rel="stylesheet" href="/styles/base/styles.css">
+  <link rel="stylesheet" href="/styles/primary/bakers-oven.css">
+  <link rel="stylesheet" href="/styles/base/lightbox.css">
+</head>
+<body>
+  <div id="header-mount"></div>
+  <div id="nav-drawer-mount"></div>
+  <script src="/scripts/base/auth.js"></script>
+  <script src="/scripts/base/nav.js"></script>
+  <script src="/scripts/base/lightbox.js"></script>
+  <script src="/scripts/base/sync.js"></script>
+  <script src="/scripts/primary/oven-config.js"></script>
+  <script src="/scripts/primary/oven-draft.js"></script>
+  <script src="/scripts/primary/oven-leagues.js"></script>
+  <script src="/scripts/primary/oven-board.js"></script>
+  <!-- oven-weekly owns score(): a raw stat line dotted with this league's
+       scoring_settings. It was written for last season's finishes and the
+       arithmetic is identical for a projection. -->
+  <script src="/scripts/primary/oven-weekly.js"></script>
+  <script src="/scripts/primary/oven-week1.js"></script>
+  <script>initPage();</script>
+
+  <main class="oven-content">
+    <div class="oven-breadcrumbs">
+      <a href="/">Home</a><span class="sep">/</span><a href="/football">Football</a><span class="sep">/</span><a href="/football/bakers-oven">Baker's Oven</a><span class="sep">/</span><a id="crumb-league" href="/football/bakers-oven">League</a><span class="sep">/</span><span>Week 1</span>
+    </div>
+    <h2 class="oven-h2">Week 1 Projections</h2>
+    <p class="oven-sub" id="sub">Every drafted lineup priced against Sleeper's Week 1 projections, scored with this league's own settings.</p>
+
+    <div id="loading">Loading the draft…</div>
+
+    <div id="sections" style="display:none;">
+      <div class="oven-status-grid oven-w1-stats" id="w1-stats"></div>
+
+      <div class="oven-controls" id="w1-filters"></div>
+
+      <p class="oven-note">
+        Checked counts, unchecked doesn't. Unchecking a round or a position takes
+        those players out of the lineup and out of the total — every team re-ranks
+        against what's left, and the players you removed stay on the card under
+        <strong>Not counted</strong>, faded. Each lineup takes the highest projected
+        player each slot can hold, so the flex goes to the best man left rather than
+        to whoever was drafted last.
+      </p>
+
+      <div class="oven-w1-grid" id="w1-grid"></div>
+    </div>
+  </main>
+
+  <script>
+  (function () {
+    // Per-account data — the league list this page reads its crumb from is
+    // private, and every Sleeper call below is made on the account's behalf.
+    if (!requireLogin()) return;
+
+    var loading = document.getElementById('loading');
+    var sections = document.getElementById('sections');
+    var seg = (location.pathname.match(/\/football\/bakers-oven\/([^/?#]+)/) || [])[1] || '';
+
+    function fail(msg) { loading.textContent = msg; }
+
+    async function boot() {
+      try {
+        await OvenLeagues.load();
+        if (!/^\d{6,25}$/.test(seg)) { fail("That isn't a Sleeper league ID."); return; }
+        var leagueId = seg;
+
+        var rec = OvenLeagues.get(leagueId);
+        if (rec) {
+          document.getElementById('crumb-league').textContent = rec.name;
+          document.getElementById('crumb-league').href = '/football/bakers-oven/' + leagueId;
+        }
+
+        // loadLeague throws when no draft is scheduled. There is nothing to
+        // price in that case, so unlike the league page this one stops.
+        var ctx;
+        try {
+          ctx = await OvenDraft.loadLeague(leagueId);
+        } catch (e) {
+          fail('This league has no draft yet — there are no lineups to project.');
+          return;
+        }
+
+        document.getElementById('crumb-league').textContent = ctx.league.name;
+        document.getElementById('crumb-league').href = '/football/bakers-oven/' + leagueId;
+        document.title = ctx.league.name + ' · Week 1 | Baker\'s Oven';
+
+        var draft = await OvenDraft.loadDraft(ctx.draftId);
+        var season = ctx.league.season || draft.season;
+
+        var results = await Promise.all([
+          OvenDraft.loadPicks(ctx.draftId, draft.last_picked || draft.status),
+          OvenWeek1.loadProjections(season, OVEN.PROJ_WEEK),
+          OvenWeek1.loadSchedule(),
+        ]);
+        var picks = results[0] || [];
+        var proj = results[1] || {};
+        var opps = OvenWeek1.weekOpponents(results[2], OVEN.PROJ_WEEK);
+
+        if (!picks.length) {
+          fail('No picks yet. This fills in as the draft runs.');
+          return;
+        }
+
+        var rounds = picks.reduce(function (n, p) { return Math.max(n, p.round || 0); }, 0);
+        document.getElementById('sub').textContent =
+          ctx.league.name + ' · ' + ctx.teams.length + ' teams · ' + rounds +
+          ' round' + (rounds === 1 ? '' : 's') + ' drafted · Sleeper Week ' + OVEN.PROJ_WEEK +
+          ' projections scored with this league’s settings.';
+
+        // The schedule file is ESPN-sourced and committed per season; a league
+        // playing a season it doesn't cover still prices fine, it just can't
+        // name anyone's opponent. Say so rather than showing blank rows.
+        if (!Object.keys(opps).length) {
+          document.getElementById('sub').textContent +=
+            ' Opponents unavailable for ' + season + '.';
+        }
+
+        OvenWeek1.mount({
+          ctx: ctx,
+          draft: draft,
+          picks: picks,
+          plan: OvenDraft.buildPickPlan(draft, ctx.tradedPicks),
+          proj: proj,
+          opps: opps,
+          myRosterId: rec ? rec.my_roster_id : null,
+          statsId: 'w1-stats',
+          filtersId: 'w1-filters',
+          gridId: 'w1-grid',
+        });
+
+        loading.style.display = 'none';
+        sections.style.display = '';
+      } catch (e) {
+        fail('Error: ' + e.message);
+      }
+    }
+
+    boot();
+  })();
+  </script>
+</body>
+</html>

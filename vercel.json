@@ -23,6 +23,7 @@
     { "source": "/football/schedule", "destination": "/views/football/schedule.html" },
     { "source": "/football/bakers-buns/methodology", "destination": "/views/football/bakers-buns-methodology.html" },
     { "source": "/football/bakers-buns", "destination": "/views/football/bakers-buns.html" },
+    { "source": "/football/bakers-oven/:leagueId/week-1", "destination": "/views/football/oven-week1.html" },
     { "source": "/football/bakers-oven/:leagueId/:rosterId", "destination": "/views/football/oven-board.html" },
     { "source": "/football/bakers-oven/:leagueId", "destination": "/views/football/oven-league.html" },
     { "source": "/football/bakers-oven", "destination": "/views/football/oven-leagues.html" },

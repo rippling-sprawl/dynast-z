@@ -51,6 +51,11 @@
         </div>
 
         <div class="oven-card">
+          <h3>Week 1 Projections</h3>
+          <div class="oven-team-grid one-col" id="week1-link"></div>
+        </div>
+
+        <div class="oven-card">
           <h3>My Rankings</h3>
           <div class="oven-rank-actions">
             <div class="oven-rank-tile oven-drop" id="drop">
@@ -237,6 +242,31 @@
         '<div class="oven-team-meta">' +
           '<div class="oven-team-name">' + OvenBoard.esc(me.teamName) + '</div>' +
           '<div class="oven-team-sub">' + sub + '</div>' +
+        '</div>' +
+        '<span class="oven-open-cta">Open →</span></a>';
+    }
+
+    /* The whole league at once, which is the one thing the draft board isn't.
+     * Not gated on a claimed team: this view is about every lineup in the
+     * league, so it has nothing to ask you before it can render. */
+    function renderWeek1(draft, picks) {
+      var el = document.getElementById('week1-link');
+      if (!draft) {
+        el.innerHTML = '<div class="oven-msg warn">No draft scheduled — nothing to project yet.</div>';
+        return;
+      }
+      var n = (picks || []).length;
+      if (!n) {
+        el.innerHTML = '<div class="oven-msg warn">Nothing drafted yet. This fills in with the first pick.</div>';
+        return;
+      }
+      var rounds = picks.reduce(function (m, p) { return Math.max(m, p.round || 0); }, 0);
+
+      el.innerHTML = '<a class="oven-team-card" href="/football/bakers-oven/' + leagueId + '/week-1">' +
+        '<div class="oven-team-meta">' +
+          '<div class="oven-team-name">Whose lineup scores the most?</div>' +
+          '<div class="oven-team-sub">' + n + ' picks · ' + rounds + ' round' +
+            (rounds === 1 ? '' : 's') + ' in</div>' +
         '</div>' +
         '<span class="oven-open-cta">Open →</span></a>';
     }
@@ -700,6 +730,9 @@
 
         renderClaim();
         renderOpenBoard(draft);
+        // tp.picks, not a local: rebuildTargetState() above is what fills it,
+        // and on a league with no draft it is still the empty array it started as.
+        renderWeek1(draft, tp.picks);
         wireImport();
 
         loading.style.display = 'none';
