@@ -107,3 +107,51 @@ async function login(username, password) {
   setUser(data);
   return data;
 }
+
+async function changePassword(currentPassword, newPassword) {
+  const me = getUser();
+  if (!me) throw new Error('Not signed in');
+  const resp = await fetch('/api/auth', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-User-Id': me.user_id },
+    body: JSON.stringify({
+      action: 'change_password',
+      current_password: currentPassword,
+      new_password: newPassword,
+    }),
+  });
+  const data = await resp.json();
+  if (!resp.ok) throw new Error(data.error || 'Could not change password');
+  return data;
+}
+
+// Admin-only. Returns { code, username, expires_in_minutes }; the code is shown
+// once and stored only as a digest, so there is no way to read it back later.
+async function issueResetCode(username) {
+  const me = getUser();
+  if (!me) throw new Error('Not signed in');
+  const resp = await fetch('/api/auth', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-User-Id': me.user_id },
+    body: JSON.stringify({ action: 'issue_reset', username }),
+  });
+  const data = await resp.json();
+  if (!resp.ok) throw new Error(data.error || 'Could not issue a reset code');
+  return data;
+}
+
+// Redeeming a code signs you in, so a locked-out user lands back in the app
+// rather than at a sign-in form they'd have to fill again.
+async function resetPassword(username, code, newPassword) {
+  const resp = await fetch('/api/auth', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      action: 'reset_password', username, code, new_password: newPassword,
+    }),
+  });
+  const data = await resp.json();
+  if (!resp.ok) throw new Error(data.error || 'Could not reset password');
+  setUser(data);
+  return data;
+}

@@ -36,6 +36,11 @@
       color: var(--text-bright);
     }
     .account-page .masters-search::placeholder { color: var(--text-4); }
+    .account-page .group-form select {
+      background: var(--hairline); border: 1px solid var(--hairline-hi);
+      color: var(--text-bright); border-radius: 4px; padding: 6px 8px;
+      font-size: 12px;
+    }
     .account-page .masters-search:focus { border-color: var(--accent-2); }
 
     .account-page .masters-btn:not(.danger) {
@@ -47,6 +52,40 @@
     .account-page .masters-btn:disabled { opacity: 0.55; cursor: default; }
 
     .account-page #acct-name { color: var(--text-hi) !important; }
+
+    /* "Forgot password?" sits under Sign In as plain text so it doesn't compete
+       with the two primary buttons on the page. */
+    .account-page .link-btn {
+      background: none; border: 0; padding: 0; margin-top: 8px;
+      font-family: monospace; font-size: 11px; color: var(--accent-2);
+      cursor: pointer; text-decoration: underline;
+    }
+    .account-page .link-btn:hover { color: var(--accent-hover); }
+
+    .account-page .note {
+      font-size: 11px; font-family: monospace; color: var(--text-3);
+      line-height: 1.55; margin: 0 0 10px;
+    }
+    .account-page .ok-msg  { color: var(--good);     font-size: 11px; font-family: monospace; margin-top: 6px; }
+    .account-page .err-msg { color: var(--bad-soft); font-size: 11px; font-family: monospace; margin-top: 6px; }
+
+    /* An issued code is displayed exactly once — only its digest is stored, so
+       nothing can read it back if the admin navigates away. Dashed border and
+       the copy button both say "take this now". */
+    .account-page .reset-code {
+      display: flex; align-items: center; gap: 10px; margin-top: 10px;
+      padding: 10px 12px; border: 1px dashed var(--accent-2);
+      border-radius: 6px; background: var(--hairline);
+    }
+    .account-page .reset-code code {
+      flex: 1; font-family: monospace; font-size: 18px;
+      letter-spacing: 2px; color: var(--text-hi);
+    }
+    .account-page .reset-code button {
+      font-family: monospace; font-size: 11px; padding: 4px 10px;
+      border-radius: 4px; cursor: pointer;
+      background: var(--accent-2); border: 1px solid var(--accent-2); color: var(--bg);
+    }
   </style>
   <link rel="stylesheet" href="/styles/base/lightbox.css">
   <!-- Vercel Web Analytics. The /_vercel/insights/* routes are injected by
@@ -69,6 +108,42 @@
       <h2>Your Account</h2>
       <p class="subtitle">Signed in as <strong id="acct-name" style="color:var(--text-bright)"></strong></p>
 
+      <!-- Change password -->
+      <div class="group-form" style="margin-top:16px">
+        <span style="font-size:11px;color:var(--text-5);font-family:monospace;display:block;margin-bottom:8px">CHANGE PASSWORD</span>
+        <div class="form-row">
+          <label>CURRENT</label>
+          <input type="password" class="masters-search" id="cur-password" placeholder="Current password" autocomplete="current-password" style="margin:0;max-width:none;flex:1">
+        </div>
+        <div class="form-row">
+          <label>NEW</label>
+          <input type="password" class="masters-search" id="new-password" placeholder="At least 8 characters" autocomplete="new-password" style="margin:0;max-width:none;flex:1">
+        </div>
+        <div class="form-row">
+          <label>CONFIRM</label>
+          <input type="password" class="masters-search" id="new-password2" placeholder="Repeat new password" autocomplete="new-password" style="margin:0;max-width:none;flex:1">
+        </div>
+        <button class="masters-btn" id="change-btn" style="width:100%;padding:8px;margin-top:4px">Update Password</button>
+        <div id="change-error" class="err-msg" style="display:none"></div>
+        <div id="change-ok" class="ok-msg" style="display:none"></div>
+      </div>
+
+      <!-- Admin only: issue a reset code for someone who is locked out. -->
+      <div class="group-form" id="admin-reset" style="margin-top:16px;display:none">
+        <span style="font-size:11px;color:var(--text-5);font-family:monospace;display:block;margin-bottom:8px">🛡️ ISSUE RESET CODE</span>
+        <p class="note">Accounts have no email on file, so you are the recovery channel. Generate a code and pass it to the user yourself — it works once and expires in 30 minutes.</p>
+        <div class="form-row">
+          <label>USER</label>
+          <select id="reset-user" style="flex:1"><option value="">Loading users…</option></select>
+        </div>
+        <button class="masters-btn" id="issue-btn" style="width:100%;padding:8px;margin-top:4px">Generate Code</button>
+        <div class="reset-code" id="issued-code" style="display:none">
+          <code id="issued-code-text"></code>
+          <button type="button" id="copy-code">Copy</button>
+        </div>
+        <div id="issue-error" class="err-msg" style="display:none"></div>
+      </div>
+
       <button class="masters-btn danger" id="sign-out" style="margin-top:16px;width:100%;padding:10px">Sign Out</button>
     </div>
 
@@ -90,6 +165,32 @@
         </div>
         <button class="masters-btn" id="login-btn" style="width:100%;padding:8px;margin-top:4px">Sign In</button>
         <div id="login-error" style="color:var(--bad-soft);font-size:11px;font-family:monospace;margin-top:6px;display:none"></div>
+        <button type="button" class="link-btn" id="forgot-btn">Forgot password?</button>
+      </div>
+
+      <!-- Redeem a reset code. Hidden until "Forgot password?" is clicked, so
+           the default view stays two forms rather than three. -->
+      <div class="group-form" id="reset-panel" style="margin-top:16px;display:none">
+        <span style="font-size:11px;color:var(--text-5);font-family:monospace;display:block;margin-bottom:8px">RESET PASSWORD</span>
+        <p class="note">Ask an admin for a reset code, then enter it below with the password you want. Codes are good for one use and expire after 30 minutes.</p>
+        <div class="form-row">
+          <label>USERNAME</label>
+          <input type="text" class="masters-search" id="rst-name" placeholder="Username" autocomplete="username" style="margin:0;max-width:none;flex:1">
+        </div>
+        <div class="form-row">
+          <label>CODE</label>
+          <input type="text" class="masters-search" id="rst-code" placeholder="XXXX-XXXX" autocomplete="one-time-code" spellcheck="false" style="margin:0;max-width:none;flex:1;text-transform:uppercase">
+        </div>
+        <div class="form-row">
+          <label>NEW</label>
+          <input type="password" class="masters-search" id="rst-password" placeholder="At least 8 characters" autocomplete="new-password" style="margin:0;max-width:none;flex:1">
+        </div>
+        <div class="form-row">
+          <label>CONFIRM</label>
+          <input type="password" class="masters-search" id="rst-password2" placeholder="Repeat new password" autocomplete="new-password" style="margin:0;max-width:none;flex:1">
+        </div>
+        <button class="masters-btn" id="rst-btn" style="width:100%;padding:8px;margin-top:4px">Set New Password</button>
+        <div id="rst-error" class="err-msg" style="display:none"></div>
       </div>
 
       <!-- Create account -->
@@ -128,6 +229,10 @@
         document.getElementById('logged-out').style.display = 'none';
         document.getElementById('logged-in').style.display = 'block';
         document.getElementById('acct-name').textContent = user.username;
+        if (isAdmin()) {
+          document.getElementById('admin-reset').style.display = '';
+          loadResetUsers();
+        }
       } else {
         document.getElementById('logged-in').style.display = 'none';
         document.getElementById('logged-out').style.display = 'block';
@@ -186,6 +291,136 @@
         errEl.textContent = e.message;
         errEl.style.display = 'block';
         document.getElementById('login-btn').disabled = false;
+      }
+    });
+
+    // Change password (signed in). The server re-checks the current password,
+    // so this is proof of identity rather than a formality.
+    document.getElementById('change-btn').addEventListener('click', async () => {
+      const cur = document.getElementById('cur-password').value;
+      const next = document.getElementById('new-password').value;
+      const confirm = document.getElementById('new-password2').value;
+      const errEl = document.getElementById('change-error');
+      const okEl = document.getElementById('change-ok');
+      errEl.style.display = 'none';
+      okEl.style.display = 'none';
+      const fail = (msg) => { errEl.textContent = msg; errEl.style.display = 'block'; };
+      if (!cur) return fail('Enter your current password');
+      if (next.length < 8) return fail('New password must be at least 8 characters');
+      if (next !== confirm) return fail('New passwords do not match');
+
+      const btn = document.getElementById('change-btn');
+      try {
+        btn.disabled = true;
+        await changePassword(cur, next);
+        document.getElementById('cur-password').value = '';
+        document.getElementById('new-password').value = '';
+        document.getElementById('new-password2').value = '';
+        okEl.textContent = 'Password updated.';
+        okEl.style.display = 'block';
+      } catch (e) {
+        fail(e.message);
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    // ---- admin: issue a reset code ----------------------------------------
+    async function loadResetUsers() {
+      const sel = document.getElementById('reset-user');
+      try {
+        const resp = await fetch('/api/users', { headers: { 'X-User-Id': getUser().user_id } });
+        const users = resp.ok ? await resp.json() : [];
+        sel.innerHTML = '<option value="">Select a user…</option>' +
+          users.map(u => '<option value="' + u.username + '">' + u.username + '</option>').join('');
+      } catch {
+        sel.innerHTML = '<option value="">Could not load users</option>';
+      }
+    }
+
+    document.getElementById('issue-btn').addEventListener('click', async () => {
+      const username = document.getElementById('reset-user').value;
+      const errEl = document.getElementById('issue-error');
+      const box = document.getElementById('issued-code');
+      errEl.style.display = 'none';
+      box.style.display = 'none';
+      if (!username) {
+        errEl.className = 'err-msg';
+        errEl.textContent = 'Pick a user';
+        errEl.style.display = 'block';
+        return;
+      }
+
+      const btn = document.getElementById('issue-btn');
+      try {
+        btn.disabled = true;
+        const { code, expires_in_minutes } = await issueResetCode(username);
+        document.getElementById('issued-code-text').textContent = code;
+        box.style.display = 'flex';
+        errEl.className = 'ok-msg';
+        errEl.textContent = 'Give this to ' + username + ' now — it expires in ' +
+          expires_in_minutes + ' minutes and cannot be shown again.';
+        errEl.style.display = 'block';
+      } catch (e) {
+        errEl.className = 'err-msg';
+        errEl.textContent = e.message;
+        errEl.style.display = 'block';
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    document.getElementById('copy-code').addEventListener('click', async () => {
+      const btn = document.getElementById('copy-code');
+      try {
+        await navigator.clipboard.writeText(document.getElementById('issued-code-text').textContent);
+        btn.textContent = 'Copied';
+        setTimeout(() => { btn.textContent = 'Copy'; }, 1500);
+      } catch {
+        btn.textContent = 'Copy failed';
+      }
+    });
+
+    // ---- signed out: redeem a reset code -----------------------------------
+    document.getElementById('forgot-btn').addEventListener('click', () => {
+      const panel = document.getElementById('reset-panel');
+      const opening = panel.style.display === 'none';
+      panel.style.display = opening ? 'block' : 'none';
+      if (opening) {
+        // Carry over whatever they already typed above, then focus the code.
+        document.getElementById('rst-name').value = document.getElementById('login-name').value.trim();
+        document.getElementById('rst-code').focus();
+      }
+    });
+
+    document.getElementById('rst-btn').addEventListener('click', async () => {
+      const name = document.getElementById('rst-name').value.trim();
+      const code = document.getElementById('rst-code').value.trim();
+      const next = document.getElementById('rst-password').value;
+      const confirm = document.getElementById('rst-password2').value;
+      const errEl = document.getElementById('rst-error');
+      errEl.style.display = 'none';
+      const fail = (msg) => { errEl.textContent = msg; errEl.style.display = 'block'; };
+      if (!name || !code) return fail('Enter your username and reset code');
+      if (next.length < 8) return fail('Password must be at least 8 characters');
+      if (next !== confirm) return fail('Passwords do not match');
+
+      const btn = document.getElementById('rst-btn');
+      try {
+        btn.disabled = true;
+        await resetPassword(name, code, next);   // signs you in on success
+
+        // Same post-sign-in pull as the login path, so the new session has the
+        // server's data rather than whatever this browser last cached.
+        const sel = await syncPull('masters', 'selections');
+        if (sel) localStorage.setItem('masters_selections', JSON.stringify(sel));
+        const ball = await syncPull('masters', '3ball');
+        if (ball) localStorage.setItem('masters_3ball', JSON.stringify(ball));
+
+        window.location.replace(nextParam() || '/');
+      } catch (e) {
+        fail(e.message);
+        btn.disabled = false;
       }
     });
 
