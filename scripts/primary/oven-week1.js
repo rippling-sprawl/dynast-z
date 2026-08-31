@@ -1,9 +1,13 @@
 /* Baker's Oven — Week 1 projections (window.OvenWeek1).
  *
  * Every team in the league, its drafted lineup priced against Sleeper's Week 1
- * projections under this league's own scoring, sorted ascending by total. The
- * question it answers is the one a draft room argues about the moment the last
- * pick is in: whose roster actually scores the most next Sunday.
+ * projections under this league's own scoring, sorted by total. The question it
+ * answers is the one a draft room argues about the moment the last pick is in:
+ * whose roster actually scores the most next Sunday.
+ *
+ * The board runs highest-first, except in a chopped league (`settings.type` 3),
+ * where losing the week is what costs you the season — there it runs
+ * lowest-first, so the team on the block leads the page. See choppedOrder().
  *
  * Where the numbers come from
  * ---------------------------
@@ -193,14 +197,28 @@
     };
   }
 
+  /* Which end of the board matters, taken from the league's own format.
+   *
+   * A chopped league eliminates its lowest score every week, so the card you
+   * open the page to read is the one in last — the board runs uphill and the
+   * team in trouble is the first thing on it. Every other format is asking who
+   * won the draft, and that team goes first.
+   *
+   * Unknown type falls in with the majority: descending is the answer to the
+   * question this page is normally asked. */
+  function choppedOrder() {
+    var t = C.leagueType(state.ctx && state.ctx.league);
+    return !!t && t.code === C.LEAGUE_TYPE_CHOPPED;
+  }
+
   function buildTeams() {
     var ctx = state.ctx;
     var rosterPositions = (ctx.league && ctx.league.roster_positions) || [];
+    var dir = choppedOrder() ? 1 : -1;
     return ctx.teams.map(function (t) { return buildTeam(t, rosterPositions); })
-      // Ascending, so the board reads bottom-of-the-league first and the winner
-      // is the last card — the same order the page it replaces used. Ties break
-      // on roster id so a re-render can't shuffle two equal teams past each other.
-      .sort(function (a, b) { return (a.total - b.total) || (a.team.roster_id - b.team.roster_id); });
+      // Ties break on roster id, always in the same direction, so a re-render
+      // can't shuffle two equal teams past each other.
+      .sort(function (a, b) { return dir * (a.total - b.total) || (a.team.roster_id - b.team.roster_id); });
   }
 
   /* ---------- render ---------- */
@@ -324,10 +342,13 @@
     var totals = teams.map(function (t) { return t.total; });
     var lo = Math.min.apply(null, totals), span = Math.max.apply(null, totals) - lo;
 
-    // Rank 1 is the highest total, so it lands on the LAST card — the list runs
-    // uphill and the numeral counts down beside it.
+    // Rank 1 is the highest total whichever way the list runs — it is a
+    // standing, not a position in the grid. In a chopped league the board goes
+    // uphill and the numeral counts down beside it; everywhere else the two
+    // read together from 1.
+    var up = choppedOrder();
     state.els.grid.innerHTML = teams.map(function (t, i) {
-      return card(t, teams.length - i, lo, span);
+      return card(t, up ? teams.length - i : i + 1, lo, span);
     }).join('');
   }
 

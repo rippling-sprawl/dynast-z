@@ -256,6 +256,23 @@
     // is named and sits here where the next mismatch has somewhere to go.
     SCHEDULE_ALIAS: { WSH: 'WAS' },
 
+    /* ---------- what kind of league this is ---------- */
+
+    /* Sleeper's `settings.type`, keyed by the integer it sends. 0/1/2 are the
+     * three formats its own create-a-league screen offers; 3 is a chopped
+     * league — lowest score each week is eliminated — which Sleeper stores
+     * without ever naming it in a UI. That last one is not decoration: it
+     * inverts the question the Week 1 board answers, so the team to read first
+     * is the one in trouble rather than the one in front.
+     *
+     * A code Sleeper adds later falls through to 'Type n' rather than a blank
+     * tile: an unknown format is still worth reporting as one. */
+    LEAGUE_TYPE: { 0: 'Redraft', 1: 'Keeper', 2: 'Dynasty', 3: 'Chopped' },
+
+    // Named rather than spelled `3` at the one place that asks. See
+    // OVEN.leagueType() for why the comparison is on a number and not a label.
+    LEAGUE_TYPE_CHOPPED: 3,
+
     /* ---------- the league's own lineup vocabulary ---------- */
 
     /* Which players a lineup slot accepts, keyed by Sleeper's `roster_positions`
@@ -370,5 +387,21 @@
     });
 
     return { starters: starters, bench: bench, benchSlots: benchSlots };
+  };
+
+  /* This league's format as `{ code, label }`, or **null** when Sleeper hasn't
+   * said — an unloaded league, or one whose settings came back without a type.
+   *
+   * Reading it in one place is what keeps the trap in one place: a redraft is
+   * type **0**, so `if (settings.type)` is false for both "redraft" and "no
+   * league loaded", and every caller that tested it directly would have to
+   * remember the difference. Null is the only "don't know" here; 0 is an answer.
+   */
+  global.OVEN.leagueType = function (league) {
+    var raw = league && league.settings ? league.settings.type : null;
+    if (raw == null || raw === '') return null;
+    var code = Number(raw);
+    if (!isFinite(code)) return null;
+    return { code: code, label: global.OVEN.LEAGUE_TYPE[code] || ('Type ' + code) };
   };
 })(window);

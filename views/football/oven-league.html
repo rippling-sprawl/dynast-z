@@ -189,6 +189,19 @@
       return Number(s.max_keepers || 0) > 1 || Number(s.type) === 1;
     }
 
+    /* Redraft / keeper / dynasty / chopped, straight off the league's own
+     * `settings.type`. It belongs beside Format because it answers the other
+     * half of the same question — Format is how the draft runs, this is what
+     * the draft is for — and because it is the setting the Week 1 board reads
+     * its order from, which is a fact worth being able to see.
+     *
+     * Absent rather than '—' when Sleeper hasn't said: the grid auto-fits, so a
+     * missing tile closes up instead of leaving a labelled hole. */
+    function typeStat() {
+      var t = OVEN.leagueType(ctx.league);
+      return t ? stat('League type', OvenBoard.esc(t.label), true) : '';
+    }
+
     function renderStatus(draft, picks) {
       var s = draft.settings;
       var keepers = picks.filter(function (p) { return p.is_keeper; }).length;
@@ -196,7 +209,8 @@
         head(draft.status, draft.status.replace('_', ' ')) +
         row(
           stat('Format', s.teams + '-team · ' + s.rounds + 'rd · ' + draft.type, true) +
-          stat('Scoring', (draft.metadata && draft.metadata.scoring_type || '').replace('_', ' ') || '—', true)
+          stat('Scoring', (draft.metadata && draft.metadata.scoring_type || '').replace('_', ' ') || '—', true) +
+          typeStat()
         ) +
         row(
           stat('Draft Date', fmtStart(draft.start_time) + ' <span style="color:var(--text-4);font-size:12px">' + countdown(draft.start_time) + '</span>') +
@@ -212,7 +226,8 @@
         head('pre_draft', 'no draft yet') +
         row(
           stat('Teams', String(ctx.league.total_rosters || ctx.teams.length), true) +
-          stat('Season', OvenBoard.esc(String(ctx.league.season || '—')), true)
+          stat('Season', OvenBoard.esc(String(ctx.league.season || '—')), true) +
+          typeStat()
         );
     }
 

@@ -197,8 +197,8 @@ body:has(.oven-content) header {
   grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
   gap: 14px;
 }
-/* Stacked rows, so the pairing (format+scoring, date+keepers) survives the
- * auto-fit reflow instead of collapsing into one run of six cells. */
+/* Stacked rows, so the grouping (format+scoring+type, date+keepers) survives
+ * the auto-fit reflow instead of collapsing into one run of six cells. */
 .oven-status-grid + .oven-status-grid { margin-top: 16px; }
 .oven-stat-label {
   font-family: var(--oven-data);

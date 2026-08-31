@@ -68,9 +68,32 @@ SETUP
 USAGE
 
     python3 scripts/fetch_action_network.py                 # full history + futures report
+    python3 scripts/fetch_action_network.py --incremental   # trailing window, merged on
+    python3 scripts/fetch_action_network.py --merge         # full crawl, merged not replaced
     python3 scripts/fetch_action_network.py --since 2025-01 # only from that month
     python3 scripts/fetch_action_network.py --raw           # dump one window untouched
     python3 scripts/fetch_action_network.py --all           # tables for every bucket
+
+KEEPING IT UP TO DATE
+
+--incremental crawls only the last INCREMENTAL_WINDOW_DAYS of event dates and
+merges the result onto the existing cache/an_picks.json by pick id, instead of
+re-walking the account from 2019. Use it for routine refreshes; run the full
+crawl when seeding the cache, or after changing how picks are shaped.
+
+It is a client-side delta, because the API cannot express a server-side one --
+there is no "changed since" parameter, and the reasoning is written out above
+merge_entries() below. The saving is real but bounded: the futures sweep still
+runs in full, since a future is only ever returned by a window containing its
+whole event span, and no trailing window does.
+
+--merge applies the same merge to a FULL crawl rather than a trailing one. Use
+it when re-crawling everything, because a full run replaces the export and no
+two full runs agree exactly: how deep the futures sweep gets before the gateway
+starts timing out varies run to run, and the deep-history windows are flaky at
+their edges too. Two consecutive full crawls here returned 9962 and 9959 picks,
+each holding a handful the other missed. --merge keeps the union; a plain full
+crawl keeps only the last run and warns about what it dropped.
 
 IF IT BREAKS
 
@@ -123,6 +146,13 @@ SWEEP_HORIZON_YEARS = 4
 SWEEP_STEP_DAYS = 15
 SWEEP_MAX_FAILS = 2
 SWEEP_RETRIES = 3
+
+# --incremental only. How far back the trailing pass-1 window reaches. Bets are
+# placed on upcoming events and settle within days of them, so a window this
+# wide around today catches new tickets and fresh gradings; anything older has
+# already been captured by the full crawl that seeded the cache. It does NOT
+# bound futures -- those come from the sweep, which still runs in full.
+INCREMENTAL_WINDOW_DAYS = 45
 
 SETUP_HINT = """
 Set ACTION_NETWORK_TOKEN before running:
@@ -499,30 +529,197 @@ def normalize(pick, now, books):
     }
 
 
-def bucket(picks, now, books):
+def bucket_name(pick):
     """Futures first -- a futures parlay is still a future -- then by structure."""
-    futures, parlays, teasers, straight = [], [], [], []
-    for pick in picks:
-        shaped = normalize(pick, now, books)
-        if is_futures(pick):
-            futures.append(shaped)
-        elif is_parlay(pick):
-            parlays.append(shaped)
-        elif is_teaser(pick):
-            teasers.append(shaped)
-        else:
-            straight.append(shaped)
+    if is_futures(pick):
+        return "futures"
+    if is_parlay(pick):
+        return "parlays"
+    if is_teaser(pick):
+        return "teasers"
+    return "straight"
 
+
+def assemble(entries):
+    """Build the output file from (bucket, shaped) pairs.
+
+    Split out of bucket() so --incremental can assemble a mix of freshly shaped
+    picks and untouched ones carried over from the previous export.
+    """
+    grouped = {"futures": [], "parlays": [], "teasers": [], "straight": []}
+    for name, shaped in entries:
+        grouped[name].append(shaped)
+
+    futures = grouped["futures"]
     futures.sort(key=lambda f: f.get("created_at") or "", reverse=True)
     return {
         "futures": {
             "pending": [f for f in futures if f["result"] == "pending"],
             "settled": [f for f in futures if f["result"] != "pending"],
         },
-        "parlays": parlays,
-        "teasers": teasers,
-        "straight": straight,
+        "parlays": grouped["parlays"],
+        "teasers": grouped["teasers"],
+        "straight": grouped["straight"],
     }
+
+
+def bucket(picks, now, books):
+    return assemble([(bucket_name(p), normalize(p, now, books)) for p in picks])
+
+
+# ---- incremental merge -----------------------------------------------------
+# There is no "changed since" parameter on this API. I checked three ways:
+# /v1/me/picks silently ignores every unknown param (60 name/format combinations
+# of updatedSince/modifiedSince/since/... all returned byte-identical payloads);
+# the stricter /v1/me/picks/paginated 400s on anything outside a four-name
+# allowlist -- startDate, endDate, limit, pageKey -- with no time filter among
+# them; and there is no ETag or Last-Modified, with If-Modified-Since ignored.
+#
+# The reason it cannot exist in the current shape: the only time axis you can
+# query is EVENT time, while "changed" is updated_at, and the two are unrelated.
+# A real row from this account -- a pick on an August 2025 game carrying
+# updated_at of 2026-02-10 -- is invisible to any window drawn around when it
+# changed. So the delta has to be computed here, after fetching.
+#
+# What that buys is still most of the cost: re-crawl a trailing window instead
+# of seven years, and merge onto the previous export by id.
+
+def entry_key(shaped):
+    """Ids are only unique within their source array -- same key as dedupe()."""
+    return (shaped.get("source"), shaped.get("id"))
+
+
+def load_cached(path):
+    """Read a previous export back into (bucket, shaped) pairs.
+
+    Carried-over picks are kept exactly as they were written, never re-derived
+    from their own `raw`: slim_raw() drops `game` and `competition`, so
+    re-normalizing an old pick would null out its matchup and flatten the
+    description of anything without a `play`. The bucket comes from where the
+    pick was found rather than from the classifiers, for the same reason.
+    """
+    with open(path) as f:
+        data = json.load(f)
+
+    entries = []
+    for name in ("parlays", "teasers", "straight"):
+        for shaped in data.get(name) or []:
+            entries.append((name, shaped))
+    futures = data.get("futures") or {}
+    for sub in ("pending", "settled"):
+        for shaped in futures.get(sub) or []:
+            entries.append(("futures", shaped))
+    return entries
+
+
+def has_changed(old, new):
+    """Did this pick actually move, or was it just re-fetched?
+
+    updated_at survives slim_raw and is exactly the field the API maintains for
+    this, so it is the primary test. The shaped bodies cannot be compared
+    wholesale: days_held is relative to now and would mark every pending pick
+    dirty on every run.
+    """
+    old_raw, new_raw = old.get("raw") or {}, new.get("raw") or {}
+    old_ts, new_ts = old_raw.get("updated_at"), new_raw.get("updated_at")
+    if old_ts and new_ts:
+        return old_ts != new_ts
+    return any(old.get(f) != new.get(f)
+               for f in ("result", "status", "settled_at", "net", "units_net",
+                         "odds", "stake"))
+
+
+def refresh_days_held(shaped, now):
+    """days_held is measured from created_at to now, so it goes stale in the
+    cache. Recompute it for carried-over pending picks; nothing else in a
+    shaped pick depends on when the export ran."""
+    if shaped.get("result") != "pending":
+        return shaped
+    created = parse_ts(shaped.get("created_at"))
+    if created:
+        shaped["days_held"] = (now - created).days
+    return shaped
+
+
+def merge_entries(cached, fresh, now):
+    """Fresh picks win; everything else is carried over untouched."""
+    index = {}
+    for name, shaped in cached:
+        index[entry_key(shaped)] = (name, refresh_days_held(shaped, now))
+
+    added, updated = 0, 0
+    for name, shaped in fresh:
+        key = entry_key(shaped)
+        prior = index.get(key)
+        if prior is None:
+            added += 1
+        elif has_changed(prior[1], shaped):
+            updated += 1
+        index[key] = (name, shaped)
+
+    return list(index.values()), added, updated
+
+
+def warn_if_shrunk(out_path, shaped):
+    """A full crawl replaces the file, so it can quietly drop picks a previous
+    one found -- and verify() cannot see it, having nothing to compare against.
+
+    This is not hypothetical. Two consecutive full crawls of the same account,
+    twelve minutes apart, returned 9962 and 9959 picks: the futures sweep
+    bottomed out at 2026-05-03 on the first run and 2026-05-18 on the second,
+    and the five pending futures starting in between vanished from the export.
+    How deep the sweep gets depends on when the gateway starts timing out, so
+    any full run can come back shallower than the one before it.
+
+    Warn rather than fail: a deliberate re-crawl after a shape change may
+    legitimately produce fewer picks, and refusing to write would be wrong.
+    """
+    try:
+        previous = load_cached(out_path)
+    except (OSError, ValueError):
+        return  # nothing to compare against, which is fine
+
+    current = {entry_key(sh) for sh in
+               (shaped["futures"]["pending"] + shaped["futures"]["settled"]
+                + shaped["parlays"] + shaped["teasers"] + shaped["straight"])}
+    dropped = [(name, sh) for name, sh in previous
+               if entry_key(sh) not in current]
+    if not dropped:
+        return
+
+    print(f"  warn  {len(dropped)} pick(s) in the existing export are missing "
+          f"from this crawl.")
+    print(f"        Most often the futures sweep did not reach as far back this "
+          f"time. Re-run with --incremental to merge instead of replacing:")
+    for name, sh in dropped[:5]:
+        print(f"          [{name}] {(sh.get('description') or '')[:44]} "
+              f"({sh.get('result')}, starts {str(sh.get('starts_at'))[:10]})")
+    if len(dropped) > 5:
+        print(f"          ... and {len(dropped) - 5} more")
+
+
+def verify_merged(entries, cached, shaped):
+    """A merged run may only ever add. Same discipline as verify(): a
+    half-working fetch must not clobber an export that was fine."""
+    ok = True
+
+    if len(entries) < len(cached):
+        print(f"  FAIL  merge lost picks: {len(entries)} after merge vs "
+              f"{len(cached)} in the cache")
+        ok = False
+    else:
+        print(f"  ok    {len(entries)} picks after merge, none dropped "
+              f"(cache had {len(cached)})")
+
+    total = (len(shaped["futures"]["pending"]) + len(shaped["futures"]["settled"])
+             + len(shaped["parlays"]) + len(shaped["teasers"]) + len(shaped["straight"]))
+    if total != len(entries):
+        print(f"  FAIL  bucketing lost picks: {total} bucketed vs {len(entries)} merged")
+        ok = False
+    else:
+        print(f"  ok    all {total} picks bucketed")
+
+    return ok
 
 
 def verify(picks, shaped):
@@ -683,7 +880,22 @@ def main():
                         help="dump one untouched window and exit")
     parser.add_argument("--all", action="store_true",
                         help="also print tables for straight bets, parlays, teasers")
+    parser.add_argument("--incremental", action="store_true",
+                        help="crawl only a trailing window and merge onto the "
+                             "existing cache/an_picks.json")
+    parser.add_argument("--window-days", type=int, default=INCREMENTAL_WINDOW_DAYS,
+                        metavar="N",
+                        help=f"how far back --incremental reaches "
+                             f"(default {INCREMENTAL_WINDOW_DAYS})")
+    parser.add_argument("--merge", action="store_true",
+                        help="merge onto the existing export instead of "
+                             "replacing it (implied by --incremental)")
     args = parser.parse_args()
+
+    if args.window_days < 1:
+        parser.error("--window-days must be at least 1")
+    if args.incremental and args.since:
+        parser.error("--incremental and --since both set the crawl start; pick one")
 
     token = os.environ.get("ACTION_NETWORK_TOKEN", "").strip()
     if not token:
@@ -724,8 +936,42 @@ def main():
             print(json.dumps(flat[0], indent=2)[:2500])
         return 0
 
-    since = args.since or (parse_ts(profile.get("created_at")) or datetime(2017, 1, 1, tzinfo=timezone.utc)).date()
-    since = max(since, EARLIEST_SEASON)
+    out_path = os.path.join(cache_dir, "an_picks.json")
+    meta_path = os.path.join(cache_dir, "an_picks_meta.json")
+
+    # --incremental picks the window; --merge picks what happens to the result.
+    # A full crawl can come back shallower than the last one (see
+    # warn_if_shrunk), so --merge makes a re-crawl additive: it recovers the
+    # deep-history picks a single run misses without dropping the futures that
+    # run's sweep could not reach.
+    merging = args.incremental or args.merge
+
+    cached, prior_meta = None, {}
+    if merging:
+        try:
+            cached = load_cached(out_path)
+        except (OSError, ValueError) as e:
+            flag = "--incremental" if args.incremental else "--merge"
+            print(f"{flag} needs an existing export to merge onto, and "
+                  f"{out_path}\ncould not be read ({e}).\nRun once with no "
+                  f"flags to seed it.", file=sys.stderr)
+            return 1
+        try:
+            with open(meta_path) as f:
+                prior_meta = json.load(f)
+        except (OSError, ValueError):
+            # Only used to carry the original crawl's start date forward into
+            # the new metadata. Not worth failing over.
+            prior_meta = {}
+    if args.incremental:
+        since = today - timedelta(days=args.window_days)
+        print(f"Incremental: {len(cached)} picks in the cache, crawling back to "
+              f"{since} ({args.window_days}d)\n")
+    else:
+        since = args.since or (parse_ts(profile.get("created_at")) or datetime(2017, 1, 1, tzinfo=timezone.utc)).date()
+        since = max(since, EARLIEST_SEASON)
+        if merging:
+            print(f"Merging onto {len(cached)} cached picks\n")
 
     print(f"Pass 1/2 -- settled history, {since} .. {today}")
     print("  (widest windows first, splitting on timeout)\n")
@@ -735,6 +981,10 @@ def main():
         print(str(e), file=sys.stderr)
         return 1
 
+    # The sweep runs in full even incrementally, and is the floor on what an
+    # incremental fetch costs. A future is only returned by a window containing
+    # its whole span, so no trailing window can find one: on the run this was
+    # built against, 8 of the 21 newly-placed picks were pending futures.
     print("\nPass 2/2 -- futures sweep, walking the start date back\n")
     try:
         swept, sweep_floor = fetch_futures_sweep(token, today)
@@ -746,7 +996,18 @@ def main():
 
     books = fetch_books()
     now = datetime.now(timezone.utc)
-    shaped = bucket(picks, now, books)
+
+    added = updated = 0
+    if merging:
+        fresh = [(bucket_name(pick), normalize(pick, now, books)) for pick in picks]
+        entries, added, updated = merge_entries(cached, fresh, now)
+        shaped = assemble(entries)
+        print(f"\nMerged {len(picks)} fetched picks onto {len(cached)} cached: "
+              f"{added} new, {updated} changed, "
+              f"{len(picks) - added - updated} unchanged")
+    else:
+        entries = None
+        shaped = bucket(picks, now, books)
 
     print("\nVerifying:")
     if skipped:
@@ -758,19 +1019,23 @@ def main():
     else:
         print("  warn  the futures sweep never completed a window -- pending "
               "futures are\n        almost certainly undercounted")
-    if not verify(picks, shaped):
+    if merging:
+        checks_pass = verify_merged(entries, cached, shaped)
+    else:
+        checks_pass = verify(picks, shaped)
+        warn_if_shrunk(out_path, shaped)
+    if not checks_pass:
         print("\nRefusing to overwrite good data.", file=sys.stderr)
         return 1
 
-    out_path = os.path.join(cache_dir, "an_picks.json")
     with open(out_path, "w") as f:
         # Indented, unlike the data/ fetchers: this file is read by a human on
         # one machine, never shipped to a page.
         json.dump(shaped, f, indent=2)
-    print(f"\nWrote {len(picks)} picks to {os.path.abspath(out_path)} "
+    written = len(entries) if merging else len(picks)
+    print(f"\nWrote {written} picks to {os.path.abspath(out_path)} "
           f"({os.path.getsize(out_path) / 1024:.0f} KB)")
 
-    meta_path = os.path.join(cache_dir, "an_picks_meta.json")
     with open(meta_path, "w") as f:
         # No token in here, ever. This file is local-only, but a credential does
         # not belong in an artifact regardless.
@@ -778,8 +1043,29 @@ def main():
             "source": "Action Network (My Action)",
             "endpoint": f"{API_BASE}{PICKS_ENDPOINT}",
             "username": profile.get("username"),
-            "range": {"since": since.isoformat(), "until": today.isoformat()},
-            "pick_count": len(picks),
+            # An incremental run only crawled a trailing window, but the file
+            # it wrote still covers everything the seeding crawl reached, so the
+            # recorded range is the original one.
+            # The file keeps everything the earlier crawls reached, so when
+            # merging the recorded start is the earliest of the two.
+            "range": {
+                "since": min(filter(None, [
+                    since.isoformat(),
+                    prior_meta.get("range", {}).get("since") if merging else None,
+                ])),
+                "until": today.isoformat(),
+            },
+            "mode": ("incremental" if args.incremental
+                     else "full+merge" if args.merge else "full"),
+            "merge": {
+                "window_days": args.window_days if args.incremental else None,
+                "window_start": since.isoformat(),
+                "fetched": len(picks),
+                "added": added,
+                "updated": updated,
+                "previous_fetched_at": prior_meta.get("fetched_at"),
+            } if merging else None,
+            "pick_count": written,
             "futures_pending": len(shaped["futures"]["pending"]),
             "futures_settled": len(shaped["futures"]["settled"]),
             "parlays": len(shaped["parlays"]),

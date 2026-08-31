@@ -692,14 +692,56 @@ Exported as `OvenTargets.team(state)` for the same reason `project` is.
 
 ---
 
+## What kind of league this is
+
+`settings.type` on the league object, which Sleeper sends with every
+`/v1/league/{leagueId}`:
+
+| `type` | Label |
+|---|---|
+| `0` | Redraft |
+| `1` | Keeper |
+| `2` | Dynasty |
+| `3` | Chopped |
+
+`OVEN.LEAGUE_TYPE` holds that table and `OVEN.leagueType(league)` is the only reader — it returns
+`{ code, label }`, or **null** when Sleeper hasn't said. Null is the point of having a reader at
+all: a redraft is type **0**, so `if (settings.type)` is false for a redraft *and* for a league
+that hasn't loaded, and a caller testing it directly gets the two confused. A code Sleeper adds
+later renders as `Type n` rather than a blank — an unknown format is still worth reporting as one.
+
+Chopped is the odd one. Sleeper stores `3` but never names it in its own UI: a chopped league
+eliminates the lowest score every week, which inverts the question the Week 1 board answers. That
+is why the constant has a name (`OVEN.LEAGUE_TYPE_CHOPPED`) rather than being spelled `3` at the
+comparison.
+
+It surfaces as a **League type** tile in the league page's Draft card, beside Format and Scoring —
+Format is how the draft runs, this is what the draft is *for*. The tile is **absent**, not `—`,
+when the type is unknown: the status grid auto-fits, so a missing tile closes up instead of
+leaving a labelled hole. A league with no draft scheduled yet gets the same tile beside Teams and
+Season, because the format is a fact about the league and doesn't wait on a draft.
+
+Unrelated to `max_keepers`, which is what actually decides whether the **Keepers set** tile
+appears. Sleeper sends `max_keepers: 1` for every league, keepers on or off, so that test is
+`max_keepers > 1` **or** type `1` — the explicit keeper league.
+
+---
+
 ## Week 1 projections
 
 `/football/bakers-oven/{leagueId}/week-1`. Every team in the league, its drafted lineup priced
-against Sleeper's Week 1 projections under **this league's** scoring, sorted **ascending** by
-total so the winner is the last card and the rank numeral counts down beside it. One card per
-team, rows drawn from the Team view's vocabulary verbatim — same slot label, same position
+against Sleeper's Week 1 projections under **this league's** scoring, sorted by total. One card
+per team, rows drawn from the Team view's vocabulary verbatim — same slot label, same position
 badge, same name cell — because it is the same object, and a lineup that looked different on
 two pages would read as two lineups.
+
+**Which end leads depends on the league type** (see *What kind of league this is* above). A
+chopped league eliminates its lowest score each week, so its board runs **ascending** — the team
+on the block is the first card, the winner is the last, and the rank numeral counts down beside
+it. Every other format is being asked who won the draft, so it runs **descending** and card and
+numeral both start at 1. An unknown type reads as descending. Rank 1 is the highest total either
+way: it is a standing, not a position in the grid. `choppedOrder()` in `oven-week1.js` is the
+single test, consulted by both the sort and the numeral.
 
 The rewrite must sit **above** `:leagueId/:rosterId` in `vercel.json`: Vercel's `:rosterId` is a
 wildcard and would swallow `week-1`. `server.py`'s regex is digits-only and could not, but the
