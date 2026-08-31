@@ -25,7 +25,18 @@ Only two sources are trusted, because a wrong team is worse than no team:
 Player nicknames are deliberately NOT resolved against data/fp.json. That was
 tried and it returns confidently wrong answers -- "Kyler" matches a Kyler on
 Minnesota rather than Kyler Murray, "Monty" and "Willis" likewise. Anything not
-covered by the two rules above lands in an "Unassigned" block that says so.
+covered by the two rules above lands in an "Other" block rather than being
+guessed into a club.
+
+WHAT DOES NOT BELONG TO A CLUB AT ALL
+
+A season-long award or stat-leader ticket is drawn from a field of every player
+in the league, so filing it under whichever club the pick happens to play for is
+a category error -- it buries a league-wide market inside one of thirty-two
+cards and splits the field across them. Those markets are lifted out into an
+"NFL" section alongside AFC and NFC, split into "Stat Leaders" and "Awards", and
+grouped there by the market itself so the whole field reads as one block. The
+picks that match no club go in the same section under "Other".
 
 A pick naming two teams in one division ("Bears/Lions 1-2 NFC North") is a bet on
 the division, not on either club, so it renders at the division level rather than
@@ -158,6 +169,27 @@ TEAM_TOKENS = {
 }
 
 
+# Action Network stamps league, season and direction onto every market name --
+# "2026 NFL Regular Season - Most Interceptions Thrown", "2026 NFL AFC West -
+# To Win". Every ticket on this board is a 2026 NFL outright, so all three say
+# the same thing on all 136 rows while eating the width of the one column that
+# has to hold a real sentence. The season is optional in the prefix because
+# only in-season markets carry it; awards and seeds go straight from the league
+# to the market name.
+SEASON_RE = re.compile(r"^2026 NFL (?:Regular Season - )?")
+TOWIN_RE = re.compile(r"\s+-\s+To Win$", re.I)
+
+
+def market_of(pick):
+    """The market a ticket was entered in, per meta.description. May be "".
+
+    This is the only record of what a non-over/under ticket actually bets:
+    `play` holds nothing but a name."""
+    meta = pick["raw"].get("meta") or {}
+    market = (meta.get("description") or "").strip()
+    return TOWIN_RE.sub("", SEASON_RE.sub("", market))
+
+
 def teams_in_text(text):
     """Every club named in a free-form description, in order of appearance."""
     found = []
@@ -168,8 +200,30 @@ def teams_in_text(text):
     return found
 
 
+# Markets whose field is the whole league rather than one roster. Matched on
+# the market name because that is the only place the distinction is recorded:
+# "Most Receiving Yards" is a race, "Total Receiving Yards" is a player prop,
+# and nothing else in the payload tells them apart.
+LEADER_RE = re.compile(r"^Most\b")
+AWARD_RE = re.compile(r"\b(?:MVP|of the Year)$")
+
+
+def league_bucket(pick):
+    """'Stat Leaders', 'Awards', or None if the ticket belongs to a club."""
+    market = market_of(pick)
+    if LEADER_RE.match(market):
+        return "Stat Leaders"
+    if AWARD_RE.search(market):
+        return "Awards"
+    return None
+
+
 def attribute(pick):
-    """(scope, key) where scope is 'team', 'division' or 'unassigned'."""
+    """(scope, key) where scope is 'league', 'team', 'division' or 'other'."""
+    bucket = league_bucket(pick)
+    if bucket:
+        return "league", (bucket, market_of(pick))
+
     side = pick["raw"].get("side_id")
     if side in TEAMS:
         return "team", TEAMS[side][0]
@@ -183,7 +237,7 @@ def attribute(pick):
         if len(divisions) == 1:
             return "division", divisions.pop()
         return "team", named[0]
-    return "unassigned", None
+    return "other", None
 
 
 # ---- images ---------------------------------------------------------------
@@ -217,10 +271,16 @@ def data_uri(url):
 # ---- formatting -----------------------------------------------------------
 
 def fmt_odds(odds):
+    """American odds, except that four-figure longshots read as a ratio.
+
+    "+15000" is six glyphs of noise in a narrow column and nobody parses it as
+    a price; "150:1" is the same number said the way the payout is spoken."""
     try:
         n = int(odds)
     except (TypeError, ValueError):
         return "--"
+    if n >= 10000:
+        return f"{n / 100:g}:1"
     return f"+{n}" if n > 0 else str(n)
 
 
@@ -229,7 +289,7 @@ def fmt_units(units):
         u = float(units)
     except (TypeError, ValueError):
         return "--"
-    return f"{u:g}u"
+    return f"{u:.2f}"
 
 
 def money(amount):
@@ -253,6 +313,10 @@ CSS = """
    rather than a var() that flips. */
 .fb{
   --ground:#EDEFF2; --surface:#FFFFFF; --sunk:#F5F7F9;
+  /* Header shades, darkest first: division encloses club encloses picks, and
+     the picks sit on --surface. Reading the greys top to bottom tells you how
+     deep in the board you are without a single extra rule or label. */
+  --head-div:#D3DAE2; --head-team:#E3E8EE;
   --ink:#11161C; --muted:#5C6773; --line:#D8DDE3;
   --afc:#C8102E; --nfc:#21437E; --brass:#8A6520;
   --shadow:0 1px 2px rgba(17,22,28,.06),0 8px 20px -12px rgba(17,22,28,.18);
@@ -292,11 +356,15 @@ CSS = """
 .fb .tot .s{font-size:11.5px;color:var(--muted);margin-top:2px}
 
 .fb .conf{margin-top:34px}
+/* The conference accent fills the bar rather than tinting the type, which puts
+   the strongest value on the board at its top level and leaves the greys below
+   to carry division/club/pick depth on their own. */
 .fb .conf-head{display:flex;align-items:baseline;gap:12px;
-  border-left:5px solid var(--c);padding-left:12px;margin-bottom:15px}
-.fb .conf-head h4{font-size:24px;margin:0;color:var(--c);letter-spacing:.07em;
+  background:var(--c);color:#FFFFFF;border-radius:10px;
+  padding:11px 16px;margin-bottom:15px}
+.fb .conf-head h4{font-size:24px;margin:0;color:#FFFFFF;letter-spacing:.07em;
   font-weight:700;text-transform:uppercase}
-.fb .conf-head .meta{font-size:12.5px;color:var(--muted);margin-left:auto}
+.fb .conf-head .meta{font-size:12.5px;color:#FFFFFF;margin-left:auto}
 
 .fb .divs{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));
   gap:16px;align-items:start}
@@ -304,34 +372,55 @@ CSS = """
 .fb .div{background:var(--surface);border:1px solid var(--line);
   border-radius:12px;box-shadow:var(--shadow);overflow:hidden}
 .fb .div-head{display:flex;align-items:baseline;gap:8px;padding:11px 14px;
-  background:var(--sunk);border-bottom:1px solid var(--line)}
+  background:var(--head-div);border-bottom:1px solid var(--line)}
 .fb .div-head h5{font-size:13.5px;margin:0;letter-spacing:.11em;font-weight:700;
   text-transform:uppercase}
-.fb .div-head .n{font-size:11.5px;color:var(--muted);margin-left:auto}
 
 .fb .team{border-bottom:1px solid var(--line)}
 .fb .team:last-child{border-bottom:0}
-.fb .team-head{display:flex;align-items:center;gap:9px;padding:9px 14px}
+.fb .team-head{display:flex;align-items:center;gap:10px;padding:9px 14px;
+  background:var(--head-team);border-bottom:1px solid var(--line)}
 .fb .team-head img{width:22px;height:22px;object-fit:contain;flex:none}
 .fb .team-head .nm{font-size:12.5px;letter-spacing:.06em;font-weight:600;
   text-transform:uppercase}
 .fb .team-head .rk{font-size:11.5px;color:var(--muted);margin-left:auto}
 
-.fb .picks{list-style:none;margin:0;padding:0 14px 10px}
-.fb .pick{display:flex;align-items:center;gap:10px;padding:6px 0;
-  border-top:1px dashed var(--line)}
-.fb .pick img{width:26px;height:26px;object-fit:contain;border-radius:50%;
-  background:var(--sunk);flex:none}
-.fb .pick .ph{width:26px;height:26px;border-radius:50%;background:var(--sunk);
-  flex:none;display:grid;place-items:center;font-size:9px;color:var(--muted)}
-.fb .pick .d{flex:1;min-width:0;font-size:13.5px}
-.fb .pick .u{font-size:12px;color:var(--muted);flex:none}
-.fb .odds{font-size:12px;padding:2px 7px;border-radius:5px;flex:none;
-  border:1px solid var(--line);background:var(--sunk);color:var(--brass)}
+.fb .picks{list-style:none;margin:0;padding:6px 14px 10px}
+.fb .picks>.pick:first-child{border-top:0}
+.fb .pick,.fb .subj{display:flex;align-items:center;gap:10px}
+.fb .pick{padding:6px 0;border-top:1px dashed var(--line)}
+.fb .pick img,.fb .subj img{width:26px;height:26px;object-fit:contain;
+  border-radius:50%;background:var(--sunk);flex:none}
+.fb .pick .ph,.fb .subj .ph{width:26px;height:26px;border-radius:50%;
+  background:var(--sunk);flex:none;display:grid;place-items:center;
+  font-size:9px;color:var(--muted)}
+.fb .pick .d,.fb .cols .d{flex:1;min-width:0;font-size:13.5px}
 
-.fb .divbet{padding:8px 14px;background:var(--sunk);
-  border-bottom:1px solid var(--line)}
-.fb .divbet .lbl{font-size:10px;color:var(--muted);margin-bottom:3px}
+/* A subject owns its headshot and its name; the tickets beneath it carry only
+   what differs between them, indented to the width of the mark they share. */
+.fb .subj{padding:10px 0 4px;border-top:1px solid var(--line)}
+.fb .subj:first-child{border-top:0}
+.fb .subj .nm{font-size:12px;font-weight:700;letter-spacing:.06em}
+.fb .subj+.pick{border-top:0}
+.fb .pick.sub{padding-left:36px}
+
+/* Units and odds are fixed-width so every ticket on the board rules up into
+   two columns, whatever the length of the line to its left. */
+.fb .col{flex:none;font-size:12px;text-align:right}
+.fb .col.u{width:54px}
+.fb .col.odds{width:54px}
+.fb .pick .col.odds{padding:2px 7px;color:var(--brass)}
+
+/* The columns are named in the card's own header, so the list underneath is
+   nothing but tickets. .colhead pairs them at the same width and gap the rows
+   use, and both headers pad to 14px like .picks, so the two rule up. The odds
+   cell repeats the row's own 7px padding so the label sits over the prices
+   rather than over the column's outer edge. */
+.fb .colhead{display:flex;flex:none;gap:10px;margin-left:6px}
+.fb .div-head .colhead{margin-left:auto}
+.fb .colhead .col{font-size:9px;color:var(--muted);font-weight:700;
+  text-transform:uppercase;letter-spacing:.08em}
+.fb .colhead .col.odds{padding:2px 7px}
 
 .fb .note{margin-top:30px;padding:15px 17px;background:var(--surface);
   border:1px solid var(--line);border-left:4px solid var(--brass);
@@ -342,28 +431,146 @@ CSS = """
 """
 
 
-def render_pick(pick, images):
+OU_RE = re.compile(r"^(.*\S)\s+([ou]\d+(?:\.\d+)?)$")
+YESNO_RE = re.compile(r"^(.*\S)\s+(Yes|No)$")
+
+# An over/under's market is what it counts: "Total Receiving Yards" -> "Rec
+# Yards". The "Total" is what makes it an over/under and is already said by the
+# o/u prefix on the line beside it, and the long participles are what push these
+# labels past the width of a two-up division card. Every one of the 82 lines on
+# the board resolves through this, so an unmapped market degrades to the market
+# name rather than vanishing.
+TOTAL_RE = re.compile(r"^Total\s+")
+STAT_ABBR = ((re.compile(r"\bReceiving\b"), "Rec"),
+             (re.compile(r"\bRushing\b"), "Rush"),
+             (re.compile(r"\bPassing\b"), "Pass"))
+
+
+def stat_of(pick):
+    """The stat an over/under is counting, short enough to sit beside a line."""
+    stat = TOTAL_RE.sub("", market_of(pick))
+    for pattern, short in STAT_ABBR:
+        stat = pattern.sub(short, stat)
+    return stat
+
+
+def split_pick(pick):
+    """(subject, detail) -- what the ticket is on, and what it says about it.
+
+    An over/under names its subject and its line in one string ("Nico Collins
+    o1249.5") but never the stat, so the row pairs the line with the market it
+    counts. Every other market stores only a name in `play` ("Sam Darnold") and
+    the whole of what was bet lives in `meta.description`.
+
+    A hand-typed pick has neither shape -- no line to split off and no market
+    record -- so it gets no subject and renders as a plain row.
+    """
+    desc = (pick.get("description") or "").strip()
+    line = OU_RE.match(desc)
+    if line:
+        return line.group(1), f"{stat_of(pick)} {line.group(2)}".strip()
+
+    market = market_of(pick)
+    if not market:
+        return None, desc
+    # "Minnesota Vikings Yes" is the Vikings; the Yes belongs with the market.
+    yes_no = YESNO_RE.match(desc)
+    if yes_no:
+        return yes_no.group(1), f"{market} \u00b7 {yes_no.group(2)}"
+    return desc, market
+
+
+def unit_val(pick):
+    u = pick.get("units")
+    return float(u) if isinstance(u, (int, float)) else 0.0
+
+
+def thumb(pick, images):
     img = images.get(pick["raw"].get("image") or "", "")
-    thumb = (f'<img src="{img}" alt="">' if img
-             else '<span class="ph" aria-hidden="true">--</span>')
-    return (f'<li class="pick">{thumb}'
-            f'<span class="d">{esc(pick["description"])}</span>'
-            f'<span class="u num">{fmt_units(pick["units"])}</span>'
-            f'<span class="odds num">{fmt_odds(pick["odds"])}</span></li>')
+    return (f'<img src="{img}" alt="">' if img
+            else '<span class="ph" aria-hidden="true">--</span>')
+
+
+def render_pick(pick, images, sub=False, text=None):
+    detail = text or split_pick(pick)[1] or pick["description"]
+    mark = "" if sub else thumb(pick, images)
+    return (f'<li class="pick{" sub" if sub else ""}">{mark}'
+            f'<span class="d">{esc(detail)}</span>'
+            f'<span class="col u num">{fmt_units(pick["units"])}</span>'
+            f'<span class="col odds num">{fmt_odds(pick["odds"])}</span></li>')
+
+
+# Goes in the header of whatever card directly encloses a list of tickets --
+# every .team-head, plus the one .div-head that holds picks itself rather than
+# clubs. Naming the columns on each row instead cost 272 words across the board
+# to say the same two things.
+COL_HEAD = ('<span class="colhead"><span class="col u">Units</span>'
+            '<span class="col odds">Odds</span></span>')
+
+
+def render_market_picks(picks, images):
+    """Rows for one league-wide market -- the field, biggest bet first.
+
+    The card is headed by the market, so each row carries only who was backed
+    in it. That is the mirror image of a club card, where the header is the
+    subject and the rows carry the market."""
+    return [render_pick(p, images, text=split_pick(p)[0] or p["description"])
+            for p in sorted(picks, key=lambda p: -unit_val(p))]
+
+
+def render_picks(picks, images, club=None):
+    """Rows for one club, gathered by subject and ordered by size of the bet.
+
+    Six Ladd McConkey receiving-yard tickets are one position taken at six
+    prices, so they read as one block; a pick with no identifiable subject is
+    its own block of one and sorts among the rest on units, which keeps the
+    biggest bet at the top of the club whatever shape it was entered in.
+
+    `club` is the name on the card. Tickets whose subject IS the club -- win
+    totals, division, playoffs -- lead the card with no header of their own,
+    because the card is already headed by that name and repeating it two lines
+    down reads as a rendering fault rather than as a group.
+    """
+    subjects = defaultdict(list)
+    blocks = []
+    for pick in picks:
+        subject = split_pick(pick)[0]
+        if subject is None:
+            blocks.append((None, [pick]))
+        else:
+            subjects[subject].append(pick)
+    own = sorted(subjects.pop(club, []), key=lambda p: -unit_val(p))
+    blocks += [(name, sorted(group, key=lambda p: -unit_val(p)))
+               for name, group in subjects.items()]
+    blocks.sort(key=lambda b: (-sum(unit_val(p) for p in b[1]),
+                               b[0] or b[1][0]["description"]))
+
+    out = [render_pick(p, images, sub=True) for p in own]
+    for subject, group in blocks:
+        if subject is None:
+            out.append(render_pick(group[0], images))
+            continue
+        out.append(f'<li class="subj">{thumb(group[0], images)}'
+                   f'<span class="nm condensed">{esc(subject)}</span></li>')
+        out += [render_pick(p, images, sub=True) for p in group]
+    return out
 
 
 def build_html(pending, images, generated):
     by_team = defaultdict(list)
     by_div = defaultdict(list)
-    unassigned = []
+    by_market = defaultdict(list)   # (bucket, market) -> picks
+    other = []
     for pick in pending:
         scope, key = attribute(pick)
         if scope == "team":
             by_team[key].append(pick)
         elif scope == "division":
             by_div[key].append(pick)
+        elif scope == "league":
+            by_market[key].append(pick)
         else:
-            unassigned.append(pick)
+            other.append(pick)
 
     def risk(picks):
         return sum(float(p["stake"]) for p in picks
@@ -386,8 +593,8 @@ def build_html(pending, images, generated):
     out.append(f'''<div class="mast">
   <div class="eyebrow condensed">Action Network &middot; My Action &middot; pending futures</div>
   <h3 class="condensed">NFL Futures Board</h3>
-  <div class="asof">{len(pending)} live tickets by conference, division and club
-    &middot; generated {generated}</div>
+  <div class="asof">{len(pending)} live tickets by conference, division and club,
+    league-wide markets by field &middot; generated {generated}</div>
 </div>''')
 
     out.append(f'''<section class="totals">
@@ -428,15 +635,7 @@ def build_html(pending, images, generated):
             if not count:
                 continue
             out.append('<div class="div"><div class="div-head">'
-                       f'<h5 class="condensed">{conf} {div}</h5>'
-                       f'<span class="n num">{count}</span></div>')
-
-            if div_bets:
-                out.append('<div class="divbet">'
-                           '<div class="lbl condensed">Division-order tickets</div>'
-                           '<ul class="picks" style="padding:0">')
-                out += [render_pick(p, images) for p in div_bets]
-                out.append("</ul></div>")
+                       f'<h5 class="condensed">{conf} {div}</h5></div>')
 
             for abbr in clubs:
                 picks = club_picks[abbr]
@@ -446,34 +645,59 @@ def build_html(pending, images, generated):
                 mark = (f'<img src="{logo}" alt="">' if logo else "")
                 out.append(f'''<div class="team"><div class="team-head">{mark}
   <span class="nm condensed">{esc(TEAMS_BY_ABBR[abbr])}</span>
-  <span class="rk num">{len(picks)} &middot; {money(risk(picks))}</span>
+  <span class="rk num">{money(risk(picks))}</span>{COL_HEAD}
 </div><ul class="picks">''')
-                out += [render_pick(p, images) for p in picks]
+                out += render_picks(picks, images, TEAMS_BY_ABBR[abbr])
+                out.append("</ul></div>")
+
+            # Tickets on the division's finishing order sit last, under the same
+            # header treatment as a club: they belong to the division, not to
+            # whichever club happened to be typed first.
+            if div_bets:
+                out.append('<div class="team"><div class="team-head">'
+                           '<span class="nm condensed">Other</span>'
+                           f'<span class="rk num">{money(risk(div_bets))}</span>'
+                           f'{COL_HEAD}</div><ul class="picks">')
+                out += render_picks(div_bets, images)
                 out.append("</ul></div>")
             out.append("</div>")
         out.append("</div></section>")
 
-    if unassigned:
+    league = [p for picks in by_market.values() for p in picks] + other
+    if league:
         out.append('<section class="conf" style="--c:var(--brass)">')
         out.append(f'''<div class="conf-head">
-  <h4 class="condensed">Unassigned</h4>
-  <span class="meta num">{len(unassigned)} tickets &middot;
-    {money(risk(unassigned))} at risk</span>
-</div><div class="divs"><div class="div">
-  <div class="div-head"><h5 class="condensed">No club in the record</h5>
-  <span class="n num">{len(unassigned)}</span></div><ul class="picks">''')
-        out += [render_pick(p, images) for p in unassigned]
-        out.append("</ul></div></div></section>")
+  <h4 class="condensed">NFL</h4>
+  <span class="meta num">{len(league)} tickets &middot;
+    {money(risk(league))} at risk &middot;
+    {money(towin(league))} to win</span>
+</div><div class="divs">''')
 
-        out.append('''<div class="note"><strong>Why these are unassigned.</strong>
-Action Network stores no team id on a hand-typed free-form pick, and the
-description names a player rather than a club. Matching those nicknames against
-the roster in <code>data/fp.json</code> was tried and rejected: it resolves
-"Kyler" to a Kyler on Minnesota rather than Kyler Murray, and misplaces "Monty"
-and "Willis" the same way. Filing them here is the honest answer.
-<ul><li>Tickets naming two clubs in one division are shown as
-division-order tickets, not filed under whichever club was typed first.</li></ul>
-</div>''')
+        for bucket in ("Stat Leaders", "Awards"):
+            markets = [(key[1], picks) for key, picks in by_market.items()
+                       if key[0] == bucket]
+            if not markets:
+                continue
+            out.append('<div class="div"><div class="div-head">'
+                       f'<h5 class="condensed">{bucket}</h5></div>')
+            markets.sort(key=lambda m: (-units(m[1]), m[0]))
+            for market, picks in markets:
+                out.append('<div class="team"><div class="team-head">'
+                           f'<span class="nm condensed">{esc(market)}</span>'
+                           f'<span class="rk num">{money(risk(picks))}</span>'
+                           f'{COL_HEAD}</div><ul class="picks">')
+                out += render_market_picks(picks, images)
+                out.append("</ul></div>")
+            out.append("</div>")
+
+        # Hand-typed tickets that name no club and sit in no market record.
+        if other:
+            out.append('<div class="div"><div class="div-head">'
+                       f'<h5 class="condensed">Other</h5>{COL_HEAD}</div>'
+                       '<ul class="picks">')
+            out += render_picks(other, images)
+            out.append("</ul></div>")
+        out.append("</div></section>")
 
     out.append("</div>")  # .fb
     return "\n".join(out)
@@ -516,22 +740,20 @@ VIEW_PAGE = """<!DOCTYPE html>
     <!-- GENERATED FILE -- do not hand-edit.
          Rebuild with: python3 scripts/render_futures.py
 
-         PRIVACY: the board below is baked into this committed file, which
-         Vercel serves from the public CDN. requireAdmin() hides it from
-         non-admins in the UI, but anyone who fetches this URL directly reads
-         the markup, exactly as the requireAdmin() comment in
-         scripts/base/auth.js warns. This was a deliberate call; moving the
-         data behind an admin-verified endpoint is what would actually
-         protect it. -->
-    <div id="futures-gate" hidden>%%BOARD%%</div>
-  </div>
+         NO GATE, DELIBERATELY. The board is baked into this committed file and
+         Vercel serves it off the public CDN, so a requireAdmin() call here only
+         ever hid it from whoever loaded the page in a browser -- the markup was
+         already readable by anyone who fetched the URL. Rather than keep a
+         check that implied a protection it never provided, the page is open and
+         unlisted: the only link to it is the admin-gated card on
+         views/home/football.html, so there is no way to click through without
+         being an admin, and the URL itself works for anyone who has it.
 
-  <script>
-    // UI gate only -- see the privacy note above.
-    if (requireAdmin('/football')) {
-      document.getElementById('futures-gate').hidden = false;
-    }
-  </script>
+         If this data ever needs to be actually private, the fix is to stop
+         baking it into a committed file and serve it from an admin-verified
+         endpoint instead. A client-side check is not that fix. -->
+    %%BOARD%%
+  </div>
 </body>
 </html>
 """
@@ -584,7 +806,8 @@ def main():
     scopes = [attribute(p)[0] for p in pending]
     print(f"Attribution: {scopes.count('team')} to a club, "
           f"{scopes.count('division')} to a division, "
-          f"{scopes.count('unassigned')} unassigned")
+          f"{scopes.count('league')} to a league-wide market, "
+          f"{scopes.count('other')} to neither")
 
     generated = datetime.now(timezone.utc).strftime("%d %b %Y")
     board = build_html(pending, images, generated)
@@ -596,9 +819,10 @@ def main():
             f.write(page)
         print(f"Wrote {os.path.abspath(path)} ({len(page) / 1024:.0f} KB)")
 
-    print("\nNOTE: views/football/futures.html is committed and CDN-public. The "
-          "admin gate\n      hides it in the UI only -- the markup is readable by "
-          "anyone with the URL.")
+    print("\nNOTE: views/football/futures.html is committed and CDN-public, and "
+          "carries no page\n      gate. It is unlisted, not private -- only the "
+          "hub card linking to it is\n      admin-only. Anyone with the URL can "
+          "read the board.")
 
     if args.open:
         subprocess.run(["open", OUT])
