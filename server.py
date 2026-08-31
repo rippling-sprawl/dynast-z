@@ -1502,6 +1502,11 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         elif self.path == "/football/grading-system":
             self.path = "/views/home/grading-system.html"
             super().do_GET()
+        # Admin-only in the UI (auth.js requireAdmin), but the file itself is
+        # static and public — same caveat as every other page here.
+        elif self.path.split("?")[0] == "/football/futures":
+            self.path = "/views/football/futures.html"
+            super().do_GET()
         # Query string tolerated: the schedule page keeps its week/team filters
         # in ?week=&team= so a view is linkable, and Vercel matches on the path
         # alone, so dev must too.

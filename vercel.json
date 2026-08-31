@@ -21,6 +21,7 @@
     { "source": "/bets", "destination": "/views/bets/index.html" },
     { "source": "/football/grading-system", "destination": "/views/home/grading-system.html" },
     { "source": "/football/schedule", "destination": "/views/football/schedule.html" },
+    { "source": "/football/futures", "destination": "/views/football/futures.html" },
     { "source": "/football/bakers-buns/methodology", "destination": "/views/football/bakers-buns-methodology.html" },
     { "source": "/football/bakers-buns", "destination": "/views/football/bakers-buns.html" },
     { "source": "/football/bakers-oven/:leagueId/week-1", "destination": "/views/football/oven-week1.html" },
