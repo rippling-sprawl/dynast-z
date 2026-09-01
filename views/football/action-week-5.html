@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <title>Week 5 | Dynast-Z</title>
+  <!-- Theme first: theme.js sets <html data-theme> before the first paint,
+       theme.css holds every colour token the sheets below spend. The board
+       itself is light-only and scopes its own tokens under .fb. -->
+  <script src="/scripts/base/theme.js"></script>
+  <link rel="stylesheet" href="/styles/base/theme.css">
+  <link rel="stylesheet" href="/styles/base/styles.css">
+  <link rel="stylesheet" href="/styles/base/hub.css">
+  <!-- Vercel Web Analytics. The /_vercel/insights/* routes are injected by
+       Vercel at deploy time, so this 404s harmlessly when serving locally. -->
+  <script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
+  <script defer src="/_vercel/insights/script.js"></script>
+  <style>
+/* Scoped to .fb so the board cannot leak into the site header, nav drawer or
+   hub cards, which keep their own theme tokens from styles/base/theme.css.
+
+   The board is deliberately light-only: it is a printed-ticket board, and the
+   odds/units columns were tuned for dark ink on paper. It therefore does NOT
+   follow the site's dark toggle -- every value below is a fixed light token
+   rather than a var() that flips. */
+.fb{
+  --ground:#EDEFF2; --surface:#FFFFFF; --sunk:#F5F7F9;
+  /* Header shades, darkest first: division encloses club encloses picks, and
+     the picks sit on --surface. Reading the greys top to bottom tells you how
+     deep in the board you are without a single extra rule or label. */
+  --head-div:#D3DAE2; --head-team:#E3E8EE;
+  --ink:#11161C; --muted:#5C6773; --line:#D8DDE3;
+  --afc:#C8102E; --nfc:#21437E; --brass:#8A6520;
+  /* Slate heads the second board; win/loss ink the result nodes on a leg. */
+  --slate:#39434F; --win:#1E7A46; --loss:#B4232B; --rail:#B8C1CB;
+  --shadow:0 1px 2px rgba(17,22,28,.06),0 8px 20px -12px rgba(17,22,28,.18);
+  background:var(--ground); color:var(--ink);
+  font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;
+  font-size:17.81px; line-height:1.5; -webkit-font-smoothing:antialiased;
+  border:1px solid var(--line); border-radius:14px;
+  padding:26px 22px 34px; margin-top:18px;
+}
+.fb *{box-sizing:border-box}
+/* styles/base/styles.css styles bare tags globally -- `header` is flex+sticky
+   for the site chrome, and h2..h5 carry hub sizing. Neutralise all of that
+   inside the board so its own rules below are what actually apply. */
+.fb div,.fb section,.fb ul,.fb li{display:block;position:static}
+.fb h3,.fb h4,.fb h5{display:block;margin:0;font-family:inherit;
+  color:inherit;border:0;padding:0}
+.fb ul{list-style:none}
+
+/* Helvetica Neue throughout. The scoreboard voice comes from weight, caps and
+   tracking rather than from a second family. */
+.fb .condensed{font-weight:700;text-transform:uppercase;letter-spacing:.09em}
+.fb .num{font-variant-numeric:tabular-nums;
+  font-feature-settings:"tnum" 1;letter-spacing:.01em}
+
+.fb .mast{border-bottom:2px solid var(--ink);padding-bottom:16px;margin-bottom:20px}
+.fb .eyebrow{font-size:13.06px;color:var(--muted)}
+.fb .mast h3{font-size:clamp(30.88px,4.75vw,45.12px);line-height:1.04;margin:6px 0 0;
+  font-weight:700;letter-spacing:-.01em;text-transform:uppercase;text-wrap:balance}
+.fb .asof{font-size:14.84px;color:var(--muted);margin-top:7px}
+
+/* Three readings of one book, so they are three rows of one table: the label
+   on the left, the number in a column of its own so the three of them rule up,
+   and what the number is made of trailing it in the muted voice. */
+.fb table.totals{width:100%;border-collapse:collapse;margin-bottom:28px;
+  background:var(--surface);border:1px solid var(--line);border-radius:10px}
+.fb .totals th,.fb .totals td{padding:10px 15px;text-align:left;
+  border-bottom:1px solid var(--line)}
+.fb .totals tr:last-child th,.fb .totals tr:last-child td{border-bottom:0}
+.fb .totals th{font-size:12.47px;color:var(--muted);font-weight:700;
+  white-space:nowrap;width:1%}
+.fb .totals .v{font-size:27.31px;font-weight:600;letter-spacing:-.01em;
+  text-align:right;white-space:nowrap;width:1%}
+.fb .totals .s{font-size:13.66px;color:var(--muted)}
+@media (max-width:560px){
+  .fb .totals th,.fb .totals td{padding:8px 10px}
+  .fb .totals .v{font-size:21px}
+  .fb .totals .s{font-size:12px}}
+
+.fb .conf{margin-top:34px}
+/* The conference accent fills the bar rather than tinting the type, which puts
+   the strongest value on the board at its top level and leaves the greys below
+   to carry division/club/pick depth on their own. */
+.fb .conf-head{display:flex;align-items:baseline;gap:4px 12px;flex-wrap:wrap;
+  background:var(--c);color:#FFFFFF;border-radius:10px;
+  padding:11px 16px;margin-bottom:15px}
+.fb .conf-head h4{font-size:28.5px;margin:0;color:#FFFFFF;letter-spacing:.07em;
+  font-weight:700;text-transform:uppercase}
+.fb .conf-head .meta{font-size:14.84px;color:#FFFFFF;margin-left:auto}
+
+/* min() rather than a bare 340px: a bare track floor is a hard minimum, so on
+   a 390px phone the 330px column box was overflowed by its own grid. */
+.fb .divs{display:grid;gap:16px;align-items:start;
+  grid-template-columns:repeat(auto-fit,minmax(min(425px,100%),1fr))}
+@media (min-width:900px){.fb .divs{grid-template-columns:repeat(2,1fr)}}
+.fb .div{background:var(--surface);border:1px solid var(--line);
+  border-radius:12px;box-shadow:var(--shadow);overflow:hidden}
+.fb .div-head{display:flex;align-items:baseline;gap:4px 8px;flex-wrap:wrap;
+  padding:11px 14px;background:var(--head-div);
+  border-bottom:1px solid var(--line)}
+.fb .div-head h5{font-size:16.03px;margin:0;letter-spacing:.11em;font-weight:700;
+  text-transform:uppercase}
+
+.fb .team{border-bottom:1px solid var(--line)}
+.fb .team:last-child{border-bottom:0}
+.fb .team-head{display:flex;align-items:center;gap:4px 10px;flex-wrap:wrap;
+  padding:9px 14px;background:var(--head-team);
+  border-bottom:1px solid var(--line)}
+.fb .team-head img{width:27.5px;height:27.5px;object-fit:contain;flex:none}
+.fb .team-head .nm{font-size:14.84px;letter-spacing:.06em;font-weight:600;
+  text-transform:uppercase}
+/* The club header used to carry that club's stake. It said the same thing 27
+   times in 27 places and could not be compared across any two of them, so the
+   money moved out into one ledger and the header kept only the name. */
+.fb .team-head .colhead{margin-left:auto}
+
+.fb .picks{list-style:none;margin:0;padding:6px 14px 10px}
+.fb .picks>.pick:first-child{border-top:0}
+.fb .pick,.fb .subj{display:flex;align-items:center;gap:10px}
+.fb .pick{padding:6px 0;border-top:1px dashed var(--line)}
+.fb .pick img,.fb .subj img{width:32.5px;height:32.5px;object-fit:contain;
+  border-radius:50%;background:var(--sunk);flex:none}
+.fb .pick .ph,.fb .subj .ph{width:32.5px;height:32.5px;border-radius:50%;
+  background:var(--sunk);flex:none;display:grid;place-items:center;
+  font-size:10.69px;color:var(--muted)}
+.fb .pick .d,.fb .cols .d{flex:1;min-width:0;font-size:16.03px;
+  overflow-wrap:anywhere}
+
+/* A subject owns its headshot and its name; the tickets beneath it carry only
+   what differs between them, indented to the width of the mark they share. */
+.fb .subj{padding:10px 0 4px;border-top:1px solid var(--line)}
+.fb .subj:first-child{border-top:0}
+.fb .subj .nm{font-size:14.25px;font-weight:700;letter-spacing:.06em}
+.fb .subj+.pick{border-top:0}
+.fb .pick.sub{padding-left:36px}
+
+/* Units and odds are fixed-width so every ticket on the board rules up into
+   two columns, whatever the length of the line to its left. */
+.fb .col{flex:none;font-size:14.25px;text-align:right}
+.fb .col.u{width:68px}
+.fb .col.odds{width:68px}
+.fb .pick .col.odds{padding:2px 7px;color:var(--brass)}
+
+/* The columns are named in the card's own header, so the list underneath is
+   nothing but tickets. .colhead pairs them at the same width and gap the rows
+   use, and both headers pad to 14px like .picks, so the two rule up. The odds
+   cell repeats the row's own 7px padding so the label sits over the prices
+   rather than over the column's outer edge. */
+.fb .colhead{display:flex;flex:none;gap:10px;margin-left:6px}
+.fb .div-head .colhead{margin-left:auto}
+.fb .colhead .col{font-size:10.69px;color:var(--muted);font-weight:700;
+  text-transform:uppercase;letter-spacing:.08em}
+.fb .colhead .col.odds{padding:2px 7px}
+
+/* The club ledger. A real table rather than the .picks flex rows used
+   everywhere else, because this is the one place on the board where numbers
+   have to rule up into columns that can be read against each other -- which is
+   the whole reason the money left the club headers. */
+.fb .ledger{background:var(--surface);border:1px solid var(--line);
+  border-radius:12px;box-shadow:var(--shadow);margin-bottom:28px;
+  /* clip rather than hidden: hidden would make this a scroll container and a
+     sticky table head cannot escape one. */
+  overflow:clip}
+.fb .ledger .div-head{align-items:baseline}
+.fb .ledger .meta{font-size:13.06px;color:var(--muted);margin-left:auto;
+  text-align:right}
+/* Same reason: the table only gets a scroll container on the screens that
+   actually need one, which are the screens too narrow for a stuck head to be
+   worth anything anyway. */
+.fb .ledger .scroll{overflow-x:visible}
+@media (max-width:760px){
+  .fb .ledger .scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}}
+.fb .ledger table{width:100%;border-collapse:collapse;font-size:15.44px}
+.fb .ledger th,.fb .ledger td{padding:5px 12px;text-align:right;
+  border-bottom:1px solid var(--line)}
+/* Thirty-two clubs, any of them able to open onto its tickets: the table is
+   taller than the screen, and four money columns are unreadable without the
+   two rows that name them, so the head stays put. The 38px is pinned rather
+   than measured -- the second row has to know exactly how tall the first one
+   is -- and `height` on a cell is a floor, so the rows hold it at every width. */
+.fb .ledger thead th{background:var(--head-team);font-weight:700;
+  font-size:11.28px;text-transform:uppercase;letter-spacing:.08em;
+  color:var(--muted);white-space:nowrap;padding-top:8px;padding-bottom:8px;
+  position:sticky;z-index:3;height:38px;
+  /* The head's rules are drawn inside the cell rather than on its edge.
+     Under border-collapse a border belongs to the table, not to the cell, so
+     a stuck head left its own borders behind with the rows and the lines it
+     was ruled with went see-through as the board scrolled under it. An inset
+     shadow is painted by the cell and travels with it. */
+  border-bottom:0;box-shadow:inset 0 -1px 0 var(--line)}
+.fb .ledger thead tr:first-child th{top:var(--stick,0px)}
+.fb .ledger thead tr+tr th{top:calc(var(--stick,0px) + 38px)}
+/* The rule opening each pair is what makes "team" and "player" read as two
+   blocks of two rather than as four unrelated money columns. */
+.fb .ledger thead th.g{border-left:0;
+  box-shadow:inset 1px 0 0 var(--line),inset 0 -1px 0 var(--line)}
+/* Team, Team markets and Player markets are the three groups the head names,
+   so all three are set the same: the size and the full-strength ink that says
+   this row is the head of a group, not a label inside one. */
+.fb .ledger thead tr:first-child th{color:var(--ink);font-size:12.47px}
+.fb .ledger thead tr:first-child th.g{text-align:center}
+.fb .ledger th.g,.fb .ledger td.g{border-left:1px solid var(--line)}
+.fb .ledger th.c,.fb .ledger td.c{text-align:left;font-weight:600}
+.fb .ledger td.c{font-size:14.84px;letter-spacing:.02em}
+.fb .ledger td.c img{width:25px;height:25px;object-fit:contain;
+  vertical-align:-5px;margin-right:9px}
+.fb .ledger td.n{width:130px;white-space:nowrap}
+/* Teams with nothing on them stay in the table -- the list of what is not bet
+   is worth as much as the list of what is -- but they are greyed so the eye
+   runs down the live rows without having to read the dashes. */
+.fb .ledger tr.zero td{color:var(--muted)}
+.fb .ledger tr.zero td.c img{filter:grayscale(1);opacity:.42}
+.fb .ledger td.zip{color:var(--muted)}
+.fb .ledger tfoot td{background:var(--head-div);font-weight:700;
+  border-bottom:0;padding-top:8px;padding-bottom:8px}
+
+/* The conference band. It carries the same red and blue the AFC and NFC
+   section bars used to wear, because those sections are now these rows: the
+   board reads conference, division, club, tickets straight down one table
+   instead of down a page and back up a grid of cards. */
+.fb .ledger tr.band td{background:var(--c);border-bottom-color:var(--c);
+  color:#FFFFFF;padding-top:9px;padding-bottom:9px}
+.fb .ledger tr.band td.c{font-size:17.81px;font-weight:700;letter-spacing:.1em;
+  text-transform:uppercase}
+.fb .ledger tr.band td.bmeta{font-size:13.66px;
+  letter-spacing:.03em;color:rgba(255,255,255,.86)}
+.fb .ledger tbody.bd td{border-bottom:0}
+.fb .ledger tr.dband td{background:var(--head-div);font-size:12.47px;
+  font-weight:700;letter-spacing:.11em;text-transform:uppercase}
+
+/* A club row is a disclosure. Closed it is the money, open it is the tickets,
+   and the caret is the only thing added to the club cell to say so -- a row
+   with nothing on it gets no caret, no hook and no cursor, because there is
+   nothing behind it to open. */
+.fb .ledger tr.tm[aria-controls]{cursor:pointer}
+.fb .ledger tr.tm[aria-controls]:hover td{background:var(--sunk)}
+.fb .ledger tr.tm.on td{background:var(--head-team)}
+.fb .ledger tr.tm:focus{outline:2px solid var(--brass);outline-offset:-2px}
+.fb .ledger tr.tm.oth td.c{color:var(--muted);font-style:italic}
+.fb .ledger td.c .cx{display:inline-block;width:11px;margin-right:8px;
+  font-size:10.69px;color:var(--muted);transition:transform .14s ease}
+.fb .ledger td.c .cx::before{content:"\25B8"}
+.fb .ledger td.c .cx.off::before{content:""}
+.fb .ledger tr.tm.on td.c .cx{transform:rotate(90deg);color:var(--ink)}
+/* A club's tickets, closed until its row is opened. They are rows of the one
+   table, so a ticket's units sit in the Risk column and its price in the To
+   win column of the pair that counts it -- which is why neither carries a
+   label of its own down here: the head two rows up already names them. */
+.fb .ledger tbody.grp:not(.on) tr.pk{display:none}
+.fb .ledger tr.pk td{background:var(--sunk);font-size:14.84px;
+  border-bottom:1px dashed var(--line)}
+.fb .ledger tbody.grp tr:last-child td{border-bottom:1px solid var(--line)}
+.fb .ledger tr.pk td.c{padding-left:41px;font-weight:400;color:var(--ink)}
+/* Indented to the mark the subject above them carries, so a run of tickets
+   reads as hanging off one player rather than as five more rows. */
+.fb .ledger tr.pk.sub td.c{padding-left:70px}
+/* The price rides with the words, not in a column: an American odd is not a
+   quantity that rules up against a column of money, and the two money columns
+   are spoken for by what the head calls them. Italic and small so a row still
+   reads as one line with a price on it rather than as two things. */
+.fb .ledger .odds{margin-left:11px;font-size:.82em;font-style:italic;
+  color:var(--brass);white-space:nowrap}
+.fb .ledger tr.bare td.c{font-weight:400}
+.fb .ledger tr.pk td.c img,.fb .ledger tr.pk td.c .ph{width:27.5px;height:27.5px;
+  border-radius:50%;background:var(--surface);object-fit:contain;
+  vertical-align:middle;margin-right:9px}
+.fb .ledger tr.pk td.c .ph{display:inline-grid;place-items:center;
+  font-size:10.69px;color:var(--muted)}
+/* Middle rather than baseline: a row's text has to sit level with the money
+   in the four cells beside it, not with the mark it shares its cell with. */
+.fb .ledger tr.pk td.c .d,.fb .ledger tr.pk td.c .nm{vertical-align:middle}
+.fb .ledger tr.pk.sj td{padding-top:8px}
+.fb .ledger tr.pk.sj td.c{font-size:13.66px;font-weight:700;letter-spacing:.06em}
+
+/* Above the table, beside the count: the one control on the board. */
+.fb .ledger .xall{font:inherit;font-size:11.88px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.08em;color:var(--ink);
+  background:var(--surface);border:1px solid var(--line);border-radius:7px;
+  padding:5px 10px;margin-left:12px;cursor:pointer;white-space:nowrap}
+.fb .ledger .xall:hover{border-color:var(--brass);color:var(--brass)}
+@media (max-width:620px){
+  .fb .ledger th,.fb .ledger td{padding:5px 7px}
+  .fb .ledger .det-in{padding:4px 6px 10px 22px}
+  .fb .ledger td.n,.fb .ledger th.n{width:85px;font-size:13.66px}
+  .fb .ledger td.c{font-size:13.66px}
+  .fb .ledger td.c img{width:21.25px;height:21.25px;vertical-align:-4px;margin-right:6px}
+}
+
+.fb .note{margin-top:30px;padding:15px 17px;background:var(--surface);
+  border:1px solid var(--line);border-left:4px solid var(--brass);
+  border-radius:10px;font-size:16.03px;color:var(--muted)}
+.fb .note strong{color:var(--ink)}
+.fb .note ul{margin:8px 0 0;padding-left:18px}
+@media (max-width:560px){.fb{padding:18px 13px 26px}}
+
+/* ---- pending non-futures board -------------------------------------------
+
+   The second board on the page. It reuses every token above and the .conf /
+   .div / .picks components wholesale, and adds only what a ticket with legs
+   needs. Its section bars are slate rather than red/blue/brass: on this page
+   colour says which board you are reading, and AFC/NFC/NFL are spoken for. */
+.fb .sect{border-top:2px solid var(--ink);margin-top:52px;padding-top:22px;
+  margin-bottom:20px}
+.fb .sect h3{font-size:clamp(26.12px,3.8vw,35.62px);line-height:1.06;margin:6px 0 0;
+  font-weight:700;letter-spacing:-.01em;text-transform:uppercase}
+
+/* A parlay is ONE bet whose legs must all land, so the legs are drawn strung
+   on a rail rather than stacked as a list. Without the rail four legs read as
+   four separate tickets priced at four separate odds, which is the single
+   thing this card must never say. The rail runs edge to edge through every
+   node and stops at the first and last one, so the eye sees a closed chain. */
+.fb .tix{columns:3 412px;column-gap:16px}
+.fb .tik{display:block;break-inside:avoid;margin:0 0 16px;
+  background:var(--surface);border:1px solid var(--line);
+  border-radius:12px;box-shadow:var(--shadow);overflow:hidden}
+.fb .tik-head{display:flex;align-items:center;gap:4px 9px;flex-wrap:wrap;
+  padding:10px 14px;background:var(--head-team);
+  border-bottom:1px solid var(--line)}
+.fb .tik-head .nm{font-size:14.84px;letter-spacing:.06em;font-weight:700;
+  text-transform:uppercase}
+/* Stake and return are one phrase off the title -- "1.00u to win 4.06u" --
+   because risk and reward are only meaningful against each other. The two
+   figures carry the weight; the words between them step back. */
+.fb .tik-head .pays{font-size:13.66px;font-weight:600;color:var(--ink)}
+.fb .tik-head .pays i{font-style:normal;font-weight:400;color:var(--muted)}
+/* The combined price is the only number that belongs to the ticket rather than
+   to a leg, so it is the one thing set large and in brass at the top right. */
+.fb .tik-head .price{margin-left:auto;font-size:19px;font-weight:700;
+  color:var(--brass);letter-spacing:-.01em}
+.fb .tag{font-size:11.28px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.07em;color:var(--muted);background:var(--surface);
+  border:1px solid var(--line);border-radius:999px;padding:2px 8px;
+  white-space:nowrap}
+
+.fb .legs{list-style:none;margin:0;padding:8px 14px 10px}
+.fb .leg{position:relative;display:flex;align-items:center;gap:9px;
+  padding:7px 0 7px 25px;min-height:40px}
+.fb .leg::before{content:"";position:absolute;left:5px;top:0;bottom:0;
+  width:2px;background:var(--rail)}
+.fb .leg:first-child::before{top:50%}
+.fb .leg:last-child::before{bottom:50%}
+.fb .leg:only-child::before{display:none}
+/* The node, centred on the rail. Its ring carries the leg's own result, so a
+   part-settled ticket shows which links have already held. */
+.fb .leg::after{content:"";position:absolute;left:0;top:50%;margin-top:-6px;
+  width:15px;height:15px;border-radius:50%;background:var(--surface);
+  border:2px solid var(--brass);box-sizing:border-box}
+.fb .leg.win::after{background:var(--win);border-color:var(--win)}
+.fb .leg.loss::after{background:var(--loss);border-color:var(--loss)}
+.fb .leg.push::after{background:var(--muted);border-color:var(--muted)}
+.fb .leg img{width:32.5px;height:32.5px;object-fit:contain;border-radius:50%;
+  background:var(--sunk);flex:none}
+.fb .leg .ph{width:32.5px;height:32.5px;border-radius:50%;background:var(--sunk);
+  flex:none;display:grid;place-items:center;font-size:10.69px;color:var(--muted)}
+.fb .leg .d{flex:1;min-width:0;font-size:15.44px;overflow-wrap:anywhere}
+.fb .leg .d b{font-weight:700}
+.fb .leg .mu{display:block;font-size:12.47px;color:var(--muted);
+  letter-spacing:.03em}
+
+/* Singles are filed by the game they are on, which is the only grouping that
+   puts the six Barkley rushing tickets and the Eagles spread on one card. */
+.fb .gms{columns:2 425px;column-gap:16px}
+.fb .gm{break-inside:avoid;margin:0 0 16px;
+  background:var(--surface);border:1px solid var(--line);
+  border-radius:12px;box-shadow:var(--shadow);overflow:hidden}
+.fb .gms .gm:last-child{margin-bottom:0}
+.fb .gm-head{display:flex;align-items:baseline;gap:9px;padding:11px 14px;
+  background:var(--head-div);border-bottom:1px solid var(--line);flex-wrap:wrap}
+.fb .gm-head h5{font-size:16.03px;margin:0;letter-spacing:.09em;font-weight:700;
+  text-transform:uppercase}
+.fb .gm-head .when{font-size:12.47px;color:var(--muted);letter-spacing:.04em;
+  text-transform:uppercase;font-weight:700}
+.fb .gm-head .rk{font-size:13.66px;color:var(--muted);margin-left:auto}
+
+/* Tickets whose event has finished but which the book never graded. They are
+   not live and must not be totalled with what is, but dropping them silently
+   would quietly shrink the book, so they get a muted card of their own. */
+.fb .wide>.gm{margin:0}
+.fb .dead{opacity:.62}
+.fb .dead .pick .col.odds{color:var(--muted)}
+.fb .dead .pick{flex-wrap:wrap}
+.fb .dead .pick .when{font-size:13.06px;color:var(--muted);flex:none;width:103px}
+@media (max-width:560px){.fb .dead .pick .d{flex-basis:100%;order:1}}
+.fb .pick .d .tag{margin-right:7px;vertical-align:1px}
+
+/* A block inside a section that is not a grid of cards -- the season-futures
+   parlays under NFL, which are .tix and run full width rather than sitting in
+   .div columns. Same head-div grey as a division header, because it is at the
+   same depth in the board and the greys are what say so. */
+.fb .subhead{display:flex;align-items:baseline;gap:4px 10px;flex-wrap:wrap;
+  padding:10px 14px;margin:0 0 14px;background:var(--head-div);
+  border:1px solid var(--line);border-radius:10px}
+.fb .subhead h5{font-size:16.03px;letter-spacing:.11em;font-weight:700;
+  text-transform:uppercase}
+.fb .subhead .meta{font-size:13.66px;color:var(--muted);margin-left:auto}
+.fb .divs+.subhead{margin-top:22px}
+
+/* A week holds multis and game cards both. They are two separate column
+   blocks, so they need between them the gap the cards inside them use. */
+.fb .tix+.gms{margin-top:16px}
+/* The days a week's slate actually runs, said once in its bar rather than
+   reconstructed from the kickoff line of every card underneath it. */
+.fb .conf-head .span{font-size:14.84px;color:#FFFFFF;opacity:.78;
+  letter-spacing:.03em}
+
+/* ---- the strip and the grid ----------------------------------------------
+
+   The book is nineteen pages and every one of them carries the strip, which is
+   both the way across and the shape of the season: a week with nothing on it
+   keeps its slot, greyed, so a hole in the book is visible from anywhere in
+   it. Numbers rather than names, because "Week 11" nineteen times across is a
+   paragraph and 1..18 is a ruler. */
+.fb .pager{display:flex;flex-wrap:wrap;gap:5px;margin:0 0 26px}
+.fb .pager a{display:block;min-width:36px;padding:5px 8px;text-align:center;
+  font-size:13.66px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
+  color:var(--ink);background:var(--surface);border:1px solid var(--line);
+  border-radius:7px;text-decoration:none;font-variant-numeric:tabular-nums}
+.fb .pager a:hover{border-color:var(--brass);color:var(--brass)}
+.fb .pager a.zero{color:var(--muted);background:transparent;border-style:dashed}
+/* The page you are on is filled rather than outlined -- the one state that has
+   to survive being read at a glance from the middle of a row of eighteen. */
+.fb .pager a.on{background:var(--ink);border-color:var(--ink);color:#FFFFFF}
+.fb .pager a.on:hover{color:#FFFFFF}
+.fb .pager a.all,.fb .pager a.lead{letter-spacing:.08em}
+.fb .pager a.lead:not(.on){border-color:var(--brass);color:var(--brass)}
+
+/* One cell per slate. The cell is the whole link, and its foot is where a
+   settled slate's profit will go -- which is why a pending one says so in
+   words rather than leaving the line off, since a line that appears later
+   moves every number above it when it does. */
+.fb .grid{display:grid;gap:12px;align-items:start;
+  grid-template-columns:repeat(auto-fill,minmax(min(268px,100%),1fr))}
+.fb .cell{display:block;background:var(--surface);border:1px solid var(--line);
+  border-radius:12px;box-shadow:var(--shadow);overflow:hidden;
+  color:inherit;text-decoration:none}
+.fb .cell:hover{border-color:var(--brass)}
+.fb .cell-head{display:flex;align-items:baseline;gap:3px 8px;flex-wrap:wrap;
+  padding:9px 13px;background:var(--head-team);
+  border-bottom:1px solid var(--line)}
+.fb .cell-head .nm{font-size:14.25px;letter-spacing:.08em;font-weight:700}
+.fb .cell-head .when{font-size:11.88px;color:var(--muted);margin-left:auto;
+  letter-spacing:.03em;white-space:nowrap}
+.fb .cell-body{padding:11px 13px 13px}
+.fb .cell .v{font-size:27.31px;font-weight:600;letter-spacing:-.01em;line-height:1}
+.fb .cell .k{font-size:12.47px;color:var(--muted);margin-top:4px}
+.fb .cell .exp{font-size:13.66px;margin-top:8px;color:var(--muted)}
+.fb .cell-foot{padding:7px 13px;background:var(--sunk);
+  border-top:1px solid var(--line);font-size:11.88px;color:var(--muted);
+  letter-spacing:.07em}
+/* A week with nothing on it stays in the grid -- the weeks not bet say as much
+   about the book as the weeks that are -- but sunk and greyed, so the eye runs
+   down the live cells without having to read the dashes. */
+.fb .cell.zero{box-shadow:none;background:var(--sunk);border-style:dashed}
+.fb .cell.zero .cell-head{background:transparent}
+.fb .cell.zero .cell-foot{background:transparent}
+.fb .cell.zero .nm,.fb .cell.zero .v{color:var(--muted)}
+/* Futures is not a week. It leads the grid and takes the brass, which is the
+   colour it already wears as a section on the board. */
+.fb .cell.lead{grid-column:span 2}
+.fb .cell.lead .cell-head{background:var(--brass);border-bottom-color:var(--brass)}
+.fb .cell.lead .cell-head .nm,.fb .cell.lead .cell-head .when{color:#FFFFFF}
+@media (max-width:520px){.fb .cell.lead{grid-column:span 1}}
+</style>
+</head>
+<body class="masters-body">
+  <div id="header-mount"></div>
+  <div id="nav-drawer-mount"></div>
+  <script src="/scripts/base/auth.js"></script>
+  <script src="/scripts/base/nav.js"></script>
+  <script>initPage();</script>
+
+  <div class="masters-content">
+    <div class="masters-breadcrumbs"><a href="/">Home</a><span class="separator">/</span><a href="/football">Football</a><span class="separator">/</span><a href="/football/action">Action</a><span class="separator">/</span><span>Week 5</span></div>
+
+    <h2>Week 5</h2>
+
+    <!-- GENERATED FILE -- do not hand-edit.
+         Rebuild every page with: python3 scripts/render_futures.py
+
+         NO GATE, DELIBERATELY. The board is baked into this committed file and
+         Vercel serves it off the public CDN, so a requireAdmin() call here only
+         ever hid it from whoever loaded the page in a browser -- the markup was
+         already readable by anyone who fetched the URL. Rather than keep a
+         check that implied a protection it never provided, the page is open and
+         unlisted: the only link to it is the admin-gated card on
+         views/home/football.html, so there is no way to click through without
+         being an admin, and the URL itself works for anyone who has it.
+
+         If this data ever needs to be actually private, the fix is to stop
+         baking it into a committed file and serve it from an admin-verified
+         endpoint instead. A client-side check is not that fix. -->
+    <div class="fb">
+<div class="mast">
+  <div class="eyebrow condensed">Action Network &middot; My Action &middot; pending</div>
+  <h3 class="condensed">Week 5</h3>
+  <div class="asof">Thu 8 – Mon 12 Oct &middot; 
+    generated 01 Sep 2026</div>
+</div>
+<nav class="pager"><a class="all" href="/football/action">All</a><a class="lead" href="/football/action/futures" title="Futures">Futures</a><a class="" href="/football/action/week/1" title="Week 1">1</a><a class="zero" href="/football/action/week/2" title="Week 2">2</a><a class="zero" href="/football/action/week/3" title="Week 3">3</a><a class="zero" href="/football/action/week/4" title="Week 4">4</a><a class="on zero" href="/football/action/week/5" title="Week 5">5</a><a class="zero" href="/football/action/week/6" title="Week 6">6</a><a class="zero" href="/football/action/week/7" title="Week 7">7</a><a class="zero" href="/football/action/week/8" title="Week 8">8</a><a class="zero" href="/football/action/week/9" title="Week 9">9</a><a class="zero" href="/football/action/week/10" title="Week 10">10</a><a class="zero" href="/football/action/week/11" title="Week 11">11</a><a class="zero" href="/football/action/week/12" title="Week 12">12</a><a class="zero" href="/football/action/week/13" title="Week 13">13</a><a class="zero" href="/football/action/week/14" title="Week 14">14</a><a class="zero" href="/football/action/week/15" title="Week 15">15</a><a class="zero" href="/football/action/week/16" title="Week 16">16</a><a class="zero" href="/football/action/week/17" title="Week 17">17</a><a class="zero" href="/football/action/week/18" title="Week 18">18</a></nav>
+<div class="note">Nothing open on this slate. Season-long tickets are on the <strong>Futures</strong> page; every other week of the schedule has a page of its own, linked above.</div>
+</div>
+  </div>
+</body>
+</html>

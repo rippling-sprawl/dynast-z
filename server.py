@@ -1502,11 +1502,37 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         elif self.path == "/football/grading-system":
             self.path = "/views/home/grading-system.html"
             super().do_GET()
-        # Admin-only in the UI (auth.js requireAdmin), but the file itself is
-        # static and public — same caveat as every other page here.
-        elif self.path.split("?")[0] == "/football/futures":
-            self.path = "/views/football/futures.html"
+        # The Action Network book. One page per slate: /football/action is the
+        # index, /futures the season book, /week/{n} one week of the schedule.
+        # Admin-only in the UI (auth.js requireAdmin), but the files themselves
+        # are static and public — same caveat as every other page here.
+        #
+        # Matched longest-path-first, and the week id is digits-only so a junk
+        # segment 404s rather than serving a page that does not exist. Mirrors
+        # the rewrites block in vercel.json, which orders them the same way for
+        # the same reason.
+        elif self.path.split("?")[0] == "/football/action/futures":
+            self.path = "/views/football/action-futures.html"
             super().do_GET()
+        elif re.match(r"^/football/action/week/\d+/?$", self.path.split("?")[0]):
+            week = self.path.split("?")[0].rstrip("/").rsplit("/", 1)[1]
+            self.path = f"/views/football/action-week-{week}.html"
+            super().do_GET()
+        elif self.path.split("?")[0] in ("/football/action/preseason",
+                                         "/football/action/postseason",
+                                         "/football/action/other"):
+            slate = self.path.split("?")[0].rsplit("/", 1)[1]
+            self.path = f"/views/football/action-{slate}.html"
+            super().do_GET()
+        elif self.path.split("?")[0] == "/football/action":
+            self.path = "/views/football/action.html"
+            super().do_GET()
+        # The book used to be one page at /football/futures. Anything already
+        # bookmarked lands on its replacement in one hop, as in vercel.json.
+        elif self.path.split("?")[0] == "/football/futures":
+            self.send_response(301)
+            self.send_header("Location", "/football/action/futures")
+            self.end_headers()
         # Query string tolerated: the schedule page keeps its week/team filters
         # in ?week=&team= so a view is linkable, and Vercel matches on the path
         # alone, so dev must too.

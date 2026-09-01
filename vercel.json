@@ -9,7 +9,8 @@
     { "source": "/the-bakers-oven/:path*", "destination": "/football/bakers-oven/:path*", "statusCode": 301 },
     { "source": "/bakers-oven", "destination": "/football/bakers-oven", "statusCode": 301 },
     { "source": "/bakers-oven/:path*", "destination": "/football/bakers-oven/:path*", "statusCode": 301 },
-    { "source": "/trade-calculator", "destination": "/football/trade-calculator", "statusCode": 301 }
+    { "source": "/trade-calculator", "destination": "/football/trade-calculator", "statusCode": 301 },
+    { "source": "/football/futures", "destination": "/football/action/futures", "statusCode": 301 }
   ],
   "rewrites": [
     { "source": "/", "destination": "/views/index.html" },
@@ -21,7 +22,12 @@
     { "source": "/bets", "destination": "/views/bets/index.html" },
     { "source": "/football/grading-system", "destination": "/views/home/grading-system.html" },
     { "source": "/football/schedule", "destination": "/views/football/schedule.html" },
-    { "source": "/football/futures", "destination": "/views/football/futures.html" },
+    { "source": "/football/action/futures", "destination": "/views/football/action-futures.html" },
+    { "source": "/football/action/week/:week", "destination": "/views/football/action-week-:week.html" },
+    { "source": "/football/action/preseason", "destination": "/views/football/action-preseason.html" },
+    { "source": "/football/action/postseason", "destination": "/views/football/action-postseason.html" },
+    { "source": "/football/action/other", "destination": "/views/football/action-other.html" },
+    { "source": "/football/action", "destination": "/views/football/action.html" },
     { "source": "/football/bakers-buns/methodology", "destination": "/views/football/bakers-buns-methodology.html" },
     { "source": "/football/bakers-buns", "destination": "/views/football/bakers-buns.html" },
     { "source": "/football/bakers-oven/:leagueId/week-1", "destination": "/views/football/oven-week1.html" },
