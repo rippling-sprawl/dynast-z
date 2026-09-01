@@ -18,14 +18,14 @@ import sys
 
 UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 
-ARTICLE_URL = "https://www.fantasypros.com/2026/08/fantasy-football-rankings-dynasty-trade-value-chart-august-2026-update/"
+ARTICLE_URL = "https://www.fantasypros.com/2026/09/fantasy-football-rankings-dynasty-trade-value-chart-september-2026-update/"
 
 # Datawrapper CSV endpoints for each position group
 POSITION_CSVS = {
-    "QB": "https://datawrapper.dwcdn.net/jcbi5/1/dataset.csv",
-    "RB": "https://datawrapper.dwcdn.net/HXKZl/1/dataset.csv",
-    "WR": "https://datawrapper.dwcdn.net/LFTe5/1/dataset.csv",
-    "TE": "https://datawrapper.dwcdn.net/pnawx/1/dataset.csv",
+    "QB": "https://datawrapper.dwcdn.net/l2wfo/1/dataset.csv",
+    "RB": "https://datawrapper.dwcdn.net/20Vr9/1/dataset.csv",
+    "WR": "https://datawrapper.dwcdn.net/m7Gli/1/dataset.csv",
+    "TE": "https://datawrapper.dwcdn.net/Ar02Z/1/dataset.csv",
 }
 
 
@@ -66,16 +66,21 @@ def parse_player_csv(csv_text, position):
 def parse_pick_tables(html):
     """Parse draft pick tables from the article HTML."""
     picks = []
+    slot_values = {}  # year -> {(round, slot): value} for pick-by-pick tables
 
     # Split by the year headers to determine context
     # Find all table blocks with their preceding context
     year = None
-    lines = html.split("\n")
     html_joined = html
 
-    # Determine year boundaries
-    year_2026_start = html_joined.find("2026 Dynasty Rookie Draft Pick Values")
-    year_2027_start = html_joined.find("2027 Dynasty Rookie Draft Pick Values")
+    # Determine year boundaries. FP publishes the next three rookie classes; the
+    # furthest-out one is quoted in ranges rather than pick by pick.
+    year_starts = []
+    for y in ("2026", "2027", "2028", "2029", "2030"):
+        pos = html_joined.find(f"{y} Dynasty Rookie Draft Pick Values")
+        if pos > 0:
+            year_starts.append((pos, y))
+    year_starts.sort(reverse=True)
 
     # Find all tables within mobile-table divs
     table_pattern = re.compile(r'<div class="mobile-table">\s*<table[^>]*>(.*?)</table>', re.DOTALL)
@@ -86,12 +91,9 @@ def parse_pick_tables(html):
         table_html = match.group(1)
         table_pos = match.start()
 
-        # Determine year from position in document
-        if year_2027_start > 0 and table_pos > year_2027_start:
-            year = "2027"
-        elif year_2026_start > 0 and table_pos > year_2026_start:
-            year = "2026"
-        else:
+        # Determine year from position in document (last header before the table)
+        year = next((y for pos, y in year_starts if table_pos > pos), None)
+        if not year:
             continue
 
         rows = row_pattern.findall(table_html)
@@ -123,6 +125,12 @@ def parse_pick_tables(html):
             if pick_label.lower().startswith("all"):
                 continue
 
+            slot_match = re.match(r'^(\d+)\.(\d+)$', pick_label)
+            if slot_match:
+                slot_values.setdefault(year, {})[
+                    (int(slot_match.group(1)), int(slot_match.group(2)))
+                ] = value
+
             pick_name = normalize_pick_name(pick_label, year)
             if pick_name:
                 picks.append({
@@ -132,7 +140,43 @@ def parse_pick_tables(html):
                     "value": value,
                 })
 
+    picks.extend(tiers_from_slots(slot_values, {p["name"] for p in picks}))
     return picks
+
+
+# Slot buckets for a 12-team rookie draft, matching server.py's
+# pick_tier_from_slot() (thirds of the round).
+_SLOT_TIERS = (("Early", range(1, 5)), ("Mid", range(5, 9)), ("Late", range(9, 13)))
+_ROUND_ORDINALS = {1: "1st", 2: "2nd", 3: "3rd", 4: "4th", 5: "5th"}
+
+
+def tiers_from_slots(slot_values, existing_names):
+    """Synthesize Early/Mid/Late tier entries from a pick-by-pick table.
+
+    FP quotes the nearest rookie classes slot by slot ("1.01"), but a future
+    season whose draft order isn't set yet can only be matched by tier
+    ("2027 Early 1st") — that's the key server.py indexes picks under. Average
+    each third of the round so those tiers stay populated. Any tier FP already
+    publishes outright wins over the synthesized one."""
+    synthesized = []
+    for year, slots in slot_values.items():
+        rounds = {rd for rd, _ in slots}
+        for rd in sorted(rounds):
+            ordinal = _ROUND_ORDINALS.get(rd, f"{rd}th")
+            for tier, slot_range in _SLOT_TIERS:
+                name = f"{year} {tier} {ordinal}"
+                if name in existing_names:
+                    continue
+                vals = [slots[(rd, s)] for s in slot_range if (rd, s) in slots]
+                if not vals:
+                    continue
+                synthesized.append({
+                    "name": name,
+                    "position": "PICK",
+                    "team": "",
+                    "value": round(sum(vals) / len(vals)),
+                })
+    return synthesized
 
 
 def normalize_pick_name(label, year):
@@ -216,14 +260,18 @@ def main():
 
     # Verify expected values
     by_name = {p["name"]: p for p in all_players}
+    # Spot values read off the September 2026 article (SF column)
     checks = [
         ("Josh Allen", 100),
-        ("Bo Nix", 67),
+        ("Jahmyr Gibbs", 86),
+        ("Ja'Marr Chase", 89),
+        ("Brock Bowers", 72),  # non-TEP column, matching the SF chart
         ("2026 Pick 1.01", 69),
-        ("2027 Early 1st", 68),
-        ("2027 Late 1st", 47),
-        ("2027 Late 2nd", 29),
         ("2026 Early 2nd", 34),
+        ("2027 Pick 1.01", 76),
+        ("2027 Late 2nd", 35),
+        ("2028 Early 1st", 51),
+        ("2028 Late 1st", 32),
     ]
     print("\nVerification:")
     for name, expected in checks:
