@@ -469,7 +469,12 @@ CSS = """
   font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;
   font-size:17.81px; line-height:1.5; -webkit-font-smoothing:antialiased;
   border:1px solid var(--line); border-radius:14px;
-  padding:26px 22px 34px; margin-top:18px;
+  /* Three boxes nest between the viewport and the table -- .masters-content,
+     this, and the .ledger card -- so the gutter is the one thing charged
+     three times over. It scales with the width rather than stepping at a
+     breakpoint: ~7px a side on a 390px phone, the drawn 22px past 850px. */
+  padding:clamp(14px,3.2vw,26px) clamp(6px,1.85vw,22px) clamp(20px,4vw,34px);
+  margin-top:18px;
 }
 .fb *{box-sizing:border-box}
 /* styles/base/styles.css styles bare tags globally -- `header` is flex+sticky
@@ -529,10 +534,10 @@ CSS = """
 .fb .div{background:var(--surface);border:1px solid var(--line);
   border-radius:12px;box-shadow:var(--shadow);overflow:hidden}
 .fb .div-head{display:flex;align-items:baseline;gap:4px 8px;flex-wrap:wrap;
-  padding:11px 14px;background:var(--head-div);
+  padding:clamp(8px,2.1vw,11px) clamp(9px,2.5vw,14px);background:var(--head-div);
   border-bottom:1px solid var(--line)}
-.fb .div-head h5{font-size:16.03px;margin:0;letter-spacing:.11em;font-weight:700;
-  text-transform:uppercase}
+.fb .div-head h5{font-size:clamp(12.75px,2.85vw,16.03px);margin:0;
+  letter-spacing:.11em;font-weight:700;text-transform:uppercase}
 
 .fb .team{border-bottom:1px solid var(--line)}
 .fb .team:last-child{border-bottom:0}
@@ -588,33 +593,48 @@ CSS = """
 /* The club ledger. A real table rather than the .picks flex rows used
    everywhere else, because this is the one place on the board where numbers
    have to rule up into columns that can be read against each other -- which is
-   the whole reason the money left the club headers. */
-.fb .ledger{background:var(--surface);border:1px solid var(--line);
+   the whole reason the money left the club headers.
+
+   EVERY SIZE IN HERE SCALES. The board was drawn at one width and every rule
+   under it was a fixed px, so a 390px phone was handed a desktop table and
+   paid for it in sideways scroll. The sizes are clamp(floor, vw, ceiling)
+   now: the ceiling is the drawing this was tuned at, the floor is what still
+   reads on the narrowest phone, and the vw between them means there is no
+   width at which the table is suddenly wrong. What the narrow board gives up
+   it gives up on purpose -- see --hrow, .lb and the pick indents below. */
+.fb .ledger{
+  /* The head is two stacked sticky rows, so the second has to know exactly how
+     tall the first is. One token holds it, because the `height` floor on the
+     cell and the `top` offset on the row beneath must never disagree. */
+  --hrow:38px;
+  background:var(--surface);border:1px solid var(--line);
   border-radius:12px;box-shadow:var(--shadow);margin-bottom:28px;
   /* clip rather than hidden: hidden would make this a scroll container and a
      sticky table head cannot escape one. */
   overflow:clip}
 .fb .ledger .div-head{align-items:baseline}
-.fb .ledger .meta{font-size:13.06px;color:var(--muted);margin-left:auto;
-  text-align:right}
-/* Same reason: the table only gets a scroll container on the screens that
-   actually need one, which are the screens too narrow for a stuck head to be
-   worth anything anyway. */
+.fb .ledger .meta{font-size:clamp(11px,2.2vw,13.06px);color:var(--muted);
+  margin-left:auto;text-align:right}
+/* No scroll container at any width, deliberately. The table used to get one
+   below 760px, which is exactly the width at which the head stopped sticking:
+   a sticky cell sticks to its scrollport, and an overflow-x:auto wrapper IS
+   one, so the phone got a head that scrolled away while the desktop kept it.
+   The columns are sized to fit a 390px viewport instead -- there is nothing
+   left to scroll sideways, so nothing has to scroll sideways. */
 .fb .ledger .scroll{overflow-x:visible}
-@media (max-width:760px){
-  .fb .ledger .scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}}
-.fb .ledger table{width:100%;border-collapse:collapse;font-size:15.44px}
-.fb .ledger th,.fb .ledger td{padding:5px 12px;text-align:right;
-  border-bottom:1px solid var(--line)}
+.fb .ledger table{width:100%;border-collapse:collapse;
+  font-size:clamp(11.5px,2.55vw,15.44px)}
+.fb .ledger th,.fb .ledger td{padding:5px clamp(4px,1.35vw,12px);
+  text-align:right;border-bottom:1px solid var(--line)}
 /* Thirty-two clubs, any of them able to open onto its tickets: the table is
    taller than the screen, and four money columns are unreadable without the
-   two rows that name them, so the head stays put. The 38px is pinned rather
-   than measured -- the second row has to know exactly how tall the first one
-   is -- and `height` on a cell is a floor, so the rows hold it at every width. */
+   two rows that name them, so the head stays put. `height` on a cell is a
+   floor, so the rows hold --hrow at every width. */
 .fb .ledger thead th{background:var(--head-team);font-weight:700;
-  font-size:11.28px;text-transform:uppercase;letter-spacing:.08em;
-  color:var(--muted);white-space:nowrap;padding-top:8px;padding-bottom:8px;
-  position:sticky;z-index:3;height:38px;
+  font-size:clamp(8.75px,1.95vw,11.28px);text-transform:uppercase;
+  letter-spacing:.08em;color:var(--muted);white-space:nowrap;
+  padding-top:6px;padding-bottom:6px;
+  position:sticky;z-index:3;height:var(--hrow);
   /* The head's rules are drawn inside the cell rather than on its edge.
      Under border-collapse a border belongs to the table, not to the cell, so
      a stuck head left its own borders behind with the rows and the lines it
@@ -622,7 +642,7 @@ CSS = """
      shadow is painted by the cell and travels with it. */
   border-bottom:0;box-shadow:inset 0 -1px 0 var(--line)}
 .fb .ledger thead tr:first-child th{top:var(--stick,0px)}
-.fb .ledger thead tr+tr th{top:calc(var(--stick,0px) + 38px)}
+.fb .ledger thead tr+tr th{top:calc(var(--stick,0px) + var(--hrow))}
 /* The rule opening each pair is what makes "team" and "player" read as two
    blocks of two rather than as four unrelated money columns. */
 .fb .ledger thead th.g{border-left:0;
@@ -630,13 +650,20 @@ CSS = """
 /* Team, Team markets and Player markets are the three groups the head names,
    so all three are set the same: the size and the full-strength ink that says
    this row is the head of a group, not a label inside one. */
-.fb .ledger thead tr:first-child th{color:var(--ink);font-size:12.47px}
+.fb .ledger thead tr:first-child th{color:var(--ink);
+  font-size:clamp(9.25px,2.1vw,12.47px)}
 .fb .ledger thead tr:first-child th.g{text-align:center}
 .fb .ledger th.g,.fb .ledger td.g{border-left:1px solid var(--line)}
 .fb .ledger th.c,.fb .ledger td.c{text-align:left;font-weight:600}
-.fb .ledger td.c{font-size:14.84px;letter-spacing:.02em}
+.fb .ledger td.c{font-size:clamp(11.5px,2.5vw,14.84px);letter-spacing:.02em;
+  overflow-wrap:anywhere}
 .fb .ledger td.c img{width:25px;height:25px;object-fit:contain;
   vertical-align:-5px;margin-right:9px}
+/* Fixed on the wide board, where 130px is comfort rather than need: the four
+   money columns rule up with room around them however many clubs are open.
+   Below 840px it stops being comfort and starts costing the club column the
+   width its names live in, so it is handed back -- see the two media queries
+   at the foot of this block. */
 .fb .ledger td.n{width:130px;white-space:nowrap}
 /* Teams with nothing on them stay in the table -- the list of what is not bet
    is worth as much as the list of what is -- but they are greyed so the eye
@@ -653,78 +680,115 @@ CSS = """
    instead of down a page and back up a grid of cards. */
 .fb .ledger tr.band td{background:var(--c);border-bottom-color:var(--c);
   color:#FFFFFF;padding-top:9px;padding-bottom:9px}
-.fb .ledger tr.band td.c{font-size:17.81px;font-weight:700;letter-spacing:.1em;
-  text-transform:uppercase}
-.fb .ledger tr.band td.bmeta{font-size:13.66px;
+.fb .ledger tr.band td.c{font-size:clamp(13.5px,3vw,17.81px);font-weight:700;
+  letter-spacing:.1em;text-transform:uppercase}
+.fb .ledger tr.band td.bmeta{font-size:clamp(10.5px,2.3vw,13.66px);
   letter-spacing:.03em;color:rgba(255,255,255,.86)}
 .fb .ledger tbody.bd td{border-bottom:0}
-.fb .ledger tr.dband td{background:var(--head-div);font-size:12.47px;
-  font-weight:700;letter-spacing:.11em;text-transform:uppercase}
+.fb .ledger tr.dband td{background:var(--head-div);
+  font-size:clamp(10px,2.1vw,12.47px);font-weight:700;letter-spacing:.11em;
+  text-transform:uppercase}
 
 /* A club row is a disclosure. Closed it is the money, open it is the tickets,
-   and the caret is the only thing added to the club cell to say so -- a row
-   with nothing on it gets no caret, no hook and no cursor, because there is
-   nothing behind it to open. */
+   and nothing at all is added to the cell to say so: the caret that used to
+   sit there taught on the first press what the first press teaches anyway,
+   and it charged the club column 19px for the lesson on the width that could
+   least afford it. The cursor, the hover and the focus ring say it instead --
+   and a row with nothing behind it gets none of the three. */
 .fb .ledger tr.tm[aria-controls]{cursor:pointer}
 .fb .ledger tr.tm[aria-controls]:hover td{background:var(--sunk)}
 .fb .ledger tr.tm.on td{background:var(--head-team)}
 .fb .ledger tr.tm:focus{outline:2px solid var(--brass);outline-offset:-2px}
 .fb .ledger tr.tm.oth td.c{color:var(--muted);font-style:italic}
-.fb .ledger td.c .cx{display:inline-block;width:11px;margin-right:8px;
-  font-size:10.69px;color:var(--muted);transition:transform .14s ease}
-.fb .ledger td.c .cx::before{content:"\\25B8"}
-.fb .ledger td.c .cx.off::before{content:""}
-.fb .ledger tr.tm.on td.c .cx{transform:rotate(90deg);color:var(--ink)}
 /* A club's tickets, closed until its row is opened. They are rows of the one
    table, so a ticket's units sit in the Risk column and its price in the To
    win column of the pair that counts it -- which is why neither carries a
    label of its own down here: the head two rows up already names them. */
 .fb .ledger tbody.grp:not(.on) tr.pk{display:none}
-.fb .ledger tr.pk td{background:var(--sunk);font-size:14.84px;
-  border-bottom:1px dashed var(--line)}
+.fb .ledger tr.pk td{background:var(--sunk);
+  font-size:clamp(11.5px,2.5vw,14.84px);border-bottom:1px dashed var(--line)}
 .fb .ledger tbody.grp tr:last-child td{border-bottom:1px solid var(--line)}
-.fb .ledger tr.pk td.c{padding-left:41px;font-weight:400;color:var(--ink)}
-/* Indented to the mark the subject above them carries, so a run of tickets
-   reads as hanging off one player rather than as five more rows. */
-.fb .ledger tr.pk.sub td.c{padding-left:70px}
+/* The indent has one job -- say these rows hang off the one above -- so it is
+   the smallest step that still says it. It used to be a fixed 41px clearing a
+   caret that is gone, which on a phone was a tenth of the whole board spent
+   on white space. */
+.fb .ledger tr.pk td.c{padding-left:clamp(11px,3.4vw,22px);font-weight:400;
+  color:var(--ink)}
+/* One step further in, so a run of tickets reads as hanging off one player
+   rather than as five more rows. */
+.fb .ledger tr.pk.sub td.c{padding-left:clamp(22px,7vw,55px)}
 /* The price rides with the words, not in a column: an American odd is not a
    quantity that rules up against a column of money, and the two money columns
    are spoken for by what the head calls them. Italic and small so a row still
    reads as one line with a price on it rather than as two things. */
-.fb .ledger .odds{margin-left:11px;font-size:.82em;font-style:italic;
-  color:var(--brass);white-space:nowrap}
+.fb .ledger .odds{margin-left:clamp(5px,1.5vw,11px);font-size:.82em;
+  font-style:italic;color:var(--brass);white-space:nowrap}
 .fb .ledger tr.bare td.c{font-weight:400}
-.fb .ledger tr.pk td.c img,.fb .ledger tr.pk td.c .ph{width:27.5px;height:27.5px;
+.fb .ledger tr.pk td.c img,.fb .ledger tr.pk td.c .ph{
+  width:clamp(20px,5.6vw,27.5px);height:clamp(20px,5.6vw,27.5px);
   border-radius:50%;background:var(--surface);object-fit:contain;
-  vertical-align:middle;margin-right:9px}
+  vertical-align:middle;margin-right:clamp(5px,1.6vw,9px)}
 .fb .ledger tr.pk td.c .ph{display:inline-grid;place-items:center;
-  font-size:10.69px;color:var(--muted)}
+  font-size:clamp(9px,1.9vw,10.69px);color:var(--muted)}
 /* Middle rather than baseline: a row's text has to sit level with the money
    in the four cells beside it, not with the mark it shares its cell with. */
 .fb .ledger tr.pk td.c .d,.fb .ledger tr.pk td.c .nm{vertical-align:middle}
 .fb .ledger tr.pk.sj td{padding-top:8px}
-.fb .ledger tr.pk.sj td.c{font-size:13.66px;font-weight:700;letter-spacing:.06em}
+.fb .ledger tr.pk.sj td.c{font-size:clamp(11px,2.3vw,13.66px);font-weight:700;
+  letter-spacing:.06em}
 
 /* Above the table, beside the count: the one control on the board. */
-.fb .ledger .xall{font:inherit;font-size:11.88px;font-weight:700;
-  text-transform:uppercase;letter-spacing:.08em;color:var(--ink);
-  background:var(--surface);border:1px solid var(--line);border-radius:7px;
-  padding:5px 10px;margin-left:12px;cursor:pointer;white-space:nowrap}
+.fb .ledger .xall{font:inherit;font-size:clamp(9.75px,2vw,11.88px);
+  font-weight:700;text-transform:uppercase;letter-spacing:.08em;
+  color:var(--ink);background:var(--surface);border:1px solid var(--line);
+  border-radius:7px;padding:5px clamp(7px,1.8vw,10px);margin-left:auto;
+  cursor:pointer;white-space:nowrap}
 .fb .ledger .xall:hover{border-color:var(--brass);color:var(--brass)}
+
+/* ---- the narrow board ----
+
+   Two steps down, and each gives the club column width the wide drawing had
+   spent elsewhere.
+
+   The first is the money. width:1% plus nowrap is "as narrow as the number in
+   it": the browser gives each of these four its content width and hands the
+   whole remainder to the one column that asked for nothing. Nothing moves
+   about -- the widest figure in a money column is the season total in the
+   foot, which is there whether a club is open or shut -- so the columns still
+   rule up; they just stop reserving room they were not using. 840px is where
+   4x130px stops leaving "New England Patriots" a line to sit on. */
+@media (max-width:840px){
+  .fb .ledger td.n,.fb .ledger th.n{width:1%}
+  .fb .ledger td.n{font-size:clamp(10.75px,2.4vw,15.44px)}
+}
+
+/* The second is the club name itself, and the row it sits in. Below 620px the
+   name goes and the mark it sat beside grows to carry the row alone, the head
+   loses 8px of its two stuck rows, and every row tightens. Between the two
+   steps the table fits a 390px viewport with room to spare -- which is what
+   lets the head stay sticky here rather than sitting in a sideways scroller
+   the way it used to. */
 @media (max-width:620px){
-  .fb .ledger th,.fb .ledger td{padding:5px 7px}
-  .fb .ledger .det-in{padding:4px 6px 10px 22px}
-  .fb .ledger td.n,.fb .ledger th.n{width:85px;font-size:13.66px}
-  .fb .ledger td.c{font-size:13.66px}
-  .fb .ledger td.c img{width:21.25px;height:21.25px;vertical-align:-4px;margin-right:6px}
+  .fb .ledger{--hrow:30px}
+  .fb .ledger th,.fb .ledger td{padding-top:4px;padding-bottom:4px}
+  /* Off the screen, not out of the row. A club row whose only visible content
+     is a logo with an empty alt would otherwise reach a screen reader as four
+     numbers belonging to nobody, so the name is clipped rather than dropped.
+     Scoped to `img+.lb`: a market row -- "Awards", "Division markets" -- has
+     no mark to be named by, and keeps its words. */
+  .fb .ledger tr.tm td.c img+.lb{position:absolute;width:1px;height:1px;
+    padding:0;margin:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+  .fb .ledger tr.tm td.c img{width:34px;height:34px;vertical-align:-11px;
+    margin-right:0}
+  .fb .ledger tr.tm td{padding-top:3px;padding-bottom:3px}
+  .fb .ledger tr.band td{padding-top:7px;padding-bottom:7px}
 }
 
 .fb .note{margin-top:30px;padding:15px 17px;background:var(--surface);
   border:1px solid var(--line);border-left:4px solid var(--brass);
-  border-radius:10px;font-size:16.03px;color:var(--muted)}
+  border-radius:10px;font-size:clamp(13px,2.7vw,16.03px);color:var(--muted)}
 .fb .note strong{color:var(--ink)}
 .fb .note ul{margin:8px 0 0;padding-left:18px}
-@media (max-width:560px){.fb{padding:18px 13px 26px}}
 
 /* ---- pending non-futures board -------------------------------------------
 
@@ -1231,9 +1295,11 @@ def ledger_rows(rid, mark, label, team, player, images, club=None,
     hook = ("" if not picks else
             ' role="button" tabindex="0" aria-expanded="false"'
             f' aria-controls="{rid}"')
+    # The label is wrapped rather than bare so the narrow board can drop it
+    # for the club mark beside it -- visually only; it stays in the accessible
+    # name of the row, which the logo's empty alt cannot carry.
     row = (f'<tr class="{row_cls}"{hook}><td class="c">'
-           f'<span class="cx{"" if picks else " off"}" aria-hidden="true"></span>'
-           f'{mark}{esc(label)}</td>'
+           f'{mark}<span class="lb">{esc(label)}</span></td>'
            f'{ledger_cells(team, band)}{ledger_cells(player, band)}</tr>')
     tickets = "" if not picks else "".join(
         ledger_field_rows(picks, images) if field else
@@ -1311,7 +1377,6 @@ def ledger_bet_row(pick, images, band):
     team, player = ((picks, []) if pick_side(pick, None) == "team"
                     else ([], picks))
     return (f'<tbody class="grp"><tr class="tm bare"><td class="c">'
-            f'<span class="cx off" aria-hidden="true"></span>'
             f'{esc(pick.get("description"))}'
             f'<span class="odds num">{fmt_odds(pick["odds"])}</span></td>'
             f'{ledger_cells(team, band)}{ledger_cells(player, band)}'
@@ -1844,13 +1909,13 @@ def render_totals(tickets, extra):
     return f'''<table class="totals">
   <tr><th class="condensed">Tickets</th>
     <td class="v num">{len(tickets)}</td>
-    <td class="s num">{extra}</td></tr>
+    </tr>
   <tr><th class="condensed">At risk</th>
     <td class="v num">{unit_str(staked(tickets))}</td>
-    <td class="s num">{each} a ticket</td></tr>
+    </tr>
   <tr><th class="condensed">Potential profit</th>
     <td class="v num">{unit_str(won(tickets))}</td>
-    <td class="s num">{unit_str(staked(tickets) + won(tickets))} returned</td></tr>
+    </tr>
 </table>'''
 
 
