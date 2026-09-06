@@ -1,0 +1,174 @@
+{
+  "slug": "action-network",
+  "url": "https://www.actionnetwork.com/",
+  "assets": [
+    {
+      "file": "favicon.png",
+      "src": "https://assets.actionnetwork.com/252389_action-logo-check.png",
+      "bytes": 2449,
+      "content_type": "image/png"
+    },
+    {
+      "file": "og-image.png",
+      "src": "https://assets.actionnetwork.com/214091_action_social_38cb3c4385.png",
+      "bytes": 21646,
+      "content_type": "image/png"
+    },
+    {
+      "file": "favicon-ico.ico",
+      "src": "https://www.actionnetwork.com/favicon.ico",
+      "bytes": 12014,
+      "content_type": "image/x-icon"
+    }
+  ],
+  "palette": [
+    {
+      "hex": "#00c358",
+      "count": 35
+    },
+    {
+      "hex": "#00a767",
+      "count": 17
+    },
+    {
+      "hex": "#000000",
+      "count": 9
+    },
+    {
+      "hex": "#1d1d25",
+      "count": 6
+    },
+    {
+      "hex": "#a4a4aa",
+      "count": 6
+    },
+    {
+      "hex": "#f7f8fd",
+      "count": 6
+    },
+    {
+      "hex": "#dedfe4",
+      "count": 4
+    },
+    {
+      "hex": "#818188",
+      "count": 3
+    },
+    {
+      "hex": "#0079f0",
+      "count": 3
+    },
+    {
+      "hex": "#ebecf5",
+      "count": 3
+    },
+    {
+      "hex": "#ffffff",
+      "count": 3
+    },
+    {
+      "hex": "#f32535",
+      "count": 2
+    },
+    {
+      "hex": "#ffe500",
+      "count": 2
+    },
+    {
+      "hex": "#00acee",
+      "count": 1
+    }
+  ],
+  "meta": {
+    "og_image": "https://assets.actionnetwork.com/214091_action_social_38cb3c4385.png",
+    "site_name": "Action Network",
+    "og_title": "Action Network: Sports Betting Odds, Insights, &amp; Analysis",
+    "og_description": "Reporting on sportsbooks, prediction markets and online casinos."
+  },
+  "errors": [
+    "img favicon-ico.ico: Truncated File Read"
+  ],
+  "final_url": "https://www.actionnetwork.com/",
+  "fonts_inline": [
+    "inherit",
+    "monospace,monospace",
+    "var(--tan-font-base)",
+    "var(--tan-font-header)",
+    "var(--tan-font-mona)"
+  ],
+  "fonts_google": [],
+  "css_files": [
+    "https://bam-static.actionnetwork.com/0.0.2/bam-scripts/bam-scripts.css"
+  ],
+  "image_palette": {
+    "favicon.png": [
+      {
+        "hex": "#00bb58",
+        "pct": 88.0
+      },
+      {
+        "hex": "#fdfdfd",
+        "pct": 8.5
+      },
+      {
+        "hex": "#c6f2dc",
+        "pct": 0.7
+      },
+      {
+        "hex": "#58d18f",
+        "pct": 0.3
+      },
+      {
+        "hex": "#e7f2f2",
+        "pct": 0.3
+      },
+      {
+        "hex": "#9ae7bb",
+        "pct": 0.3
+      },
+      {
+        "hex": "#2cc66e",
+        "pct": 0.2
+      },
+      {
+        "hex": "#79dca5",
+        "pct": 0.1
+      }
+    ],
+    "og-image.png": [
+      {
+        "hex": "#161616",
+        "pct": 80.5
+      },
+      {
+        "hex": "#fdfdfd",
+        "pct": 0.9
+      },
+      {
+        "hex": "#0b0b00",
+        "pct": 0.4
+      },
+      {
+        "hex": "#424242",
+        "pct": 0.3
+      },
+      {
+        "hex": "#00bb4d",
+        "pct": 0.1
+      },
+      {
+        "hex": "#797979",
+        "pct": 0.1
+      },
+      {
+        "hex": "#b0b0b0",
+        "pct": 0.1
+      },
+      {
+        "hex": "#2c2c2c",
+        "pct": 0.1
+      }
+    ]
+  },
+  "fonts_resolved": []
+}

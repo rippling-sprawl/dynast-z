@@ -34,7 +34,7 @@
 
   <main class="oven-content">
     <div class="oven-breadcrumbs">
-      <a href="/">Home</a><span class="sep">/</span><a href="/football">Football</a><span class="sep">/</span><a href="/football/bakers-oven">Baker's Oven</a><span class="sep">/</span><span id="crumb-league">League</span>
+      <a href="/football">Football</a><span class="sep">/</span><a href="/football/bakers-oven">Baker's Oven</a><span class="sep">/</span><span id="crumb-league">League</span>
     </div>
     <h2 class="oven-h2">🔥 Baker's Oven</h2>
 
@@ -57,6 +57,15 @@
         <div class="oven-card">
           <h3>Week 1 Projections</h3>
           <div class="oven-team-grid one-col" id="week1-link"></div>
+        </div>
+
+        <!-- The season-long league views (/league/*) hang off the Oven now
+             rather than off the top-level nav: they are per-league, so the
+             league you are already looking at is the only place a link to them
+             can be built without asking which league you meant. -->
+        <div class="oven-card">
+          <h3>League Tools</h3>
+          <div class="oven-team-grid one-col" id="league-tools"></div>
         </div>
 
         <div class="oven-card">
@@ -261,6 +270,19 @@
         '<div class="oven-team-meta">' +
           '<div class="oven-team-name">' + OvenBoard.esc(me.teamName) + '</div>' +
           '<div class="oven-team-sub">' + sub + '</div>' +
+        '</div>' +
+        '<span class="oven-open-cta">Open →</span></a>';
+    }
+
+    /* Scout / Rosters / Schedule / Trades for this league. One card into the
+     * /league/:leagueId views, which is where those routes are reachable from
+     * now that the nav no longer names individual leagues. */
+    function renderLeagueTools() {
+      document.getElementById('league-tools').innerHTML =
+        '<a class="oven-team-card" href="/league/' + leagueId + '/scout">' +
+        '<div class="oven-team-meta">' +
+          '<div class="oven-team-name">Scout the league</div>' +
+          '<div class="oven-team-sub">Rosters, schedule &amp; trades, valued by z-score</div>' +
         '</div>' +
         '<span class="oven-open-cta">Open →</span></a>';
     }
@@ -752,6 +774,7 @@
         // tp.picks, not a local: rebuildTargetState() above is what fills it,
         // and on a league with no draft it is still the empty array it started as.
         renderWeek1(draft, tp.picks);
+        renderLeagueTools();
         wireImport();
 
         loading.style.display = 'none';

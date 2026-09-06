@@ -1,0 +1,137 @@
+{
+  "slug": "sportsdataio",
+  "url": "https://sportsdata.io/",
+  "assets": [
+    {
+      "file": "favicon.ico",
+      "src": "https://sportsdata.io/assets/images/favicon.ico",
+      "bytes": 5430,
+      "content_type": "image/x-icon"
+    },
+    {
+      "file": "favicon.png",
+      "src": "https://sportsdata.io/assets/images/favicon.png",
+      "bytes": 8054,
+      "content_type": "image/png"
+    },
+    {
+      "file": "og-image.png",
+      "src": "https://sportsdata.io/assets/images/og_image.png",
+      "bytes": 31860,
+      "content_type": "image/png"
+    }
+  ],
+  "palette": [
+    {
+      "hex": "#ffffff",
+      "count": 170
+    },
+    {
+      "hex": "#000000",
+      "count": 109
+    },
+    {
+      "hex": "#dddddd",
+      "count": 32
+    },
+    {
+      "hex": "#337ab7",
+      "count": 24
+    },
+    {
+      "hex": "#333333",
+      "count": 23
+    },
+    {
+      "hex": "#777777",
+      "count": 23
+    },
+    {
+      "hex": "#eeeeee",
+      "count": 16
+    },
+    {
+      "hex": "#3c763d",
+      "count": 14
+    },
+    {
+      "hex": "#8a6d3b",
+      "count": 14
+    },
+    {
+      "hex": "#a94442",
+      "count": 14
+    },
+    {
+      "hex": "#999999",
+      "count": 13
+    },
+    {
+      "hex": "#cccccc",
+      "count": 13
+    },
+    {
+      "hex": "#f5f5f5",
+      "count": 11
+    },
+    {
+      "hex": "#31708f",
+      "count": 9
+    }
+  ],
+  "meta": {
+    "og_image": "https://sportsdata.io/assets/images/og_image.png",
+    "site_name": "SportsDataIO",
+    "og_title": "SportsDataIO - Live Sports Data Provider, API Solutions, NFL, NBA, MLB Data",
+    "og_description": "Live sports data provider with scores, odds, projections, stats, news, and images for NFL football, MLB Baseball, NBA Basketball, NHL Hockey, PGA Golf, NASCAR, Tennis Data, Soccer, and ESports. SportsDataIO provides sports API feeds and database downloads to power your website and mobile applications"
+  },
+  "errors": [
+    "asset favicon-ico: HTTP Error 404: Not Found"
+  ],
+  "final_url": "https://sportsdata.io/",
+  "fonts_inline": [
+    "var(--font-bold)",
+    "var(--font-medium)"
+  ],
+  "fonts_google": [],
+  "css_files": [
+    "https://sportsdata.io/assets/css/bootstrap.css?v=2",
+    "https://sportsdata.io/assets/css/bootstrap-xxs.css",
+    "https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.min.css",
+    "https://kendo.cdn.telerik.com/2019.2.514/styles/kendo.common-material.min.css"
+  ],
+  "image_palette": {
+    "favicon.png": [
+      {
+        "hex": "#0b8ffd",
+        "pct": 100.0
+      }
+    ],
+    "og-image.png": [
+      {
+        "hex": "#0b8ffd",
+        "pct": 77.5
+      },
+      {
+        "hex": "#000000",
+        "pct": 15.3
+      }
+    ],
+    "favicon.ico": [
+      {
+        "hex": "#0b8ffd",
+        "pct": 100.0
+      }
+    ]
+  },
+  "fonts_resolved": [
+    "\"Helvetica Neue\", Helvetica, Arial, sans-serif",
+    "'Glyphicons Halflings'",
+    "@font-face:Glyphicons Halflings",
+    "Menlo, Monaco, Consolas, \"Courier New\", monospace",
+    "inherit",
+    "monospace, monospace",
+    "sans-serif",
+    "serif"
+  ]
+}

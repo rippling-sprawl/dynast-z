@@ -179,6 +179,26 @@ def resolve_bets_user(headers, require_active):
     return user_id, None
 
 
+_action_api = None
+
+
+def action_api():
+    """Load api/action.py so dev renders the book exactly as production does.
+
+    Loaded by path and lazily for the same reasons as bun_notes_api() below, plus
+    one of its own: importing it inserts api/ on sys.path so that `from _action
+    import render` resolves, which is a side effect worth paying only when
+    somebody actually opens the book."""
+    global _action_api
+    if _action_api is None:
+        import importlib.util
+        path = os.path.join(DATA_DIR, "api", "action.py")
+        spec = importlib.util.spec_from_file_location("action_api", path)
+        _action_api = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(_action_api)
+    return _action_api
+
+
 _bun_notes_api = None
 
 
@@ -1504,29 +1524,24 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             super().do_GET()
         # The Action Network book. One page per slate: /football/action is the
         # index, /futures the season book, /week/{n} one week of the schedule.
-        # Admin-only in the UI (auth.js requireAdmin), but the files themselves
-        # are static and public — same caveat as every other page here.
+        #
+        # These used to be twenty committed HTML files served straight off disk.
+        # They are rendered per request now, so dev delegates to the deployed
+        # function rather than re-implementing it — the same reason bun_notes_api()
+        # exists, and the same guarantee: the two cannot disagree about what a
+        # page of the book looks like. Needs SUPABASE_URL/KEY in .env, as the
+        # other Supabase-backed routes here do.
         #
         # Matched longest-path-first, and the week id is digits-only so a junk
-        # segment 404s rather than serving a page that does not exist. Mirrors
-        # the rewrites block in vercel.json, which orders them the same way for
-        # the same reason.
-        elif self.path.split("?")[0] == "/football/action/futures":
-            self.path = "/views/football/action-futures.html"
-            super().do_GET()
+        # segment 404s rather than being looked up. Mirrors the rewrites block in
+        # vercel.json, which orders them the same way for the same reason.
         elif re.match(r"^/football/action/week/\d+/?$", self.path.split("?")[0]):
             week = self.path.split("?")[0].rstrip("/").rsplit("/", 1)[1]
-            self.path = f"/views/football/action-week-{week}.html"
-            super().do_GET()
-        elif self.path.split("?")[0] in ("/football/action/preseason",
-                                         "/football/action/postseason",
-                                         "/football/action/other"):
-            slate = self.path.split("?")[0].rsplit("/", 1)[1]
-            self.path = f"/views/football/action-{slate}.html"
-            super().do_GET()
+            self.serve_action(f"week-{week}")
+        elif re.match(r"^/football/action/[a-z]+/?$", self.path.split("?")[0]):
+            self.serve_action(self.path.split("?")[0].rstrip("/").rsplit("/", 1)[1])
         elif self.path.split("?")[0] == "/football/action":
-            self.path = "/views/football/action.html"
-            super().do_GET()
+            self.serve_action("index")
         # The book used to be one page at /football/futures. Anything already
         # bookmarked lands on its replacement in one hop, as in vercel.json.
         elif self.path.split("?")[0] == "/football/futures":
@@ -2020,6 +2035,42 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         self.send_header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Content-Type, X-User-Id, X-Audit-User-Id")
         self.end_headers()
+
+    def serve_action(self, slug):
+        """One page of the Action Network book, rendered by the deployed function.
+
+        ETag handling included, so `curl -H 'If-None-Match: ...'` behaves in dev
+        exactly as it does on Vercel and the 304 path is testable without a
+        deploy."""
+        api = action_api()
+        if not api.SLUG_RE.match(slug):
+            self.send_error(404, "No such slate")
+            return
+        try:
+            etag, html = api.render(slug)
+        except Exception as e:  # noqa: BLE001
+            self.send_error(500, f"Could not read the book: {e}")
+            return
+        if etag is None:
+            self.send_error(404, "Page not pushed — run scripts/build_action.py")
+            return
+
+        quoted = f'"{etag}"'
+        if self.headers.get("If-None-Match") == quoted:
+            self.send_response(304)
+            self.send_header("ETag", quoted)
+            self.send_header("Cache-Control", "public, max-age=0, must-revalidate")
+            self.end_headers()
+            return
+
+        body = html.encode()
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        self.send_header("ETag", quoted)
+        self.send_header("Cache-Control", "public, max-age=0, must-revalidate")
+        self.end_headers()
+        self.wfile.write(body)
 
     def _json_response(self, status, data):
         self.send_response(status)

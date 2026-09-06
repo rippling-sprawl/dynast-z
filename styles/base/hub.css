@@ -132,6 +132,19 @@ body.masters-body {
   margin: 28px 0 0;
 }
 
+/* A section heading that doubles as the link to its own landing page. It stays
+   a heading first, so it takes the colour of the surrounding text and only
+   brightens on hover. */
+.hub-section a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.hub-section a:hover {
+  color: var(--text-bright);
+  text-decoration: underline;
+}
+
 /* --- Hub cards --- */
 .hub-grid {
   display: grid;

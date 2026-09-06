@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <title>%%TITLE%% | Dynast-Z</title>
+  <!-- Theme first: theme.js sets <html data-theme> before the first paint,
+       theme.css holds every colour token the sheets below spend. The board
+       itself is light-only and scopes its own tokens under .fb. -->
+  <script src="/scripts/base/theme.js"></script>
+  <link rel="stylesheet" href="/styles/base/theme.css">
+  <link rel="stylesheet" href="/styles/base/styles.css">
+  <link rel="stylesheet" href="/styles/base/hub.css">
+  <!-- The board's own sheet. It used to be ~500 lines inlined into all twenty
+       generated pages; it is an asset now, so it is fetched once and cached
+       immutable rather than re-sent with data that moves every day. -->
+  <link rel="stylesheet" href="/styles/football/action.css">
+  <!-- Vercel Web Analytics. The /_vercel/insights/* routes are injected by
+       Vercel at deploy time, so this 404s harmlessly when serving locally. -->
+  <script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
+  <script defer src="/_vercel/insights/script.js"></script>
+</head>
+<body class="masters-body">
+  <div id="header-mount"></div>
+  <div id="nav-drawer-mount"></div>
+  <script src="/scripts/base/auth.js"></script>
+  <script src="/scripts/base/nav.js"></script>
+  <script>initPage();</script>
+
+  <div class="masters-content">
+    <div class="masters-breadcrumbs">%%CRUMBS%%</div>
+
+    <h2>%%HEAD%%</h2>
+
+    <!-- The shell for every page of the Action Network book. Rendered per
+         request by api/action.py out of a page model pushed to Supabase; the
+         board below is built by api/_action/render.py. There are no generated
+         action-*.html files any more, so there is nothing here to hand-edit
+         and nothing to go stale between pushes.
+
+         NO GATE, DELIBERATELY. The book is unlisted, not private: the only link
+         to it is the admin-gated card on views/home/football.html, and the URL
+         itself works for anyone who has it. Moving the data behind an endpoint
+         now makes an actual gate cheap -- verify X-User-Id against users.role
+         in api/action.py -- but that is a decision to take on purpose, not a
+         side effect of this refactor. A client-side check would not be it. -->
+    %%BOARD%%
+  </div>
+</body>
+</html>

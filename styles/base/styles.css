@@ -274,6 +274,14 @@ header a:hover { color: var(--accent); }
   letter-spacing: 0.5px;
 }
 
+/* A section heading that is also its own landing page (Football -> /football).
+   It keeps the heading's look so the list still reads as two groups, and only
+   picks up the hover of the links below it. */
+.nav-drawer a.nav-section-label:hover {
+  background: var(--surface-3);
+  color: var(--text-hi);
+}
+
 .nav-drawer .nav-sub a {
   padding-left: 36px;
   font-size: 13px;

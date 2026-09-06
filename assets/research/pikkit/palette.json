@@ -1,0 +1,134 @@
+{
+  "slug": "pikkit",
+  "url": "https://pikkit.com/",
+  "assets": [
+    {
+      "file": "og-image.png",
+      "src": "https://cdn.prod.website-files.com/64da07a5bc219a0c49e31e1c/69d5604abbb81be02ce35d8e_Home_OG%20Image.png",
+      "bytes": 345617,
+      "content_type": "image/png"
+    }
+  ],
+  "palette": [
+    {
+      "hex": "#ffffff",
+      "count": 107
+    },
+    {
+      "hex": "#11151b",
+      "count": 37
+    },
+    {
+      "hex": "#13182b",
+      "count": 37
+    },
+    {
+      "hex": "#8bb9fe",
+      "count": 33
+    },
+    {
+      "hex": "#030303",
+      "count": 25
+    },
+    {
+      "hex": "#dddddd",
+      "count": 24
+    },
+    {
+      "hex": "#fafafa",
+      "count": 23
+    },
+    {
+      "hex": "#3898ec",
+      "count": 21
+    },
+    {
+      "hex": "#999999",
+      "count": 20
+    },
+    {
+      "hex": "#e6e6e6",
+      "count": 11
+    },
+    {
+      "hex": "#051131",
+      "count": 11
+    },
+    {
+      "hex": "#0050bd",
+      "count": 10
+    },
+    {
+      "hex": "#aeb4c0",
+      "count": 9
+    },
+    {
+      "hex": "#000000",
+      "count": 7
+    }
+  ],
+  "meta": {
+    "og_image": "https://cdn.prod.website-files.com/64da07a5bc219a0c49e31e1c/69d5604abbb81be02ce35d8e_Home_OG%20Image.png",
+    "og_title": "Pikkit | All Your Friends and Bets in One Place",
+    "og_description": "All your friends and bets in one place. Follow, copy, bet."
+  },
+  "errors": [
+    "asset favicon-ico: HTTP Error 404: Not Found"
+  ],
+  "final_url": "https://pikkit.com/",
+  "fonts_inline": [],
+  "fonts_google": [],
+  "css_files": [
+    "https://cdn.prod.website-files.com/64da07a5bc219a0c49e31e1c/css/pikkit.webflow.shared.3f6651257.css"
+  ],
+  "image_palette": {
+    "og-image.png": [
+      {
+        "hex": "#0b0b16",
+        "pct": 52.4
+      },
+      {
+        "hex": "#000000",
+        "pct": 2.0
+      },
+      {
+        "hex": "#16212c",
+        "pct": 1.9
+      },
+      {
+        "hex": "#2c2c37",
+        "pct": 0.7
+      },
+      {
+        "hex": "#e7e7e7",
+        "pct": 0.3
+      },
+      {
+        "hex": "#d1d1d1",
+        "pct": 0.3
+      },
+      {
+        "hex": "#42424d",
+        "pct": 0.3
+      },
+      {
+        "hex": "#bbbbbb",
+        "pct": 0.3
+      }
+    ]
+  },
+  "fonts_resolved": [
+    "@font-face:Inter",
+    "@font-face:Manrope",
+    "@font-face:webflow-icons",
+    "Arial, sans-serif",
+    "Helvetica Neue, Helvetica, Ubuntu, Segoe UI, Verdana, sans-serif",
+    "Inter",
+    "Inter, sans-serif",
+    "Manrope",
+    "Manrope, sans-serif",
+    "monospace",
+    "sans-serif",
+    "serif"
+  ]
+}

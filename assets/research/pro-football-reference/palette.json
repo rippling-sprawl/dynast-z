@@ -1,0 +1,69 @@
+{
+  "slug": "pro-football-reference",
+  "url": "https://www.pro-football-reference.com/",
+  "assets": [
+    {
+      "file": "logo.svg",
+      "src": "https://cdn.ssref.net/req/202509051/logos/pfr-logo.svg",
+      "bytes": 5303,
+      "content_type": "image/svg+xml"
+    }
+  ],
+  "palette": [
+    {
+      "hex": "#043462",
+      "count": 11
+    },
+    {
+      "hex": "#ffffff",
+      "count": 6
+    },
+    {
+      "hex": "#fffae5",
+      "count": 5
+    },
+    {
+      "hex": "#2b00ff",
+      "count": 3
+    },
+    {
+      "hex": "#000000",
+      "count": 2
+    },
+    {
+      "hex": "#9ca3af",
+      "count": 1
+    }
+  ],
+  "meta": {},
+  "errors": [
+    "page: HTTP Error 403: Forbidden",
+    "retry asset favicon: HTTP Error 404: Not Found"
+  ],
+  "retry_notes": [
+    "https://www.sports-reference.com/ -> ok (24548 bytes)"
+  ],
+  "css_files": [
+    "https://www.sports-reference.com/sr-homepage/_nuxt/entry.-aqVqt4W.css",
+    "https://www.sports-reference.com/sr-homepage/_nuxt/index.IH7BqGAe.css",
+    "https://www.sports-reference.com/sr-homepage/_nuxt/entry.-aqVqt4W.css",
+    "https://www.sports-reference.com/sr-homepage/_nuxt/index.IH7BqGAe.css"
+  ],
+  "image_palette": {
+    "logo.svg": [
+      {
+        "hex": "#59595b",
+        "count": 1
+      },
+      {
+        "hex": "#ffffff",
+        "count": 1
+      },
+      {
+        "hex": "#008345",
+        "count": 1
+      }
+    ]
+  },
+  "fonts_resolved": []
+}

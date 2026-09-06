@@ -1,0 +1,124 @@
+{
+  "slug": "api-sports",
+  "url": "https://api-sports.io/",
+  "assets": [
+    {
+      "file": "favicon.ico",
+      "src": "https://api-sports.io/favicon.ico",
+      "bytes": 5430,
+      "content_type": "image/x-icon"
+    }
+  ],
+  "palette": [
+    {
+      "hex": "#ffffff",
+      "count": 91
+    },
+    {
+      "hex": "#4a90e2",
+      "count": 49
+    },
+    {
+      "hex": "#000000",
+      "count": 28
+    },
+    {
+      "hex": "#1d4371",
+      "count": 14
+    },
+    {
+      "hex": "#f5a623",
+      "count": 13
+    },
+    {
+      "hex": "#d8d8d8",
+      "count": 12
+    },
+    {
+      "hex": "#4e4e4e",
+      "count": 10
+    },
+    {
+      "hex": "#0d93f2",
+      "count": 8
+    },
+    {
+      "hex": "#133154",
+      "count": 8
+    },
+    {
+      "hex": "#f5f5f5",
+      "count": 8
+    },
+    {
+      "hex": "#1890ff",
+      "count": 7
+    },
+    {
+      "hex": "#db2828",
+      "count": 6
+    },
+    {
+      "hex": "#001025",
+      "count": 6
+    },
+    {
+      "hex": "#e7e7e7",
+      "count": 5
+    }
+  ],
+  "meta": {
+    "og_image": "http://localhost:8080/hub/images/opengraph/api.png",
+    "og_description": "Explore your APIs"
+  },
+  "errors": [
+    "page: HTTP Error 403: Forbidden",
+    "retry asset logo: HTTP Error 404: Not Found",
+    "retry asset og-image: <urlopen error [Errno 61] Connection refused>"
+  ],
+  "retry_notes": [
+    "https://dashboard.api-football.com/ -> HTTP Error 403: Forbidden",
+    "https://rapidapi.com/api-sports/api/api-american-football -> ok (224558 bytes)"
+  ],
+  "css_files": [
+    "https://rapidapi.com/hub/_next/static/css/42b46dd3916d8a37.css",
+    "https://rapidapi.com/hub/_next/static/css/6095442821a1f5ed.css",
+    "https://rapidapi.com/hub/_next/static/css/42b46dd3916d8a37.css"
+  ],
+  "image_palette": {
+    "favicon.ico": [
+      {
+        "hex": "#374242",
+        "pct": 36.8
+      },
+      {
+        "hex": "#fdfdfd",
+        "pct": 28.3
+      },
+      {
+        "hex": "#bbbbc6",
+        "pct": 6.7
+      },
+      {
+        "hex": "#dcdcdc",
+        "pct": 2.9
+      },
+      {
+        "hex": "#9aa5a5",
+        "pct": 0.9
+      },
+      {
+        "hex": "#586363",
+        "pct": 0.8
+      }
+    ]
+  },
+  "fonts_resolved": [
+    "@font-face:Inter",
+    "@font-face:Inter Fallback",
+    "Inter",
+    "Inter Fallback",
+    "Inter,Inter Fallback",
+    "inherit"
+  ]
+}

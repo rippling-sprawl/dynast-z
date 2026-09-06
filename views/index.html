@@ -31,18 +31,16 @@
     <h2>Dynast-Z</h2>
     <p class="subtitle">Sports Tools &amp; Trackers</p>
 
-    <h3 class="hub-section">Sections</h3>
-    <div class="hub-grid">
-      <a class="hub-card" href="/football"><h3><span class="hub-emoji">🏈</span>Football</h3><p>Trade tools &amp; dynasty leagues</p></a>
-      <a class="hub-card" href="/bets"><h3><span class="hub-emoji">🎯</span>Bets</h3><p>Track your wagers &amp; history</p></a>
-      <a class="hub-card" href="/golf"><h3><span class="hub-emoji">🏌️</span>Golf</h3><p>Majors, leaderboards, 3-balls &amp; groups</p></a>
-    </div>
+    <!-- Both grids are filled from NAV_SECTIONS in scripts/base/nav.js, so the
+         home page, the /football hub and the drawer can never disagree about
+         what the site contains. -->
+    <h3 class="hub-section"><a href="/football">Football</a></h3>
+    <div class="hub-grid" data-nav-section="Football"></div>
 
-    <h3 class="hub-section">Resources</h3>
-    <div class="hub-grid">
-      <a class="hub-card" href="https://sharplystupid.substack.com/" target="_blank"><h3><span class="hub-emoji">📰</span>News</h3><p>The Sharply Stupid blog</p></a>
-      <a class="hub-card" href="/acknowledgements"><h3><span class="hub-emoji">🧠</span>About</h3><p>Resources &amp; acknowledgements</p></a>
-    </div>
+    <h3 class="hub-section">Everything Else</h3>
+    <div class="hub-grid" data-nav-section="Everything Else"></div>
   </div>
+
+  <script>mountHubGrids();</script>
 </body>
 </html>

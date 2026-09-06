@@ -29,36 +29,20 @@
 
     <div id="fp-stale-banner" class="fp-stale-banner" hidden></div>
     
-    <h3 class="hub-section">NFL & Betting</h3>
-    <div class="hub-grid">
-      <a class="hub-card" href="/football/bakers-buns"><h3><span class="hub-emoji">🍞</span>Baker&rsquo;s Buns</h3><p>Season notes, projections &amp; open positions</p></a>
-      <a class="hub-card" href="/football/schedule"><h3><span class="hub-emoji">📅</span>NFL Schedule</h3><p>The full season by week &amp; team, primetime flagged</p></a>
-      <!--<a class="hub-card" href="/odds"><h3><span class="hub-emoji">🎲</span>NFL Odds</h3><p>From Fanduel, Draft Kings, and The Score</p></a>-->
-      <a class="hub-card" id="futures-card" href="/football/action" hidden><h3><span class="hub-emoji">🏈</span>Action</h3><p>The open Action Network book &mdash; season futures and every week of the schedule</p></a>
-    </div>
-
-    <h3 class="hub-section">Fantasy Tools</h3>
-    <div class="hub-grid">
-      <a class="hub-card" href="/football/bakers-oven"><h3><span class="hub-emoji">🔥</span>Baker&rsquo;s Oven</h3><p>Live draft companion &mdash; your leagues, big board &amp; next pick</p></a>
-      <a class="hub-card" href="/football/trade-calculator"><h3><span class="hub-emoji">⚖️</span>Trade Calculator</h3><p>Value any dynasty trade with blended rankings</p></a>
-      <a class="hub-card" href="/football/grading-system"><h3><span class="hub-emoji">📊</span>Grading System</h3><p>How player &amp; pick values are calculated</p></a>
-    </div>
-    
-    <h3 class="hub-section">Leagues</h3>
-    <div class="hub-grid">
-      <a class="hub-card" href="/league/1314983622930870272"><h3>JHBC</h3></a>
-      <a class="hub-card" href="/league/1312081645817327616"><h3>Drew Dynasty</h3></a>
-    </div>
+    <!-- One grid, filled from the Football section of NAV_SECTIONS in
+         scripts/base/nav.js — the same list behind the drawer and the home
+         page, including the admin-only Action card and the hidden NFL Odds
+         entry. -->
+    <div class="hub-grid" data-nav-section="Football"></div>
 
   </div>
 
   <script>
-    // Admin-only card. UI gating only — every page under /football/action is a
+    // Cards come from the nav list, which does the admin gating for the Action
+    // entry itself. UI gating only — every page under /football/action is a
     // static file and is served to anyone who requests it directly (see
     // auth.js requireAdmin).
-    if (isLoggedIn() && isAdmin()) {
-      document.getElementById('futures-card').hidden = false;
-    }
+    mountHubGrids();
   </script>
 
   <style>
