@@ -50,9 +50,17 @@
 
   var docs = {};
 
+  /* `no-cache`, not the default: /data/* is served `max-age=3600`, and the ids
+   * in this file are what every game link on the page is built from. They have
+   * already changed identity once — the season moved from ESPN's ids to
+   * balldontlie's — and a client holding the previous file links every row to a
+   * game that no longer resolves. Not `no-store`: the file is ~200 KB and
+   * rarely changes, and Vercel serves a Last-Modified, so revalidating costs a
+   * 304 on all but the load that matters. */
   function schedLoad(season) {
     if (docs[season]) return docs[season];
-    docs[season] = fetch('/data/nfl_schedule_' + season + '.json')
+    docs[season] = fetch('/data/nfl_schedule_' + season + '.json',
+                         { cache: 'no-cache' })
       .then(function (r) {
         if (!r.ok) throw new Error('schedule data unavailable (' + r.status + ')');
         return r.json();
@@ -400,9 +408,18 @@
     }).join('');
   }
 
+  /* Drops the memo so the next schedLoad goes back to the network. The memo is
+   * per-page-load state and normally right to keep; the exception is a page
+   * that was restored rather than loaded, where "since the page loaded" can
+   * mean days ago. */
+  function schedInvalidate() {
+    docs = {};
+  }
+
   global.SCHED_SEASONS = SEASONS;
   global.SCHED_CURRENT_SEASON = SEASONS[0];
   global.schedLoad = schedLoad;
+  global.schedInvalidate = schedInvalidate;
   global.schedTeamsByAbbr = schedTeamsByAbbr;
   global.schedCurrentWeek = schedCurrentWeek;
   global.schedRenderWeek = schedRenderWeek;

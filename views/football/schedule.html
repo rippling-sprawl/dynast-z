@@ -284,6 +284,34 @@
       });
     }
 
+    /* A restored page is not a loaded one. iOS keeps open tabs as a rendered
+     * snapshot and hands the DOM back untouched — no fetch, no script — so a
+     * tab left open across a deploy keeps drawing rows built from whatever the
+     * schedule file said at the time. That is not hypothetical here: the ids
+     * these rows link by changed from ESPN's to balldontlie's, and a restored
+     * tab links every game to a page that cannot resolve it. `no-store` on the
+     * document does not prevent this; Safari's back/forward cache keeps
+     * no-store pages anyway.
+     *
+     * Re-fetch and repaint rather than calling load(): the reader's week and
+     * team are still on the screen and still what they asked for, and load()
+     * would reset them to the defaults for the season. */
+    function restore() {
+      schedInvalidate();
+      schedLoad(state.season).then(function (d) {
+        doc = d;
+        refreshPanels();
+        apply();
+      }).catch(function () {
+        // Offline, most likely. What is on the page is stale but readable, and
+        // wiping it for an error message trades one wrong thing for a worse one.
+      });
+    }
+
+    window.addEventListener('pageshow', function (e) {
+      if (e.persisted) restore();
+    });
+
     state.season = readSeasonParam();
     wireFilters();
     load(state.season, true);
