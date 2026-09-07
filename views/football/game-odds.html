@@ -1285,9 +1285,12 @@
      *
      * A game page left open across a kickoff should not have to be reloaded by
      * hand, so it re-checks on the bundle's own schedule: `refresh.next_ts` is
-     * the moment the sweep intends to have replaced it. Cheap to be wrong about
-     * — the bundle's etag is the sha256 of its canonical JSON, so an unchanged
-     * game costs a 304 and no body, and a settled game is never polled at all.
+     * the moment the sweep intends to have replaced it. A settled game is never
+     * polled at all. It was meant to be cheap to be wrong about — the bundle's
+     * etag is the sha256 of its canonical JSON, so an unchanged game should
+     * cost a 304 and no body — but the etag does not reach the client (see
+     * fetchBundle), so every poll is a full ~600 KB read until that is fixed.
+     * The floor below is doing more work than it looks like it is.
      *
      * Held to a 60-second floor whatever the plan says, paused while the tab is
      * hidden, and resumed on the way back — a backgrounded tab polling a live
@@ -1296,12 +1299,33 @@
     var MISSING_POLL = 180;     // not captured yet: the sweep decides, not us
     var currentIndex = null;
     var timer = null;
+    var frozen = false;         // settled: nothing upstream will change again
+
+    /* `cache: 'no-store'` is not belt-and-braces, it is the fix. The endpoint
+     * sends `no-store` on its 404 and an ETag on its 200, and neither survives
+     * the hop: every /api/* response on production comes back stamped
+     * `public, max-age=0, must-revalidate` with no validator, from a header
+     * rule sitting above the functions. A `public` 404 with nothing to
+     * revalidate against is exactly the response iOS Safari keeps on disk and
+     * replays, which is how a phone ends up pinned to "not captured yet" while
+     * a desktop shows the full board. Going around the HTTP cache from here
+     * makes the page correct without depending on that rule being fixed.
+     *
+     * FAILED, not null, when the request itself falls over: null is the real
+     * "no bundle stored yet" answer and it repaints the page as empty. A
+     * dropped connection on a phone is not evidence the game is uncaptured,
+     * and treating it as such wipes a board that was on the screen. */
+    var FAILED = {};
 
     function fetchBundle(id) {
       // A 404 here is the ordinary "not captured yet" case, not an error.
-      return fetch('/api/game-odds?game=' + encodeURIComponent(id))
-        .then(function (r) { return r.ok ? r.json() : null; })
-        .catch(function () { return null; });
+      return fetch('/api/game-odds?game=' + encodeURIComponent(id),
+                   { cache: 'no-store' })
+        .then(function (r) {
+          if (r.ok) return r.json();
+          return r.status === 404 ? null : FAILED;
+        })
+        .catch(function () { return FAILED; });
     }
 
     function schedulePoll(id, b) {
@@ -1311,7 +1335,8 @@
       if (!b) {
         wait = MISSING_POLL;
       } else if (b.refresh && b.refresh.frozen) {
-        return;                 // settled: there is no next capture to wait for
+        frozen = true;          // settled: there is no next capture to wait for
+        return;
       } else if (b.refresh && b.refresh.next_ts) {
         wait = b.refresh.next_ts - Date.now() / 1000;
       } else {
@@ -1322,6 +1347,13 @@
     }
 
     function paint(id, b) {
+      if (b === FAILED) {
+        // Leave whatever is on the page alone and come back sooner than the
+        // sweep would have us: the request failed, the game did not change.
+        if (timer) { clearTimeout(timer); timer = null; }
+        if (id) timer = setTimeout(function () { poll(id); }, MIN_POLL * 1000);
+        return;
+      }
       if (b) render(b, currentIndex);
       else if (!id) renderMissing('', currentIndex, null);
       schedulePoll(id, b);
@@ -1340,16 +1372,30 @@
       fetchBundle(id).then(function (b) { paint(id, b); });
     }
 
-    document.addEventListener('visibilitychange', function () {
+    /* Coming back to the page is the moment its contents are most likely to be
+     * wrong, and the two ways back are different events. `visibilitychange`
+     * covers a tab switch; `pageshow` with `persisted` covers a bfcache
+     * restore, where iOS hands back the rendered DOM from hours ago and
+     * re-runs no script at all. Neither is gated on `timer` any more — a page
+     * restored with no pending timer is the case that most needs the poll. */
+    function resume() {
       var id = gameParam();
-      if (!document.hidden && id && timer) poll(id);
+      if (id && !frozen) poll(id);
+    }
+
+    document.addEventListener('visibilitychange', function () {
+      if (!document.hidden) resume();
+    });
+
+    window.addEventListener('pageshow', function (e) {
+      if (e.persisted) resume();
     });
 
     function load() {
       var id = gameParam();
       // The index is fetched either way: it is what turns "nothing here" into
       // "nothing here, but these exist".
-      var idxP = fetch(INDEX_URL).then(function (r) {
+      var idxP = fetch(INDEX_URL, { cache: 'no-store' }).then(function (r) {
         return r.ok ? r.json() : null;
       }).catch(function () { return null; });
 
