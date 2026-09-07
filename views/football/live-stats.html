@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <title>Live Stats | Dynast-Z</title>
+  <!-- Theme first: theme.js sets <html data-theme> before the first paint,
+       theme.css holds every colour token the sheets below spend. -->
+  <script src="/scripts/base/theme.js"></script>
+  <link rel="stylesheet" href="/styles/base/theme.css">
+  <link rel="stylesheet" href="/styles/base/styles.css">
+  <link rel="stylesheet" href="/styles/base/hub.css">
+  <!-- Vercel Web Analytics. The /_vercel/insights/* routes are injected by
+       Vercel at deploy time, so this 404s harmlessly when serving locally. -->
+  <script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
+  <script defer src="/_vercel/insights/script.js"></script>
+</head>
+<body class="masters-body">
+  <div id="header-mount"></div>
+  <div id="nav-drawer-mount"></div>
+  <script src="/scripts/base/auth.js"></script>
+  <script src="/scripts/base/nav.js"></script>
+  <script>initPage();</script>
+
+  <div class="masters-content ls">
+    <div class="crumbs"><a href="/football">Football</a> <span>/</span> Live Stats</div>
+
+    <h1>Live Stats</h1>
+    <p class="lede">Where the odds, props and box scores on this site come from,
+      and how current they are.</p>
+
+    <!-- THE SHORT VERSION -->
+    <section class="abstract">
+      <h2 class="abstract-h">The Short Version</h2>
+      <p>Every NFL game on this site has its own page: the betting lines, the player
+        props, the box score, and every play. Those pages are not live windows into
+        somebody else's site &mdash; they are <strong>snapshots</strong>, taken on a
+        schedule and stored here.</p>
+
+      <p>A robot checks each game and grabs a fresh snapshot. How often depends on
+        how close the game is:</p>
+      <ul>
+        <li><strong>Weeks away</strong> &mdash; not at all. The sportsbooks haven't
+          posted anything yet, so there is nothing to take a picture of.</li>
+        <li><strong>The week of the game</strong> &mdash; every few hours.</li>
+        <li><strong>The last few hours before kickoff</strong> &mdash; every ten
+          minutes, because that is when the lines move most.</li>
+        <li><strong>While the game is being played</strong> &mdash; every couple of
+          minutes.</li>
+        <li><strong>After the whistle</strong> &mdash; a few more times over the next
+          six hours, in case the league corrects a stat. Then it stops forever,
+          because a finished game never changes again.</li>
+      </ul>
+
+      <p>Every game page tells you exactly where it stands in that cycle, at the top,
+        next to the game's status: <em>updated 4m ago &middot; next in 6h</em>.</p>
+
+      <p class="kicker">So if a page looks stale, it probably isn't. It's just not
+        due yet.</p>
+    </section>
+
+    <!-- LIVE BOARD -->
+    <h2>What's captured right now</h2>
+    <p>Every game below has a snapshot stored. Click one for the full board.</p>
+    <div id="ls-board"><p class="ls-note">Loading&hellip;</p></div>
+
+    <!-- THE LONGER VERSION -->
+    <h2>The Longer Version</h2>
+
+    <h3>Where the numbers come from</h3>
+    <p>One source: <strong>balldontlie</strong>, a sports data company that sells
+      access to the NFL feed. We pay for a plan, they give us a key, and that key
+      lets a script ask questions like <em>"what are the current lines on this
+      game?"</em> or <em>"give me every play from Super Bowl LX."</em></p>
+    <p>It was picked over roughly seventeen alternatives for one boring reason that
+      matters a lot: its terms of service explicitly allow storing the data and
+      building something on top of it. Most sports feeds do not &mdash; they let you
+      display their numbers and nothing else, which rules out keeping a history, and
+      keeping a history is the entire point.</p>
+
+    <h3>The schedule is the spine</h3>
+    <p>The <a href="/football/schedule">Games</a> page lists all 272 regular-season
+      games. That list also comes from balldontlie, and that is deliberate: because
+      the schedule and the game data come from the same place, they use the same
+      ID numbers. Clicking a row on the schedule and asking the API about that game
+      are the same act. There is no translation step in the middle to get wrong.</p>
+    <p>Before this, the schedule came from ESPN, which meant two sets of ID numbers
+      for the same 272 games and a permanent opportunity for a mismatch. Now there
+      is one.</p>
+
+    <h3>How a game page gets filled in</h3>
+    <p>A snapshot is assembled from about a dozen separate questions to the API
+      &mdash; current lines, opening lines, the player-prop board, injuries, game-day
+      designations, team stats, individual stats, and every play. The answers are
+      shaped into a single file and stored in a database.</p>
+    <p>When you open a game page, it loads that one file. That's why it's fast, and
+      why it works the same whether the game is three weeks out or three years past.
+      The page also quietly re-checks itself on the same schedule the robot runs, so
+      a page left open through a kickoff keeps up on its own &mdash; no refreshing.</p>
+    <p>Snapshots live in a database rather than in the codebase because they're big:
+      a single game is around 900&nbsp;KB, almost all of it player props &mdash; about
+      34 players &times; 25 markets &times; both sides of every over/under. Keeping one
+      per game in the repository would add roughly 15&nbsp;MB a week during the
+      season, permanently, for numbers that are stale within the hour.</p>
+
+    <h3>Only two sportsbooks, on purpose</h3>
+    <p>balldontlie quotes eight to ten books per game. The snapshots keep
+      <strong>DraftKings and FanDuel</strong>. A line at a book you don't have an
+      account with isn't a line you can act on, and dropping the rest cut each
+      snapshot roughly in half. The others are one flag away if that changes.</p>
+
+    <h3>Why some pages say "not captured yet"</h3>
+    <p>Three different reasons, and the page will tell you which:</p>
+    <ul>
+      <li><strong>Too early.</strong> More than eight days out, nothing is captured
+        because the books haven't posted. The page says roughly what date that
+        changes.</li>
+      <li><strong>Due, but not swept yet.</strong> It'll appear on the next pass,
+        and the page will pick it up without a reload.</li>
+      <li><strong>It finished before any of this existed.</strong> Games that are
+        already over never change, so nothing re-checks them on a timer &mdash; the
+        entire 2025 season is in that bucket. They get filled in deliberately,
+        in batches, rather than by a robot discovering 272 of them at once.</li>
+    </ul>
+
+    <h3>Two honest limits</h3>
+    <p><strong>It depends on a subscription.</strong> The lines, props and play-by-play
+      sit behind the top paid tier. If that lapses, the feed answers "no" to those
+      questions and snapshots stop getting richer. There is a guard against the worse
+      version of that: before storing a snapshot, the script compares it to the one
+      already stored and refuses to replace a full one with an emptier one. A lapsed
+      subscription makes the data <em>stop updating</em>; it can't make it
+      disappear.</p>
+    <p><strong>Live games need a machine that's awake.</strong> The scheduled robot
+      runs on GitHub's free infrastructure, which is best-effort &mdash; it drifts five
+      to fifteen minutes when they're busy. Fine for a Tuesday, useless for a
+      two-minute live cadence. For a slate worth watching closely, the same sweep runs
+      in a loop on a real computer and keeps up properly.</p>
+
+    <h3>Everything is kept</h3>
+    <p>Every single answer the API has ever given is saved to disk, exactly as it
+      arrived. Two reasons. One: any snapshot can be rebuilt later without paying for
+      the data twice. Two: <strong>closing lines are not for sale after the fact</strong>
+      &mdash; balldontlie keeps opening lines but not closing ones, so a line nobody
+      captured before kickoff is gone at any price. Capturing them as the game
+      approaches is the only way to have them.</p>
+
+    <p class="footnote">Source: balldontlie NFL API. Snapshots are taken by
+      <code>scripts/bdl_refresh.py</code> and rendered at
+      <a href="/football/schedule">/football/schedule</a>. Nothing on this page is a
+      live feed &mdash; it's the most recent snapshot, and it says how recent.</p>
+  </div>
+
+  <script>
+  (function () {
+    'use strict';
+
+    /* The board of captured games, from the same /api/game-odds listing the
+     * game page uses to say "nothing here, but these exist". Summary columns
+     * only — the listing deliberately does not carry the ~900 KB snapshot
+     * itself, so this stays cheap however many games are stored.
+     *
+     * ES5 globals, like the rest of scripts/ — no modules, no build step. */
+
+    var boardEl = document.getElementById('ls-board');
+    var LOGO_DIR = '/assets/icons/nfl/';
+
+    function esc(s) {
+      return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+      });
+    }
+
+    function stamp(iso) {
+      if (!iso) return null;
+      var t = Date.parse(String(iso).replace(/T(\d\d:\d\d)Z$/, 'T$1:00Z'));
+      return isFinite(t) ? t / 1000 : null;
+    }
+
+    function gap(secs) {
+      var s = Math.abs(Math.round(secs));
+      if (s < 60) return s + 's';
+      if (s < 5400) return Math.round(s / 60) + 'm';
+      if (s < 172800) return Math.round(s / 3600) + 'h';
+      return Math.round(s / 86400) + 'd';
+    }
+
+    function when(iso) {
+      var t = stamp(iso);
+      if (t === null) return '';
+      try {
+        return new Date(t * 1000).toLocaleString('en-US', {
+          timeZone: 'America/New_York', weekday: 'short', month: 'short',
+          day: 'numeric', hour: 'numeric', minute: '2-digit'
+        });
+      } catch (e) { return String(iso); }
+    }
+
+    /* What a snapshot actually contains, in the order a person would look for
+     * it. `has` is stored alongside each row precisely so this can be answered
+     * without opening the snapshot. */
+    var PARTS = [
+      ['odds', 'lines'], ['props', 'props'], ['team_stats', 'team stats'],
+      ['player_stats', 'box score'], ['plays', 'plays']
+    ];
+
+    function contents(has) {
+      var got = PARTS.filter(function (p) { return has && has[p[0]]; });
+      if (!got.length) return '<span class="ls-thin">game details only</span>';
+      return got.map(function (p) {
+        return '<span class="ls-part">' + esc(p[1]) + '</span>';
+      }).join('');
+    }
+
+    function row(g) {
+      var upd = stamp(g.updated_at);
+      return '<a class="ls-row" href="/football/schedule/game/' +
+          encodeURIComponent(g.id) + '">' +
+        '<span class="ls-teams">' +
+          '<img class="ls-logo" src="' + LOGO_DIR + esc(g.away) + '.svg" alt="" aria-hidden="true">' +
+          '<span class="ls-abbr">' + esc(g.away) + '</span>' +
+          '<span class="ls-at">@</span>' +
+          '<img class="ls-logo" src="' + LOGO_DIR + esc(g.home) + '.svg" alt="" aria-hidden="true">' +
+          '<span class="ls-abbr">' + esc(g.home) + '</span>' +
+        '</span>' +
+        '<span class="ls-kick">' + esc(when(g.kickoff)) + '</span>' +
+        '<span class="ls-parts">' + contents(g.has) + '</span>' +
+        '<span class="ls-phase ' + esc(g.phase) + '">' + esc(g.phase) + '</span>' +
+        '<span class="ls-age">' +
+          (upd === null ? '' : 'updated ' + esc(gap(Date.now() / 1000 - upd)) + ' ago') +
+        '</span>' +
+      '</a>';
+    }
+
+    /* Live first, then what is coming, then history — the order of how much
+     * anyone cares right now. */
+    var RANK = { live: 0, pregame: 1, final: 2 };
+
+    function render(index) {
+      var games = (index && index.games) || {};
+      var ids = Object.keys(games);
+      if (!ids.length) {
+        boardEl.innerHTML = '<p class="ls-note">No snapshots stored yet. ' +
+          'They appear here as games come inside the capture window — about ' +
+          'eight days before kickoff.</p>';
+        return;
+      }
+      ids.sort(function (a, b) {
+        var ga = games[a], gb = games[b];
+        var d = (RANK[ga.phase] === undefined ? 3 : RANK[ga.phase]) -
+                (RANK[gb.phase] === undefined ? 3 : RANK[gb.phase]);
+        if (d) return d;
+        // Soonest kickoff first among the upcoming; most recent first among
+        // the finished.
+        var ka = stamp(ga.kickoff) || 0, kb = stamp(gb.kickoff) || 0;
+        return ga.phase === 'final' ? kb - ka : ka - kb;
+      });
+      boardEl.innerHTML = '<div class="ls-board">' +
+        ids.map(function (id) { return row(games[id]); }).join('') + '</div>' +
+        '<p class="ls-note">' + ids.length + ' game' + (ids.length === 1 ? '' : 's') +
+        ' stored. Every row on <a href="/football/schedule">the schedule</a> ' +
+        'links to its own page, captured or not.</p>';
+    }
+
+    fetch('/api/game-odds')
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(render)
+      .catch(function () {
+        boardEl.innerHTML = '<p class="ls-note">The listing could not be loaded ' +
+          'just now. The game pages themselves are unaffected.</p>';
+      });
+  })();
+  </script>
+
+  <style>
+    /* Scoped to .ls, matching the /football/grading-system explainer next door:
+     * a page with one layout and no reusable parts keeps its styles with it
+     * rather than adding a sheet nothing else loads. */
+    .ls { max-width: 780px; line-height: 1.6; color: var(--text-2); }
+    .ls .crumbs {
+      font-family: monospace; font-size: 12px; color: var(--text-4); margin-bottom: 18px;
+    }
+    .ls .crumbs a { color: var(--text-3); text-decoration: none; }
+    .ls .crumbs a:hover { color: var(--good-vivid); }
+    .ls .crumbs span { margin: 0 4px; color: var(--hairline-hi); }
+    .ls h1 {
+      font-size: 30px; font-weight: 800; color: var(--text-hi); margin: 0 0 4px;
+      letter-spacing: -0.3px;
+    }
+    .ls .lede { color: var(--text-3); font-size: 15px; margin: 0 0 28px; }
+    .ls h2 { font-size: 21px; font-weight: 700; color: var(--text-hi); margin: 34px 0 10px; }
+    .ls h3 {
+      font-size: 16px; font-weight: 700; color: var(--good-vivid); margin: 26px 0 8px;
+      text-transform: uppercase; letter-spacing: 0.4px;
+    }
+    .ls p { margin: 0 0 14px; }
+    .ls ul { margin: 0 0 16px; padding-left: 20px; }
+    .ls li { margin-bottom: 8px; }
+    .ls strong { color: var(--text-hi); }
+    .ls em { color: var(--text-2); font-style: italic; }
+    .ls a { color: var(--good-vivid); }
+    .ls code {
+      font-family: monospace; background: var(--surface); border: 1px solid var(--border);
+      border-radius: 4px; padding: 1px 5px; color: var(--good-vivid); font-size: 13px;
+    }
+
+    .ls .abstract {
+      background: linear-gradient(180deg, color-mix(in oklab, var(--good-vivid) 7%, transparent), transparent);
+      border: 1px solid color-mix(in oklab, var(--good-vivid) 28%, transparent);
+      border-left-width: 4px; border-radius: 10px; padding: 18px 22px; margin: 0 0 20px;
+    }
+    .ls .abstract-h {
+      font-size: 12px !important; text-transform: uppercase; letter-spacing: 1px;
+      color: var(--good-vivid) !important; margin: 0 0 12px !important;
+      font-family: monospace; font-weight: 700;
+    }
+    .ls .abstract .kicker {
+      margin: 14px 0 0; font-style: italic; color: var(--text-3); font-size: 14px;
+    }
+
+    /* The board. One grid so the columns line up down the page; it collapses to
+     * two rows per game on a phone rather than scrolling sideways. */
+    .ls-board {
+      border: 1px solid var(--border); border-radius: 10px;
+      background: var(--panel-lo); overflow: hidden; margin: 4px 0 10px;
+    }
+    .ls-row {
+      display: grid; align-items: center; gap: 4px 14px;
+      grid-template-columns: minmax(130px, max-content) 1fr auto auto auto;
+      padding: 10px 14px; border-top: 1px solid var(--surface-2);
+      text-decoration: none; color: inherit;
+    }
+    .ls-row:first-child { border-top: 0; }
+    .ls-row:hover { background: var(--surface); }
+    .ls-teams {
+      display: flex; align-items: center; gap: 5px;
+      font-family: monospace; font-weight: 700; color: var(--text-hi);
+    }
+    .ls-logo { width: 16px; height: 16px; }
+    .ls-abbr { display: inline-block; min-width: 3ch; }
+    .ls-at { color: var(--text-5); font-weight: 400; margin: 0 2px; }
+    .ls-kick { font-size: 12px; color: var(--text-3); font-family: monospace; }
+    .ls-parts { display: flex; flex-wrap: wrap; gap: 4px; justify-content: flex-end; }
+    .ls-part {
+      font-size: 10px; font-family: monospace; color: var(--text-3);
+      background: var(--surface-2); border-radius: 4px; padding: 1px 6px;
+    }
+    .ls-thin { font-size: 10px; font-family: monospace; color: var(--text-5); }
+    .ls-phase {
+      font-size: 9px; font-weight: 700; font-family: monospace; text-transform: uppercase;
+      letter-spacing: 0.6px; padding: 2px 7px; border-radius: 999px;
+      border: 1px solid transparent; white-space: nowrap;
+    }
+    .ls-phase.pregame { color: var(--warn); border-color: var(--warn-line); background: var(--warn-soft); }
+    .ls-phase.live    { color: var(--bad);  border-color: var(--bad-line);  background: var(--bad-soft); }
+    .ls-phase.final   { color: var(--text-3); border-color: var(--border); background: var(--surface-2); }
+    .ls-age {
+      font-size: 11px; color: var(--text-4); white-space: nowrap; min-width: 12ch;
+      text-align: right;
+    }
+    .ls-note { font-size: 13px; color: var(--text-4); margin: 0 0 8px; }
+
+    .ls .footnote {
+      margin-top: 30px; padding-top: 16px; border-top: 1px solid var(--surface-2);
+      font-size: 13px; color: var(--text-4); font-style: italic;
+    }
+
+    @media (max-width: 640px) {
+      .ls h1 { font-size: 24px; }
+      .ls-row { grid-template-columns: 1fr auto auto; }
+      /* Kickoff and freshness drop to a second line under the matchup; the
+       * contents chips are the first thing to go — the phase chip carries more. */
+      .ls-teams { grid-column: 1; }
+      .ls-phase { grid-column: 2; }
+      .ls-age { grid-column: 3; min-width: 0; }
+      .ls-kick { grid-column: 1 / -1; }
+      .ls-parts { grid-column: 1 / -1; justify-content: flex-start; }
+    }
+  </style>
+</body>
+</html>

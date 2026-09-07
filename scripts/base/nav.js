@@ -30,6 +30,10 @@ const NAV_SECTIONS = [
     items: [
       { label: "Baker's Buns", href: '/football/bakers-buns', emoji: '🍞' },
       { label: 'Games', href: '/football/schedule', emoji: '📅' },
+      // Sits next to Games because it is the same data seen from the other
+      // side: Games is the fixture list, this is what has been captured off it
+      // and how current each capture is.
+      { label: 'Live Stats', href: '/football/live-stats', emoji: '📡' },
       // Baker's Oven holds per-account leagues and boards, but the landing
       // page is public and pitches itself to signed-out visitors, so it is
       // listed for everyone.

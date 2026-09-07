@@ -28,6 +28,10 @@
    * scripts/fetch_nfl_schedule.py --season N and adding N here. */
   var SEASONS = [2026, 2025];
 
+  /* Served from this app, not hotlinked — the same 32 files the team picker and
+   * the projected-standings table already use. */
+  var LOGO_DIR = '/assets/icons/nfl/';
+
   function esc(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
@@ -193,8 +197,18 @@
     // home — so the row carries the venue instead and no side is colored.
     function team(t, side) {
       var picked = !g.neutral && opts.team === t.abbr;
+      // The abbreviation gets its own fixed-width span so that the logo column
+      // and the letters column each line up down the page. Putting the image
+      // straight into the cell would right-align "NE" and "WSH" to the same
+      // edge and leave their logos two characters apart.
+      //
+      // loading="lazy" is not decoration: the all-weeks list is 272 rows, so
+      // 544 logos, and only a screenful is ever visible.
       return '<span class="sched-team ' + side + (picked ? ' is-picked' : '') +
-        '" title="' + esc(t.name || t.abbr) + '">' + esc(t.abbr) + '</span>';
+        '" title="' + esc(t.name || t.abbr) + '">' +
+        '<img class="sched-logo" src="' + LOGO_DIR + esc(t.abbr) +
+          '.svg" alt="" aria-hidden="true" loading="lazy">' +
+        '<span class="sched-abbr">' + esc(t.abbr) + '</span></span>';
     }
 
     // A neutral-site game has no true home team, so "@" would be a lie and the
@@ -208,13 +222,13 @@
     // teams themselves costs no width, no badge and no column: the row looks
     // exactly as it did, and the thing you would click anyway is now clickable.
     //
-    // g.id is balldontlie's game id since the schedule moved to that source, and
-    // it is what /game-odds resolves a bundle by. A row without one still
-    // renders — the id is not load-bearing for anything else on the page.
+    // g.id is balldontlie's game id since the schedule moved to that source,
+    // and it is the last segment of the game page's URL. A row without one
+    // still renders — the id is not load-bearing for anything else here.
     var teamsInner = team(away, 'away') +
       '<span class="sched-at">' + sep + '</span>' + team(home, 'home');
     var teams = g.id
-      ? '<a class="sched-teams" href="/game-odds?game=' +
+      ? '<a class="sched-teams" href="/football/schedule/game/' +
           encodeURIComponent(g.id) + '" title="Odds and box score: ' +
           esc(away.abbr + ' ' + sep + ' ' + home.abbr) + '">' + teamsInner + '</a>'
       : '<span class="sched-teams">' + teamsInner + '</span>';

@@ -24,8 +24,16 @@ switch: 272 games, keys matched on (week, away, home), zero differences in
 kickoff, slot or neutral-site classification. The only divergence was `venue`,
 where balldontlie carries stale stadium names — see VENUE_ALIAS.
 
-The ESPN parser is kept behind --source espn. It is the oracle --compare
-validates against, and it is the fallback if the key ever lapses.
+The ESPN parser is kept behind --source espn, but it can no longer write this
+file -- only --compare and --dry-run accept it. The reason is the `id` field.
+Nothing read it when the source changed, so the two id spaces were harmless
+next to each other; it is now the last segment of the game page's URL
+(/football/schedule/game/1392217) and the page resolves it against balldontlie.
+ESPN event ids are nine digits starting with 4, balldontlie's are six or seven,
+and a file full of the wrong ones looks perfectly valid and 404s on every click.
+So ESPN stays as the independent oracle that --compare checks against, which is
+what it was actually useful for, and verify() refuses to write ESPN-shaped ids
+whatever produced them.
 
 Two fields ESPN gave us directly have to be derived here:
 
@@ -626,7 +634,8 @@ def main():
     ap.add_argument("--season", type=int,
                     default=now.year if now.month >= 5 else now.year - 1)
     ap.add_argument("--source", choices=["bdl", "espn"], default="bdl",
-                    help="bdl (default) or the legacy ESPN scoreboard")
+                    help="bdl (default), or the legacy ESPN scoreboard as a "
+                         "--compare oracle; espn cannot write the file")
     ap.add_argument("--compare", nargs="?", const=True, default=None,
                     metavar="PATH",
                     help="diff against an existing schedule file (default: the one "
@@ -635,6 +644,22 @@ def main():
                     help="verify and report, but do not write")
     bdl.add_mode_args(ap)
     args = ap.parse_args()
+
+    # Checked before anything is fetched, so a wrong invocation costs no
+    # requests rather than eighteen and a refusal at the end.
+    if args.source == "espn" and args.compare is None and not args.dry_run:
+        print("--source espn cannot write data/nfl_schedule_*.json.\n\n"
+              "  The `id` field is the game page's URL segment now — "
+              "/football/schedule/game/<id> —\n"
+              "  and that page resolves it against balldontlie. ESPN's event "
+              "ids belong to a\n"
+              "  different id space, so a file written from ESPN would 404 on "
+              "every game.\n\n"
+              "  ESPN is still the oracle for validating the balldontlie feed:\n\n"
+              f"    python3 scripts/fetch_nfl_schedule.py --season {args.season} "
+              "--source espn --compare",
+              file=sys.stderr)
+        return 1
 
     conflicts = ()
     if args.source == "espn":
@@ -675,6 +700,22 @@ def main():
     if args.dry_run:
         print("\n--dry-run: verified, nothing written")
         return 0
+
+    # A write precondition, not a data-validity check -- which is why it sits
+    # here and not in verify(). A document built from ESPN is perfectly good to
+    # compare against; it is only unfit to become the file. The id is the game
+    # page's URL segment now (/football/schedule/game/<id>) and that page
+    # resolves it against balldontlie, so ESPN's ids would 404 on every game.
+    # Checked by shape rather than by which --source ran, so it holds for any
+    # writer added later.
+    espn_ids = [str(g["id"]) for w in weeks for g in w["games"]
+                if len(str(g["id"])) >= 9 and str(g["id"]).startswith("4")]
+    if espn_ids:
+        print(f"\nERROR: {len(espn_ids)} games carry ESPN-shaped ids "
+              f"(e.g. {espn_ids[0]}). The id is the game page's URL segment and "
+              f"has to be balldontlie's.\nRefusing to overwrite good data.",
+              file=sys.stderr)
+        return 1
 
     data_dir = repo_path("data")
     os.makedirs(data_dir, exist_ok=True)

@@ -4,7 +4,9 @@
 GET  /api/game-odds              -> {"games": {id: {...summary...}}}
 GET  /api/game-odds?game=<id>    -> the full bundle for that game
 
-Both public: this is the data /game-odds renders, and that page is public.
+Both public: this is the data /football/schedule/game/<id> renders, and that
+page is public. The page route carries the id as a path segment; this endpoint
+keeps it as a query parameter, because it is an API and not a page.
 
 WHY THIS IS AN ENDPOINT AND NOT A FILE IN /data
 

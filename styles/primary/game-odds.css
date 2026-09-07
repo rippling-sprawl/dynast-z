@@ -1,4 +1,4 @@
-/* /game-odds — one NFL game: odds, props, box score, play log.
+/* /football/schedule/game/<id> — one NFL game: odds, props, box score, plays.
  *
  * The page has an unusual constraint for a data page: most of the time, most of
  * it is empty. The bundle behind it comes from balldontlie, where the box score
@@ -21,11 +21,14 @@
   margin-bottom: 18px;
 }
 
+/* The hero is centred rather than justified: with only three things in it —
+ * matchup, score, phase — a space-between row pushes them to the edges of a
+ * 1000px page and leaves a gap in the middle that reads as missing content. */
 .go-hero-top {
   display: flex;
   align-items: baseline;
-  justify-content: space-between;
-  gap: 12px;
+  justify-content: center;
+  gap: 12px 18px;
   flex-wrap: wrap;
 }
 
@@ -66,6 +69,7 @@
   margin-top: 10px;
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 6px 16px;
   font-size: 12px;
   color: var(--text-3);
@@ -89,10 +93,46 @@
 .go-phase.live    { color: var(--bad);  border-color: var(--bad-line);  background: var(--bad-soft); }
 .go-phase.final   { color: var(--text-3); border-color: var(--border); background: var(--surface-2); }
 
+/* Phase and freshness read as one fact — "live, updated 40s ago" — so they sit
+ * in one column rather than competing for the same row. */
+.go-status {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+
+.go-fresh {
+  font-size: 11px;
+  color: var(--text-4);
+  white-space: nowrap;
+  cursor: help;
+}
+
+/* The empty state's own header. Smaller than the hero on purpose: there is no
+ * game here yet, and a full-size matchup would promise one. */
+.go-miss-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin-bottom: 12px;
+}
+
+.go-matchup-sm { font-size: 17px; }
+.go-matchup-sm .go-at { font-size: 12px; }
+
+.go-miss-when {
+  font-size: 12px;
+  color: var(--text-3);
+  font-family: monospace;
+}
+
 /* Quarter-by-quarter. Only drawn once a game has started — a line of five
  * zeroes for a fixture would read as a 0-0 result. */
 .go-line {
-  margin-top: 14px;
+  margin: 14px auto 0;
   border-collapse: collapse;
   font-family: monospace;
   font-size: 12px;
@@ -212,6 +252,28 @@
 .go-table td.is-num { text-align: right; }
 .go-table td.is-null { color: var(--text-5); }
 
+/* --- Book column groups --------------------------------------------------
+ * Odds and props both carry the sportsbook in a spanning header rather than in
+ * a column, so one row holds every book's price for the same line and the
+ * comparison is read across it. That only works if the eye can find where one
+ * book's columns end, hence the rule on the first column of each group. */
+
+.go-grouped thead th { line-height: 12px; }
+.go-grouped th.go-bk, .go-grouped td.go-bk { border-left: 1px solid var(--border); }
+
+.go-grouped thead tr:first-child th.go-bk,
+.go-grouped thead tr:first-child th[colspan] {
+  text-align: center;
+  color: var(--text-2);
+  letter-spacing: 0.9px;
+}
+
+/* Two header rows, and both are sticky: the second has to be offset by the
+ * height of the first (12px line + 6px padding either side + the hairline) or
+ * it parks on top of it as the page scrolls under. */
+.go-grouped thead tr:first-child th { top: 0; }
+.go-grouped thead tr + tr th { top: 25px; }
+
 /* --- Team stat comparison ------------------------------------------------ */
 
 .go-vs { width: 100%; border-collapse: collapse; font-size: 12px; }
@@ -277,7 +339,7 @@
   .go-play .go-pscore { display: none; }
 }
 
-/* Props filters. Native selects: three of them, changing one table, on a page
+/* Props filters. Native selects: two of them, changing one table, on a page
  * that is otherwise read-only — a custom dropdown would be more furniture than
  * the interaction is worth. */
 .go-select {
@@ -291,3 +353,32 @@
 }
 
 .go-select:focus-visible { outline: 2px solid var(--accent-ring); outline-offset: 1px; }
+
+/* --- Team logos ---
+ * The 32 crests under /assets/icons/nfl, the same ones /football/schedule and
+ * the team picker use. Both sizes are nudged below the box bottom rather than
+ * centred: these sit beside large type, and aligning a square to the text box
+ * makes it read as floating above the baseline the letters sit on. */
+
+.go-logo {
+  width: 32px;
+  height: 32px;
+  vertical-align: -5px;
+  margin-right: 9px;
+}
+
+.go-vs-team {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.go-logo-sm {
+  width: 15px;
+  height: 15px;
+  vertical-align: -3px;
+  margin-right: 5px;
+}
+
+@media (max-width: 640px) {
+  .go-logo { width: 24px; height: 24px; vertical-align: -4px; margin-right: 6px; }
+}

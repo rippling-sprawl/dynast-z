@@ -137,14 +137,32 @@
 }
 
 .sched-team {
-  width: 3ch;
+  display: inline-block;
   font-weight: 600;
   font-size: 12px;
   color: var(--text);
+  white-space: nowrap;
 }
 
-.sched-team.away { text-align: right; }
-.sched-team.home { text-align: left; }
+/* The 3ch that used to be on .sched-team now sits on the letters alone, so the
+ * cell is logo + gap + 3ch and still an identical width on every row — which is
+ * what keeps the slot badges after it from zigzagging down the page. */
+.sched-abbr {
+  display: inline-block;
+  width: 3ch;
+}
+
+.sched-team.away .sched-abbr { text-align: right; }
+.sched-team.home .sched-abbr { text-align: left; }
+
+/* Optical, not geometric: the baseline of a 12px monospace capital sits a few
+ * pixels above the box bottom, so a box-aligned logo reads as floating. */
+.sched-logo {
+  width: 14px;
+  height: 14px;
+  vertical-align: -3px;
+  margin-right: 4px;
+}
 
 /* The filtered team, so a single row still reads at a glance which side is
  * "yours" when the matchup is scanned in a list of seventeen. */
@@ -272,6 +290,15 @@
   /* The columns are already at their content width — only the gutters give. */
   .sched-game { gap: 8px; }
 
+  /* Two logos add ~36px to a row that had none. Shrinking them buys most of it
+   * back; the crest is still identifiable at 12px, which is all it has to be. */
+  .sched-logo {
+    width: 12px;
+    height: 12px;
+    vertical-align: -2px;
+    margin-right: 3px;
+  }
+
   /* The venue no longer fits beside the matchup at this width, and dropping it
    * loses the one thing a neutral-site row exists to say. It wraps to its own
    * line under the teams instead: full-basis so it always breaks rather than
@@ -292,7 +319,7 @@
 }
 
 /* --- Matchup link ---
- * The teams cell is an <a> to /game-odds when the game has an id. It has to
+ * The teams cell is an <a> to the game page when the game has an id. It has to
  * look like exactly what it looked like before — the team abbreviation colours,
  * including the picked-team accent, are the information here and a link colour
  * would overwrite it — so the anchor inherits everything and announces itself

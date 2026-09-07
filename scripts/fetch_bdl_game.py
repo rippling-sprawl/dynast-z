@@ -55,6 +55,7 @@ Usage:
     python3 scripts/fetch_bdl_game.py --example week1 --replay   # offline
     python3 scripts/fetch_bdl_game.py --example week1 --record --label week1_final
     python3 scripts/fetch_bdl_game.py --game-id 1341307 --label probe
+    python3 scripts/fetch_bdl_game.py --season 2026 --week 1 --away SF --home LAR
     python3 scripts/fetch_bdl_game.py --example week1 --publish   # also to Supabase
     python3 scripts/fetch_bdl_game.py --example week1 --all-books
     python3 scripts/fetch_bdl_game.py --example week1 --books draftkings
@@ -66,6 +67,7 @@ import json
 import os
 import sys
 import time
+import unicodedata
 import urllib.error
 import urllib.request
 from datetime import datetime, timezone
@@ -135,6 +137,96 @@ GROUPED_FIELDS = {f for fields in STAT_GROUPS.values() for f in fields}
 STAT_IDENTITY = ("player", "team", "game")
 
 
+# --------------------------------------------------------------------------
+# Refresh policy
+# --------------------------------------------------------------------------
+#
+# How often a game is worth re-fetching, as a function of how far it is from
+# kickoff. Two consumers, one answer: scripts/bdl_refresh.py sweeps on this to
+# decide what is due, and build_bundle stamps the result into every bundle so
+# /football/schedule/game/<id> can say when the page will next change instead of
+# leaving the reader to guess.
+#
+# The shape of it follows the market. Books have not posted a line eight days
+# out; it drifts through the week, moves through the day, and moves on every
+# snap. At the whistle it stops -- but the box score does not, because stat
+# corrections keep landing for a few hours, which is why a final game is not
+# frozen the moment it goes final.
+
+HOUR = 3600
+LIVE_INTERVAL = 2 * 60
+IMMINENT_INTERVAL = 10 * 60
+GAMEDAY_INTERVAL = HOUR
+UPCOMING_INTERVAL = 6 * HOUR
+SETTLING_INTERVAL = 30 * 60
+
+# How long after kickoff a final game keeps being re-fetched for stat
+# corrections. Six hours covers a 3.5-hour game plus the window in which the
+# league revises a fumble recovery or a target.
+SETTLING_WINDOW = 6 * HOUR
+
+# Beyond this, nothing is fetched at all: there is no market to record.
+DISTANT_HORIZON = 8 * 24 * HOUR
+
+# Rendered verbatim by the page, so the reason a game is on the cadence it is on
+# lives next to the cadence rather than being reinvented in JavaScript.
+REFRESH_NOTE = {
+    "settled": "final and past stat corrections \u2014 this will not change again",
+    "settling": "final; stat corrections still land for a few hours",
+    "live": "in progress",
+    "imminent": "kickoff is close, lines move fastest now",
+    "gameday": "game day",
+    "upcoming": "more than a day out",
+    "distant": "too far out for the books to have posted",
+}
+
+
+def refresh_plan(kickoff_ts, phase, last_ts=None, now=None):
+    """When this game is next worth re-fetching.
+
+    -> {"policy", "interval_s", "frozen", "note"[, "next_ts", "next_at"]}
+
+    `last_ts` is when it was last captured; without one the answer is "now".
+    A frozen plan carries no next_* keys at all rather than a null one, so the
+    page renders the absence rather than having to test for it."""
+    now = float(now if now is not None else time.time())
+    to_kick = (kickoff_ts - now) if kickoff_ts else None
+
+    if phase == "final":
+        since = (now - kickoff_ts) if kickoff_ts else SETTLING_WINDOW + 1
+        if since > SETTLING_WINDOW:
+            policy, interval = "settled", None
+        else:
+            policy, interval = "settling", SETTLING_INTERVAL
+    elif phase == "live":
+        policy, interval = "live", LIVE_INTERVAL
+    elif to_kick is None:
+        # No kickoff to reason from. Hourly is the safe middle.
+        policy, interval = "gameday", GAMEDAY_INTERVAL
+    elif to_kick <= 0:
+        # Kickoff has passed but status_state has not caught up. This is exactly
+        # the window in which it is about to, so poll at the live cadence.
+        policy, interval = "live", LIVE_INTERVAL
+    elif to_kick <= 3 * HOUR:
+        policy, interval = "imminent", IMMINENT_INTERVAL
+    elif to_kick <= 36 * HOUR:
+        policy, interval = "gameday", GAMEDAY_INTERVAL
+    elif to_kick <= DISTANT_HORIZON:
+        policy, interval = "upcoming", UPCOMING_INTERVAL
+    else:
+        policy, interval = "distant", None
+
+    plan = {"policy": policy, "interval_s": interval,
+            "frozen": interval is None, "note": REFRESH_NOTE[policy]}
+    if interval is not None:
+        # An overdue capture is due now, not in the past.
+        nxt = max((last_ts if last_ts is not None else now) + interval, now)
+        plan["next_ts"] = int(nxt)
+        plan["next_at"] = datetime.fromtimestamp(
+            plan["next_ts"], timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    return plan
+
+
 class PublishError(RuntimeError):
     """A --publish problem worth showing verbatim rather than as a traceback."""
 
@@ -195,7 +287,28 @@ def resolve_game(spec, mode):
 
 
 def fetch_game_by_id(game_id, mode):
-    payload, _ = bdl.bdl_get(f"/games/{game_id}", mode=mode)
+    try:
+        payload, _ = bdl.bdl_get(f"/games/{game_id}", mode=mode)
+    except bdl.BdlError as e:
+        if "404" not in str(e):
+            raise
+        # Almost always the same mistake, and worth naming rather than leaving
+        # as a bare 404: ESPN event ids are nine digits beginning with 4
+        # (401872657), balldontlie's are seven (1392217). data/nfl_schedule_*.json
+        # carried ESPN's until the schedule moved to balldontlie as its source,
+        # and ESPN's own URLs still carry them -- so an id copied from either
+        # place, or from an older checkout, lands here.
+        hint = ""
+        if len(str(game_id)) >= 9 and str(game_id).startswith("4"):
+            hint = ("\n\nThat looks like an ESPN event id, not a balldontlie one. "
+                    "ESPN's are\nnine digits starting with 4; balldontlie's are seven.")
+        raise bdl.BdlError(
+            f"No balldontlie game {game_id}.{hint}\n\n"
+            "Either look the id up in data/nfl_schedule_<season>.json, which "
+            "carries\nballdontlie ids now, or skip the id and name the "
+            "matchup instead:\n\n"
+            "  python3 scripts/fetch_bdl_game.py --season 2026 --week 1 "
+            "--away SF --home LAR") from None
     return payload.get("data") or payload
 
 
@@ -295,6 +408,55 @@ def group_stat_row(row):
     return out
 
 
+def norm_venue(name):
+    """Casefold, strip accents, drop non-alphanumerics. Same normalization
+    scripts/fetch_nfl_schedule.py uses, and for the same reason: without the
+    accent strip "Maracanã" and "Bernabéu" compare unequal to themselves across
+    feeds and every game at one reads as a venue change."""
+    if not name:
+        return ""
+    name = unicodedata.normalize("NFD", name)
+    name = "".join(c for c in name if not unicodedata.combining(c))
+    return "".join(c for c in name.lower() if c.isalnum())
+
+
+def is_neutral(g, mode):
+    """Is this game at neither team's home ground?
+
+    balldontlie ships no neutral-site flag, so it is derived the way the
+    schedule fetcher derives it: a team's modal home venue over a full regular
+    season is its stadium, and a home game anywhere else is neutral. One extra
+    request per bundle, cassetted like the rest.
+
+    The regular season establishes the ground even when the game itself is a
+    playoff game -- which is the only way the Super Bowl, always at a neutral
+    site, comes out right.
+    """
+    venue = norm_venue(g.get("venue"))
+    home = g.get("home_team") or {}
+    if not venue or not home.get("id") or not g.get("season"):
+        return False
+    try:
+        rows = list(bdl.paginate("/games",
+                                 {"seasons[]": [g["season"]],
+                                  "season_types[]": [REGULAR_SEASON],
+                                  "team_ids[]": [home["id"]]},
+                                 mode=mode, quiet=True))
+    except bdl.BdlError:
+        return False
+    counts = {}
+    for r in rows:
+        if (r.get("home_team") or {}).get("id") != home["id"]:
+            continue
+        v = norm_venue(r.get("venue"))
+        if v:
+            counts[v] = counts.get(v, 0) + 1
+    if not counts:
+        return False
+    modal = max(counts, key=counts.get)
+    return venue != modal
+
+
 def keep_books(rows, books):
     """Drop rows quoted by a book we are not carrying.
 
@@ -354,6 +516,7 @@ def build_bundle(g, label, title, mode, books=DEFAULT_BOOKS):
             "status": g.get("status"),
             "status_state": g.get("status_state"),
             "venue": g.get("venue"),
+            "neutral": is_neutral(g, mode),
             "summary": g.get("summary"),
             "away": {"id": away["id"], "abbr": away["abbreviation"],
                      "name": away["full_name"]},
@@ -486,6 +649,10 @@ def build_bundle(g, label, title, mode, books=DEFAULT_BOOKS):
     bundle["designations"] = split(designations)
     bundle["unavailable"] = notes
     bundle["timing"] = bdl.latency_summary()
+    # Stamped last, off the phase this fetch actually observed -- a game that
+    # went final during the fetch gets the settling cadence, not the live one.
+    bundle["refresh"] = refresh_plan(kickoff.timestamp(), phase,
+                                     bundle["fetched_ts"])
     return bundle
 
 
@@ -618,7 +785,28 @@ def write_shapes(bundle, path):
     return path
 
 
-def publish(bundle):
+def _sections_lost(url, key, game_id, has):
+    """-> sections the stored row has that this capture does not. [] if new.
+
+    A read failure returns [] rather than raising: the guard exists to stop a
+    regression, not to stop a publish when Supabase is having a bad minute --
+    the write itself will surface that."""
+    q = (f"{url}/rest/v1/game_odds?game_id=eq.{game_id}&select=has")
+    req = urllib.request.Request(q)
+    req.add_header("apikey", key)
+    req.add_header("Authorization", f"Bearer {key}")
+    try:
+        with urllib.request.urlopen(req, timeout=20) as resp:
+            rows = json.loads(resp.read() or b"[]")
+    except Exception:                                        # noqa: BLE001
+        return []
+    if not rows:
+        return []
+    prior = rows[0].get("has") or {}
+    return sorted(k for k, v in prior.items() if v and not has.get(k))
+
+
+def publish(bundle, force=False):
     """Upsert the bundle into Supabase `game_odds`. -> list of log lines.
 
     Writes straight to PostgREST with the service key from .env rather than
@@ -666,6 +854,27 @@ def publish(bundle):
         "updated_at": "now()",
     }
 
+    # Read before write. Publishing is an upsert, so a thin capture silently
+    # replaces a rich one -- and the way that happens is mundane: the GOAT trial
+    # lapses, the key drops to free, /odds and /plays start answering 401, and
+    # an unattended refresh sweep overwrites a full bundle with a game-layer
+    # shell. `has` is exactly the right comparison because it is what the row
+    # already carries and what the listing renders. Same rule the file writers
+    # follow, applied to a table.
+    if not force:
+        lost = _sections_lost(url, key, g["id"], row["has"])
+        if lost:
+            raise PublishError(
+                f"this capture is thinner than what is already published for "
+                f"game {g['id']}.\n\n"
+                f"  Would lose: {', '.join(lost)}\n\n"
+                "  Almost always this means the key that fetched it is below\n"
+                "  the tier the stored bundle was fetched on -- an expired GOAT\n"
+                "  trial drops /odds, /plays and /player_props to 401, and the\n"
+                "  bundle is still valid, just emptier. Refusing to overwrite\n"
+                "  good data. Re-run on a key with the tier, or --force if the\n"
+                "  thinner bundle really is the one you want.")
+
     req = urllib.request.Request(
         f"{url}/rest/v1/game_odds?on_conflict=game_id",
         data=json.dumps([row]).encode(), method="POST")
@@ -690,14 +899,22 @@ def publish(bundle):
 
     return [f"Published game {g['id']} to Supabase game_odds "
             f"({len(canon) / 1024:.0f} KB, etag {etag[:12]})",
-            f"  /game-odds?game={g['id']}"]
+            f"  /football/schedule/game/{g['id']}"]
 
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--example", choices=sorted(EXAMPLES))
-    ap.add_argument("--game-id", type=int)
+    ap.add_argument("--game-id", type=int,
+                    help="balldontlie game id (7 digits) — NOT an ESPN event id")
+    # Naming the matchup beats looking an id up, and is the only form that
+    # works without already having the schedule file to hand.
+    ap.add_argument("--season", type=int)
+    ap.add_argument("--week", type=int)
+    ap.add_argument("--away", help="team abbreviation, e.g. SF")
+    ap.add_argument("--home", help="team abbreviation, e.g. LAR")
+    ap.add_argument("--season-type", choices=["pre", "reg", "post"], default="reg")
     ap.add_argument("--label", help="output name; defaults to the example's label")
     ap.add_argument("--books", default=",".join(DEFAULT_BOOKS), metavar="LIST",
                     help="comma-separated sportsbooks to keep "
@@ -706,18 +923,34 @@ def main():
                     help="keep every book balldontlie quotes")
     ap.add_argument("--raw", action="store_true",
                     help="also write the unshaped rows alongside the bundle")
+    ap.add_argument("--force", action="store_true",
+                    help="publish even if it would drop sections the stored "
+                         "bundle has (see the guard in publish())")
     ap.add_argument("--publish", action="store_true",
                     help="upsert the bundle into Supabase game_odds, which is "
                          "what /game-odds renders — this publishes it")
     bdl.add_mode_args(ap)
     args = ap.parse_args()
 
-    if not args.example and not args.game_id:
-        ap.error("give --example or --game-id")
+    by_matchup = bool(args.season and args.away and args.home)
+    if not args.example and not args.game_id and not by_matchup:
+        ap.error("give --example, --game-id, or --season with --away and --home")
     mode = bdl.resolve_mode(args)
 
     spec = dict(EXAMPLES.get(args.example, {}))
-    label = args.label or spec.get("label") or f"game_{args.game_id}"
+    if by_matchup:
+        spec.update({
+            "season": args.season,
+            "season_type": {"pre": 1, "reg": REGULAR_SEASON, "post": POSTSEASON}[
+                args.season_type],
+            "away": args.away.upper(),
+            "home": args.home.upper(),
+        })
+        if args.week:
+            spec["week"] = args.week
+        spec.setdefault("label", f"{spec['away']}_{spec['home']}_{args.season}"
+                                 + (f"w{args.week}" if args.week else ""))
+    label = (args.label or spec.get("label") or f"game_{args.game_id}").lower()
     print(f"balldontlie game bundle: {label} (mode={mode})\n")
 
     try:
@@ -758,7 +991,7 @@ def main():
 
     if args.publish:
         try:
-            for line in publish(bundle):
+            for line in publish(bundle, force=args.force):
                 print(line)
         except PublishError as e:
             print(f"\nNot published. {e}", file=sys.stderr)

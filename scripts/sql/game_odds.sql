@@ -1,7 +1,7 @@
 -- One NFL game's odds, props, box score and play log: one row per game.
 --
 -- Written by scripts/fetch_bdl_game.py --publish, read by api/game-odds.py and
--- rendered at /game-odds?game=<game_id>. `game_id` is balldontlie's, which is
+-- rendered at /football/schedule/game/<game_id>. `game_id` is balldontlie's,
 -- also the id data/nfl_schedule_*.json carries since the schedule moved to that
 -- source -- so a schedule row links straight here with no mapping table.
 --

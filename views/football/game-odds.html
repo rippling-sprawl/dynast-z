@@ -42,10 +42,11 @@
      * season to the repo forever. It lives in Supabase `game_odds` and moves on
      * a push with no deploy, the same split the Action Network book uses.
      *
-     * Deep-linked by balldontlie game id: /game-odds?game=1392216. That is the
-     * same id the schedule rows carry since data/nfl_schedule_*.json moved to
-     * balldontlie as its source, so every row on /football/schedule links here
-     * without a lookup table in between.
+     * Deep-linked by balldontlie game id, as the last segment of the path:
+     * /football/schedule/game/1392216. It sits under the schedule because that
+     * is the only thing that links to it, and the id is the same one the rows
+     * carry since data/nfl_schedule_*.json moved to balldontlie as its source —
+     * so there is no lookup table in between.
      *
      * The page is built to be mostly empty and still say something useful. Of
      * the six sections below, five are behind balldontlie's paid tiers, so on a
@@ -69,8 +70,25 @@
       });
     }
 
+    /* The same 32 files /football/schedule and the team picker use, served
+     * from this app rather than hotlinked. No lazy loading here: there are at
+     * most four on the page and two of them are above the fold. */
+    var LOGO_DIR = '/assets/icons/nfl/';
+
+    function teamLogo(abbr, cls) {
+      return '<img class="' + cls + '" src="' + LOGO_DIR + esc(abbr) +
+        '.svg" alt="" aria-hidden="true">';
+    }
+
+    /* The id is the last path segment, not a query parameter. Anchored and
+     * digits-only for the same reason api/game-odds.py validates it: this value
+     * ends up in a request URL, and a path is as capable of carrying junk as a
+     * query string is. */
+    var PATH_RE = /^\/football\/schedule\/game\/([0-9]{1,12})\/?$/;
+
     function gameParam() {
-      return new URLSearchParams(location.search).get('game') || '';
+      var m = PATH_RE.exec(location.pathname || '');
+      return m ? m[1] : '';
     }
 
     /* ---------- formatting ---------- */
@@ -94,6 +112,60 @@
       if (isNum(v)) return '<td class="is-num">' + esc(v) + '</td>';
       if (typeof v === 'object') return '<td>' + esc(JSON.stringify(v)) + '</td>';
       return '<td>' + esc(v) + '</td>';
+    }
+
+    /* ---------- freshness ----------
+     * When this bundle was captured, and when it changes next. Both are read
+     * off the bundle rather than decided here: `fetched_at` is stamped by the
+     * fetcher, and `refresh` is refresh_plan()'s answer in
+     * scripts/fetch_bdl_game.py — the same function scripts/bdl_refresh.py
+     * sweeps on. So the "next in 6h" this page prints is the cadence a sweep
+     * will actually run, not a second guess at it. */
+
+    function gap(secs) {
+      var s = Math.abs(Math.round(secs));
+      if (s < 60) return s + 's';
+      if (s < 5400) return Math.round(s / 60) + 'm';
+      if (s < 172800) return Math.round(s / 3600) + 'h';
+      return Math.round(s / 86400) + 'd';
+    }
+
+    function stamp(iso) {
+      if (!iso) return null;
+      var t = Date.parse(String(iso).replace(/T(\d\d:\d\d)Z$/, 'T$1:00Z'));
+      return isFinite(t) ? t / 1000 : null;
+    }
+
+    function kickoffET(iso) {
+      var t = stamp(iso);
+      if (t === null) return '';
+      try {
+        return new Date(t * 1000).toLocaleString('en-US', {
+          timeZone: 'America/New_York', weekday: 'short', month: 'short',
+          day: 'numeric', hour: 'numeric', minute: '2-digit'
+        }) + ' ET';
+      } catch (e) { return String(iso); }
+    }
+
+    /* Rendered next to the phase chip, because "final" and "captured four
+     * months ago" are two different facts and only one of them was on the page.
+     * A bundle written before refresh_plan existed has no `refresh` block, so
+     * the age stands on its own rather than the whole line disappearing. */
+    function freshness(b) {
+      var now = Date.now() / 1000;
+      var at = stamp(b.fetched_at);
+      var r = b.refresh || null;
+      var bits = [];
+      if (at !== null) bits.push('updated ' + gap(now - at) + ' ago');
+      if (r && r.frozen) bits.push('no longer updating');
+      else if (r && r.next_ts) {
+        bits.push(now >= r.next_ts ? 'next due now'
+                                   : 'next in ' + gap(r.next_ts - now));
+      }
+      if (!bits.length) return '';
+      return '<span class="go-fresh"' +
+        (r && r.note ? ' title="' + esc(r.note) + '"' : '') + '>' +
+        esc(bits.join(' \u00b7 ')) + '</span>';
     }
 
     /* ---------- generic table ----------
@@ -205,22 +277,30 @@
           }).join('') + '</tbody></table>';
       }
 
+      /* Kickoff and status answer the same question at different times: before
+       * the game "when does this start", once it has started "where are we".
+       * Only one of them is ever the live answer, so only one is shown --
+       * kickoff before the game, status during it and after ("Final"). */
       var meta = [];
-      if (g.kickoff_et) meta.push('<b>Kickoff</b> ' + esc(g.kickoff_et));
-      if (g.venue) meta.push('<b>Venue</b> ' + esc(g.venue));
-      if (g.season) {
-        meta.push('<b>Season</b> ' + esc(g.season) +
-          (g.postseason ? ' postseason' : (g.week ? ' · week ' + esc(g.week) : '')));
+      if (b.phase === 'pregame') {
+        if (g.kickoff_et) meta.push('<b>Kickoff</b> ' + esc(g.kickoff_et));
+      } else if (g.status) {
+        meta.push('<b>Status</b> ' + esc(g.status));
       }
-      if (g.status) meta.push('<b>Status</b> ' + esc(g.status));
+      if (g.venue) meta.push('<b>Venue</b> ' + esc(g.venue));
 
       return '<div class="go-hero"><div class="go-hero-top">' +
         '<div class="go-matchup">' +
-          '<span class="go-side' + aw + '">' + esc(g.away.abbr) + '</span>' +
+          '<span class="go-side' + aw + '">' + teamLogo(g.away.abbr, 'go-logo') +
+            esc(g.away.abbr) + '</span>' +
           '<span class="go-at">' + (g.neutral ? 'vs' : '@') + '</span>' +
-          '<span class="go-side' + hw + '">' + esc(g.home.abbr) + '</span>' +
+          '<span class="go-side' + hw + '">' + teamLogo(g.home.abbr, 'go-logo') +
+            esc(g.home.abbr) + '</span>' +
         '</div>' + scoreHtml +
-        '<span class="go-phase ' + esc(b.phase) + '">' + esc(b.phase) + '</span>' +
+        '<span class="go-status">' +
+          '<span class="go-phase ' + esc(b.phase) + '">' + esc(b.phase) + '</span>' +
+          freshness(b) +
+        '</span>' +
         '</div>' +
         '<div class="go-meta">' + meta.join('') + '</div>' + line + '</div>';
     }
@@ -246,8 +326,10 @@
       }).join('');
       return card('Team stats', null,
         '<table class="go-vs"><thead><tr>' +
-          '<th style="text-align:right">' + esc(b.game.away.abbr) + '</th><th></th>' +
-          '<th style="text-align:right">' + esc(b.game.home.abbr) + '</th>' +
+          '<th class="go-vs-team">' + teamLogo(b.game.away.abbr, 'go-logo-sm') +
+            esc(b.game.away.abbr) + '</th><th></th>' +
+          '<th class="go-vs-team">' + teamLogo(b.game.home.abbr, 'go-logo-sm') +
+            esc(b.game.home.abbr) + '</th>' +
         '</tr></thead><tbody>' + rows + '</tbody></table>');
     }
 
@@ -347,6 +429,40 @@
      * books quoting the same game is for — the generic table would put the two
      * sides of a spread in non-adjacent columns and bury the comparison. */
 
+    /* Books arrive as their API slug — `draftkings`, `fanduel`. Both tables now
+     * carry the book in a header cell sitting above four narrow columns, where
+     * the full name is several times the width of the numbers under it, so it
+     * is shortened to the ticker a line-shopping grid is read with. An unmapped
+     * book falls back to its slug uppercased: wrong-looking enough to notice
+     * and add rather than quietly rendering as something else. */
+    var BOOK_SHORT = {
+      draftkings: 'DK', fanduel: 'FD', betmgm: 'MGM', caesars: 'CZR',
+      betrivers: 'BR', fanatics: 'FAN', espnbet: 'ESPN', bet365: 'B365',
+      pointsbet: 'PB', hardrock: 'HR'
+    };
+
+    function bookLabel(v) {
+      var k = String(v == null ? '' : v).toLowerCase();
+      return BOOK_SHORT[k] || k.toUpperCase();
+    }
+
+    /* The thead of both tables is two rows: one book per spanning cell, then
+     * that book's columns under it. `go-bk` marks the first column of each
+     * group so the CSS can rule the boundary — skipped on the leading group of
+     * a table that starts with one, where the rule would land on the edge. */
+    function groupHead(books, sub, lead) {
+      return '<tr>' + (lead || '') + books.map(function (v, i) {
+          return '<th' + (i || lead ? ' class="go-bk"' : '') +
+            ' colspan="' + sub.length + '">' + esc(bookLabel(v)) + '</th>';
+        }).join('') +
+        '</tr><tr>' + books.map(function (v, i) {
+          return sub.map(function (h, j) {
+            return '<th' + (!j && (i || lead) ? ' class="go-bk"' : '') + '>' +
+              esc(h) + '</th>';
+          }).join('');
+        }).join('') + '</tr>';
+    }
+
     function fmtOdds(n) {
       if (n === null || n === undefined || n === '') return '—';
       return (n > 0 ? '+' : '') + n;
@@ -359,16 +475,15 @@
     }
 
     function oddsTable(rows, g) {
-      var head = ['Book',
-        g.away.abbr + ' spread', g.away.abbr + ' ML',
-        g.home.abbr + ' spread', g.home.abbr + ' ML',
-        'Total', 'Over', 'Under'];
-      var body = rows.slice().sort(function (a, b2) {
+      var sub = [g.away.abbr + ' spread', g.away.abbr + ' ML',
+                 g.home.abbr + ' spread', g.home.abbr + ' ML',
+                 'Total', 'Over', 'Under'];
+      var quotes = rows.slice().sort(function (a, b2) {
         return String(a.vendor).localeCompare(String(b2.vendor));
-      }).map(function (r) {
-        return '<tr>' +
-          '<td>' + esc(r.vendor) + '</td>' +
-          '<td class="is-num">' + esc(fmtSpread(r.spread_away_value)) + ' (' +
+      });
+      var body = quotes.map(function (r, i) {
+        return '<td class="is-num' + (i ? ' go-bk' : '') + '">' +
+            esc(fmtSpread(r.spread_away_value)) + ' (' +
             esc(fmtOdds(r.spread_away_odds)) + ')</td>' +
           '<td class="is-num">' + esc(fmtOdds(r.moneyline_away_odds)) + '</td>' +
           '<td class="is-num">' + esc(fmtSpread(r.spread_home_value)) + ' (' +
@@ -376,12 +491,11 @@
           '<td class="is-num">' + esc(fmtOdds(r.moneyline_home_odds)) + '</td>' +
           '<td class="is-num">' + esc(r.total_value === null ? '—' : r.total_value) + '</td>' +
           '<td class="is-num">' + esc(fmtOdds(r.total_over_odds)) + '</td>' +
-          '<td class="is-num">' + esc(fmtOdds(r.total_under_odds)) + '</td>' +
-        '</tr>';
+          '<td class="is-num">' + esc(fmtOdds(r.total_under_odds)) + '</td>';
       }).join('');
-      return '<div class="go-scroll"><table class="go-table"><thead><tr>' +
-        head.map(function (h) { return '<th>' + esc(h) + '</th>'; }).join('') +
-        '</tr></thead><tbody>' + body + '</tbody></table></div>';
+      return '<div class="go-scroll"><table class="go-table go-grouped"><thead>' +
+        groupHead(quotes.map(function (r) { return r.vendor; }), sub, '') +
+        '</thead><tbody><tr>' + body + '</tr></tbody></table></div>';
     }
 
     function oddsSection(b) {
@@ -408,16 +522,19 @@
           'is over. Opening is kept.</div>';
       }
       return card('Betting odds',
-        (o.books && o.books.length ? o.books.length + ' books · ' + o.books.join(' · ') : null),
+        (o.books && o.books.length
+          ? o.books.length + ' books · ' + o.books.map(bookLabel).join(' · ')
+          : null),
         body);
     }
 
     /* ---------- props ----------
      * Several thousand rows per game — 34 players x 25 markets x 6 books, and
      * both sides of every over/under — so a flat dump is unreadable and a
-     * truncated one is a lie. Two selects cut it to one market at one book,
-     * which is the question anyone actually has ("what is Maye's passing yards
-     * line, and who has the best price").
+     * truncated one is a lie. Two selects cut it to one market, and inside it
+     * every book quoting that market sits side by side under its own spanning
+     * header, which is the question anyone actually has ("what is Maye's
+     * passing yards line, and who has the best price").
      *
      * Two market shapes come back and both are handled: `milestone` is an
      * alternate-line ladder with a single price per line, `over_under` is the
@@ -432,30 +549,63 @@
     }
 
     function propsTable(b, rows) {
-      var body = rows.slice().sort(function (x, y) {
+      /* Book as a column group, not a column: a row is one player at one line
+       * and holds every book's price for it, so the comparison is read across
+       * rather than by hunting down the table for the second row with the same
+       * name. Where two books hang the line in different places the row splits
+       * and the empty half says which of them is not offering it. */
+      var books = ((b.player_props && b.player_props.books) || []).slice();
+      rows.forEach(function (r) {
+        if (books.indexOf(r.vendor) < 0) books.push(r.vendor);
+      });
+      books = books.filter(function (v) {
+        return rows.some(function (r) { return r.vendor === v; });
+      });
+
+      var order = [], byKey = {};
+      rows.forEach(function (r) {
+        var k = r.player_id + '|' + r.line_value;
+        if (!byKey[k]) {
+          byKey[k] = { player_id: r.player_id, line: r.line_value, quotes: {} };
+          order.push(k);
+        }
+        byKey[k].quotes[r.vendor] = r;
+      });
+
+      var body = order.map(function (k) { return byKey[k]; }).sort(function (x, y) {
         var px = playerOf(b, x.player_id), py = playerOf(b, y.player_id);
         var nx = (px && px.name) || String(x.player_id);
         var ny = (py && py.name) || String(y.player_id);
         if (nx !== ny) return nx.localeCompare(ny);
-        return parseFloat(x.line_value) - parseFloat(y.line_value);
-      }).map(function (r) {
-        var pl = playerOf(b, r.player_id);
-        var m = r.market || {};
+        return parseFloat(x.line) - parseFloat(y.line);
+      }).map(function (row) {
+        var pl = playerOf(b, row.player_id);
         return '<tr>' +
-          '<td>' + esc(pl ? pl.name : r.player_id) + '</td>' +
+          '<td>' + esc(pl ? pl.name : row.player_id) + '</td>' +
           '<td>' + esc(pl && pl.position ? pl.position : '') + '</td>' +
           '<td>' + esc(pl && pl.team ? pl.team : '') + '</td>' +
-          '<td class="is-num">' + esc(r.line_value) + '</td>' +
-          '<td class="is-num">' + esc(m.type === 'milestone' ? fmtOdds(m.odds) : '') + '</td>' +
-          '<td class="is-num">' + esc(m.type === 'over_under' ? fmtOdds(m.over_odds) : '') + '</td>' +
-          '<td class="is-num">' + esc(m.type === 'over_under' ? fmtOdds(m.under_odds) : '') + '</td>' +
-          '<td>' + esc(r.vendor) + '</td>' +
+          books.map(function (v) {
+            var r = row.quotes[v];
+            if (!r) {
+              return '<td class="is-null go-bk">—</td>' +
+                '<td class="is-null">—</td><td class="is-null">—</td>' +
+                '<td class="is-null">—</td>';
+            }
+            var m = r.market || {};
+            var mile = m.type === 'milestone', ou = m.type === 'over_under';
+            return '<td class="is-num go-bk">' + esc(r.line_value) + '</td>' +
+              '<td class="is-num">' + (mile ? esc(fmtOdds(m.odds)) : '') + '</td>' +
+              '<td class="is-num">' + (ou ? esc(fmtOdds(m.over_odds)) : '') + '</td>' +
+              '<td class="is-num">' + (ou ? esc(fmtOdds(m.under_odds)) : '') + '</td>';
+          }).join('') +
         '</tr>';
       }).join('');
-      return '<div class="go-scroll"><table class="go-table"><thead><tr>' +
-        ['Player', 'Pos', 'Team', 'Line', 'Odds', 'Over', 'Under', 'Book']
-          .map(function (h) { return '<th>' + esc(h) + '</th>'; }).join('') +
-        '</tr></thead><tbody>' + body + '</tbody></table></div>';
+
+      return '<div class="go-scroll"><table class="go-table go-grouped"><thead>' +
+        groupHead(books, ['Line', 'Odds', 'Over', 'Under'],
+          '<th rowspan="2">Player</th><th rowspan="2">Pos</th>' +
+          '<th rowspan="2">Team</th>') +
+        '</thead><tbody>' + body + '</tbody></table></div>';
     }
 
     function propsSection(b) {
@@ -479,15 +629,11 @@
               return '<option value="' + esc(m) + '">' + esc(label(m)) + '</option>';
             }).join('') +
           '</select>' +
-          '<select id="prop-book" class="go-select"><option value="">All books</option>' +
-            books.map(function (v) {
-              return '<option value="' + esc(v) + '">' + esc(v) + '</option>';
-            }).join('') +
-          '</select>' +
         '</div><div id="prop-table"></div>';
       return card('Player props',
         (p.current.length || p.opening.length) + ' quotes · ' +
-        markets.length + ' markets · ' + books.length + ' books',
+        markets.length + ' markets · ' + books.length + ' books' +
+        (books.length ? ' · ' + books.map(bookLabel).join(' · ') : ''),
         controls);
     }
 
@@ -496,7 +642,6 @@
     function wireProps(b) {
       var whichEl = document.getElementById('prop-which');
       var marketEl = document.getElementById('prop-market');
-      var bookEl = document.getElementById('prop-book');
       var tableEl = document.getElementById('prop-table');
       if (!tableEl) return;
 
@@ -511,14 +656,13 @@
 
       function draw() {
         var rows = propRows(b, whichEl.value).filter(function (r) {
-          return r.prop_type === marketEl.value &&
-            (!bookEl.value || r.vendor === bookEl.value);
+          return r.prop_type === marketEl.value;
         });
         tableEl.innerHTML = rows.length
           ? propsTable(b, rows)
           : '<div class="go-empty">No quotes for that combination.</div>';
       }
-      [whichEl, marketEl, bookEl].forEach(function (el) {
+      [whichEl, marketEl].forEach(function (el) {
         if (el) el.addEventListener('change', draw);
       });
       draw();
@@ -551,25 +695,12 @@
     function injuriesSection(b) {
       var inj = b.injuries || {};
       var rows = (inj.away || []).concat(inj.home || []).concat(inj.unknown || []);
-      var des = b.designations || {};
-      var drows = (des.away || []).concat(des.home || []);
-      if (!rows.length && !drows.length) {
-        return card('Injuries and designations', null,
-          emptyState(b, ['/player_injuries', '/player_designations'],
-                     'injury data'), true);
+      if (!rows.length) {
+        return card('Injury report', null,
+          emptyState(b, ['/player_injuries'], 'injury data'), true);
       }
-      var body = rows.length ? injuryTable(rows) : '';
-      if (drows.length) {
-        // Designations are a weekly practice-report record and their shape has
-        // more variation than the injury list, so they stay generic.
-        body += '<div class="go-card-note" style="margin:14px 0 6px">' +
-          'Designations (' + drows.length + ')</div>' + genericTable(drows.slice(0, 60)) +
-          (drows.length > 60
-            ? '<div class="go-card-note" style="margin-top:6px">showing first 60 of ' +
-              drows.length + '</div>'
-            : '');
-      }
-      return card('Injuries and designations', rows.length + ' on the injury report', body);
+      return card('Injury report', rows.length + ' on the injury report',
+                  injuryTable(rows));
     }
 
     function othersSection(index, currentId) {
@@ -581,7 +712,7 @@
       }).map(function (id) {
         var g = games[id];
         return '<a class="go-chip' + (id === String(currentId) ? ' is-current' : '') +
-          '" href="/game-odds?game=' + encodeURIComponent(id) + '">' +
+          '" href="/football/schedule/game/' + encodeURIComponent(id) + '">' +
           esc(g.away + ' @ ' + g.home) + ' · ' + esc(g.title || g.label) + '</a>';
       }).join('');
       return card('Other captured games', null, '<div class="go-others">' + chips + '</div>');
@@ -599,29 +730,144 @@
         'captured <code>' + esc(b.fetched_at) + '</code>' + filt +
         (n ? ' · <b>' + n + '</b> endpoint' + (n === 1 ? '' : 's') +
              ' unavailable on the key that fetched this' : '') +
-        '<br>Published to Supabase by <code>scripts/fetch_bdl_game.py --publish</code>. ' +
-        'Re-running it refreshes this page; nothing here is live.</p>';
+        (b.refresh ? '<br>Refresh policy <code>' + esc(b.refresh.policy) +
+          '</code> — ' + esc(b.refresh.note || '') +
+          (b.refresh.frozen ? '' :
+            ', so this is re-captured every ' + esc(gap(b.refresh.interval_s)) +
+            ' by <code>scripts/bdl_refresh.py</code>') + '.' : '') +
+        '<br>Published to Supabase by <code>scripts/fetch_bdl_game.py --publish</code>, ' +
+        'swept by <code>scripts/bdl_refresh.py</code>. The page re-checks on the ' +
+        'same schedule, so it does not need reloading.</p>';
     }
 
     /* ---------- render ---------- */
 
-    function renderMissing(id, index) {
-      crumbEl.textContent = 'Game';
+    /* ---------- nothing captured yet ----------
+     *
+     * The interesting half of this page. A bundle exists only once something
+     * has fetched it, and until this sweep existed that meant somebody typing a
+     * command, so 270-odd of the 272 rows on the schedule landed here. Now the
+     * honest answer is a time, not an instruction — so the empty state looks the
+     * game up in the committed schedule and says when it gets captured.
+     *
+     * Mirrors DISTANT_HORIZON in scripts/fetch_bdl_game.py, and is the only
+     * piece of the refresh policy this page has to know for itself: a captured
+     * game carries refresh_plan()'s real answer in its bundle, and a game that
+     * was never captured has no bundle to carry one. */
+    var CAPTURE_HORIZON_DAYS = 8;
+
+    /* The season is named for the year it starts in and runs into February, so
+     * through the winter both are live. Two files, ~40 KB each, served with an
+     * hour of cache — and only ever fetched on this path, where the page has
+     * nothing else to say. */
+    function likelySeasons() {
+      var d = new Date(), y = d.getFullYear();
+      var cur = d.getMonth() >= 2 ? y : y - 1;
+      return [cur, cur - 1];
+    }
+
+    var schedCache = null;
+
+    function scheduleLookup(id) {
+      if (!schedCache) {
+        schedCache = Promise.all(likelySeasons().map(function (yr) {
+          return fetch('/data/nfl_schedule_' + yr + '.json')
+            .then(function (r) { return r.ok ? r.json() : null; })
+            .catch(function () { return null; });
+        }));
+      }
+      return schedCache.then(function (docs) {
+        for (var i = 0; i < docs.length; i++) {
+          var doc = docs[i];
+          if (!doc) continue;
+          for (var w = 0; w < (doc.weeks || []).length; w++) {
+            var wk = doc.weeks[w];
+            for (var j = 0; j < (wk.games || []).length; j++) {
+              var g = wk.games[j];
+              if (String(g.id) === String(id)) {
+                return { id: String(g.id), away: g.away, home: g.home,
+                         kickoff: g.kickoff, venue: g.venue, neutral: !!g.neutral,
+                         week: wk.week, season: doc.season };
+              }
+            }
+          }
+        }
+        return null;
+      }).catch(function () { return null; });
+    }
+
+    function whenCaptured(row) {
+      if (!row) {
+        return 'This id is not on the 2026 or 2025 schedule, so nothing is ' +
+          'scheduled to capture it. Check the id, or fetch it directly:';
+      }
+      var k = stamp(row.kickoff);
+      if (k === null) return 'This game has no kickoff time yet, so there is ' +
+        'nothing to schedule a capture against.';
+      var now = Date.now() / 1000, out = k - now;
+      var horizon = CAPTURE_HORIZON_DAYS * 86400;
+      if (out > horizon) {
+        var opens = new Date((k - horizon) * 1000);
+        return 'Capture starts ' + CAPTURE_HORIZON_DAYS + ' days before kickoff — ' +
+          'around ' + opens.toLocaleDateString('en-US',
+            { weekday: 'short', month: 'short', day: 'numeric' }) +
+          ', in about ' + gap(out - horizon) + '. Before then there is nothing ' +
+          'to publish: the books have not posted a line.';
+      }
+      if (out > 0) {
+        return 'This game is inside the capture window and has not been swept ' +
+          'yet. The next sweep publishes it, and this page picks it up on its ' +
+          'own — no reload needed.';
+      }
+      return 'This game finished without ever being captured. Settled games ' +
+        'never change, so nothing re-checks them on a schedule; they get filled ' +
+        'in deliberately:';
+    }
+
+    function needsCommand(row) {
+      if (!row) return true;
+      var k = stamp(row.kickoff);
+      return k !== null && k < Date.now() / 1000;
+    }
+
+    function renderMissing(id, index, row) {
       var games = (index && index.games) || {};
       var known = Object.keys(games).length;
-      pageEl.innerHTML = card(
-        id ? 'Nothing captured for game ' + esc(id) : 'No game selected', null,
-        '<div class="go-empty">' +
-          (id
-            ? 'No bundle has been published for this game yet. Capture one with:<br><br>' +
-              '<code>python3 scripts/fetch_bdl_game.py --game-id ' + esc(id) +
-              ' --record --publish</code>'
-            : 'Add <code>?game=&lt;id&gt;</code>, or pick one below.') +
-        '</div>', true) +
+      var head = 'No game selected', body;
+
+      if (!id) {
+        crumbEl.textContent = 'Game';
+        body = 'A game page is <code>/football/schedule/game/&lt;id&gt;</code>. ' +
+          'Pick one below, or start from <a href="/football/schedule">the schedule</a>.';
+      } else {
+        var tag = row ? row.away + ' @ ' + row.home : 'game ' + id;
+        crumbEl.textContent = tag;
+        head = 'Not captured yet — ' + tag;
+        body = (row
+          ? '<div class="go-miss-head">' +
+              '<span class="go-matchup go-matchup-sm">' +
+                '<span class="go-side">' + teamLogo(row.away, 'go-logo-sm') +
+                  esc(row.away) + '</span>' +
+                '<span class="go-at">' + (row.neutral ? 'vs' : '@') + '</span>' +
+                '<span class="go-side">' + teamLogo(row.home, 'go-logo-sm') +
+                  esc(row.home) + '</span>' +
+              '</span>' +
+              '<span class="go-miss-when">' + esc(kickoffET(row.kickoff)) +
+                (row.week ? ' \u00b7 week ' + esc(row.week) : '') + '</span>' +
+            '</div>'
+          : '') +
+          whenCaptured(row) +
+          (needsCommand(row)
+            ? '<br><br><code>python3 scripts/bdl_refresh.py --game-id ' + esc(id) +
+              ' --publish</code>'
+            : '');
+      }
+
+      pageEl.innerHTML = card(head, null, '<div class="go-empty">' + body + '</div>', true) +
         (known ? othersSection(index, id) : '') +
         '<p class="go-prov">Every row on <a href="/football/schedule">the schedule</a> ' +
         'links here. ' + known + ' game' + (known === 1 ? '' : 's') +
-        ' captured so far.</p>';
+        ' published so far, swept by <code>scripts/bdl_refresh.py</code>.</p>';
     }
 
     function render(b, index) {
@@ -641,6 +887,70 @@
       wireProps(b);
     }
 
+    /* ---------- load, and keep loading ----------
+     *
+     * A game page left open across a kickoff should not have to be reloaded by
+     * hand, so it re-checks on the bundle's own schedule: `refresh.next_ts` is
+     * the moment the sweep intends to have replaced it. Cheap to be wrong about
+     * — the bundle's etag is the sha256 of its canonical JSON, so an unchanged
+     * game costs a 304 and no body, and a settled game is never polled at all.
+     *
+     * Held to a 60-second floor whatever the plan says, paused while the tab is
+     * hidden, and resumed on the way back — a backgrounded tab polling a live
+     * game every two minutes for three hours is somebody's battery. */
+    var MIN_POLL = 60;
+    var MISSING_POLL = 180;     // not captured yet: the sweep decides, not us
+    var currentIndex = null;
+    var timer = null;
+
+    function fetchBundle(id) {
+      // A 404 here is the ordinary "not captured yet" case, not an error.
+      return fetch('/api/game-odds?game=' + encodeURIComponent(id))
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .catch(function () { return null; });
+    }
+
+    function schedulePoll(id, b) {
+      if (timer) { clearTimeout(timer); timer = null; }
+      if (!id) return;
+      var wait;
+      if (!b) {
+        wait = MISSING_POLL;
+      } else if (b.refresh && b.refresh.frozen) {
+        return;                 // settled: there is no next capture to wait for
+      } else if (b.refresh && b.refresh.next_ts) {
+        wait = b.refresh.next_ts - Date.now() / 1000;
+      } else {
+        wait = 300;             // a bundle from before refresh_plan existed
+      }
+      timer = setTimeout(function () { poll(id); },
+                         Math.max(MIN_POLL, wait) * 1000);
+    }
+
+    function paint(id, b) {
+      if (b) render(b, currentIndex);
+      else if (!id) renderMissing('', currentIndex, null);
+      schedulePoll(id, b);
+      if (!b && id) {
+        scheduleLookup(id).then(function (row) {
+          renderMissing(id, currentIndex, row);
+        });
+      }
+    }
+
+    function poll(id) {
+      if (document.hidden) {
+        // Come back when the tab does, rather than burning the request now.
+        return schedulePoll(id, null);
+      }
+      fetchBundle(id).then(function (b) { paint(id, b); });
+    }
+
+    document.addEventListener('visibilitychange', function () {
+      var id = gameParam();
+      if (!document.hidden && id && timer) poll(id);
+    });
+
     function load() {
       var id = gameParam();
       // The index is fetched either way: it is what turns "nothing here" into
@@ -649,21 +959,11 @@
         return r.ok ? r.json() : null;
       }).catch(function () { return null; });
 
-      if (!id) {
-        idxP.then(function (index) { renderMissing('', index); });
-        return;
-      }
-      Promise.all([
-        // A 404 here is the ordinary "not captured yet" case, not an error —
-        // renderMissing handles it and offers whatever has been captured.
-        fetch('/api/game-odds?game=' + encodeURIComponent(id))
-          .then(function (r) { return r.ok ? r.json() : null; })
-          .catch(function () { return null; }),
-        idxP
-      ]).then(function (res) {
-        if (!res[0]) return renderMissing(id, res[1]);
-        render(res[0], res[1]);
-      });
+      Promise.all([id ? fetchBundle(id) : Promise.resolve(null), idxP])
+        .then(function (res) {
+          currentIndex = res[1];
+          paint(id, res[0]);
+        });
     }
 
     load();

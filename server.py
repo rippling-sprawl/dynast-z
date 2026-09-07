@@ -199,6 +199,10 @@ def action_api():
     return _action_api
 
 
+# /football/schedule/game/<balldontlie game id>. Anchored and digits-only so it
+# cannot swallow a future /football/schedule/... route.
+GAME_PAGE_RE = re.compile(r"^/football/schedule/game/[0-9]{1,12}/?$")
+
 _game_odds_api = None
 
 
@@ -1570,16 +1574,23 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self.send_response(301)
             self.send_header("Location", "/football/action/futures")
             self.end_headers()
+        # How the game pages get their data, and how current each one is. Plain
+        # prose plus the board of what has been captured -- the /football tile
+        # points here.
+        elif self.path.split("?")[0] == "/football/live-stats":
+            self.path = "/views/football/live-stats.html"
+            super().do_GET()
         # Query string tolerated: the schedule page keeps its week/team filters
         # in ?week=&team= so a view is linkable, and Vercel matches on the path
         # alone, so dev must too.
         elif self.path.split("?")[0] == "/football/schedule":
             self.path = "/views/football/schedule.html"
             super().do_GET()
-        # One game's odds and box score, deep-linked by balldontlie game id
-        # (?game=1392216) — the id every schedule row now carries. Same
-        # query-string rule as the schedule above.
-        elif self.path.split("?")[0] == "/game-odds":
+        # One game's odds and box score, under the schedule it hangs off:
+        # /football/schedule/game/1392216, where the last segment is the
+        # balldontlie game id every schedule row carries. Matched before the
+        # schedule itself, the way vercel.json orders them.
+        elif GAME_PAGE_RE.match(self.path.split("?")[0]):
             self.path = "/views/football/game-odds.html"
             super().do_GET()
         # The data behind that page. Delegated to the deployed function's own
