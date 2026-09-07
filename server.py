@@ -1603,7 +1603,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         # loaders so dev and prod can never disagree about the shape — the same
         # reason action_api() and bun_notes_api() exist.
         elif self.path.split("?")[0] == "/api/game-odds":
-            game_id = (parse_qs(urlparse(self.path).query).get("game") or [""])[0].strip()
+            query = parse_qs(urlparse(self.path).query)
+            game_id = (query.get("game") or [""])[0].strip()
+            known = (query.get("known") or [""])[0].strip()[:64]
             api = game_odds_api()
             try:
                 if not game_id:
@@ -1611,12 +1613,22 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 elif not api.GAME_ID_RE.match(game_id):
                     self._json_response(400, {"error": "game must be a numeric game id"})
                 else:
-                    _etag, bundle = api.load_bundle(game_id)
-                    if bundle is None:
+                    # Same two-step the function does: the etag column is a few
+                    # hundred bytes and the data column is a megabyte, so a poll
+                    # that finds nothing new must never reach for the second.
+                    etag = api.load_etag(game_id)
+                    if etag is None:
                         self._json_response(
                             404, {"error": f"no bundle stored for game {game_id}"})
+                    elif known == etag:
+                        self._json_response(200, {"unchanged": True, "etag": etag})
                     else:
-                        self._json_response(200, bundle)
+                        bundle = api.load_bundle(game_id, etag)
+                        if bundle is None:
+                            self._json_response(
+                                404, {"error": f"no bundle stored for game {game_id}"})
+                        else:
+                            self._json_response(200, dict(bundle, etag=etag))
             except Exception as e:  # noqa: BLE001
                 self._json_response(500, {"error": str(e)})
         # Methodology is its own route rather than a section of the table's
