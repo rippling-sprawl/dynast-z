@@ -8,6 +8,11 @@
  * stays in nfl-schedule.css). Depends on styles/base/lightbox.css for the
  * body.lightbox-open scroll pin the team overlay uses. */
 
+/* A consumer that shows the row for one view and not another sets [hidden] on
+ * it, and the attribute loses to the display below unless it is said here —
+ * the same reason .dd-pop[hidden] is spelled out further down. */
+.dd-row[hidden] { display: none; }
+
 .dd-row {
   display: flex;
   gap: 8px;

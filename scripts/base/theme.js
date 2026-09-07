@@ -87,19 +87,23 @@
   // --- The control in the nav drawer -------------------------------------
   // Markup lives here rather than in nav.js so the whole feature is one file;
   // nav.js only has to drop the string in and call mountToggle().
+  //
+  // Two small circles on the account row, a moon and a sun. Still two explicit
+  // options rather than one toggle — the lit one says which theme is on, with
+  // no need to work out which way a switch points — but the group carries no
+  // heading and the buttons carry no text: a moon and a sun beside each other
+  // are not ambiguous, so the words were only taking up the row. The names
+  // screen readers need are on aria-label instead.
 
   function controlHTML() {
     return '' +
       '<div class="theme-toggle" role="group" aria-label="Color theme">' +
-        '<span class="theme-toggle-label">Theme</span>' +
-        '<div class="theme-switch">' +
-          '<button type="button" class="theme-opt" data-theme-set="dark" aria-pressed="false">' +
-            '<span class="theme-opt-icon" aria-hidden="true">&#9789;</span>Dark' +
-          '</button>' +
-          '<button type="button" class="theme-opt" data-theme-set="light" aria-pressed="false">' +
-            '<span class="theme-opt-icon" aria-hidden="true">&#9788;</span>Light' +
-          '</button>' +
-        '</div>' +
+        '<button type="button" class="theme-opt" data-theme-set="dark" aria-pressed="false" aria-label="Dark theme" title="Dark">' +
+          '<span class="theme-opt-icon" aria-hidden="true">&#9789;</span>' +
+        '</button>' +
+        '<button type="button" class="theme-opt" data-theme-set="light" aria-pressed="false" aria-label="Light theme" title="Light">' +
+          '<span class="theme-opt-icon" aria-hidden="true">&#9788;</span>' +
+        '</button>' +
       '</div>';
   }
 

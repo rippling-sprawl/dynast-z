@@ -147,6 +147,14 @@
       panel: root.querySelector('.dd-pop')
     };
     dd.modal = dd.panel.classList.contains('dd-overlay');
+    /* Registrations from a markup that has since been replaced are dropped
+     * here rather than accumulating. A consumer that repaints — /football
+     * /schedule/game polls itself and rebuilds its cards — otherwise registers
+     * the same control again on every paint, and closeAllDropdowns walks a
+     * list that grows for as long as the page is open. */
+    dropdowns = dropdowns.filter(function (d) {
+      return d.root !== root && d.root.isConnected !== false;
+    });
     dropdowns.push(dd);
 
     dd.btn.addEventListener('click', function (e) {

@@ -11,8 +11,9 @@
  * scrape of the live site. Its top colours are a near-white page (#fefefe /
  * #f4f4f4), #333 ink, the brand gold (#f4c255 / #fcc138), a deep navy (#002c5f)
  * on the header bands, a link blue (#0065cc), and the near-black chrome bar
- * (#1d1d25). Its display face is Saira Condensed, which is where the uppercase
- * condensed headings and column heads below come from.
+ * (#1d1d25). The palette is still VegasInsider's; the type is not. These three
+ * pages set their headings in Inter and their running text in Helvetica Neue —
+ * see the type block below.
  *
  * Two themes, one identity. VegasInsider is a light site, so light mode is the
  * faithful reading — white board, navy header bands, gold rules. Dark mode
@@ -28,7 +29,11 @@
  * though they are written against the document root: a page that never loads
  * this file never sees them. */
 
-@import url('https://fonts.googleapis.com/css?family=Saira+Condensed:400,700&display=swap');
+/* Inter, for the display face below. Only the three weights the skin actually
+ * sets — 400 on the one lowercase note, 700 on everything else, 600 for the
+ * rules that inherit it — so the request stays small. The body face needs no
+ * import: it is Helvetica Neue, which is already on the machine. */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
 
 /* --- Brand constants ------------------------------------------------------
  * Theme-independent, unlike everything in the block below: the gold is the gold
@@ -44,12 +49,21 @@
   --vi-band-ink: #ffffff;
   --vi-band-ink-2: rgba(255, 255, 255, 0.66);
 
-  /* Saira Condensed with a real fallback ladder: Arial Narrow ships on both
-   * desktop platforms, so a blocked or slow webfont still lands on something
-   * condensed rather than on the body face. */
-  --vi-display: 'Saira Condensed', 'Arial Narrow', 'Helvetica Neue Condensed',
-                Helvetica, Arial, sans-serif;
-  --vi-body: Helvetica, Arial, sans-serif;
+  /* Inter on the headings, bands, column heads and chips; Helvetica Neue on
+   * the running text. Inter is the grotesque the odds-screen genre has settled
+   * on — it was drawn for small dense UI, and its tall x-height and open
+   * apertures are what keep a 10px uppercase column head legible.
+   *
+   * The ladder falls to Helvetica Neue and then to Arial, so a blocked or slow
+   * webfont lands on the body face rather than on the browser default, and the
+   * page degrades to the one-family setting it had before rather than to
+   * something unrelated.
+   *
+   * Note neither face is condensed, where Saira Condensed was. The uppercase
+   * headings and column heads below therefore set wider than they used to at
+   * the same size and tracking. */
+  --vi-display: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --vi-body: 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 
 /* --- Dark ---------------------------------------------------------------- */
@@ -181,9 +195,10 @@
 }
 
 /* --- Body face ------------------------------------------------------------
- * VegasInsider sets its running text in Helvetica/Arial and reserves the
- * condensed face for headings, column heads and labels. The same split is what
- * every --vi-display rule downstream is doing. */
+ * The running text is Helvetica Neue and stays off the webfont; Inter is spent
+ * only where --vi-display is asked for, which is headings, bands, column heads
+ * and chips. So the heading/text split the skin has always had is still a split
+ * in the face, not only in weight and case. */
 
 body {
   font-family: var(--vi-body);
@@ -194,12 +209,12 @@ body {
  * The near-black bar with the gold rule under it is the first thing the site
  * is recognised by, so the shared header takes it on these three routes.
  *
- * The account link in the corner is written by scripts/base/nav.js with its
- * colour inline — var(--text-4) signed out, var(--accent-2) signed in — and an
- * inline style cannot be outranked by a sheet. It does not have to be: custom
- * properties inherit, so redefining the two of them *on the header* changes
- * what those inline var()s resolve to. Same trick carries the h1 and the
- * hamburger, which read --text-hi and --text-3 from their own rules. */
+ * The header's contents are written by scripts/base/nav.js and styled from
+ * styles/base/styles.css, so the skin is applied by redefining the custom
+ * properties *on the header* rather than by restating those rules: the h1, the
+ * menu button and the two bar tabs read --text-hi, --text-3 and --accent from
+ * their own rules and pick the skin up through inheritance. That is also what
+ * puts gold on the tab for the page you are on. */
 
 header {
   background: var(--vi-bar);
@@ -221,10 +236,20 @@ header h1 {
 
 header a:hover { color: var(--vi-gold); }
 
+/* Narrow screens: the bar is fixed to the bottom of the viewport (see the
+ * media query in styles/base/styles.css), so the gold rule moves to the edge
+ * that now faces the page. `header.site-header` to outrank the border the
+ * bottom-bar rule sets there. */
+@media (max-width: 640px) {
+  header.site-header {
+    border-top: 3px solid var(--vi-gold);
+  }
+}
+
 /* --- Page furniture ------------------------------------------------------- */
 
-/* The page title, in the condensed caps every heading on VegasInsider is set
- * in, over the gold rule that separates it from the board below. */
+/* The page title, in the display caps every heading on these pages is set in,
+ * over the gold rule that separates it from the board below. */
 .masters-content h2 {
   font-family: var(--vi-display);
   font-size: 30px;
@@ -261,13 +286,13 @@ header a:hover { color: var(--vi-gold); }
  * Three patterns carry the skin across all three pages, and each page's own
  * sheet spends them on its own components:
  *
- *   .vi-band  — a navy header strip with white condensed caps on it, the
+ *   .vi-band  — a navy header strip with white display caps on it, the
  *               treatment VegasInsider gives every table head and card head.
- *   .vi-label — condensed caps on the page's own surface, for the smaller
+ *   .vi-label — display caps on the page's own surface, for the smaller
  *               headings that are not strong enough to earn a band.
  *   .vi-chip  — a squared-off badge. The house pill is 999px; nothing on
  *               VegasInsider is, so every badge on these pages loses its
- *               radius and gains the condensed face.
+ *               radius and gains the display caps.
  *
  * They are written as classes so the intent has a name, and applied by the
  * page sheets with @extend-by-hand — i.e. the page sheet repeats the two or

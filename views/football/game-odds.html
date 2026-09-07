@@ -9,6 +9,9 @@
   <link rel="stylesheet" href="/styles/base/theme.css">
   <link rel="stylesheet" href="/styles/base/styles.css">
   <link rel="stylesheet" href="/styles/base/hub.css">
+  <!-- The dropdown the props board filters with is /football/schedule's week
+       menu, unchanged: same trigger, same panel, same keyboard. -->
+  <link rel="stylesheet" href="/styles/components/nfl-pickers.css">
   <link rel="stylesheet" href="/styles/primary/game-odds.css">
   <script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
   <script defer src="/_vercel/insights/script.js"></script>
@@ -18,6 +21,7 @@
   <div id="nav-drawer-mount"></div>
   <script src="/scripts/base/auth.js"></script>
   <script src="/scripts/base/nav.js"></script>
+  <script src="/scripts/components/nfl-pickers.js"></script>
   <script>initPage();</script>
 
   <div class="masters-content go-wrap">
@@ -75,9 +79,12 @@
      * most four on the page and two of them are above the fold. */
     var LOGO_DIR = '/assets/icons/nfl/';
 
-    function teamLogo(abbr, cls) {
+    function teamLogo(abbr, cls, alt) {
+      // The crest is decorative wherever the abbreviation sits beside it. In
+      // the hero it is the only thing naming the team, so it takes the name.
       return '<img class="' + cls + '" src="' + LOGO_DIR + esc(abbr) +
-        '.svg" alt="" aria-hidden="true">';
+        '.svg" alt="' + (alt ? esc(abbr) : '') + '"' +
+        (alt ? '' : ' aria-hidden="true"') + '>';
     }
 
     /* The id is the last path segment, not a query parameter. Anchored and
@@ -260,12 +267,41 @@
       'reserve-dnr': 'DNR', 'suspended': 'SUSP', 'active': 'ACT'
     };
 
-    function statusCell(v) {
+    /* Questionable and Out are the two designations the report is scanned for
+     * -- one is a lineup question and the other closes it -- so those two
+     * carry colour and the rest of the list stays neutral. A season-long
+     * designation like IR or PUP is a fact about the roster rather than about
+     * Sunday, and colouring all twelve would leave nothing standing out. */
+    var STATUS_TONE = { 'questionable': 'is-q', 'out': 'is-out' };
+
+    /* Sort order within a club. The feed hands the report back in no order
+     * anyone would choose -- roughly the order the rows were written -- so the
+     * player who is ruled out sits between two men on IR from August. Ordered
+     * by how much the designation says about Sunday instead: the three game
+     * statuses first, hardest first, then the season-long reserve lists, then
+     * anyone listed active. A designation with no entry lands between the two
+     * halves rather than at either end, on the reasoning that an unrecognised
+     * status is more likely to be a new game designation than a new list. */
+    var STATUS_RANK = {
+      'out': 0, 'doubtful': 1, 'questionable': 2,
+      'injured reserve': 4, 'ir': 4, 'ir-r': 5, 'pup-p': 6, 'pup-r': 7,
+      'nfi-a': 8, 'nfi-r': 9, 'reserve-dnr': 10, 'suspended': 11,
+      'active': 12
+    };
+
+    function statusRank(v) {
+      var k = String(v == null ? '' : v).trim().toLowerCase();
+      var r = STATUS_RANK[k];
+      return r === undefined ? 3 : r;
+    }
+
+    function statusBadge(v) {
       var full = String(v == null ? '' : v).trim();
-      if (!full) return '<td></td>';
-      var h = heading(STATUS_ABBR[full.toLowerCase()] || full, full);
-      return '<td' + (h.t ? ' title="' + esc(h.t) + '"' : '') + '>' +
-        esc(h.s) + '</td>';
+      if (!full) return '';
+      var k = full.toLowerCase();
+      var h = heading(STATUS_ABBR[k] || full, full);
+      return '<span class="go-ibadge ' + (STATUS_TONE[k] || 'is-plain') + '"' +
+        (h.t ? ' title="' + esc(h.t) + '"' : '') + '>' + esc(h.s) + '</span>';
     }
 
     function isNum(v) { return typeof v === 'number'; }
@@ -425,9 +461,15 @@
         ' key and this section fills in.</div>';
     }
 
-    function card(title, body, flush) {
+    /* `head` is markup dropped in the card head beside the title rather than
+     * appended to the body: a control that switches the whole card belongs on
+     * the same line as the card's name, not on a strip the reader has to take
+     * as a first row of content. Escaped titles, raw head -- the only caller
+     * passing one builds it here. */
+    function card(title, body, flush, head) {
       return '<section class="go-card">' +
-        '<div class="go-card-head"><h3>' + esc(title) + '</h3></div>' +
+        '<div class="go-card-head"><h3>' + esc(title) + '</h3>' +
+        (head || '') + '</div>' +
         '<div class="go-card-body' + (flush ? ' is-flush' : '') + '">' +
         body + '</div></section>';
     }
@@ -472,26 +514,26 @@
           }).join('') + '</tbody></table>';
       }
 
-      /* Kickoff and status both answer "where is this game", and both are now
-       * the chip's job, so neither is repeated here. What is left is the one
-       * fact the chip does not carry. */
-      var meta = [];
-      if (g.venue) meta.push('<b>Venue</b> ' + esc(g.venue));
-
+      /* The two crests are the headline and they sit at the far edges, away on
+       * the left and home on the right, so the column between them is free for
+       * everything that answers "where is this game": the neutral-site marker,
+       * the status chip with its freshness line, and the venue. The venue needs
+       * no "Venue" label down there -- a stadium name between two crests is
+       * only ever the place they are playing. */
       return '<div class="go-hero"><div class="go-hero-top">' +
-        '<div class="go-matchup">' +
-          '<span class="go-side' + aw + '">' + teamLogo(g.away.abbr, 'go-logo') +
-            esc(g.away.abbr) + '</span>' +
+        '<span class="go-team' + aw + '">' +
+          teamLogo(g.away.abbr, 'go-crest', true) + '</span>' +
+        '<div class="go-hero-mid">' +
           '<span class="go-at">' + (g.neutral ? 'vs' : '@') + '</span>' +
-          '<span class="go-side' + hw + '">' + teamLogo(g.home.abbr, 'go-logo') +
-            esc(g.home.abbr) + '</span>' +
+          '<span class="go-status">' +
+            '<span class="go-phase ' + esc(b.phase) + '">' + esc(phaseText(b)) + '</span>' +
+            freshness(b) +
+          '</span>' +
+          (g.venue ? '<span class="go-venue">' + esc(g.venue) + '</span>' : '') +
         '</div>' +
-        '<span class="go-status">' +
-          '<span class="go-phase ' + esc(b.phase) + '">' + esc(phaseText(b)) + '</span>' +
-          freshness(b) +
-        '</span>' +
+        '<span class="go-team' + hw + '">' +
+          teamLogo(g.home.abbr, 'go-crest', true) + '</span>' +
         '</div>' +
-        (meta.length ? '<div class="go-meta">' + meta.join('') + '</div>' : '') +
         line + '</div>';
     }
 
@@ -754,6 +796,11 @@
       return BOOK_SHORT[k] || k.toUpperCase();
     }
 
+    function bookName(v) {
+      var k = String(v == null ? '' : v).toLowerCase();
+      return BOOK_NAME[k] || bookLabel(v);
+    }
+
     function bookHeading(v) {
       var k = String(v == null ? '' : v).toLowerCase();
       return heading(bookLabel(v), BOOK_NAME[k] || null);
@@ -840,21 +887,12 @@
       }
       var body = '';
       if (o.current.length) {
-        body += '<div class="go-sub" style="margin:0 0 6px 9px">Current</div>' +
-          oddsTable(o.current, b.game);
+        body += oddsTable(o.current, b.game);
       }
       if (o.opening.length) {
-        body += '<div class="go-sub" style="margin:14px 0 6px 9px">Opening</div>' +
-          oddsTable(o.opening, b.game);
+        body += oddsTable(o.opening, b.game);
       }
-      // A settled game keeps its opening line but not its closing one — worth
-      // saying, because an empty "Current" on a finished game is a property of
-      // the feed, not a gap in the capture.
-      if (!o.current.length && o.opening.length) {
-        body += '<div class="go-empty" style="padding:12px 0 0">' +
-          'No current line: balldontlie does not retain closing odds once a game ' +
-          'is over. Opening is kept.</div>';
-      }
+      
       return card('Betting odds', body);
     }
 
@@ -862,11 +900,39 @@
      * Several thousand rows per game — 34 players x 25 markets x 2 books, and
      * both sides of every over/under — so a flat dump is unreadable and a
      * truncated one is a lie. Two selects cut it to one market, and inside it
-     * every line a player is quoted at hangs under his name.
+     * a player is a row and the lines he is quoted at are the columns.
      *
-     * Two market shapes come back and both are handled: `milestone` is an
-     * alternate-line ladder with a single price per line, `over_under` is the
-     * conventional two-sided line. */
+     * ---------- market shapes ----------
+     * Two shapes come back under the same prop_type and they are different
+     * bets. `milestone` is an over-only ladder — 50+, 60+, 70+ receiving yards,
+     * anytime touchdown, 2+ touchdowns — one price per rung and no under to
+     * take. `over_under` is the conventional two-sided line at 59.5.
+     *
+     * They used to share a table, because the feed shares a market name. A
+     * receiving-yards board was then 206 ladder rungs and 19 two-sided lines
+     * under three price columns, two of which were empty on every row: a blank
+     * Over and Under beside each rung, a blank Odds beside each line. So the
+     * split is made at the <select> — Milestones and Over / Under are separate
+     * options — and one table only ever holds one shape, which is what lets
+     * each of them be laid out as the board it actually is.
+     *
+     * Anything that is not a milestone is treated as two-sided, which is what
+     * the price cells assumed before the split: a third shape the feed adds
+     * later renders with Over and Under rather than vanishing from the menu. */
+    var MILESTONE = 'milestone';
+
+    function shapeOf(r) {
+      return ((r && r.market) || {}).type === MILESTONE ? MILESTONE : 'over_under';
+    }
+
+    /* A milestone line is a floor, not a number the market can land on: 50 is
+     * "50 or more receiving yards", and the 0.5 an anytime-touchdown quote
+     * hangs on is "1 or more". Shown with the + and rounded up, because "0.5"
+     * in a touchdown column reads as half a touchdown. */
+    function mileLine(v) {
+      var n = parseFloat(v);
+      return isFinite(n) ? Math.ceil(n) + '+' : String(v == null ? '' : v);
+    }
 
     /* Current only. An opening line answers a different question — how the
      * market moved — and that is not what this board is for; carrying it as a
@@ -907,29 +973,78 @@
       return Math.round(100 * (1 - p) / p);
     }
 
-    /* [{vendor, odds}, …] -> {odds, title}, or null when no book priced it.
-     * `title` is the column group folded up: what took eight columns is one
-     * cell and a hover, so the per-book prices are still on the page. Only
-     * built when there is more than one — on a single quote the cell already
-     * IS that book's price and the Books column already names it. */
+    /* [{vendor, odds}, …] -> {odds, books:[{name, odds}]}, or null when no
+     * book priced it. The books come back whole rather than folded into a
+     * string: they are the column group this board replaced, and both the
+     * hover and the tap overlay below are built out of them. */
     function consensusOdds(quotes) {
-      var ps = [], parts = [];
+      var ps = [], books = [];
       quotes.forEach(function (q) {
         var p = impliedProb(q.odds);
         if (p === null) return;
         ps.push(p);
-        parts.push(bookLabel(q.vendor) + ' ' + fmtOdds(q.odds));
+        books.push({ name: bookName(q.vendor), odds: q.odds });
       });
       if (!ps.length) return null;
       var mean = ps.reduce(function (a, c) { return a + c; }, 0) / ps.length;
-      return { odds: toAmerican(mean), title: ps.length > 1 ? parts.join(' \u00b7 ') : null };
+      return { odds: toAmerican(mean), books: books };
     }
 
+    /* ---------- price detail ----------
+     * What each book is hanging a line at, behind the one consensus number the
+     * board shows. It was a title attribute and nothing else, which is a
+     * hover, which a phone does not have — and a prop board is mostly read on
+     * a phone. The hover stays for a mouse; a tap opens the same thing as an
+     * overlay.
+     *
+     * The row is what carries it, not the price cell. A price cell is a 40px
+     * target on a phone and there are three of them in a two-sided row, so
+     * tapping the name — the widest, most obvious thing in the row — did
+     * nothing, and tapping a price meant hitting the right number rather than
+     * the right bet. One panel per row instead: it is a superset of what the
+     * per-cell panels held, since a row's sides or rungs are all in it.
+     *
+     * The row carries an index into this rather than the detail itself: the
+     * payload is a player, a line and a price per book per side, and encoding
+     * that as attributes on every row of a forty-column ladder is a lot of
+     * markup to say what an array position says. Reset per render, which is
+     * safe because a render replaces every table on the page. */
+    var priceDetail = [];
+
+    /* rows: [{label, quotes}] — the sides of a two-sided line, or the rungs of
+     * one player's ladder. Returns the index the <tr> hangs off. */
+    function pushDetail(player, line, rows) {
+      var vendors = [], seen = {};
+      rows.forEach(function (r) {
+        r.quotes.forEach(function (q) {
+          if (seen[q.vendor]) return;
+          seen[q.vendor] = 1;
+          vendors.push(q.vendor);
+        });
+      });
+      vendors.sort(function (x, y) {
+        return bookLabel(x).localeCompare(bookLabel(y));
+      });
+      return priceDetail.push({
+        player: player, line: line, books: vendors,
+        rows: rows.map(function (r) {
+          var by = {}, c = consensusOdds(r.quotes);
+          r.quotes.forEach(function (q) { by[q.vendor] = q.odds; });
+          return { label: r.label, by: by, cons: c ? c.odds : null };
+        })
+      }) - 1;
+    }
+
+    /* The hover stays per cell: a mouse is already pointing at one price, and
+     * the whole row is what the tap is for. */
     function consCell(quotes) {
       var c = consensusOdds(quotes);
       if (!c) return '<td class="is-null">—</td>';
-      return '<td class="is-num"' + (c.title ? ' title="' + esc(c.title) + '"' : '') +
-        '>' + esc(fmtOdds(c.odds)) + '</td>';
+      var hover = c.books.map(function (bk) {
+        return bk.name + ' ' + fmtOdds(bk.odds);
+      }).join(' \u00b7 ');
+      return '<td class="is-num" title="' + esc(hover) + '">' +
+        esc(fmtOdds(c.odds)) + '</td>';
     }
 
     /* Every line one player is quoted at, in this market. Keyed on the market
@@ -944,13 +1059,12 @@
         if (!byKey[k]) {
           byKey[k] = {
             player_id: r.player_id, line: r.line_value, type: m.type,
-            books: [], odds: [], over: [], under: []
+            odds: [], over: [], under: []
           };
           order.push(k);
         }
         var g = byKey[k];
-        if (g.books.indexOf(r.vendor) < 0) g.books.push(r.vendor);
-        if (m.type === 'milestone') {
+        if (shapeOf(r) === MILESTONE) {
           g.odds.push({ vendor: r.vendor, odds: m.odds });
         } else {
           g.over.push({ vendor: r.vendor, odds: m.over_odds });
@@ -958,51 +1072,167 @@
         }
       });
       /* Sorted by ticker rather than left in whatever order the feed listed
-       * the books in, which differs between markets and reads as unsorted next
-       * to the Books column it has to agree with. */
+       * the books in, which differs between markets and would read as an
+       * unsorted list in the hover the prices are folded into. */
       function byBook(x, y) {
         return bookLabel(x.vendor).localeCompare(bookLabel(y.vendor));
       }
       return order.map(function (k) {
         var g = byKey[k];
-        g.books.sort(function (x, y) {
-          return bookLabel(x).localeCompare(bookLabel(y));
-        });
         g.odds.sort(byBook); g.over.sort(byBook); g.under.sort(byBook);
         return g;
       });
     }
 
-    function propsTable(b, rows) {
-      /* Player as a header row rather than a column, the same grouping
-       * /football/action reads its tickets in. One player is quoted at up to
-       * fifteen lines in a market, and a Player column spends the widest cell
-       * on the table repeating a name that has not changed for fifteen rows.
-       * Said once, what hangs under it is four short numbers — which is a board
-       * that fits a phone without scrolling. */
-      var groups = propGroups(rows);
+    /* Sorted on the name as it is displayed, which is the surname: ordering
+     * by the full name while showing "P. Mahomes" reads as unsorted to anyone
+     * scanning down the page. */
+    function playerName(b, id) {
+      var pl = playerOf(b, id);
+      return (pl && shortenName(pl.name)) || String(id);
+    }
 
-      /* Odds belongs to milestone rows and Over/Under to two-sided ones, and a
-       * market is often all of one kind — every anytime-TD quote is a milestone
-       * — so the columns a market has no use for are not drawn. A fixed head
-       * would leave a third of the table permanently empty and reading as a
-       * feed that failed rather than as a shape it does not have. */
-      var hasMile = groups.some(function (g) { return g.type === 'milestone'; });
-      var hasOU = groups.some(function (g) { return g.type !== 'milestone'; });
+    /* The player as the first cell of his own row, rather than a header row
+     * spanning the table above the lines that hang off it. A milestone board
+     * is one row per player now — the ladder went into the columns — and a
+     * two-sided board is one row, two when the books disagree on where to hang
+     * the line, so a group header would be a banner over a single line.
+     *
+     * It is the pinned column instead, the arrangement the injury report
+     * already scrolls under: a milestone market runs to two dozen rungs and
+     * the board has to go sideways, and the name is the one thing a row cannot
+     * afford to have scroll off it. Position and club stay on the name, which
+     * is the only cell wide enough to carry them. */
+    function playerCell(b, id) {
+      var pl = playerOf(b, id);
+      var meta = pl ? [pl.position, pl.team].filter(Boolean).join(' \u00b7 ') : '';
+      return '<td class="go-plc">' + esc(playerName(b, id)) +
+        (meta ? '<span class="go-plmeta">' + esc(meta) + '</span>' : '') + '</td>';
+    }
 
-      /* Same argument for the line itself: a first-touchdown board is 29 rows
-       * that all read 0.5, and a column that says one thing is a column that
-       * says nothing. What the number means is in the market above it. */
-      var hasLine = groups.some(function (g) { return g.line !== groups[0].line; });
+    /* The ladder as columns, one row per player: every rung anyone in this
+     * market is quoted at across the head, ascending, and a player's row is
+     * his price at each of them.
+     *
+     * Read down a column it answers the question a milestone board is opened
+     * for — who is worth taking at 50+, and at what price — which the old
+     * layout could not be read for at all: a rung was one row inside one
+     * player's block, so comparing two players at 50+ meant scrolling between
+     * two blocks and holding a number in your head.
+     *
+     * Wide, and allowed to be. A book prices each player's own line as well as
+     * the round numbers, so 57 and 63 turn up between 50 and 70 as columns
+     * with a single price in them. They stay: it is a real quote, and a board
+     * that drops it disagrees with the book it came from. */
+    function milestoneTable(b, players, byPlayer, groups) {
+      var lines = [], seen = {};
+      groups.forEach(function (g) {
+        if (seen[g.line]) return;
+        seen[g.line] = 1;
+        lines.push(g.line);
+      });
+      lines.sort(function (x, y) { return parseFloat(x) - parseFloat(y); });
 
-      var head = [];
-      if (hasLine) head.push(thCell(heading('Line', 'Line quoted'), 'is-num'));
-      if (hasMile) head.push(thCell(heading('Odds', 'Consensus price for the line and up'), 'is-num'));
-      if (hasOU) {
-        head.push(thCell(heading('Over', 'Consensus over price'), 'is-num'));
-        head.push(thCell(heading('Under', 'Consensus under price'), 'is-num'));
+      /* One rung is not a ladder, and a board of them is headed Odds rather
+       * than by the rung — but only when the rung is 1+, which is every
+       * touchdown market and says nothing the market name has not. Any other
+       * single rung keeps its number: a board quoted at 50+ and nowhere else
+       * headed "Odds" would be a price with no threshold on the page, which is
+       * the hole the two-sided board had with its Line column. */
+      var trivial = lines.length === 1 && mileLine(lines[0]) === '1+';
+      var head = thCell('Player', 'go-plc') + (trivial
+        ? thCell(heading('Odds', 'Consensus price for the line and up'), 'is-num')
+        : lines.map(function (v) {
+            return thCell(heading(mileLine(v),
+              'Consensus price for ' + mileLine(v).slice(0, -1) + ' or more'), 'is-num');
+          }).join(''));
+
+      /* Ordered down the first rung rather than by name. The board is opened
+       * to find who is worth taking at the shortest milestone — the leftmost
+       * column — so that column is the order, ascending on the price, chalk at
+       * the top.
+       *
+       * A player the books have not quoted at that rung sorts above every
+       * price rather than below them: an unquoted 50+ on a back who is quoted
+       * at 70+ is a rung too short for a book to bother hanging, so the blank
+       * is shorter than any number in the column, not longer. Ties fall
+       * through to the next rung, which is what the players sharing a blank
+       * first column have to be separated on, and a name breaks a tie the
+       * whole ladder does not. */
+      var at = {};
+      players.forEach(function (id) {
+        var byLine = {};
+        byPlayer[id].forEach(function (g) { byLine[g.line] = g; });
+        at[id] = byLine;
+      });
+      function priceAt(id, v) {
+        var g = at[id][v], c = g && consensusOdds(g.odds);
+        return c ? c.odds : -Infinity;
       }
-      head.push(thCell(heading('Books', 'Books quoting this line'), 'go-bks'));
+      players = players.slice().sort(function (x, y) {
+        for (var i = 0; i < lines.length; i++) {
+          var px = priceAt(x, lines[i]), py = priceAt(y, lines[i]);
+          if (px !== py) return px < py ? -1 : 1;
+        }
+        return playerName(b, x).localeCompare(playerName(b, y));
+      });
+
+      var body = players.map(function (id) {
+        /* The whole ladder in one panel, rung by rung — which is the board's
+         * own row read book by book, and the line shopping the per-book column
+         * groups used to be for. */
+        var mine = at[id];
+        var i = pushDetail(playerName(b, id), null,
+          lines.filter(function (v) { return mine[v]; }).map(function (v) {
+            return { label: mileLine(v), quotes: mine[v].odds };
+          }));
+        return '<tr data-pd="' + i + '">' + playerCell(b, id) +
+          lines.map(function (v) {
+            return mine[v] ? consCell(mine[v].odds) : '<td class="is-null">—</td>';
+          }).join('') + '</tr>';
+      }).join('');
+
+      return { head: head, body: body };
+    }
+
+    /* One row per line, because the books do not agree on where to hang it:
+     * FanDuel at 59.5 and DraftKings at 62.5 are two different bets, not two
+     * prices on one, and folding them into a row would average across a line
+     * that neither book is offering. So the line stays a column and a player
+     * takes a second row when he is quoted at a second number.
+     *
+     * Always drawn, even when every row on the board says the same number.
+     * It used to be dropped in that case, on the rule that a column saying one
+     * thing says nothing — which is true of the milestone board, where the
+     * rung is the column heading, and false here: the line IS the bet. Two
+     * quarterbacks quoted at the same 31.5 pass attempts left a board reading
+     * "Pass Att, over -106, under -120" with the 31.5 nowhere on the page. */
+    function overUnderTable(b, players, byPlayer, groups) {
+      var head = thCell('Player', 'go-plc') +
+        thCell(heading('Line', 'Line quoted'), 'is-num') +
+        thCell(heading('Over', 'Consensus over price'), 'is-num') +
+        thCell(heading('Under', 'Consensus under price'), 'is-num');
+
+      var body = players.map(function (id) {
+        return byPlayer[id].slice().sort(function (x, y) {
+          return parseFloat(x.line) - parseFloat(y.line);
+        }).map(function (g) {
+          var i = pushDetail(playerName(b, id), g.line, [
+            { label: 'Over', quotes: g.over },
+            { label: 'Under', quotes: g.under }
+          ]);
+          return '<tr data-pd="' + i + '">' + playerCell(b, id) +
+            '<td class="is-num">' + esc(g.line) + '</td>' +
+            consCell(g.over) + consCell(g.under) +
+            '</tr>';
+        }).join('');
+      }).join('');
+
+      return { head: head, body: body };
+    }
+
+    function propsTable(b, rows) {
+      var groups = propGroups(rows);
 
       var players = [], byPlayer = {};
       groups.forEach(function (g) {
@@ -1010,46 +1240,221 @@
         if (!byPlayer[id]) { byPlayer[id] = []; players.push(id); }
         byPlayer[id].push(g);
       });
+      players.sort(function (x, y) {
+        return playerName(b, x).localeCompare(playerName(b, y));
+      });
 
-      /* Sorted on the name as it is displayed, which is the surname: ordering
-       * by the full name while showing "P. Mahomes" reads as unsorted to anyone
-       * scanning down the page. */
-      function nameOf(id) {
-        var pl = playerOf(b, id);
-        return (pl && shortenName(pl.name)) || String(id);
-      }
-      players.sort(function (x, y) { return nameOf(x).localeCompare(nameOf(y)); });
+      /* One shape per table — the market <select> carries it — so the shape is
+       * read off the first group and speaks for all of them. The two are
+       * different boards, not one board with a column swapped: an over-only
+       * ladder has a price per rung and no under anywhere on it, and drawing
+       * it the two-sided way left a third of the table permanently empty. */
+      var mile = groups[0].type === MILESTONE;
+      var t = mile
+        ? milestoneTable(b, players, byPlayer, groups)
+        : overUnderTable(b, players, byPlayer, groups);
 
-      var body = players.map(function (id) {
-        var pl = playerOf(b, id);
-        /* The position and club ride on the header row, where a row that spans
-         * the table has the width for them and a Player column never did. */
-        var meta = pl ? [pl.position, pl.team].filter(Boolean).join(' \u00b7 ') : '';
-        var lines = byPlayer[id].sort(function (x, y) {
-          return (parseFloat(x.line) - parseFloat(y.line)) ||
-            String(x.type).localeCompare(String(y.type));
-        });
-        return '<tr class="go-pl"><th scope="rowgroup" colspan="' + head.length + '">' +
-            esc(nameOf(id)) +
-            (meta ? '<span class="go-plmeta">' + esc(meta) + '</span>' : '') +
-          '</th></tr>' +
-          lines.map(function (g) {
-            var mile = g.type === 'milestone';
-            var cells = [];
-            if (hasLine) cells.push('<td class="is-num">' + esc(g.line) + '</td>');
-            if (hasMile) cells.push(mile ? consCell(g.odds) : '<td class="is-null"></td>');
-            if (hasOU) {
-              cells.push(mile ? '<td class="is-null"></td>' : consCell(g.over));
-              cells.push(mile ? '<td class="is-null"></td>' : consCell(g.under));
-            }
-            cells.push('<td class="go-bks">' +
-              esc(g.books.map(bookLabel).join(' ')) + '</td>');
-            return '<tr>' + cells.join('') + '</tr>';
-          }).join('');
-      }).join('');
+      /* The shape is on the table as well as in its columns: the over/under
+       * view stacks ten of these boards, and ten tables each sizing their own
+       * columns puts Over and Under at a different place on every one. */
+      return '<div class="go-scroll"><table class="go-table go-props go-pinned ' +
+        (mile ? 'go-mile' : 'go-ou') + '">' +
+        '<thead><tr>' + t.head + '</tr></thead>' +
+        '<tbody>' + t.body + '</tbody></table></div>';
+    }
 
-      return '<div class="go-scroll"><table class="go-table go-props"><thead><tr>' +
-        head.join('') + '</tr></thead><tbody>' + body + '</tbody></table></div>';
+    /* ---------- the overlay ----------
+     * Fixed to the viewport and parented to the body rather than to the table.
+     * The board scrolls inside .go-scroll, and anything positioned inside a
+     * scrollport is clipped by it: an overlay on the last column of a
+     * milestone ladder would open half outside the box and be cut in half.
+     * Placed off the cell's rect instead, flipped above the cell when there is
+     * no room below it, and clamped to the viewport on the left and right so a
+     * price at the edge of a phone opens a panel that is all on screen.
+     *
+     * A rect goes stale the moment anything moves, so the panel closes on
+     * everything that could move it — a click outside, Escape, a scroll of the
+     * page or of the board, a resize — rather than trying to follow it. */
+    var openPop = null;
+
+    function closePop() {
+      if (!openPop) return;
+      var p = openPop;
+      openPop = null;
+      if (p.el.parentNode) p.el.parentNode.removeChild(p.el);
+      if (p.cell) p.cell.classList.remove('is-open');
+      document.removeEventListener('mousedown', p.onDoc, true);
+      document.removeEventListener('touchstart', p.onDoc, true);
+      document.removeEventListener('keydown', p.onKey, true);
+      window.removeEventListener('resize', closePop);
+      window.removeEventListener('scroll', p.onScroll, true);
+    }
+
+    /* A book per column, and a side — or a rung — per row: the column group
+     * this board folded up, DK against FD at a glance, on the one bet the
+     * reader has just pointed at. The mean is the last column and only when
+     * there is a second book for it to be a mean of; on one book it would be
+     * that book's price written twice. */
+    function popTable(d) {
+      var multi = d.books.length > 1;
+      return '<table class="go-pop-t"><thead><tr><th></th>' +
+          d.books.map(function (v) {
+            return '<th title="' + esc(bookName(v)) + '">' +
+              esc(bookName(v)) + '</th>';
+          }).join('') +
+          (multi ? '<th class="go-pop-avg">Avg</th>' : '') +
+        '</tr></thead><tbody>' +
+        d.rows.map(function (r) {
+          return '<tr><th>' + esc(r.label) + '</th>' +
+            d.books.map(function (v) {
+              var o = r.by[v];
+              return '<td>' +
+                esc(o === undefined ? '\u2014' : fmtOdds(o)) + '</td>';
+            }).join('') +
+            (multi ? '<td class="go-pop-avg">' + esc(fmtOdds(r.cons)) +
+              '</td>' : '') +
+            '</tr>';
+        }).join('') +
+        '</tbody></table>';
+    }
+
+    function openPricePop(row, anchor) {
+      var d = priceDetail[Number(row.getAttribute('data-pd'))];
+      if (!d || !d.rows.length) return;
+      closePop();
+
+      var el = document.createElement('div');
+      el.className = 'go-pop';
+      el.innerHTML =
+        '<div class="go-pop-h">' +
+          esc([d.player, d.line].filter(Boolean).join(' \u00b7 ')) +
+        '</div>' + popTable(d);
+      document.body.appendChild(el);
+
+      var r = (anchor || row).getBoundingClientRect();
+      var w = el.offsetWidth, h = el.offsetHeight, pad = 8;
+      var left = r.left + r.width / 2 - w / 2;
+      left = Math.max(pad, Math.min(left, window.innerWidth - w - pad));
+      var top = r.bottom + 6;
+      if (top + h > window.innerHeight - pad) top = Math.max(pad, r.top - h - 6);
+      el.style.left = Math.round(left) + 'px';
+      el.style.top = Math.round(top) + 'px';
+      row.classList.add('is-open');
+
+      var p = {
+        el: el, cell: row,
+        onDoc: function (e) { if (!el.contains(e.target)) closePop(); },
+        /* A ladder of two dozen rungs is taller than the panel is allowed to
+         * be, so the panel scrolls inside itself — and that scroll is not the
+         * page moving out from under it. */
+        onScroll: function (e) {
+          var t = e.target;
+          if (!t || !t.nodeType || !el.contains(t)) closePop();
+        },
+        onKey: function (e) { if (e.key === 'Escape' || e.keyCode === 27) closePop(); }
+      };
+      openPop = p;
+      /* Registered on the next tick: the click that opened the panel is still
+       * on its way up to the document, and a listener added inside it would
+       * take that same click as the one dismissing it. */
+      setTimeout(function () {
+        if (openPop !== p) return;
+        document.addEventListener('mousedown', p.onDoc, true);
+        document.addEventListener('touchstart', p.onDoc, true);
+        document.addEventListener('keydown', p.onKey, true);
+        window.addEventListener('resize', closePop);
+        window.addEventListener('scroll', p.onScroll, true);
+      }, 0);
+    }
+
+    /* The markets this bundle holds, split by shape and kept in the bundle's
+     * own order — which is alphabetical — with anything the rows carry and the
+     * market list does not appended rather than dropped. Derived rather than
+     * stored because the two views are built out of it twice: once to lay the
+     * card out and once, on every draw, to decide what is still valid. */
+    function propMarkets(b) {
+      var p = b.player_props || { current: [] };
+      var have = {};
+      (p.current || []).forEach(function (r) {
+        (have[r.prop_type] || (have[r.prop_type] = {}))[shapeOf(r)] = 1;
+      });
+      var order = (p.markets || []).filter(function (m) { return have[m]; });
+      Object.keys(have).forEach(function (m) {
+        if (order.indexOf(m) < 0) order.push(m);
+      });
+      return {
+        ou: order.filter(function (m) { return have[m].over_under; }),
+        mile: order.filter(function (m) { return have[m][MILESTONE]; })
+      };
+    }
+
+    /* Which board is up, and what the milestone one is filtered to. Kept out
+     * here rather than in the DOM because a poll replaces the whole card every
+     * thirty seconds: a market held in a control that is thrown away is a
+     * board that jumps back to its default while it is being read. Validated
+     * against the bundle on every wire, so a market that stops being quoted
+     * falls back rather than emptying the table. */
+    var propView = 'ou', propMarket = '', propPlayer = '';
+
+    /* ---------- the two views ----------
+     * Over/under and milestones are not two filters on one board, they are two
+     * boards: one is every player's line in a market and the price on each
+     * side of it, the other is one player's ladder priced rung by rung. They
+     * had to share a <select>, which meant the same market name appeared twice
+     * in one list meaning two different bets, and reading both meant knowing
+     * that the second half of the menu was a different kind of thing.
+     *
+     * A switch instead, in the card head beside the title, marked with icons
+     * rather than words. Over/under is the default and needs no market picker
+     * at all: there are ten of these
+     * markets, each a dozen rows, and all ten fit on the page at once — which
+     * is how a prop board is actually read, down the page for a name rather
+     * than market by market. Milestones cannot be shown that way — one market
+     * is two dozen rungs wide on its own — so that view keeps the pickers.
+     */
+
+    /* Both icons are one colour and drawn in strokes of `currentColor`, so the
+     * pressed state inverts the glyph along with the button rather than
+     * needing a second artwork: gold fill, bar-dark strokes.
+     *
+     * The over/under mark is the two directions a two-sided line is taken in,
+     * one arrow each way. The milestone mark is a ladder because that is what
+     * the board is -- rungs at 50+, 60+, 70+, climbed until the price stops
+     * being worth it. */
+    var PROP_VIEW_ICON = {
+      ou: '<path d="M7 20V4"/><path d="M3.2 8L7 4.2 10.8 8"/>' +
+          '<path d="M17 4v16"/><path d="M13.2 16l3.8 3.8 3.8-3.8"/>',
+      mile: '<path d="M7.5 3v18"/><path d="M16.5 3v18"/>' +
+            '<path d="M7.5 7.5h9"/><path d="M7.5 12h9"/><path d="M7.5 16.5h9"/>'
+    };
+
+    /* Icons, so the label is a name for the button rather than its face: with
+     * the switch in the card head there is one line for a title and two
+     * controls, and two words of caps on each button would crowd the title off
+     * it. The name still has to be readable, hence aria-label and title. */
+    function propViewButton(view, text, count) {
+      return '<button type="button" class="go-icobtn" data-prop-view="' +
+        esc(view) + '"' + (count ? '' : ' disabled') +
+        ' aria-pressed="false" title="' + esc(text) + '"' +
+        ' aria-label="' + esc(text) + '">' +
+        '<svg viewBox="0 0 24 24" width="17" height="17" fill="none"' +
+          ' stroke="currentColor" stroke-width="2" stroke-linecap="round"' +
+          ' stroke-linejoin="round" aria-hidden="true" focusable="false">' +
+          PROP_VIEW_ICON[view] +
+        '</svg></button>';
+    }
+
+    /* The markup contract scripts/components/nfl-pickers.js registers against,
+     * verbatim from /football/schedule. */
+    function ddControl(id, label) {
+      return '<div class="dd" id="dd-' + id + '">' +
+          '<button type="button" class="dd-btn" id="' + id + '"' +
+            ' aria-haspopup="true" aria-expanded="false">' +
+            '<span class="dd-value"></span>' +
+          '</button>' +
+          '<div class="dd-pop dd-menu" id="' + id + '-menu" role="menu"' +
+            ' aria-label="' + esc(label) + '" hidden></div>' +
+        '</div>';
     }
 
     function propsSection(b) {
@@ -1058,151 +1463,269 @@
         return card('Player props',
           emptyState(b, ['/odds/player_props'], 'player props'), true);
       }
-      /* The bundle's market list is the union across current and opening, so a
-       * market priced only at open would be an option that draws an empty
-       * table. Kept in the bundle's order, with anything the rows carry and
-       * the list does not appended rather than dropped. */
-      var have = {};
-      p.current.forEach(function (r) { have[r.prop_type] = 1; });
-      var markets = (p.markets || []).filter(function (m) { return have[m]; });
-      Object.keys(have).forEach(function (m) {
-        if (markets.indexOf(m) < 0) markets.push(m);
-      });
+      var mk = propMarkets(b);
 
-      var controls =
-        '<div class="dd-row" style="margin-bottom:12px;gap:8px;display:flex;flex-wrap:wrap">' +
-          '<select id="prop-market" class="go-select">' +
-            markets.map(function (m) {
-              var h = marketHeading(m);
-              return '<option value="' + esc(m) + '"' +
-                (h.t ? ' title="' + esc(h.t) + '"' : '') + '>' +
-                esc(h.s) + '</option>';
-            }).join('') +
-          '</select>' +
-          '<select id="prop-player" class="go-select"></select>' +
-        '</div>' +
-        /* One line of it, under the controls rather than in a column heading:
-         * a price column that is an average of two books and not either of
-         * them is worth saying out loud once, and the Books column beside it
-         * only names who is in the average, not what was done to them. */
-        '<div class="go-sub" style="margin:0 0 10px 9px">' +
-          'One price per line: the mean of the books\u2019 implied ' +
-          'probabilities, vig included.</div>' +
-        '<div id="prop-table"></div>';
-      return card('Player props', controls);
+      return card('Player props',
+        '<div class="go-pbody">' +
+          /* Hidden on the over/under board rather than absent from it: the
+           * pickers belong to one of the two views, and a row of controls that
+           * appears and disappears in place reads as part of the view it is
+           * attached to. */
+          '<div class="dd-row" id="prop-filters" hidden>' +
+            ddControl('prop-market', 'Market') +
+            ddControl('prop-player', 'Player') +
+          '</div>' +
+          '<div id="prop-table"></div>' +
+        '</div>', true,
+        '<div class="go-seg go-seg-head" id="prop-views" role="group"' +
+          ' aria-label="Prop board">' +
+          propViewButton('ou', 'Player O/U', mk.ou.length) +
+          propViewButton('mile', 'Milestones', mk.mile.length) +
+        '</div>');
+    }
+
+    /* Every two-sided market at once, each its own board under its own
+     * heading. Ten short tables rather than one long one: they do not share a
+     * line, a price or even a unit — receptions and passing yards in one table
+     * would be a Line column meaning two different things — and stacked, a
+     * player's name appears once per market he is quoted in, which is the
+     * sweep the board is opened for. */
+    function ouBoards(b, markets) {
+      var byMarket = {};
+      propRows(b).forEach(function (r) {
+        if (shapeOf(r) === MILESTONE) return;
+        (byMarket[r.prop_type] || (byMarket[r.prop_type] = [])).push(r);
+      });
+      return markets.filter(function (m) { return byMarket[m]; })
+        .map(function (m) {
+          var h = marketHeading(m);
+          return '<div class="go-mkt"' +
+              (h.t ? ' title="' + esc(h.t) + '"' : '') + '>' + esc(h.s) +
+            '</div>' + propsTable(b, byMarket[m]);
+        }).join('');
     }
 
     /* innerHTML wipes listeners, so the props controls are wired after every
      * render rather than once at load. */
     function wireProps(b) {
-      var marketEl = document.getElementById('prop-market');
-      var playerEl = document.getElementById('prop-player');
+      var viewsEl = document.getElementById('prop-views');
+      var filtersEl = document.getElementById('prop-filters');
       var tableEl = document.getElementById('prop-table');
       if (!tableEl) return;
 
-      // A <select> reports its first option as the value, but only once it is
-      // in a document. Setting it explicitly makes the first draw independent
-      // of that, which also keeps the page testable outside a browser.
-      function firstValue(el) {
-        return el && el.options && el.options.length ? el.options[0].value : '';
-      }
-      if (marketEl && !marketEl.value) marketEl.value = firstValue(marketEl);
+      var mk = propMarkets(b);
+      if (propView === 'ou' && !mk.ou.length) propView = 'mile';
+      if (propView === 'mile' && !mk.mile.length) propView = 'ou';
+      if (mk.mile.indexOf(propMarket) < 0) propMarket = mk.mile[0] || '';
 
-      function marketRows() {
+      var mktBtn = document.getElementById('prop-market');
+      var mktMenu = document.getElementById('prop-market-menu');
+      var plBtn = document.getElementById('prop-player');
+      var plMenu = document.getElementById('prop-player-menu');
+      var mktDd = registerDropdown(document.getElementById('dd-prop-market'));
+      var plDd = registerDropdown(document.getElementById('dd-prop-player'));
+
+      function mileRows() {
         return propRows(b).filter(function (r) {
-          return r.prop_type === marketEl.value;
+          return r.prop_type === propMarket && shapeOf(r) === MILESTONE;
         });
       }
 
-      /* The player list is per market, not per game: a receiving-yards board
-       * has no quarterbacks on it, and offering every player who is quoted
-       * anywhere would fill the menu with names that empty the table. Named
-       * and ordered the way the first column is, so the menu and the rows read
-       * as the same list. A selection that survives the market change is
-       * kept — the same player at a different market is a common next look. */
-      function fillPlayers(rows) {
-        var keep = playerEl.value, seen = {}, opts = [];
-        rows.forEach(function (r) {
+      function syncViews() {
+        var btns = viewsEl.querySelectorAll('button[data-prop-view]');
+        for (var i = 0; i < btns.length; i++) {
+          btns[i].setAttribute('aria-pressed',
+            btns[i].getAttribute('data-prop-view') === propView ? 'true' : 'false');
+        }
+        filtersEl.hidden = propView !== 'mile';
+      }
+
+      function syncMarket() {
+        buildOptionMenu(mktMenu, mk.mile.map(function (m) {
+          return { value: m, label: marketHeading(m).s };
+        }), 'mkt');
+        syncOptionMenu(mktBtn, mktMenu, propMarket,
+          propMarket ? marketHeading(propMarket).s : 'No markets', 'mkt');
+      }
+
+      /* The player list is per market, not per game: a receiving-yards ladder
+       * has no quarterbacks on it, and offering every player quoted anywhere
+       * would fill the menu with names that empty the table. Named and ordered
+       * the way the first column is, so the menu and the rows read as the same
+       * list. A pick that survives a market change is kept — the same player
+       * at a different market is a common next look. */
+      function syncPlayers() {
+        var seen = {}, opts = [];
+        mileRows().forEach(function (r) {
           var id = String(r.player_id);
           if (seen[id]) return;
           seen[id] = 1;
           var pl = playerOf(b, r.player_id);
-          opts.push({ id: id, name: (pl && shortenName(pl.name)) || id });
+          opts.push({
+            value: id, label: playerName(b, id),
+            note: pl ? [pl.position, pl.team].filter(Boolean).join(' \u00b7 ') : ''
+          });
         });
-        opts.sort(function (x, y) { return x.name.localeCompare(y.name); });
-        playerEl.innerHTML = '<option value="">All players</option>' +
-          opts.map(function (o) {
-            return '<option value="' + esc(o.id) + '">' + esc(o.name) + '</option>';
-          }).join('');
-        playerEl.value = seen[keep] ? keep : '';
+        opts.sort(function (x, y) { return x.label.localeCompare(y.label); });
+        if (!seen[propPlayer]) propPlayer = '';
+        buildOptionMenu(plMenu,
+          [{ value: '', label: 'All players' }].concat(opts), 'pl');
+        syncOptionMenu(plBtn, plMenu, propPlayer,
+          propPlayer ? playerName(b, propPlayer) : 'All players', 'pl');
       }
 
       function draw() {
-        var rows = marketRows();
-        if (playerEl.value) {
-          rows = rows.filter(function (r) {
-            return String(r.player_id) === playerEl.value;
-          });
+        closePop();
+        /* Reset here rather than in propsTable: the over/under view draws ten
+         * of them and each one's cells carry an index into this, so a per-table
+         * reset would leave nine boards pointing into the tenth. */
+        priceDetail = [];
+        var html;
+        if (propView === 'ou') {
+          html = ouBoards(b, mk.ou);
+        } else {
+          var rows = mileRows();
+          if (propPlayer) {
+            rows = rows.filter(function (r) {
+              return String(r.player_id) === propPlayer;
+            });
+          }
+          html = rows.length ? propsTable(b, rows) : '';
         }
-        tableEl.innerHTML = rows.length
-          ? propsTable(b, rows)
-          : '<div class="go-empty">No quotes for that combination.</div>';
+        tableEl.innerHTML = html ||
+          '<div class="go-empty">No quotes for that combination.</div>';
       }
 
-      function onMarket() { fillPlayers(marketRows()); draw(); }
+      viewsEl.addEventListener('click', function (e) {
+        var btn = e.target.closest ? e.target.closest('button[data-prop-view]') : null;
+        if (!btn || btn.disabled || !viewsEl.contains(btn)) return;
+        propView = btn.getAttribute('data-prop-view');
+        syncViews();
+        draw();
+      });
 
-      if (marketEl) marketEl.addEventListener('change', onMarket);
-      playerEl.addEventListener('change', draw);
-      onMarket();
+      mktMenu.addEventListener('click', function (e) {
+        var opt = e.target.closest ? e.target.closest('.dd-opt') : null;
+        if (!opt || !mktMenu.contains(opt)) return;
+        propMarket = opt.getAttribute('data-mkt') || '';
+        closeDropdown(mktDd, true);
+        syncMarket();
+        syncPlayers();
+        draw();
+      });
+
+      plMenu.addEventListener('click', function (e) {
+        var opt = e.target.closest ? e.target.closest('.dd-opt') : null;
+        if (!opt || !plMenu.contains(opt)) return;
+        propPlayer = opt.getAttribute('data-pl') || '';
+        closeDropdown(plDd, true);
+        syncPlayers();
+        draw();
+      });
+
+      /* Delegated, because the tables under it are replaced on every draw and
+       * a listener per price cell would be several hundred of them rebound
+       * each time a view or a market changes. */
+      tableEl.addEventListener('click', function (e) {
+        var row = e.target, anchor = null;
+        while (row && row !== tableEl &&
+               !(row.getAttribute && row.getAttribute('data-pd'))) {
+          /* The panel opens off the cell that was tapped rather than off the
+           * row, which on a two-sided board is the width of the card: anchored
+           * to the row it would open under the middle of the table however far
+           * to one side the finger actually was. */
+          if (row.nodeName === 'TD' || row.nodeName === 'TH') anchor = row;
+          row = row.parentNode;
+        }
+        if (row && row !== tableEl) openPricePop(row, anchor);
+      });
+
+      syncViews();
+      syncMarket();
+      syncPlayers();
+      draw();
     }
 
     /* ---------- injuries ----------
      * /player_injuries returns no team of its own — the team hangs off the
      * player — and embeds the full player record, so the generic table would
      * spread height, weight, college and jersey number across fourteen columns.
-     * These are the four fields anyone reads.
+     * Five fields are worth reading and only two of them want a column.
      *
-     * The club was the fifth. It is a rowgroup heading now rather than a
-     * column: the bundle already sorts the report into away, home and whatever
-     * it could not place, so as a column it was one of two values repeated down
-     * thirty rows, and finding one team's injuries meant finding the boundary
-     * between them. Said once at the top of each block it is easier to read and
-     * it hands its width to the comment, which is the column that wanted it. */
+     * The club is a rowgroup heading rather than a column: the bundle already
+     * sorts the report into away, home and whatever it could not place, so as
+     * a column it was one of two values repeated down thirty rows, and finding
+     * one team's injuries meant finding the boundary between them. Position,
+     * designation and report time went the other way, down into the player
+     * cell -- see injuryRow. Both moves hand their width to the comment, which
+     * is the column that wanted it. */
 
     /* The feed reports in full ISO UTC — 2026-08-11T23:27:00.000Z, twenty-four
-     * characters to say a Tuesday evening, in a monospace column that has to
-     * fit beside a paragraph of free text. Same treatment as the kickoff:
-     * Eastern, to the minute. No year, because an injury report is read for
-     * how stale it is and nothing here is a season old; the raw stamp stays on
-     * the cell's title for anyone who wants the rest of it. */
+     * characters to say a Tuesday, sitting beside a designation badge on a
+     * caption line. Cut to the day, in Eastern so the date agrees with the one
+     * the club reported it on: a report is read for whether it is this week's
+     * word or last week's, and the minute it was filed never changed that
+     * reading. No year either -- nothing on this page is a season old. The
+     * full stamp stays on the span's title for anyone who wants the rest. */
     function reportedET(iso) {
       var t = stamp(iso);
       if (t === null) return '';
       try {
         return new Date(t * 1000).toLocaleString('en-US', {
-          timeZone: 'America/New_York', month: 'short', day: 'numeric',
-          hour: 'numeric', minute: '2-digit'
+          timeZone: 'America/New_York', month: 'short', day: 'numeric'
         });
       } catch (e) { return String(iso); }
     }
 
-    function reportedCell(iso) {
-      var s = reportedET(iso);
-      if (!s) return '<td class="is-null">—</td>';
-      return '<td title="' + esc(iso) + '">' + esc(s) + '</td>';
-    }
+    var INJ_COLS = 2;
 
-    var INJ_COLS = 5;
-
+    /* Position, designation and report date are each one or two characters
+     * wide, and as three columns of their own they were narrow strips holding
+     * the comment -- the column a report is actually read for -- off the right
+     * edge of the table. They sit in the player's cell instead, in two lines:
+     * the name with its position after it, which is how a player is said out
+     * loud, and under it the designation with the date it was given. The table
+     * drops to the two things it is really carrying: who, and what the club
+     * said about him.
+     *
+     * reportedCell went with them: the stamp is part of a caption now rather
+     * than a cell of its own, and there is no other table asking for it. */
     function injuryRow(r) {
       var pl = r.player || {};
+      var pos = String(pl.position_abbreviation || pl.position || '').trim();
+      var meta = [];
+      var badge = statusBadge(r.status);
+      if (badge) meta.push(badge);
+      var upd = reportedET(r.date);
+      if (upd) {
+        meta.push('<span class="go-iupd" title="' + esc(r.date) + '">' +
+          esc(upd) + '</span>');
+      }
       return '<tr>' +
-        '<td>' + esc(initialName(pl.first_name, pl.last_name)) + '</td>' +
-        '<td>' + esc(pl.position_abbreviation || pl.position || '') + '</td>' +
-        statusCell(r.status) +
+        '<td>' +
+          '<span class="go-iname">' +
+            esc(initialName(pl.first_name, pl.last_name)) +
+            (pos ? '<span class="go-ipos">' + esc(pos) + '</span>' : '') +
+          '</span>' +
+          (meta.length ? '<span class="go-imeta">' + meta.join('') + '</span>'
+                       : '') +
+        '</td>' +
         '<td class="go-note">' + esc(r.comment || '') + '</td>' +
-        reportedCell(r.date) +
       '</tr>';
+    }
+
+    /* Copied before sorting: the rows belong to the bundle, which the rest of
+     * the page reads too, and a table is not the place to reorder them for
+     * everyone. Ties break on the name so a club's Out block is alphabetical
+     * rather than in whatever order the feed happened to list it. */
+    function sortByStatus(rows) {
+      return rows.slice().sort(function (a, b) {
+        var d = statusRank(a.status) - statusRank(b.status);
+        if (d) return d;
+        var an = String(((a.player || {}).last_name) || '');
+        var bn = String(((b.player || {}).last_name) || '');
+        return an.localeCompare(bn);
+      });
     }
 
     function injuryTable(groups) {
@@ -1210,21 +1733,17 @@
         return '<tr class="go-igrp"><th scope="rowgroup" colspan="' + INJ_COLS + '">' +
             '<span class="go-grp">' +
               (g.abbr ? teamLogo(g.abbr, 'go-logo-sm') : '') + esc(g.name) +
-              '<span class="go-igrp-n">' + g.rows.length + '</span>' +
             '</span>' +
           '</th></tr>' +
-          g.rows.map(injuryRow).join('');
+          sortByStatus(g.rows).map(injuryRow).join('');
       }).join('');
       /* Comment is the one free-text column on the page, so it is the one
        * column that wraps and is capped rather than run out to whatever the
        * longest note happens to be. */
       return '<div class="go-scroll"><table class="go-table go-pinned go-inj">' +
         '<thead><tr>' +
-        thCell(heading('Player', null)) +
-        thCell(heading('Pos', 'Position')) +
-        thCell(heading('Status', 'Injury designation')) +
+        thCell(heading('Player', 'Position, designation and last report')) +
         thCell(heading('Comment', null), 'go-note') +
-        thCell(heading('Updated', 'Last reported, Eastern')) +
         '</tr></thead><tbody>' + body + '</tbody></table></div>';
     }
 
@@ -1454,8 +1973,7 @@
         playsSection(b) +
         (pregame ? '' : props) +
         injuriesSection(b) +
-        othersSection(index, g.id) +
-        provenance(b);
+        othersSection(index, g.id);
       wireProps(b);
       wirePlays(b);
     }
@@ -1554,6 +2072,10 @@
         return;
       }
       lastBundle = b || null;
+      /* A repaint replaces the cell the panel is hanging off, and the panel is
+       * on the body rather than in the table, so it would be left pointing at
+       * a row that no longer exists. A poll that lands mid-read closes it. */
+      closePop();
       if (b) render(b, currentIndex);
       else if (!id) renderMissing('', currentIndex, null);
       schedulePoll(id, b);

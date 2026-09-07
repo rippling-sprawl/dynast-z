@@ -1886,7 +1886,8 @@ body.oven-tp-open .oven-tp { transform: translateX(0); visibility: visible; }
     position: fixed; inset: 0; z-index: 149;
     background: rgba(var(--oven-shadow-rgb), .55);
   }
-  .oven-tp-tab { top: auto; bottom: 76px; transform: none; }
+  /* Above the fixed bottom bar (--bottom-nav-h) rather than a bare 76px. */
+  .oven-tp-tab { top: auto; bottom: calc(20px + var(--bottom-nav-h, 0px) + env(safe-area-inset-bottom)); transform: none; }
   .oven-tp-chips { max-width: 50%; }
   .oven-preview-shot { width: 100%; }
   .oven-lightbox { padding: 12px; }

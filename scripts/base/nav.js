@@ -110,10 +110,16 @@ function mountHubGrids(root) {
 // The account row leads the drawer rather than sitting in the header: it is a
 // destination like every other row, and the header is left with just the menu
 // button and the title. Signed out it reads "Sign In" and goes to the same page.
+//
+// The theme circles ride this row. They are a setting rather than a
+// destination, but they are also the only one, and two 24px buttons in the
+// space the name leaves empty cost nothing — where a footer of their own cost
+// a heading, a rule and the bottom of the drawer.
 function buildNavAccountHTML() {
   const user = typeof getUser === 'function' ? getUser() : null;
   const label = user ? user.username : 'Sign In';
-  return `<li class="nav-account"><a class="nav-section-label" href="/account">${label}</a></li>`;
+  const themeHTML = typeof Theme !== 'undefined' ? Theme.controlHTML() : '';
+  return `<li class="nav-account"><a class="nav-section-label" href="/account">${label}</a>${themeHTML}</li>`;
 }
 
 function buildNavDrawerHTML() {
@@ -131,11 +137,6 @@ function buildNavDrawerHTML() {
     return `<li${cls}><a href="${item.href}"${target}>${item.label}</a></li>`;
   }).join('\n        ');
 
-  // The theme switch is a setting rather than a destination, so it sits under
-  // the links in its own footer instead of joining the list. Its markup comes
-  // from scripts/base/theme.js — see mountToggle() there for the wiring.
-  const themeHTML = typeof Theme !== 'undefined' ? Theme.controlHTML() : '';
-
   return `<div class="nav-overlay" id="nav-overlay">
     <div class="nav-drawer">
       <div class="nav-drawer-header">
@@ -146,17 +147,56 @@ function buildNavDrawerHTML() {
         ${buildNavAccountHTML()}
         ${items}
       </ul>
-      ${themeHTML}
     </div>
   </div>`;
 }
 
+// --- Bar icons ---
+// Drawn here rather than shipped as files so they inherit the bar's colour with
+// no second request: one path set each, stroked in currentColor, sized by the
+// stylesheet. 24x24 box, 1.8 stroke, so the three read at one weight.
+const NAV_ICONS = {
+  // A calendar: the fixture list is a week of dates before it is anything else.
+  games: '<path d="M4 6.5a2.5 2.5 0 0 1 2.5-2.5h11A2.5 2.5 0 0 1 20 6.5v12a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 18.5z"/><path d="M8 2.5v4M16 2.5v4M4 10h16"/>',
+  // A scored loaf: dome, base, three slashes.
+  buns: '<path d="M3.4 14.4a8.6 7.4 0 0 1 17.2 0"/><path d="M2.6 14.4h18.8V17a3 3 0 0 1-3 3H5.6a3 3 0 0 1-3-3z"/><path d="M8.6 8.2 7.2 11.1M12.4 7.5 11 10.7M16.2 8.7l-1.3 2.7"/>',
+  menu: '<path d="M4 7h16M4 12h16M4 17h16"/>',
+};
+
+function navIconHTML(name) {
+  return `<svg class="nav-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${NAV_ICONS[name]}</svg>`;
+}
+
+// The two shortcut destinations on the bar. Everything else is a drawer row —
+// these two are here because they are the pages people come back to daily.
+const NAV_TABS = [
+  { label: 'Games', href: '/football/schedule', icon: 'games' },
+  { label: 'Buns', href: '/football/bakers-buns', icon: 'buns' },
+];
+
+// The page a tab points at, or a page under it (a game page under /schedule),
+// marks that tab. Exact match on the site root only, so "/" is not a prefix of
+// everything.
+function navTabIsCurrent(href) {
+  const path = location.pathname.replace(/\/+$/, '') || '/';
+  return path === href || path.startsWith(href + '/');
+}
+
+// One header serves both shapes. Its DOM order is the mobile order — the two
+// tabs, then the menu button — and the desktop rule pulls the menu button back
+// in front of the title with `order`, so reading order and tab order match the
+// visual order at both widths without a second copy of the button.
 function buildHeaderHTML() {
-  return `<header>
-    <div style="display: flex; align-items: center; gap: 12px;">
-      <button class="hamburger" id="nav-toggle" aria-label="Menu">&#9776;</button>
-      <h1><a href="/" style="color: inherit; text-decoration: none;">Dynast-Z</a></h1>
-    </div>
+  const tabs = NAV_TABS.map(tab => {
+    const current = navTabIsCurrent(tab.href) ? ' aria-current="page"' : '';
+    return `<a class="nav-tab" href="${tab.href}"${current}>${navIconHTML(tab.icon)}<span class="nav-tab-label">${tab.label}</span></a>`;
+  }).join('\n    ');
+
+  return `<header class="site-header">
+    ${tabs}
+    <button class="nav-tab hamburger" id="nav-toggle" aria-label="Menu">${navIconHTML('menu')}<span class="nav-tab-label">Menu</span></button>
+    <h1 class="site-title"><a href="/">Dynast-Z</a></h1>
   </header>`;
 }
 

@@ -1739,7 +1739,10 @@ li:hover > .tc-note-edit,
 .bn-fab {
   position: fixed;
   right: 16px;
-  bottom: calc(16px + env(safe-area-inset-bottom));
+  /* --bottom-nav-h is 0 on wide screens and the height of the fixed bottom bar
+   * on narrow ones (styles/base/styles.css), so the button clears the bar
+   * without a breakpoint of its own. */
+  bottom: calc(16px + var(--bottom-nav-h, 0px) + env(safe-area-inset-bottom));
   z-index: 60;
   display: flex;
   align-items: center;
