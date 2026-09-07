@@ -4,16 +4,38 @@ Fetch a full NFL regular season and save to data/nfl_schedule_{season}.json.
 
 Why this source
 ---------------
-ESPN's public scoreboard endpoint is the simplest schedule feed that exists: no
-key, no auth, no scraping of HTML, and one plain GET per week.
+balldontlie, since 2026-09-06. One paginated crawl replaces ESPN's eighteen
+weekly GETs:
 
-    https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard
-        ?dates={season}&seasontype=2&week={week}
+    https://api.balldontlie.io/nfl/v1/games
+        ?seasons[]={season}&season_types[]=2&per_page=100      (3 pages, 272 games)
 
-seasontype=2 is the regular season (1 = pre, 3 = post). Eighteen requests cover
-it — 272 games. The alternative sources are all worse for this: nflverse ships
-CSVs but lags the release, the NFL's own shield API needs a rotating token, and
-anything HTML-based breaks on the next redesign.
+The switch is not about the schedule, which ESPN served fine. It is that
+everything downstream of a schedule — live score, box score, plays, odds, props
+— is on this one key, under a ToS (§6) that expressly permits caching, storing
+and building derivative databases for "lawful sportsbook and wagering products".
+ESPN's equivalent data is free and complete but the Disney Terms of Use ban
+automated access, database building, and business use outright; the same
+objection that disqualified Pro Football Reference. See
+docs/research/nfl-live-data-apis.md for the full survey.
+
+The two feeds were compared game-for-game across the 2026 season before the
+switch: 272 games, keys matched on (week, away, home), zero differences in
+kickoff, slot or neutral-site classification. The only divergence was `venue`,
+where balldontlie carries stale stadium names — see VENUE_ALIAS.
+
+The ESPN parser is kept behind --source espn. It is the oracle --compare
+validates against, and it is the fallback if the key ever lapses.
+
+Two fields ESPN gave us directly have to be derived here:
+
+  neutral   balldontlie ships no neutral-site flag. A team's modal home venue
+            across its 8-9 home games is its stadium; a home game anywhere else
+            is neutral. Cross-checked against KNOWN_NEUTRAL_VENUES, and a
+            disagreement between the two refuses to write.
+  tbd       ESPN flagged flex games with timeValid: false. balldontlie is more
+            explicit — status reads literally "TBD" — and parks them at midnight
+            ET exactly as ESPN did, so either signal alone would do.
 
 One file per season, because the views show more than one: the team card on
 /football/bakers-buns puts last season beside this one, and re-running with a
@@ -53,16 +75,27 @@ Usage:
     python3 scripts/fetch_nfl_schedule.py              # current season
     python3 scripts/fetch_nfl_schedule.py --season 2026
     python3 scripts/fetch_nfl_schedule.py --season 2025   # last season, with scores
+
+    # validate against the file already on disk; writes nothing
+    python3 scripts/fetch_nfl_schedule.py --season 2026 --compare
+    python3 scripts/fetch_nfl_schedule.py --season 2026 --dry-run
+    python3 scripts/fetch_nfl_schedule.py --season 2026 --source espn
+    python3 scripts/fetch_nfl_schedule.py --season 2026 --replay   # from cassettes
 """
 
 import argparse
+import collections
 import json
 import os
 import subprocess
 import sys
 import time
+import unicodedata
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import bdl_common as bdl  # noqa: E402
 
 SCOREBOARD = "https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard"
 
@@ -83,6 +116,40 @@ SUNDAY = 6
 EXPECTED_GAMES = 272
 EXPECTED_TEAMS = 32
 GAMES_PER_TEAM = 17
+
+# Two stadiums whose names both feeds get wrong. This is not a balldontlie
+# correction: ESPN returned the good names when this file was first generated on
+# 2026-08-19 and returns the stale ones now, so the alias is applied to either
+# source. Houston's ground has been NRG Stadium since 2014, and GEHA Field is
+# Kansas City's current sponsored name. Nothing renders these — the view only
+# prints a venue for a neutral-site game — but the file should still be right.
+VENUE_ALIAS = {
+    "Reliant Stadium": "NRG Stadium",                                # renamed 2014
+    "Arrowhead Stadium": "GEHA Field at Arrowhead Stadium",          # sponsor, 2021
+}
+
+# Buffalo opened a new Highmark Stadium in 2026 and both feeds call it
+# "Highmark Stadium". ESPN disambiguates the old one retroactively, balldontlie
+# does not — so this correction only applies to seasons played in the old
+# ground, and applying it globally would rename the new stadium.
+VENUE_ALIAS_BY_SEASON = {
+    2025: {"Highmark Stadium": "Highmark Stadium (Old)"},
+}
+
+# The backstop for the modal-venue rule below. Substrings, matched against the
+# normalized venue, covering every ground the league has used for an
+# international or neutral-site game. This does not decide anything on its own:
+# it only has to agree with the modal rule, and a disagreement is a hard error.
+KNOWN_NEUTRAL_VENUES = (
+    "wembley", "tottenham", "twickenham",           # London
+    "allianz", "bayern", "munich", "deutschebank",  # Munich, Frankfurt
+    "olympiastadion", "olympicstadium",             # Berlin, spelled both ways
+    "bernabeu", "estadiobanorte", "azteca",         # Madrid, Mexico City
+    "maracana", "corinthians",                      # Brazil
+    "stadedefrance",                                # Paris
+    "melbournecricket",                             # Australia
+    "crokepark", "aviva",                           # Dublin
+)
 
 
 def curl_fetch(url):
@@ -220,7 +287,127 @@ def iso(dt):
     return dt.strftime("%Y-%m-%dT%H:%MZ")
 
 
-def build(season):
+def norm_venue(name):
+    """Casefold, strip accents, drop everything that is not alphanumeric.
+
+    Without the accent strip, "Maracanã" and "Estadio Bernabéu" compare unequal
+    to themselves across feeds, and every game at one would be misread as a
+    venue change — i.e. as a neutral site."""
+    if not name:
+        return ""
+    name = unicodedata.normalize("NFD", name)
+    name = "".join(c for c in name if not unicodedata.combining(c))
+    return "".join(c for c in name.lower() if c.isalnum())
+
+
+def parse_bdl_date(s):
+    """balldontlie sends a full UTC instant: "2026-09-10T00:20:00.000Z".
+
+    Minute precision is load-bearing — classify() buckets on the ET wall clock,
+    so a date-only value would silently make every game a midnight game and
+    therefore `tbd`. Refuse rather than guess."""
+    t = (s or "").strip()
+    if "T" not in t:
+        raise RuntimeError(f"balldontlie date {s!r} has no time component; "
+                           f"slot classification needs minutes")
+    if t.endswith("Z"):
+        t = t[:-1] + "+00:00"
+    try:
+        dt = datetime.fromisoformat(t)
+    except ValueError:
+        raise RuntimeError(f"unparseable balldontlie date {s!r}")
+    if dt.tzinfo is None:
+        raise RuntimeError(f"balldontlie date {s!r} carries no timezone")
+    return dt.astimezone(timezone.utc)
+
+
+def build_bdl(season, mode="auto"):
+    """-> (weeks, teams, conflicts). One crawl, then a second pass for neutral
+    sites, which can only be decided once every game of the season is in hand."""
+    venue_alias = dict(VENUE_ALIAS)
+    venue_alias.update(VENUE_ALIAS_BY_SEASON.get(season, {}))
+    by_abbr, _ = bdl.team_index(mode=mode)
+    teams = {t["abbreviation"]: {"abbr": t["abbreviation"],
+                                 "name": t["full_name"],
+                                 "short": t["name"]}
+             for t in by_abbr.values()}
+
+    rows = list(bdl.paginate("/games",
+                             {"seasons[]": [season], "season_types[]": [REGULAR_SEASON]},
+                             mode=mode, quiet=True))
+    print(f"  {len(rows)} games returned")
+
+    missing_week = [g["id"] for g in rows if not g.get("week")]
+    if missing_week:
+        raise RuntimeError(f"{len(missing_week)} games have no week "
+                           f"(e.g. id {missing_week[0]}); week is the file's structure")
+
+    # A team is home 8 or 9 times a season, so the mode of its home venues is
+    # its stadium by a wide margin. Shared grounds are safe — MetLife is the mode
+    # for both NYG and NYJ, SoFi for both LAR and LAC — and a club playing a
+    # whole season somewhere temporary gets that ground as its mode, which is the
+    # right answer: those games are a relocation, not a neutral site.
+    home_venues = collections.defaultdict(collections.Counter)
+    for g in rows:
+        home_venues[g["home_team"]["abbreviation"]][norm_venue(g.get("venue"))] += 1
+    modal = {t: c.most_common(1)[0][0] for t, c in home_venues.items()}
+
+    by_week = collections.defaultdict(list)
+    conflicts = []
+    for g in rows:
+        away = g["visitor_team"]["abbreviation"]
+        home = g["home_team"]["abbreviation"]
+        kickoff = parse_bdl_date(g["date"])
+
+        # Two independent signals, either of which is sufficient. ESPN only had
+        # the midnight-ET placeholder; balldontlie says so in words as well.
+        status = (g.get("status") or "").strip().upper()
+        placeholder = kickoff.astimezone(ET).strftime("%H:%M") == "00:00"
+        time_valid = not (status == "TBD" or placeholder)
+
+        venue = g.get("venue")
+        vkey = norm_venue(venue)
+        by_modal = vkey != modal.get(home, vkey)
+        by_name = any(tok in vkey for tok in KNOWN_NEUTRAL_VENUES)
+        if by_modal != by_name:
+            conflicts.append((g.get("week"), away, home, venue, by_modal, by_name))
+
+        game = {
+            "id": str(g["id"]),
+            "kickoff": iso(kickoff),
+            "slot": classify(kickoff, time_valid),
+            "away": away,
+            "home": home,
+            "venue": venue_alias.get(venue, venue),
+        }
+        if by_modal:
+            game["neutral"] = True
+
+        # status_state is the gate, not the presence of a number: a scheduled
+        # game already carries null scores and a live one carries real ones that
+        # are not final. Away first, then home — the order the row reads them in.
+        if (g.get("status_state") or "").lower() == "final":
+            av, hv = g.get("visitor_team_score"), g.get("home_team_score")
+            if av is not None and hv is not None:
+                game["score"] = [int(av), int(hv)]
+
+        by_week[g["week"]].append(game)
+
+    weeks = []
+    for wk in sorted(by_week):
+        games = sorted(by_week[wk], key=lambda g: (g["kickoff"], g["away"]))
+        start, end = week_bounds(games)
+        weeks.append({"week": wk, "start": iso(start), "end": iso(end), "games": games})
+        slots = collections.Counter(g["slot"] for g in games)
+        print(f"  week {wk:>2}: {len(games):>2} games  "
+              f"({', '.join(f'{v} {k}' for k, v in sorted(slots.items()))})")
+
+    return weeks, teams, conflicts
+
+
+def build_espn(season):
+    venue_alias = dict(VENUE_ALIAS)
+    venue_alias.update(VENUE_ALIAS_BY_SEASON.get(season, {}))
     weeks = []
     teams = {}
 
@@ -236,6 +423,8 @@ def build(season):
                 print(f"  WARNING: week {wk} event {ev.get('id')} unparseable", file=sys.stderr)
                 continue
             game, seen = parsed
+            if game.get("venue") in venue_alias:
+                game["venue"] = venue_alias[game["venue"]]
             games.append(game)
             teams.update(seen)
 
@@ -256,9 +445,20 @@ def build(season):
     return weeks, teams
 
 
-def verify(weeks, teams):
+def verify(weeks, teams, conflicts=()):
     ok = True
     total = sum(len(w["games"]) for w in weeks)
+
+    # The modal-venue rule and the named-venue list have to agree. Either one
+    # alone would be a guess; together they are a check, and a mismatch means a
+    # game is about to be written with the wrong home team or the wrong "@".
+    if conflicts:
+        print(f"ERROR: {len(conflicts)} games where the modal-venue rule and "
+              f"KNOWN_NEUTRAL_VENUES disagree:", file=sys.stderr)
+        for wk, away, home, venue, by_modal, by_name in conflicts[:10]:
+            print(f"  week {wk} {away}@{home} at {venue!r}: "
+                  f"modal says {by_modal}, name list says {by_name}", file=sys.stderr)
+        ok = False
 
     print(f"\n{total} games across {len(weeks)} weeks, {len(teams)} teams")
     if total != EXPECTED_GAMES:
@@ -334,6 +534,88 @@ def verify(weeks, teams):
     return ok, total, slots, scored
 
 
+DIFF_FIELDS = ("kickoff", "slot", "venue", "neutral", "score")
+
+
+def flatten(doc):
+    """-> {(week, away, home): {field: value}}.
+
+    Keyed on the matchup, never on `id`: the whole point of --compare is to run
+    across a source change, and the ids are the one field guaranteed to differ."""
+    out = {}
+    for w in doc["weeks"]:
+        for g in w["games"]:
+            out[(w["week"], g["away"], g["home"])] = {
+                "kickoff": g.get("kickoff"), "slot": g.get("slot"),
+                "venue": g.get("venue"), "neutral": bool(g.get("neutral")),
+                "score": g.get("score"),
+            }
+    return out
+
+
+def compare(new_doc, ref_path):
+    """-> True when the two agree everywhere that matters. Writes nothing."""
+    if not os.path.exists(ref_path):
+        print(f"ERROR: no reference file at {ref_path}", file=sys.stderr)
+        return False
+    with open(ref_path) as f:
+        ref_doc = json.load(f)
+
+    new, ref = flatten(new_doc), flatten(ref_doc)
+    print(f"\nComparing against {os.path.relpath(ref_path, repo_path())}")
+    print(f"  reference {len(ref)} games, generated {len(new)} games")
+
+    ok = True
+    only_ref = sorted(set(ref) - set(new))
+    only_new = sorted(set(new) - set(ref))
+    for label, missing in (("missing from generated", only_ref), ("not in reference", only_new)):
+        if missing:
+            ok = False
+            print(f"  ERROR: {len(missing)} games {label}:", file=sys.stderr)
+            for k in missing[:8]:
+                print(f"    week {k[0]} {k[1]}@{k[2]}", file=sys.stderr)
+
+    diffs = collections.defaultdict(list)
+    for k in sorted(set(ref) & set(new)):
+        for field in DIFF_FIELDS:
+            if ref[k][field] != new[k][field]:
+                diffs[field].append((k, ref[k][field], new[k][field]))
+
+    if not diffs:
+        print("  no differences in " + ", ".join(DIFF_FIELDS))
+    for field, rows in sorted(diffs.items()):
+        print(f"  {field}: {len(rows)} differences", file=sys.stderr)
+        for k, was, now_ in rows[:10]:
+            print(f"    week {k[0]} {k[1]}@{k[2]}: {was!r} -> {now_!r}", file=sys.stderr)
+        if len(rows) > 10:
+            print(f"    ... and {len(rows) - 10} more", file=sys.stderr)
+        ok = False
+
+    # The strong form of the check. Substitute the reference ids into the
+    # generated document — they are the only field expected to differ — and the
+    # two should then serialize to the same string. That proves the contract is
+    # preserved down to key order and value types, which a field-by-field diff
+    # of the five fields above does not.
+    ref_ids = {}
+    for w in ref_doc["weeks"]:
+        for g in w["games"]:
+            ref_ids[(w["week"], g["away"], g["home"])] = g["id"]
+    swapped = json.loads(json.dumps(new_doc))
+    for w in swapped["weeks"]:
+        for g in w["games"]:
+            g["id"] = ref_ids.get((w["week"], g["away"], g["home"]), g["id"])
+    a = json.dumps(swapped, sort_keys=True)
+    b = json.dumps(ref_doc, sort_keys=True)
+    if a == b:
+        print("  identical to the reference once ids are substituted")
+    else:
+        print(f"  NOTE: documents still differ after id substitution "
+              f"({len(a)} vs {len(b)} bytes serialized) — check teams[] and week windows")
+
+    print("\nCOMPARE PASSED" if ok else "\nCOMPARE FAILED", file=sys.stderr if not ok else sys.stdout)
+    return ok
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -343,12 +625,37 @@ def main():
     now = datetime.now(timezone.utc)
     ap.add_argument("--season", type=int,
                     default=now.year if now.month >= 5 else now.year - 1)
+    ap.add_argument("--source", choices=["bdl", "espn"], default="bdl",
+                    help="bdl (default) or the legacy ESPN scoreboard")
+    ap.add_argument("--compare", nargs="?", const=True, default=None,
+                    metavar="PATH",
+                    help="diff against an existing schedule file (default: the one "
+                         "for this season) and write nothing")
+    ap.add_argument("--dry-run", action="store_true",
+                    help="verify and report, but do not write")
+    bdl.add_mode_args(ap)
     args = ap.parse_args()
 
-    print(f"Fetching the {args.season} NFL regular-season schedule from ESPN\n")
-    weeks, teams = build(args.season)
+    conflicts = ()
+    if args.source == "espn":
+        print(f"Fetching the {args.season} NFL regular-season schedule from ESPN\n")
+        weeks, teams = build_espn(args.season)
+        source, source_url = "ESPN", (
+            f"{SCOREBOARD}?dates={args.season}&seasontype={REGULAR_SEASON}&week={{week}}")
+    else:
+        mode = bdl.resolve_mode(args)
+        print(f"Fetching the {args.season} NFL regular-season schedule from "
+              f"balldontlie (mode={mode})\n")
+        try:
+            weeks, teams, conflicts = build_bdl(args.season, mode=mode)
+        except bdl.BdlError as e:
+            print(f"\n{e}", file=sys.stderr)
+            return 1
+        source, source_url = "balldontlie", (
+            f"{bdl.API_BASE}/games?seasons[]={args.season}"
+            f"&season_types[]={REGULAR_SEASON}&per_page=100")
 
-    ok, total, slots, scored = verify(weeks, teams)
+    ok, total, slots, scored = verify(weeks, teams, conflicts)
     if not ok:
         print("\nRefusing to overwrite good data.", file=sys.stderr)
         return 1
@@ -359,6 +666,15 @@ def main():
         "teams": [teams[a] for a in sorted(teams)],
         "weeks": weeks,
     }
+
+    if args.compare is not None:
+        ref = (args.compare if isinstance(args.compare, str)
+               else repo_path("data", f"nfl_schedule_{args.season}.json"))
+        return 0 if compare(out, ref) else 1
+
+    if args.dry_run:
+        print("\n--dry-run: verified, nothing written")
+        return 0
 
     data_dir = repo_path("data")
     os.makedirs(data_dir, exist_ok=True)
@@ -376,8 +692,8 @@ def main():
     meta_path = os.path.join(data_dir, f"nfl_schedule_{args.season}_meta.json")
     with open(meta_path, "w") as f:
         json.dump({
-            "source": "ESPN",
-            "url": f"{SCOREBOARD}?dates={args.season}&seasontype={REGULAR_SEASON}&week={{week}}",
+            "source": source,
+            "url": source_url,
             "season": args.season,
             "weeks": len(weeks),
             "game_count": total,

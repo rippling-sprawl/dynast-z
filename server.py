@@ -199,6 +199,23 @@ def action_api():
     return _action_api
 
 
+_game_odds_api = None
+
+
+def game_odds_api():
+    """Load api/game-odds.py so dev reads the game bundles exactly as production
+    does. By path because the filename has a hyphen in it, and lazily because a
+    dev who never opens /game-odds should not pay for the import."""
+    global _game_odds_api
+    if _game_odds_api is None:
+        import importlib.util
+        path = os.path.join(DATA_DIR, "api", "game-odds.py")
+        spec = importlib.util.spec_from_file_location("game_odds_api", path)
+        _game_odds_api = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(_game_odds_api)
+    return _game_odds_api
+
+
 _bun_notes_api = None
 
 
@@ -1513,6 +1530,11 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self.send_header("Location", f"/golf/2026/masters/{page}")
             self.end_headers()
         # Hub pages
+        # /appendix is the second one: everything that is not football, listed
+        # off the same NAV_SECTIONS the drawer reads.
+        elif self.path == "/appendix":
+            self.path = "/views/home/appendix.html"
+            super().do_GET()
         elif self.path == "/golf":
             self.path = "/views/home/golf-hub.html"
             super().do_GET()
@@ -1554,6 +1576,32 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         elif self.path.split("?")[0] == "/football/schedule":
             self.path = "/views/football/schedule.html"
             super().do_GET()
+        # One game's odds and box score, deep-linked by balldontlie game id
+        # (?game=1392216) — the id every schedule row now carries. Same
+        # query-string rule as the schedule above.
+        elif self.path.split("?")[0] == "/game-odds":
+            self.path = "/views/football/game-odds.html"
+            super().do_GET()
+        # The data behind that page. Delegated to the deployed function's own
+        # loaders so dev and prod can never disagree about the shape — the same
+        # reason action_api() and bun_notes_api() exist.
+        elif self.path.split("?")[0] == "/api/game-odds":
+            game_id = (parse_qs(urlparse(self.path).query).get("game") or [""])[0].strip()
+            api = game_odds_api()
+            try:
+                if not game_id:
+                    self._json_response(200, api.load_index())
+                elif not api.GAME_ID_RE.match(game_id):
+                    self._json_response(400, {"error": "game must be a numeric game id"})
+                else:
+                    _etag, bundle = api.load_bundle(game_id)
+                    if bundle is None:
+                        self._json_response(
+                            404, {"error": f"no bundle stored for game {game_id}"})
+                    else:
+                        self._json_response(200, bundle)
+            except Exception as e:  # noqa: BLE001
+                self._json_response(500, {"error": str(e)})
         # Methodology is its own route rather than a section of the table's
         # page, so it must be matched before the page it hangs off.
         elif self.path.split("?")[0] == "/football/bakers-buns/methodology":

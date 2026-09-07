@@ -15,6 +15,7 @@
   "rewrites": [
     { "source": "/", "destination": "/views/index.html" },
     { "source": "/odds", "destination": "/views/odds/index.html" },
+    { "source": "/game-odds", "destination": "/views/football/game-odds.html" },
     { "source": "/bets/audit", "destination": "/views/bets/audit.html" },
     { "source": "/bets/place", "destination": "/views/bets/place.html" },
     { "source": "/bets/history", "destination": "/views/bets/history.html" },
@@ -54,6 +55,7 @@
     { "source": "/golf/:year/:tournament/groups", "destination": "/views/golf/groups.html" },
     { "source": "/golf/:year/:tournament/ev-model", "destination": "/views/golf/ev-model.html" },
     { "source": "/golf/:year/:tournament", "destination": "/views/golf/hub.html" },
+    { "source": "/appendix", "destination": "/views/home/appendix.html" },
     { "source": "/acknowledgements", "destination": "/views/home/acknowledgements.html" },
     { "source": "/api/:path*", "destination": "/api/:path*" }
   ],

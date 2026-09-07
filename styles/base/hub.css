@@ -168,15 +168,22 @@ body.masters-body {
 }
 
 .hub-card h3 {
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
   color: var(--text-bright);
   margin-bottom: 4px;
 }
 
+/* A card that is only its title carries the whole card on that one line, so it
+   gets the larger type and drops the gap meant for the description under it. */
+.hub-card.is-title-only h3 {
+  font-size: 18px;
+  margin-bottom: 0;
+}
+
 .hub-emoji {
   margin-right: 6px;
-  font-size: 15px;
+  font-size: 17px;
   line-height: 1;
 }
 

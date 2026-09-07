@@ -287,6 +287,14 @@ header a:hover { color: var(--accent); }
   font-size: 13px;
 }
 
+/* A top-level link with no section heading over it (Appendix). The rule is what
+   stops it reading as one more row of the section above. */
+.nav-drawer .nav-standalone {
+  border-top: 1px solid var(--border);
+  margin-top: 8px;
+  padding-top: 8px;
+}
+
 @media (max-width: 500px) {
   .league-content {
     padding: 12px 0;

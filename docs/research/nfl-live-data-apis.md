@@ -34,9 +34,17 @@ GOAT only for the game clock, live possession (`/plays`), odds, and player props
 
 ### The one test worth running first
 
-balldontlie's **actual** latency was never measured — it needs a key. Its 48-hour GOAT trial would
-settle it against a live slate. Measure against the three thresholds (25s score/period, 2 min player
-stats, 3–5 min team stats) before committing. This is the single largest remaining unknown.
+**Still open, and now scheduled.** balldontlie's *propagation* lag — how long after a play before the
+API will admit it happened — is the one claim in this document that cannot be settled without a live
+game. Request latency is now measured (200–350 ms, below), but that is a different number and not the
+one that decides whether a live score is worth showing.
+
+The 48-hour GOAT trial should be spent on **Wed 9 Sept 2026**, not before: started earlier it expires
+before kickoff and never sees a game. Activating mid-afternoon covers pregame odds and prop drift on
+NE @ SEA, the 8:20pm ET opener live, the settled postgame bundle, and Thursday's Melbourne game as a
+second sample. `scripts/bdl_latency.py` runs the measurement against the three thresholds (25s
+score/period, 2 min player stats, 3–5 min team stats) using balldontlie's own `plays[].wallclock` as
+the reference clock — the same method that produced ESPN's 26–33s, so the two are comparable.
 
 ---
 
@@ -141,6 +149,59 @@ Run on this machine, 2026-09-06:
   balldontlie 401 · SportsGameOdds 401 · api.nfl.com 401 · ESPN core `/odds` → `count=1`, DraftKings.
 - nflverse release assets: `play_by_play_2025.csv.gz` last updated 2026-08-13; no 2026 asset exists.
 - Brand assets and palettes for all 14 services → `assets/research/<service>/palette.json`.
+
+Run on this machine, 2026-09-07, against a **free** balldontlie key:
+
+- Request latency: `/teams` 285 ms, `/games` 200–353 ms (n=4). Not propagation lag — see above.
+- Tier boundaries confirmed by probe: `/teams`, `/games` serve on the free key; `/stats`,
+  `/team_stats`, `/player_injuries` → 401 (ALL-STAR); `/plays`, `/odds`, `/odds/player_props`,
+  `/player_designations` → 401 (GOAT). An under-tier request returns the same bare 401 as a bad key,
+  so the two have to be told apart by a static endpoint→tier table, not by the response.
+- **The published HTML docs give the wrong path for player props.** They say `/player_props`, which
+  answers `404 {"error":"Route not found"}`. The real path is **`/odds/player_props`** (and
+  `/odds/player_props/opening`). The OpenAPI spec at `https://www.balldontlie.io/openapi/nfl.yml`
+  is the authoritative list of the 30 routes; the HTML docs are not.
+- **Array filters take brackets — `game_ids[]` — on every endpoint that takes an array**, and a
+  singular `game_id` on `/plays` and the two props endpoints. Note the OpenAPI spec documents `/odds`
+  and `/team_stats` as taking a bare `game_ids`, and that is **wrong**: the API answers
+  `400 {"param":"game_ids","error":"game_ids must be an array (use game_ids[]=value)"}`. Where the
+  HTML docs, the spec and the running API disagree, only the API is worth believing.
+  `/player_designations` has no team filter at all — season/week only.
+- **`/team_stats` silently returns zero rows for a postseason game unless `season_types[]=3` is
+  passed**, even though a game id already identifies the game unambiguously. `/stats` has no such
+  quirk, which is what makes it easy to miss: the box score arrives and the team totals do not.
+- **`/player_injuries` carries no team of its own** — the team hangs off `player.team`. Nor does the
+  player object inside a `/stats` row carry one; there the team is on the stat row, because it is
+  the team he played *that game* for.
+- **The sportsbook list, previously undocumented**, for NE @ SEA on 2026-09-07: `betmgm`,
+  `betrivers`, `caesars`, `draftkings`, `fanatics`, `fanduel`, `kalshi`, `polymarket` — eight,
+  including two prediction markets. Super Bowl LX's opening line carries ten, adding `ballybet`,
+  `betparx` and `betway`. The field is `vendor`.
+- **25 player-prop markets**, including the quarter- and half-scoped ones: `anytime_td` (plus `_1q`
+  `_2q` `_3q` `_4q` `_1h` `_2h`), `first_td`, `passing_yards`/`_attempts`/`_completions`/`_tds`,
+  `interceptions`, `receiving_yards` (+`_1h` `_1q`), `receptions`, `rushing_yards` (+`_1h` `_1q`),
+  `rushing_attempts`, `rushing_receiving_yards`, `longest_rush`, `fg_made`, `kicking_points`. A prop
+  row is `{player_id, vendor, prop_type, line_value, market}` where `market` is either
+  `{type: "milestone", odds}` — an alternate-line ladder — or `{type: "over_under", over_odds,
+  under_odds}`. Props name no player, only `player_id`.
+- **Correction to the "props have no history" caveat above: opening lines *are* retained, closing
+  lines are not.** Super Bowl LX, seven months on, returns 0 rows from `/odds` and
+  `/odds/player_props` but 10 from `/odds/opening` and 1,769 from `/odds/player_props/opening`. So
+  CLV against the *open* is available retrospectively; CLV against the *close* still has to be
+  snapshotted before kickoff.
+- Schedule parity with ESPN, full-season diff on `(week, away, home)`: **272/272 games matched for
+  both 2025 and 2026, with zero differences in kickoff, slot, neutral-site or final score.** The 2025
+  run covers all 272 final scores. Kickoffs are full ISO instants (`2026-09-10T00:20:00.000Z`), so
+  ET slot classification survives the source change intact.
+- Two fields ESPN supplied that balldontlie does not, and how they were recovered: flex games are
+  marked `status: "TBD"` (and parked at midnight ET, as ESPN's were) — 24/24 in 2026; neutral sites
+  have no flag at all, and are derived from each team's modal home venue, which reproduced ESPN's 9
+  exactly. All 32 team abbreviations match the repo's already, `WSH`/`JAX`/`LAR` included.
+- Quarter scores use `null` for a scoreless quarter, not for a missing one — Super Bowl LX
+  (game `1341307`) has New England `q1..q3` null and `q4: 13`, summing to its 13-point final.
+- balldontlie carries stale venue names: `Reliant Stadium` (NRG since 2014) and `Arrowhead Stadium`
+  (ESPN's `GEHA Field at Arrowhead Stadium`). Buffalo is season-dependent — ESPN retroactively calls
+  the pre-2026 ground `Highmark Stadium (Old)`, balldontlie does not.
 
 ---
 

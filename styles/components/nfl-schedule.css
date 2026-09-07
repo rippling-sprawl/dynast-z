@@ -290,3 +290,28 @@
     line-height: 1.3;
   }
 }
+
+/* --- Matchup link ---
+ * The teams cell is an <a> to /game-odds when the game has an id. It has to
+ * look like exactly what it looked like before — the team abbreviation colours,
+ * including the picked-team accent, are the information here and a link colour
+ * would overwrite it — so the anchor inherits everything and announces itself
+ * only on hover and focus. `display: inline-flex` keeps the 3ch/2ch/3ch cell
+ * geometry the badges downstream depend on. */
+
+a.sched-teams {
+  color: inherit;
+  text-decoration: none;
+  border-radius: 3px;
+}
+
+a.sched-teams:hover .sched-team,
+a.sched-teams:focus-visible .sched-team { color: var(--accent); }
+
+a.sched-teams:hover .sched-at,
+a.sched-teams:focus-visible .sched-at { color: var(--accent); }
+
+a.sched-teams:focus-visible {
+  outline: 2px solid var(--accent-ring);
+  outline-offset: 2px;
+}

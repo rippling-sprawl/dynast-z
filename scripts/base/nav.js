@@ -18,6 +18,9 @@ const CURRENT_GOLF_YEAR = 2026;
 //   admin    — only rendered for a signed-in admin (UI gating only; the pages
 //              themselves are static and served to anyone with the URL)
 //   external — opens in a new tab
+//
+// A section may also carry `href` (its own landing page) and `collapsed` (the
+// drawer shows that landing page as one link instead of listing the items).
 const NAV_SECTIONS = [
   {
     label: 'Football',
@@ -25,36 +28,29 @@ const NAV_SECTIONS = [
     // separate self-referential row inside its own list.
     href: '/football',
     items: [
-      { label: "Baker's Buns", href: '/football/bakers-buns', emoji: '🍞',
-        desc: 'Season notes, projections &amp; open positions' },
-      { label: 'NFL Schedule', href: '/football/schedule', emoji: '📅',
-        desc: 'The full season by week &amp; team, primetime flagged' },
+      { label: "Baker's Buns", href: '/football/bakers-buns', emoji: '🍞' },
+      { label: 'Games', href: '/football/schedule', emoji: '📅' },
       // Baker's Oven holds per-account leagues and boards, but the landing
       // page is public and pitches itself to signed-out visitors, so it is
       // listed for everyone.
-      { label: "Baker's Oven", href: '/football/bakers-oven', emoji: '🔥',
-        desc: 'Live draft companion &mdash; your leagues, big board &amp; next pick' },
-      { label: 'Action', href: '/football/action', emoji: '🏈', admin: true,
-        desc: 'The open Action Network book &mdash; season futures and every week of the schedule' },
-      { label: 'Bets', href: '/bets', emoji: '🎯',
-        desc: 'Track your wagers &amp; history' },
-      { label: 'Trade Calculator', href: '/football/trade-calculator', emoji: '⚖️',
-        desc: 'Value any dynasty trade with blended rankings' },
-      { label: 'NFL Odds', href: '/odds', emoji: '🎲', hidden: true,
-        desc: 'From FanDuel, DraftKings and theScore' },
+      { label: "Baker's Oven", href: '/football/bakers-oven', emoji: '🔥' },
+      { label: 'Action', href: '/football/action', emoji: '🏈', admin: true },
+      { label: 'Bets', href: '/bets', emoji: '🎯' },
+      { label: 'Trade Calculator', href: '/football/trade-calculator', emoji: '⚖️' },
+      { label: 'NFL Odds', href: '/odds', emoji: '🎲', hidden: true },
     ],
   },
   {
-    label: 'Everything Else',
+    label: 'Appendix',
+    href: '/appendix',
+    // Collapsed in the drawer: one link to /appendix rather than a heading with
+    // four rows under it. The items below are the cards on that page.
+    collapsed: true,
     items: [
-      { label: 'Golf', href: '/golf', emoji: '🏌️',
-        desc: 'Majors, leaderboards, 3-balls &amp; groups' },
-      { label: 'Grading System', href: '/football/grading-system', emoji: '📊',
-        desc: 'How player &amp; pick values are calculated' },
-      { label: 'Sharply Stupid Blog', href: 'https://sharplystupid.substack.com/',
-        emoji: '📰', external: true, desc: 'The blog' },
-      { label: 'Acknowledgements', href: '/acknowledgements', emoji: '🧠',
-        desc: 'Resources &amp; acknowledgements' },
+      { label: 'Golf', href: '/golf', emoji: '🏌️' },
+      { label: 'Grading System', href: '/football/grading-system', emoji: '📊' },
+      { label: 'Sharply Stupid Blog', href: 'https://sharplystupid.substack.com/', emoji: '📰', external: true },
+      { label: 'Acknowledgements', href: '/acknowledgements', emoji: '🧠' },
     ],
   },
 ];
@@ -68,10 +64,15 @@ function navVisibleItems(section) {
   return section.items.filter(i => !i.hidden && (!i.admin || admin));
 }
 
-// The drawer's flat list, sections included.
+// The drawer's flat list, sections included. A `collapsed` section contributes
+// a single link to its own landing page instead of a heading and its rows.
 function buildNavItems() {
   const items = [];
   for (const section of NAV_SECTIONS) {
+    if (section.collapsed) {
+      items.push({ type: 'link', label: section.label, href: section.href, standalone: true });
+      continue;
+    }
     items.push({ type: 'section', label: section.label, href: section.href });
     for (const item of navVisibleItems(section)) {
       items.push({ type: 'link', label: item.label, href: item.href, external: item.external });
@@ -80,15 +81,17 @@ function buildNavItems() {
   return items;
 }
 
-// A section's cards, for the home page and the /football hub.
+// A section's cards, for the home page, the /football hub and /appendix. Title
+// only — the label and its emoji say what the destination is, and a sentence of
+// description under each one turned the grid into something to read rather than
+// something to scan.
 function buildHubCardsHTML(sectionLabel) {
   const section = NAV_SECTIONS.find(s => s.label === sectionLabel);
   if (!section) return '';
   return navVisibleItems(section).map(item => {
     const target = item.external ? ' target="_blank"' : '';
     const emoji = item.emoji ? `<span class="hub-emoji">${item.emoji}</span>` : '';
-    const desc = item.desc ? `<p>${item.desc}</p>` : '';
-    return `<a class="hub-card" href="${item.href}"${target}><h3>${emoji}${item.label}</h3>${desc}</a>`;
+    return `<a class="hub-card is-title-only" href="${item.href}"${target}><h3>${emoji}${item.label}</h3></a>`;
   }).join('\n      ');
 }
 
@@ -107,7 +110,10 @@ function buildNavDrawerHTML() {
         ? `<li><a class="nav-section-label" href="${item.href}">${item.label}</a></li>`
         : `<li><span class="nav-section-label">${item.label}</span></li>`;
     }
-    const cls = item.type === 'sub' ? ' class="nav-sub"' : '';
+    // `standalone` is a top-level destination with no heading over it, so it
+    // needs a rule above it or it reads as one more row of the section before.
+    const cls = item.standalone ? ' class="nav-standalone"'
+      : item.type === 'sub' ? ' class="nav-sub"' : '';
     const target = item.external ? ' target="_blank"' : '';
     return `<li${cls}><a href="${item.href}"${target}>${item.label}</a></li>`;
   }).join('\n        ');

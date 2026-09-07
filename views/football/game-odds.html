@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <title>Game Odds | Dynast-Z</title>
+  <script src="/scripts/base/theme.js"></script>
+  <link rel="stylesheet" href="/styles/base/theme.css">
+  <link rel="stylesheet" href="/styles/base/styles.css">
+  <link rel="stylesheet" href="/styles/base/hub.css">
+  <link rel="stylesheet" href="/styles/primary/game-odds.css">
+  <script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
+  <script defer src="/_vercel/insights/script.js"></script>
+</head>
+<body class="masters-body">
+  <div id="header-mount"></div>
+  <div id="nav-drawer-mount"></div>
+  <script src="/scripts/base/auth.js"></script>
+  <script src="/scripts/base/nav.js"></script>
+  <script>initPage();</script>
+
+  <div class="masters-content go-wrap">
+    <div class="masters-breadcrumbs">
+      <a href="/football">Football</a><span class="separator">/</span>
+      <a href="/football/schedule">Games</a><span class="separator">/</span>
+      <span id="crumb">Game</span>
+    </div>
+
+    <div id="page"><p class="go-empty">Loading game…</p></div>
+  </div>
+
+  <script>
+  (function () {
+    'use strict';
+
+    /* One game, from /api/game-odds?game=<id> — the bundle
+     * scripts/fetch_bdl_game.py writes to Supabase with --publish.
+     *
+     * Not a file under /data: a bundle is ~900 KB, nearly all of it player
+     * props, and committing one per game would add ~15 MB a week during the
+     * season to the repo forever. It lives in Supabase `game_odds` and moves on
+     * a push with no deploy, the same split the Action Network book uses.
+     *
+     * Deep-linked by balldontlie game id: /game-odds?game=1392216. That is the
+     * same id the schedule rows carry since data/nfl_schedule_*.json moved to
+     * balldontlie as its source, so every row on /football/schedule links here
+     * without a lookup table in between.
+     *
+     * The page is built to be mostly empty and still say something useful. Of
+     * the six sections below, five are behind balldontlie's paid tiers, so on a
+     * free key the honest render is a game header plus five explanations. Each
+     * section states which tier it needs, taken from the bundle's own
+     * `unavailable` notes rather than from a constant here — the fetcher already
+     * recorded exactly why each endpoint refused, and repeating that judgement
+     * in the page would be a second place to get it wrong.
+     *
+     * ES5 globals, like the rest of scripts/ — no modules, no build step.
+     */
+
+    var INDEX_URL = '/api/game-odds';
+
+    var pageEl = document.getElementById('page');
+    var crumbEl = document.getElementById('crumb');
+
+    function esc(s) {
+      return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+      });
+    }
+
+    function gameParam() {
+      return new URLSearchParams(location.search).get('game') || '';
+    }
+
+    /* ---------- formatting ---------- */
+
+    /* Stat keys arrive as snake_case straight off the API. Title-casing them
+     * here keeps the bundle a faithful copy of what was fetched — a label map
+     * would have to be maintained against ~60 stat fields and would silently
+     * drop any field the API adds. */
+    function label(key) {
+      return String(key).replace(/_/g, ' ').replace(/\b\w/g, function (c) {
+        return c.toUpperCase();
+      });
+    }
+
+    function isNum(v) { return typeof v === 'number'; }
+
+    function cell(v) {
+      if (v === null || v === undefined || v === '') {
+        return '<td class="is-null">—</td>';
+      }
+      if (isNum(v)) return '<td class="is-num">' + esc(v) + '</td>';
+      if (typeof v === 'object') return '<td>' + esc(JSON.stringify(v)) + '</td>';
+      return '<td>' + esc(v) + '</td>';
+    }
+
+    /* ---------- generic table ----------
+     * Used for odds and props, whose row shapes are undocumented and have never
+     * been observed against a live key. Rendering the union of whatever keys
+     * arrive cannot be wrong, and is the quickest way to learn the real shape
+     * the first time a paid key runs. Nested objects (a player, a team) are
+     * flattened one level so their fields become columns rather than JSON. */
+    function flatten(row) {
+      var out = {};
+      Object.keys(row).forEach(function (k) {
+        var v = row[k];
+        if (v && typeof v === 'object' && !Array.isArray(v)) {
+          Object.keys(v).forEach(function (k2) {
+            if (v[k2] === null || typeof v[k2] !== 'object') out[k + '.' + k2] = v[k2];
+          });
+        } else {
+          out[k] = v;
+        }
+      });
+      return out;
+    }
+
+    function genericTable(rows, labelFn) {
+      var head = labelFn || label;
+      if (!rows || !rows.length) return '';
+      var flat = rows.map(flatten);
+      var keys = [];
+      flat.forEach(function (r) {
+        Object.keys(r).forEach(function (k) { if (keys.indexOf(k) < 0) keys.push(k); });
+      });
+      // Drop columns that are null in every row — an undocumented payload
+      // carries a lot of them and they add nothing but width.
+      keys = keys.filter(function (k) {
+        return flat.some(function (r) { return r[k] !== null && r[k] !== undefined; });
+      });
+      return '<div class="go-scroll"><table class="go-table"><thead><tr>' +
+        keys.map(function (k) { return '<th>' + esc(head(k)) + '</th>'; }).join('') +
+        '</tr></thead><tbody>' +
+        flat.map(function (r) {
+          return '<tr>' + keys.map(function (k) { return cell(r[k]); }).join('') + '</tr>';
+        }).join('') +
+        '</tbody></table></div>';
+    }
+
+    /* ---------- sections ---------- */
+
+    function unavailableFor(bundle, paths) {
+      var notes = bundle.unavailable || [];
+      for (var i = 0; i < notes.length; i++) {
+        if (paths.indexOf(notes[i].path) >= 0) return notes[i];
+      }
+      return null;
+    }
+
+    function emptyState(bundle, paths, what) {
+      var note = unavailableFor(bundle, paths);
+      if (!note) {
+        return '<div class="go-empty">No ' + esc(what) +
+          ' in this bundle — the endpoint answered, with nothing in it.</div>';
+      }
+      var tier = String(note.needs_tier || '').toUpperCase();
+      var reason = note.error === 'CassetteMiss'
+        ? 'was never recorded, so <code>--replay</code> has nothing to serve'
+        : 'needs a plan this key is not on';
+      return '<div class="go-empty">' +
+        'No ' + esc(what) + ' captured. <code>' + esc(note.path) + '</code> ' + reason +
+        ' — <span class="go-tier">' + esc(tier) + '</span><br>' +
+        'Re-run <code>python3 scripts/fetch_bdl_game.py --game-id ' +
+        esc(bundle.game.id) + ' --record --publish</code> on a ' + esc(tier) +
+        ' key and this section fills in.</div>';
+    }
+
+    function card(title, note, body, flush) {
+      return '<section class="go-card">' +
+        '<div class="go-card-head"><h3>' + esc(title) + '</h3>' +
+        (note ? '<span class="go-card-note">' + esc(note) + '</span>' : '') +
+        '</div><div class="go-card-body' + (flush ? ' is-flush' : '') + '">' +
+        body + '</div></section>';
+    }
+
+    function heroSection(b) {
+      var g = b.game;
+      var sc = g.score;
+      var aw = '', hw = '';
+      if (sc && sc.away !== null && sc.home !== null) {
+        aw = sc.away > sc.home ? ' is-win' : (sc.away < sc.home ? ' is-loss' : '');
+        hw = sc.home > sc.away ? ' is-win' : (sc.home < sc.away ? ' is-loss' : '');
+      }
+      var scoreHtml = sc && sc.away !== null && sc.home !== null
+        ? '<div class="go-score">' + esc(sc.away) +
+            '<span class="go-sep"> – </span>' + esc(sc.home) + '</div>'
+        : '';
+
+      // The quarter table is drawn only once there is a game to draw it from.
+      var line = '';
+      if (sc && sc.away_line) {
+        var cols = ['1', '2', '3', '4', 'OT'];
+        // Overtime column only when someone actually scored in it.
+        var n = (sc.away_line[4] || sc.home_line[4]) ? 5 : 4;
+        line = '<table class="go-line"><thead><tr><th></th>' +
+          cols.slice(0, n).map(function (c) { return '<th>' + c + '</th>'; }).join('') +
+          '<th>T</th></tr></thead><tbody>' +
+          [['away', g.away.abbr, sc.away_line, sc.away],
+           ['home', g.home.abbr, sc.home_line, sc.home]].map(function (r) {
+            return '<tr><td>' + esc(r[1]) + '</td>' +
+              r[2].slice(0, n).map(function (v) { return '<td>' + esc(v) + '</td>'; }).join('') +
+              '<td class="go-total">' + esc(r[3]) + '</td></tr>';
+          }).join('') + '</tbody></table>';
+      }
+
+      var meta = [];
+      if (g.kickoff_et) meta.push('<b>Kickoff</b> ' + esc(g.kickoff_et));
+      if (g.venue) meta.push('<b>Venue</b> ' + esc(g.venue));
+      if (g.season) {
+        meta.push('<b>Season</b> ' + esc(g.season) +
+          (g.postseason ? ' postseason' : (g.week ? ' · week ' + esc(g.week) : '')));
+      }
+      if (g.status) meta.push('<b>Status</b> ' + esc(g.status));
+
+      return '<div class="go-hero"><div class="go-hero-top">' +
+        '<div class="go-matchup">' +
+          '<span class="go-side' + aw + '">' + esc(g.away.abbr) + '</span>' +
+          '<span class="go-at">' + (g.neutral ? 'vs' : '@') + '</span>' +
+          '<span class="go-side' + hw + '">' + esc(g.home.abbr) + '</span>' +
+        '</div>' + scoreHtml +
+        '<span class="go-phase ' + esc(b.phase) + '">' + esc(b.phase) + '</span>' +
+        '</div>' +
+        '<div class="go-meta">' + meta.join('') + '</div>' + line + '</div>';
+    }
+
+    function teamStatsSection(b) {
+      var a = b.team_stats && b.team_stats.away;
+      var h = b.team_stats && b.team_stats.home;
+      if (!a || !h) {
+        return card('Team stats', null,
+          emptyState(b, ['/team_stats'], 'team stats'), true);
+      }
+      var skip = { game: 1, team: 1, home_away: 1 };
+      var keys = Object.keys(a).filter(function (k) {
+        return !skip[k] && (typeof a[k] !== 'object' || a[k] === null);
+      });
+      var rows = keys.map(function (k) {
+        var av = a[k], hv = h[k];
+        var ab = isNum(av) && isNum(hv) && av > hv ? ' is-better' : '';
+        var hb = isNum(av) && isNum(hv) && hv > av ? ' is-better' : '';
+        return '<tr><td class="go-val' + ab + '">' + esc(av === null ? '—' : av) + '</td>' +
+          '<td class="go-stat">' + esc(label(k)) + '</td>' +
+          '<td class="go-val' + hb + '">' + esc(hv === null ? '—' : hv) + '</td></tr>';
+      }).join('');
+      return card('Team stats', null,
+        '<table class="go-vs"><thead><tr>' +
+          '<th style="text-align:right">' + esc(b.game.away.abbr) + '</th><th></th>' +
+          '<th style="text-align:right">' + esc(b.game.home.abbr) + '</th>' +
+        '</tr></thead><tbody>' + rows + '</tbody></table>');
+    }
+
+    /* A stat's group already names it. Under the Receiving heading, a column
+     * called "Receiving Targets" says "receiving" twice and pushes the word that
+     * distinguishes it — Targets — to where it is read last. So the group's own
+     * prefix comes off its children.
+     *
+     * The prefixes are listed rather than derived from the group name, because
+     * three of them do not match it: defense's fields are `defensive_*`,
+     * kicking's are `field_goal*`, punting's are `punt_*`. And `returns` is
+     * deliberately empty — its fields are `kick_return_yards` and
+     * `punt_return_yards`, so stripping to "Yards" would produce two identically
+     * named columns and lose the only thing that told them apart.
+     *
+     * Only a prefix that leaves something behind is removed: the `fumbles` group
+     * contains a bare `fumbles`, which must stay "Fumbles" rather than become
+     * blank. */
+    var GROUP_PREFIX = {
+      passing: ['passing_'],
+      rushing: ['rushing_'],
+      receiving: ['receiving_'],
+      fumbles: ['fumbles_'],
+      defense: ['defensive_'],
+      kicking: ['field_goals_', 'field_goal_'],
+      punting: ['punt_'],
+      returns: []
+    };
+
+    function groupLabel(grp) {
+      var prefixes = GROUP_PREFIX[grp] || [grp + '_'];
+      return function (key) {
+        for (var i = 0; i < prefixes.length; i++) {
+          var p = prefixes[i];
+          if (key.indexOf(p) === 0 && key.length > p.length) {
+            return label(key.slice(p.length));
+          }
+        }
+        return label(key);
+      };
+    }
+
+    function playerStatsSection(b) {
+      var ps = b.player_stats || {};
+      var total = ['away', 'home'].reduce(function (n, s) {
+        return n + ((ps[s] || []).length);
+      }, 0);
+      if (!total) {
+        return card('Box score', null, emptyState(b, ['/stats'], 'player stats'), true);
+      }
+      var groups = ['passing', 'rushing', 'receiving', 'defense', 'kicking',
+                    'returns', 'punting', 'fumbles'];
+      var html = '';
+      ['away', 'home'].forEach(function (side) {
+        var rows = ps[side] || [];
+        if (!rows.length) return;
+        html += '<h4 style="margin:14px 0 6px;font-size:12px">' +
+          esc(b.game[side].name) + '</h4>';
+        groups.forEach(function (grp) {
+          var withGrp = rows.filter(function (r) { return r[grp]; });
+          if (!withGrp.length) return;
+          var flat = withGrp.map(function (r) {
+            var o = { player: [(r.player || {}).first_name, (r.player || {}).last_name]
+              .filter(Boolean).join(' ') || (r.player || {}).id };
+            Object.keys(r[grp]).forEach(function (k) { o[k] = r[grp][k]; });
+            return o;
+          });
+          html += '<div class="go-card-note" style="margin:10px 0 4px">' +
+            esc(label(grp)) + '</div>' + genericTable(flat, groupLabel(grp));
+        });
+      });
+      return card('Box score', total + ' player lines', html);
+    }
+
+    function playsSection(b) {
+      var p = b.plays || { count: 0, all: [] };
+      if (!p.count) {
+        return card('Play log', null, emptyState(b, ['/plays'], 'plays'), true);
+      }
+      var rows = p.all.map(function (pl) {
+        return '<div class="go-play' + (pl.scoring_play ? ' is-scoring' : '') + '">' +
+          '<span class="go-clock">Q' + esc(pl.period) + ' ' +
+            esc(pl.clock_display || '') + '</span>' +
+          '<span class="go-pteam">' + esc((pl.team || {}).abbreviation || '') + '</span>' +
+          '<span class="go-ptext">' + esc(pl.text || pl.short_text || '') + '</span>' +
+          '<span class="go-pscore">' + esc(pl.away_score) + '–' + esc(pl.home_score) +
+          '</span></div>';
+      }).join('');
+      return card('Play log', p.count + ' plays · ' + p.scoring_count + ' scoring',
+        '<div class="go-plays">' + rows + '</div>', true);
+    }
+
+    /* ---------- odds ----------
+     * Shape settled by probing a live key, not by the docs: one row per
+     * sportsbook with spread / moneyline / total in flat columns, and the book
+     * in `vendor`. Rendered as a line-shopping grid because that is what eight
+     * books quoting the same game is for — the generic table would put the two
+     * sides of a spread in non-adjacent columns and bury the comparison. */
+
+    function fmtOdds(n) {
+      if (n === null || n === undefined || n === '') return '—';
+      return (n > 0 ? '+' : '') + n;
+    }
+
+    function fmtSpread(v) {
+      if (v === null || v === undefined || v === '') return '—';
+      var s = String(v);
+      return s.charAt(0) === '-' ? s : '+' + s;
+    }
+
+    function oddsTable(rows, g) {
+      var head = ['Book',
+        g.away.abbr + ' spread', g.away.abbr + ' ML',
+        g.home.abbr + ' spread', g.home.abbr + ' ML',
+        'Total', 'Over', 'Under'];
+      var body = rows.slice().sort(function (a, b2) {
+        return String(a.vendor).localeCompare(String(b2.vendor));
+      }).map(function (r) {
+        return '<tr>' +
+          '<td>' + esc(r.vendor) + '</td>' +
+          '<td class="is-num">' + esc(fmtSpread(r.spread_away_value)) + ' (' +
+            esc(fmtOdds(r.spread_away_odds)) + ')</td>' +
+          '<td class="is-num">' + esc(fmtOdds(r.moneyline_away_odds)) + '</td>' +
+          '<td class="is-num">' + esc(fmtSpread(r.spread_home_value)) + ' (' +
+            esc(fmtOdds(r.spread_home_odds)) + ')</td>' +
+          '<td class="is-num">' + esc(fmtOdds(r.moneyline_home_odds)) + '</td>' +
+          '<td class="is-num">' + esc(r.total_value === null ? '—' : r.total_value) + '</td>' +
+          '<td class="is-num">' + esc(fmtOdds(r.total_over_odds)) + '</td>' +
+          '<td class="is-num">' + esc(fmtOdds(r.total_under_odds)) + '</td>' +
+        '</tr>';
+      }).join('');
+      return '<div class="go-scroll"><table class="go-table"><thead><tr>' +
+        head.map(function (h) { return '<th>' + esc(h) + '</th>'; }).join('') +
+        '</tr></thead><tbody>' + body + '</tbody></table></div>';
+    }
+
+    function oddsSection(b) {
+      var o = b.odds || { current: [], opening: [] };
+      if (!o.current.length && !o.opening.length) {
+        return card('Betting odds', null,
+          emptyState(b, ['/odds', '/odds/opening'], 'odds'), true);
+      }
+      var body = '';
+      if (o.current.length) {
+        body += '<div class="go-card-note" style="margin-bottom:6px">Current</div>' +
+          oddsTable(o.current, b.game);
+      }
+      if (o.opening.length) {
+        body += '<div class="go-card-note" style="margin:14px 0 6px">Opening</div>' +
+          oddsTable(o.opening, b.game);
+      }
+      // A settled game keeps its opening line but not its closing one — worth
+      // saying, because an empty "Current" on a finished game is a property of
+      // the feed, not a gap in the capture.
+      if (!o.current.length && o.opening.length) {
+        body += '<div class="go-empty" style="padding:12px 0 0">' +
+          'No current line: balldontlie does not retain closing odds once a game ' +
+          'is over. Opening is kept.</div>';
+      }
+      return card('Betting odds',
+        (o.books && o.books.length ? o.books.length + ' books · ' + o.books.join(' · ') : null),
+        body);
+    }
+
+    /* ---------- props ----------
+     * Several thousand rows per game — 34 players x 25 markets x 6 books, and
+     * both sides of every over/under — so a flat dump is unreadable and a
+     * truncated one is a lie. Two selects cut it to one market at one book,
+     * which is the question anyone actually has ("what is Maye's passing yards
+     * line, and who has the best price").
+     *
+     * Two market shapes come back and both are handled: `milestone` is an
+     * alternate-line ladder with a single price per line, `over_under` is the
+     * conventional two-sided line. */
+
+    function propRows(b, which) {
+      return (b.player_props && b.player_props[which]) || [];
+    }
+
+    function playerOf(b, id) {
+      return (b.players && b.players[String(id)]) || null;
+    }
+
+    function propsTable(b, rows) {
+      var body = rows.slice().sort(function (x, y) {
+        var px = playerOf(b, x.player_id), py = playerOf(b, y.player_id);
+        var nx = (px && px.name) || String(x.player_id);
+        var ny = (py && py.name) || String(y.player_id);
+        if (nx !== ny) return nx.localeCompare(ny);
+        return parseFloat(x.line_value) - parseFloat(y.line_value);
+      }).map(function (r) {
+        var pl = playerOf(b, r.player_id);
+        var m = r.market || {};
+        return '<tr>' +
+          '<td>' + esc(pl ? pl.name : r.player_id) + '</td>' +
+          '<td>' + esc(pl && pl.position ? pl.position : '') + '</td>' +
+          '<td>' + esc(pl && pl.team ? pl.team : '') + '</td>' +
+          '<td class="is-num">' + esc(r.line_value) + '</td>' +
+          '<td class="is-num">' + esc(m.type === 'milestone' ? fmtOdds(m.odds) : '') + '</td>' +
+          '<td class="is-num">' + esc(m.type === 'over_under' ? fmtOdds(m.over_odds) : '') + '</td>' +
+          '<td class="is-num">' + esc(m.type === 'over_under' ? fmtOdds(m.under_odds) : '') + '</td>' +
+          '<td>' + esc(r.vendor) + '</td>' +
+        '</tr>';
+      }).join('');
+      return '<div class="go-scroll"><table class="go-table"><thead><tr>' +
+        ['Player', 'Pos', 'Team', 'Line', 'Odds', 'Over', 'Under', 'Book']
+          .map(function (h) { return '<th>' + esc(h) + '</th>'; }).join('') +
+        '</tr></thead><tbody>' + body + '</tbody></table></div>';
+    }
+
+    function propsSection(b) {
+      var p = b.player_props || { current: [], opening: [] };
+      if (!p.current.length && !p.opening.length) {
+        return card('Player props', null,
+          emptyState(b, ['/odds/player_props', '/odds/player_props/opening'],
+                     'player props'), true);
+      }
+      var which = p.current.length ? 'current' : 'opening';
+      var markets = p.markets || [];
+      var books = p.books || [];
+      var controls =
+        '<div class="dd-row" style="margin-bottom:12px;gap:8px;display:flex;flex-wrap:wrap">' +
+          '<select id="prop-which" class="go-select">' +
+            (p.current.length ? '<option value="current">Current</option>' : '') +
+            (p.opening.length ? '<option value="opening">Opening</option>' : '') +
+          '</select>' +
+          '<select id="prop-market" class="go-select">' +
+            markets.map(function (m) {
+              return '<option value="' + esc(m) + '">' + esc(label(m)) + '</option>';
+            }).join('') +
+          '</select>' +
+          '<select id="prop-book" class="go-select"><option value="">All books</option>' +
+            books.map(function (v) {
+              return '<option value="' + esc(v) + '">' + esc(v) + '</option>';
+            }).join('') +
+          '</select>' +
+        '</div><div id="prop-table"></div>';
+      return card('Player props',
+        (p.current.length || p.opening.length) + ' quotes · ' +
+        markets.length + ' markets · ' + books.length + ' books',
+        controls);
+    }
+
+    /* innerHTML wipes listeners, so the props controls are wired after every
+     * render rather than once at load. */
+    function wireProps(b) {
+      var whichEl = document.getElementById('prop-which');
+      var marketEl = document.getElementById('prop-market');
+      var bookEl = document.getElementById('prop-book');
+      var tableEl = document.getElementById('prop-table');
+      if (!tableEl) return;
+
+      // A <select> reports its first option as the value, but only once it is
+      // in a document. Setting it explicitly makes the first draw independent
+      // of that, which also keeps the page testable outside a browser.
+      function firstValue(el) {
+        return el && el.options && el.options.length ? el.options[0].value : '';
+      }
+      if (marketEl && !marketEl.value) marketEl.value = firstValue(marketEl);
+      if (whichEl && !whichEl.value) whichEl.value = firstValue(whichEl);
+
+      function draw() {
+        var rows = propRows(b, whichEl.value).filter(function (r) {
+          return r.prop_type === marketEl.value &&
+            (!bookEl.value || r.vendor === bookEl.value);
+        });
+        tableEl.innerHTML = rows.length
+          ? propsTable(b, rows)
+          : '<div class="go-empty">No quotes for that combination.</div>';
+      }
+      [whichEl, marketEl, bookEl].forEach(function (el) {
+        if (el) el.addEventListener('change', draw);
+      });
+      draw();
+    }
+
+    /* ---------- injuries ----------
+     * /player_injuries returns no team of its own — the team hangs off the
+     * player — and embeds the full player record, so the generic table would
+     * spread height, weight, college and jersey number across fourteen columns.
+     * These are the five fields anyone reads. */
+
+    function injuryTable(rows) {
+      var body = rows.map(function (r) {
+        var pl = r.player || {};
+        return '<tr>' +
+          '<td>' + esc([pl.first_name, pl.last_name].filter(Boolean).join(' ')) + '</td>' +
+          '<td>' + esc(pl.position_abbreviation || pl.position || '') + '</td>' +
+          '<td>' + esc((pl.team || {}).abbreviation || '') + '</td>' +
+          '<td>' + esc(r.status || '') + '</td>' +
+          '<td>' + esc(r.comment || '') + '</td>' +
+          '<td>' + esc(r.date || '—') + '</td>' +
+        '</tr>';
+      }).join('');
+      return '<div class="go-scroll"><table class="go-table"><thead><tr>' +
+        ['Player', 'Pos', 'Team', 'Status', 'Comment', 'Updated']
+          .map(function (h) { return '<th>' + esc(h) + '</th>'; }).join('') +
+        '</tr></thead><tbody>' + body + '</tbody></table></div>';
+    }
+
+    function injuriesSection(b) {
+      var inj = b.injuries || {};
+      var rows = (inj.away || []).concat(inj.home || []).concat(inj.unknown || []);
+      var des = b.designations || {};
+      var drows = (des.away || []).concat(des.home || []);
+      if (!rows.length && !drows.length) {
+        return card('Injuries and designations', null,
+          emptyState(b, ['/player_injuries', '/player_designations'],
+                     'injury data'), true);
+      }
+      var body = rows.length ? injuryTable(rows) : '';
+      if (drows.length) {
+        // Designations are a weekly practice-report record and their shape has
+        // more variation than the injury list, so they stay generic.
+        body += '<div class="go-card-note" style="margin:14px 0 6px">' +
+          'Designations (' + drows.length + ')</div>' + genericTable(drows.slice(0, 60)) +
+          (drows.length > 60
+            ? '<div class="go-card-note" style="margin-top:6px">showing first 60 of ' +
+              drows.length + '</div>'
+            : '');
+      }
+      return card('Injuries and designations', rows.length + ' on the injury report', body);
+    }
+
+    function othersSection(index, currentId) {
+      var games = (index && index.games) || {};
+      var ids = Object.keys(games);
+      if (ids.length < 2) return '';
+      var chips = ids.sort(function (a, c) {
+        return String(games[c].kickoff).localeCompare(String(games[a].kickoff));
+      }).map(function (id) {
+        var g = games[id];
+        return '<a class="go-chip' + (id === String(currentId) ? ' is-current' : '') +
+          '" href="/game-odds?game=' + encodeURIComponent(id) + '">' +
+          esc(g.away + ' @ ' + g.home) + ' · ' + esc(g.title || g.label) + '</a>';
+      }).join('');
+      return card('Other captured games', null, '<div class="go-others">' + chips + '</div>');
+    }
+
+    function provenance(b) {
+      var n = (b.unavailable || []).length;
+      // Say so when the capture is not everything on offer. A prop board that
+      // silently omits six books looks like a thin market rather than a choice.
+      var filt = b.books_filter && b.books_filter.length
+        ? ' · books <code>' + esc(b.books_filter.join(', ')) + '</code>'
+        : '';
+      return '<p class="go-prov">' +
+        'Source <code>balldontlie</code> · game <code>' + esc(b.game.id) + '</code> · ' +
+        'captured <code>' + esc(b.fetched_at) + '</code>' + filt +
+        (n ? ' · <b>' + n + '</b> endpoint' + (n === 1 ? '' : 's') +
+             ' unavailable on the key that fetched this' : '') +
+        '<br>Published to Supabase by <code>scripts/fetch_bdl_game.py --publish</code>. ' +
+        'Re-running it refreshes this page; nothing here is live.</p>';
+    }
+
+    /* ---------- render ---------- */
+
+    function renderMissing(id, index) {
+      crumbEl.textContent = 'Game';
+      var games = (index && index.games) || {};
+      var known = Object.keys(games).length;
+      pageEl.innerHTML = card(
+        id ? 'Nothing captured for game ' + esc(id) : 'No game selected', null,
+        '<div class="go-empty">' +
+          (id
+            ? 'No bundle has been published for this game yet. Capture one with:<br><br>' +
+              '<code>python3 scripts/fetch_bdl_game.py --game-id ' + esc(id) +
+              ' --record --publish</code>'
+            : 'Add <code>?game=&lt;id&gt;</code>, or pick one below.') +
+        '</div>', true) +
+        (known ? othersSection(index, id) : '') +
+        '<p class="go-prov">Every row on <a href="/football/schedule">the schedule</a> ' +
+        'links here. ' + known + ' game' + (known === 1 ? '' : 's') +
+        ' captured so far.</p>';
+    }
+
+    function render(b, index) {
+      var g = b.game;
+      crumbEl.textContent = g.away.abbr + ' @ ' + g.home.abbr;
+      document.title = g.away.abbr + ' @ ' + g.home.abbr + ' | Dynast-Z';
+      pageEl.innerHTML =
+        heroSection(b) +
+        oddsSection(b) +
+        propsSection(b) +
+        teamStatsSection(b) +
+        playerStatsSection(b) +
+        playsSection(b) +
+        injuriesSection(b) +
+        othersSection(index, g.id) +
+        provenance(b);
+      wireProps(b);
+    }
+
+    function load() {
+      var id = gameParam();
+      // The index is fetched either way: it is what turns "nothing here" into
+      // "nothing here, but these exist".
+      var idxP = fetch(INDEX_URL).then(function (r) {
+        return r.ok ? r.json() : null;
+      }).catch(function () { return null; });
+
+      if (!id) {
+        idxP.then(function (index) { renderMissing('', index); });
+        return;
+      }
+      Promise.all([
+        // A 404 here is the ordinary "not captured yet" case, not an error —
+        // renderMissing handles it and offers whatever has been captured.
+        fetch('/api/game-odds?game=' + encodeURIComponent(id))
+          .then(function (r) { return r.ok ? r.json() : null; })
+          .catch(function () { return null; }),
+        idxP
+      ]).then(function (res) {
+        if (!res[0]) return renderMissing(id, res[1]);
+        render(res[0], res[1]);
+      });
+    }
+
+    load();
+  })();
+  </script>
+</body>
+</html>

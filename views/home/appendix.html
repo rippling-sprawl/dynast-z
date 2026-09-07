@@ -4,14 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <link rel="icon" type="image/png" href="/favicon.png">
-  <title>Dynast-Z</title>
+  <title>Appendix | Dynast-Z</title>
   <!-- Theme first: theme.js sets <html data-theme> before the first paint,
        theme.css holds every colour token the sheets below spend. -->
   <script src="/scripts/base/theme.js"></script>
   <link rel="stylesheet" href="/styles/base/theme.css">
   <link rel="stylesheet" href="/styles/base/styles.css">
-  <!-- Same hub shell the section landing pages use (/football, /golf), so the
-       home page reads as the top of that same ladder. -->
   <link rel="stylesheet" href="/styles/base/hub.css">
   <link rel="stylesheet" href="/styles/base/lightbox.css">
   <!-- Vercel Web Analytics. The /_vercel/insights/* routes are injected by
@@ -28,15 +26,13 @@
   <script>initPage();</script>
 
   <div class="masters-content">
-    <h2>Dynast-Z</h2>
-    <p class="subtitle">Sports Tools &amp; Trackers</p>
+    <h2>Appendix</h2>
+    <p class="subtitle">Everything that isn&rsquo;t football</p>
 
-    <!-- Filled from NAV_SECTIONS in scripts/base/nav.js, so the home page, the
-         /football hub and the drawer can never disagree about what the site
-         contains. Everything that is not football lives on /appendix, which the
-         drawer links to directly. -->
-    <h3 class="hub-section"><a href="/football">Football</a></h3>
-    <div class="hub-grid" data-nav-section="Football"></div>
+    <!-- Filled from the Appendix section of NAV_SECTIONS in
+         scripts/base/nav.js. That section is `collapsed`, so the drawer links
+         straight here instead of listing these four — this page is the listing. -->
+    <div class="hub-grid" data-nav-section="Appendix"></div>
   </div>
 
   <script>mountHubGrids();</script>

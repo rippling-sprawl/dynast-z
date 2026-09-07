@@ -1,6 +1,6 @@
 {
-  "source": "ESPN",
-  "url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?dates=2025&seasontype=2&week={week}",
+  "source": "balldontlie",
+  "url": "https://api.balldontlie.io/nfl/v1/games?seasons[]=2025&season_types[]=2&per_page=100",
   "season": 2025,
   "weeks": 18,
   "game_count": 272,
@@ -10,7 +10,7 @@
     "odd": 74,
     "regular": 198
   },
-  "size_bytes": 39935,
-  "fetched_at": "2026-08-19T19:44:39+00:00",
-  "fetched_ts": 1787168679
+  "size_bytes": 39119,
+  "fetched_at": "2026-09-07T00:29:45+00:00",
+  "fetched_ts": 1788740985
 }

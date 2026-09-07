@@ -201,6 +201,23 @@
     // venue is the whole point of the row — it's the only case where the stadium
     // earns its space in a condensed list.
     var sep = g.neutral ? 'vs' : '@';
+
+    // The matchup is the link. Every row gets one — 272 of them a season — so a
+    // separate "odds" affordance per row would be 272 pieces of furniture for a
+    // page whose whole design is that only exceptions get a marker. Linking the
+    // teams themselves costs no width, no badge and no column: the row looks
+    // exactly as it did, and the thing you would click anyway is now clickable.
+    //
+    // g.id is balldontlie's game id since the schedule moved to that source, and
+    // it is what /game-odds resolves a bundle by. A row without one still
+    // renders — the id is not load-bearing for anything else on the page.
+    var teamsInner = team(away, 'away') +
+      '<span class="sched-at">' + sep + '</span>' + team(home, 'home');
+    var teams = g.id
+      ? '<a class="sched-teams" href="/game-odds?game=' +
+          encodeURIComponent(g.id) + '" title="Odds and box score: ' +
+          esc(away.abbr + ' ' + sep + ' ' + home.abbr) + '">' + teamsInner + '</a>'
+      : '<span class="sched-teams">' + teamsInner + '</span>';
     var venue = g.neutral && g.venue
       ? '<span class="sched-venue">' + esc(g.venue) + '</span>' : '';
 
@@ -231,9 +248,7 @@
       (opts.week ? '<span class="sched-wk">' + esc(opts.week) + '</span>' : '') +
       (opts.date ? '<span class="sched-date">' + esc(f.dayRow.format(d)) + '</span>' : '') +
       '<span class="sched-time">' + (tbd ? 'TBD' : esc(timeLabel(f, d))) + '</span>' +
-      '<span class="sched-matchup">' +
-        '<span class="sched-teams">' + team(away, 'away') +
-          '<span class="sched-at">' + sep + '</span>' + team(home, 'home') + '</span>' +
+      '<span class="sched-matchup">' + teams +
         resultCell(g, opts.team) + badge + venue + '</span>' +
     '</div>';
   }
