@@ -21,15 +21,15 @@
   margin-bottom: 18px;
 }
 
-/* The hero is centred rather than justified: with only three things in it —
- * matchup, score, phase — a space-between row pushes them to the edges of a
- * 1000px page and leaves a gap in the middle that reads as missing content. */
+/* The hero stacks rather than rows: matchup, status and venue are three
+ * separate facts, and side by side the chip hangs off the end of a 30px
+ * matchup instead of reading as its own line. Stacked, each one centres on
+ * the same axis and the hero reads top to bottom. */
 .go-hero-top {
   display: flex;
-  align-items: baseline;
-  justify-content: center;
-  gap: 12px 18px;
-  flex-wrap: wrap;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
 }
 
 .go-matchup {
@@ -55,16 +55,6 @@
 .go-side.is-win { color: var(--good); }
 .go-side.is-loss { color: var(--text-4); }
 
-.go-score {
-  font-family: monospace;
-  font-size: 30px;
-  font-weight: 700;
-  color: var(--text);
-  white-space: nowrap;
-}
-
-.go-score .go-sep { color: var(--text-5); font-weight: 400; }
-
 .go-meta {
   margin-top: 10px;
   display: flex;
@@ -78,12 +68,12 @@
 .go-meta b { color: var(--text-2); font-weight: 600; }
 
 .go-phase {
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 700;
   font-family: monospace;
   text-transform: uppercase;
   letter-spacing: 0.6px;
-  padding: 2px 7px;
+  padding: 3px 9px;
   border-radius: 999px;
   border: 1px solid transparent;
   white-space: nowrap;
@@ -176,9 +166,11 @@
   color: var(--text);
 }
 
-.go-card-note { font-size: 11px; color: var(--text-4); font-family: monospace; }
+/* Small labels inside a card body -- a stat group in the box score, Current
+ * vs Opening on the odds grid. The card head carries no note of its own. */
+.go-sub { font-size: 11px; color: var(--text-4); font-family: monospace; }
 
-.go-card-body { padding: 14px 16px; }
+.go-card-body { padding: 14px 4px; }
 .go-card-body.is-flush { padding: 0; }
 
 /* --- The empty state ----------------------------------------------------- */
@@ -240,6 +232,7 @@
 .go-table th {
   position: sticky;
   top: 0;
+  z-index: 2;
   background: var(--surface-2);
   color: var(--text-4);
   font-size: 10px;
@@ -251,6 +244,46 @@
 .go-table tbody tr:nth-child(even) { background: var(--zebra); }
 .go-table td.is-num { text-align: right; }
 .go-table td.is-null { color: var(--text-5); }
+
+/* --- Pinned first column -------------------------------------------------
+ * Injuries and props both scroll sideways — one because a comment can run to a
+ * sentence, the other because every book adds four columns — and both are read
+ * by finding a player's row and then tracking across it. Scroll the name off
+ * the left edge and the row loses the only thing that identifies it, so the
+ * first column stays put.
+ *
+ * The cells need their own opaque backgrounds: sticky cells paint over the row
+ * they are scrolling past, and a transparent one would drag the zebra stripe
+ * of whatever is underneath along with it. Header sits at z-index 2 so the
+ * pinned body cells slide under it on vertical scroll; its own first cell is
+ * pinned in both directions and has to outrank both. */
+
+.go-pinned tbody td:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+}
+
+.go-pinned tbody tr:nth-child(even) td:first-child { background: var(--zebra); }
+
+/* First row only: on the grouped props head the second row starts at the
+ * first book's Line column, and th:first-child would pin that to the left edge
+ * on top of the Player heading. */
+.go-pinned thead tr:first-child th:first-child {
+  left: 0;
+  z-index: 3;
+  border-right: 1px solid var(--border);
+}
+
+/* Free text, unlike every other cell on the page. It is the only column
+ * allowed to wrap — capped so a long note stacks into a paragraph inside the
+ * row instead of stretching the table off the side of the viewport. */
+.go-table th.go-note, .go-table td.go-note {
+  max-width: 80vw;
+  white-space: normal;
+}
 
 /* --- Book column groups --------------------------------------------------
  * Odds and props both carry the sportsbook in a spanning header rather than in
@@ -274,18 +307,119 @@
 .go-grouped thead tr:first-child th { top: 0; }
 .go-grouped thead tr + tr th { top: 25px; }
 
+/* --- Odds: one table per book --------------------------------------------
+ * The odds card is the one place a book is a whole table rather than a column
+ * group. Flat, it ran to eight columns and scrolled sideways on anything
+ * narrower than a laptop, which put the price the reader came for off-screen.
+ * Pivoted — markets across, the two teams down — a book is four columns, so
+ * the books tile into whatever width the card has and none of them scroll. */
+
+/* Flex rather than a grid of fixed tracks: the numbers are monospace and set
+ * not to wrap, so a track narrower than the widest row would clip a price. A
+ * flex item floors at its own content width, so a book that does not fit the
+ * row wraps to the next one instead of losing a digit. */
+.go-books {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px 18px;
+  padding: 0 8px;
+}
+
+.go-book {
+  flex: 1 1 260px;
+  min-width: min-content;
+  max-width: 420px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.go-odds th, .go-odds td { padding: 6px 10px; }
+.go-odds th.is-num { text-align: right; }
+
+/* Nothing below the last row to separate it from, and the box already draws
+ * the edge the hairline would double. */
+.go-odds tbody tr:last-child th,
+.go-odds tbody tr:last-child td { border-bottom: 0; }
+
+/* The book ticker heads the column the team abbreviations run down, so it is
+ * read as the label of the table rather than of the column. */
+.go-odds thead th.go-tm { color: var(--text-2); letter-spacing: 0.9px; }
+
+/* A team cell labels its row, so it is a th — which otherwise inherits the
+ * sticky, uppercased treatment meant for column headings, and would lift out
+ * of the table and paint over the zebra as the page scrolls under it. */
+.go-odds tbody th.go-tm {
+  position: static;
+  background: none;
+  color: var(--text);
+  font-size: 11.5px;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
+  white-space: nowrap;
+}
+
+/* A three-figure moneyline next to a hung total is the widest a row gets. On
+ * the narrowest phones that is a few pixels more than the column has, and the
+ * padding is the cheapest thing to take it out of. */
+@media (max-width: 400px) {
+  .go-odds { font-size: 11px; }
+  .go-odds th, .go-odds td { padding: 6px 7px; }
+  .go-odds tbody th.go-tm { font-size: 11px; }
+  .go-books { padding: 0 4px; gap: 12px; }
+}
+
 /* --- Team stat comparison ------------------------------------------------ */
 
 .go-vs { width: 100%; border-collapse: collapse; font-size: 12px; }
 
 .go-vs th, .go-vs td { padding: 5px 12px; border-bottom: 1px solid var(--hairline); }
 .go-vs thead th { color: var(--text-4); font-size: 10px; text-transform: uppercase; letter-spacing: 0.4px; }
-.go-vs td.go-stat { color: var(--text-3); }
+.go-vs td.go-stat { color: var(--text-3); text-align: center; }
 .go-vs td.go-val { font-family: monospace; text-align: right; width: 22%; color: var(--text); }
 .go-vs tbody tr:nth-child(even) { background: var(--zebra); }
 .go-vs td.is-better { color: var(--good); font-weight: 600; }
 
 /* --- Play log ------------------------------------------------------------ */
+
+/* All / Q1-Q4 / Scoring. Six mutually exclusive views of rows already on the
+ * page, every label one short word, so a segmented row rather than a select:
+ * they all fit, and which one is active is readable without opening anything.
+ * It sits inside the card body because that body is flush -- the strip is the
+ * card's own header rule, continued. */
+.go-seg {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--hairline);
+  background: var(--surface-2);
+}
+
+.go-seg button {
+  font-family: monospace;
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-3);
+  cursor: pointer;
+}
+
+.go-seg button:hover { border-color: var(--accent-line); color: var(--accent); }
+
+.go-seg button[aria-pressed="true"] {
+  border-color: var(--accent-line);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.go-seg button:focus-visible {
+  outline: 2px solid var(--accent-ring);
+  outline-offset: 1px;
+}
 
 .go-plays { max-height: 520px; overflow-y: auto; }
 
@@ -308,21 +442,12 @@
 
 /* --- Other games --------------------------------------------------------- */
 
-.go-others { display: flex; flex-wrap: wrap; gap: 8px; }
-
-.go-chip {
-  font-family: monospace;
-  font-size: 11px;
-  padding: 4px 10px;
-  border-radius: 999px;
-  border: 1px solid var(--border);
-  background: var(--surface-2);
-  color: var(--text-2);
-  text-decoration: none;
-}
-
-.go-chip:hover { border-color: var(--accent-line); color: var(--accent); }
-.go-chip.is-current { border-color: var(--accent-line); color: var(--accent); }
+/* Links inside an empty-state body: the archive door under "Other captured
+ * games", and the schedule link the not-captured-yet card carries. The chip
+ * grid that used to live here went with the wall of sibling games it styled —
+ * the whole set is at /football/schedule/archive now. */
+.go-empty a { color: var(--accent); text-decoration: none; font-weight: 600; }
+.go-empty a:hover { text-decoration: underline; }
 
 .go-prov {
   font-size: 11px;
@@ -334,7 +459,7 @@
 .go-prov code { font-family: monospace; color: var(--text-3); }
 
 @media (max-width: 640px) {
-  .go-matchup, .go-score { font-size: 22px; }
+  .go-matchup { font-size: 22px; }
   .go-play { grid-template-columns: 46px 40px minmax(0, 1fr); }
   .go-play .go-pscore { display: none; }
 }

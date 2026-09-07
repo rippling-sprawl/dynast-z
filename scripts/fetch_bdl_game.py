@@ -697,10 +697,18 @@ def verify(bundle, spec):
         # every one of these is a recorded 401, and refusing to write then would
         # mean refusing to write the one thing a free key CAN produce.
         if bundle["plays"]["count"]:
-            last = bundle["plays"]["all"][-1]
-            got = [last.get("away_score"), last.get("home_score")]
+            # The running score has to reach the final -- but the last row is
+            # not where it lands. /plays comes back ordered by play id, and
+            # administrative rows sort out of sequence: KC@LAC in week 1 2025
+            # ends on a period-1 timeout reading 0-0, three rows after "END
+            # GAME" at 21-27. Taking the max over every row is the same
+            # assertion with the ordering assumption removed. It held for Super
+            # Bowl LX by luck, which is why it was written the other way.
+            rows = bundle["plays"]["all"]
+            got = [max((r.get("away_score") or 0) for r in rows),
+                   max((r.get("home_score") or 0) for r in rows)]
             if got != [sc["away"], sc["home"]]:
-                print(f"ERROR: last play reads {got}, game says "
+                print(f"ERROR: the play log tops out at {got}, game says "
                       f"{[sc['away'], sc['home']]}", file=sys.stderr)
                 ok = False
             if bundle["plays"]["count"] < 100:

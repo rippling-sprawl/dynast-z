@@ -22,6 +22,7 @@
     { "source": "/bets", "destination": "/views/bets/index.html" },
     { "source": "/football/grading-system", "destination": "/views/home/grading-system.html" },
     { "source": "/football/live-stats", "destination": "/views/football/live-stats.html" },
+    { "source": "/football/schedule/archive", "destination": "/views/football/schedule-archive.html" },
     { "source": "/football/schedule/game/:gameId", "destination": "/views/football/game-odds.html" },
     { "source": "/football/schedule", "destination": "/views/football/schedule.html" },
     { "source": "/football/action/week/:week", "destination": "/api/action?slug=week-:week" },

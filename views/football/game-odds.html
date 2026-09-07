@@ -93,17 +93,203 @@
 
     /* ---------- formatting ---------- */
 
-    /* Stat keys arrive as snake_case straight off the API. Title-casing them
-     * here keeps the bundle a faithful copy of what was fetched — a label map
-     * would have to be maintained against ~60 stat fields and would silently
-     * drop any field the API adds. */
+    /* Stat keys arrive as snake_case straight off the API. Title-casing them is
+     * the floor, and it is what keeps the bundle a faithful copy of what was
+     * fetched: a field the API adds tomorrow still renders under a readable
+     * name rather than vanishing because nobody updated a map.
+     *
+     * Above that floor sit the ABBR maps below, which shorten the ~130 headings
+     * this page can draw to the forms a box score is actually read in. The
+     * widths are the argument: "Long Reception" is four times the width of the
+     * number under it and pushes eight sibling columns off the screen, where
+     * "LNG" does not. They are overrides, not a replacement — a key with no
+     * entry falls through to label() — and every abbreviated heading carries
+     * its long form as a title, so nothing that was on the page is gone, only
+     * folded up. */
     function label(key) {
       return String(key).replace(/_/g, ' ').replace(/\b\w/g, function (c) {
         return c.toUpperCase();
       });
     }
 
+    /* The tooltips are built out of label(), which title-cases every word and
+     * so turns the acronyms in these keys into words: `qbr` reads "Qbr" and
+     * `anytime_td` reads "Anytime Td". Spelled-out is the whole point of a
+     * tooltip, so the handful of keys that are acronyms are put back up. */
+    var ACRONYM = {
+      Qb: 'QB', Qbr: 'QBR', Td: 'TD', Tds: 'TDs', Fg: 'FG', Fgs: 'FGs',
+      Int: 'INT', Ints: 'INTs', Rz: 'RZ', Xp: 'XP', Ot: 'OT', Pat: 'PAT'
+    };
+
+    function fullLabel(key) {
+      return label(key).replace(/[A-Za-z]+/g, function (w) {
+        return ACRONYM[w] || w;
+      });
+    }
+
+    /* A heading is the short form plus the long one it stands for. `t` is null
+     * when the two say the same thing, so an unabbreviated heading gets no
+     * tooltip rather than one that repeats the text already under the cursor.
+     * Compared case-insensitively: "QBR" abbreviates nothing when the long form
+     * is also QBR, however label() happened to case it. */
+    function heading(short, full) {
+      var same = full && String(full).toLowerCase() === String(short).toLowerCase();
+      return { s: short, t: (full && !same) ? full : null };
+    }
+
+    function thCell(h, cls) {
+      if (typeof h === 'string') h = heading(h, null);
+      return '<th' + (cls ? ' class="' + cls + '"' : '') +
+        (h.t ? ' title="' + esc(h.t) + '"' : '') + '>' + esc(h.s) + '</th>';
+    }
+
+    /* ---------- abbreviations ----------
+     * Keyed on the JSON path a value arrives under rather than on its rendered
+     * string, so a heading can be traced back to the field it came from by
+     * grepping the key, and the map does not break the day balldontlie changes
+     * its own title-casing.
+     *
+     * Scoped per section because the same key wants a different width in
+     * different places: `passing_attempts` is "Att" in a team comparison with
+     * one stat per row and acres of space, and "ATT" in a box score where nine
+     * numeric columns share that row. */
+
+    /* team_stats.away|home.* */
+    var TEAM_ABBR = {
+      first_downs: '1st Downs', first_downs_passing: '1st D Pass',
+      first_downs_rushing: '1st D Rush', first_downs_penalty: '1st D Pen',
+      third_down_efficiency: '3rd Down %', third_down_conversions: '3rd Down Conv',
+      third_down_attempts: '3rd Down Att', fourth_down_efficiency: '4th Down %',
+      fourth_down_conversions: '4th Down Conv', fourth_down_attempts: '4th Down Att',
+      total_offensive_plays: 'Off Plays', total_yards: 'Tot Yds',
+      yards_per_play: 'Y/P', total_drives: 'Drives',
+      net_passing_yards: 'Net Pass Yds', passing_completions: 'Comp',
+      passing_attempts: 'Att', yards_per_pass: 'Y/A', sacks: 'Sacks',
+      sack_yards_lost: 'Sack Yds', rushing_yards: 'Rush Yds',
+      rushing_attempts: 'Rush Att', yards_per_rush_attempt: 'Y/C',
+      red_zone_scores: 'RZ Scores', red_zone_attempts: 'RZ Att',
+      penalties: 'Pen', penalty_yards: 'Pen Yds', turnovers: 'TO',
+      fumbles_lost: 'Fum Lost', interceptions_thrown: 'INT',
+      defensive_touchdowns: 'Def TD', possession_time: 'TOP'
+    };
+
+    /* player_stats.away|home[].<group>.* */
+    var STAT_ABBR = {
+      passing: {
+        passing_completions: 'CMP', passing_attempts: 'ATT',
+        passing_yards: 'YDS', yards_per_pass_attempt: 'Y/A',
+        passing_touchdowns: 'TD', passing_interceptions: 'INT',
+        sacks: 'SK', sacks_loss: 'SKYL', qbr: 'QBR', qb_rating: 'RTG'
+      },
+      rushing: {
+        rushing_attempts: 'ATT', rushing_yards: 'YDS',
+        yards_per_rush_attempt: 'AVG', rushing_touchdowns: 'TD',
+        long_rushing: 'LNG'
+      },
+      receiving: {
+        receptions: 'REC', receiving_yards: 'YDS',
+        yards_per_reception: 'AVG', receiving_touchdowns: 'TD',
+        long_reception: 'LNG', receiving_targets: 'TGT'
+      },
+      defense: {
+        total_tackles: 'TCK', defensive_sacks: 'SK', solo_tackles: 'SOLO',
+        tackles_for_loss: 'TFL', passes_defended: 'PD', qb_hits: 'QBH',
+        defensive_interceptions: 'INT', interception_yards: 'IYDS',
+        interception_touchdowns: 'ITD'
+      },
+      kicking: {
+        field_goal_attempts: 'FGA', field_goals_made: 'FGM',
+        field_goal_pct: 'FG%', long_field_goal_made: 'LNG',
+        extra_points_made: 'XPM', total_points: 'PTS'
+      },
+      returns: {
+        kick_returns: 'KR', kick_return_yards: 'KR YDS',
+        yards_per_kick_return: 'KR AVG', long_kick_return: 'KR LNG',
+        kick_return_touchdowns: 'KR TD', punt_returns: 'PR',
+        punt_return_yards: 'PR YDS', yards_per_punt_return: 'PR AVG',
+        long_punt_return: 'PR LNG', punt_return_touchdowns: 'PR TD'
+      },
+      punting: {
+        punts: 'PUNTS', punt_yards: 'YDS', gross_avg_punt_yards: 'AVG',
+        touchbacks: 'TB', punts_inside_20: 'IN20', long_punt: 'LNG'
+      },
+      fumbles: {
+        fumbles: 'FUM', fumbles_lost: 'LOST', fumbles_recovered: 'REC',
+        fumbles_touchdowns: 'TD'
+      }
+    };
+
+    /* player_props.markets[] / player_props.<which>[].prop_type — the market
+     * <select>. A period is a mechanical suffix on half of the 35 markets, so
+     * it is split off, the base abbreviated, and the period put back. Listing
+     * every combination would be 35 rows that disagree with each other the
+     * first time a market picks up a suffix the list does not have. */
+    var MARKET_ABBR = {
+      anytime_td: 'Anytime TD', first_td: 'First TD', fg_made: 'FG Made',
+      kicking_points: 'Kicking Pts', interceptions: 'INT Thrown',
+      passing_attempts: 'Pass Att', passing_completions: 'Pass Comp',
+      passing_tds: 'Pass TD', passing_yards: 'Pass Yds',
+      receptions: 'Rec', receiving_yards: 'Rec Yds',
+      rushing_attempts: 'Rush Att', rushing_yards: 'Rush Yds',
+      rushing_receiving_yards: 'Rush+Rec Yds', longest_rush: 'Long Rush'
+    };
+
+    var PERIOD = { '1q': '1Q', '2q': '2Q', '3q': '3Q', '4q': '4Q',
+                   '1h': '1H', '2h': '2H' };
+
+    function marketHeading(key) {
+      var k = String(key == null ? '' : key), suffix = '';
+      var m = /^(.*)_(1q|2q|3q|4q|1h|2h)$/.exec(k);
+      if (m) { k = m[1]; suffix = ' (' + PERIOD[m[2]] + ')'; }
+      return heading((MARKET_ABBR[k] || label(k)) + suffix,
+                     fullLabel(k) + suffix);
+    }
+
+    function teamHeading(key) {
+      return heading(TEAM_ABBR[key] || label(key), fullLabel(key));
+    }
+
+    /* injuries.away|home|unknown[].status. Matched case-insensitively and
+     * carrying more than the six statuses these bundles happen to contain: the
+     * rest of the designation list turns up in-season, and a status with no
+     * entry renders whole rather than blank. */
+    var STATUS_ABBR = {
+      'questionable': 'Q', 'doubtful': 'D', 'out': 'OUT',
+      'injured reserve': 'IR', 'ir': 'IR', 'ir-r': 'IR-R',
+      'pup-p': 'PUP-P', 'pup-r': 'PUP-R', 'nfi-a': 'NFI-A', 'nfi-r': 'NFI-R',
+      'reserve-dnr': 'DNR', 'suspended': 'SUSP', 'active': 'ACT'
+    };
+
+    function statusCell(v) {
+      var full = String(v == null ? '' : v).trim();
+      if (!full) return '<td></td>';
+      var h = heading(STATUS_ABBR[full.toLowerCase()] || full, full);
+      return '<td' + (h.t ? ' title="' + esc(h.t) + '"' : '') + '>' +
+        esc(h.s) + '</td>';
+    }
+
     function isNum(v) { return typeof v === 'number'; }
+
+    /* Players are named in three tables that are all short on width -- the box
+     * score, the prop board and the injury report -- and the given name is the
+     * part none of them are read for. "P. Mahomes" identifies the same player
+     * and hands the width back to the numbers beside it. */
+    function initialName(first, last) {
+      var f = String(first == null ? '' : first).trim();
+      var l = String(last == null ? '' : last).trim();
+      if (!f) return l;
+      if (!l) return f;
+      return f.charAt(0).toUpperCase() + '. ' + l;
+    }
+
+    /* The prop board carries the name already joined, so it is split back on
+     * the first space only -- everything after it is the surname, which leaves
+     * "Amon-Ra St. Brown" and "Michael Pittman Jr." intact. */
+    function shortenName(full) {
+      var s = String(full == null ? '' : full).trim();
+      var i = s.indexOf(' ');
+      return i < 0 ? s : initialName(s.slice(0, i), s.slice(i + 1));
+    }
 
     function cell(v) {
       if (v === null || v === undefined || v === '') {
@@ -190,7 +376,7 @@
     }
 
     function genericTable(rows, labelFn) {
-      var head = labelFn || label;
+      var headFn = labelFn || label;
       if (!rows || !rows.length) return '';
       var flat = rows.map(flatten);
       var keys = [];
@@ -203,7 +389,7 @@
         return flat.some(function (r) { return r[k] !== null && r[k] !== undefined; });
       });
       return '<div class="go-scroll"><table class="go-table"><thead><tr>' +
-        keys.map(function (k) { return '<th>' + esc(head(k)) + '</th>'; }).join('') +
+        keys.map(function (k) { return thCell(headFn(k)); }).join('') +
         '</tr></thead><tbody>' +
         flat.map(function (r) {
           return '<tr>' + keys.map(function (k) { return cell(r[k]); }).join('') + '</tr>';
@@ -239,12 +425,26 @@
         ' key and this section fills in.</div>';
     }
 
-    function card(title, note, body, flush) {
+    function card(title, body, flush) {
       return '<section class="go-card">' +
-        '<div class="go-card-head"><h3>' + esc(title) + '</h3>' +
-        (note ? '<span class="go-card-note">' + esc(note) + '</span>' : '') +
-        '</div><div class="go-card-body' + (flush ? ' is-flush' : '') + '">' +
+        '<div class="go-card-head"><h3>' + esc(title) + '</h3></div>' +
+        '<div class="go-card-body' + (flush ? ' is-flush' : '') + '">' +
         body + '</div></section>';
+    }
+
+    /* The chip is the whole status line now. Before kickoff that is the
+     * kickoff itself -- the only fact a scheduled game has -- and afterwards it
+     * is where the game is, in words rather than the bundle's `pregame` /
+     * `live` / `final` enum. An unrecognised phase falls back to its own name
+     * so a new one from the feed shows up rather than rendering blank. */
+    var PHASE_TEXT = { live: 'In progress', final: 'Final' };
+
+    function phaseText(b) {
+      var g = b.game;
+      if (b.phase === 'pregame') {
+        return kickoffET(g.kickoff_raw || g.kickoff_utc) || g.kickoff_et || 'Scheduled';
+      }
+      return PHASE_TEXT[b.phase] || label(b.phase || '');
     }
 
     function heroSection(b) {
@@ -255,11 +455,6 @@
         aw = sc.away > sc.home ? ' is-win' : (sc.away < sc.home ? ' is-loss' : '');
         hw = sc.home > sc.away ? ' is-win' : (sc.home < sc.away ? ' is-loss' : '');
       }
-      var scoreHtml = sc && sc.away !== null && sc.home !== null
-        ? '<div class="go-score">' + esc(sc.away) +
-            '<span class="go-sep"> – </span>' + esc(sc.home) + '</div>'
-        : '';
-
       // The quarter table is drawn only once there is a game to draw it from.
       var line = '';
       if (sc && sc.away_line) {
@@ -277,16 +472,10 @@
           }).join('') + '</tbody></table>';
       }
 
-      /* Kickoff and status answer the same question at different times: before
-       * the game "when does this start", once it has started "where are we".
-       * Only one of them is ever the live answer, so only one is shown --
-       * kickoff before the game, status during it and after ("Final"). */
+      /* Kickoff and status both answer "where is this game", and both are now
+       * the chip's job, so neither is repeated here. What is left is the one
+       * fact the chip does not carry. */
       var meta = [];
-      if (b.phase === 'pregame') {
-        if (g.kickoff_et) meta.push('<b>Kickoff</b> ' + esc(g.kickoff_et));
-      } else if (g.status) {
-        meta.push('<b>Status</b> ' + esc(g.status));
-      }
       if (g.venue) meta.push('<b>Venue</b> ' + esc(g.venue));
 
       return '<div class="go-hero"><div class="go-hero-top">' +
@@ -296,23 +485,26 @@
           '<span class="go-at">' + (g.neutral ? 'vs' : '@') + '</span>' +
           '<span class="go-side' + hw + '">' + teamLogo(g.home.abbr, 'go-logo') +
             esc(g.home.abbr) + '</span>' +
-        '</div>' + scoreHtml +
+        '</div>' +
         '<span class="go-status">' +
-          '<span class="go-phase ' + esc(b.phase) + '">' + esc(b.phase) + '</span>' +
+          '<span class="go-phase ' + esc(b.phase) + '">' + esc(phaseText(b)) + '</span>' +
           freshness(b) +
         '</span>' +
         '</div>' +
-        '<div class="go-meta">' + meta.join('') + '</div>' + line + '</div>';
+        (meta.length ? '<div class="go-meta">' + meta.join('') + '</div>' : '') +
+        line + '</div>';
     }
 
     function teamStatsSection(b) {
       var a = b.team_stats && b.team_stats.away;
       var h = b.team_stats && b.team_stats.home;
       if (!a || !h) {
-        return card('Team stats', null,
+        return card('Team stats',
           emptyState(b, ['/team_stats'], 'team stats'), true);
       }
-      var skip = { game: 1, team: 1, home_away: 1 };
+      /* possession_time_seconds is possession_time in a unit nobody reads a
+       * clock in — 33:11 and 1991 are one row, not two. */
+      var skip = { game: 1, team: 1, home_away: 1, possession_time_seconds: 1 };
       var keys = Object.keys(a).filter(function (k) {
         return !skip[k] && (typeof a[k] !== 'object' || a[k] === null);
       });
@@ -320,11 +512,13 @@
         var av = a[k], hv = h[k];
         var ab = isNum(av) && isNum(hv) && av > hv ? ' is-better' : '';
         var hb = isNum(av) && isNum(hv) && hv > av ? ' is-better' : '';
+        var hd = teamHeading(k);
         return '<tr><td class="go-val' + ab + '">' + esc(av === null ? '—' : av) + '</td>' +
-          '<td class="go-stat">' + esc(label(k)) + '</td>' +
+          '<td class="go-stat"' + (hd.t ? ' title="' + esc(hd.t) + '"' : '') + '>' +
+            esc(hd.s) + '</td>' +
           '<td class="go-val' + hb + '">' + esc(hv === null ? '—' : hv) + '</td></tr>';
       }).join('');
-      return card('Team stats', null,
+      return card('Team stats',
         '<table class="go-vs"><thead><tr>' +
           '<th class="go-vs-team">' + teamLogo(b.game.away.abbr, 'go-logo-sm') +
             esc(b.game.away.abbr) + '</th><th></th>' +
@@ -333,10 +527,14 @@
         '</tr></thead><tbody>' + rows + '</tbody></table>');
     }
 
-    /* A stat's group already names it. Under the Receiving heading, a column
+    /* The fallback for a box-score key STAT_ABBR has no entry for — a field
+     * balldontlie adds after this map was written.
+     *
+     * A stat's group already names it. Under the Receiving heading, a column
      * called "Receiving Targets" says "receiving" twice and pushes the word that
      * distinguishes it — Targets — to where it is read last. So the group's own
-     * prefix comes off its children.
+     * prefix comes off its children, which is most of the way to the
+     * abbreviation and costs nothing to keep for the keys nobody has seen yet.
      *
      * The prefixes are listed rather than derived from the group name, because
      * three of them do not match it: defense's fields are `defensive_*`,
@@ -361,14 +559,20 @@
 
     function groupLabel(grp) {
       var prefixes = GROUP_PREFIX[grp] || [grp + '_'];
+      var map = STAT_ABBR[grp] || {};
+      /* The tooltip is always the whole key spelled out — "Receiving Yards",
+       * not the "Yards" the prefix-stripping would leave. Under a Receiving
+       * heading the group is obvious in the column and useless in the tooltip,
+       * which is read on its own. */
       return function (key) {
+        if (map[key]) return heading(map[key], fullLabel(key));
         for (var i = 0; i < prefixes.length; i++) {
           var p = prefixes[i];
           if (key.indexOf(p) === 0 && key.length > p.length) {
-            return label(key.slice(p.length));
+            return heading(label(key.slice(p.length)), fullLabel(key));
           }
         }
-        return label(key);
+        return heading(label(key), null);
       };
     }
 
@@ -378,7 +582,7 @@
         return n + ((ps[s] || []).length);
       }, 0);
       if (!total) {
-        return card('Box score', null, emptyState(b, ['/stats'], 'player stats'), true);
+        return card('Box score', emptyState(b, ['/stats'], 'player stats'), true);
       }
       var groups = ['passing', 'rushing', 'receiving', 'defense', 'kicking',
                     'returns', 'punting', 'fumbles'];
@@ -392,58 +596,151 @@
           var withGrp = rows.filter(function (r) { return r[grp]; });
           if (!withGrp.length) return;
           var flat = withGrp.map(function (r) {
-            var o = { player: [(r.player || {}).first_name, (r.player || {}).last_name]
-              .filter(Boolean).join(' ') || (r.player || {}).id };
+            var o = { player: initialName((r.player || {}).first_name,
+              (r.player || {}).last_name) || (r.player || {}).id };
             Object.keys(r[grp]).forEach(function (k) { o[k] = r[grp][k]; });
             return o;
           });
-          html += '<div class="go-card-note" style="margin:10px 0 4px">' +
+          html += '<div class="go-sub" style="margin:10px 0 4px">' +
             esc(label(grp)) + '</div>' + genericTable(flat, groupLabel(grp));
         });
       });
-      return card('Box score', total + ' player lines', html);
+      return card('Box score', html);
+    }
+
+    /* Overtime is period 5 and up, so it was rendering as "Q5" -- not a
+     * quarter, and not something the quarter filters below could name either.
+     * One label function now answers both. */
+    function periodLabel(n) {
+      var p = Number(n);
+      if (!(p > 0)) return '';
+      return p > 5 ? 'OT' + (p - 4) : (p > 4 ? 'OT' : 'Q' + p);
+    }
+
+    function playRow(pl) {
+      return '<div class="go-play' + (pl.scoring_play ? ' is-scoring' : '') + '">' +
+        '<span class="go-clock">' + esc(periodLabel(pl.period)) + ' ' +
+          esc(pl.clock_display || '') + '</span>' +
+        '<span class="go-pteam">' + esc((pl.team || {}).abbreviation || '') + '</span>' +
+        '<span class="go-ptext">' + esc(pl.text || pl.short_text || '') + '</span>' +
+        '<span class="go-pscore">' + esc(pl.away_score) + '–' + esc(pl.home_score) +
+        '</span></div>';
+    }
+
+    /* A filter is one predicate over rows that are already on the page -- the
+     * whole log ships inside the bundle, so switching view is not a fetch and
+     * not a re-render of anything but the list. `scoring` reads the feed's own
+     * flag rather than matching on the play text, and a quarter key is just the
+     * period number it ends with, which is what lets the overtime chips fall
+     * out of the same three lines. */
+    function playPredicate(key) {
+      if (key === 'scoring') return function (pl) { return !!pl.scoring_play; };
+      if (key.charAt(0) === 'q') {
+        var n = parseInt(key.slice(1), 10);
+        return function (pl) { return Number(pl.period) === n; };
+      }
+      return function () { return true; };
+    }
+
+    /* Q1 through Q4 always, so a game at halftime offers the same controls a
+     * final one does and an empty quarter reads as "not yet" rather than as a
+     * missing button. Overtime is the exception: those chips appear only when
+     * the log actually reaches that period, because most games never do. */
+    function playFilters(p) {
+      var periods = [1, 2, 3, 4];
+      (p.all || []).forEach(function (pl) {
+        var n = Number(pl.period);
+        if (n > 4 && periods.indexOf(n) < 0) periods.push(n);
+      });
+      periods.sort(function (a, c) { return a - c; });
+      var out = [{ key: 'all', text: 'All' }];
+      periods.forEach(function (n) { out.push({ key: 'q' + n, text: periodLabel(n) }); });
+      if (p.scoring_count) out.push({ key: 'scoring', text: 'Scoring' });
+      return out;
     }
 
     function playsSection(b) {
       var p = b.plays || { count: 0, all: [] };
       if (!p.count) {
-        return card('Play log', null, emptyState(b, ['/plays'], 'plays'), true);
+        return card('Play log', emptyState(b, ['/plays'], 'plays'), true);
       }
-      var rows = p.all.map(function (pl) {
-        return '<div class="go-play' + (pl.scoring_play ? ' is-scoring' : '') + '">' +
-          '<span class="go-clock">Q' + esc(pl.period) + ' ' +
-            esc(pl.clock_display || '') + '</span>' +
-          '<span class="go-pteam">' + esc((pl.team || {}).abbreviation || '') + '</span>' +
-          '<span class="go-ptext">' + esc(pl.text || pl.short_text || '') + '</span>' +
-          '<span class="go-pscore">' + esc(pl.away_score) + '–' + esc(pl.home_score) +
-          '</span></div>';
+      var seg = playFilters(p).map(function (f, i) {
+        return '<button type="button" data-play-filter="' + esc(f.key) +
+          '" aria-pressed="' + (i ? 'false' : 'true') + '">' + esc(f.text) +
+          '</button>';
       }).join('');
-      return card('Play log', p.count + ' plays · ' + p.scoring_count + ' scoring',
-        '<div class="go-plays">' + rows + '</div>', true);
+      return card('Play log',
+        '<div class="go-seg" id="play-filters">' + seg + '</div>' +
+        '<div class="go-plays" id="play-list"></div>', true);
+    }
+
+    /* Wired after every render for the same reason wireProps is: a poll
+     * replaces the section wholesale and takes its listeners with it. */
+    function wirePlays(b) {
+      var segEl = document.getElementById('play-filters');
+      var listEl = document.getElementById('play-list');
+      if (!segEl || !listEl) return;
+      var all = (b.plays || {}).all || [];
+
+      function draw(key) {
+        var rows = all.filter(playPredicate(key));
+        listEl.innerHTML = rows.length
+          ? rows.map(playRow).join('')
+          : '<div class="go-empty">No plays in that filter yet.</div>';
+      }
+
+      segEl.addEventListener('click', function (e) {
+        var btn = e.target && e.target.getAttribute &&
+          e.target.getAttribute('data-play-filter') !== null ? e.target : null;
+        if (!btn) return;
+        var buttons = segEl.querySelectorAll('[data-play-filter]');
+        for (var i = 0; i < buttons.length; i++) {
+          buttons[i].setAttribute('aria-pressed',
+            buttons[i] === btn ? 'true' : 'false');
+        }
+        draw(btn.getAttribute('data-play-filter'));
+      });
+      draw('all');
     }
 
     /* ---------- odds ----------
      * Shape settled by probing a live key, not by the docs: one row per
      * sportsbook with spread / moneyline / total in flat columns, and the book
-     * in `vendor`. Rendered as a line-shopping grid because that is what eight
-     * books quoting the same game is for — the generic table would put the two
-     * sides of a spread in non-adjacent columns and bury the comparison. */
+     * in `vendor`. Rendered as one small table per book rather than one wide
+     * one: laid out flat, the two sides of every market sit in eight columns
+     * that no phone can hold, so the table scrolled sideways and the price a
+     * reader came for was off-screen. Pivoted, a book is four columns — team,
+     * spread, moneyline, total — and the two teams are the two rows, which
+     * fits without scrolling and puts the two sides of a market adjacent. */
 
-    /* Books arrive as their API slug — `draftkings`, `fanduel`. Both tables now
-     * carry the book in a header cell sitting above four narrow columns, where
-     * the full name is several times the width of the numbers under it, so it
-     * is shortened to the ticker a line-shopping grid is read with. An unmapped
-     * book falls back to its slug uppercased: wrong-looking enough to notice
-     * and add rather than quietly rendering as something else. */
+    /* Books arrive as their API slug — `draftkings`, `fanduel`. Both the odds
+     * tables and the props grid label the book in a header cell sitting over
+     * narrow numeric columns, where the full name is several times the width
+     * of the numbers under it, so it is shortened to the ticker a line-shopping
+     * grid is read with. An unmapped book falls back to its slug uppercased:
+     * wrong-looking enough to notice and add rather than quietly rendering as
+     * something else. */
     var BOOK_SHORT = {
       draftkings: 'DK', fanduel: 'FD', betmgm: 'MGM', caesars: 'CZR',
       betrivers: 'BR', fanatics: 'FAN', espnbet: 'ESPN', bet365: 'B365',
       pointsbet: 'PB', hardrock: 'HR'
     };
 
+    var BOOK_NAME = {
+      draftkings: 'DraftKings', fanduel: 'FanDuel', betmgm: 'BetMGM',
+      caesars: 'Caesars', betrivers: 'BetRivers', fanatics: 'Fanatics',
+      espnbet: 'ESPN BET', bet365: 'bet365', pointsbet: 'PointsBet',
+      hardrock: 'Hard Rock Bet'
+    };
+
     function bookLabel(v) {
       var k = String(v == null ? '' : v).toLowerCase();
       return BOOK_SHORT[k] || k.toUpperCase();
+    }
+
+    function bookHeading(v) {
+      var k = String(v == null ? '' : v).toLowerCase();
+      return heading(bookLabel(v), BOOK_NAME[k] || null);
     }
 
     /* The thead of both tables is two rows: one book per spanning cell, then
@@ -452,13 +749,14 @@
      * a table that starts with one, where the rule would land on the edge. */
     function groupHead(books, sub, lead) {
       return '<tr>' + (lead || '') + books.map(function (v, i) {
+          var b = bookHeading(v);
           return '<th' + (i || lead ? ' class="go-bk"' : '') +
-            ' colspan="' + sub.length + '">' + esc(bookLabel(v)) + '</th>';
+            (b.t ? ' title="' + esc(b.t) + '"' : '') +
+            ' colspan="' + sub.length + '">' + esc(b.s) + '</th>';
         }).join('') +
         '</tr><tr>' + books.map(function (v, i) {
           return sub.map(function (h, j) {
-            return '<th' + (!j && (i || lead) ? ' class="go-bk"' : '') + '>' +
-              esc(h) + '</th>';
+            return thCell(h, (!j && (i || lead)) ? 'go-bk' : '');
           }).join('');
         }).join('') + '</tr>';
     }
@@ -474,43 +772,81 @@
       return s.charAt(0) === '-' ? s : '+' + s;
     }
 
+    /* A market cell is the line and the price it is offered at — `-3.5 (-110)`.
+     * Either half can be missing on a book that has posted one and not the
+     * other, and `-3.5 (—)` reads as a price rather than an absence, so a
+     * half-quoted market renders only the half that exists. */
+    function lineCell(value, odds, fmt) {
+      var hasV = value !== null && value !== undefined && value !== '';
+      var hasO = odds !== null && odds !== undefined && odds !== '';
+      if (!hasV) return hasO ? fmtOdds(odds) : '—';
+      return fmt(value) + (hasO ? ' (' + fmtOdds(odds) + ')' : '');
+    }
+
+    /* The total is one line quoted from both sides, so it is not a property of
+     * either team the way the spread and the moneyline are. It is split down
+     * the same two rows anyway — over on top, under below, each prefixed with
+     * the side it is — because a third row for one market would cost more than
+     * the small fiction that the over belongs to the away team. */
+    function totalCell(r, side) {
+      return lineCell(r.total_value,
+        side === 'over' ? r.total_over_odds : r.total_under_odds,
+        function (v) { return (side === 'over' ? 'o' : 'u') + v; });
+    }
+
+    function oddsRow(t, spread, ml, tot) {
+      return '<tr><th scope="row" class="go-tm">' + teamLogo(t.abbr, 'go-logo-sm') +
+        esc(t.abbr) + '</th>' +
+        '<td class="is-num">' + esc(spread) + '</td>' +
+        '<td class="is-num">' + esc(ml) + '</td>' +
+        '<td class="is-num">' + esc(tot) + '</td></tr>';
+    }
+
+    /* One book, one table: the book names the team column, the markets are the
+     * other three headings, and the away team leads the way it does everywhere
+     * else on the page. */
+    function bookTable(r, g) {
+      var b = bookHeading(r.vendor);
+      return '<div class="go-book"><table class="go-table go-odds"><thead><tr>' +
+          '<th class="go-tm"' + (b.t ? ' title="' + esc(b.t) + '"' : '') + '>' +
+            esc(b.s) + '</th>' +
+          thCell(heading('Spread', 'Point spread'), 'is-num') +
+          thCell(heading('ML', 'Moneyline'), 'is-num') +
+          thCell(heading('Total', 'Total points line'), 'is-num') +
+        '</tr></thead><tbody>' +
+        oddsRow(g.away,
+          lineCell(r.spread_away_value, r.spread_away_odds, fmtSpread),
+          fmtOdds(r.moneyline_away_odds),
+          totalCell(r, 'over')) +
+        oddsRow(g.home,
+          lineCell(r.spread_home_value, r.spread_home_odds, fmtSpread),
+          fmtOdds(r.moneyline_home_odds),
+          totalCell(r, 'under')) +
+        '</tbody></table></div>';
+    }
+
     function oddsTable(rows, g) {
-      var sub = [g.away.abbr + ' spread', g.away.abbr + ' ML',
-                 g.home.abbr + ' spread', g.home.abbr + ' ML',
-                 'Total', 'Over', 'Under'];
       var quotes = rows.slice().sort(function (a, b2) {
         return String(a.vendor).localeCompare(String(b2.vendor));
       });
-      var body = quotes.map(function (r, i) {
-        return '<td class="is-num' + (i ? ' go-bk' : '') + '">' +
-            esc(fmtSpread(r.spread_away_value)) + ' (' +
-            esc(fmtOdds(r.spread_away_odds)) + ')</td>' +
-          '<td class="is-num">' + esc(fmtOdds(r.moneyline_away_odds)) + '</td>' +
-          '<td class="is-num">' + esc(fmtSpread(r.spread_home_value)) + ' (' +
-            esc(fmtOdds(r.spread_home_odds)) + ')</td>' +
-          '<td class="is-num">' + esc(fmtOdds(r.moneyline_home_odds)) + '</td>' +
-          '<td class="is-num">' + esc(r.total_value === null ? '—' : r.total_value) + '</td>' +
-          '<td class="is-num">' + esc(fmtOdds(r.total_over_odds)) + '</td>' +
-          '<td class="is-num">' + esc(fmtOdds(r.total_under_odds)) + '</td>';
-      }).join('');
-      return '<div class="go-scroll"><table class="go-table go-grouped"><thead>' +
-        groupHead(quotes.map(function (r) { return r.vendor; }), sub, '') +
-        '</thead><tbody><tr>' + body + '</tr></tbody></table></div>';
+      return '<div class="go-books">' +
+        quotes.map(function (r) { return bookTable(r, g); }).join('') +
+        '</div>';
     }
 
     function oddsSection(b) {
       var o = b.odds || { current: [], opening: [] };
       if (!o.current.length && !o.opening.length) {
-        return card('Betting odds', null,
+        return card('Betting odds',
           emptyState(b, ['/odds', '/odds/opening'], 'odds'), true);
       }
       var body = '';
       if (o.current.length) {
-        body += '<div class="go-card-note" style="margin-bottom:6px">Current</div>' +
+        body += '<div class="go-sub" style="margin:0 0 6px 9px">Current</div>' +
           oddsTable(o.current, b.game);
       }
       if (o.opening.length) {
-        body += '<div class="go-card-note" style="margin:14px 0 6px">Opening</div>' +
+        body += '<div class="go-sub" style="margin:14px 0 6px 9px">Opening</div>' +
           oddsTable(o.opening, b.game);
       }
       // A settled game keeps its opening line but not its closing one — worth
@@ -521,11 +857,7 @@
           'No current line: balldontlie does not retain closing odds once a game ' +
           'is over. Opening is kept.</div>';
       }
-      return card('Betting odds',
-        (o.books && o.books.length
-          ? o.books.length + ' books · ' + o.books.map(bookLabel).join(' · ')
-          : null),
-        body);
+      return card('Betting odds', body);
     }
 
     /* ---------- props ----------
@@ -572,16 +904,19 @@
         byKey[k].quotes[r.vendor] = r;
       });
 
+      /* Sorted on the name as it is displayed, which is now the surname:
+       * ordering by the full name while showing "P. Mahomes" reads as unsorted
+       * to anyone scanning the first column. */
       var body = order.map(function (k) { return byKey[k]; }).sort(function (x, y) {
         var px = playerOf(b, x.player_id), py = playerOf(b, y.player_id);
-        var nx = (px && px.name) || String(x.player_id);
-        var ny = (py && py.name) || String(y.player_id);
+        var nx = (px && shortenName(px.name)) || String(x.player_id);
+        var ny = (py && shortenName(py.name)) || String(y.player_id);
         if (nx !== ny) return nx.localeCompare(ny);
         return parseFloat(x.line) - parseFloat(y.line);
       }).map(function (row) {
         var pl = playerOf(b, row.player_id);
         return '<tr>' +
-          '<td>' + esc(pl ? pl.name : row.player_id) + '</td>' +
+          '<td>' + esc(pl ? shortenName(pl.name) : row.player_id) + '</td>' +
           '<td>' + esc(pl && pl.position ? pl.position : '') + '</td>' +
           '<td>' + esc(pl && pl.team ? pl.team : '') + '</td>' +
           books.map(function (v) {
@@ -601,9 +936,10 @@
         '</tr>';
       }).join('');
 
-      return '<div class="go-scroll"><table class="go-table go-grouped"><thead>' +
+      return '<div class="go-scroll"><table class="go-table go-grouped go-pinned"><thead>' +
         groupHead(books, ['Line', 'Odds', 'Over', 'Under'],
-          '<th rowspan="2">Player</th><th rowspan="2">Pos</th>' +
+          '<th rowspan="2">Player</th>' +
+          '<th rowspan="2" title="Position">Pos</th>' +
           '<th rowspan="2">Team</th>') +
         '</thead><tbody>' + body + '</tbody></table></div>';
     }
@@ -611,13 +947,11 @@
     function propsSection(b) {
       var p = b.player_props || { current: [], opening: [] };
       if (!p.current.length && !p.opening.length) {
-        return card('Player props', null,
+        return card('Player props',
           emptyState(b, ['/odds/player_props', '/odds/player_props/opening'],
                      'player props'), true);
       }
-      var which = p.current.length ? 'current' : 'opening';
       var markets = p.markets || [];
-      var books = p.books || [];
       var controls =
         '<div class="dd-row" style="margin-bottom:12px;gap:8px;display:flex;flex-wrap:wrap">' +
           '<select id="prop-which" class="go-select">' +
@@ -626,15 +960,14 @@
           '</select>' +
           '<select id="prop-market" class="go-select">' +
             markets.map(function (m) {
-              return '<option value="' + esc(m) + '">' + esc(label(m)) + '</option>';
+              var h = marketHeading(m);
+              return '<option value="' + esc(m) + '"' +
+                (h.t ? ' title="' + esc(h.t) + '"' : '') + '>' +
+                esc(h.s) + '</option>';
             }).join('') +
           '</select>' +
         '</div><div id="prop-table"></div>';
-      return card('Player props',
-        (p.current.length || p.opening.length) + ' quotes · ' +
-        markets.length + ' markets · ' + books.length + ' books' +
-        (books.length ? ' · ' + books.map(bookLabel).join(' · ') : ''),
-        controls);
+      return card('Player props', controls);
     }
 
     /* innerHTML wipes listeners, so the props controls are wired after every
@@ -678,17 +1011,24 @@
       var body = rows.map(function (r) {
         var pl = r.player || {};
         return '<tr>' +
-          '<td>' + esc([pl.first_name, pl.last_name].filter(Boolean).join(' ')) + '</td>' +
+          '<td>' + esc(initialName(pl.first_name, pl.last_name)) + '</td>' +
           '<td>' + esc(pl.position_abbreviation || pl.position || '') + '</td>' +
           '<td>' + esc((pl.team || {}).abbreviation || '') + '</td>' +
-          '<td>' + esc(r.status || '') + '</td>' +
-          '<td>' + esc(r.comment || '') + '</td>' +
+          statusCell(r.status) +
+          '<td class="go-note">' + esc(r.comment || '') + '</td>' +
           '<td>' + esc(r.date || '—') + '</td>' +
         '</tr>';
       }).join('');
-      return '<div class="go-scroll"><table class="go-table"><thead><tr>' +
-        ['Player', 'Pos', 'Team', 'Status', 'Comment', 'Updated']
-          .map(function (h) { return '<th>' + esc(h) + '</th>'; }).join('') +
+      /* Comment is the one free-text column on the page, so it is the one
+       * column that wraps and is capped rather than run out to whatever the
+       * longest note happens to be. */
+      return '<div class="go-scroll"><table class="go-table go-pinned"><thead><tr>' +
+        thCell(heading('Player', null)) +
+        thCell(heading('Pos', 'Position')) +
+        thCell(heading('Team', null)) +
+        thCell(heading('Status', 'Injury designation')) +
+        thCell(heading('Comment', null), 'go-note') +
+        thCell(heading('Updated', 'Last reported')) +
         '</tr></thead><tbody>' + body + '</tbody></table></div>';
     }
 
@@ -696,26 +1036,31 @@
       var inj = b.injuries || {};
       var rows = (inj.away || []).concat(inj.home || []).concat(inj.unknown || []);
       if (!rows.length) {
-        return card('Injury report', null,
+        return card('Injury report',
           emptyState(b, ['/player_injuries'], 'injury data'), true);
       }
-      return card('Injury report', rows.length + ' on the injury report',
-                  injuryTable(rows));
+      return card('Injury report', injuryTable(rows));
     }
 
+    /* Sibling games. This listed every captured game when there were four of
+     * them; backfilling 2025 turned that into a 278-chip wall on every page,
+     * and trimming it to the game's own slate only moved the problem — a
+     * capped, re-sorted list of sixteen still spends the bottom of a page
+     * about one game on fifteen others, and still has to explain what it left
+     * out. The whole set has a page of its own now, so what stays here is the
+     * door to it: one line, one link, and the count that says how much is
+     * behind it. */
     function othersSection(index, currentId) {
       var games = (index && index.games) || {};
-      var ids = Object.keys(games);
-      if (ids.length < 2) return '';
-      var chips = ids.sort(function (a, c) {
-        return String(games[c].kickoff).localeCompare(String(games[a].kickoff));
-      }).map(function (id) {
-        var g = games[id];
-        return '<a class="go-chip' + (id === String(currentId) ? ' is-current' : '') +
-          '" href="/football/schedule/game/' + encodeURIComponent(id) + '">' +
-          esc(g.away + ' @ ' + g.home) + ' · ' + esc(g.title || g.label) + '</a>';
-      }).join('');
-      return card('Other captured games', null, '<div class="go-others">' + chips + '</div>');
+      var n = Object.keys(games).filter(function (id) {
+        return id !== String(currentId);
+      }).length;
+      if (!n) return '';
+      return card('Other captured games',
+        '<div class="go-empty">' +
+          '<a href="/football/schedule/archive">Browse the capture archive</a>' +
+          ' — ' + n + ' other game' + (n === 1 ? '' : 's') +
+          ' captured, listed by season and week.</div>', true);
     }
 
     function provenance(b) {
@@ -863,7 +1208,7 @@
             : '');
       }
 
-      pageEl.innerHTML = card(head, null, '<div class="go-empty">' + body + '</div>', true) +
+      pageEl.innerHTML = card(head, '<div class="go-empty">' + body + '</div>', true) +
         (known ? othersSection(index, id) : '') +
         '<p class="go-prov">Every row on <a href="/football/schedule">the schedule</a> ' +
         'links here. ' + known + ' game' + (known === 1 ? '' : 's') +
@@ -874,17 +1219,27 @@
       var g = b.game;
       crumbEl.textContent = g.away.abbr + ' @ ' + g.home.abbr;
       document.title = g.away.abbr + ' @ ' + g.home.abbr + ' | Dynast-Z';
+      /* Before kickoff the prop board is the page: there is no box score and
+       * no play log, and the lines are the only thing that has moved all week.
+       * Once the game is under way that inverts -- what happened outranks what
+       * it was priced at -- so the board drops below the play log rather than
+       * sitting between the odds and the game itself. Built once either way;
+       * only its position in the string changes. */
+      var props = propsSection(b);
+      var pregame = b.phase === 'pregame';
       pageEl.innerHTML =
         heroSection(b) +
         oddsSection(b) +
-        propsSection(b) +
+        (pregame ? props : '') +
         teamStatsSection(b) +
         playerStatsSection(b) +
         playsSection(b) +
+        (pregame ? '' : props) +
         injuriesSection(b) +
         othersSection(index, g.id) +
         provenance(b);
       wireProps(b);
+      wirePlays(b);
     }
 
     /* ---------- load, and keep loading ----------

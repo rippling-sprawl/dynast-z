@@ -119,9 +119,11 @@
       <li><strong>Due, but not swept yet.</strong> It'll appear on the next pass,
         and the page will pick it up without a reload.</li>
       <li><strong>It finished before any of this existed.</strong> Games that are
-        already over never change, so nothing re-checks them on a timer &mdash; the
-        entire 2025 season is in that bucket. They get filled in deliberately,
-        in batches, rather than by a robot discovering 272 of them at once.</li>
+        already over never change, so nothing re-checks them on a timer. They get
+        filled in deliberately, in one pass, rather than by a robot discovering
+        hundreds of them at once and spending a day on history nobody asked for.
+        The whole 2025 season was filled in that way &mdash; all 272 games, box
+        scores and play logs included.</li>
     </ul>
 
     <h3>Two honest limits</h3>
@@ -237,6 +239,10 @@
      * anyone cares right now. */
     var RANK = { live: 0, pregame: 1, final: 2 };
 
+    /* Recent results worth a glance; the rest is history, browsable from the
+     * schedule rather than piled up here. */
+    var FINALS_SHOWN = 8;
+
     function render(index) {
       var games = (index && index.games) || {};
       var ids = Object.keys(games);
@@ -256,11 +262,26 @@
         var ka = stamp(ga.kickoff) || 0, kb = stamp(gb.kickoff) || 0;
         return ga.phase === 'final' ? kb - ka : ka - kb;
       });
+
+      // Everything still moving, plus a handful of the most recent results.
+      // Backfilling the 2025 season put 273 finished games in here, and a board
+      // of 278 rows is an archive, not a status page — the schedule is the
+      // place to browse history.
+      var moving = ids.filter(function (id) { return games[id].phase !== 'final'; });
+      var done = ids.filter(function (id) { return games[id].phase === 'final'; });
+      var shown = moving.concat(done.slice(0, FINALS_SHOWN));
+      var hidden = done.length - Math.min(done.length, FINALS_SHOWN);
+
       boardEl.innerHTML = '<div class="ls-board">' +
-        ids.map(function (id) { return row(games[id]); }).join('') + '</div>' +
-        '<p class="ls-note">' + ids.length + ' game' + (ids.length === 1 ? '' : 's') +
-        ' stored. Every row on <a href="/football/schedule">the schedule</a> ' +
-        'links to its own page, captured or not.</p>';
+        shown.map(function (id) { return row(games[id]); }).join('') + '</div>' +
+        '<p class="ls-note">' +
+        (hidden
+          ? hidden + ' more finished game' + (hidden === 1 ? '' : 's') +
+            ' stored and not shown here — every row on ' +
+            '<a href="/football/schedule">the schedule</a> links to its own page. '
+          : 'Every row on <a href="/football/schedule">the schedule</a> links to ' +
+            'its own page, captured or not. ') +
+        ids.length + ' stored in total.</p>';
     }
 
     fetch('/api/game-odds')

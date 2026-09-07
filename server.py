@@ -1580,6 +1580,12 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         elif self.path.split("?")[0] == "/football/live-stats":
             self.path = "/views/football/live-stats.html"
             super().do_GET()
+        # The full listing of what has been captured. Ahead of the game route
+        # and the schedule itself for the same reason vercel.json orders them
+        # this way: most specific path first.
+        elif self.path.split("?")[0] == "/football/schedule/archive":
+            self.path = "/views/football/schedule-archive.html"
+            super().do_GET()
         # Query string tolerated: the schedule page keeps its week/team filters
         # in ?week=&team= so a view is linkable, and Vercel matches on the path
         # alone, so dev must too.
