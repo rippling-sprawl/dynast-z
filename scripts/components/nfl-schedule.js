@@ -50,17 +50,24 @@
 
   var docs = {};
 
-  /* `no-cache`, not the default: /data/* is served `max-age=3600`, and the ids
-   * in this file are what every game link on the page is built from. They have
-   * already changed identity once — the season moved from ESPN's ids to
-   * balldontlie's — and a client holding the previous file links every row to a
-   * game that no longer resolves. Not `no-store`: the file is ~200 KB and
-   * rarely changes, and Vercel serves a Last-Modified, so revalidating costs a
-   * 304 on all but the load that matters. */
+  /* `reload`, not `no-cache` — the difference is load-bearing here.
+   *
+   * The ids in this file are what every game link on the page is built from,
+   * and they have already changed identity once: the season moved from ESPN's
+   * ids to balldontlie's, so a client holding the previous file links every
+   * row to a game that no longer resolves.
+   *
+   * `no-cache` revalidates, and revalidation against Vercel is broken for our
+   * purposes: it stamps EVERY static file with the same fixed
+   * `Last-Modified: Sat, 20 Oct 2018 01:46:40 GMT` and sends no ETag. So the
+   * conditional request asks "changed since 2018?", the origin compares that
+   * to its own constant, answers 304, and the browser keeps the ESPN-era file
+   * — with its freshness timer reset, forever. `reload` skips the conditional
+   * request entirely and always takes the body. */
   function schedLoad(season) {
     if (docs[season]) return docs[season];
     docs[season] = fetch('/data/nfl_schedule_' + season + '.json',
-                         { cache: 'no-cache' })
+                         { cache: 'reload' })
       .then(function (r) {
         if (!r.ok) throw new Error('schedule data unavailable (' + r.status + ')');
         return r.json();
@@ -224,22 +231,19 @@
     // earns its space in a condensed list.
     var sep = g.neutral ? 'vs' : '@';
 
-    // The matchup is the link. Every row gets one — 272 of them a season — so a
-    // separate "odds" affordance per row would be 272 pieces of furniture for a
-    // page whose whole design is that only exceptions get a marker. Linking the
-    // teams themselves costs no width, no badge and no column: the row looks
-    // exactly as it did, and the thing you would click anyway is now clickable.
+    // The whole row is the link. Every row gets one — 272 of them a season — so
+    // a separate "odds" affordance per row would be 272 pieces of furniture for
+    // a page whose whole design is that only exceptions get a marker. The row
+    // costs no width, no badge and no column: it looks exactly as it did, and
+    // the target is the whole line rather than the three characters of an
+    // abbreviation — which is what the row already highlights on hover.
     //
     // g.id is balldontlie's game id since the schedule moved to that source,
     // and it is the last segment of the game page's URL. A row without one
-    // still renders — the id is not load-bearing for anything else here.
-    var teamsInner = team(away, 'away') +
-      '<span class="sched-at">' + sep + '</span>' + team(home, 'home');
-    var teams = g.id
-      ? '<a class="sched-teams" href="/football/schedule/game/' +
-          encodeURIComponent(g.id) + '" title="Odds and box score: ' +
-          esc(away.abbr + ' ' + sep + ' ' + home.abbr) + '">' + teamsInner + '</a>'
-      : '<span class="sched-teams">' + teamsInner + '</span>';
+    // still renders as a plain <div> — the id is not load-bearing for anything
+    // else here.
+    var teams = '<span class="sched-teams">' + team(away, 'away') +
+      '<span class="sched-at">' + sep + '</span>' + team(home, 'home') + '</span>';
     var venue = g.neutral && g.venue
       ? '<span class="sched-venue">' + esc(g.venue) + '</span>' : '';
 
@@ -264,15 +268,21 @@
 
     // A TBD game still has a known calendar day — only the kickoff time is
     // unset — so the date cell is real even where the time cell isn't.
-    return '<div class="sched-game' + (tbd ? ' is-tbd' : '') +
-        (opts.week ? ' has-week' : '') + (opts.date ? ' has-date' : '') +
-        (opts.slateBreak ? ' is-slate-break' : '') + '">' +
+    var cls = 'sched-game' + (tbd ? ' is-tbd' : '') +
+      (opts.week ? ' has-week' : '') + (opts.date ? ' has-date' : '') +
+      (opts.slateBreak ? ' is-slate-break' : '');
+    var open = g.id
+      ? '<a class="' + cls + '" href="/football/schedule/game/' +
+          encodeURIComponent(g.id) + '" title="Odds and box score: ' +
+          esc(away.abbr + ' ' + sep + ' ' + home.abbr) + '">'
+      : '<div class="' + cls + '">';
+    return open +
       (opts.week ? '<span class="sched-wk">' + esc(opts.week) + '</span>' : '') +
       (opts.date ? '<span class="sched-date">' + esc(f.dayRow.format(d)) + '</span>' : '') +
       '<span class="sched-time">' + (tbd ? 'TBD' : esc(timeLabel(f, d))) + '</span>' +
       '<span class="sched-matchup">' + teams +
         resultCell(g, opts.team) + badge + venue + '</span>' +
-    '</div>';
+    (g.id ? '</a>' : '</div>');
   }
 
   /* The final score, on the seasons that have one. `score` is [away, home], the

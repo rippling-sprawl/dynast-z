@@ -318,27 +318,30 @@
   }
 }
 
-/* --- Matchup link ---
- * The teams cell is an <a> to the game page when the game has an id. It has to
- * look like exactly what it looked like before — the team abbreviation colours,
- * including the picked-team accent, are the information here and a link colour
- * would overwrite it — so the anchor inherits everything and announces itself
- * only on hover and focus. `display: inline-flex` keeps the 3ch/2ch/3ch cell
- * geometry the badges downstream depend on. */
+/* --- The row as a link ---
+ * The row itself is the <a> to the game page when the game has an id — the
+ * matchup used to be, but the target was three characters of an abbreviation on
+ * a line the reader is already pointing at. It has to look like exactly what it
+ * looked like before — the team abbreviation colours, including the picked-team
+ * accent, are the information here and a link colour would overwrite it — so
+ * the anchor inherits everything and announces itself only on hover and focus.
+ * The grid geometry comes from .sched-game above and is unchanged by the tag. */
 
-a.sched-teams {
+a.sched-game {
   color: inherit;
   text-decoration: none;
-  border-radius: 3px;
 }
 
-a.sched-teams:hover .sched-team,
-a.sched-teams:focus-visible .sched-team { color: var(--accent); }
+a.sched-game:hover .sched-team,
+a.sched-game:focus-visible .sched-team { color: var(--accent); }
 
-a.sched-teams:hover .sched-at,
-a.sched-teams:focus-visible .sched-at { color: var(--accent); }
+a.sched-game:hover .sched-at,
+a.sched-game:focus-visible .sched-at { color: var(--accent); }
 
-a.sched-teams:focus-visible {
+/* Inset, because on the schedule page the rows sit inside a board with
+ * `overflow: hidden` — an outward outline on the first or last row is clipped
+ * by the box it is drawn against. */
+a.sched-game:focus-visible {
   outline: 2px solid var(--accent-ring);
-  outline-offset: 2px;
+  outline-offset: -2px;
 }

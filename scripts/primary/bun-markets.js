@@ -218,7 +218,9 @@
   }
 
   function load() {
-    return fetch('/data/outrights.json')
+    // `reload`: Vercel stamps every static file with one fixed Last-Modified
+    // and no ETag, so a revalidating fetch gets a 304 and keeps a stale body.
+    return fetch('/data/outrights.json', { cache: 'reload' })
       .then(function (r) { return r.ok ? r.json() : null; })
       .catch(function () { return null; });   // the page still has win total and playoffs
   }

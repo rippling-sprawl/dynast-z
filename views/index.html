@@ -130,6 +130,9 @@
 
     @media (max-width: 600px) {
       .home-auth-row { flex-direction: column; align-items: stretch; }
+      /* Stacked, the flex main axis is vertical, so the 160px basis above would
+         be read as a 160px-tall field. Height comes from the padding only. */
+      .home-auth input { flex: 0 0 auto; }
       .home-auth button[type="submit"] { width: 100%; }
     }
   </style>
