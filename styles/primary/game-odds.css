@@ -213,11 +213,22 @@
  * of keys across the rows, in a scrolling table. It is plain, it cannot be
  * wrong, and it is the fastest way to see what the shape really is. */
 
-.go-scroll { overflow-x: auto; }
+/* The tables scroll in their own box rather than with the page: a sticky
+ * header sticks to its nearest scrollport, and .go-scroll is already one for
+ * the horizontal axis, so pinning the head to the viewport is not available
+ * to it. Capped instead — a long board scrolls under its own header, and a
+ * short one is unaffected because max-height only bites when it is exceeded. */
+.go-scroll { overflow: auto; max-height: 70vh; }
 
 .go-table {
   width: 100%;
-  border-collapse: collapse;
+  /* Separate, with no spacing, so it still draws as one ruled grid. Collapsed
+   * borders are painted by the *table*, not by the cells they sit between, so
+   * the 1px line between the two header rows scrolled away with the body while
+   * the head stayed pinned — and the body showed through the band it left. A
+   * separate border belongs to its own cell and travels with it. */
+  border-collapse: separate;
+  border-spacing: 0;
   font-size: 11.5px;
   font-family: monospace;
   white-space: nowrap;
@@ -229,10 +240,23 @@
   border-bottom: 1px solid var(--hairline);
 }
 
-.go-table th {
+/* The head sticks as a whole rather than row by row. Per-row offsets have to
+ * name the height of the row above them, and on the grouped head that row is
+ * half of a rowspan'd Player cell and lands on a fraction — the half pixel it
+ * misses by is a slot for the table to show through. One sticky element has no
+ * seam to leak through. */
+.go-table thead {
   position: sticky;
   top: 0;
   z-index: 2;
+  /* Backed as well as sticky. Cell boxes on the two-row head meet on a half
+   * pixel, and the hairline of tbody that shows through that seam is a row of
+   * clipped digits sitting inside the header. The thead's own background is
+   * one unbroken box behind all of them. */
+  background: var(--surface-2);
+}
+
+.go-table th {
   background: var(--surface-2);
   color: var(--text-4);
   font-size: 10px;
@@ -240,6 +264,10 @@
   text-transform: uppercase;
   letter-spacing: 0.4px;
 }
+
+/* Rows pass behind the header, so the head needs a hard bottom edge of its
+ * own rather than the hairline that separates two body rows. */
+.go-table thead tr:last-child th { border-bottom-color: var(--border); }
 
 .go-table tbody tr:nth-child(even) { background: var(--zebra); }
 .go-table td.is-num { text-align: right; }
@@ -272,6 +300,7 @@
  * first book's Line column, and th:first-child would pin that to the left edge
  * on top of the Player heading. */
 .go-pinned thead tr:first-child th:first-child {
+  position: sticky;
   left: 0;
   z-index: 3;
   border-right: 1px solid var(--border);
@@ -300,12 +329,6 @@
   color: var(--text-2);
   letter-spacing: 0.9px;
 }
-
-/* Two header rows, and both are sticky: the second has to be offset by the
- * height of the first (12px line + 6px padding either side + the hairline) or
- * it parks on top of it as the page scrolls under. */
-.go-grouped thead tr:first-child th { top: 0; }
-.go-grouped thead tr + tr th { top: 25px; }
 
 /* --- Odds: one table per book --------------------------------------------
  * The odds card is the one place a book is a whole table rather than a column

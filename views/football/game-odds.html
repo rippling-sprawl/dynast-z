@@ -872,8 +872,12 @@
      * alternate-line ladder with a single price per line, `over_under` is the
      * conventional two-sided line. */
 
-    function propRows(b, which) {
-      return (b.player_props && b.player_props[which]) || [];
+    /* Current only. An opening line answers a different question — how the
+     * market moved — and that is not what this board is for; carrying it as a
+     * filter put a second decision in front of the one price anyone came to
+     * read. */
+    function propRows(b) {
+      return (b.player_props && b.player_props.current) || [];
     }
 
     function playerOf(b, id) {
@@ -917,8 +921,6 @@
         var pl = playerOf(b, row.player_id);
         return '<tr>' +
           '<td>' + esc(pl ? shortenName(pl.name) : row.player_id) + '</td>' +
-          '<td>' + esc(pl && pl.position ? pl.position : '') + '</td>' +
-          '<td>' + esc(pl && pl.team ? pl.team : '') + '</td>' +
           books.map(function (v) {
             var r = row.quotes[v];
             if (!r) {
@@ -938,26 +940,29 @@
 
       return '<div class="go-scroll"><table class="go-table go-grouped go-pinned"><thead>' +
         groupHead(books, ['Line', 'Odds', 'Over', 'Under'],
-          '<th rowspan="2">Player</th>' +
-          '<th rowspan="2" title="Position">Pos</th>' +
-          '<th rowspan="2">Team</th>') +
+          '<th rowspan="2">Player</th>') +
         '</thead><tbody>' + body + '</tbody></table></div>';
     }
 
     function propsSection(b) {
-      var p = b.player_props || { current: [], opening: [] };
-      if (!p.current.length && !p.opening.length) {
+      var p = b.player_props || { current: [] };
+      if (!p.current.length) {
         return card('Player props',
-          emptyState(b, ['/odds/player_props', '/odds/player_props/opening'],
-                     'player props'), true);
+          emptyState(b, ['/odds/player_props'], 'player props'), true);
       }
-      var markets = p.markets || [];
+      /* The bundle's market list is the union across current and opening, so a
+       * market priced only at open would be an option that draws an empty
+       * table. Kept in the bundle's order, with anything the rows carry and
+       * the list does not appended rather than dropped. */
+      var have = {};
+      p.current.forEach(function (r) { have[r.prop_type] = 1; });
+      var markets = (p.markets || []).filter(function (m) { return have[m]; });
+      Object.keys(have).forEach(function (m) {
+        if (markets.indexOf(m) < 0) markets.push(m);
+      });
+
       var controls =
         '<div class="dd-row" style="margin-bottom:12px;gap:8px;display:flex;flex-wrap:wrap">' +
-          '<select id="prop-which" class="go-select">' +
-            (p.current.length ? '<option value="current">Current</option>' : '') +
-            (p.opening.length ? '<option value="opening">Opening</option>' : '') +
-          '</select>' +
           '<select id="prop-market" class="go-select">' +
             markets.map(function (m) {
               var h = marketHeading(m);
@@ -966,6 +971,7 @@
                 esc(h.s) + '</option>';
             }).join('') +
           '</select>' +
+          '<select id="prop-player" class="go-select"></select>' +
         '</div><div id="prop-table"></div>';
       return card('Player props', controls);
     }
@@ -973,8 +979,8 @@
     /* innerHTML wipes listeners, so the props controls are wired after every
      * render rather than once at load. */
     function wireProps(b) {
-      var whichEl = document.getElementById('prop-which');
       var marketEl = document.getElementById('prop-market');
+      var playerEl = document.getElementById('prop-player');
       var tableEl = document.getElementById('prop-table');
       if (!tableEl) return;
 
@@ -985,20 +991,53 @@
         return el && el.options && el.options.length ? el.options[0].value : '';
       }
       if (marketEl && !marketEl.value) marketEl.value = firstValue(marketEl);
-      if (whichEl && !whichEl.value) whichEl.value = firstValue(whichEl);
 
-      function draw() {
-        var rows = propRows(b, whichEl.value).filter(function (r) {
+      function marketRows() {
+        return propRows(b).filter(function (r) {
           return r.prop_type === marketEl.value;
         });
+      }
+
+      /* The player list is per market, not per game: a receiving-yards board
+       * has no quarterbacks on it, and offering every player who is quoted
+       * anywhere would fill the menu with names that empty the table. Named
+       * and ordered the way the first column is, so the menu and the rows read
+       * as the same list. A selection that survives the market change is
+       * kept — the same player at a different market is a common next look. */
+      function fillPlayers(rows) {
+        var keep = playerEl.value, seen = {}, opts = [];
+        rows.forEach(function (r) {
+          var id = String(r.player_id);
+          if (seen[id]) return;
+          seen[id] = 1;
+          var pl = playerOf(b, r.player_id);
+          opts.push({ id: id, name: (pl && shortenName(pl.name)) || id });
+        });
+        opts.sort(function (x, y) { return x.name.localeCompare(y.name); });
+        playerEl.innerHTML = '<option value="">All players</option>' +
+          opts.map(function (o) {
+            return '<option value="' + esc(o.id) + '">' + esc(o.name) + '</option>';
+          }).join('');
+        playerEl.value = seen[keep] ? keep : '';
+      }
+
+      function draw() {
+        var rows = marketRows();
+        if (playerEl.value) {
+          rows = rows.filter(function (r) {
+            return String(r.player_id) === playerEl.value;
+          });
+        }
         tableEl.innerHTML = rows.length
           ? propsTable(b, rows)
           : '<div class="go-empty">No quotes for that combination.</div>';
       }
-      [whichEl, marketEl].forEach(function (el) {
-        if (el) el.addEventListener('change', draw);
-      });
-      draw();
+
+      function onMarket() { fillPlayers(marketRows()); draw(); }
+
+      if (marketEl) marketEl.addEventListener('change', onMarket);
+      playerEl.addEventListener('change', draw);
+      onMarket();
     }
 
     /* ---------- injuries ----------
