@@ -1286,11 +1286,10 @@
      * A game page left open across a kickoff should not have to be reloaded by
      * hand, so it re-checks on the bundle's own schedule: `refresh.next_ts` is
      * the moment the sweep intends to have replaced it. A settled game is never
-     * polled at all. It was meant to be cheap to be wrong about — the bundle's
-     * etag is the sha256 of its canonical JSON, so an unchanged game should
-     * cost a 304 and no body — but the etag does not reach the client (see
-     * fetchBundle), so every poll is a full ~600 KB read until that is fixed.
-     * The floor below is doing more work than it looks like it is.
+     * polled at all. Being wrong about it is cheap: an unchanged game answers
+     * `{unchanged: true}` in about sixty bytes and the endpoint reads only its
+     * etag column to say so (see fetchBundle), so the cost of a poll that finds
+     * nothing is a round trip and no more.
      *
      * Held to a 60-second floor whatever the plan says, paused while the tab is
      * hidden, and resumed on the way back — a backgrounded tab polling a live
@@ -1301,29 +1300,44 @@
     var timer = null;
     var frozen = false;         // settled: nothing upstream will change again
 
-    /* `cache: 'no-store'` is not belt-and-braces, it is the fix. The endpoint
-     * sends `no-store` on its 404 and an ETag on its 200, and neither survives
-     * the hop: every /api/* response on production comes back stamped
-     * `public, max-age=0, must-revalidate` with no validator, from a header
-     * rule sitting above the functions. A `public` 404 with nothing to
-     * revalidate against is exactly the response iOS Safari keeps on disk and
+    /* `cache: 'no-store'` is not belt-and-braces, it is the fix. The endpoint's
+     * own headers do not survive the hop: every /api/* response comes back
+     * re-encoded and stripped of its ETag, so a 404 arrives with nothing to
+     * revalidate against — exactly the response iOS Safari keeps on disk and
      * replays, which is how a phone ends up pinned to "not captured yet" while
-     * a desktop shows the full board. Going around the HTTP cache from here
-     * makes the page correct without depending on that rule being fixed.
+     * a desktop shows the full board. Going around the HTTP cache is what makes
+     * the page correct.
      *
-     * FAILED, not null, when the request itself falls over: null is the real
-     * "no bundle stored yet" answer and it repaints the page as empty. A
-     * dropped connection on a phone is not evidence the game is uncaptured,
-     * and treating it as such wipes a board that was on the screen. */
+     * Going around it would also mean re-reading a megabyte on every poll, so
+     * revalidation moved into the request instead: `known` is the etag of the
+     * bundle already on the screen, and a game that has not moved answers with
+     * `{unchanged: true}` and about sixty bytes. The endpoint reads only its
+     * etag column to decide that, so an unchanged poll costs nothing at either
+     * end. Nothing between here and the function can strip a query parameter.
+     *
+     * Three sentinels, because "keep what is on the screen" and "the screen is
+     * wrong" are different answers:
+     *   null       no bundle stored yet — repaint as empty, this is real news
+     *   FAILED     the request fell over; a dropped connection on a phone is
+     *              not evidence the game is uncaptured, and treating it as such
+     *              wipes a board that was on the screen
+     *   UNCHANGED  the bundle we are holding is still current */
     var FAILED = {};
+    var UNCHANGED = {};
+    var lastBundle = null;      // what is on the screen, for its etag and plan
 
     function fetchBundle(id) {
+      var url = '/api/game-odds?game=' + encodeURIComponent(id);
+      if (lastBundle && lastBundle.etag) {
+        url += '&known=' + encodeURIComponent(lastBundle.etag);
+      }
       // A 404 here is the ordinary "not captured yet" case, not an error.
-      return fetch('/api/game-odds?game=' + encodeURIComponent(id),
-                   { cache: 'no-store' })
+      return fetch(url, { cache: 'no-store' })
         .then(function (r) {
-          if (r.ok) return r.json();
-          return r.status === 404 ? null : FAILED;
+          if (!r.ok) return r.status === 404 ? null : FAILED;
+          return r.json().then(function (b) {
+            return (b && b.unchanged) ? UNCHANGED : b;
+          });
         })
         .catch(function () { return FAILED; });
     }
@@ -1354,6 +1368,13 @@
         if (id) timer = setTimeout(function () { poll(id); }, MIN_POLL * 1000);
         return;
       }
+      if (b === UNCHANGED) {
+        // Confirmed current. Nothing to repaint; re-arm on the plan the bundle
+        // we are already holding gave us.
+        schedulePoll(id, lastBundle);
+        return;
+      }
+      lastBundle = b || null;
       if (b) render(b, currentIndex);
       else if (!id) renderMissing('', currentIndex, null);
       schedulePoll(id, b);

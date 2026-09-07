@@ -19,15 +19,30 @@ book does. Schema in scripts/sql/game_odds.sql.
 
 CACHING
 
-Same reasoning as api/action.py, and for the same reason: `etag` is the sha256 of
-the bundle's canonical JSON, computed by the writer, so an unchanged game costs a
-304 rather than 900 KB. `max-age=0, must-revalidate` with no `s-maxage` is
-deliberate -- there is no way to purge Vercel's edge cache from inside a
-function, and an s-maxage would keep serving a stale line after a push had
-replaced it. Pregame odds move; that is the whole point of capturing them.
+`etag` is the sha256 of the bundle's canonical JSON, computed by the writer, so
+an unchanged game is cheap to recognise. Recognising it is done twice over,
+because neither HTTP mechanism survives this deployment:
+
+  ?known=<etag>   The one that actually works. The page remembers the etag it is
+                  holding and sends it back; an unchanged game answers with
+                  ~60 bytes instead of a megabyte. This is plain response data,
+                  so nothing between here and the browser can strip it.
+
+  If-None-Match   Kept for anything that does get a validator through, but the
+                  browser is not one of them: every /api/* response comes back
+                  re-encoded and stripped of its ETag, which is also why every
+                  route under /api is `no-store` in vercel.json rather than
+                  carrying a max-age it could not revalidate against.
+
+The Supabase read is split for the same reason it is split in api/action.py.
+`select=etag` is a few hundred bytes; `select=data` is the whole megabyte, and
+884 KB of that is player props. Asking for both at once -- which is what this
+did -- paid the megabyte on every request even when the answer was "unchanged",
+and a game page polls itself for as long as it is open. Read the etag, and read
+the data only when it is one this instance has not already rendered.
 
 The listing is the exception: it carries no odds, only which games exist, so it
-is cheap to rebuild and gets a short s-maxage instead of a validator.
+is cheap to rebuild and does not need a validator at all.
 """
 from http.server import BaseHTTPRequestHandler
 import json
@@ -98,19 +113,32 @@ def load_index():
     return {"games": games, "updated_at": newest}
 
 
-def load_bundle(game_id):
-    """-> (etag, bundle) or (None, None) when nothing is stored for that game."""
-    cached = _MEMO.get(game_id)
+def load_etag(game_id):
+    """-> the stored bundle's etag, or None when nothing is stored for that game.
+
+    Deliberately its own round trip. This is the request every poll makes and
+    most polls make only this one, so it must not carry the data column."""
     rows = supabase_request(
-        f"game_odds?game_id=eq.{urllib.parse.quote(game_id)}&select=data,etag")
-    if not rows:
-        return None, None
-    etag = rows[0].get("etag")
+        f"game_odds?game_id=eq.{urllib.parse.quote(game_id)}&select=etag")
+    return rows[0].get("etag") if rows else None
+
+
+def load_bundle(game_id, etag):
+    """-> the bundle for a game whose etag has already been read, or None if the
+    row went away between the two reads.
+
+    The memo is keyed on that etag, so a warm instance serving the same game
+    twice reads nothing at all the second time."""
+    cached = _MEMO.get(game_id)
     if cached and cached[0] == etag:
-        return cached
+        return cached[1]
+    rows = supabase_request(
+        f"game_odds?game_id=eq.{urllib.parse.quote(game_id)}&select=data")
+    if not rows:
+        return None
     bundle = rows[0].get("data")
     _MEMO[game_id] = (etag, bundle)
-    return etag, bundle
+    return bundle
 
 
 class handler(BaseHTTPRequestHandler):
@@ -120,8 +148,7 @@ class handler(BaseHTTPRequestHandler):
 
         if not game_id:
             try:
-                self._json(200, load_index(),
-                           cache="public, s-maxage=120, stale-while-revalidate=600")
+                self._json(200, load_index())
             except Exception as e:                       # noqa: BLE001
                 self._json(500, {"error": str(e)})
             return
@@ -130,13 +157,18 @@ class handler(BaseHTTPRequestHandler):
             self._json(400, {"error": "game must be a numeric balldontlie game id"})
             return
 
+        # Compared, never interpolated into a query, so an odd value here is
+        # simply an etag that matches nothing. Bounded anyway: an etag is a
+        # sha256 and a caller sending more than that is not one of ours.
+        known = (params.get("known") or [""])[0].strip()[:64]
+
         try:
-            etag, bundle = load_bundle(game_id)
+            etag = load_etag(game_id)
         except Exception as e:                           # noqa: BLE001
             self._json(500, {"error": str(e)})
             return
 
-        if bundle is None:
+        if etag is None:
             # 404 rather than an empty bundle: the page distinguishes "no
             # capture yet" from "captured, but the endpoints were tier-gated",
             # and the two look identical if this returns an empty object.
@@ -144,23 +176,46 @@ class handler(BaseHTTPRequestHandler):
             return
 
         quoted = f'"{etag}"'
+
+        # The whole point of the split read: answer without ever touching the
+        # data column. `known` is the path the page takes; If-None-Match is the
+        # same answer for anything whose validator survived the hop.
+        if known == etag:
+            self._json(200, {"unchanged": True, "etag": etag})
+            return
+
         if self.headers.get("If-None-Match") == quoted:
             self.send_response(304)
             self.send_header("ETag", quoted)
-            self.send_header("Cache-Control", "public, max-age=0, must-revalidate")
             self.send_header("Access-Control-Allow-Origin", "*")
             self.end_headers()
             return
 
-        self._json(200, bundle, etag=quoted,
-                   cache="public, max-age=0, must-revalidate")
+        try:
+            bundle = load_bundle(game_id, etag)
+        except Exception as e:                           # noqa: BLE001
+            self._json(500, {"error": str(e)})
+            return
 
-    def _json(self, status, data, etag=None, cache="no-store"):
+        if bundle is None:
+            # The row was deleted between the two reads. Rare, and the page
+            # already knows what to do with a 404.
+            self._json(404, {"error": f"no bundle stored for game {game_id}"})
+            return
+
+        # Shallow copy: the page needs the etag to send back next time, and the
+        # memoised bundle should stay exactly as it was stored.
+        self._json(200, dict(bundle, etag=etag), etag=quoted)
+
+    def _json(self, status, data, etag=None):
+        # No `cache` argument any more: vercel.json puts every /api/* route on
+        # no-store, and a header set here would only be overwritten. Freshness
+        # is `?known=`, not HTTP.
         body = json.dumps(data).encode()
         self.send_response(status)
         self.send_header("Content-Type", "application/json")
         self.send_header("Content-Length", str(len(body)))
-        self.send_header("Cache-Control", cache)
+        self.send_header("Cache-Control", "no-store")
         if etag:
             self.send_header("ETag", etag)
         self.send_header("Access-Control-Allow-Origin", "*")
