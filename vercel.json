@@ -11,8 +11,8 @@
     { "source": "/bakers-oven/:path*", "destination": "/football/bakers-oven/:path*", "statusCode": 301 },
     { "source": "/trade-calculator", "destination": "/football/trade-calculator", "statusCode": 301 },
     { "source": "/football/futures", "destination": "/football/action/futures", "statusCode": 301 },
-    { "source": "/game-odds", "has": [{ "type": "query", "key": "game", "value": "(?<gid>[0-9]{1,12})" }], "destination": "/football/schedule/game/:gid", "statusCode": 301 },
-    { "source": "/game-odds", "destination": "/football/schedule", "statusCode": 301 }
+    { "source": "/game-odds", "has": [{ "type": "query", "key": "game", "value": "(?<gid>[0-9]{1,12})" }], "destination": "/football/schedule/game/:gid", "statusCode": 302 },
+    { "source": "/game-odds", "destination": "/football/schedule", "statusCode": 302 }
   ],
   "rewrites": [
     { "source": "/", "destination": "/views/index.html" },
