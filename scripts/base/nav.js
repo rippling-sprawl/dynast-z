@@ -107,6 +107,15 @@ function mountHubGrids(root) {
   });
 }
 
+// The account row leads the drawer rather than sitting in the header: it is a
+// destination like every other row, and the header is left with just the menu
+// button and the title. Signed out it reads "Sign In" and goes to the same page.
+function buildNavAccountHTML() {
+  const user = typeof getUser === 'function' ? getUser() : null;
+  const label = user ? user.username : 'Sign In';
+  return `<li class="nav-account"><a class="nav-section-label" href="/account">${label}</a></li>`;
+}
+
 function buildNavDrawerHTML() {
   const items = buildNavItems().map(item => {
     if (item.type === 'section') {
@@ -134,6 +143,7 @@ function buildNavDrawerHTML() {
         <button class="nav-close" id="nav-close" aria-label="Close menu">&times;</button>
       </div>
       <ul>
+        ${buildNavAccountHTML()}
         ${items}
       </ul>
       ${themeHTML}
@@ -142,16 +152,11 @@ function buildNavDrawerHTML() {
 }
 
 function buildHeaderHTML() {
-  const user = typeof getUser === 'function' ? getUser() : null;
-  const acctHTML = user
-    ? `<a href="/account" style="font-size:11px;font-family:monospace;color:var(--accent-2);text-decoration:none">${user.username}</a>`
-    : `<a href="/account" style="font-size:11px;font-family:monospace;color:var(--text-4);text-decoration:none">Sign In</a>`;
   return `<header>
     <div style="display: flex; align-items: center; gap: 12px;">
       <button class="hamburger" id="nav-toggle" aria-label="Menu">&#9776;</button>
       <h1><a href="/" style="color: inherit; text-decoration: none;">Dynast-Z</a></h1>
     </div>
-    ${acctHTML}
   </header>`;
 }
 

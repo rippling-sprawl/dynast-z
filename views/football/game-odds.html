@@ -495,12 +495,24 @@
         line + '</div>';
     }
 
+    /* An empty section is worth a card only once there is something for it to
+     * be empty *of*. After kickoff "no team stats" is news — the capture is
+     * behind, or the key is on the wrong plan, and the card says which. Before
+     * it, the same card says a game that has not been played has no statistics,
+     * three times over, between the odds and the injury report. So team stats,
+     * the box score and the play log draw nothing at all in the pregame phase,
+     * and reappear the moment the bundle has rows for them — the test is the
+     * data, not the phase, so a game whose phase is behind its feed still
+     * renders what arrived. */
+    function playedYet(b) { return b.phase !== 'pregame'; }
+
     function teamStatsSection(b) {
       var a = b.team_stats && b.team_stats.away;
       var h = b.team_stats && b.team_stats.home;
       if (!a || !h) {
-        return card('Team stats',
-          emptyState(b, ['/team_stats'], 'team stats'), true);
+        return playedYet(b)
+          ? card('Team stats', emptyState(b, ['/team_stats'], 'team stats'), true)
+          : '';
       }
       /* possession_time_seconds is possession_time in a unit nobody reads a
        * clock in — 33:11 and 1991 are one row, not two. */
@@ -582,7 +594,9 @@
         return n + ((ps[s] || []).length);
       }, 0);
       if (!total) {
-        return card('Box score', emptyState(b, ['/stats'], 'player stats'), true);
+        return playedYet(b)
+          ? card('Box score', emptyState(b, ['/stats'], 'player stats'), true)
+          : '';
       }
       var groups = ['passing', 'rushing', 'receiving', 'defense', 'kicking',
                     'returns', 'punting', 'fumbles'];
@@ -662,7 +676,9 @@
     function playsSection(b) {
       var p = b.plays || { count: 0, all: [] };
       if (!p.count) {
-        return card('Play log', emptyState(b, ['/plays'], 'plays'), true);
+        return playedYet(b)
+          ? card('Play log', emptyState(b, ['/plays'], 'plays'), true)
+          : '';
       }
       var seg = playFilters(p).map(function (f, i) {
         return '<button type="button" data-play-filter="' + esc(f.key) +
@@ -713,13 +729,13 @@
      * spread, moneyline, total — and the two teams are the two rows, which
      * fits without scrolling and puts the two sides of a market adjacent. */
 
-    /* Books arrive as their API slug — `draftkings`, `fanduel`. Both the odds
-     * tables and the props grid label the book in a header cell sitting over
-     * narrow numeric columns, where the full name is several times the width
-     * of the numbers under it, so it is shortened to the ticker a line-shopping
-     * grid is read with. An unmapped book falls back to its slug uppercased:
-     * wrong-looking enough to notice and add rather than quietly rendering as
-     * something else. */
+    /* Books arrive as their API slug — `draftkings`, `fanduel`. The odds card
+     * heads a book's table with it and the props board lists it beside a price,
+     * both times against narrow numeric columns where the full name is several
+     * times the width of the numbers, so it is shortened to the ticker a
+     * line-shopping grid is read with. An unmapped book falls back to its slug
+     * uppercased: wrong-looking enough to notice and add rather than quietly
+     * rendering as something else. */
     var BOOK_SHORT = {
       draftkings: 'DK', fanduel: 'FD', betmgm: 'MGM', caesars: 'CZR',
       betrivers: 'BR', fanatics: 'FAN', espnbet: 'ESPN', bet365: 'B365',
@@ -741,24 +757,6 @@
     function bookHeading(v) {
       var k = String(v == null ? '' : v).toLowerCase();
       return heading(bookLabel(v), BOOK_NAME[k] || null);
-    }
-
-    /* The thead of both tables is two rows: one book per spanning cell, then
-     * that book's columns under it. `go-bk` marks the first column of each
-     * group so the CSS can rule the boundary — skipped on the leading group of
-     * a table that starts with one, where the rule would land on the edge. */
-    function groupHead(books, sub, lead) {
-      return '<tr>' + (lead || '') + books.map(function (v, i) {
-          var b = bookHeading(v);
-          return '<th' + (i || lead ? ' class="go-bk"' : '') +
-            (b.t ? ' title="' + esc(b.t) + '"' : '') +
-            ' colspan="' + sub.length + '">' + esc(b.s) + '</th>';
-        }).join('') +
-        '</tr><tr>' + books.map(function (v, i) {
-          return sub.map(function (h, j) {
-            return thCell(h, (!j && (i || lead)) ? 'go-bk' : '');
-          }).join('');
-        }).join('') + '</tr>';
     }
 
     function fmtOdds(n) {
@@ -861,12 +859,10 @@
     }
 
     /* ---------- props ----------
-     * Several thousand rows per game — 34 players x 25 markets x 6 books, and
+     * Several thousand rows per game — 34 players x 25 markets x 2 books, and
      * both sides of every over/under — so a flat dump is unreadable and a
      * truncated one is a lie. Two selects cut it to one market, and inside it
-     * every book quoting that market sits side by side under its own spanning
-     * header, which is the question anyone actually has ("what is Maye's
-     * passing yards line, and who has the best price").
+     * every line a player is quoted at hangs under his name.
      *
      * Two market shapes come back and both are handled: `milestone` is an
      * alternate-line ladder with a single price per line, `over_under` is the
@@ -884,64 +880,176 @@
       return (b.players && b.players[String(id)]) || null;
     }
 
-    function propsTable(b, rows) {
-      /* Book as a column group, not a column: a row is one player at one line
-       * and holds every book's price for it, so the comparison is read across
-       * rather than by hunting down the table for the second row with the same
-       * name. Where two books hang the line in different places the row splits
-       * and the empty half says which of them is not offering it. */
-      var books = ((b.player_props && b.player_props.books) || []).slice();
-      rows.forEach(function (r) {
-        if (books.indexOf(r.vendor) < 0) books.push(r.vendor);
-      });
-      books = books.filter(function (v) {
-        return rows.some(function (r) { return r.vendor === v; });
-      });
+    /* ---------- consensus ----------
+     * The board used to give each book a column group of its own — Line, Odds,
+     * Over, Under, once per book — which is how a line-shopping grid is read,
+     * and is nine columns wide before a third book turns up. On a phone that
+     * scrolled sideways, so the price a reader came for was off the right edge.
+     * It also bought very little: the books hang their ladders on different
+     * numbers (DraftKings on tens, FanDuel on twenty-fives), so most of a row
+     * was the em dashes saying the other book is not at this line.
+     *
+     * One price per line instead, priced the way scripts/build_bun_win_totals.py
+     * prices a win total so the two agree: the mean of the books' implied
+     * probabilities at that line, converted back to American. The vig stays in —
+     * this is a number to hold against a screen, not a fair value nobody can
+     * bet. A line only one book hangs is that book's price, and the Books
+     * column says which.
+     */
+    function impliedProb(odds) {
+      var o = Number(odds);
+      if (!isFinite(o) || o === 0) return null;
+      return o < 0 ? (-o) / ((-o) + 100) : 100 / (o + 100);
+    }
 
+    function toAmerican(p) {
+      if (p >= 0.5) return -Math.round(100 * p / (1 - p));
+      return Math.round(100 * (1 - p) / p);
+    }
+
+    /* [{vendor, odds}, …] -> {odds, title}, or null when no book priced it.
+     * `title` is the column group folded up: what took eight columns is one
+     * cell and a hover, so the per-book prices are still on the page. Only
+     * built when there is more than one — on a single quote the cell already
+     * IS that book's price and the Books column already names it. */
+    function consensusOdds(quotes) {
+      var ps = [], parts = [];
+      quotes.forEach(function (q) {
+        var p = impliedProb(q.odds);
+        if (p === null) return;
+        ps.push(p);
+        parts.push(bookLabel(q.vendor) + ' ' + fmtOdds(q.odds));
+      });
+      if (!ps.length) return null;
+      var mean = ps.reduce(function (a, c) { return a + c; }, 0) / ps.length;
+      return { odds: toAmerican(mean), title: ps.length > 1 ? parts.join(' \u00b7 ') : null };
+    }
+
+    function consCell(quotes) {
+      var c = consensusOdds(quotes);
+      if (!c) return '<td class="is-null">—</td>';
+      return '<td class="is-num"' + (c.title ? ' title="' + esc(c.title) + '"' : '') +
+        '>' + esc(fmtOdds(c.odds)) + '</td>';
+    }
+
+    /* Every line one player is quoted at, in this market. Keyed on the market
+     * shape as well as the number, because a 250+ milestone rung and a 250.5
+     * two-sided line are different bets that round to the same place — folded
+     * into one row, one book's price would sit in the other's column. */
+    function propGroups(rows) {
       var order = [], byKey = {};
       rows.forEach(function (r) {
-        var k = r.player_id + '|' + r.line_value;
+        var m = r.market || {};
+        var k = r.player_id + '|' + r.line_value + '|' + (m.type || '');
         if (!byKey[k]) {
-          byKey[k] = { player_id: r.player_id, line: r.line_value, quotes: {} };
+          byKey[k] = {
+            player_id: r.player_id, line: r.line_value, type: m.type,
+            books: [], odds: [], over: [], under: []
+          };
           order.push(k);
         }
-        byKey[k].quotes[r.vendor] = r;
+        var g = byKey[k];
+        if (g.books.indexOf(r.vendor) < 0) g.books.push(r.vendor);
+        if (m.type === 'milestone') {
+          g.odds.push({ vendor: r.vendor, odds: m.odds });
+        } else {
+          g.over.push({ vendor: r.vendor, odds: m.over_odds });
+          g.under.push({ vendor: r.vendor, odds: m.under_odds });
+        }
+      });
+      /* Sorted by ticker rather than left in whatever order the feed listed
+       * the books in, which differs between markets and reads as unsorted next
+       * to the Books column it has to agree with. */
+      function byBook(x, y) {
+        return bookLabel(x.vendor).localeCompare(bookLabel(y.vendor));
+      }
+      return order.map(function (k) {
+        var g = byKey[k];
+        g.books.sort(function (x, y) {
+          return bookLabel(x).localeCompare(bookLabel(y));
+        });
+        g.odds.sort(byBook); g.over.sort(byBook); g.under.sort(byBook);
+        return g;
+      });
+    }
+
+    function propsTable(b, rows) {
+      /* Player as a header row rather than a column, the same grouping
+       * /football/action reads its tickets in. One player is quoted at up to
+       * fifteen lines in a market, and a Player column spends the widest cell
+       * on the table repeating a name that has not changed for fifteen rows.
+       * Said once, what hangs under it is four short numbers — which is a board
+       * that fits a phone without scrolling. */
+      var groups = propGroups(rows);
+
+      /* Odds belongs to milestone rows and Over/Under to two-sided ones, and a
+       * market is often all of one kind — every anytime-TD quote is a milestone
+       * — so the columns a market has no use for are not drawn. A fixed head
+       * would leave a third of the table permanently empty and reading as a
+       * feed that failed rather than as a shape it does not have. */
+      var hasMile = groups.some(function (g) { return g.type === 'milestone'; });
+      var hasOU = groups.some(function (g) { return g.type !== 'milestone'; });
+
+      /* Same argument for the line itself: a first-touchdown board is 29 rows
+       * that all read 0.5, and a column that says one thing is a column that
+       * says nothing. What the number means is in the market above it. */
+      var hasLine = groups.some(function (g) { return g.line !== groups[0].line; });
+
+      var head = [];
+      if (hasLine) head.push(thCell(heading('Line', 'Line quoted'), 'is-num'));
+      if (hasMile) head.push(thCell(heading('Odds', 'Consensus price for the line and up'), 'is-num'));
+      if (hasOU) {
+        head.push(thCell(heading('Over', 'Consensus over price'), 'is-num'));
+        head.push(thCell(heading('Under', 'Consensus under price'), 'is-num'));
+      }
+      head.push(thCell(heading('Books', 'Books quoting this line'), 'go-bks'));
+
+      var players = [], byPlayer = {};
+      groups.forEach(function (g) {
+        var id = String(g.player_id);
+        if (!byPlayer[id]) { byPlayer[id] = []; players.push(id); }
+        byPlayer[id].push(g);
       });
 
-      /* Sorted on the name as it is displayed, which is now the surname:
-       * ordering by the full name while showing "P. Mahomes" reads as unsorted
-       * to anyone scanning the first column. */
-      var body = order.map(function (k) { return byKey[k]; }).sort(function (x, y) {
-        var px = playerOf(b, x.player_id), py = playerOf(b, y.player_id);
-        var nx = (px && shortenName(px.name)) || String(x.player_id);
-        var ny = (py && shortenName(py.name)) || String(y.player_id);
-        if (nx !== ny) return nx.localeCompare(ny);
-        return parseFloat(x.line) - parseFloat(y.line);
-      }).map(function (row) {
-        var pl = playerOf(b, row.player_id);
-        return '<tr>' +
-          '<td>' + esc(pl ? shortenName(pl.name) : row.player_id) + '</td>' +
-          books.map(function (v) {
-            var r = row.quotes[v];
-            if (!r) {
-              return '<td class="is-null go-bk">—</td>' +
-                '<td class="is-null">—</td><td class="is-null">—</td>' +
-                '<td class="is-null">—</td>';
+      /* Sorted on the name as it is displayed, which is the surname: ordering
+       * by the full name while showing "P. Mahomes" reads as unsorted to anyone
+       * scanning down the page. */
+      function nameOf(id) {
+        var pl = playerOf(b, id);
+        return (pl && shortenName(pl.name)) || String(id);
+      }
+      players.sort(function (x, y) { return nameOf(x).localeCompare(nameOf(y)); });
+
+      var body = players.map(function (id) {
+        var pl = playerOf(b, id);
+        /* The position and club ride on the header row, where a row that spans
+         * the table has the width for them and a Player column never did. */
+        var meta = pl ? [pl.position, pl.team].filter(Boolean).join(' \u00b7 ') : '';
+        var lines = byPlayer[id].sort(function (x, y) {
+          return (parseFloat(x.line) - parseFloat(y.line)) ||
+            String(x.type).localeCompare(String(y.type));
+        });
+        return '<tr class="go-pl"><th scope="rowgroup" colspan="' + head.length + '">' +
+            esc(nameOf(id)) +
+            (meta ? '<span class="go-plmeta">' + esc(meta) + '</span>' : '') +
+          '</th></tr>' +
+          lines.map(function (g) {
+            var mile = g.type === 'milestone';
+            var cells = [];
+            if (hasLine) cells.push('<td class="is-num">' + esc(g.line) + '</td>');
+            if (hasMile) cells.push(mile ? consCell(g.odds) : '<td class="is-null"></td>');
+            if (hasOU) {
+              cells.push(mile ? '<td class="is-null"></td>' : consCell(g.over));
+              cells.push(mile ? '<td class="is-null"></td>' : consCell(g.under));
             }
-            var m = r.market || {};
-            var mile = m.type === 'milestone', ou = m.type === 'over_under';
-            return '<td class="is-num go-bk">' + esc(r.line_value) + '</td>' +
-              '<td class="is-num">' + (mile ? esc(fmtOdds(m.odds)) : '') + '</td>' +
-              '<td class="is-num">' + (ou ? esc(fmtOdds(m.over_odds)) : '') + '</td>' +
-              '<td class="is-num">' + (ou ? esc(fmtOdds(m.under_odds)) : '') + '</td>';
-          }).join('') +
-        '</tr>';
+            cells.push('<td class="go-bks">' +
+              esc(g.books.map(bookLabel).join(' ')) + '</td>');
+            return '<tr>' + cells.join('') + '</tr>';
+          }).join('');
       }).join('');
 
-      return '<div class="go-scroll"><table class="go-table go-grouped go-pinned"><thead>' +
-        groupHead(books, ['Line', 'Odds', 'Over', 'Under'],
-          '<th rowspan="2">Player</th>') +
-        '</thead><tbody>' + body + '</tbody></table></div>';
+      return '<div class="go-scroll"><table class="go-table go-props"><thead><tr>' +
+        head.join('') + '</tr></thead><tbody>' + body + '</tbody></table></div>';
     }
 
     function propsSection(b) {
@@ -972,7 +1080,15 @@
             }).join('') +
           '</select>' +
           '<select id="prop-player" class="go-select"></select>' +
-        '</div><div id="prop-table"></div>';
+        '</div>' +
+        /* One line of it, under the controls rather than in a column heading:
+         * a price column that is an average of two books and not either of
+         * them is worth saying out loud once, and the Books column beside it
+         * only names who is in the average, not what was done to them. */
+        '<div class="go-sub" style="margin:0 0 10px 9px">' +
+          'One price per line: the mean of the books\u2019 implied ' +
+          'probabilities, vig included.</div>' +
+        '<div id="prop-table"></div>';
       return card('Player props', controls);
     }
 
@@ -1044,41 +1160,104 @@
      * /player_injuries returns no team of its own — the team hangs off the
      * player — and embeds the full player record, so the generic table would
      * spread height, weight, college and jersey number across fourteen columns.
-     * These are the five fields anyone reads. */
+     * These are the four fields anyone reads.
+     *
+     * The club was the fifth. It is a rowgroup heading now rather than a
+     * column: the bundle already sorts the report into away, home and whatever
+     * it could not place, so as a column it was one of two values repeated down
+     * thirty rows, and finding one team's injuries meant finding the boundary
+     * between them. Said once at the top of each block it is easier to read and
+     * it hands its width to the comment, which is the column that wanted it. */
 
-    function injuryTable(rows) {
-      var body = rows.map(function (r) {
-        var pl = r.player || {};
-        return '<tr>' +
-          '<td>' + esc(initialName(pl.first_name, pl.last_name)) + '</td>' +
-          '<td>' + esc(pl.position_abbreviation || pl.position || '') + '</td>' +
-          '<td>' + esc((pl.team || {}).abbreviation || '') + '</td>' +
-          statusCell(r.status) +
-          '<td class="go-note">' + esc(r.comment || '') + '</td>' +
-          '<td>' + esc(r.date || '—') + '</td>' +
-        '</tr>';
+    /* The feed reports in full ISO UTC — 2026-08-11T23:27:00.000Z, twenty-four
+     * characters to say a Tuesday evening, in a monospace column that has to
+     * fit beside a paragraph of free text. Same treatment as the kickoff:
+     * Eastern, to the minute. No year, because an injury report is read for
+     * how stale it is and nothing here is a season old; the raw stamp stays on
+     * the cell's title for anyone who wants the rest of it. */
+    function reportedET(iso) {
+      var t = stamp(iso);
+      if (t === null) return '';
+      try {
+        return new Date(t * 1000).toLocaleString('en-US', {
+          timeZone: 'America/New_York', month: 'short', day: 'numeric',
+          hour: 'numeric', minute: '2-digit'
+        });
+      } catch (e) { return String(iso); }
+    }
+
+    function reportedCell(iso) {
+      var s = reportedET(iso);
+      if (!s) return '<td class="is-null">—</td>';
+      return '<td title="' + esc(iso) + '">' + esc(s) + '</td>';
+    }
+
+    var INJ_COLS = 5;
+
+    function injuryRow(r) {
+      var pl = r.player || {};
+      return '<tr>' +
+        '<td>' + esc(initialName(pl.first_name, pl.last_name)) + '</td>' +
+        '<td>' + esc(pl.position_abbreviation || pl.position || '') + '</td>' +
+        statusCell(r.status) +
+        '<td class="go-note">' + esc(r.comment || '') + '</td>' +
+        reportedCell(r.date) +
+      '</tr>';
+    }
+
+    function injuryTable(groups) {
+      var body = groups.map(function (g) {
+        return '<tr class="go-igrp"><th scope="rowgroup" colspan="' + INJ_COLS + '">' +
+            '<span class="go-grp">' +
+              (g.abbr ? teamLogo(g.abbr, 'go-logo-sm') : '') + esc(g.name) +
+              '<span class="go-igrp-n">' + g.rows.length + '</span>' +
+            '</span>' +
+          '</th></tr>' +
+          g.rows.map(injuryRow).join('');
       }).join('');
       /* Comment is the one free-text column on the page, so it is the one
        * column that wraps and is capped rather than run out to whatever the
        * longest note happens to be. */
-      return '<div class="go-scroll"><table class="go-table go-pinned"><thead><tr>' +
+      return '<div class="go-scroll"><table class="go-table go-pinned go-inj">' +
+        '<thead><tr>' +
         thCell(heading('Player', null)) +
         thCell(heading('Pos', 'Position')) +
-        thCell(heading('Team', null)) +
         thCell(heading('Status', 'Injury designation')) +
         thCell(heading('Comment', null), 'go-note') +
-        thCell(heading('Updated', 'Last reported')) +
+        thCell(heading('Updated', 'Last reported, Eastern')) +
         '</tr></thead><tbody>' + body + '</tbody></table></div>';
     }
 
     function injuriesSection(b) {
       var inj = b.injuries || {};
-      var rows = (inj.away || []).concat(inj.home || []).concat(inj.unknown || []);
-      if (!rows.length) {
+      var groups = [];
+      ['away', 'home'].forEach(function (side) {
+        var rows = inj[side] || [];
+        if (rows.length) {
+          groups.push({ abbr: b.game[side].abbr, name: b.game[side].name,
+            rows: rows });
+        }
+      });
+      /* A row the bundle could not place against either club still carries a
+       * team on the player, so it heads a block of its own rather than being
+       * tipped into one anonymous "other" pile. */
+      var byAbbr = {}, extra = [];
+      (inj.unknown || []).forEach(function (r) {
+        var t = (r.player || {}).team || {};
+        var k = t.abbreviation || '';
+        if (!byAbbr[k]) {
+          byAbbr[k] = { abbr: k, name: t.full_name || 'Unplaced', rows: [] };
+          extra.push(byAbbr[k]);
+        }
+        byAbbr[k].rows.push(r);
+      });
+      groups = groups.concat(extra);
+
+      if (!groups.length) {
         return card('Injury report',
           emptyState(b, ['/player_injuries'], 'injury data'), true);
       }
-      return card('Injury report', injuryTable(rows));
+      return card('Injury report', injuryTable(groups));
     }
 
     /* Sibling games. This listed every captured game when there were four of

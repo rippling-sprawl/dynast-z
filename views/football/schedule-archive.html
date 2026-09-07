@@ -227,7 +227,18 @@
      * else reuses. The rows are deliberately the same shape as the board on
      * /football/live-stats — that page shows what is moving now, this one shows
      * everything ever stored, and a reader crossing between them should not
-     * have to re-learn a row. */
+     * have to re-learn a row.
+     *
+     * The page wears the VegasInsider skin, imported below and shared with
+     * /football/schedule and the game page: the palette, the condensed face
+     * and the navy-and-gold bands all come from there, and only the .ar-
+     * rules that spend them are here. It is a repaint — no row moved, no
+     * column changed, the grids below are the ones this page has always had.
+     *
+     * The import has to be the first thing in the block: @import is only valid
+     * ahead of every other rule in a sheet, and a <style> element is a sheet. */
+    @import url('/styles/base/vegasinsider.css');
+
     .ar-wrap { max-width: 900px; }
     .ar-lede {
       color: var(--text-3); font-size: 14px; line-height: 1.6;
@@ -237,47 +248,66 @@
     .ar-lede a:hover { text-decoration: underline; }
 
     .ar-seasons { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 22px; }
+    /* Squared and condensed, like every other control on the three Games
+     * pages, and gold on hover rather than accent-blue. */
     .ar-jump {
-      font-family: monospace; font-size: 11px; padding: 4px 12px;
-      border-radius: 999px; border: 1px solid var(--border);
+      font-family: var(--vi-display); font-size: 15px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.7px; padding: 3px 14px;
+      border-radius: 2px; border: 1px solid var(--border);
       background: var(--surface-2); color: var(--text-2); text-decoration: none;
     }
-    .ar-jump:hover { border-color: var(--accent-line); color: var(--accent); }
+    .ar-jump:hover { border-color: var(--vi-gold); color: var(--text-hi); }
 
     .ar-season { margin: 0 0 12px; }
     .ar-season-h {
-      font-size: 12px; font-family: monospace; font-weight: 700;
-      text-transform: uppercase; letter-spacing: 1px; color: var(--accent);
-      margin: 26px 0 10px; padding-bottom: 8px;
-      border-bottom: 1px solid var(--hairline-hi);
+      font-size: 22px; font-family: var(--vi-display); font-weight: 700;
+      text-transform: uppercase; letter-spacing: 1px; color: var(--text-hi);
+      margin: 26px 0 12px; padding-bottom: 6px;
+      border-bottom: 3px solid var(--vi-gold);
     }
     .ar-season:first-child .ar-season-h { margin-top: 0; }
 
     .ar-group { margin: 0 0 18px; }
+
+    /* The week label is the band that heads its board — the same navy strip,
+     * gold-ruled, that the day headers on /football/schedule and the card
+     * heads on the game page are drawn as. It sits directly on the board
+     * rather than floating above it, so the two read as one table. */
     .ar-group-h {
       display: flex; align-items: center; gap: 8px;
-      font-size: 12px; font-family: monospace; font-weight: 700;
-      color: var(--text-3); margin: 0 0 6px;
+      font-size: 15px; font-family: var(--vi-display); font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.9px;
+      color: var(--vi-band-ink); margin: 0;
+      padding: 6px 12px 5px;
+      background: var(--vi-navy);
+      border-bottom: 2px solid var(--vi-gold);
+      border-radius: 2px 2px 0 0;
     }
     .ar-count {
-      font-size: 10px; font-weight: 400; color: var(--text-4);
-      background: var(--surface-2); border-radius: 4px; padding: 1px 6px;
+      font-size: 13px; font-weight: 400; color: var(--vi-band-ink-2);
+      background: rgba(255, 255, 255, 0.12); border-radius: 2px; padding: 0 7px;
     }
 
     /* One grid per group so the columns line up down the page; it collapses to
      * two rows per game on a phone rather than scrolling sideways. */
     .ar-board {
-      border: 1px solid var(--border); border-radius: 10px;
-      background: var(--panel-lo); overflow: hidden;
+      border: 1px solid var(--border); border-top: 0;
+      border-radius: 0 0 2px 2px;
+      background: var(--panel); overflow: hidden;
     }
     .ar-row {
       display: grid; align-items: center; gap: 4px 14px;
       grid-template-columns: minmax(130px, max-content) 1fr auto auto;
-      padding: 10px 14px; border-top: 1px solid var(--surface-2);
+      padding: 8px 12px; border-top: 1px solid var(--hairline);
       text-decoration: none; color: inherit;
     }
+    /* Zebra, which the board did not have: on a page that is nothing but rows
+     * the stripe is what keeps a long week readable across four columns. */
+    .ar-row:nth-child(even) { background: var(--zebra); }
     .ar-row:first-child { border-top: 0; }
-    .ar-row:hover { background: var(--surface); }
+    .ar-row:hover { background: var(--surface-hover); }
+    /* Monospace stays: .ar-abbr is a 3ch cell, and a proportional face makes
+     * the column ragged and the kickoff beside it zigzag down the board. */
     .ar-teams {
       display: flex; align-items: center; gap: 5px;
       font-family: monospace; font-weight: 700; color: var(--text-hi);
@@ -287,8 +317,9 @@
     .ar-at { color: var(--text-5); font-weight: 400; margin: 0 2px; }
     .ar-kick { font-size: 12px; color: var(--text-3); font-family: monospace; }
     .ar-phase {
-      font-size: 9px; font-weight: 700; font-family: monospace; text-transform: uppercase;
-      letter-spacing: 0.6px; padding: 2px 7px; border-radius: 999px;
+      font-size: 12px; font-weight: 700; font-family: var(--vi-display);
+      text-transform: uppercase;
+      letter-spacing: 0.8px; padding: 1px 8px; border-radius: 2px;
       border: 1px solid transparent; white-space: nowrap;
     }
     .ar-phase.pregame { color: var(--warn); border-color: var(--warn-line); background: var(--warn-soft); }

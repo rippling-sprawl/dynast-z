@@ -5,16 +5,231 @@
  * controls made into styles/components/nfl-pickers.css before it.
  *
  * What is left here is the Reset beside those filters, which only a page with
- * filters to reset has any use for. */
+ * filters to reset has any use for — and, since the page took the
+ * VegasInsider skin, the repaint of those two shared components. The repaint
+ * has to live here rather than with them: /football/bakers-buns renders the
+ * same rows and the same pickers and stays on the house palette, and this
+ * sheet is the one thing the schedule page loads that Baker's Buns does not.
+ *
+ * It is loaded after both component sheets, so every selector below is the
+ * component's own selector at the same specificity and simply wins on order.
+ * Nothing here moves an element. */
+
+@import url('/styles/base/vegasinsider.css');
 
 .sched-reset {
   background: none;
   border: none;
   color: var(--accent);
-  font-size: 12px;
+  font-family: var(--vi-display);
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
   cursor: pointer;
   padding: 5px 2px;
 }
 
 .sched-reset:hover { text-decoration: underline; }
 .sched-reset[hidden] { display: none; }
+
+/* === VegasInsider skin ====================================================
+ * See styles/base/vegasinsider.css for where the palette and the face came
+ * from. What follows is that skin spent on the schedule: the day header
+ * becomes a navy band, the rows under it become the board it heads, and every
+ * badge and control loses its pill for a squared-off chip.
+ *
+ * The one thing that does not change is the monospace on the numbers. The
+ * columns down this list are held by ch units measured in that face —
+ * .sched-abbr is 3ch, .sched-at is 2ch, .sched-result is 7ch — and a
+ * proportional face makes all three ragged, which would zigzag the badges down
+ * the page. Condensed type goes on the headings and the chips, where nothing
+ * is measuring itself. */
+
+/* --- The day header, as a band -------------------------------------------
+ * A rule under grey caps becomes the navy strip VegasInsider heads every board
+ * with, gold-ruled along the bottom. The margin is the gap between one day's
+ * board and the next; :first-child still zeroes the top one. */
+
+.sched-group {
+  gap: 10px;
+  margin: 20px 0 0;
+  padding: 6px 10px 5px;
+  background: var(--vi-navy);
+  border-bottom: 2px solid var(--vi-gold);
+  border-radius: 2px 2px 0 0;
+}
+
+.sched-group h3 {
+  font-family: var(--vi-display);
+  font-size: 14px;
+  letter-spacing: 0.9px;
+  color: var(--vi-band-ink);
+}
+
+.sched-group .sched-group-sub {
+  font-family: var(--vi-display);
+  font-size: 13px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--vi-band-ink-2);
+}
+
+/* --- The rows, as the board ----------------------------------------------
+ * Boxed rather than loose on the page: a day of football is one table on
+ * VegasInsider, not a run of rows in the margin. The box is drawn on all four
+ * sides so the headerless list — one team's season, which renders .sched-rows
+ * with no group above it — is closed too; where a band *is* above it, the top
+ * edge is dropped so the gold rule is the only line between them. */
+
+.sched-rows {
+  border: 1px solid var(--border);
+  border-radius: 0 0 2px 2px;
+  background: var(--panel);
+  overflow: hidden;
+}
+
+.sched-group + .sched-rows { border-top: 0; }
+
+.sched-game {
+  padding: 3px 10px;
+  border-radius: 0;
+}
+
+/* Whole-row hover, which the list did not have: on a board this dense the row
+ * under the pointer is worth marking, and every row here is a link to its own
+ * game page. */
+.sched-rows .sched-game:hover { background: var(--surface-hover); }
+
+/* The slate break was a rounded 2px rule inside a rounded row; inside a boxed
+ * board it is simply the heavier line between the early games and the late
+ * ones, drawn in the brand gold. */
+.sched-rows .sched-game.is-slate-break {
+  border-top: 2px solid var(--vi-gold-line);
+  margin-top: 2px;
+  padding-top: 5px;
+  border-radius: 0;
+}
+
+/* --- Badges ---------------------------------------------------------------
+ * Squared and condensed. The odd-kickoff badge keeps its meaning and takes the
+ * brand gold with it, which is what --warn already resolves to under the skin. */
+
+.sched-slot {
+  font-family: var(--vi-display);
+  font-size: 11px;
+  letter-spacing: 0.7px;
+  padding: 0 6px;
+  border-radius: 2px;
+}
+
+.sched-links-label {
+  font-family: var(--vi-display);
+  font-size: 13px;
+  letter-spacing: 0.8px;
+}
+
+.sched-links a {
+  font-family: var(--vi-display);
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.sched-links { border-top: 2px solid var(--vi-gold); }
+
+.sched-empty { padding: 16px 10px; }
+
+/* --- Filters --------------------------------------------------------------
+ * The three triggers and the two panels behind them, from
+ * styles/components/nfl-pickers.css. Same repaint: squared boxes, condensed
+ * caps on the labels, gold on the open control. */
+
+.dd-btn {
+  font-family: var(--vi-display);
+  font-size: 15px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  padding: 5px 10px;
+  border-radius: 2px;
+}
+
+.dd-btn:hover { border-color: var(--vi-gold); }
+
+.dd-btn:focus-visible,
+.dd-btn[aria-expanded="true"] {
+  border-color: var(--vi-gold);
+  background: var(--surface-3);
+}
+
+.dd-menu {
+  border-radius: 2px;
+  border-top: 2px solid var(--vi-gold);
+}
+
+.dd-opt {
+  font-family: var(--vi-display);
+  font-size: 15px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-radius: 0;
+}
+
+.dd-opt.is-on { font-weight: 700; }
+
+.dd-note {
+  font-family: var(--vi-display);
+  font-size: 12px;
+  letter-spacing: 0.7px;
+}
+
+.dd-opt.is-group-start { border-radius: 0; }
+
+.dd-overlay .tp,
+.dd-overlay .dd-menu { border-radius: 2px; }
+
+/* The team grid. Its conference and division labels are the same condensed
+ * caps as everything else; the tiles themselves square off, and the picked
+ * club is ringed in gold rather than in the accent, so the ring reads the same
+ * in both themes. */
+
+.tp-conf-name {
+  font-family: var(--vi-display);
+  font-size: 13px;
+  letter-spacing: 0.9px;
+  border-bottom: 2px solid var(--vi-gold);
+  padding-bottom: 3px;
+}
+
+.tp-div-name {
+  font-family: var(--vi-display);
+  font-size: 12px;
+  letter-spacing: 0.8px;
+}
+
+.tp-team { border-radius: 2px; }
+
+.tp-team:focus-visible { border-color: var(--vi-gold); }
+
+.tp .tp-team.is-on,
+.tp.has-pick .tp-team.is-on {
+  border-color: var(--vi-gold);
+  background: var(--vi-gold-soft);
+}
+
+.tp-any {
+  font-family: var(--vi-display);
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  border-radius: 2px;
+}
+
+.tp-any:hover { border-color: var(--vi-gold); }
+
+.tp-any.is-on {
+  border-color: var(--vi-gold);
+  background: var(--vi-gold-soft);
+}

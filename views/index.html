@@ -14,6 +14,114 @@
        home page reads as the top of that same ladder. -->
   <link rel="stylesheet" href="/styles/base/hub.css">
   <link rel="stylesheet" href="/styles/base/lightbox.css">
+  <style>
+    /* Signed-out sign-in card. Sits above the Football section on the home page
+       and is the only thing here that is not a nav card, so it stays quiet: a
+       hairline panel the width of the hub grid, not a hero. Hidden until
+       auth.js confirms there is no session, so signed-in visitors never see it
+       flash. */
+    .home-auth {
+      background: var(--panel-hi);
+      border: 1px solid var(--hairline);
+      border-radius: 6px;
+      padding: 14px 16px;
+      margin-top: 4px;
+    }
+
+    .home-auth-label {
+      font-size: 11px;
+      font-family: monospace;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-4);
+      display: block;
+      margin-bottom: 10px;
+    }
+
+    /* One row on desktop (username, password, button), stacked under 600px. */
+    .home-auth-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .home-auth input {
+      flex: 1 1 160px;
+      min-width: 0;
+      background: var(--hairline);
+      border: 1px solid var(--hairline-hi);
+      border-radius: 4px;
+      padding: 8px 10px;
+      font-size: 13px;
+      font-family: monospace;
+      color: var(--text-bright);
+    }
+
+    .home-auth input::placeholder { color: var(--text-4); }
+    .home-auth input:focus { outline: none; border-color: var(--accent-2); }
+
+    .home-auth button[type="submit"] {
+      flex: 0 0 auto;
+      padding: 8px 18px;
+      border: 1px solid var(--accent-2);
+      border-radius: 4px;
+      background: var(--accent-2);
+      color: var(--bg);
+      font-size: 13px;
+      font-weight: 600;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .home-auth button[type="submit"]:hover {
+      background: var(--accent-hover);
+      border-color: var(--accent-hover);
+    }
+
+    .home-auth button[type="submit"]:disabled { opacity: 0.55; cursor: default; }
+
+    /* Signing up is the secondary path, so it is an outlined link rather than a
+       second filled button competing with Sign In. */
+    .home-auth-foot {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .home-auth-signup {
+      font-size: 11px;
+      font-family: monospace;
+      color: var(--text-3);
+      text-decoration: none;
+      padding: 4px 10px;
+      border: 1px solid var(--hairline-hi);
+      border-radius: 4px;
+      transition: color 0.15s, border-color 0.15s;
+    }
+
+    .home-auth-signup:hover { color: var(--text-bright); border-color: var(--accent-2); }
+
+    .home-auth-note {
+      font-size: 11px;
+      font-family: monospace;
+      color: var(--text-4);
+    }
+
+    .home-auth-error {
+      font-size: 11px;
+      font-family: monospace;
+      color: var(--bad-soft);
+      margin-top: 8px;
+    }
+
+    @media (max-width: 600px) {
+      .home-auth-row { flex-direction: column; align-items: stretch; }
+      .home-auth button[type="submit"] { width: 100%; }
+    }
+  </style>
   <!-- Vercel Web Analytics. The /_vercel/insights/* routes are injected by
        Vercel at deploy time, so this 404s harmlessly when serving locally. -->
   <script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
@@ -31,6 +139,23 @@
     <h2>Dynast-Z</h2>
     <p class="subtitle">Sports Tools &amp; Trackers</p>
 
+    <!-- Signed-out only. Same /api/auth login as /account, so the home page is
+         a shortcut into a session rather than a second way to make one —
+         creating an account still happens on /account. -->
+    <form class="home-auth" id="home-auth" hidden autocomplete="on">
+      <span class="home-auth-label">Sign in</span>
+      <div class="home-auth-row">
+        <input type="text" id="home-login-name" placeholder="Username" autocomplete="username" aria-label="Username">
+        <input type="password" id="home-login-password" placeholder="Password" autocomplete="current-password" aria-label="Password">
+        <button type="submit" id="home-login-btn">Sign In</button>
+      </div>
+      <div class="home-auth-foot">
+        <a class="home-auth-signup" href="/account">Create an account</a>
+        <span class="home-auth-note">Syncs your picks across devices</span>
+      </div>
+      <div class="home-auth-error" id="home-login-error" hidden></div>
+    </form>
+
     <!-- Filled from NAV_SECTIONS in scripts/base/nav.js, so the home page, the
          /football hub and the drawer can never disagree about what the site
          contains. Everything that is not football lives on /appendix, which the
@@ -39,6 +164,50 @@
     <div class="hub-grid" data-nav-section="Football"></div>
   </div>
 
-  <script>mountHubGrids();</script>
+  <script src="/scripts/base/sync.js"></script>
+  <script>
+    mountHubGrids();
+
+    // Only offer the form to signed-out visitors. It ships `hidden` so a signed-in
+    // visitor never sees it paint before this runs.
+    (function () {
+      const form = document.getElementById('home-auth');
+      if (isLoggedIn()) return;
+      form.hidden = false;
+
+      const btn = document.getElementById('home-login-btn');
+      const errEl = document.getElementById('home-login-error');
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const name = document.getElementById('home-login-name').value.trim();
+        const password = document.getElementById('home-login-password').value;
+        errEl.hidden = true;
+        if (!name || !password) {
+          errEl.textContent = 'Enter username and password';
+          errEl.hidden = false;
+          return;
+        }
+
+        try {
+          btn.disabled = true;
+          await login(name, password);
+
+          // Same post-sign-in pull as /account: the new session reads the
+          // server's data rather than whatever this browser last cached.
+          const sel = await syncPull('masters', 'selections');
+          if (sel) localStorage.setItem('masters_selections', JSON.stringify(sel));
+          const ball = await syncPull('masters', '3ball');
+          if (ball) localStorage.setItem('masters_3ball', JSON.stringify(ball));
+
+          window.location.reload();
+        } catch (err) {
+          errEl.textContent = err.message;
+          errEl.hidden = false;
+          btn.disabled = false;
+        }
+      });
+    })();
+  </script>
 </body>
 </html>

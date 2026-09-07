@@ -282,6 +282,14 @@ header a:hover { color: var(--accent); }
   color: var(--text-hi);
 }
 
+/* The account row leads the list (it used to sit in the header), so it gets a
+   rule under it to keep it apart from the first real section. */
+.nav-drawer .nav-account {
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 8px;
+  padding-bottom: 4px;
+}
+
 .nav-drawer .nav-sub a {
   padding-left: 36px;
   font-size: 13px;

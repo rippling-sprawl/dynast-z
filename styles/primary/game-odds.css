@@ -7,7 +7,21 @@
  * deliberate rather than broken, which is what .go-empty is for — it is a real
  * component with a real message, not a hidden section or a spinner that never
  * resolves.
+ *
+ * The page wears the VegasInsider skin. Everything colour, type and edge on it
+ * comes from styles/base/vegasinsider.css, imported below and loaded by this
+ * page alone (and by the two other Games routes); the rules in this file spend
+ * that skin on the hero, the cards and the boards. Nothing here moved when the
+ * skin arrived — the cards are the same cards, in the same order, at the same
+ * widths. What changed is that the card heads are navy bands, the column heads
+ * are condensed caps on navy, the badges are squared rather than pilled, and
+ * the gold is the accent the page is read by.
+ *
+ * The numbers stay monospace. An odds table is read down its columns, and the
+ * prices in it are the one thing on the page that has to line up.
  */
+
+@import url('/styles/base/vegasinsider.css');
 
 .go-wrap { max-width: 1000px; }
 
@@ -15,7 +29,8 @@
 
 .go-hero {
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-top: 3px solid var(--vi-gold);
+  border-radius: 2px;
   background: var(--surface);
   padding: 18px 20px;
   margin-bottom: 18px;
@@ -32,22 +47,26 @@
   gap: 10px;
 }
 
+/* The one place the condensed face replaces the monospace rather than joining
+ * it: the matchup is a headline, not a column, and nothing is measuring
+ * itself against it. */
 .go-matchup {
   display: flex;
   align-items: baseline;
   gap: 10px;
-  font-family: monospace;
-  font-size: 30px;
+  font-family: var(--vi-display);
+  font-size: 36px;
   font-weight: 700;
-  letter-spacing: -0.5px;
-  color: var(--text);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--text-hi);
   min-width: 0;
 }
 
 .go-matchup .go-at {
-  font-size: 15px;
+  font-size: 17px;
   font-weight: 400;
-  color: var(--text-5);
+  color: var(--text-4);
 }
 
 /* The winner carries the weight. On a scheduled game neither side is a winner,
@@ -68,13 +87,13 @@
 .go-meta b { color: var(--text-2); font-weight: 600; }
 
 .go-phase {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
-  font-family: monospace;
+  font-family: var(--vi-display);
   text-transform: uppercase;
-  letter-spacing: 0.6px;
-  padding: 3px 9px;
-  border-radius: 999px;
+  letter-spacing: 0.8px;
+  padding: 2px 9px;
+  border-radius: 2px;
   border: 1px solid transparent;
   white-space: nowrap;
 }
@@ -134,7 +153,15 @@
   border-bottom: 1px solid var(--hairline);
 }
 
-.go-line th { color: var(--text-4); font-weight: 600; font-size: 10px; text-transform: uppercase; }
+.go-line th {
+  color: var(--text-3);
+  font-family: var(--vi-display);
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+  border-bottom-color: var(--vi-gold-line);
+}
 .go-line td:first-child, .go-line th:first-child { text-align: left; color: var(--text-2); }
 .go-line td.go-total { font-weight: 700; color: var(--text); }
 
@@ -142,33 +169,47 @@
 
 .go-card {
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: 2px;
   background: var(--surface);
   margin-bottom: 14px;
   overflow: hidden;
 }
 
+/* The band. Every board on VegasInsider is headed by one: navy, ruled in gold
+ * along the bottom, its title in condensed caps. It is the motif the whole
+ * skin hangs off, and it is repeated on the column heads below. */
 .go-card-head {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
   gap: 10px;
-  padding: 11px 16px;
-  border-bottom: 1px solid var(--hairline);
-  background: var(--surface-2);
+  padding: 9px 14px 8px;
+  border-bottom: 2px solid var(--vi-gold);
+  background: var(--vi-navy);
 }
 
 .go-card-head h3 {
   margin: 0;
-  font-size: 13px;
+  font-family: var(--vi-display);
+  font-size: 17px;
   font-weight: 700;
-  letter-spacing: 0.2px;
-  color: var(--text);
+  letter-spacing: 0.9px;
+  text-transform: uppercase;
+  color: var(--vi-band-ink);
 }
 
 /* Small labels inside a card body -- a stat group in the box score, Current
- * vs Opening on the odds grid. The card head carries no note of its own. */
-.go-sub { font-size: 11px; color: var(--text-4); font-family: monospace; }
+ * vs Opening on the odds grid. The card head carries no note of its own.
+ *
+ * Condensed but not uppercased: the same element also carries the sentence
+ * under the props filters explaining what a consensus price is, and a sentence
+ * in caps is a sign, not a note. */
+.go-sub {
+  font-size: 13px;
+  color: var(--text-4);
+  font-family: var(--vi-display);
+  letter-spacing: 0.4px;
+}
 
 .go-card-body { padding: 14px 4px; }
 .go-card-body.is-flush { padding: 0; }
@@ -188,18 +229,19 @@
   color: var(--text-2);
   background: var(--surface-2);
   border: 1px solid var(--hairline);
-  border-radius: 3px;
+  border-radius: 2px;
   padding: 1px 5px;
 }
 
 .go-tier {
   display: inline-block;
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 700;
-  font-family: monospace;
-  letter-spacing: 0.6px;
-  padding: 1px 6px;
-  border-radius: 999px;
+  font-family: var(--vi-display);
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  padding: 0 6px;
+  border-radius: 2px;
   color: var(--warn);
   border: 1px solid var(--warn-line);
   background: var(--warn-soft);
@@ -253,32 +295,35 @@
    * pixel, and the hairline of tbody that shows through that seam is a row of
    * clipped digits sitting inside the header. The thead's own background is
    * one unbroken box behind all of them. */
-  background: var(--surface-2);
+  background: var(--vi-navy);
 }
 
+/* The column heads are the card head's band continued: same navy, same
+ * condensed caps, same gold rule closing it. The cells' own background has to
+ * be set as well as the thead's — see the note above about the seam. */
 .go-table th {
-  background: var(--surface-2);
-  color: var(--text-4);
-  font-size: 10px;
+  background: var(--vi-navy);
+  color: var(--vi-band-ink);
+  font-family: var(--vi-display);
+  font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.4px;
+  letter-spacing: 0.7px;
 }
 
 /* Rows pass behind the header, so the head needs a hard bottom edge of its
  * own rather than the hairline that separates two body rows. */
-.go-table thead tr:last-child th { border-bottom-color: var(--border); }
+.go-table thead tr:last-child th { border-bottom: 2px solid var(--vi-gold); }
 
 .go-table tbody tr:nth-child(even) { background: var(--zebra); }
 .go-table td.is-num { text-align: right; }
 .go-table td.is-null { color: var(--text-5); }
 
 /* --- Pinned first column -------------------------------------------------
- * Injuries and props both scroll sideways — one because a comment can run to a
- * sentence, the other because every book adds four columns — and both are read
- * by finding a player's row and then tracking across it. Scroll the name off
- * the left edge and the row loses the only thing that identifies it, so the
- * first column stays put.
+ * The injury report scrolls sideways, because a comment can run to a sentence,
+ * and it is read by finding a player's row and then tracking across it. Scroll
+ * the name off the left edge and the row loses the only thing that identifies
+ * it, so the first column stays put.
  *
  * The cells need their own opaque backgrounds: sticky cells paint over the row
  * they are scrolling past, and a transparent one would drag the zebra stripe
@@ -296,9 +341,8 @@
 
 .go-pinned tbody tr:nth-child(even) td:first-child { background: var(--zebra); }
 
-/* First row only: on the grouped props head the second row starts at the
- * first book's Line column, and th:first-child would pin that to the left edge
- * on top of the Player heading. */
+/* First row only, so a two-row head can never pin its second row's leading
+ * cell to the left edge on top of the heading above it. */
 .go-pinned thead tr:first-child th:first-child {
   position: sticky;
   left: 0;
@@ -308,26 +352,131 @@
 
 /* Free text, unlike every other cell on the page. It is the only column
  * allowed to wrap — capped so a long note stacks into a paragraph inside the
- * row instead of stretching the table off the side of the viewport. */
+ * row instead of stretching the table off the side of the viewport.
+ *
+ * The cap was doing nothing on its own. Every other column is monospace and
+ * set not to wrap, so they take their content width and this one takes what is
+ * left; a max-width only bites when a column is trying to grow past it, and a
+ * column shrinking to fit never is. The floor is what widens it: the table is
+ * allowed to outgrow the card and .go-scroll carries the overflow, which is
+ * the arrangement the pinned first column was already built for. Held under
+ * two thirds of the viewport so the floor never becomes the reason a phone
+ * scrolls sideways. */
 .go-table th.go-note, .go-table td.go-note {
-  max-width: 80vw;
+  min-width: min(62vw, 560px);
+  max-width: 820px;
   white-space: normal;
 }
 
-/* --- Book column groups --------------------------------------------------
- * Odds and props both carry the sportsbook in a spanning header rather than in
- * a column, so one row holds every book's price for the same line and the
- * comparison is read across it. That only works if the eye can find where one
- * book's columns end, hence the rule on the first column of each group. */
+/* --- Injury report: grouped by club --------------------------------------
+ * Same shape as the prop board below: the thing every row in the block shares
+ * is a heading spanning the table rather than a column repeating it. Styled
+ * separately because the two want opposite things from the zebra — a prop line
+ * is one short row and reads fine unstriped, an injury row is a wrapped
+ * paragraph and needs the stripe to keep its own cells together. */
 
-.go-grouped thead th { line-height: 12px; }
-.go-grouped th.go-bk, .go-grouped td.go-bk { border-left: 1px solid var(--border); }
+/* A th inside tbody otherwise inherits the uppercased 10px treatment meant for
+ * column headings, which is the opposite of what this row is. */
+.go-inj tbody th {
+  background: var(--surface-2);
+  color: var(--text-hi);
+  font-family: var(--vi-display);
+  font-size: 15px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  border-bottom: 2px solid var(--vi-gold-line);
+  padding-top: 9px;
+  padding-bottom: 7px;
+}
 
-.go-grouped thead tr:first-child th.go-bk,
-.go-grouped thead tr:first-child th[colspan] {
-  text-align: center;
-  color: var(--text-2);
-  letter-spacing: 0.9px;
+/* First club only: a rule above the top row would sit against the head. */
+.go-inj tbody tr:first-child th { padding-top: 6px; }
+
+/* The heading spans a table that scrolls sideways, so the label rides a sticky
+ * span inside the cell: the cell scrolls, the club name stays at the left edge
+ * with the pinned Player column it is heading. Without it, a reader who has
+ * scrolled out to the Updated column is looking at rows under a blank band. */
+.go-inj .go-grp {
+  position: sticky;
+  left: 0;
+  display: inline-block;
+}
+
+/* How many players the club has on the report — the one number the block was
+ * implicitly carrying and nothing was saying. */
+.go-inj .go-igrp-n {
+  margin-left: 8px;
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0.6px;
+  color: var(--text-4);
+}
+
+/* A comment wraps to three or four lines and the cells beside it hold two
+ * words, so centring them puts the player's name level with the middle of
+ * somebody's paragraph. Everything hangs from the first line instead. */
+.go-inj tbody td { vertical-align: top; }
+
+/* --- Props: grouped by player --------------------------------------------
+ * The board carried a column group per book — Line, Odds, Over, Under, once
+ * each — which is nine columns before a third book turns up, and on a phone
+ * that put the price off the right edge. It is one consensus price now, and
+ * the player is a header row rather than a column, so the widest cell on the
+ * table is no longer a name repeated down fifteen rows. Five columns at most,
+ * four on most markets: it fits a phone without scrolling sideways. */
+
+.go-props th.is-num { text-align: right; }
+
+/* Zebra counts rows, and a player header is a row, so striping walks in and
+ * out of step with the groups it is meant to separate. The header rows do that
+ * job on their own here. */
+.go-props tbody tr:nth-child(even) { background: none; }
+
+/* The player, spanning the table. A th inside tbody otherwise inherits the
+ * uppercased 10px treatment meant for column headings, which is the opposite
+ * of what this row is: the largest text in the table, not the smallest. */
+.go-props tbody th {
+  background: var(--surface-2);
+  color: var(--text-hi);
+  font-family: var(--vi-display);
+  font-size: 15px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  border-bottom: 2px solid var(--vi-gold-line);
+  padding-top: 9px;
+  padding-bottom: 7px;
+}
+
+/* First group only: a rule above the top row would sit against the head. */
+.go-props tbody tr:first-child th { padding-top: 6px; }
+
+/* Position and club, on the row that has the width for them. Muted and small
+ * so the name still reads as the heading and these as an aside on it. */
+.go-props .go-plmeta {
+  margin-left: 9px;
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0.6px;
+  color: var(--text-4);
+}
+
+/* The lines under a name are one player's ladder, so they are stepped in from
+ * it — the smallest indent that still says these hang off the row above. */
+.go-props tbody tr:not(.go-pl) td:first-child { padding-left: 22px; }
+
+/* Which books hang this line — the only thing the column groups said that the
+ * consensus price does not, and the last column rather than the first because
+ * it is read after a price, not before one. Left of the numbers it would rule
+ * up against them as if it were one. */
+.go-props .go-bks {
+  text-align: left;
+  color: var(--text-4);
+  font-family: var(--vi-display);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
 }
 
 /* --- Odds: one table per book --------------------------------------------
@@ -353,7 +502,7 @@
   min-width: min-content;
   max-width: 420px;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 2px;
   overflow: hidden;
 }
 
@@ -367,7 +516,7 @@
 
 /* The book ticker heads the column the team abbreviations run down, so it is
  * read as the label of the table rather than of the column. */
-.go-odds thead th.go-tm { color: var(--text-2); letter-spacing: 0.9px; }
+.go-odds thead th.go-tm { color: var(--vi-gold); letter-spacing: 1px; }
 
 /* A team cell labels its row, so it is a th — which otherwise inherits the
  * sticky, uppercased treatment meant for column headings, and would lift out
@@ -376,6 +525,7 @@
   position: static;
   background: none;
   color: var(--text);
+  font-family: monospace;
   font-size: 11.5px;
   font-weight: 600;
   text-transform: none;
@@ -391,6 +541,11 @@
   .go-odds th, .go-odds td { padding: 6px 7px; }
   .go-odds tbody th.go-tm { font-size: 11px; }
   .go-books { padding: 0 4px; gap: 12px; }
+  /* Same trade on the props board, where five columns are a line, three prices
+   * and the books behind them: at 320px the widest market is a dozen pixels
+   * over, and a dozen pixels of padding is cheaper to give up than a column. */
+  .go-props th, .go-props td { padding: 6px 7px; }
+  .go-props tbody tr:not(.go-pl) td:first-child { padding-left: 14px; }
 }
 
 /* --- Team stat comparison ------------------------------------------------ */
@@ -398,8 +553,23 @@
 .go-vs { width: 100%; border-collapse: collapse; font-size: 12px; }
 
 .go-vs th, .go-vs td { padding: 5px 12px; border-bottom: 1px solid var(--hairline); }
-.go-vs thead th { color: var(--text-4); font-size: 10px; text-transform: uppercase; letter-spacing: 0.4px; }
-.go-vs td.go-stat { color: var(--text-3); text-align: center; }
+.go-vs thead th {
+  color: var(--text-3);
+  font-family: var(--vi-display);
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  border-bottom: 2px solid var(--vi-gold-line);
+}
+.go-vs td.go-stat {
+  color: var(--text-3);
+  font-family: var(--vi-display);
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  text-align: center;
+}
 .go-vs td.go-val { font-family: monospace; text-align: right; width: 22%; color: var(--text); }
 .go-vs tbody tr:nth-child(even) { background: var(--zebra); }
 .go-vs td.is-better { color: var(--good); font-weight: 600; }
@@ -421,22 +591,28 @@
 }
 
 .go-seg button {
-  font-family: monospace;
-  font-size: 11px;
-  padding: 4px 10px;
-  border-radius: 999px;
+  font-family: var(--vi-display);
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  padding: 3px 12px;
+  border-radius: 2px;
   border: 1px solid var(--border);
   background: var(--surface);
   color: var(--text-3);
   cursor: pointer;
 }
 
-.go-seg button:hover { border-color: var(--accent-line); color: var(--accent); }
+.go-seg button:hover { border-color: var(--vi-gold); color: var(--text); }
 
+/* The chosen view is the one thing on the strip that is gold-filled, which is
+ * how VegasInsider marks a selected tab. Dark ink on it in both themes: the
+ * fill is the same gold either way. */
 .go-seg button[aria-pressed="true"] {
-  border-color: var(--accent-line);
-  background: var(--accent-soft);
-  color: var(--accent);
+  border-color: var(--vi-gold);
+  background: var(--vi-gold);
+  color: var(--vi-bar);
 }
 
 .go-seg button:focus-visible {
@@ -491,10 +667,12 @@
  * that is otherwise read-only — a custom dropdown would be more furniture than
  * the interaction is worth. */
 .go-select {
-  font-family: inherit;
-  font-size: 12px;
-  padding: 5px 9px;
-  border-radius: 6px;
+  font-family: var(--vi-display);
+  font-size: 15px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 4px 9px;
+  border-radius: 2px;
   border: 1px solid var(--border);
   background: var(--surface-2);
   color: var(--text);
