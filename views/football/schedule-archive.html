@@ -91,23 +91,6 @@
       } catch (e) { return String(iso); }
     }
 
-    /* What a snapshot actually contains, in the order a person would look for
-     * it. Read off the listing's own `has`, which is stored beside each row
-     * precisely so this can be answered without opening the snapshot — the
-     * same five parts /football/live-stats names. */
-    var PARTS = [
-      ['odds', 'lines'], ['props', 'props'], ['team_stats', 'team stats'],
-      ['player_stats', 'box score'], ['plays', 'plays']
-    ];
-
-    function contents(has) {
-      var got = PARTS.filter(function (p) { return has && has[p[0]]; });
-      if (!got.length) return '<span class="ar-thin">game details only</span>';
-      return got.map(function (p) {
-        return '<span class="ar-part">' + esc(p[1]) + '</span>';
-      }).join('');
-    }
-
     function row(g) {
       var upd = stamp(g.updated_at);
       return '<a class="ar-row" href="/football/schedule/game/' +
@@ -120,7 +103,6 @@
           '<span class="ar-abbr">' + esc(g.home) + '</span>' +
         '</span>' +
         '<span class="ar-kick">' + esc(when(g.kickoff)) + '</span>' +
-        '<span class="ar-parts">' + contents(g.has) + '</span>' +
         '<span class="ar-phase ' + esc(g.phase) + '">' + esc(g.phase) + '</span>' +
         '<span class="ar-age">' +
           (upd === null ? '' : 'updated ' + esc(gap(Date.now() / 1000 - upd)) + ' ago') +
@@ -290,7 +272,7 @@
     }
     .ar-row {
       display: grid; align-items: center; gap: 4px 14px;
-      grid-template-columns: minmax(130px, max-content) 1fr auto auto auto;
+      grid-template-columns: minmax(130px, max-content) 1fr auto auto;
       padding: 10px 14px; border-top: 1px solid var(--surface-2);
       text-decoration: none; color: inherit;
     }
@@ -304,12 +286,6 @@
     .ar-abbr { display: inline-block; min-width: 3ch; }
     .ar-at { color: var(--text-5); font-weight: 400; margin: 0 2px; }
     .ar-kick { font-size: 12px; color: var(--text-3); font-family: monospace; }
-    .ar-parts { display: flex; flex-wrap: wrap; gap: 4px; justify-content: flex-end; }
-    .ar-part {
-      font-size: 10px; font-family: monospace; color: var(--text-3);
-      background: var(--surface-2); border-radius: 4px; padding: 1px 6px;
-    }
-    .ar-thin { font-size: 10px; font-family: monospace; color: var(--text-5); }
     .ar-phase {
       font-size: 9px; font-weight: 700; font-family: monospace; text-transform: uppercase;
       letter-spacing: 0.6px; padding: 2px 7px; border-radius: 999px;
@@ -331,14 +307,13 @@
     .ar-note code { font-family: monospace; color: var(--text-3); }
 
     @media (max-width: 640px) {
+      /* Kickoff drops to a second line under the matchup, leaving phase and
+       * freshness on the row with it. */
       .ar-row { grid-template-columns: 1fr auto auto; }
-      /* Kickoff and freshness drop to a second line under the matchup; the
-       * contents chips are the first thing to go — the phase chip carries more. */
       .ar-teams { grid-column: 1; }
       .ar-phase { grid-column: 2; }
       .ar-age { grid-column: 3; min-width: 0; }
       .ar-kick { grid-column: 1 / -1; }
-      .ar-parts { grid-column: 1 / -1; justify-content: flex-start; }
     }
   </style>
 </body>
