@@ -793,6 +793,97 @@ def write_shapes(bundle, path):
     return path
 
 
+def _supabase_creds():
+    """-> (url, key), either of which may be empty."""
+    return ((os.environ.get("SUPABASE_URL") or "").rstrip("/"),
+            os.environ.get("SUPABASE_KEY") or "")
+
+
+def _stored_injuries(url, key, game_id):
+    """-> the stored bundle's injury rows for this game, flat. [] if new.
+
+    `select=data->injuries` rather than `select=data`: the bundle is ~900 KB
+    and all but a few of those are player props, and this needs one small
+    object out of the middle of it. PostgREST evaluates the arrow server-side,
+    so the read costs a few kilobytes.
+
+    A read failure returns [] for the same reason _sections_lost does -- this
+    exists to preserve a timestamp, not to stop a publish when Supabase is
+    having a bad minute."""
+    q = f"{url}/rest/v1/game_odds?game_id=eq.{game_id}&select=data->injuries"
+    req = urllib.request.Request(q)
+    req.add_header("apikey", key)
+    req.add_header("Authorization", f"Bearer {key}")
+    try:
+        with urllib.request.urlopen(req, timeout=20) as resp:
+            rows = json.loads(resp.read() or b"[]")
+    except Exception:                                        # noqa: BLE001
+        return []
+    if not rows:
+        return []
+    stored = rows[0].get("injuries") or {}
+    if not isinstance(stored, dict):
+        return []
+    return [r for v in stored.values() if isinstance(v, list) for r in v]
+
+
+def carry_injury_dates(bundle):
+    """Refill injury dates the feed has stopped sending. -> lines logged.
+
+    /player_injuries answers with two shapes of row and only one of them is
+    timestamped. A player first turns up as a wire report -- a written note
+    with the hour it was filed -- and is later replaced, in place, by the
+    club's own designation: comment "Knee - PCL", date null. Ricky Pearsall
+    made that move between two captures four hours apart, and the second one
+    overwrote the first, so a report time the bundle already held was gone.
+
+    Nothing recovers it from the API: the endpoint has no as-of parameter and
+    no history, and answers only who is hurt right now. The prior capture is
+    the only copy, which makes preserving it a job for the writer rather than
+    something the page can work around.
+
+    Matched on player and designation together. A date describes the report
+    that produced a status, so it survives a comment being rewritten under the
+    same designation -- that is the whole case -- and does not survive the
+    designation itself changing. A man moved from Questionable to IR has a new
+    fact about him and last week's practice report is not its date.
+
+    Read failures and first publishes both no-op: an empty stored list carries
+    nothing, and every row keeps the null the feed sent."""
+    url, key = _supabase_creds()
+    if not url or not key:
+        return []
+    rows = [r for v in (bundle.get("injuries") or {}).values()
+            if isinstance(v, list) for r in v]
+    missing = [r for r in rows if not r.get("date")]
+    if not missing:
+        return []
+
+    prior = {}
+    for r in _stored_injuries(url, key, bundle["game"]["id"]):
+        pid = (r.get("player") or {}).get("id")
+        if pid is None or not r.get("date"):
+            continue
+        prior[(pid, str(r.get("status") or "").strip().lower())] = r["date"]
+    if not prior:
+        return []
+
+    carried = []
+    for r in missing:
+        pid = (r.get("player") or {}).get("id")
+        was = prior.get((pid, str(r.get("status") or "").strip().lower()))
+        if not was:
+            continue
+        r["date"] = was
+        pl = r.get("player") or {}
+        carried.append(f"{pl.get('first_name', '')} {pl.get('last_name', '')}"
+                       f" ({r.get('status')}) {was[:10]}".strip())
+    if not carried:
+        return []
+    return [f"Carried {len(carried)} injury date(s) forward from the stored "
+            f"bundle: " + ", ".join(carried)]
+
+
 def _sections_lost(url, key, game_id, has):
     """-> sections the stored row has that this capture does not. [] if new.
 
@@ -825,8 +916,7 @@ def publish(bundle, force=False):
 
     The summary columns are duplicated out of the bundle on purpose so the
     listing at /api/game-odds can render without pulling a megabyte per row."""
-    url = (os.environ.get("SUPABASE_URL") or "").rstrip("/")
-    key = os.environ.get("SUPABASE_KEY") or ""
+    url, key = _supabase_creds()
     if not url or not key:
         raise RuntimeError(
             "SUPABASE_URL and SUPABASE_KEY are needed to --publish.\n"
@@ -979,6 +1069,15 @@ def main():
     if not ok:
         print("\nRefusing to overwrite good data.", file=sys.stderr)
         return 1
+
+    # Before the cache write rather than inside publish(), so the file under
+    # cache/ and the row in Supabase are the same bundle byte for byte -- the
+    # etag is a hash of it, and a local copy that hashes differently to the
+    # published one is a debugging trap. Only when publishing: there is nothing
+    # to carry forward from unless a stored bundle exists.
+    if args.publish:
+        for line in carry_injury_dates(bundle):
+            print(f"\n{line}")
 
     cache_dir = repo_path("cache")
     os.makedirs(cache_dir, exist_ok=True)

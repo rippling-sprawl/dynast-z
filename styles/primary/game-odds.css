@@ -519,7 +519,12 @@
   background: var(--warn-tint);
 }
 
-.go-ibadge.is-out {
+/* is-hot is a reserve designation filed in the last few weeks -- see
+ * STATUS_RESERVE. Deliberately the same red rather than a third tint: both say
+ * "this one is why you opened the report", and a distinct colour for each
+ * would be inventing a difference the reader has no key for. */
+.go-ibadge.is-out,
+.go-ibadge.is-hot {
   color: var(--bad);
   border-color: var(--bad-line);
   background: var(--bad-tint);
