@@ -233,6 +233,29 @@
   letter-spacing: 0.4px;
 }
 
+/* The box score's two levels of heading. Both were smaller than the rows they
+ * introduced, which read as a caption under the table above rather than a
+ * label over the one below. They step down instead: the card head names the
+ * board, the team is the next thing down from it, the stat group the next, and
+ * the column heads -- 12px -- the floor. */
+.go-bs-team {
+  margin: 18px 14px 6px;
+  font-family: var(--vi-display);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--text);
+}
+
+.go-bs-team:first-child { margin-top: 2px; }
+
+.go-bs-grp {
+  margin: 12px 14px 4px;
+  font-size: 13.5px;
+  color: var(--text-3);
+}
+
 .go-card-body { padding: 14px 0px; }
 .go-card-body.is-flush { padding: 0; }
 
@@ -735,7 +758,7 @@
   letter-spacing: 0.5px;
   text-align: center;
 }
-.go-vs td.go-val { font-family: monospace; text-align: right; width: 22%; color: var(--text); }
+.go-vs td.go-val { font-family: monospace; text-align: center; width: 22%; color: var(--text); }
 .go-vs tbody tr:nth-child(even) { background: var(--zebra); }
 .go-vs td.is-better { color: var(--good); font-weight: 600; }
 
@@ -941,9 +964,18 @@
  * makes it read as floating above the baseline the letters sit on. The hero's
  * .go-crest is laid out as a block instead and lives with the hero. */
 
+/* The crest is the whole column head here, so it is centred over the numbers
+ * it labels and sized to stand on its own rather than to sit beside type. */
 .go-vs-team {
-  text-align: right;
+  text-align: center;
   white-space: nowrap;
+}
+
+.go-vs-logo {
+  width: 32px;
+  height: 32px;
+  display: inline-block;
+  vertical-align: middle;
 }
 
 .go-logo-sm {

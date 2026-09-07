@@ -146,6 +146,7 @@ function buildNavDrawerHTML() {
       <ul>
         ${buildNavAccountHTML()}
         ${items}
+        ${typeof Standalone !== 'undefined' ? Standalone.rowHTML() : ''}
       </ul>
     </div>
   </div>`;
@@ -212,6 +213,7 @@ function initPage() {
   }
 
   if (typeof Theme !== 'undefined') Theme.mountToggle();
+  if (typeof Standalone !== 'undefined') Standalone.mount();
 
   document.getElementById('nav-toggle').addEventListener('click', () => {
     document.getElementById('nav-overlay').classList.add('open');
@@ -231,6 +233,7 @@ function initNavDrawer() {
   }
 
   if (typeof Theme !== 'undefined') Theme.mountToggle();
+  if (typeof Standalone !== 'undefined') Standalone.mount();
 
   document.getElementById('nav-toggle').addEventListener('click', () => {
     document.getElementById('nav-overlay').classList.add('open');

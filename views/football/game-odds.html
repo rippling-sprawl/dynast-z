@@ -4,6 +4,17 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <link rel="icon" type="image/png" href="/favicon.png">
+  <!-- Home-screen install. The two *-capable tags are what make an iOS icon
+       launch the site standalone — its own window, no address bar — instead of
+       opening a Safari tab; the manifest says the same thing to everyone else,
+       and to iOS 16.4+. standalone.js keys the drawer's share row off exactly
+       that state, so dropping these tags silently removes the row too. -->
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/assets/icons/app-touch-180.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Dynast-Z">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <title>Game Odds | Dynast-Z</title>
   <script src="/scripts/base/theme.js"></script>
   <link rel="stylesheet" href="/styles/base/theme.css">
@@ -20,6 +31,7 @@
   <div id="header-mount"></div>
   <div id="nav-drawer-mount"></div>
   <script src="/scripts/base/auth.js"></script>
+  <script src="/scripts/base/standalone.js"></script>
   <script src="/scripts/base/nav.js"></script>
   <script src="/scripts/components/nfl-pickers.js"></script>
   <script>initPage();</script>
@@ -572,12 +584,15 @@
             esc(hd.s) + '</td>' +
           '<td class="go-val' + hb + '">' + esc(hv === null ? '—' : hv) + '</td></tr>';
       }).join('');
+      /* The crest alone names the column -- the abbreviation beside it said the
+       * same thing twice in a table three columns wide, so the logo takes the
+       * space it was using and the alt text it was carrying. */
       return card('Team stats',
         '<table class="go-vs"><thead><tr>' +
-          '<th class="go-vs-team">' + teamLogo(b.game.away.abbr, 'go-logo-sm') +
-            esc(b.game.away.abbr) + '</th><th></th>' +
-          '<th class="go-vs-team">' + teamLogo(b.game.home.abbr, 'go-logo-sm') +
-            esc(b.game.home.abbr) + '</th>' +
+          '<th class="go-vs-team">' +
+            teamLogo(b.game.away.abbr, 'go-vs-logo', true) + '</th><th></th>' +
+          '<th class="go-vs-team">' +
+            teamLogo(b.game.home.abbr, 'go-vs-logo', true) + '</th>' +
         '</tr></thead><tbody>' + rows + '</tbody></table>');
     }
 
@@ -646,8 +661,7 @@
       ['away', 'home'].forEach(function (side) {
         var rows = ps[side] || [];
         if (!rows.length) return;
-        html += '<h4 style="margin:14px 0 6px;font-size:12px">' +
-          esc(b.game[side].name) + '</h4>';
+        html += '<h4 class="go-bs-team">' + esc(b.game[side].name) + '</h4>';
         groups.forEach(function (grp) {
           var withGrp = rows.filter(function (r) { return r[grp]; });
           if (!withGrp.length) return;
@@ -657,8 +671,8 @@
             Object.keys(r[grp]).forEach(function (k) { o[k] = r[grp][k]; });
             return o;
           });
-          html += '<div class="go-sub" style="margin:10px 0 4px">' +
-            esc(label(grp)) + '</div>' + genericTable(flat, groupLabel(grp));
+          html += '<div class="go-sub go-bs-grp">' + esc(label(grp)) + '</div>' +
+            genericTable(flat, groupLabel(grp));
         });
       });
       return card('Box score', html);

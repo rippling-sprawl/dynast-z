@@ -522,6 +522,44 @@ header a:hover { color: var(--accent); }
 
 .theme-opt-icon { font-size: 12px; line-height: 1; }
 
+/* --- Share this page (nav drawer, home-screen launches only) ---
+ * Only rendered when the site was opened from a home-screen icon, where there
+ * is no address bar to copy the URL out of — see scripts/base/standalone.js.
+ * It sits on the last row under the same rule .nav-standalone draws, because
+ * it acts on the page you are already on instead of leading somewhere.
+ *
+ * Shaped to match .nav-drawer a exactly, since it sits in the same column of
+ * rows and should not read as a control dropped into a list of links. The
+ * confirmation is the label swapping to "Link copied" for a moment, so the
+ * copied state only has to hold the row still: same padding, same size, only
+ * the colour moves. */
+.nav-share {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 20px;
+  font-family: inherit;
+  font-size: 14px;
+  text-align: left;
+  color: var(--accent);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: background 0.1s, color 0.15s;
+}
+
+.nav-share:hover { background: var(--surface-3); }
+
+.nav-share-icon {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+}
+
+.nav-share.is-copied { color: var(--good); }
+.nav-share.is-failed { color: var(--bad); }
+
 /* The drawer is a flex column, so a list shorter than the drawer still fills
  * it and the rows stay against the top edge. */
 .nav-drawer {
