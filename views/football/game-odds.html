@@ -1761,6 +1761,29 @@
         '</tr></thead><tbody>' + body + '</tbody></table></div>';
     }
 
+    /* Whether the injury report still describes this game.
+     *
+     * /player_injuries has no as-of parameter and no history: it answers who is
+     * hurt right now, league-wide, and a capture stores whatever it said the
+     * day it ran. Backfilling 2025 therefore filed September 2026's injury list
+     * under last November's games, where it reads as the report the clubs
+     * actually published that week -- the caption line carries a day and a
+     * month and deliberately no year, because nothing on this page was supposed
+     * to be a season old.
+     *
+     * So the section is dropped once the game is behind us rather than shown
+     * with a disclaimer: a current report is worth reading about a game that
+     * has not happened, and about one in progress, and about a played one it is
+     * only a wrong answer dressed as a right one. The test is final, or a
+     * kickoff already gone by for a game the feed has not caught up with -- a
+     * live game is still ahead of the injuries in the sense that matters. */
+    function injuriesApply(b) {
+      if (b.phase === 'live') return true;
+      if (b.phase === 'final') return false;
+      var k = stamp(b.game.kickoff_raw || b.game.kickoff_utc);
+      return k === null || k >= Date.now() / 1000;
+    }
+
     function injuriesSection(b) {
       var inj = b.injuries || {};
       var groups = [];
@@ -1986,7 +2009,7 @@
         playerStatsSection(b) +
         playsSection(b) +
         (pregame ? '' : props) +
-        injuriesSection(b) +
+        (injuriesApply(b) ? injuriesSection(b) : '') +
         othersSection(index, g.id);
       wireProps(b);
       wirePlays(b);
