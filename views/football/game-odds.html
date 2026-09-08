@@ -964,51 +964,80 @@
       return isFinite(n) ? Math.ceil(n) + '+' : String(v == null ? '' : v);
     }
 
-    /* ---------- one book, one line ----------
-     * A book hangs one two-sided line per player per market. A second one is
-     * the feed's doing, not the book's: DraftKings prices markets the feed
-     * has no name for — pass + rush yards, longest completion, longest
-     * reception, both quarterbacks' passing yards added together — and they
-     * arrive wearing the nearest name it does have. Dak Prescott came back at
-     * 261.5 and 273.5 passing yards (the second is 261.5 plus his 7.5 rushing
-     * line), Matthew Stafford at 23.5 and 38.5 completions (the second is his
-     * longest completion, in yards), Brock Purdy at 243.5 and 513.5 (the
-     * second is his line plus Stafford's). Nothing on the row tells them
-     * apart: same vendor, same prop_type, same timestamp, prices in the same
-     * range.
+    /* ---------- markets wearing another market's name ----------
+     * DraftKings prices markets the feed has no name for — pass + rush yards,
+     * longest completion, longest reception, both quarterbacks' passing yards
+     * added together — and they arrive wearing the nearest name it does have,
+     * with nothing on the row to tell them apart: same vendor, same prop_type,
+     * same timestamp, prices in the same range. Dak Prescott came back at
+     * 261.5 and 273.5 passing yards, Matthew Stafford at 23.5 and 38.5
+     * completions, Brock Purdy at 243.5 and 513.5. Left alone the board reads
+     * the second one as two books disagreeing, which is what a second line
+     * means between books, and the reader has no way to tell which to take.
      *
-     * The board reads a second line as two books disagreeing — which is what
-     * it is between books — so the player took a second row for a bet the
-     * market he is filed under does not contain, and nothing on the page said
-     * which of the two to read.
+     * Both boards are cleaned here, because both are hit: over a full week,
+     * 22,140 rows, 873 of them belong to a market other than the one they are
+     * filed under, and every single one is DraftKings.
      *
-     * So keep one: the lowest, because every impostor is a superset of the
-     * market it lands in — a longest-something, a combined something, a
-     * this-plus-that — and a superset can only price above the thing it
-     * contains. That is the whole rule where no other book quotes the market
-     * at all, which is most of them: completions and receptions are a
-     * DraftKings board in almost every game.
+     * ---------- 1. one book, one line ----------
+     * Keep the lowest, because every impostor is a superset of the market it
+     * lands in — a longest-something, a combined something, a this-plus-that —
+     * and a superset can only price above the thing it contains. That is the
+     * whole rule where no other book quotes the market, which is most of them:
+     * completions and receptions are a DraftKings board in almost every game.
      *
-     * Where other books do quote it they are the check on that reasoning, and
-     * they overrule it only when they are decisive: the median of their lines
-     * is an anchor, and a higher quote has to sit at less than half the
-     * lowest one's distance from it to be believed. Books disagree among
-     * themselves by enough to straddle an impostor — in one game the other
-     * two were at 267.5 and 273.5 around DraftKings' real 264.5, and their
-     * median leant toward the 274.5 that was really 264.5 plus a rushing
-     * line — so a bare nearest-the-anchor test picks the wrong line about as
-     * often as it saves one.
+     * Where other books do quote it they are the check, and they overrule the
+     * lowest line only when decisive: the median of their lines is an anchor,
+     * and a higher quote has to sit at less than half the lowest one's
+     * distance from it to be believed. Books straddle an impostor often
+     * enough to matter — in one game the other two were at 267.5 and 273.5
+     * around DraftKings' real 264.5, and their median leant toward the 274.5
+     * that was 264.5 plus a rushing line.
      *
-     * Checked over a full week's board, 22,140 rows: of 1,549 two-sided
-     * quotes 55 doubled up, every one of them DraftKings. The lowest line is
-     * the real one in all 55; the anchor agrees in 51 of the 52 it can speak
-     * to, and the half-distance margin is what keeps the 52nd.
+     * Of 1,549 two-sided quotes 55 doubled up. The lowest line is the real one
+     * in all 55; the anchor agrees in 51 of the 52 it can speak to, and the
+     * half-distance margin is what keeps the 52nd.
      *
-     * Milestone ladders are left alone, and are contaminated the same way —
-     * a 45+ receptions rung is a longest-reception rung. A ladder is many rows
-     * by design, so "keep one" is not the shape of that fix. */
+     * ---------- 2. one ladder, one market ----------
+     * A milestone ladder is a cumulative price — 50+, 60+, 70+ — so it can
+     * only get longer as the rung rises. That is what makes a foreign rung
+     * visible without knowing what it is: a price that jumps back toward even
+     * money at a higher rung is quoting something else. Puka Nacua's
+     * receptions ladder ran 3+ at -10000 out to 14+ at +2100 and then offered
+     * 20+ at -437, because 20+ was his longest reception in yards; Purdy's
+     * completions ladder did the same thing at 30+, and Stafford's passing
+     * ladder opened with a -23.5 rung, which is a handicap.
+     *
+     * So keep the longest run of rungs that stays a ladder, and drop what will
+     * not fit into it — the smallest edit that leaves one coherent market. A
+     * run may not skip a hole wider than three times the ladder's own step,
+     * which is what stops it stitching the bottom of one market to the top of
+     * another; ties go to the run holding the rung the book's own line sits
+     * on, then to whole-numbered rungs, since a fractional rung in a yardage
+     * ladder is almost always some other line's twin.
+     *
+     * Then the ladder has to be this market's at all. A ladder crosses even
+     * money about five yards above the two-sided line it belongs to; where it
+     * crosses somewhere else entirely, it is another market's ladder with this
+     * market's rung sitting in it. Seventeen DraftKings passing ladders read
+     * that way in one week — every one of them a quarterback with a pass +
+     * rush line, and every one crossing within six yards of that line rather
+     * than his passing line. Those go whole; the other books' ladders for the
+     * same player stay, so the board still has prices.
+     *
+     * Nothing here fires without a violation to point at, which is why 96% of
+     * the feed passes through untouched. */
+    var NOISE = 0.02;        // price wobble that is not a market changing
+    var REACH = 3;           // how many steps a ladder may skip over a bad rung
+    var CROSS_STEPS = 1.5;   // how far from its line a ladder may cross even money
+    var ANCHOR_MARGIN = 0.5; // how much closer than the lowest line an anchor must be
+
     function ouLine(r) {
       return shapeOf(r) === MILESTONE ? NaN : parseFloat(r.line_value);
+    }
+
+    function rungProb(r) {
+      return impliedProb((r.market || {}).odds);
     }
 
     function median(ns) {
@@ -1016,10 +1045,6 @@
       var i = Math.floor(s.length / 2);
       return s.length % 2 ? s[i] : (s[i - 1] + s[i]) / 2;
     }
-
-    /* How much closer to the anchor a higher quote has to be before it is
-     * read as the real line rather than the lowest one. */
-    var ANCHOR_MARGIN = 0.5;
 
     /* The one quote to keep out of the several a book is showing for one
      * player in one market. */
@@ -1041,29 +1066,133 @@
              ANCHOR_MARGIN * Math.abs(ouLine(low) - anchor) ? near : low;
     }
 
-    function dropDoubleQuotes(rows) {
-      var byBook = {}, byMarket = {};
-      rows.forEach(function (r) {
-        if (!isFinite(ouLine(r))) return;
-        var mkt = r.prop_type + '|' + r.player_id;
-        (byMarket[mkt] || (byMarket[mkt] = [])).push(r);
-        var bk = r.vendor + '|' + mkt;
-        (byBook[bk] || (byBook[bk] = [])).push(r);
+    /* rungs: [{line, prob}] in rung order -> which of them to keep.
+     * The longest run whose prices only lengthen, scored so that ties go to
+     * the run holding `anchor` and then to whole-numbered rungs. */
+    function coherentRungs(rungs, anchor) {
+      var gaps = [], i, j;
+      for (i = 1; i < rungs.length; i++) gaps.push(rungs[i].line - rungs[i - 1].line);
+      var reach = gaps.length ? REACH * median(gaps) : Infinity;
+
+      var score = [], from = [], best = -1, end = -1;
+      for (i = 0; i < rungs.length; i++) {
+        var w = 1 + (rungs[i].line === anchor ? 0.5 : 0) +
+                    (rungs[i].line % 1 === 0 ? 0.001 : 0);
+        score[i] = w;
+        from[i] = -1;
+        for (j = 0; j < i; j++) {
+          if (rungs[i].line - rungs[j].line > reach) continue;
+          if (rungs[j].prob >= rungs[i].prob - NOISE && score[j] + w > score[i]) {
+            score[i] = score[j] + w;
+            from[i] = j;
+          }
+        }
+        if (score[i] > best) { best = score[i]; end = i; }
+      }
+
+      var keep = [];
+      for (i = end; i >= 0; i = from[i]) keep[i] = true;
+      return keep;
+    }
+
+    /* Where a ladder's price passes through even money, in the ladder's own
+     * units. A ladder that has been spliced together crosses more than once. */
+    function evenMoneyAt(rungs) {
+      var out = [];
+      for (var i = 1; i < rungs.length; i++) {
+        var a = rungs[i - 1], b = rungs[i];
+        if (a.prob >= 0.5 && b.prob <= 0.5 && a.prob !== b.prob) {
+          out.push(a.line + (b.line - a.line) * ((a.prob - 0.5) / (a.prob - b.prob)));
+        }
+      }
+      return out;
+    }
+
+    function cleanProps(rows) {
+      var drop = [], keyOf = function (r) {
+        return r.vendor + '|' + r.prop_type + '|' + r.player_id;
+      };
+      var quotes = {}, ladders = {}, market = {}, real = {};
+
+      rows.forEach(function (r, i) {
+        var k = keyOf(r), mkt = r.prop_type + '|' + r.player_id;
+        if (shapeOf(r) !== MILESTONE) {
+          if (!isFinite(ouLine(r))) return;
+          (quotes[k] || (quotes[k] = [])).push(i);
+          (market[mkt] || (market[mkt] = [])).push(i);
+        } else if (isFinite(rungProb(r))) {
+          (ladders[k] || (ladders[k] = [])).push(i);
+        }
       });
 
-      var drop = [];
-      Object.keys(byBook).forEach(function (bk) {
-        var quotes = byBook[bk];
-        if (quotes.length < 2) return;
-        var others = byMarket[bk.slice(bk.indexOf('|') + 1)]
-          .filter(function (r) { return r.vendor !== quotes[0].vendor; })
-          .map(ouLine);
-        var keep = realQuote(quotes, others);
-        quotes.forEach(function (r) { if (r !== keep) drop.push(r); });
+      // 1. one book, one line
+      Object.keys(quotes).forEach(function (k) {
+        var mine = quotes[k].map(function (i) { return rows[i]; });
+        var others = [];
+        if (mine.length > 1) {
+          others = market[mine[0].prop_type + '|' + mine[0].player_id]
+            .map(function (i) { return rows[i]; })
+            .filter(function (r) { return r.vendor !== mine[0].vendor; })
+            .map(ouLine);
+        }
+        var keep = realQuote(mine, others);
+        real[k] = ouLine(keep);
+        quotes[k].forEach(function (i) { if (rows[i] !== keep) drop[i] = true; });
       });
 
-      if (!drop.length) return rows;
-      return rows.filter(function (r) { return drop.indexOf(r) < 0; });
+      // 2. one ladder, one market
+      Object.keys(ladders).forEach(function (k) {
+        var idx = ladders[k].slice().sort(function (a, b) {
+          return parseFloat(rows[a].line_value) - parseFloat(rows[b].line_value);
+        });
+        var line = real.hasOwnProperty(k) ? real[k] : null;
+
+        /* The rung that goes with a line the book is not offering after all. */
+        var twin = {};
+        (quotes[k] || []).forEach(function (i) {
+          if (drop[i]) twin[Math.ceil(ouLine(rows[i]))] = true;
+        });
+        idx = idx.filter(function (i) {
+          if (!twin[parseFloat(rows[i].line_value)]) return true;
+          drop[i] = true;
+          return false;
+        });
+        if (idx.length < 3) return;
+
+        var rungs = idx.map(function (i) {
+          return { line: parseFloat(rows[i].line_value), prob: rungProb(rows[i]) };
+        });
+
+        var broken = rungs.some(function (r, n) {
+          return n > 0 && r.prob > rungs[n - 1].prob + NOISE;
+        });
+        if (broken) {
+          var keep = coherentRungs(rungs, line === null ? NaN : Math.ceil(line));
+          idx = idx.filter(function (i, n) {
+            if (keep[n]) return true;
+            drop[i] = true;
+            return false;
+          });
+          rungs = rungs.filter(function (r, n) { return keep[n]; });
+        }
+        if (line === null || rungs.length < 3) return;
+
+        /* Whose ladder is it? One that never comes near even money says
+         * nothing either way — a bench player's ladder is long odds top to
+         * bottom — so only a ladder that crosses somewhere is asked where. */
+        var steps = [], n;
+        for (n = 1; n < rungs.length; n++) steps.push(rungs[n].line - rungs[n - 1].line);
+        var crosses = evenMoneyAt(rungs);
+        if (!crosses.length) return;
+        var nearest = crosses.reduce(function (a, x) {
+          return Math.abs(x - line) < Math.abs(a - line) ? x : a;
+        });
+        if (Math.abs(nearest - line) <= CROSS_STEPS * median(steps)) return;
+        idx.forEach(function (i) { drop[i] = true; });
+      });
+
+      var kept = rows.filter(function (r, i) { return !drop[i]; });
+      return kept.length === rows.length ? rows : kept;
     }
 
     /* Current only. An opening line answers a different question — how the
@@ -1071,7 +1200,7 @@
      * filter put a second decision in front of the one price anyone came to
      * read. */
     function propRows(b) {
-      return dropDoubleQuotes((b.player_props && b.player_props.current) || []);
+      return cleanProps((b.player_props && b.player_props.current) || []);
     }
 
     function playerOf(b, id) {
