@@ -145,9 +145,11 @@
       var k = pkPickCount(sides);
       var conf = pkAssign(order, locked, data.n);
 
-      // What is still winnable: the confidences sitting on games that have a
-      // side taken and are not graded yet. Counted rather than derived, since a
-      // partial week is worth whichever ranks the reader put their picks on.
+      // What is still riding on ungraded games: the confidences sitting on
+      // games that have a side taken and are not graded yet. It swings both
+      // ways — a wrong pick deducts its confidence — so this is exposure, not
+      // winnings-in-waiting. Counted rather than derived, since a partial week
+      // is worth whichever ranks the reader put their picks on.
       var live = 0, byId = {};
       (data.games || []).forEach(function (g) { byId[g.game_id] = g; });
       order.forEach(function (gameId) {
@@ -166,7 +168,7 @@
       statPoints.innerHTML = (data.totals.mine.points ? '<b>' +
           data.totals.mine.points + '</b> points so far' : '') +
         (data.totals.mine.points && live ? ' · ' : '') +
-        (live ? '<b>' + live + '</b> still live' : '');
+        (live ? '<b>' + live + '</b> at stake' : '');
       renderSaved();
       saveBtn.disabled = busy || !dirty();
       if (!busy && dirty()) setStatus('Unsaved changes', '');

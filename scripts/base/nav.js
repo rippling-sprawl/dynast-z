@@ -23,41 +23,53 @@ const CURRENT_GOLF_YEAR = 2026;
 // drawer shows that landing page as one link instead of listing the items).
 const NAV_SECTIONS = [
   {
-    label: 'Football',
-    // The section heading is itself the football hub, so /football needs no
-    // separate self-referential row inside its own list.
-    href: '/football',
+    // The football pages split three ways by what you are actually doing on
+    // them: betting, playing a pool, or running a fantasy roster. There is no
+    // Football heading over the three — /football is still the hub the
+    // breadcrumbs point at, but the drawer names the three things instead of
+    // the sport they share.
+    label: 'Gambling',
     items: [
       { label: "Baker's Buns", href: '/football/bakers-buns', emoji: '🍞' },
-      { label: 'Games', href: '/football/schedule', emoji: '📅' },
-      // Next to Games because it is the same slate with something at stake on
-      // it: the fixture list is where a week is read, this is where it is picked.
+      { label: "Baker's Action", href: '/football/action', emoji: '🏈', admin: true },
+      { label: 'Bet Tracker', href: '/bets', emoji: '🎯' },
+      // /football/schedule: the week's slate, read for its lines rather than
+      // its kickoff times, which is what puts it under Gambling.
+      { label: 'Odds', href: '/football/schedule', emoji: '📅' },
+      { label: 'NFL Odds', href: '/odds', emoji: '🎲', hidden: true },
+    ],
+  },
+  {
+    // Pools, not fixtures: the same slate played by a set of rules against
+    // other people. Pick 'Em is every game, Survivor is one team a week.
+    label: 'Games',
+    items: [
       { label: "Pick 'Em", href: '/football/pickem', emoji: '🏆' },
-      // Under Pick 'Em because it is the same board played by different
-      // rules: one team a week, straight up, and nobody twice.
       { label: 'Survivor', href: '/football/survivor', emoji: '☠️' },
-      // Sits next to Games because it is the same data seen from the other
-      // side: Games is the fixture list, this is what has been captured off it
-      // and how current each capture is.
-      { label: 'Live Stats', href: '/football/live-stats', emoji: '📡' },
+    ],
+  },
+  {
+    label: 'Fantasy',
+    items: [
       // Baker's Oven holds per-account leagues and boards, but the landing
       // page is public and pitches itself to signed-out visitors, so it is
       // listed for everyone.
       { label: "Baker's Oven", href: '/football/bakers-oven', emoji: '🔥' },
-      { label: 'Action', href: '/football/action', emoji: '🏈', admin: true },
-      { label: 'Bets', href: '/bets', emoji: '🎯' },
       { label: 'Trade Calculator', href: '/football/trade-calculator', emoji: '⚖️' },
-      { label: 'NFL Odds', href: '/odds', emoji: '🎲', hidden: true },
     ],
   },
   {
     label: 'Appendix',
     href: '/appendix',
     // Collapsed in the drawer: one link to /appendix rather than a heading with
-    // four rows under it. The items below are the cards on that page.
+    // a row per item under it. The items below are the cards on that page.
     collapsed: true,
     items: [
       { label: 'Golf', href: '/golf', emoji: '🏌️' },
+      // Reference rather than a football destination: it is not a slate to bet
+      // or a board to play, it is what has been captured off /football/schedule
+      // and how current each capture is. Filed here with the Grading System.
+      { label: 'Live Stats', href: '/football/live-stats', emoji: '📡' },
       { label: 'Grading System', href: '/football/grading-system', emoji: '📊' },
       { label: 'Sharply Stupid Blog', href: 'https://sharplystupid.substack.com/', emoji: '📰', external: true },
       { label: 'Acknowledgements', href: '/acknowledgements', emoji: '🧠' },
@@ -163,8 +175,8 @@ function buildNavDrawerHTML() {
 // no second request: one path set each, stroked in currentColor, sized by the
 // stylesheet. 24x24 box, 1.8 stroke, so the three read at one weight.
 const NAV_ICONS = {
-  // A calendar: the fixture list is a week of dates before it is anything else.
-  games: '<path d="M4 6.5a2.5 2.5 0 0 1 2.5-2.5h11A2.5 2.5 0 0 1 20 6.5v12a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 18.5z"/><path d="M8 2.5v4M16 2.5v4M4 10h16"/>',
+  // A calendar: the slate is a week of dates before it is anything else.
+  odds: '<path d="M4 6.5a2.5 2.5 0 0 1 2.5-2.5h11A2.5 2.5 0 0 1 20 6.5v12a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 18.5z"/><path d="M8 2.5v4M16 2.5v4M4 10h16"/>',
   // A scored loaf: dome, base, three slashes.
   buns: '<path d="M3.4 14.4a8.6 7.4 0 0 1 17.2 0"/><path d="M2.6 14.4h18.8V17a3 3 0 0 1-3 3H5.6a3 3 0 0 1-3-3z"/><path d="M8.6 8.2 7.2 11.1M12.4 7.5 11 10.7M16.2 8.7l-1.3 2.7"/>',
   menu: '<path d="M4 7h16M4 12h16M4 17h16"/>',
@@ -178,7 +190,7 @@ function navIconHTML(name) {
 // The two shortcut destinations on the bar. Everything else is a drawer row —
 // these two are here because they are the pages people come back to daily.
 const NAV_TABS = [
-  { label: 'Games', href: '/football/schedule', icon: 'games' },
+  { label: 'Odds', href: '/football/schedule', icon: 'odds' },
   { label: 'Buns', href: '/football/bakers-buns', icon: 'buns' },
 ];
 

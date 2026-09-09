@@ -25,6 +25,9 @@
        home page reads as the top of that same ladder. -->
   <link rel="stylesheet" href="/styles/base/hub.css">
   <link rel="stylesheet" href="/styles/base/lightbox.css">
+  <!-- The VegasInsider skin /football/schedule wears, spent on the hub
+       shell. Loaded last so it repaints the sheets above it. -->
+  <link rel="stylesheet" href="/styles/primary/hub.css">
   <style>
     /* Signed-out sign-in card. Sits above the Football section on the home page
        and is the only thing here that is not a nav card, so it stays quiet: a
@@ -152,7 +155,7 @@
 
   <div class="masters-content">
     <h2>Dynast-Z</h2>
-    <p class="subtitle">Sports Tools &amp; Trackers</p>
+    <p class="subtitle">Tools, Trackers, &amp; Pools for NFL Fantasy &amp; Gambling</p>
 
     <!-- Signed-out only. Same /api/auth login as /account, so the home page is
          a shortcut into a session rather than a second way to make one —
@@ -173,10 +176,20 @@
 
     <!-- Filled from NAV_SECTIONS in scripts/base/nav.js, so the home page, the
          /football hub and the drawer can never disagree about what the site
-         contains. Everything that is not football lives on /appendix, which the
-         drawer links to directly. -->
-    <h3 class="hub-section"><a href="/football">Football</a></h3>
-    <div class="hub-grid" data-nav-section="Football"></div>
+         contains. Three headings rather than one Football heading: the split is
+         by what you are doing, not by sport. Everything outside them lives on
+         /appendix, which the drawer links to directly.
+
+         The headings are plain text, not links — none of the three has a
+         landing page of its own; /football is the hub for all three. -->
+    <h3 class="hub-section">Gambling</h3>
+    <div class="hub-grid" data-nav-section="Gambling"></div>
+
+    <h3 class="hub-section">Games</h3>
+    <div class="hub-grid" data-nav-section="Games"></div>
+
+    <h3 class="hub-section">Fantasy</h3>
+    <div class="hub-grid" data-nav-section="Fantasy"></div>
   </div>
 
   <script src="/scripts/base/sync.js"></script>

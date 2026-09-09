@@ -323,13 +323,18 @@
    * thing that is now derived.
    *
    * Muted when no side has been taken — the number still says what the row
-   * would be worth, which is exactly the thing worth knowing before picking. */
+   * would be worth, which is exactly the thing worth knowing before picking.
+   *
+   * The tooltip names both directions because the number is a stake, not a
+   * prize: a miss deducts exactly what a hit pays (a push costs nothing), and a
+   * player who only ever reads "worth 16" will rank the coin-flips wrong. */
   function confidenceCell(game, sides, confidence) {
     var live = !!sides[game.game_id];
+    var stake = '+' + esc(confidence) + ' if it lands, −' + esc(confidence) +
+      ' if it does not';
     return '<span class="pk-conf' + (live ? '' : ' is-idle') +
       (game.locked ? ' is-locked' : '') + '"' +
-      ' title="' + (live ? 'Worth ' + esc(confidence) + ' if it lands'
-                         : 'Worth ' + esc(confidence) + ' once you take a side') + '">' +
+      ' title="' + (live ? stake : stake + ' — once you take a side') + '">' +
       esc(confidence || '–') + '</span>';
   }
 
@@ -360,11 +365,16 @@
       var score = (game.away_score === null || game.away_score === undefined) ? ''
         : ' <span class="pk-score">' + esc(game.away_score) + '–' +
           esc(game.home_score) + '</span>';
-      var won = mine && game.result !== 'push' &&
+      // Three outcomes, not two: a push scores 0 and is neither a hit nor a
+      // miss, so it gets its own neutral chip rather than borrowing the red
+      // one and reading as a loss it is not.
+      var push = game.result === 'push';
+      var won = mine && !push &&
         mine === (game.result === 'home' ? game.home : game.away);
       var points = mine
-        ? '<span class="pk-points' + (won ? ' is-hit' : ' is-miss') + '">' +
-            (won ? '+' + esc(confidence) : '0') + '</span>'
+        ? '<span class="pk-points ' +
+            (push ? 'is-push' : (won ? 'is-hit' : 'is-miss')) + '">' +
+            (push ? '0' : (won ? '+' : '−') + esc(confidence)) + '</span>'
         : '';
       return '<span class="pk-state is-final">' + verdict + score + points +
         chips(game, others) + '</span>';
@@ -636,6 +646,9 @@
     var weeks = (data.weeks || []).slice();
     var single = data.week != null;
 
+    // Clamped at 0 on both ends: week totals can be negative now that a wrong
+    // pick deducts, and a negative ratio would either invert the scale or paint
+    // a losing week as the hottest cell in the column.
     var best = {};
     weeks.forEach(function (wk) {
       best[wk] = rows.reduce(function (m, r) {
@@ -657,8 +670,10 @@
       var cells = single ? '' : weeks.map(function (wk) {
         var cell = r.byWeek[String(wk)];
         if (!cell) return '<td class="pk-wk is-none">–</td>';
-        var heat = best[wk] ? (cell.points / best[wk]).toFixed(3) : '0';
-        return '<td class="pk-wk" style="--heat:' + heat + '" ' +
+        var heat = best[wk] > 0
+          ? (Math.max(cell.points, 0) / best[wk]).toFixed(3) : '0';
+        return '<td class="pk-wk' + (cell.points < 0 ? ' is-down' : '') +
+          '" style="--heat:' + heat + '" ' +
           'title="' + esc(cell.correct) + ' of ' +
           esc(cell.picked - cell.pending) + ' graded' +
           (cell.pending ? ', ' + esc(cell.pending) + ' still open' : '') + '">' +

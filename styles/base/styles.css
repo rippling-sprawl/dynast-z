@@ -344,9 +344,10 @@ header a:hover { color: var(--accent); }
   letter-spacing: 0.5px;
 }
 
-/* A section heading that is also its own landing page (Football -> /football).
-   It keeps the heading's look so the list still reads as two groups, and only
-   picks up the hover of the links below it. */
+/* A heading row that is also a link. No NAV_SECTIONS section carries an href
+   any more, so this is the account row alone -- it keeps the heading's look so
+   the list still reads as groups, and only picks up the hover of the rows
+   below it. */
 .nav-drawer a.nav-section-label:hover {
   background: var(--surface-3);
   color: var(--text-hi);

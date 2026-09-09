@@ -1,9 +1,10 @@
 # NFL Confidence Pick 'Em
 
 A confidence pool at `/football/pickem`. Pick a side in every game of the week,
-rank your picks 1..N, and score a pick's confidence when it lands. Picks are
-graded **against the spread**, using the line as it stood at **3:00 AM ET on the
-Tuesday** of that week.
+rank your picks 1..N, and score a pick's confidence when it lands — **or lose
+that same confidence when it does not.** A push scores nothing either way.
+Picks are graded **against the spread**, using the line as it stood at
+**3:00 AM ET on the Tuesday** of that week.
 
 ## Decisions
 
@@ -11,6 +12,14 @@ Tuesday** of that week.
   slate a formality — nobody agonises over ranking a 13-point favourite. The
   line is what makes every game a real decision, and it is the reason the
   Tuesday freeze exists at all.
+- **A miss deducts what a hit pays.** The confidence on a game is a stake, not
+  a prize. Add-only scoring makes a coin flip free, so the optimal play is to
+  rank every game and let the low numbers soak up the noise — the ranking stops
+  being a claim about anything. A symmetric penalty prices it: a game you have
+  no read on is one you can decline to pick, and the skip is a real hedge
+  rather than points left on the table. A **push scores 0**, not `-confidence`
+  — it is not a miss, it is a bet the line refused to settle — and an ungraded
+  game scores 0 because it has not happened.
 - **The line is frozen once and never moves.** Lines drift all week; a pool
   graded on the current line would grade Sunday's picks against a number nobody
   saw when they picked. `pickem_games.spread_home` is written once by
@@ -33,8 +42,10 @@ Tuesday** of that week.
   {1, 3, 4} has a hole only the locked pick could fill, and it must not be
   renumbered. The two rules cannot both hold. Widening the range dissolves it,
   costs nothing (a full week is still exactly 1..N), and creates no perverse
-  incentive: 16 correct at 1..16 is 136, three correct at 14–16 is 45, so
-  picking everything still dominates.
+  incentive to under-pick for the high numbers: a perfect full week beats a
+  perfect partial one (16 correct at 1..16 is 136, three correct at 14–16 is
+  45). What a partial week buys is downside, not upside — with misses
+  deducting, every game you decline is a stake you keep.
 - **Per-game lock at kickoff**, ESPN-style, rather than one lock for the week.
   It is what people expect, and it means a Thursday result is visible while the
   Sunday slate is still live.
@@ -180,7 +191,9 @@ people on it. `api/users.py` stays admin-only.
     A's `user_id`; B's rows are unchanged.
 12. **Standings** — totals hand-verify; a points tie breaks on `correct` and
     ranks competition-style (1, 1, 3); a `push` scores 0 for everyone and counts
-    as neither correct nor pending; **no standings response contains a `pick`
+    as neither correct nor pending; a wrong pick shows `−confidence` on the row
+    and pulls the week total down, including below zero, which the week column
+    renders in red with no heat wash; **no standings response contains a `pick`
     field anywhere**.
 13. **Routing** — all four page URLs including bare `/football/pickem/picks`, in
     dev and on a preview deploy. Confirm `/api/pickem-standings` is not served

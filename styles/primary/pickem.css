@@ -484,6 +484,10 @@
 
 .pk-points.is-hit { background: var(--good-tint); color: var(--good); }
 .pk-points.is-miss { background: var(--bad-tint); color: var(--bad); }
+/* A push pays nobody and costs nobody, so it is neither green nor red — the
+ * chip still appears, because "0" is a settled result and its absence would
+ * read as a game still waiting. */
+.pk-points.is-push { background: var(--surface-2); color: var(--text-4); }
 
 /* Another player's pick on a game that has kicked off. These only ever exist
  * for locked games — the server does not send the others — so there is no
@@ -621,6 +625,11 @@
 }
 
 .pk-table td.pk-wk.is-none { color: var(--text-5); background: none; }
+
+/* A week that finished under water. It carries no heat — the wash only ranks
+ * the positive end — so the sign is the only thing left to say it, and a bare
+ * "-12" in body text is too easy to read as a 12. */
+.pk-table td.pk-wk.is-down { color: var(--bad); }
 
 .pk-table td.pk-total,
 .pk-table td.pk-correct,

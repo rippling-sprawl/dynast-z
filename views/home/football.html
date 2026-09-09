@@ -22,6 +22,9 @@
   <link rel="stylesheet" href="/styles/base/theme.css">
   <link rel="stylesheet" href="/styles/base/styles.css">
   <link rel="stylesheet" href="/styles/base/hub.css">
+  <!-- The VegasInsider skin /football/schedule wears, spent on the hub
+       shell. Loaded last so it repaints the sheets above it. -->
+  <link rel="stylesheet" href="/styles/primary/hub.css">
   <!-- Vercel Web Analytics. The /_vercel/insights/* routes are injected by
        Vercel at deploy time, so this 404s harmlessly when serving locally. -->
   <script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
@@ -41,11 +44,19 @@
 
     <div id="fp-stale-banner" class="fp-stale-banner" hidden></div>
     
-    <!-- One grid, filled from the Football section of NAV_SECTIONS in
-         scripts/base/nav.js — the same list behind the drawer and the home
-         page, including the admin-only Action card and the hidden NFL Odds
-         entry. -->
-    <div class="hub-grid" data-nav-section="Football"></div>
+    <!-- Three grids, filled from the Gambling, Games and Fantasy sections of
+         NAV_SECTIONS in scripts/base/nav.js — the same list behind the drawer
+         and the home page, including the admin-only Baker's Action card and
+         the hidden NFL Odds entry. This page is the only place all three are
+         shown under one Football heading; the drawer names them separately. -->
+    <h3 class="hub-section">Gambling</h3>
+    <div class="hub-grid" data-nav-section="Gambling"></div>
+
+    <h3 class="hub-section">Games</h3>
+    <div class="hub-grid" data-nav-section="Games"></div>
+
+    <h3 class="hub-section">Fantasy</h3>
+    <div class="hub-grid" data-nav-section="Fantasy"></div>
 
   </div>
 

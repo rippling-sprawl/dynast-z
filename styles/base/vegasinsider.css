@@ -1,7 +1,8 @@
 /* === VegasInsider skin ===
  * The look of vegasinsider.com, applied to the three Games pages —
  * /football/schedule, /football/schedule/game/<id> and
- * /football/schedule/archive — and to nothing else on the site.
+ * /football/schedule/archive — and to the three hub pages that lead to them:
+ * the home page, /football and /account.
  *
  * It is a *skin*, not a layout: every rule here repaints something that was
  * already on the page. No element moved, no grid changed, no markup was
@@ -19,15 +20,15 @@
  * faithful reading — white board, navy header bands, gold rules. Dark mode
  * keeps the same bands and the same gold and swaps the neutrals for the site's
  * own near-black family, because a reader who has chosen dark should not be
- * handed a white page for three routes.
+ * handed a white page for these routes.
  *
- * Scope: this file is pulled in by @import from the three sheets those pages
- * own — styles/primary/nfl-schedule.css, styles/primary/game-odds.css, and the
- * inline block at the foot of views/football/schedule-archive.html. Nothing
- * else imports it, which is what keeps the rest of the site on the house
- * palette. The :root blocks below are therefore page-scoped in practice even
- * though they are written against the document root: a page that never loads
- * this file never sees them. */
+ * Scope: this file is pulled in by @import from the sheets those pages own —
+ * styles/primary/nfl-schedule.css, styles/primary/game-odds.css,
+ * styles/primary/hub.css, and the inline block at the foot of
+ * views/football/schedule-archive.html. Nothing else imports it, which is what
+ * keeps the rest of the site on the house palette. The :root blocks below are
+ * therefore page-scoped in practice even though they are written against the
+ * document root: a page that never loads this file never sees them. */
 
 /* Inter, for the display face below. Only the three weights the skin actually
  * sets — 400 on the one lowercase note, 700 on everything else, 600 for the

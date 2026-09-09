@@ -5,8 +5,11 @@ The whole of the game's rules is in this file:
 
   * A pick is graded against the spread as it stood at the Tuesday 3:00am ET
     freeze, not against the outright winner.
-  * A correct pick scores its confidence value. A wrong pick, a push and an
-    ungraded game all score nothing.
+  * A correct pick scores its confidence value and a wrong pick loses it. A
+    push and an ungraded game score nothing either way: a push is a real
+    outcome that simply pays nobody, and an ungraded game has not happened yet.
+    Ranking is therefore a two-sided bet -- the confidence you put on a game is
+    what you win on it and what you pay for it.
   * Within one week a player's confidences are distinct integers in 1..N, where
     N is how many games the week has a line for. A full week therefore uses
     exactly 1..N. A partial week uses any k of those values -- picking three
@@ -20,8 +23,11 @@ The whole of the game's rules is in this file:
     gapless, and the 4 belongs to a locked pick that must not be renumbered.
     There is no repair -- the two rules simply cannot both hold. Widening the
     range to 1..N dissolves the conflict rather than papering over it, and it
-    costs nothing: a full week is still exactly 1..N, and picking every game
-    still dominates (16 correct at 1..16 is 136; three correct at 14-16 is 45).
+    costs nothing: a full week is still exactly 1..N, and a perfect full week
+    still beats a perfect partial one (16 correct at 1..16 is 136; three
+    correct at 14-16 is 45). With wrong picks deducting, the games you skip are
+    a real hedge rather than free money left on the table -- which is the
+    point: a game you have no read on is one you can decline to price.
 
 Imported by api/pickem.py, api/pickem-standings.py and
 scripts/pickem_capture.py, which is the point: the capture job stores the
@@ -72,11 +78,18 @@ def winner_abbr(game):
 
 
 def points_for(pick_abbr, confidence, game):
-    """What one pick is worth. 0 for wrong, for a push and for ungraded."""
+    """What one pick is worth: +confidence right, -confidence wrong, 0 for a
+    push and for ungraded.
+
+    The penalty is symmetric with the reward on purpose. A pool that only ever
+    adds makes a coin-flip pick free, so the optimal play is to rank every game
+    and let the low numbers absorb the noise; making a miss cost what a hit
+    pays is what turns the ranking into a statement of belief.
+    """
     winner = winner_abbr(game)
     if winner is None:
         return 0
-    return int(confidence) if pick_abbr == winner else 0
+    return int(confidence) if pick_abbr == winner else -int(confidence)
 
 
 def score_pick(pick_abbr, confidence, game):
@@ -86,7 +99,8 @@ def score_pick(pick_abbr, confidence, game):
 
     A push is `correct: False` rather than None: the game *is* graded, nobody
     got it, and counting it as pending would leave a finished week showing
-    outstanding games forever.
+    outstanding games forever. It scores 0 rather than -confidence -- a push is
+    not a miss, it is a bet the line refused to settle.
     """
     winner = winner_abbr(game)
     if game.get("result") is None:
@@ -94,17 +108,19 @@ def score_pick(pick_abbr, confidence, game):
     if winner is None:                      # a push
         return {"points": 0, "correct": False}
     hit = pick_abbr == winner
-    return {"points": int(confidence) if hit else 0, "correct": hit}
+    return {"points": int(confidence) if hit else -int(confidence),
+            "correct": hit}
 
 
 def score_set(picks, games_by_id):
     """Total one collection of picks. `picks` is an iterable of
     (game_id, pick_abbr, confidence); `games_by_id` maps game_id -> game dict.
 
-    -> {points, correct, picked, pending}. `pending` is how many of those picks
-    are still waiting on a verdict, which is what the pages print next to a
-    total so a Sunday-afternoon leaderboard reads as provisional rather than
-    final.
+    -> {points, correct, picked, pending}. `points` is a net and can be
+    negative, since a wrong pick deducts its confidence. `pending` is how many
+    of those picks are still waiting on a verdict, which is what the pages
+    print next to a total so a Sunday-afternoon leaderboard reads as
+    provisional rather than final.
 
     A pick on a game the caller did not supply is skipped rather than raising:
     the standings read games and picks in two queries, and a game deleted
