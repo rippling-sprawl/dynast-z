@@ -281,6 +281,21 @@ def http_fetch(url):
     return result.stdout
 
 
+def extract_ktc_players(html):
+    """KTC embeds its rankings payload in the page. It used to be a literal
+    `var playersArray = [...]`; it now ships as a JSON script tag the page
+    parses at runtime. Try the current shape first, fall back to the old one so
+    a revert on their end doesn't break us."""
+    match = re.search(
+        r"<script[^>]*id=[\"']ktc-players[\"'][^>]*>(.*?)</script>", html, re.DOTALL
+    )
+    if not match:
+        match = re.search(r"var\s+playersArray\s*=\s*(\[.*?\]);\s*\n", html, re.DOTALL)
+    if not match:
+        raise RuntimeError("Could not find playersArray in KTC page")
+    return match.group(1).strip()
+
+
 def fetch_ktc():
     cached = read_cache("ktc.json")
     if cached is not None:
@@ -288,10 +303,7 @@ def fetch_ktc():
         return cached
     print("Fetching fresh KTC data...")
     html = http_fetch(KTC_URL)
-    match = re.search(r"var\s+playersArray\s*=\s*(\[.*?\]);\s*\n", html, re.DOTALL)
-    if not match:
-        raise RuntimeError("Could not find playersArray in KTC page")
-    data = json.loads(match.group(1))
+    data = json.loads(extract_ktc_players(html))
     write_cache("ktc.json", data)
     print("KTC data complete.")
     return data
