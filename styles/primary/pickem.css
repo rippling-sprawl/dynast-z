@@ -166,6 +166,21 @@
   padding: 8px 12px;
   border-radius: 0;
   background: var(--panel);
+
+  /* Nothing on a row is text anyone wants to select, and a drag that starts a
+   * selection instead is the drag failing. On a phone a long press would also
+   * raise the copy/define callout over the board, so that goes too. The result
+   * line is opted back in below — a score is worth copying. */
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* The one part of a row that is prose rather than furniture. */
+.pk-state {
+  user-select: text;
+  -webkit-user-select: text;
 }
 
 .pk-rows .pk-game:nth-child(even) { background: var(--zebra); }
@@ -381,18 +396,34 @@
   box-shadow: 0 -5px 0 currentColor, 0 5px 0 currentColor;
 }
 
-/* The row under the finger. Lifted off the board so it reads as detached and
- * in motion, which is the only feedback the live-reorder approach gives. */
+/* The row under the pointer, lifted out of flow and following it. The inline
+ * position/left/width/top are set by pkDragList; what belongs here is only how
+ * it looks while detached. */
 .pk-rows.is-reordering { cursor: grabbing; }
 
-.pk-rows.is-reordering .pk-game { transition: transform 120ms ease; }
+/* overflow:hidden gives the board its rounded corners, and a fixed-position
+ * child is not clipped by it — but a UA that ever promoted this element to a
+ * containing block would clip the dragged row to the list. Cheap insurance for
+ * the duration of the gesture only. */
+.pk-rows.is-reordering { overflow: visible; }
 
 .pk-game.is-dragging {
-  background: var(--accent-soft) !important;
-  box-shadow: 0 6px 18px var(--overlay);
+  z-index: 20;
+  background: var(--accent-soft);
+  box-shadow: 0 8px 24px var(--overlay);
   outline: 1px solid var(--vi-gold-line);
-  position: relative;
-  z-index: 2;
+  pointer-events: none;      /* so the rows underneath answer elementFromPoint */
+}
+
+.pk-game.is-dragging .pk-drag { cursor: grabbing; }
+
+/* Holds the gap the lifted row left, so the rows below do not jump up by a row
+ * height the instant a drag starts. It is what actually moves through the list;
+ * the row itself is only put back into its slot on release. */
+.pk-placeholder {
+  border: 1px dashed var(--vi-gold-line);
+  background: var(--accent-faint);
+  border-radius: 2px;
 }
 
 /* --- State column --- */

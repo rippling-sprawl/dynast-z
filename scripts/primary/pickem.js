@@ -439,26 +439,43 @@
   /* ---------- dragging ----------
    * Pointer Events, not HTML5 drag-and-drop: the latter does not exist on
    * touch, and the requirement is one interaction that works with a finger and
-   * a mouse alike. Pointer Events are that one interaction.
+   * a mouse alike.
    *
-   * The list is reordered live in the DOM as the pointer crosses each row's
-   * midpoint, rather than dragging a floating ghost and computing an insertion
-   * point on release. It is less machinery, and the reader sees the ranking
-   * they are making rather than a preview of it.
+   * WHY THE DRAGGED ROW IS NEVER MOVED IN THE DOM
    *
-   * `onDrop` is handed the new order once, on release — not on every move — so
-   * the page re-renders and recomputes confidences a single time.
+   * The first version reordered the list live — insertBefore on the row under
+   * the pointer, every move. On a mouse that works. On a phone it dies after
+   * one frame, and the reason is worth writing down: a touch pointer is
+   * *implicitly captured* to the element that received pointerdown, and moving
+   * that element in the DOM tears the capture down. insertBefore on a node that
+   * is already in the tree is a remove-then-insert, so the very first reorder
+   * detached the row containing the handle the finger was holding, capture was
+   * lost, and no further pointermove was ever delivered. Nothing threw; the row
+   * simply stopped following.
+   *
+   * So the dragged row stays exactly where it is in the DOM for the whole
+   * gesture. It is lifted out of flow with position:fixed and follows the
+   * pointer, a placeholder of the same height holds its gap, and it is the
+   * *placeholder* that moves between the other rows. The row is put back in the
+   * placeholder's slot once, on release, when losing capture no longer matters.
+   *
+   * The move and release listeners go on `document` rather than the container
+   * for the same family of reasons: a fixed-position row can end up over
+   * another element, and a listener scoped to the list would miss the release
+   * if the finger left it.
    */
   function pkDragList(container, onDrop) {
-    var dragging = null;      // the .pk-game being moved
+    var row = null;           // the .pk-game being moved
+    var holder = null;        // the placeholder standing in its gap
     var pointerId = null;
-    var scroller = null;      // rAF handle for edge auto-scroll
+    var grabDy = 0;           // where in the row the pointer took hold
+    var scroller = null;
     var edgeDy = 0;
 
-    function rows() {
+    function others() {
       return Array.prototype.filter.call(
         container.querySelectorAll('.pk-game'),
-        function (el) { return el !== dragging; });
+        function (el) { return el !== row; });
     }
 
     function orderNow() {
@@ -467,89 +484,124 @@
         function (el) { return el.getAttribute('data-game'); });
     }
 
-    // Auto-scroll when the finger is held near the top or bottom of the
-    // viewport. Without it a sixteen-row board cannot be reordered on a phone:
-    // the row you want is off-screen and the page will not scroll, because the
-    // gesture has been claimed by the drag.
+    /* Auto-scroll when the pointer is held near the top or bottom of the
+     * viewport. Without it a sixteen-row board cannot be reordered on a phone:
+     * the row you want is off-screen and the page will not scroll, because the
+     * gesture belongs to the drag. The row is positioned against the viewport,
+     * so it stays under the finger while the page moves beneath it. */
     function tick() {
-      if (!dragging) { scroller = null; return; }
-      if (edgeDy) window.scrollBy(0, edgeDy);
+      if (!row) { scroller = null; return; }
+      if (edgeDy) {
+        window.scrollBy(0, edgeDy);
+        place(lastY);
+      }
       scroller = window.requestAnimationFrame(tick);
     }
 
-    function moveTo(clientY) {
-      var EDGE = 72, SPEED = 12;
-      if (clientY < EDGE) edgeDy = -SPEED;
-      else if (clientY > window.innerHeight - EDGE) edgeDy = SPEED;
-      else edgeDy = 0;
-      if (!scroller) scroller = window.requestAnimationFrame(tick);
+    var lastY = 0;
 
-      // Insert before the first row whose midpoint is below the pointer. A
-      // locked row is skipped as a *target* but still occupies space, so the
-      // dragged row settles either side of it and never displaces it.
+    function place(clientY) {
+      lastY = clientY;
+      row.style.top = (clientY - grabDy) + 'px';
+
+      // The placeholder goes before the first remaining row whose midpoint is
+      // below the pointer. A locked row is a legitimate landing site — it is
+      // only undraggable itself — so nothing is skipped here.
       var target = null;
-      rows().some(function (el) {
+      others().some(function (el) {
         var box = el.getBoundingClientRect();
         if (clientY < box.top + box.height / 2) { target = el; return true; }
         return false;
       });
-      if (target) container.insertBefore(dragging, target);
-      else container.appendChild(dragging);
+      if (target) container.insertBefore(holder, target);
+      else container.appendChild(holder);
     }
 
     function start(e) {
+      if (row) return;                                   // one drag at a time
       var handle = e.target.closest ? e.target.closest('[data-drag]') : null;
       if (!handle || !container.contains(handle)) return;
-      var row = handle.closest('.pk-game');
-      if (!row || row.classList.contains('is-locked')) return;
+      if (handle.classList.contains('is-locked')) return;
+      var target = handle.closest('.pk-game');
+      if (!target || target.classList.contains('is-locked')) return;
 
-      dragging = row;
+      var box = target.getBoundingClientRect();
+      row = target;
       pointerId = e.pointerId;
+      grabDy = e.clientY - box.top;
+
+      holder = document.createElement('div');
+      holder.className = 'pk-placeholder';
+      holder.style.height = box.height + 'px';
+      container.insertBefore(holder, row.nextSibling);
+
+      // Lifted out of flow, pinned to the viewport. Width is frozen because a
+      // fixed element no longer inherits the grid track it was sitting in.
+      row.style.position = 'fixed';
+      row.style.left = box.left + 'px';
+      row.style.width = box.width + 'px';
+      row.style.top = box.top + 'px';
       row.classList.add('is-dragging');
       container.classList.add('is-reordering');
-      // The handle keeps the pointer for the whole gesture, so a fast drag that
-      // outruns the row still delivers its moves here.
-      try { handle.setPointerCapture(pointerId); } catch (err) { /* older Safari */ }
+
+      document.addEventListener('pointermove', move, { passive: false });
+      document.addEventListener('pointerup', end);
+      document.addEventListener('pointercancel', end);
+
+      place(e.clientY);
+      if (!scroller) scroller = window.requestAnimationFrame(tick);
       e.preventDefault();
     }
 
     function move(e) {
-      if (!dragging || e.pointerId !== pointerId) return;
+      if (!row || e.pointerId !== pointerId) return;
+      // Non-passive so this actually suppresses the scroll on a browser that
+      // has not honoured touch-action for some reason.
       e.preventDefault();
-      moveTo(e.clientY);
+      var EDGE = 72, SPEED = 12;
+      if (e.clientY < EDGE) edgeDy = -SPEED;
+      else if (e.clientY > window.innerHeight - EDGE) edgeDy = SPEED;
+      else edgeDy = 0;
+      place(e.clientY);
     }
 
     function end(e) {
-      if (!dragging || (e && e.pointerId !== pointerId)) return;
-      dragging.classList.remove('is-dragging');
-      container.classList.remove('is-reordering');
-      edgeDy = 0;
+      if (!row || (e && e.pointerId !== pointerId)) return;
+      document.removeEventListener('pointermove', move);
+      document.removeEventListener('pointerup', end);
+      document.removeEventListener('pointercancel', end);
       if (scroller) { window.cancelAnimationFrame(scroller); scroller = null; }
-      dragging = null;
-      pointerId = null;
-      onDrop(orderNow());
+      edgeDy = 0;
+
+      // The one DOM move of the whole gesture, now that capture is spent.
+      container.insertBefore(row, holder);
+      holder.parentNode.removeChild(holder);
+      row.removeAttribute('style');
+      row.classList.remove('is-dragging');
+      container.classList.remove('is-reordering');
+
+      var settled = orderNow();
+      row = null; holder = null; pointerId = null;
+      onDrop(settled);
     }
 
     container.addEventListener('pointerdown', start);
-    container.addEventListener('pointermove', move);
-    container.addEventListener('pointerup', end);
-    container.addEventListener('pointercancel', end);
 
     /* Keyboard equivalent. A ranking that can only be made by dragging is a
-     * ranking some people cannot make at all, and the arrow keys are two lines
-     * of code on top of the model already here. */
+     * ranking some people cannot make at all, and the arrow keys are a few
+     * lines on top of the model already here. */
     container.addEventListener('keydown', function (e) {
       if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
       var handle = e.target.closest ? e.target.closest('[data-drag]') : null;
-      if (!handle) return;
+      if (!handle || handle.classList.contains('is-locked')) return;
       e.preventDefault();
       var order = orderNow();
       var gameId = handle.getAttribute('data-game');
       var i = order.indexOf(gameId);
       var to = e.key === 'ArrowUp' ? i - 1 : i + 1;
       if (i < 0 || to < 0 || to >= order.length) return;
-      onDrop(pkMove(order, gameId, to), gameId);
       // The caller normalises; see pkAfterDrop.
+      onDrop(pkMove(order, gameId, to), gameId);
     });
   }
 

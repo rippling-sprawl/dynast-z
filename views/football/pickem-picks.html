@@ -87,7 +87,6 @@
     var locked = {};        // { game_id: confidence } — kicked off, immutable
     var saved = '';         // JSON of the last confirmed set
     var busy = false;
-    var dragWired = false;
 
     var boardEl = document.getElementById('board');
     var barEl = document.getElementById('bar');
@@ -197,18 +196,25 @@
       });
     }
 
-    /* The drag list lives on .pk-rows, which pkRenderWeek rebuilds, so this
-     * runs after every render. `dragWired` guards the one case that matters:
-     * a drop calls render(), which would otherwise re-enter here while the
-     * pointer sequence that triggered it is still unwinding. */
+    /* The drag list lives on .pk-rows, which pkRenderWeek rebuilds from scratch
+     * on every render — so this must re-attach every time, unconditionally.
+     *
+     * There was a guard here that skipped the re-attach on the render a drop
+     * itself triggered, meant to avoid re-entering mid-gesture. It was wrong
+     * twice over: pkDragList tears its document listeners down before it calls
+     * back, so there is no gesture still running, and skipping the attach left
+     * the freshly-built list with no listeners at all — which is why a board
+     * could be dragged exactly once and then went dead.
+     *
+     * Re-attaching costs nothing and leaks nothing: the old .pk-rows node is
+     * discarded with its listeners when innerHTML is replaced. */
     function wireDrag() {
       var list = boardEl.querySelector('[data-sortable]');
-      if (!list || dragWired) { dragWired = false; return; }
+      if (!list) return;
       pkDragList(list, function (next, keepFocus) {
         // Settle the locked rows back onto their own numbers, so the
         // confidence column always reads straight down the board.
         order = pkAfterDrop(next, locked, data.n);
-        dragWired = true;
         render();
         // A keyboard move has to keep the handle it was made from focused, or
         // the second arrow press goes nowhere.
