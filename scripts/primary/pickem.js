@@ -204,28 +204,33 @@
 
   /* ---------- rows ---------- */
 
-  function teamCell(abbr, name) {
+  /* The crest carries the identity, so it leads and it is large. Under it, the
+   * abbreviation and the line read as one unit — "SEA −3" is the thing being
+   * chosen, and splitting them across the row made the reader pair them up
+   * themselves on sixteen rows. The full club name is gone: a 40px crest above
+   * its own abbreviation says "Seahawks" without spending a column on it. */
+  function teamCell(abbr, line) {
     return '<img class="pk-logo" src="' + LOGO_DIR + esc(abbr) + '.svg" alt="" ' +
       'aria-hidden="true" loading="lazy">' +
-      '<span class="pk-abbr">' + esc(abbr) + '</span>' +
-      '<span class="pk-name">' + esc(name || abbr) + '</span>';
+      '<span class="pk-meta">' +
+        '<span class="pk-abbr">' + esc(abbr) + '</span>' +
+        (line ? '<span class="pk-line">' + esc(line) + '</span>' : '') +
+      '</span>';
   }
 
   /* One side of one game, as a button. Disabled once the game has kicked off:
    * the server refuses a late edit anyway, and a control that looks live and
    * then fails is worse than one that says up front it is closed. */
-  function sideButton(game, side, picks, names) {
+  function sideButton(game, side, picks) {
     var abbr = side === 'home' ? game.home : game.away;
     var chosen = picks[game.game_id] && picks[game.game_id].pick === abbr;
-    var line = pkSpreadLabel(spreadFor(game, side));
     var covered = game.result === side;
     return '<button type="button" class="pk-side' +
       (chosen ? ' is-picked' : '') + (covered ? ' is-covered' : '') +
       '" data-game="' + esc(game.game_id) + '" data-side="' + esc(abbr) + '"' +
       (game.locked ? ' disabled' : '') +
       ' aria-pressed="' + (chosen ? 'true' : 'false') + '">' +
-      teamCell(abbr, names && names[abbr]) +
-      '<span class="pk-line">' + esc(line) + '</span></button>';
+      teamCell(abbr, pkSpreadLabel(spreadFor(game, side))) + '</button>';
   }
 
   /* The confidence control. A <select> rather than a drag handle: sixteen rows
@@ -260,6 +265,15 @@
    * version and it was backwards — the moment a game is graded is exactly when
    * who-picked-what is worth reading, and it is also the only view of the pool
    * that survives the week. */
+  /* The kickoff, leading the row. It used to share the trailing cell with the
+   * result and the chips, which meant the one column that is always populated
+   * kept moving and changing shape. On its own at the left it is a fixed,
+   * scannable gutter, and the trailing cell is free to be the input. */
+  function timeCell(game) {
+    var d = toDate(game.kickoff);
+    return '<span class="pk-time">' + esc(d ? timeLabel(d) : 'TBD') + '</span>';
+  }
+
   function stateCell(game, picks, others) {
     if (game.result) {
       var mine = picks[game.game_id];
@@ -281,7 +295,9 @@
       return '<span class="pk-state is-locked">' +
         (chips(game, others) || '<span class="pk-lock">Locked</span>') + '</span>';
     }
-    return '<span class="pk-state">' + esc(timeLabel(toDate(game.kickoff))) + '</span>';
+    // Nothing to say yet: the row is the time, the two sides and the control,
+    // and an empty trailing line would only add a gap between rows.
+    return '';
   }
 
   /* Everyone else's picks, once the game has kicked off and the server has
@@ -309,31 +325,32 @@
     return out;
   }
 
-  function pkGameRow(game, picks, others, names, n) {
+  function pkGameRow(game, picks, others, n) {
     if (game.spread_home === null || game.spread_home === undefined) {
       // Off the board: no line ever froze for it, so there is nothing to grade
       // a pick against. Shown rather than hidden, because a missing row reads
       // as a bug and this is a stated outcome.
-      return '<div class="pk-game is-off"><span class="pk-conf is-empty">–</span>' +
+      return '<div class="pk-game is-off">' + timeCell(game) +
         '<span class="pk-off">' + esc(game.away) + ' at ' + esc(game.home) +
         ' — no line was available at the deadline, so this game is not ' +
         'part of the week.</span></div>';
     }
     return '<div class="pk-game' + (game.locked ? ' is-locked' : '') +
       (game.result ? ' is-final' : '') + '" data-game="' + esc(game.game_id) + '">' +
-      confidenceCell(game, picks, n) +
+      timeCell(game) +
       '<span class="pk-matchup">' +
-        sideButton(game, 'away', picks, names) +
+        sideButton(game, 'away', picks) +
         '<span class="pk-at">@</span>' +
-        sideButton(game, 'home', picks, names) +
+        sideButton(game, 'home', picks) +
       '</span>' +
+      confidenceCell(game, picks, n) +
       stateCell(game, picks, others) +
       '</div>';
   }
 
   /* The week, grouped by calendar day so it reads Thu / Sun / Mon the way the
    * schedule page does. */
-  function pkRenderWeek(games, picks, others, names, n) {
+  function pkRenderWeek(games, picks, others, n) {
     if (!games || !games.length) {
       return '<p class="pk-empty">This week has not been opened yet. Lines are ' +
         'frozen at 3:00 AM ET on Tuesday.</p>';
@@ -350,7 +367,7 @@
           '<div class="pk-rows">';
         lastKey = key;
       }
-      html += pkGameRow(g, picks, others, names, n);
+      html += pkGameRow(g, picks, others, n);
     });
     return html + '</div>';
   }

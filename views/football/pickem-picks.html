@@ -30,9 +30,6 @@
   <script src="/scripts/base/nav.js"></script>
   <!-- The week menu, shared with /football/schedule. -->
   <script src="/scripts/components/nfl-pickers.js"></script>
-  <!-- Team names come off the committed schedule file; everything that can
-       move — the matchups, the lines, the lock state — comes from the API. -->
-  <script src="/scripts/components/nfl-schedule.js"></script>
   <script src="/scripts/primary/pickem-api.js"></script>
   <script src="/scripts/primary/pickem.js"></script>
   <script>initPage();</script>
@@ -87,7 +84,6 @@
     var data = null;        // the last GET payload
     var picks = {};         // the working set
     var saved = '';         // JSON of the last confirmed set
-    var names = {};         // abbr -> full name, from the schedule file
     var busy = false;
 
     var boardEl = document.getElementById('board');
@@ -146,7 +142,7 @@
         if (mine && !g.result) live += mine.confidence;
       });
 
-      boardEl.innerHTML = pkRenderWeek(data.games, picks, data.others, names, data.n);
+      boardEl.innerHTML = pkRenderWeek(data.games, picks, data.others, data.n);
       barEl.hidden = false;
       statPicked.innerHTML = '<b>' + k + '</b> of ' + data.n + ' picked' +
         (k < data.n ? ' · confidences 1–' + data.n + ', any ' + k + ' of them'
@@ -299,12 +295,8 @@
     } else {
       wireBoard();
       wireWeeks();
-      // Names are cosmetic and must never hold up the board: a season the
-      // schedule file does not have still renders, with abbreviations only.
-      schedLoad(seasonFromQuery() || SCHED_CURRENT_SEASON).then(function (doc) {
-        (doc.teams || []).forEach(function (t) { names[t.abbr] = t.short || t.name; });
-        if (data) render();
-      }).catch(function () {});
+      // Nothing is read from the committed schedule file any more: the crest
+      // and the abbreviation name the team, so the board needs only the API.
       load(seasonFromQuery(), weekFromPath());
     }
   })();

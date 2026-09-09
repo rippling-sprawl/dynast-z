@@ -1,18 +1,33 @@
 /* === Pick 'Em ===
  * /football/pickem, /football/pickem/picks/<week>, /football/pickem/standings.
  *
- * Every colour is a token from styles/base/theme.css; nothing here writes a
- * hex. The one place colour carries data is the week columns in the standings
- * table, and those follow the rule the rest of the app follows: the view hands
- * over a bare 0..1 number as --heat and the colour is mixed here, so the scale
- * re-colours on a theme change without the table being rebuilt.
+ * These pages wear the VegasInsider skin, the same one /football/schedule,
+ * /football/schedule/game/<id> and /football/schedule/archive wear — see
+ * styles/base/vegasinsider.css for where the palette and the faces came from.
+ * Pick 'Em is the Games slate with something at stake on it, so it belongs to
+ * that family rather than to the house palette: a reader moving from the
+ * fixture list to the pick board should not cross a visual seam.
  *
- * The row is deliberately close to .sched-game on /football/schedule — same
- * monospace numerals, same logo-then-abbreviation cell, same density — because
- * it is the same slate seen from one step further in, and the two pages should
- * not look like different products. What it adds is the two things a schedule
- * row does not have: a side you can press, and a number you chose.
+ * Importing it does most of the work on its own. The skin redefines the token
+ * layer, so --accent becomes the brand gold and every rule below that already
+ * spent --accent, --panel or --hairline repaints itself: the picked side, the
+ * confidence control and the save button all turn gold without being named
+ * here. What this sheet adds past that is the *shape* the skin gives a list —
+ * the navy day band, the boxed board under it, squared edges and the display
+ * face on anything that is a heading or a chip.
+ *
+ * Every colour is a token; nothing here writes a hex. The one place colour
+ * carries data is the week columns in the standings table, and those follow the
+ * rule the rest of the app follows: the view hands over a bare 0..1 number as
+ * --heat and the colour is mixed here, so the scale re-colours on a theme
+ * change without the table being rebuilt.
+ *
+ * CACHING CAVEAT, inherited rather than introduced: build.py hashes literal
+ * href/src references only, so an @import target never gets a ?v=. That is
+ * already true of the three Games sheets that pull this file in the same way,
+ * and matching them beats being the one page that loads the skin differently.
  */
+@import url('/styles/base/vegasinsider.css');
 
 /* --- Page furniture --- */
 
@@ -20,17 +35,18 @@
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 12px;
   padding: 10px 12px;
   margin-bottom: 12px;
   background: var(--panel);
-  border: 1px solid var(--hairline);
-  border-radius: 6px;
+  border: 1px solid var(--border);
+  border-radius: 2px;
 }
 
 .pk-bar-stat {
-  font-family: monospace;
-  font-size: 11px;
+  font-family: var(--vi-display);
+  font-size: 13px;
+  letter-spacing: 0.3px;
   color: var(--text-3);
   white-space: nowrap;
 }
@@ -45,14 +61,16 @@
 .pk-bar-spacer { flex: 1 1 auto; }
 
 .pk-save {
-  font-family: inherit;
-  font-size: 12px;
-  font-weight: 600;
-  padding: 7px 18px;
-  border-radius: 5px;
+  font-family: var(--vi-display);
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  padding: 8px 20px;
+  border-radius: 2px;
   border: 1px solid var(--accent-line);
   background: var(--accent);
-  color: var(--on-accent);
+  color: var(--accent-ink);
   cursor: pointer;
 }
 
@@ -67,8 +85,8 @@
  * answer to the thing just pressed, and a message that fades takes the only
  * evidence of a failed save with it. */
 .pk-status {
-  font-family: monospace;
-  font-size: 11px;
+  font-family: var(--vi-display);
+  font-size: 13px;
   color: var(--text-4);
 }
 
@@ -76,81 +94,118 @@
 .pk-status.is-error { color: var(--bad); }
 
 .pk-note {
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.6;
   color: var(--text-4);
-  margin: 12px 0;
+  margin: 14px 0;
 }
 
 .pk-empty {
-  font-size: 12px;
+  font-size: 15px;
   color: var(--text-4);
-  padding: 24px 12px;
+  padding: 20px 12px;
   text-align: center;
 }
 
 /* --- Day groups --- */
 
+/* A day of football is one board with a navy strip at its head, gold-ruled
+ * along the bottom — the .vi-band pattern, restated here because there is no
+ * markup to hang the class on. The margin is the gap between one day's board
+ * and the next; :first-child zeroes the top one. */
 .pk-day {
   display: flex;
   align-items: baseline;
-  gap: 8px;
-  margin: 18px 0 6px;
-  padding-bottom: 4px;
-  border-bottom: 1px solid var(--hairline);
+  gap: 12px;
+  margin: 22px 0 0;
+  padding: 9px 12px 8px;
+  background: var(--vi-navy);
+  border-bottom: 2px solid var(--vi-gold);
+  border-radius: 2px 2px 0 0;
 }
+
+.pk-day:first-child { margin-top: 0; }
 
 .pk-day h3 {
-  font-family: monospace;
-  font-size: 11px;
+  font-family: var(--vi-display);
+  font-size: 17px;
   font-weight: 700;
-  letter-spacing: 0.5px;
+  letter-spacing: 1px;
   text-transform: uppercase;
-  color: var(--text-3);
+  color: var(--vi-band-ink);
 }
 
+/* Boxed, so the rows read as the table the band heads rather than as a run of
+ * rows loose in the margin. The top edge is dropped where a band sits above it
+ * so the gold rule is the only line between the two. */
 .pk-rows {
   display: flex;
   flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: 0 0 2px 2px;
+  background: var(--panel);
+  overflow: hidden;
 }
 
-/* --- One game --- */
+.pk-day + .pk-rows { border-top: 0; }
+
+/* --- One game ---
+ * time | matchup | confidence, with the result line spanning underneath when
+ * there is one. The kickoff leads because it is the only cell that is always
+ * populated and always the same shape, which makes it the column the eye runs
+ * down; the control it used to sit opposite is now at the end of the row,
+ * where the reading order puts it after the choice it applies to. */
 
 .pk-game {
   display: grid;
-  grid-template-columns: 44px minmax(0, 1fr) minmax(90px, auto);
+  grid-template-columns: 58px minmax(0, 1fr) 58px;
   align-items: center;
-  gap: 10px;
-  padding: 6px 8px;
-  border-radius: 5px;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: 0;
 }
 
 .pk-rows .pk-game:nth-child(even) { background: var(--zebra); }
 
+/* Whole-row hover, which the loose list did not have: on a board this dense
+ * the row under the pointer is worth marking. */
+.pk-rows .pk-game:hover { background: var(--surface-hover); }
+
 .pk-game.is-locked { opacity: 0.85; }
 
 .pk-game.is-off {
-  grid-template-columns: 44px 1fr;
+  grid-template-columns: 58px 1fr;
   color: var(--text-5);
-  font-size: 11px;
+  font-size: 12px;
   font-style: italic;
+}
+
+/* --- Kickoff --- */
+
+.pk-time {
+  font-family: monospace;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-2);
+  text-align: right;
+  white-space: nowrap;
 }
 
 /* --- Confidence --- */
 
 .pk-conf {
   font-family: monospace;
-  font-size: 12px;
+  font-size: 15px;
   text-align: center;
 }
 
 .pk-conf-select {
   width: 100%;
   font-family: monospace;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 700;
   text-align: center;
-  padding: 4px 2px;
+  padding: 6px 2px;
   border-radius: 4px;
   border: 1px solid var(--accent-line);
   background: var(--accent-soft);
@@ -169,7 +224,7 @@
 
 .pk-matchup {
   display: grid;
-  grid-template-columns: 1fr 2ch 1fr;
+  grid-template-columns: 1fr 3ch 1fr;
   align-items: center;
   gap: 6px;
   min-width: 0;
@@ -177,29 +232,28 @@
 
 .pk-at {
   font-family: monospace;
-  font-size: 10px;
+  font-size: 11px;
   text-align: center;
   color: var(--text-5);
 }
 
+/* A column, not a row: crest on top, then the abbreviation and the line
+ * together under it. Both sides are now identical and symmetric about the "@",
+ * which is why the away side no longer needs its own reversed direction. */
 .pk-side {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   min-width: 0;
-  padding: 6px 8px;
+  padding: 8px 6px;
   font-family: inherit;
-  text-align: left;
-  border-radius: 5px;
+  border-radius: 2px;
   border: 1px solid var(--hairline);
   background: var(--panel-hi);
   color: var(--text);
   cursor: pointer;
 }
-
-/* The away side reads right-to-left so the two team names meet in the middle
- * around the "@", the way the matchup is spoken. */
-.pk-side[data-side]:first-child { flex-direction: row-reverse; text-align: right; }
 
 .pk-side:hover:not(:disabled) { border-color: var(--hairline-hi); }
 
@@ -211,10 +265,10 @@
 .pk-side.is-picked {
   border-color: var(--accent-line);
   background: var(--accent-soft);
-  color: var(--accent-2);
 }
 
-.pk-side.is-picked .pk-abbr { color: var(--accent-2); }
+.pk-side.is-picked .pk-abbr,
+.pk-side.is-picked .pk-line { color: var(--accent-2); }
 
 /* Which side actually covered, once the game is graded. Independent of whether
  * it was picked — the row has to be readable as a result, not only as a score. */
@@ -224,54 +278,54 @@
 }
 
 .pk-logo {
-  width: 18px;
-  height: 18px;
+  width: 40px;
+  height: 40px;
   flex: none;
 }
 
+/* The abbreviation and the line, one unit under the crest. */
+.pk-meta {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 5px;
+  min-width: 0;
+}
+
+/* The one thing in the row that is a name rather than a measurement, so it
+ * takes the display face. Everything else here — the kickoff, the line, the
+ * confidence — is a number in a column and stays monospace, the same split the
+ * schedule board makes. */
 .pk-abbr {
-  font-family: monospace;
-  font-size: 12px;
+  font-family: var(--vi-display);
+  font-size: 15px;
   font-weight: 700;
+  letter-spacing: 0.5px;
   color: var(--text);
-  flex: none;
 }
 
-/* The full name is the first thing to go: it is a nicety, and the abbreviation
- * beside a crest already names the team. */
-.pk-name {
-  font-size: 11px;
-  color: var(--text-4);
-  overflow: hidden;
-  text-overflow: ellipsis;
+/* The number the whole page is about, so it keeps the brightest text tone. */
+.pk-line {
+  font-family: monospace;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-bright);
   white-space: nowrap;
 }
 
-/* The line is the number the whole page is about, so it is the one thing in the
- * row set in the bright text tone, and it is pushed to the outside edge of each
- * side so the two of them frame the matchup. */
-.pk-line {
-  margin-left: auto;
-  font-family: monospace;
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--text-bright);
-  flex: none;
-}
-
-.pk-side[data-side]:first-child .pk-line { margin-left: 0; margin-right: auto; }
-
 /* --- State column --- */
 
+/* The result and the pool, on their own line under the matchup rather than
+ * squeezed into a trailing cell — there can be one chip per player, and they
+ * were wrapping into a column two characters wide. */
 .pk-state {
+  grid-column: 2 / -1;
   font-family: monospace;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--text-3);
-  text-align: right;
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
-  justify-content: flex-end;
+  gap: 5px;
   align-items: center;
 }
 
@@ -280,9 +334,10 @@
 .pk-score { color: var(--text-4); }
 
 .pk-points {
+  font-family: var(--vi-display);
   font-weight: 700;
-  padding: 1px 5px;
-  border-radius: 3px;
+  padding: 1px 6px;
+  border-radius: 2px;
 }
 
 .pk-points.is-hit { background: var(--good-tint); color: var(--good); }
@@ -294,12 +349,16 @@
 .pk-chip {
   display: inline-flex;
   align-items: baseline;
-  gap: 4px;
-  padding: 1px 5px;
-  border-radius: 3px;
+  gap: 5px;
+  padding: 2px 7px;
+  border-radius: 2px;
   border: 1px solid var(--hairline);
   background: var(--panel-hi2);
-  font-size: 10px;
+  font-family: var(--vi-display);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 11px;
 }
 
 /* Once the game is graded the chip says who was right, so the pool reads as a
@@ -316,15 +375,15 @@
 
 .pk-table-wrap {
   overflow-x: auto;
-  border: 1px solid var(--hairline);
-  border-radius: 6px;
+  border: 1px solid var(--border);
+  border-radius: 2px;
   background: var(--panel);
 }
 
 .pk-table {
   border-collapse: collapse;
   width: 100%;
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .pk-table th,
@@ -334,25 +393,30 @@
   border-bottom: 1px solid var(--hairline);
 }
 
+/* The column heads are the board's navy strip, gold-ruled — the same band the
+ * day headers and the card heads wear, so the three read as one system. */
 .pk-table thead th {
   position: sticky;
   top: 0;
   z-index: 2;
-  background: var(--panel-hi);
-  font-family: monospace;
-  font-size: 10px;
+  background: var(--vi-navy);
+  border-bottom: 2px solid var(--vi-gold);
+  font-family: var(--vi-display);
+  font-size: 12px;
   font-weight: 700;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.8px;
   text-transform: uppercase;
-  color: var(--text-4);
+  color: var(--vi-band-ink);
   text-align: right;
 }
 
 .pk-table tbody tr:last-child td { border-bottom: none; }
 
+.pk-table tbody tr:hover td { background: var(--surface-hover); }
+
 .pk-table tbody tr:nth-child(even) { background: var(--zebra); }
 
-.pk-table tr.is-me td { box-shadow: inset 3px 0 0 var(--accent); }
+.pk-table tr.is-me td { box-shadow: inset 3px 0 0 var(--vi-gold); }
 
 /* Rank and player pin to the left edge. scripts/components/sticky-headers.js
  * only stacks vertical offsets, so the horizontal pin is done here: eighteen
@@ -375,7 +439,7 @@
 .pk-table thead th.pk-rank,
 .pk-table thead th.pk-who {
   z-index: 3;
-  background: var(--panel-hi);
+  background: var(--vi-navy);
 }
 
 .pk-table tbody tr:nth-child(even) td.pk-rank,
@@ -388,7 +452,8 @@
 }
 
 .pk-table td.pk-who {
-  font-weight: 600;
+  font-family: var(--vi-display);
+  font-weight: 700;
   color: var(--text-bright);
 }
 
@@ -397,7 +462,7 @@
   text-decoration: none;
 }
 
-.pk-table th.pk-wk a:hover { color: var(--accent); }
+.pk-table th.pk-wk a:hover { color: var(--vi-gold); }
 
 /* The one place colour carries data. --heat is a 0..1 share of the best score
  * in that week's column, handed over by the view as a bare number; the wash is
@@ -433,46 +498,61 @@
 
 /* --- Hub --- */
 
+/* A card is a board: navy strip across the head, gold rule under it, the
+ * content boxed below. Same shape as a day of games, one level up. */
 .pk-card {
-  padding: 14px;
-  margin-bottom: 14px;
+  margin-bottom: 16px;
   background: var(--panel);
-  border: 1px solid var(--hairline);
-  border-radius: 6px;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  overflow: hidden;
 }
 
 .pk-card h3 {
-  font-family: monospace;
-  font-size: 11px;
+  font-family: var(--vi-display);
+  font-size: 15px;
   font-weight: 700;
-  letter-spacing: 0.5px;
+  letter-spacing: 1px;
   text-transform: uppercase;
-  color: var(--text-4);
-  margin-bottom: 10px;
+  color: var(--vi-band-ink);
+  background: var(--vi-navy);
+  border-bottom: 2px solid var(--vi-gold);
+  padding: 8px 12px;
+  margin: 0;
 }
 
+.pk-card > *:not(h3) { margin-left: 14px; margin-right: 14px; }
+.pk-card > *:first-of-type:not(h3) { margin-top: 14px; }
+.pk-card > *:last-child { margin-bottom: 14px; }
+
 .pk-week-line {
-  font-size: 18px;
+  font-family: var(--vi-display);
+  font-size: 22px;
   font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
   color: var(--text-bright);
   margin-bottom: 4px;
 }
 
 .pk-week-sub {
-  font-family: monospace;
-  font-size: 11px;
+  font-family: var(--vi-display);
+  font-size: 14px;
   color: var(--text-4);
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 
 .pk-cta {
   display: inline-block;
   padding: 8px 20px;
-  font-size: 13px;
-  font-weight: 600;
-  border-radius: 5px;
+  font-family: var(--vi-display);
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  border-radius: 2px;
   background: var(--accent);
-  color: var(--on-accent);
+  color: var(--accent-ink);
   text-decoration: none;
 }
 
@@ -480,8 +560,8 @@
 
 .pk-cta.is-secondary {
   background: none;
-  border: 1px solid var(--hairline-hi);
-  color: var(--text-2);
+  border: 1px solid var(--vi-gold-line);
+  color: var(--accent);
 }
 
 .pk-mini {
@@ -499,13 +579,13 @@
 
 .pk-mini li:last-child { border-bottom: none; }
 
-.pk-mini-rank { font-family: monospace; color: var(--text-4); }
-.pk-mini-who { color: var(--text-bright); font-weight: 600; }
+.pk-mini-rank { font-family: monospace; color: var(--vi-gold); font-weight: 700; }
+.pk-mini-who { font-family: var(--vi-display); color: var(--text-bright); font-weight: 700; }
 .pk-mini-pts { font-family: monospace; font-weight: 700; color: var(--text-bright); }
 
 .pk-rules {
-  font-size: 12px;
-  line-height: 1.7;
+  font-size: 14px;
+  line-height: 1.75;
   color: var(--text-3);
 }
 
@@ -517,23 +597,27 @@
 .pk-rules b { color: var(--text-bright); }
 
 /* --- Narrow screens ---
- * The full team name and the "vs" gutter go first; the crest and the
- * abbreviation carry the identity from here down, and the line stays, because
- * the line is the whole point of the row. */
+ * The shape holds: the crest and the abbreviation are what identify a team, and
+ * both stay. Only the gutters and the crest give ground, so a phone shows the
+ * same row rather than a different one. */
 @media (max-width: 640px) {
   .pk-game {
-    grid-template-columns: 38px minmax(0, 1fr);
-    grid-template-areas: "conf matchup" ". state";
-    row-gap: 4px;
+    grid-template-columns: 46px minmax(0, 1fr) 50px;
+    gap: 6px;
+    padding: 8px 4px;
   }
 
-  .pk-game > .pk-conf { grid-area: conf; }
-  .pk-game > .pk-matchup { grid-area: matchup; }
-  .pk-game > .pk-state { grid-area: state; justify-content: flex-start; }
+  .pk-game.is-off { grid-template-columns: 46px 1fr; }
 
-  .pk-name { display: none; }
+  .pk-logo { width: 32px; height: 32px; }
 
-  .pk-side { padding: 6px; }
+  .pk-time { font-size: 13px; }
+
+  .pk-abbr, .pk-line { font-size: 13px; }
+
+  .pk-side { padding: 6px 2px; }
+
+  .pk-matchup { grid-template-columns: 1fr 2ch 1fr; gap: 4px; }
 
   .pk-bar-spacer { display: none; }
 
