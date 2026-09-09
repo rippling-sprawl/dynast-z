@@ -150,73 +150,76 @@
 .pk-day + .pk-rows { border-top: 0; }
 
 /* --- One game ---
- * time | matchup | confidence, with the result line spanning underneath when
- * there is one. The kickoff leads because it is the only cell that is always
- * populated and always the same shape, which makes it the column the eye runs
- * down; the control it used to sit opposite is now at the end of the row,
- * where the reading order puts it after the choice it applies to. */
+ * confidence | matchup | drag anchor, with the result line spanning underneath
+ * when there is one.
+ *
+ * The confidence leads because it is what the row is worth and what the reader
+ * is arranging; the anchor trails because it is the instrument, not the
+ * content. Between them the matchup carries its own date and time, since the
+ * list is ordered by rank and no day header sits above it any more. */
 
 .pk-game {
   display: grid;
-  grid-template-columns: 58px minmax(0, 1fr) 58px;
+  grid-template-columns: 40px minmax(0, 1fr) 40px;
   align-items: center;
   gap: 12px;
   padding: 8px 12px;
   border-radius: 0;
+  background: var(--panel);
 }
 
 .pk-rows .pk-game:nth-child(even) { background: var(--zebra); }
 
-/* Whole-row hover, which the loose list did not have: on a board this dense
- * the row under the pointer is worth marking. */
 .pk-rows .pk-game:hover { background: var(--surface-hover); }
 
 .pk-game.is-locked { opacity: 0.85; }
 
+/* Not in the ranking at all: no line was available, so there is nothing to
+ * grade a pick against. Listed after the board rather than hidden, because a
+ * missing row reads as a bug and this is a stated outcome. */
+.pk-off-list {
+  margin-top: 10px;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  background: var(--panel);
+}
+
 .pk-game.is-off {
-  grid-template-columns: 58px 1fr;
+  display: block;
   color: var(--text-5);
-  font-size: 12px;
+  font-size: 13px;
   font-style: italic;
 }
 
-/* --- Kickoff --- */
-
-.pk-time {
-  font-family: monospace;
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--text-2);
-  text-align: right;
-  white-space: nowrap;
-}
-
-/* --- Confidence --- */
+/* --- Confidence ---
+ * A field, not a control. It shows the row's position as a number and the only
+ * way to change it is to move the row, so it takes no focus, opens no menu and
+ * cannot be typed into. */
 
 .pk-conf {
   font-family: monospace;
-  font-size: 15px;
-  text-align: center;
-}
-
-.pk-conf-select {
-  width: 100%;
-  font-family: monospace;
-  font-size: 15px;
+  font-size: 19px;
   font-weight: 700;
   text-align: center;
-  padding: 6px 2px;
-  border-radius: 4px;
+  padding: 6px 0;
+  border-radius: 2px;
   border: 1px solid var(--accent-line);
   background: var(--accent-soft);
-  color: var(--accent-2);
-  cursor: pointer;
+  color: var(--accent);
+  user-select: none;
 }
 
-.pk-conf.is-empty { color: var(--text-5); }
+/* No side taken yet, so the number is what the row *would* be worth. Present
+ * but recessive — it is information, not a commitment. */
+.pk-conf.is-idle {
+  border-color: var(--hairline);
+  background: none;
+  color: var(--text-5);
+}
 
 .pk-conf.is-locked {
-  font-weight: 700;
+  border-color: var(--hairline);
+  background: var(--panel-hi2);
   color: var(--text-3);
 }
 
@@ -224,22 +227,47 @@
 
 .pk-matchup {
   display: grid;
-  grid-template-columns: 1fr 3ch 1fr;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   min-width: 0;
+}
+
+/* The separator and when the game is, stacked between the crests. */
+.pk-centre {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  min-width: 74px;
+  padding: 0 2px;
 }
 
 .pk-at {
   font-family: monospace;
-  font-size: 11px;
-  text-align: center;
+  font-size: 12px;
   color: var(--text-5);
+  line-height: 1.2;
 }
 
-/* A column, not a row: crest on top, then the abbreviation and the line
- * together under it. Both sides are now identical and symmetric about the "@",
- * which is why the away side no longer needs its own reversed direction. */
+.pk-date {
+  font-family: var(--vi-display);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--text-3);
+  white-space: nowrap;
+}
+
+.pk-time {
+  font-family: monospace;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-2);
+  white-space: nowrap;
+}
+
 .pk-side {
   display: flex;
   flex-direction: column;
@@ -259,9 +287,6 @@
 
 .pk-side:disabled { cursor: default; }
 
-/* The pick. A border and a tinted plate rather than a filled button: sixteen
- * saturated blocks down the page would drown the one thing that actually varies
- * between rows, which is the line. */
 .pk-side.is-picked {
   border-color: var(--accent-line);
   background: var(--accent-soft);
@@ -270,8 +295,6 @@
 .pk-side.is-picked .pk-abbr,
 .pk-side.is-picked .pk-line { color: var(--accent-2); }
 
-/* Which side actually covered, once the game is graded. Independent of whether
- * it was picked — the row has to be readable as a result, not only as a score. */
 .pk-side.is-covered {
   border-color: var(--good-line);
   background: var(--good-tint);
@@ -283,7 +306,6 @@
   flex: none;
 }
 
-/* The abbreviation and the line, one unit under the crest. */
 .pk-meta {
   display: flex;
   align-items: baseline;
@@ -304,7 +326,6 @@
   color: var(--text);
 }
 
-/* The number the whole page is about, so it keeps the brightest text tone. */
 .pk-line {
   font-family: monospace;
   font-size: 14px;
@@ -313,13 +334,74 @@
   white-space: nowrap;
 }
 
+/* --- Drag anchor ---
+ * touch-action: none is the whole reason this works on a phone. Without it the
+ * browser claims the vertical gesture for scrolling before the first
+ * pointermove is delivered, and the row never moves. It is scoped to the
+ * handle, so the rest of the board scrolls normally. */
+
+.pk-drag {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid var(--hairline);
+  border-radius: 2px;
+  background: var(--panel-hi);
+  color: var(--text-4);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.pk-drag:hover { border-color: var(--vi-gold-line); color: var(--accent); }
+
+.pk-drag:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.pk-drag:active { cursor: grabbing; }
+
+.pk-drag.is-locked {
+  border-style: dashed;
+  background: none;
+  cursor: default;
+  font-size: 14px;
+}
+
+/* Three bars, drawn rather than set as a glyph so the target is the 40px
+ * button and not the size of a character inside it. */
+.pk-grip {
+  width: 16px;
+  height: 2px;
+  background: currentColor;
+  box-shadow: 0 -5px 0 currentColor, 0 5px 0 currentColor;
+}
+
+/* The row under the finger. Lifted off the board so it reads as detached and
+ * in motion, which is the only feedback the live-reorder approach gives. */
+.pk-rows.is-reordering { cursor: grabbing; }
+
+.pk-rows.is-reordering .pk-game { transition: transform 120ms ease; }
+
+.pk-game.is-dragging {
+  background: var(--accent-soft) !important;
+  box-shadow: 0 6px 18px var(--overlay);
+  outline: 1px solid var(--vi-gold-line);
+  position: relative;
+  z-index: 2;
+}
+
 /* --- State column --- */
 
 /* The result and the pool, on their own line under the matchup rather than
  * squeezed into a trailing cell — there can be one chip per player, and they
  * were wrapping into a column two characters wide. */
 .pk-state {
-  grid-column: 2 / -1;
+  grid-column: 1 / -1;
   font-family: monospace;
   font-size: 12px;
   color: var(--text-3);
@@ -597,27 +679,34 @@
 .pk-rules b { color: var(--text-bright); }
 
 /* --- Narrow screens ---
- * The shape holds: the crest and the abbreviation are what identify a team, and
- * both stay. Only the gutters and the crest give ground, so a phone shows the
- * same row rather than a different one. */
+ * The shape holds: confidence, matchup, anchor. Only the gutters, the crest
+ * and the type give ground, so a phone shows the same row rather than a
+ * different one — and the 40px anchor keeps its full size, because it is the
+ * one thing on the row that has to be hit with a thumb. */
 @media (max-width: 640px) {
   .pk-game {
-    grid-template-columns: 46px minmax(0, 1fr) 50px;
+    grid-template-columns: 34px minmax(0, 1fr) 38px;
     gap: 6px;
-    padding: 8px 4px;
+    padding: 8px 6px;
   }
 
-  .pk-game.is-off { grid-template-columns: 46px 1fr; }
-
-  .pk-logo { width: 32px; height: 32px; }
-
-  .pk-time { font-size: 13px; }
+  .pk-logo { width: 30px; height: 30px; }
 
   .pk-abbr, .pk-line { font-size: 13px; }
 
+  .pk-conf { font-size: 16px; padding: 5px 0; }
+
+  .pk-centre { min-width: 62px; }
+
+  .pk-date { font-size: 10px; letter-spacing: 0.2px; }
+
+  .pk-time { font-size: 12px; }
+
+  .pk-drag { width: 38px; height: 44px; }
+
   .pk-side { padding: 6px 2px; }
 
-  .pk-matchup { grid-template-columns: 1fr 2ch 1fr; gap: 4px; }
+  .pk-matchup { gap: 4px; }
 
   .pk-bar-spacer { display: none; }
 

@@ -19,13 +19,29 @@
  * a hole that only the locked pick could fill. See the note in
  * api/_pickem/scoring.py.
  *
- * The three mutations below are written so that an invalid state is
- * unreachable rather than merely rejected. Picking a game takes the highest
- * free value, un-picking one simply releases its value, and choosing a value
- * another game holds swaps the two rather than duplicating it. The server
- * validates all of this again (api/_pickem/scoring.py) — it has to, since the
- * client is not trusted — but a page that can only ever submit a legal week
- * never has to explain a rejection.
+ * CONFIDENCE IS POSITION, NOT AN INPUT
+ *
+ * The board is one ordered list of the week's games, best at the top, and a
+ * game's confidence is simply where it sits: the top row is N, the bottom is 1.
+ * Nothing is typed and nothing is chosen from a menu, so a duplicate or an
+ * out-of-range value is not rejected — it cannot be expressed. Ranking is what
+ * the reader is actually doing, and a list they drag is a truer instrument for
+ * it than sixteen selects that each have to be reconciled against the others.
+ *
+ * Because the order no longer follows the schedule, the day headers are gone
+ * and every row carries its own date. A row can sit above a game three days
+ * earlier, so a header saying "Sunday" over it would be a lie.
+ *
+ * LOCKED ROWS ARE ANCHORS
+ *
+ * A game that has kicked off keeps the confidence it was saved with — that is
+ * the whole point of the lock — so it cannot be renumbered by somebody else
+ * being dragged past it. It stays in the list at its own value, is not
+ * draggable, and the free values flow around it. See pkAssign.
+ *
+ * The server validates all of this again (api/_pickem/scoring.py) — it has to,
+ * since the client is not trusted — but a page that can only ever submit a
+ * legal week never has to explain a rejection.
  *
  * Everything is ES5 globals, like the rest of scripts/ — no modules.
  */
@@ -60,6 +76,9 @@
       fmt = {
         time: new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit', timeZone: TZ }),
         dayLong: new Intl.DateTimeFormat('en-US', { weekday: 'long', month: 'long', day: 'numeric', timeZone: TZ }),
+        // "Sun Sep 13" — the row's own date, now that the list is ordered by
+        // rank and no day header sits above it to say which day it is.
+        dayRow: new Intl.DateTimeFormat('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: TZ }),
         dayShort: new Intl.DateTimeFormat('en-US', { weekday: 'short', hour: 'numeric', minute: '2-digit', timeZone: TZ }),
         dayKey: new Intl.DateTimeFormat('en-CA', { year: 'numeric', month: '2-digit', day: '2-digit', timeZone: TZ })
       };
@@ -102,113 +121,155 @@
     return (value > 0 ? '+' : '−') + Math.abs(value);
   }
 
-  /* ---------- the confidence model ---------- */
-
-  // `picks` is { game_id: { pick: 'GB', confidence: 12 } } and is never mutated
-  // in place: each of these returns a new object, so a page can hand the old one
-  // back if a save is refused.
-  function pkPickCount(picks) {
-    return Object.keys(picks).length;
-  }
-
-  // The highest value in 1..n nobody is using. Highest rather than lowest
-  // because a game you have just decided to pick is, more often than not, one
-  // you feel strongly about — and it is trivially demoted from there.
-  function highestFree(picks, n) {
-    var taken = {}, key;
-    for (key in picks) if (picks.hasOwnProperty(key)) taken[picks[key].confidence] = true;
-    for (var v = n; v >= 1; v--) if (!taken[v]) return v;
-    return null;
-  }
-
-  /* Pick a side. A game that is already picked on that side is un-picked, which
-   * is what a second tap on the same button means. Switching sides keeps the
-   * confidence: it is the same slot in your ranking, just the other team.
+  /* ---------- the confidence model ----------
    *
-   * `n` is the week's pickable-game count, the top of the confidence range. */
-  function pkTogglePick(picks, gameId, side, n) {
-    var next = {}, key;
-    for (key in picks) if (picks.hasOwnProperty(key)) next[key] = picks[key];
-    var current = next[gameId];
-    if (current && current.pick === side) return pkClearPick(picks, gameId);
-    if (current) {
-      next[gameId] = { pick: side, confidence: current.confidence };
-      return next;
-    }
-    // +1 because `next` does not contain this game yet: with k picks already
-    // down, the one free value in 1..k+1 is k+1.
-    var free = highestFree(next, n || pkPickCount(next) + 1);
-    // Nothing free can only happen if every value in 1..n is already spoken
-    // for, i.e. the whole week is picked, in which case there is no game left
-    // to pick anyway. Refusing beats inventing a duplicate.
-    if (free === null) return picks;
-    next[gameId] = { pick: side, confidence: free };
-    return next;
+   * Two pieces of state, deliberately separate:
+   *
+   *   order   an array of game ids, best first. This is what the reader drags.
+   *   sides   { game_id: 'GB' } — which team, for the games they have taken a
+   *           side on. A game can sit in the order without a side; it simply
+   *           scores nothing.
+   *
+   * Confidence is never stored, only derived from `order` by pkAssign. That is
+   * what makes a duplicate impossible rather than merely invalid.
+   */
+
+  function pkPickCount(sides) {
+    return Object.keys(sides).length;
   }
 
-  /* Un-pick a game. Its confidence is simply released — nothing renumbers,
-   * which is exactly what makes this safe to do after another game in the week
-   * has locked. */
-  function pkClearPick(picks, gameId) {
-    if (!picks[gameId]) return picks;
-    var next = {}, key;
-    for (key in picks) {
-      if (!picks.hasOwnProperty(key) || key === gameId) continue;
-      next[key] = { pick: picks[key].pick, confidence: picks[key].confidence };
-    }
-    return next;
+  /* Confidence for every game in `order`. Locked games keep the value they were
+   * saved with; everything else takes the remaining values, highest first.
+   *
+   * -> { game_id: confidence }
+   */
+  function pkAssign(order, locked, n) {
+    var used = {}, key;
+    for (key in locked) if (locked.hasOwnProperty(key)) used[locked[key]] = true;
+
+    var free = [];
+    for (var v = n; v >= 1; v--) if (!used[v]) free.push(v);
+
+    var out = {}, i = 0;
+    order.forEach(function (gameId) {
+      if (locked.hasOwnProperty(gameId)) out[gameId] = locked[gameId];
+      else if (i < free.length) out[gameId] = free[i++];
+    });
+    return out;
   }
 
-  /* Give a game a confidence. Whoever held that value takes this game's old one
-   * — a swap, so the permutation survives and the reader never has to resolve a
-   * duplicate the page created. */
-  function pkSetConfidence(picks, gameId, value) {
-    var mine = picks[gameId];
-    if (!mine || value === mine.confidence) return picks;
-    var next = {}, key;
-    for (key in picks) {
-      if (!picks.hasOwnProperty(key)) continue;
-      var p = picks[key];
-      if (key === gameId) next[key] = { pick: p.pick, confidence: value };
-      else if (p.confidence === value) next[key] = { pick: p.pick, confidence: mine.confidence };
-      else next[key] = { pick: p.pick, confidence: p.confidence };
+  /* The order to open on.
+   *
+   * A saved week has to come back exactly as it was left, so a game with a
+   * stored confidence claims that slot outright. The games with no stored pick
+   * then fill whatever is left, in kickoff order, which is the only sensible
+   * default for a row nobody has ranked yet.
+   */
+  function pkInitialOrder(games, mine) {
+    var pickable = games.filter(function (g) {
+      return g.spread_home !== null && g.spread_home !== undefined;
+    });
+    var n = pickable.length;
+    var slots = {};                       // confidence -> game_id
+    var rest = [];
+
+    pickable.forEach(function (g) {
+      var saved = mine[g.game_id];
+      var c = saved && saved.confidence;
+      if (c && c >= 1 && c <= n && !slots[c]) slots[c] = g.game_id;
+      else rest.push(g.game_id);
+    });
+
+    var order = [];
+    for (var v = n; v >= 1; v--) {
+      order.push(slots[v] || rest.shift());
     }
-    return next;
+    return order.filter(Boolean);
   }
 
-  // The wire shape the PUT wants: the complete intended set for the week.
-  function pkToPayload(picks) {
-    return Object.keys(picks).map(function (gameId) {
-      return {
-        game_id: gameId,
-        pick: picks[gameId].pick,
-        confidence: picks[gameId].confidence
-      };
+  /* The order a drop produced, made presentable. The DOM order after a live
+   * reorder is exactly where the reader put the row; this is that order with
+   * the locked rows settled back onto their own numbers. */
+  function pkAfterDrop(domOrder, locked, n) {
+    return pkNormalise(domOrder, locked, n);
+  }
+
+  /* Sort an order so the confidence column reads straight down.
+   *
+   * This is not cosmetic. A locked row holds its own value while the free
+   * values flow around it, so the raw drop order can assign 6, 5, 3, 4, 2, 1
+   * top to bottom — a ranked list whose ranks are out of order, which is
+   * nonsense on a board whose entire premise is "best at the top". Re-sorting
+   * by the assigned value puts the locked row back where its number says it
+   * belongs and everything else either side of it.
+   *
+   * One pass is enough: re-assigning over the sorted order yields the same map,
+   * because the free values were already handed out in descending order and
+   * sorting only moves the locked rows among them. */
+  function pkNormalise(order, locked, n) {
+    var conf = pkAssign(order, locked, n);
+    return order.slice().sort(function (a, b) {
+      return (conf[b] || 0) - (conf[a] || 0);
     });
   }
 
-  // Read the server's `mine` map back into the model, dropping the scoring it
-  // carries. A pick with no confidence is dropped rather than defaulted: it
-  // cannot happen through the API, and inventing a value would silently move
-  // somebody else's.
-  function pkFromServer(mine) {
-    var picks = {}, key;
+  /* Move one game to a new index. Returns a new array; the old one is left
+   * alone so a refused save can put it back. */
+  function pkMove(order, gameId, toIndex, locked, n) {
+    var next = order.slice();
+    var from = next.indexOf(gameId);
+    if (from < 0) return order;
+    next.splice(from, 1);
+    next.splice(Math.max(0, Math.min(next.length, toIndex)), 0, gameId);
+    return locked ? pkNormalise(next, locked, n) : next;
+  }
+
+  /* Take or drop a side. A second tap on the side already taken clears it, and
+   * clearing a side does NOT remove the game from the order — its rank is
+   * still meaningful the moment a side is taken again. */
+  function pkToggleSide(sides, gameId, side) {
+    var next = {}, key;
+    for (key in sides) if (sides.hasOwnProperty(key)) next[key] = sides[key];
+    if (next[gameId] === side) delete next[gameId];
+    else next[gameId] = side;
+    return next;
+  }
+
+  // The wire shape: only the games a side has been taken on, each carrying the
+  // confidence its position gives it.
+  function pkToPayload(order, sides, locked, n) {
+    var conf = pkAssign(order, locked, n);
+    return order.filter(function (gameId) {
+      return sides[gameId] && conf[gameId];
+    }).map(function (gameId) {
+      return { game_id: gameId, pick: sides[gameId], confidence: conf[gameId] };
+    });
+  }
+
+  // The server's `mine` map, split into the two pieces of state above.
+  function pkSidesFromServer(mine) {
+    var sides = {}, key;
     for (key in mine) {
-      if (!mine.hasOwnProperty(key)) continue;
-      if (mine[key] && mine[key].pick && mine[key].confidence) {
-        picks[key] = { pick: mine[key].pick, confidence: mine[key].confidence };
+      if (mine.hasOwnProperty(key) && mine[key] && mine[key].pick) {
+        sides[key] = mine[key].pick;
       }
     }
-    return picks;
+    return sides;
+  }
+
+  // Locked games keep whatever they were saved with. A locked game with no
+  // saved pick has no value to protect and is left out, so its slot stays free.
+  function pkLockedFromServer(games, mine) {
+    var locked = {};
+    games.forEach(function (g) {
+      var saved = mine[g.game_id];
+      if (g.locked && saved && saved.confidence) locked[g.game_id] = saved.confidence;
+    });
+    return locked;
   }
 
   /* ---------- rows ---------- */
 
-  /* The crest carries the identity, so it leads and it is large. Under it, the
-   * abbreviation and the line read as one unit — "SEA −3" is the thing being
-   * chosen, and splitting them across the row made the reader pair them up
-   * themselves on sixteen rows. The full club name is gone: a 40px crest above
-   * its own abbreviation says "Seahawks" without spending a column on it. */
   function teamCell(abbr, line) {
     return '<img class="pk-logo" src="' + LOGO_DIR + esc(abbr) + '.svg" alt="" ' +
       'aria-hidden="true" loading="lazy">' +
@@ -218,12 +279,9 @@
       '</span>';
   }
 
-  /* One side of one game, as a button. Disabled once the game has kicked off:
-   * the server refuses a late edit anyway, and a control that looks live and
-   * then fails is worse than one that says up front it is closed. */
-  function sideButton(game, side, picks) {
+  function sideButton(game, side, sides) {
     var abbr = side === 'home' ? game.home : game.away;
-    var chosen = picks[game.game_id] && picks[game.game_id].pick === abbr;
+    var chosen = sides[game.game_id] === abbr;
     var covered = game.result === side;
     return '<button type="button" class="pk-side' +
       (chosen ? ' is-picked' : '') + (covered ? ' is-covered' : '') +
@@ -233,60 +291,68 @@
       teamCell(abbr, pkSpreadLabel(spreadFor(game, side))) + '</button>';
   }
 
-  /* The confidence control. A <select> rather than a drag handle: sixteen rows
-   * of drag targets is unusable on a phone, and the value is a number the
-   * player is choosing deliberately rather than an order they are arranging. */
-  function confidenceCell(game, picks, n) {
-    var mine = picks[game.game_id];
-    if (game.locked) {
-      return '<span class="pk-conf is-locked">' +
-        (mine ? esc(mine.confidence) : '—') + '</span>';
-    }
-    if (!mine) return '<span class="pk-conf is-empty">–</span>';
-    // The whole range, not just the values in play: choosing one another game
-    // holds swaps them, so every option is reachable and none of them can
-    // produce a duplicate.
-    var opts = '';
-    for (var v = n; v >= 1; v--) {
-      opts += '<option value="' + v + '"' +
-        (v === mine.confidence ? ' selected' : '') + '>' + v + '</option>';
-    }
-    return '<span class="pk-conf"><select class="pk-conf-select" ' +
-      'data-game="' + esc(game.game_id) + '" ' +
-      'aria-label="Confidence for ' + esc(game.away + ' at ' + game.home) + '">' +
-      opts + '</select></span>';
-  }
-
-  /* What happened, on the right of the row. Three states, in the order a game
-   * passes through them: the kickoff time, then who is on it once it locks,
-   * then the verdict and what it paid once it is graded.
-   *
-   * The chips stay through the final state. Dropping them there was the first
-   * version and it was backwards — the moment a game is graded is exactly when
-   * who-picked-what is worth reading, and it is also the only view of the pool
-   * that survives the week. */
-  /* The kickoff, leading the row. It used to share the trailing cell with the
-   * result and the chips, which meant the one column that is always populated
-   * kept moving and changing shape. On its own at the left it is a fixed,
-   * scannable gutter, and the trailing cell is free to be the input. */
-  function timeCell(game) {
+  /* The centre of the matchup: the separator, then when the game is, stacked
+   * under it. It sits between the two crests because that is the one place in
+   * the row that is about the fixture rather than about either side of it —
+   * and with the list ordered by rank rather than by day, the date has to be on
+   * the row or it is nowhere. */
+  function centreCell(game) {
     var d = toDate(game.kickoff);
-    return '<span class="pk-time">' + esc(d ? timeLabel(d) : 'TBD') + '</span>';
+    return '<span class="pk-centre">' +
+      '<span class="pk-at">@</span>' +
+      '<span class="pk-date">' + esc(d ? formats().dayRow.format(d) : 'TBD') + '</span>' +
+      '<span class="pk-time">' + esc(d ? timeLabel(d) : '') + '</span>' +
+    '</span>';
   }
 
-  function stateCell(game, picks, others) {
+  /* The confidence, on the left. A read-only field, not a control: it is the
+   * row's position expressed as a number, and the way to change it is to move
+   * the row. Rendering it as a <select> invited the reader to edit the one
+   * thing that is now derived.
+   *
+   * Muted when no side has been taken — the number still says what the row
+   * would be worth, which is exactly the thing worth knowing before picking. */
+  function confidenceCell(game, sides, confidence) {
+    var live = !!sides[game.game_id];
+    return '<span class="pk-conf' + (live ? '' : ' is-idle') +
+      (game.locked ? ' is-locked' : '') + '"' +
+      ' title="' + (live ? 'Worth ' + esc(confidence) + ' if it lands'
+                         : 'Worth ' + esc(confidence) + ' once you take a side') + '">' +
+      esc(confidence || '–') + '</span>';
+  }
+
+  /* The drag anchor, to the right of the matchup. A button rather than a bare
+   * span so it is reachable by keyboard and announced as something operable;
+   * the arrow keys move the row, which is the whole interaction for anyone not
+   * using a pointer.
+   *
+   * A locked row shows a lock in the same cell instead: the column stays put,
+   * and the reason the row will not move is where the handle would have been. */
+  function dragCell(game) {
+    if (game.locked) {
+      return '<span class="pk-drag is-locked" title="This game has kicked off — ' +
+        'its rank is fixed" aria-hidden="true">🔒</span>';
+    }
+    return '<button type="button" class="pk-drag" data-drag ' +
+      'data-game="' + esc(game.game_id) + '" ' +
+      'aria-label="Reorder ' + esc(game.away + ' at ' + game.home) +
+      '. Drag, or use the arrow keys." title="Drag to reorder">' +
+      '<span class="pk-grip" aria-hidden="true"></span></button>';
+  }
+
+  function stateCell(game, sides, others, confidence) {
+    var mine = sides[game.game_id];
     if (game.result) {
-      var mine = picks[game.game_id];
       var verdict = game.result === 'push' ? 'Push'
         : esc(game.result === 'home' ? game.home : game.away) + ' covered';
       var score = (game.away_score === null || game.away_score === undefined) ? ''
         : ' <span class="pk-score">' + esc(game.away_score) + '–' +
           esc(game.home_score) + '</span>';
       var won = mine && game.result !== 'push' &&
-        mine.pick === (game.result === 'home' ? game.home : game.away);
+        mine === (game.result === 'home' ? game.home : game.away);
       var points = mine
         ? '<span class="pk-points' + (won ? ' is-hit' : ' is-miss') + '">' +
-            (won ? '+' + esc(mine.confidence) : '0') + '</span>'
+            (won ? '+' + esc(confidence) : '0') + '</span>'
         : '';
       return '<span class="pk-state is-final">' + verdict + score + points +
         chips(game, others) + '</span>';
@@ -295,8 +361,6 @@
       return '<span class="pk-state is-locked">' +
         (chips(game, others) || '<span class="pk-lock">Locked</span>') + '</span>';
     }
-    // Nothing to say yet: the row is the time, the two sides and the control,
-    // and an empty trailing line would only add a gap between rows.
     return '';
   }
 
@@ -325,51 +389,168 @@
     return out;
   }
 
-  function pkGameRow(game, picks, others, n) {
-    if (game.spread_home === null || game.spread_home === undefined) {
-      // Off the board: no line ever froze for it, so there is nothing to grade
-      // a pick against. Shown rather than hidden, because a missing row reads
-      // as a bug and this is a stated outcome.
-      return '<div class="pk-game is-off">' + timeCell(game) +
-        '<span class="pk-off">' + esc(game.away) + ' at ' + esc(game.home) +
-        ' — no line was available at the deadline, so this game is not ' +
-        'part of the week.</span></div>';
-    }
+  function pkGameRow(game, sides, others, confidence) {
     return '<div class="pk-game' + (game.locked ? ' is-locked' : '') +
       (game.result ? ' is-final' : '') + '" data-game="' + esc(game.game_id) + '">' +
-      timeCell(game) +
+      confidenceCell(game, sides, confidence) +
       '<span class="pk-matchup">' +
-        sideButton(game, 'away', picks) +
-        '<span class="pk-at">@</span>' +
-        sideButton(game, 'home', picks) +
+        sideButton(game, 'away', sides) +
+        centreCell(game) +
+        sideButton(game, 'home', sides) +
       '</span>' +
-      confidenceCell(game, picks, n) +
-      stateCell(game, picks, others) +
+      dragCell(game) +
+      stateCell(game, sides, others, confidence) +
       '</div>';
   }
 
-  /* The week, grouped by calendar day so it reads Thu / Sun / Mon the way the
-   * schedule page does. */
-  function pkRenderWeek(games, picks, others, n) {
+  /* The board: one ranked list, best first. No day headers — the order is the
+   * reader's ranking, not the schedule, so a row can sit above a game played
+   * three days earlier and any header over it would be wrong.
+   *
+   * Games with no line are not part of the ranking at all and are listed after
+   * it, so the count in the header and the length of the list agree. */
+  function pkRenderWeek(games, order, sides, others, locked, n) {
     if (!games || !games.length) {
       return '<p class="pk-empty">This week has not been opened yet. Lines are ' +
         'frozen at 3:00 AM ET on Tuesday.</p>';
     }
-    var f = formats();
-    var html = '', lastKey = null;
-    games.forEach(function (g) {
-      var d = toDate(g.kickoff);
-      var key = d ? f.dayKey.format(d) : 'tbd';
-      if (key !== lastKey) {
-        if (lastKey !== null) html += '</div>';
-        html += '<div class="pk-day"><h3>' +
-          esc(d ? f.dayLong.format(d) : 'Time to be announced') + '</h3></div>' +
-          '<div class="pk-rows">';
-        lastKey = key;
-      }
-      html += pkGameRow(g, picks, others, n);
+    var byId = {};
+    games.forEach(function (g) { byId[g.game_id] = g; });
+    var conf = pkAssign(order, locked, n);
+
+    var rows = order.map(function (gameId) {
+      var g = byId[gameId];
+      return g ? pkGameRow(g, sides, others, conf[gameId]) : '';
+    }).join('');
+
+    var off = games.filter(function (g) {
+      return g.spread_home === null || g.spread_home === undefined;
     });
-    return html + '</div>';
+    var offHtml = off.length ? '<div class="pk-off-list">' + off.map(function (g) {
+      return '<div class="pk-game is-off">' +
+        '<span class="pk-off">' + esc(g.away) + ' at ' + esc(g.home) +
+        ' — no line was available at the deadline, so this game is not part ' +
+        'of the week.</span></div>';
+    }).join('') + '</div>' : '';
+
+    return '<div class="pk-rows" data-sortable>' + rows + '</div>' + offHtml;
+  }
+
+  /* ---------- dragging ----------
+   * Pointer Events, not HTML5 drag-and-drop: the latter does not exist on
+   * touch, and the requirement is one interaction that works with a finger and
+   * a mouse alike. Pointer Events are that one interaction.
+   *
+   * The list is reordered live in the DOM as the pointer crosses each row's
+   * midpoint, rather than dragging a floating ghost and computing an insertion
+   * point on release. It is less machinery, and the reader sees the ranking
+   * they are making rather than a preview of it.
+   *
+   * `onDrop` is handed the new order once, on release — not on every move — so
+   * the page re-renders and recomputes confidences a single time.
+   */
+  function pkDragList(container, onDrop) {
+    var dragging = null;      // the .pk-game being moved
+    var pointerId = null;
+    var scroller = null;      // rAF handle for edge auto-scroll
+    var edgeDy = 0;
+
+    function rows() {
+      return Array.prototype.filter.call(
+        container.querySelectorAll('.pk-game'),
+        function (el) { return el !== dragging; });
+    }
+
+    function orderNow() {
+      return Array.prototype.map.call(
+        container.querySelectorAll('.pk-game'),
+        function (el) { return el.getAttribute('data-game'); });
+    }
+
+    // Auto-scroll when the finger is held near the top or bottom of the
+    // viewport. Without it a sixteen-row board cannot be reordered on a phone:
+    // the row you want is off-screen and the page will not scroll, because the
+    // gesture has been claimed by the drag.
+    function tick() {
+      if (!dragging) { scroller = null; return; }
+      if (edgeDy) window.scrollBy(0, edgeDy);
+      scroller = window.requestAnimationFrame(tick);
+    }
+
+    function moveTo(clientY) {
+      var EDGE = 72, SPEED = 12;
+      if (clientY < EDGE) edgeDy = -SPEED;
+      else if (clientY > window.innerHeight - EDGE) edgeDy = SPEED;
+      else edgeDy = 0;
+      if (!scroller) scroller = window.requestAnimationFrame(tick);
+
+      // Insert before the first row whose midpoint is below the pointer. A
+      // locked row is skipped as a *target* but still occupies space, so the
+      // dragged row settles either side of it and never displaces it.
+      var target = null;
+      rows().some(function (el) {
+        var box = el.getBoundingClientRect();
+        if (clientY < box.top + box.height / 2) { target = el; return true; }
+        return false;
+      });
+      if (target) container.insertBefore(dragging, target);
+      else container.appendChild(dragging);
+    }
+
+    function start(e) {
+      var handle = e.target.closest ? e.target.closest('[data-drag]') : null;
+      if (!handle || !container.contains(handle)) return;
+      var row = handle.closest('.pk-game');
+      if (!row || row.classList.contains('is-locked')) return;
+
+      dragging = row;
+      pointerId = e.pointerId;
+      row.classList.add('is-dragging');
+      container.classList.add('is-reordering');
+      // The handle keeps the pointer for the whole gesture, so a fast drag that
+      // outruns the row still delivers its moves here.
+      try { handle.setPointerCapture(pointerId); } catch (err) { /* older Safari */ }
+      e.preventDefault();
+    }
+
+    function move(e) {
+      if (!dragging || e.pointerId !== pointerId) return;
+      e.preventDefault();
+      moveTo(e.clientY);
+    }
+
+    function end(e) {
+      if (!dragging || (e && e.pointerId !== pointerId)) return;
+      dragging.classList.remove('is-dragging');
+      container.classList.remove('is-reordering');
+      edgeDy = 0;
+      if (scroller) { window.cancelAnimationFrame(scroller); scroller = null; }
+      dragging = null;
+      pointerId = null;
+      onDrop(orderNow());
+    }
+
+    container.addEventListener('pointerdown', start);
+    container.addEventListener('pointermove', move);
+    container.addEventListener('pointerup', end);
+    container.addEventListener('pointercancel', end);
+
+    /* Keyboard equivalent. A ranking that can only be made by dragging is a
+     * ranking some people cannot make at all, and the arrow keys are two lines
+     * of code on top of the model already here. */
+    container.addEventListener('keydown', function (e) {
+      if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
+      var handle = e.target.closest ? e.target.closest('[data-drag]') : null;
+      if (!handle) return;
+      e.preventDefault();
+      var order = orderNow();
+      var gameId = handle.getAttribute('data-game');
+      var i = order.indexOf(gameId);
+      var to = e.key === 'ArrowUp' ? i - 1 : i + 1;
+      if (i < 0 || to < 0 || to >= order.length) return;
+      onDrop(pkMove(order, gameId, to), gameId);
+      // The caller normalises; see pkAfterDrop.
+    });
   }
 
   /* ---------- standings ---------- */
@@ -450,15 +631,19 @@
   global.pkSpreadFor = spreadFor;
   global.pkSpreadLabel = pkSpreadLabel;
   global.pkKickoffLabel = pkKickoffLabel;
-  global.pkTimeLabel = function (iso) { var d = toDate(iso); return d ? timeLabel(d) : 'TBD'; };
   global.pkPickCount = pkPickCount;
-  global.pkTogglePick = pkTogglePick;
-  global.pkClearPick = pkClearPick;
-  global.pkSetConfidence = pkSetConfidence;
+  global.pkAssign = pkAssign;
+  global.pkInitialOrder = pkInitialOrder;
+  global.pkMove = pkMove;
+  global.pkNormalise = pkNormalise;
+  global.pkAfterDrop = pkAfterDrop;
+  global.pkToggleSide = pkToggleSide;
   global.pkToPayload = pkToPayload;
-  global.pkFromServer = pkFromServer;
+  global.pkSidesFromServer = pkSidesFromServer;
+  global.pkLockedFromServer = pkLockedFromServer;
   global.pkGameRow = pkGameRow;
   global.pkRenderWeek = pkRenderWeek;
+  global.pkDragList = pkDragList;
   global.pkStandingsTable = pkStandingsTable;
   global.pkMiniStandings = pkMiniStandings;
 })(window);

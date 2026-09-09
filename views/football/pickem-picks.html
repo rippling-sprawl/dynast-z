@@ -75,16 +75,19 @@
      *
      * THE WORKING SET IS NOT THE SERVER'S
      *
-     * `picks` is edited locally and only becomes real on Save. `saved` is the
-     * last thing the server confirmed, and comparing the two is what enables
-     * the button and what makes leaving the page with unsaved edits worth
+     * `order` and `sides` are edited locally and only become real on Save.
+     * `saved` is the last thing the server confirmed, and comparing the two is
+     * what enables the button and what makes leaving with unsaved edits worth
      * warning about. A pick that only exists in this tab has not been made. */
 
     var state = { season: null, week: null, weeks: [] };
     var data = null;        // the last GET payload
-    var picks = {};         // the working set
+    var order = [];         // game ids, best first — this IS the ranking
+    var sides = {};         // { game_id: 'GB' } — which team, where one is taken
+    var locked = {};        // { game_id: confidence } — kicked off, immutable
     var saved = '';         // JSON of the last confirmed set
     var busy = false;
+    var dragWired = false;
 
     var boardEl = document.getElementById('board');
     var barEl = document.getElementById('bar');
@@ -120,9 +123,15 @@
 
     /* ---------- rendering ---------- */
 
+    function payload() {
+      return pkToPayload(order, sides, locked, data ? data.n : 0);
+    }
+
+    /* Keyed by game id rather than by list position, so it compares what will
+     * actually be sent. Moving a row that has no side taken changes the order
+     * but changes nothing submittable, and that should not light up Save. */
     function normalisedPayload() {
-      // Sorted, so a re-ordering of the same picks is not read as an edit.
-      return JSON.stringify(pkToPayload(picks).sort(function (a, b) {
+      return JSON.stringify(payload().slice().sort(function (a, b) {
         return a.game_id < b.game_id ? -1 : 1;
       }));
     }
@@ -131,22 +140,27 @@
 
     function render() {
       if (!data) return;
-      var k = pkPickCount(picks);
-      // What is still winnable is the sum of the confidences on games that have
-      // not been graded yet — not a formula over k. A partial week is worth
-      // whichever values the player put on it, which is the whole point of the
-      // 1..N range, so this has to be counted rather than derived.
-      var live = 0;
-      (data.games || []).forEach(function (g) {
-        var mine = picks[g.game_id];
-        if (mine && !g.result) live += mine.confidence;
+      var k = pkPickCount(sides);
+      var conf = pkAssign(order, locked, data.n);
+
+      // What is still winnable: the confidences sitting on games that have a
+      // side taken and are not graded yet. Counted rather than derived, since a
+      // partial week is worth whichever ranks the reader put their picks on.
+      var live = 0, byId = {};
+      (data.games || []).forEach(function (g) { byId[g.game_id] = g; });
+      order.forEach(function (gameId) {
+        var g = byId[gameId];
+        if (sides[gameId] && g && !g.result) live += conf[gameId] || 0;
       });
 
-      boardEl.innerHTML = pkRenderWeek(data.games, picks, data.others, data.n);
+      boardEl.innerHTML = pkRenderWeek(data.games, order, sides, data.others,
+                                       locked, data.n);
+      // The board element is replaced on every render, so the drag listeners
+      // go on the list inside it once and are re-attached each time.
+      wireDrag();
       barEl.hidden = false;
       statPicked.innerHTML = '<b>' + k + '</b> of ' + data.n + ' picked' +
-        (k < data.n ? ' · confidences 1–' + data.n + ', any ' + k + ' of them'
-                    : ' · confidences 1–' + data.n);
+        ' · drag to rank, best at the top';
       statPoints.innerHTML = (data.totals.mine.points ? '<b>' +
           data.totals.mine.points + '</b> points so far' : '') +
         (data.totals.mine.points && live ? ' · ' : '') +
@@ -177,17 +191,32 @@
       boardEl.addEventListener('click', function (e) {
         var btn = e.target.closest ? e.target.closest('.pk-side') : null;
         if (!btn || btn.disabled || !boardEl.contains(btn)) return;
-        picks = pkTogglePick(picks, btn.getAttribute('data-game'),
-                             btn.getAttribute('data-side'), data.n);
+        sides = pkToggleSide(sides, btn.getAttribute('data-game'),
+                             btn.getAttribute('data-side'));
         render();
       });
+    }
 
-      boardEl.addEventListener('change', function (e) {
-        var sel = e.target.closest ? e.target.closest('.pk-conf-select') : null;
-        if (!sel || !boardEl.contains(sel)) return;
-        picks = pkSetConfidence(picks, sel.getAttribute('data-game'),
-                                Number(sel.value));
+    /* The drag list lives on .pk-rows, which pkRenderWeek rebuilds, so this
+     * runs after every render. `dragWired` guards the one case that matters:
+     * a drop calls render(), which would otherwise re-enter here while the
+     * pointer sequence that triggered it is still unwinding. */
+    function wireDrag() {
+      var list = boardEl.querySelector('[data-sortable]');
+      if (!list || dragWired) { dragWired = false; return; }
+      pkDragList(list, function (next, keepFocus) {
+        // Settle the locked rows back onto their own numbers, so the
+        // confidence column always reads straight down the board.
+        order = pkAfterDrop(next, locked, data.n);
+        dragWired = true;
         render();
+        // A keyboard move has to keep the handle it was made from focused, or
+        // the second arrow press goes nowhere.
+        if (keepFocus) {
+          var el = boardEl.querySelector('[data-drag][data-game="' +
+            keepFocus.replace(/"/g, '\\"') + '"]');
+          if (el) el.focus();
+        }
       });
     }
 
@@ -226,7 +255,7 @@
       busy = true;
       saveBtn.disabled = true;
       setStatus('Saving…', '');
-      pickemSave(state.season, state.week, pkToPayload(picks)).then(function () {
+      pickemSave(state.season, state.week, payload()).then(function () {
         busy = false;
         saved = normalisedPayload();
         setStatus('Saved ' + new Date().toLocaleTimeString([], {
@@ -251,13 +280,15 @@
 
     function load(season, week, quiet) {
       if (!quiet) boardEl.innerHTML = '<p class="pk-empty">Loading…</p>';
-      return pickemLoadWeek(season, week).then(function (payload) {
-        data = payload;
-        state.season = payload.season;
-        state.week = payload.week;
-        state.weeks = payload.weeks && payload.weeks.length
-          ? payload.weeks : [payload.week];
-        picks = pkFromServer(payload.mine);
+      return pickemLoadWeek(season, week).then(function (body) {
+        data = body;
+        state.season = body.season;
+        state.week = body.week;
+        state.weeks = body.weeks && body.weeks.length
+          ? body.weeks : [body.week];
+        sides = pkSidesFromServer(body.mine);
+        locked = pkLockedFromServer(body.games, body.mine);
+        order = pkInitialOrder(body.games, body.mine);
         saved = normalisedPayload();
         syncWeeks();
         renderHeader();
