@@ -203,6 +203,12 @@ def action_api():
 # cannot swallow a future /football/schedule/... route.
 GAME_PAGE_RE = re.compile(r"^/football/schedule/game/[0-9]{1,12}/?$")
 
+# /football/pickem/picks and /football/pickem/picks/<week>. The week is optional
+# so a hand-typed URL without one still lands on the page, which resolves "this
+# week" itself. Digits-only and capped at two, matching the rewrite in
+# vercel.json.
+PICKEM_PICKS_RE = re.compile(r"^/football/pickem/picks(?:/[0-9]{1,2})?/?$")
+
 _game_odds_api = None
 
 
@@ -236,6 +242,48 @@ def bun_notes_api():
         _bun_notes_api = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(_bun_notes_api)
     return _bun_notes_api
+
+
+_pickem_api = None
+_pickem_standings_api = None
+
+
+def pickem_api():
+    """Load api/pickem.py so dev serves the Pick 'Em week board through exactly
+    the code production runs. Lazily, because a dev who never opens Pick 'Em
+    should not pay for the import.
+
+    This mirror delegates rather than re-implementing: the confidence rule, the
+    kickoff lock and the reveal filter are one implementation with two callers,
+    which is the only way the two runtimes cannot drift on the one rule where
+    drifting means leaking somebody's picks. Note that it is also why the
+    return=representation quirk the /api/bets mirror needs does not apply here
+    — these handlers use api/_pickem/store.py's own supabase_request, not the
+    shared one at the top of this file, and that one tolerates an empty body."""
+    global _pickem_api
+    if _pickem_api is None:
+        # No sys.path work here: api/pickem.py inserts its own directory before
+        # importing _pickem, and that insert is __file__-relative, so it lands
+        # on <repo>/api whichever runtime loaded it.
+        import importlib.util
+        path = os.path.join(DATA_DIR, "api", "pickem.py")
+        spec = importlib.util.spec_from_file_location("pickem_api", path)
+        _pickem_api = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(_pickem_api)
+    return _pickem_api
+
+
+def pickem_standings_api():
+    """Load api/pickem-standings.py. By path because the filename has a hyphen
+    in it, and lazily for the same reason as above."""
+    global _pickem_standings_api
+    if _pickem_standings_api is None:
+        import importlib.util
+        path = os.path.join(DATA_DIR, "api", "pickem-standings.py")
+        spec = importlib.util.spec_from_file_location("pickem_standings_api", path)
+        _pickem_standings_api = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(_pickem_standings_api)
+    return _pickem_standings_api
 
 
 def resolve_notes_actor(headers):
@@ -1437,6 +1485,60 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 self._json_response(200, [r["data"] for r in (rows or [])])
             except Exception as e:
                 self._json_response(500, {"error": str(e)})
+        # Exact-path, not startswith: "/api/pickem-standings" starts with
+        # "/api/pickem", so a prefix test here would serve every standings
+        # request the week board instead. The standings branch is also first,
+        # which makes that ordering visible rather than incidental.
+        elif self.path.split("?")[0] == "/api/pickem-standings":
+            api = pickem_standings_api()
+            store = api.store
+            user_id, err = store.resolve_actor(self.headers.get("X-User-Id"),
+                                               require_active=False)
+            if err:
+                self._json_response(*err)
+                return
+            params = parse_qs(urlparse(self.path).query)
+            now = store.now_utc()
+            try:
+                raw_season = (params.get("season") or [""])[0].strip()
+                raw_week = (params.get("week") or [""])[0].strip()
+                season = int(raw_season) if raw_season else store.current_season(now)
+                week = int(raw_week) if raw_week else None
+            except ValueError:
+                self._json_response(400, {"error": "season and week must be numbers"})
+                return
+            if week is not None and not store.MIN_WEEK <= week <= store.MAX_WEEK:
+                self._json_response(400, {"error": "week is out of range"})
+                return
+            try:
+                self._json_response(200, api.build_standings(season, week, now))
+            except Exception as e:  # noqa: BLE001
+                self._json_response(500, {"error": str(e)})
+        elif self.path.split("?")[0] == "/api/pickem":
+            api = pickem_api()
+            store = api.store
+            user_id, err = store.resolve_actor(self.headers.get("X-User-Id"),
+                                               require_active=False)
+            if err:
+                self._json_response(*err)
+                return
+            params = parse_qs(urlparse(self.path).query)
+            now = store.now_utc()
+            season, error = api.parse_int(params, "season", 2000, 2100)
+            if not error:
+                week, error = api.parse_int(params, "week", store.MIN_WEEK,
+                                            store.MAX_WEEK)
+            if error:
+                self._json_response(400, {"error": error})
+                return
+            try:
+                season = season or store.current_season(now)
+                season, week, weeks = api.resolve_week(season, week, now)
+                payload = api.build_week(user_id, season, week, now)
+                payload["weeks"] = weeks
+                self._json_response(200, payload)
+            except Exception as e:  # noqa: BLE001
+                self._json_response(500, {"error": str(e)})
         elif self.path.startswith("/api/bets"):
             eff, err = resolve_bets_user(self.headers, require_active=False)
             if err:
@@ -1643,6 +1745,18 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                             self._json_response(200, dict(bundle, etag=etag))
             except Exception as e:  # noqa: BLE001
                 self._json_response(500, {"error": str(e)})
+        # Pick 'Em. Standings and the picks pages are matched before the hub
+        # for the same reason vercel.json orders them that way: most specific
+        # path first.
+        elif self.path.split("?")[0] == "/football/pickem/standings":
+            self.path = "/views/football/pickem-standings.html"
+            super().do_GET()
+        elif PICKEM_PICKS_RE.match(self.path.split("?")[0]):
+            self.path = "/views/football/pickem-picks.html"
+            super().do_GET()
+        elif self.path.split("?")[0] == "/football/pickem":
+            self.path = "/views/football/pickem.html"
+            super().do_GET()
         # Methodology is its own route rather than a section of the table's
         # page, so it must be matched before the page it hangs off.
         elif self.path.split("?")[0] == "/football/bakers-buns/methodology":
@@ -2031,6 +2145,36 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 )
                 self._json_response(200, {"ok": True, "notes": [r["data"] for r in rows]})
             except Exception as e:
+                self._json_response(500, {"error": str(e)})
+        elif self.path.split("?")[0] == "/api/pickem":
+            api = pickem_api()
+            store = api.store
+            user_id, err = store.resolve_actor(self.headers.get("X-User-Id"),
+                                               require_active=True)
+            if err:
+                self._json_response(*err)
+                return
+            try:
+                length = int(self.headers.get("Content-Length", 0))
+                body = json.loads(self.rfile.read(length)) if length else {}
+            except Exception:  # noqa: BLE001
+                self._json_response(400, {"error": "Body must be JSON"})
+                return
+            if not isinstance(body, dict):
+                self._json_response(400, {"error": "Body must be an object"})
+                return
+            now = store.now_utc()
+            season = body.get("season") or store.current_season(now)
+            week = body.get("week")
+            if not isinstance(season, int) or not isinstance(week, int) \
+                    or not store.MIN_WEEK <= week <= store.MAX_WEEK:
+                self._json_response(400, {"error": "season and week are required"})
+                return
+            try:
+                payload, status = api.apply_week_picks(
+                    user_id, season, week, body.get("picks"), now)
+                self._json_response(status, payload)
+            except Exception as e:  # noqa: BLE001
                 self._json_response(500, {"error": str(e)})
         elif self.path == "/api/bets":
             eff, err = resolve_bets_user(self.headers, require_active=True)

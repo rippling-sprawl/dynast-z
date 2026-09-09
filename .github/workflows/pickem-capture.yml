@@ -1,0 +1,97 @@
+# Freeze the Pick 'Em lines every Tuesday at 3:00am ET, and grade the games that
+# have finished.
+#
+# Both phases run on every invocation and both are no-ops unless there is work,
+# so there is no mode flag and no second schedule to keep in step. The script
+# never asks what time it was started: it computes the most recent Tuesday-3am
+# deadline from the clock and does whatever is outstanding against it, which is
+# what makes a late or skipped run harmless.
+#
+# NOTHING IS COMMITTED. Lines and results go to Supabase `pickem_games` and the
+# pages are current on the next request -- the same no-deploy path the game
+# bundles and the Action Network book take. Hence no write permission.
+#
+# WHY TWO CRONS
+#
+# GitHub cron is UTC and cannot express a local time. 3:00am ET is 07:00Z from
+# March to November and 08:00Z the rest of the year, so the dense window covers
+# both hours every ten minutes and lets the script decide which of those runs is
+# actually past the deadline. The `frozen_at` guard makes every run after the
+# first a free no-op -- it returns before making a single balldontlie request --
+# so covering an hour that is wrong half the year costs nothing.
+#
+# The half-hourly sweep is what keeps the standings current on a Sunday, and it
+# doubles as the freeze safety net: if every run in the dense window is skipped,
+# the next sweep still freezes the week, just later. `frozen_at` records when it
+# actually happened alongside the `deadline_at` it was aiming at, so a late
+# freeze is visible rather than silent.
+#
+# The two schedules collide at :07 and :37 past 07:00 and 08:00 on Tuesdays.
+# `concurrency` skips the overlapping run, which GitHub displays as a cancelled
+# job. That is the guard working, not a failure.
+#
+# ALSO WORTH KNOWING
+#
+# - Scheduled workflows are disabled automatically after 60 days with no commits
+#   to the repo. In the offseason that is a feature; in season, notice it.
+# - Secrets needed (Settings > Secrets and variables > Actions):
+#     BALLDONTLIE_API_KEY  SUPABASE_URL  SUPABASE_KEY
+# - /odds needs the balldontlie GOAT tier, and unlike the game bundles this
+#   cannot degrade: no lines means no week anybody can be graded on. So the
+#   freeze phase writes nothing and exits non-zero on a tier error, leaving the
+#   week unfrozen for a later run or a human. A red run here on a Tuesday means
+#   the subscription, not the code.
+
+name: Freeze Pick 'Em lines and grade results
+
+on:
+  schedule:
+    # The base sweep: keeps the standings current, and catches a freeze the
+    # dense window below missed entirely. Off the top of the hour, where
+    # GitHub's queue is worst.
+    - cron: '7,37 * * * *'
+    # The dense window around Tuesday 3:00am ET -- 07:00Z under EDT, 08:00Z
+    # under EST, both covered.
+    - cron: '0,10,20,30,40,50 7,8 * * 2'
+  workflow_dispatch:
+    inputs:
+      week:
+        description: 'Week to freeze (blank = the deadline decides)'
+        default: ''
+      force:
+        description: 'Re-freeze a week that is already frozen'
+        type: boolean
+        default: false
+
+# A second run would double every request and race on the same rows. Skip it
+# rather than queue it: the next slot is at most half an hour away and the
+# freeze is idempotent anyway.
+concurrency:
+  group: pickem-capture
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      # No install step on purpose. Everything under scripts/ is stdlib-only --
+      # see pyproject.toml, where dependencies is deliberately empty.
+      - name: Freeze and grade
+        env:
+          BALLDONTLIE_API_KEY: ${{ secrets.BALLDONTLIE_API_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        run: |
+          python3 scripts/pickem_capture.py \
+            ${{ github.event.inputs.week && format('--week {0}', github.event.inputs.week) || '' }} \
+            ${{ github.event.inputs.force == 'true' && '--force' || '' }}

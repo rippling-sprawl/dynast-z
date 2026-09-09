@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/assets/icons/app-touch-180.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Dynast-Z">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <title>Pick 'Em | Dynast-Z</title>
+  <!-- Theme first: theme.js sets <html data-theme> before the first paint,
+       theme.css holds every colour token the sheets below spend. -->
+  <script src="/scripts/base/theme.js"></script>
+  <link rel="stylesheet" href="/styles/base/theme.css">
+  <link rel="stylesheet" href="/styles/base/styles.css">
+  <link rel="stylesheet" href="/styles/base/hub.css">
+  <link rel="stylesheet" href="/styles/components/nfl-pickers.css">
+  <link rel="stylesheet" href="/styles/primary/pickem.css">
+  <script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
+  <script defer src="/_vercel/insights/script.js"></script>
+</head>
+<body class="masters-body">
+  <div id="header-mount"></div>
+  <div id="nav-drawer-mount"></div>
+  <script src="/scripts/base/auth.js"></script>
+  <script src="/scripts/base/standalone.js"></script>
+  <script src="/scripts/base/nav.js"></script>
+  <!-- The week menu, shared with /football/schedule. -->
+  <script src="/scripts/components/nfl-pickers.js"></script>
+  <!-- Team names come off the committed schedule file; everything that can
+       move — the matchups, the lines, the lock state — comes from the API. -->
+  <script src="/scripts/components/nfl-schedule.js"></script>
+  <script src="/scripts/primary/pickem-api.js"></script>
+  <script src="/scripts/primary/pickem.js"></script>
+  <script>initPage();</script>
+
+  <div class="masters-content">
+    <div class="masters-breadcrumbs">
+      <a href="/football">Football</a><span class="separator">/</span><a href="/football/pickem">Pick 'Em</a><span class="separator">/</span><span>Picks</span>
+    </div>
+
+    <h2 id="title">Picks</h2>
+    <p class="subtitle" id="subtitle">Loading…</p>
+
+    <!-- Markup contract for scripts/components/nfl-pickers.js. -->
+    <div class="dd-row">
+      <div class="dd" id="dd-week">
+        <button type="button" class="dd-btn" id="f-week" aria-haspopup="true" aria-expanded="false">
+          <span class="dd-value">Week</span>
+        </button>
+        <div class="dd-pop dd-menu" id="week-menu" role="menu" aria-label="Week" hidden></div>
+      </div>
+      <a class="pk-cta is-secondary" href="/football/pickem/standings">Standings</a>
+    </div>
+
+    <div class="pk-bar" id="bar" hidden>
+      <span class="pk-bar-stat" id="stat-picked"></span>
+      <span class="pk-bar-stat" id="stat-points"></span>
+      <span class="pk-bar-spacer"></span>
+      <span class="pk-status" id="status"></span>
+      <button type="button" class="pk-save" id="save" disabled>Save picks</button>
+    </div>
+
+    <div id="board"><p class="pk-empty">Loading…</p></div>
+  </div>
+
+  <script>
+  (function () {
+    'use strict';
+
+    /* The week board. What lives here is what is particular to a page you can
+     * change: which week is in view, the working set of picks, and whether it
+     * has been saved. The row markup and the confidence rules are in
+     * scripts/primary/pickem.js, because the hub renders rows too.
+     *
+     * THE WORKING SET IS NOT THE SERVER'S
+     *
+     * `picks` is edited locally and only becomes real on Save. `saved` is the
+     * last thing the server confirmed, and comparing the two is what enables
+     * the button and what makes leaving the page with unsaved edits worth
+     * warning about. A pick that only exists in this tab has not been made. */
+
+    var state = { season: null, week: null, weeks: [] };
+    var data = null;        // the last GET payload
+    var picks = {};         // the working set
+    var saved = '';         // JSON of the last confirmed set
+    var names = {};         // abbr -> full name, from the schedule file
+    var busy = false;
+
+    var boardEl = document.getElementById('board');
+    var barEl = document.getElementById('bar');
+    var titleEl = document.getElementById('title');
+    var subtitleEl = document.getElementById('subtitle');
+    var statPicked = document.getElementById('stat-picked');
+    var statPoints = document.getElementById('stat-points');
+    var statusEl = document.getElementById('status');
+    var saveBtn = document.getElementById('save');
+    var weekBtn = document.getElementById('f-week');
+    var weekMenu = document.getElementById('week-menu');
+    var weekDd = null;
+
+    /* ---------- the URL is the state ----------
+     * /football/pickem/picks/3. Changing the week pushes rather than reloads,
+     * so the back button walks the weeks the reader actually looked at. */
+
+    function weekFromPath() {
+      var m = location.pathname.match(/\/picks\/(\d{1,2})\/?$/);
+      var n = m ? Number(m[1]) : 0;
+      return n >= 1 && n <= 18 ? n : null;
+    }
+
+    function seasonFromQuery() {
+      var v = Number(new URLSearchParams(location.search).get('season'));
+      return v >= 2000 && v <= 2100 ? v : null;
+    }
+
+    function writePath(week) {
+      var q = location.search;
+      history.pushState({ week: week }, '', '/football/pickem/picks/' + week + q);
+    }
+
+    /* ---------- rendering ---------- */
+
+    function normalisedPayload() {
+      // Sorted, so a re-ordering of the same picks is not read as an edit.
+      return JSON.stringify(pkToPayload(picks).sort(function (a, b) {
+        return a.game_id < b.game_id ? -1 : 1;
+      }));
+    }
+
+    function dirty() { return normalisedPayload() !== saved; }
+
+    function render() {
+      if (!data) return;
+      var k = pkPickCount(picks);
+      // What is still winnable is the sum of the confidences on games that have
+      // not been graded yet — not a formula over k. A partial week is worth
+      // whichever values the player put on it, which is the whole point of the
+      // 1..N range, so this has to be counted rather than derived.
+      var live = 0;
+      (data.games || []).forEach(function (g) {
+        var mine = picks[g.game_id];
+        if (mine && !g.result) live += mine.confidence;
+      });
+
+      boardEl.innerHTML = pkRenderWeek(data.games, picks, data.others, names, data.n);
+      barEl.hidden = false;
+      statPicked.innerHTML = '<b>' + k + '</b> of ' + data.n + ' picked' +
+        (k < data.n ? ' · confidences 1–' + data.n + ', any ' + k + ' of them'
+                    : ' · confidences 1–' + data.n);
+      statPoints.innerHTML = (data.totals.mine.points ? '<b>' +
+          data.totals.mine.points + '</b> points so far' : '') +
+        (data.totals.mine.points && live ? ' · ' : '') +
+        (live ? '<b>' + live + '</b> still live' : '');
+      saveBtn.disabled = busy || !dirty();
+      if (!busy && dirty()) setStatus('Unsaved changes', '');
+    }
+
+    function setStatus(text, kind) {
+      statusEl.textContent = text;
+      statusEl.className = 'pk-status' + (kind ? ' is-' + kind : '');
+    }
+
+    function renderHeader() {
+      titleEl.textContent = 'Week ' + state.week + ' picks';
+      var bits = [String(state.season)];
+      if (data && data.deadline_at) {
+        bits.push('lines frozen ' + pkKickoffLabel(data.deadline_at) + ' ET');
+      }
+      bits.push('higher confidence is worth more');
+      subtitleEl.textContent = bits.join(' · ');
+    }
+
+    /* ---------- events ----------
+     * Delegated to the board, which is replaced on every render. */
+
+    function wireBoard() {
+      boardEl.addEventListener('click', function (e) {
+        var btn = e.target.closest ? e.target.closest('.pk-side') : null;
+        if (!btn || btn.disabled || !boardEl.contains(btn)) return;
+        picks = pkTogglePick(picks, btn.getAttribute('data-game'),
+                             btn.getAttribute('data-side'), data.n);
+        render();
+      });
+
+      boardEl.addEventListener('change', function (e) {
+        var sel = e.target.closest ? e.target.closest('.pk-conf-select') : null;
+        if (!sel || !boardEl.contains(sel)) return;
+        picks = pkSetConfidence(picks, sel.getAttribute('data-game'),
+                                Number(sel.value));
+        render();
+      });
+    }
+
+    function wireWeeks() {
+      weekDd = registerDropdown(document.getElementById('dd-week'));
+      weekMenu.addEventListener('click', function (e) {
+        var opt = e.target.closest ? e.target.closest('.dd-opt') : null;
+        if (!opt || !weekMenu.contains(opt)) return;
+        var week = Number(opt.getAttribute('data-week'));
+        closeDropdown(weekDd, true);
+        if (week === state.week) return;
+        // Changing week throws away unsaved edits, so say so first. The prompt
+        // is the whole guard: there is nowhere to stash a half-made week.
+        if (dirty() && !confirm('You have unsaved picks for week ' + state.week +
+                                '. Leave them behind?')) return;
+        writePath(week);
+        load(state.season, week);
+      });
+    }
+
+    function syncWeeks() {
+      buildWeekMenu(weekMenu, state.weeks.map(function (w) {
+        return { value: w, label: 'Week ' + w };
+      }));
+      syncWeekMenu(weekBtn, weekMenu, state.week, 'Week ' + state.week);
+    }
+
+    /* ---------- save ----------
+     * Awaited, unlike the fire-and-forget writes in bets-api.js. A bet that
+     * fails to save is still sitting in the form it was typed into; a week of
+     * picks that fails silently is discovered on the standings page in
+     * February. */
+
+    function save() {
+      if (busy || !dirty()) return;
+      busy = true;
+      saveBtn.disabled = true;
+      setStatus('Saving…', '');
+      pickemSave(state.season, state.week, pkToPayload(picks)).then(function () {
+        busy = false;
+        saved = normalisedPayload();
+        setStatus('Saved ' + new Date().toLocaleTimeString([], {
+          hour: 'numeric', minute: '2-digit' }), 'ok');
+        saveBtn.disabled = true;
+        // Re-read rather than trusting the local set: the response settles what
+        // is now locked, and another player's picks may have been revealed by a
+        // kickoff while this page was open.
+        return load(state.season, state.week, true);
+      }).catch(function (err) {
+        busy = false;
+        setStatus(err.message, 'error');
+        // A 409 means a game kicked off mid-edit, so the board on screen is
+        // describing a week that no longer exists. Reload it rather than
+        // leaving the reader to press Save into the same refusal again.
+        if (err.status === 409) load(state.season, state.week, true);
+        else saveBtn.disabled = false;
+      });
+    }
+
+    /* ---------- loading ---------- */
+
+    function load(season, week, quiet) {
+      if (!quiet) boardEl.innerHTML = '<p class="pk-empty">Loading…</p>';
+      return pickemLoadWeek(season, week).then(function (payload) {
+        data = payload;
+        state.season = payload.season;
+        state.week = payload.week;
+        state.weeks = payload.weeks && payload.weeks.length
+          ? payload.weeks : [payload.week];
+        picks = pkFromServer(payload.mine);
+        saved = normalisedPayload();
+        syncWeeks();
+        renderHeader();
+        render();
+        if (!busy) setStatus('', '');
+      }).catch(function (err) {
+        boardEl.innerHTML = '<p class="pk-empty">' + pkEsc(err.message) + '</p>';
+        barEl.hidden = true;
+      });
+    }
+
+    /* Safari hands a restored tab back rendered, with no script run: a page
+     * left open overnight would show Sunday's games as still open and let
+     * someone try to pick them. The server refuses that anyway — this is the
+     * half that stops it being offered. */
+    window.addEventListener('pageshow', function (e) {
+      if (e.persisted && !dirty()) load(state.season, state.week, true);
+    });
+
+    window.addEventListener('popstate', function () {
+      var week = weekFromPath();
+      if (week && week !== state.week) load(state.season, week);
+    });
+
+    window.addEventListener('beforeunload', function (e) {
+      if (!dirty()) return;
+      e.preventDefault();
+      e.returnValue = '';
+    });
+
+    saveBtn.addEventListener('click', save);
+
+    if (!isLoggedIn()) {
+      location.href = '/account';
+    } else {
+      wireBoard();
+      wireWeeks();
+      // Names are cosmetic and must never hold up the board: a season the
+      // schedule file does not have still renders, with abbreviations only.
+      schedLoad(seasonFromQuery() || SCHED_CURRENT_SEASON).then(function (doc) {
+        (doc.teams || []).forEach(function (t) { names[t.abbr] = t.short || t.name; });
+        if (data) render();
+      }).catch(function () {});
+      load(seasonFromQuery(), weekFromPath());
+    }
+  })();
+  </script>
+</body>
+</html>

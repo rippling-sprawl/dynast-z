@@ -1,0 +1,541 @@
+/* === Pick 'Em ===
+ * /football/pickem, /football/pickem/picks/<week>, /football/pickem/standings.
+ *
+ * Every colour is a token from styles/base/theme.css; nothing here writes a
+ * hex. The one place colour carries data is the week columns in the standings
+ * table, and those follow the rule the rest of the app follows: the view hands
+ * over a bare 0..1 number as --heat and the colour is mixed here, so the scale
+ * re-colours on a theme change without the table being rebuilt.
+ *
+ * The row is deliberately close to .sched-game on /football/schedule — same
+ * monospace numerals, same logo-then-abbreviation cell, same density — because
+ * it is the same slate seen from one step further in, and the two pages should
+ * not look like different products. What it adds is the two things a schedule
+ * row does not have: a side you can press, and a number you chose.
+ */
+
+/* --- Page furniture --- */
+
+.pk-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  background: var(--panel);
+  border: 1px solid var(--hairline);
+  border-radius: 6px;
+}
+
+.pk-bar-stat {
+  font-family: monospace;
+  font-size: 11px;
+  color: var(--text-3);
+  white-space: nowrap;
+}
+
+.pk-bar-stat b {
+  color: var(--text-bright);
+  font-weight: 700;
+}
+
+/* Pushes Save to the right edge on a wide screen and lets it wrap to its own
+ * line on a phone, where a 100%-wide button is the easier target anyway. */
+.pk-bar-spacer { flex: 1 1 auto; }
+
+.pk-save {
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 7px 18px;
+  border-radius: 5px;
+  border: 1px solid var(--accent-line);
+  background: var(--accent);
+  color: var(--on-accent);
+  cursor: pointer;
+}
+
+.pk-save:hover:not(:disabled) { background: var(--accent-hover); }
+
+.pk-save:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* The save result sits beside the button rather than in a toast: it is the
+ * answer to the thing just pressed, and a message that fades takes the only
+ * evidence of a failed save with it. */
+.pk-status {
+  font-family: monospace;
+  font-size: 11px;
+  color: var(--text-4);
+}
+
+.pk-status.is-ok { color: var(--good); }
+.pk-status.is-error { color: var(--bad); }
+
+.pk-note {
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--text-4);
+  margin: 12px 0;
+}
+
+.pk-empty {
+  font-size: 12px;
+  color: var(--text-4);
+  padding: 24px 12px;
+  text-align: center;
+}
+
+/* --- Day groups --- */
+
+.pk-day {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 18px 0 6px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--hairline);
+}
+
+.pk-day h3 {
+  font-family: monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+
+.pk-rows {
+  display: flex;
+  flex-direction: column;
+}
+
+/* --- One game --- */
+
+.pk-game {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) minmax(90px, auto);
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px;
+  border-radius: 5px;
+}
+
+.pk-rows .pk-game:nth-child(even) { background: var(--zebra); }
+
+.pk-game.is-locked { opacity: 0.85; }
+
+.pk-game.is-off {
+  grid-template-columns: 44px 1fr;
+  color: var(--text-5);
+  font-size: 11px;
+  font-style: italic;
+}
+
+/* --- Confidence --- */
+
+.pk-conf {
+  font-family: monospace;
+  font-size: 12px;
+  text-align: center;
+}
+
+.pk-conf-select {
+  width: 100%;
+  font-family: monospace;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+  padding: 4px 2px;
+  border-radius: 4px;
+  border: 1px solid var(--accent-line);
+  background: var(--accent-soft);
+  color: var(--accent-2);
+  cursor: pointer;
+}
+
+.pk-conf.is-empty { color: var(--text-5); }
+
+.pk-conf.is-locked {
+  font-weight: 700;
+  color: var(--text-3);
+}
+
+/* --- The two sides --- */
+
+.pk-matchup {
+  display: grid;
+  grid-template-columns: 1fr 2ch 1fr;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.pk-at {
+  font-family: monospace;
+  font-size: 10px;
+  text-align: center;
+  color: var(--text-5);
+}
+
+.pk-side {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 6px 8px;
+  font-family: inherit;
+  text-align: left;
+  border-radius: 5px;
+  border: 1px solid var(--hairline);
+  background: var(--panel-hi);
+  color: var(--text);
+  cursor: pointer;
+}
+
+/* The away side reads right-to-left so the two team names meet in the middle
+ * around the "@", the way the matchup is spoken. */
+.pk-side[data-side]:first-child { flex-direction: row-reverse; text-align: right; }
+
+.pk-side:hover:not(:disabled) { border-color: var(--hairline-hi); }
+
+.pk-side:disabled { cursor: default; }
+
+/* The pick. A border and a tinted plate rather than a filled button: sixteen
+ * saturated blocks down the page would drown the one thing that actually varies
+ * between rows, which is the line. */
+.pk-side.is-picked {
+  border-color: var(--accent-line);
+  background: var(--accent-soft);
+  color: var(--accent-2);
+}
+
+.pk-side.is-picked .pk-abbr { color: var(--accent-2); }
+
+/* Which side actually covered, once the game is graded. Independent of whether
+ * it was picked — the row has to be readable as a result, not only as a score. */
+.pk-side.is-covered {
+  border-color: var(--good-line);
+  background: var(--good-tint);
+}
+
+.pk-logo {
+  width: 18px;
+  height: 18px;
+  flex: none;
+}
+
+.pk-abbr {
+  font-family: monospace;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text);
+  flex: none;
+}
+
+/* The full name is the first thing to go: it is a nicety, and the abbreviation
+ * beside a crest already names the team. */
+.pk-name {
+  font-size: 11px;
+  color: var(--text-4);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The line is the number the whole page is about, so it is the one thing in the
+ * row set in the bright text tone, and it is pushed to the outside edge of each
+ * side so the two of them frame the matchup. */
+.pk-line {
+  margin-left: auto;
+  font-family: monospace;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-bright);
+  flex: none;
+}
+
+.pk-side[data-side]:first-child .pk-line { margin-left: 0; margin-right: auto; }
+
+/* --- State column --- */
+
+.pk-state {
+  font-family: monospace;
+  font-size: 11px;
+  color: var(--text-3);
+  text-align: right;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.pk-lock { color: var(--text-5); }
+
+.pk-score { color: var(--text-4); }
+
+.pk-points {
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+
+.pk-points.is-hit { background: var(--good-tint); color: var(--good); }
+.pk-points.is-miss { background: var(--bad-tint); color: var(--bad); }
+
+/* Another player's pick on a game that has kicked off. These only ever exist
+ * for locked games — the server does not send the others — so there is no
+ * "hidden" variant to style. */
+.pk-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  border: 1px solid var(--hairline);
+  background: var(--panel-hi2);
+  font-size: 10px;
+}
+
+/* Once the game is graded the chip says who was right, so the pool reads as a
+   result rather than as a list. */
+.pk-chip.is-hit { border-color: var(--good-line); background: var(--good-tint); }
+.pk-chip.is-miss { border-color: var(--bad-line); background: var(--bad-tint); }
+.pk-chip.is-push { opacity: 0.6; }
+
+.pk-chip-who { color: var(--text-4); }
+.pk-chip-pick { font-weight: 700; color: var(--text); }
+.pk-chip-conf { color: var(--accent-2); font-weight: 700; }
+
+/* --- Standings --- */
+
+.pk-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--hairline);
+  border-radius: 6px;
+  background: var(--panel);
+}
+
+.pk-table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 12px;
+}
+
+.pk-table th,
+.pk-table td {
+  padding: 6px 10px;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--hairline);
+}
+
+.pk-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--panel-hi);
+  font-family: monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--text-4);
+  text-align: right;
+}
+
+.pk-table tbody tr:last-child td { border-bottom: none; }
+
+.pk-table tbody tr:nth-child(even) { background: var(--zebra); }
+
+.pk-table tr.is-me td { box-shadow: inset 3px 0 0 var(--accent); }
+
+/* Rank and player pin to the left edge. scripts/components/sticky-headers.js
+ * only stacks vertical offsets, so the horizontal pin is done here: eighteen
+ * week columns will never fit a phone, and a row scrolled sideways with no name
+ * on it is unreadable. Two columns, so the offset of the second is the width of
+ * the first. */
+.pk-table th.pk-rank,
+.pk-table td.pk-rank,
+.pk-table th.pk-who,
+.pk-table td.pk-who {
+  position: sticky;
+  z-index: 1;
+  background: var(--panel);
+  text-align: left;
+}
+
+.pk-table th.pk-rank, .pk-table td.pk-rank { left: 0; width: 34px; }
+.pk-table th.pk-who, .pk-table td.pk-who { left: 34px; }
+
+.pk-table thead th.pk-rank,
+.pk-table thead th.pk-who {
+  z-index: 3;
+  background: var(--panel-hi);
+}
+
+.pk-table tbody tr:nth-child(even) td.pk-rank,
+.pk-table tbody tr:nth-child(even) td.pk-who { background: var(--zebra); }
+
+.pk-table td.pk-rank {
+  font-family: monospace;
+  font-weight: 700;
+  color: var(--text-4);
+}
+
+.pk-table td.pk-who {
+  font-weight: 600;
+  color: var(--text-bright);
+}
+
+.pk-table th.pk-wk a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.pk-table th.pk-wk a:hover { color: var(--accent); }
+
+/* The one place colour carries data. --heat is a 0..1 share of the best score
+ * in that week's column, handed over by the view as a bare number; the wash is
+ * mixed here against the page so it re-colours with the theme. Normalised per
+ * column rather than against the week's theoretical maximum, so a low-scoring
+ * week still shows who won it. */
+.pk-table td.pk-wk {
+  font-family: monospace;
+  text-align: right;
+  color: var(--text-2);
+  background: color-mix(in srgb,
+    var(--heat-z-fill) calc(var(--heat, 0) * var(--heat-fill-max)),
+    transparent);
+}
+
+.pk-table td.pk-wk.is-none { color: var(--text-5); background: none; }
+
+.pk-table td.pk-total,
+.pk-table td.pk-correct,
+.pk-table td.pk-pending {
+  font-family: monospace;
+  text-align: right;
+}
+
+.pk-table td.pk-total {
+  font-weight: 700;
+  color: var(--text-bright);
+}
+
+.pk-table .pk-of { color: var(--text-5); }
+
+.pk-table td.pk-pending { color: var(--text-5); }
+
+/* --- Hub --- */
+
+.pk-card {
+  padding: 14px;
+  margin-bottom: 14px;
+  background: var(--panel);
+  border: 1px solid var(--hairline);
+  border-radius: 6px;
+}
+
+.pk-card h3 {
+  font-family: monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--text-4);
+  margin-bottom: 10px;
+}
+
+.pk-week-line {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-bright);
+  margin-bottom: 4px;
+}
+
+.pk-week-sub {
+  font-family: monospace;
+  font-size: 11px;
+  color: var(--text-4);
+  margin-bottom: 12px;
+}
+
+.pk-cta {
+  display: inline-block;
+  padding: 8px 20px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 5px;
+  background: var(--accent);
+  color: var(--on-accent);
+  text-decoration: none;
+}
+
+.pk-cta:hover { background: var(--accent-hover); }
+
+.pk-cta.is-secondary {
+  background: none;
+  border: 1px solid var(--hairline-hi);
+  color: var(--text-2);
+}
+
+.pk-mini {
+  list-style: none;
+  font-size: 12px;
+}
+
+.pk-mini li {
+  display: grid;
+  grid-template-columns: 28px 1fr auto;
+  gap: 8px;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--hairline);
+}
+
+.pk-mini li:last-child { border-bottom: none; }
+
+.pk-mini-rank { font-family: monospace; color: var(--text-4); }
+.pk-mini-who { color: var(--text-bright); font-weight: 600; }
+.pk-mini-pts { font-family: monospace; font-weight: 700; color: var(--text-bright); }
+
+.pk-rules {
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--text-3);
+}
+
+.pk-rules li {
+  margin-left: 18px;
+  padding-left: 2px;
+}
+
+.pk-rules b { color: var(--text-bright); }
+
+/* --- Narrow screens ---
+ * The full team name and the "vs" gutter go first; the crest and the
+ * abbreviation carry the identity from here down, and the line stays, because
+ * the line is the whole point of the row. */
+@media (max-width: 640px) {
+  .pk-game {
+    grid-template-columns: 38px minmax(0, 1fr);
+    grid-template-areas: "conf matchup" ". state";
+    row-gap: 4px;
+  }
+
+  .pk-game > .pk-conf { grid-area: conf; }
+  .pk-game > .pk-matchup { grid-area: matchup; }
+  .pk-game > .pk-state { grid-area: state; justify-content: flex-start; }
+
+  .pk-name { display: none; }
+
+  .pk-side { padding: 6px; }
+
+  .pk-bar-spacer { display: none; }
+
+  .pk-save { flex: 1 1 100%; }
+}
