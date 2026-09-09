@@ -57,6 +57,7 @@
       <span class="pk-bar-stat" id="stat-picked"></span>
       <span class="pk-bar-stat" id="stat-points"></span>
       <span class="pk-bar-spacer"></span>
+      <span class="pk-saved" id="saved" hidden></span>
       <span class="pk-status" id="status"></span>
       <button type="button" class="pk-save" id="save" disabled>Save picks</button>
     </div>
@@ -86,6 +87,7 @@
     var sides = {};         // { game_id: 'GB' } — which team, where one is taken
     var locked = {};        // { game_id: confidence } — kicked off, immutable
     var saved = '';         // JSON of the last confirmed set
+    var savedAt = null;     // when the server last wrote this week, ISO
     var busy = false;
 
     var boardEl = document.getElementById('board');
@@ -95,6 +97,7 @@
     var statPicked = document.getElementById('stat-picked');
     var statPoints = document.getElementById('stat-points');
     var statusEl = document.getElementById('status');
+    var savedEl = document.getElementById('saved');
     var saveBtn = document.getElementById('save');
     var weekBtn = document.getElementById('f-week');
     var weekMenu = document.getElementById('week-menu');
@@ -164,13 +167,25 @@
           data.totals.mine.points + '</b> points so far' : '') +
         (data.totals.mine.points && live ? ' · ' : '') +
         (live ? '<b>' + live + '</b> still live' : '');
+      renderSaved();
       saveBtn.disabled = busy || !dirty();
       if (!busy && dirty()) setStatus('Unsaved changes', '');
     }
 
+    /* The transient line: what is happening right now, or what went wrong.
+     * Cleared freely — it is never the record of anything. */
     function setStatus(text, kind) {
       statusEl.textContent = text;
       statusEl.className = 'pk-status' + (kind ? ' is-' + kind : '');
+    }
+
+    /* The persistent one: when this week was last written. It is state, not a
+     * message, so it is rendered from `savedAt` on every pass and survives an
+     * edit, a re-render, a week change and a reload — the server sends it back
+     * on every load. Only a successful save replaces it. */
+    function renderSaved() {
+      savedEl.hidden = !savedAt;
+      savedEl.textContent = savedAt ? pkSavedLabel(savedAt) : '';
     }
 
     function renderHeader() {
@@ -264,8 +279,11 @@
       pickemSave(state.season, state.week, payload()).then(function () {
         busy = false;
         saved = normalisedPayload();
-        setStatus('Saved ' + new Date().toLocaleTimeString([], {
-          hour: 'numeric', minute: '2-digit' }), 'ok');
+        // Stamped optimistically so the change is immediate; the reload below
+        // replaces it with the instant the server actually recorded.
+        savedAt = new Date().toISOString();
+        renderSaved();
+        setStatus('Saved', 'ok');
         saveBtn.disabled = true;
         // Re-read rather than trusting the local set: the response settles what
         // is now locked, and another player's picks may have been revealed by a
@@ -292,6 +310,7 @@
         state.week = body.week;
         state.weeks = body.weeks && body.weeks.length
           ? body.weeks : [body.week];
+        savedAt = body.saved_at || null;
         sides = pkSidesFromServer(body.mine);
         locked = pkLockedFromServer(body.games, body.mine);
         order = pkInitialOrder(body.games, body.mine);

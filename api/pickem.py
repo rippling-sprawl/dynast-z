@@ -112,6 +112,13 @@ def build_week(user_id, season, week, now):
             for r in others},
     }
 
+    # When this week was last saved. Every pick row carries the instant it was
+    # written (store.save_week_picks stamps it), so the newest of them is the
+    # answer -- and it survives a reload, which a stamp held only in the page
+    # would not. The strings are all iso/UTC/second-precision from one writer,
+    # so max() on them is a real comparison rather than a lucky one.
+    written = [d.get("updatedAt") for d in mine_raw.values() if d.get("updatedAt")]
+
     stamps = [g for g in games if g.get("_deadline")]
     return {
         "season": season,
@@ -120,6 +127,7 @@ def build_week(user_id, season, week, now):
         "deadline_at": stamps[0]["_deadline"] if stamps else None,
         "frozen_at": stamps[0]["_frozen"] if stamps else None,
         "n": n,
+        "saved_at": max(written) if written else None,
         # kickoff_ts is a datetime and internal to the lock decision; it must not
         # reach the wire, where it would neither serialise nor mean anything.
         "games": [{k: v for k, v in g.items()

@@ -285,6 +285,21 @@
 
 .sv-current .sv-none { color: var(--text-5); font-weight: 400; }
 
+/* Clearing is a retreat, not the action the bar is for, so it takes the
+ * secondary treatment rather than the gold plate .pk-save wears. Rendered at
+ * all only while the pick's own game is still unlocked. */
+.pk-save.is-clear {
+  background: none;
+  border-color: var(--hairline-hi);
+  color: var(--text-3);
+}
+
+.pk-save.is-clear:hover:not(:disabled) {
+  background: var(--bad-tint);
+  border-color: var(--bad-line);
+  color: var(--bad);
+}
+
 /* --- Standings ---
  * The Pick 'Em table's shape, with crests in the week cells instead of points.
  * Rank and player stay pinned by the inherited rule; Status pins beside them,

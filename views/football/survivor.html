@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/assets/icons/app-touch-180.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Dynast-Z">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <title>Survivor | Dynast-Z</title>
+  <!-- Theme first: theme.js sets <html data-theme> before the first paint,
+       theme.css holds every colour token the sheets below spend. -->
+  <script src="/scripts/base/theme.js"></script>
+  <link rel="stylesheet" href="/styles/base/theme.css">
+  <link rel="stylesheet" href="/styles/base/styles.css">
+  <link rel="stylesheet" href="/styles/base/hub.css">
+  <!-- pickem.css FIRST, survivor.css second. survivor.css is a layer over it and
+       several of its rules win on source order alone — see the note at the top
+       of that file. Swapping these two re-lays-out the board. -->
+  <link rel="stylesheet" href="/styles/primary/pickem.css">
+  <link rel="stylesheet" href="/styles/primary/survivor.css">
+  <script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
+  <script defer src="/_vercel/insights/script.js"></script>
+</head>
+<body class="masters-body">
+  <div id="header-mount"></div>
+  <div id="nav-drawer-mount"></div>
+  <script src="/scripts/base/auth.js"></script>
+  <script src="/scripts/base/standalone.js"></script>
+  <script src="/scripts/base/nav.js"></script>
+  <!-- pickem.js for the shared vocabulary — the crest, the Eastern kickoff, the
+       way a spread is written. See the header of survivor.js. -->
+  <script src="/scripts/primary/pickem.js"></script>
+  <script src="/scripts/primary/survivor-api.js"></script>
+  <script src="/scripts/primary/survivor.js"></script>
+  <script>initPage();</script>
+
+  <div class="masters-content">
+    <div class="masters-breadcrumbs">
+      <a href="/football">Football</a><span class="separator">/</span><span>Survivor</span>
+    </div>
+
+    <h2>Survivor</h2>
+    <p class="subtitle">One team a week · win or you are out · nobody twice</p>
+
+    <div class="pk-card">
+      <h3>Your entry</h3>
+      <p class="sv-hero-word" id="hero-word">Loading…</p>
+      <p class="sv-hero-line" id="hero-line"></p>
+      <a class="pk-cta" id="hero-cta" href="/football/survivor/pick">Make your pick</a>
+      <div class="sv-pool" id="pool"></div>
+    </div>
+
+    <div class="pk-card">
+      <h3>This week</h3>
+      <p class="pk-week-line" id="week-line">Loading…</p>
+      <p class="pk-week-sub" id="week-sub"></p>
+      <div id="current"></div>
+    </div>
+
+    <div class="pk-card">
+      <h3>Teams spent</h3>
+      <div id="spent"><p class="pk-empty">Loading…</p></div>
+    </div>
+
+    <div class="pk-card">
+      <h3>Who is left</h3>
+      <div id="mini"><p class="pk-empty">Loading…</p></div>
+      <p style="margin-top:12px">
+        <a class="pk-cta is-secondary" href="/football/survivor/standings">Full standings</a>
+      </p>
+    </div>
+
+    <!-- Static, and deliberately so: the rules are the contract, they do not
+         depend on any request, and a reader who arrives while the API is down
+         should still be able to find out how the game works. Same reasoning as
+         the panel on /football/pickem. -->
+    <div class="pk-card">
+      <h3>How it works</h3>
+      <ul class="pk-rules">
+        <li>Each week you pick <b>one team to win its game outright</b>. No
+          spread — a three-point win and a thirty-point win are the same thing
+          here. The line is printed on the board anyway, greyed, because it is
+          still the best one-number answer to who is likely to win.</li>
+        <li>Your team wins, you survive to next week. Your team <b>loses and you
+          are out</b> — for the season, not for the week.</li>
+        <li>A <b>tie counts as a loss</b>. It is the default the big contests
+          run, and it is the only reading under which "survive" means what it
+          says.</li>
+        <li><b>A team can only be picked once all season.</b> Spending Kansas
+          City in week 2 is the real cost of a week 2 pick. Teams you have
+          already used are greyed out on the board and cannot be picked again.</li>
+        <li><b>Miss a week and you are out.</b> Once every game of a week has
+          kicked off there is no pick left to make, and an entry with nothing
+          down that week is done.</li>
+        <li>Your pick <b>locks when the game you picked kicks off</b>, and not
+          before — so you can change your mind all week, including after
+          Thursday night, as long as your game has not started.</li>
+        <li>Nobody can see your pick until its game kicks off. After that,
+          everyone can, on the <a href="/football/survivor/standings">standings</a>.</li>
+        <li>There is <b>one entry per account</b>, no buybacks and no second
+          chances. Whoever is still standing after week 18 splits it; if
+          everybody goes out in the same week, they split it between them.</li>
+      </ul>
+    </div>
+  </div>
+
+  <script>
+  (function () {
+    'use strict';
+
+    /* The hub. Two requests and no state: the week board summarised, and the
+     * pool's own table. Both degrade to a sentence rather than an empty box if
+     * the API is unreachable — the rules panel above is the part of this page
+     * that always works.
+     *
+     * The two requests are independent and neither waits on the other, because
+     * the week card and the survivor list answer different questions and a slow
+     * standings sweep should not hold up "who do I have this week". */
+
+    var wordEl = document.getElementById('hero-word');
+    var lineEl = document.getElementById('hero-line');
+    var ctaEl = document.getElementById('hero-cta');
+    var poolEl = document.getElementById('pool');
+    var weekLineEl = document.getElementById('week-line');
+    var weekSubEl = document.getElementById('week-sub');
+    var currentEl = document.getElementById('current');
+    var spentEl = document.getElementById('spent');
+    var miniEl = document.getElementById('mini');
+
+    function firstUnlocked(games) {
+      for (var i = 0; i < games.length; i++) {
+        if (!games[i].locked) return games[i];
+      }
+      return null;
+    }
+
+    function poolHTML(pool) {
+      return [['alive', 'Still alive'], ['out', 'Eliminated'],
+              ['entries', 'Entries']].map(function (pair) {
+        return '<span class="sv-pool-stat">' +
+          '<span class="sv-pool-n">' + pkEsc(pool[pair[0]]) + '</span>' +
+          '<span class="sv-pool-k">' + pkEsc(pair[1]) + '</span></span>';
+      }).join('');
+    }
+
+    function renderWeek(data) {
+      var entry = data.entry;
+      var kind = !entry.entered ? 'idle' : (entry.status === 'out' ? 'out' : 'alive');
+      wordEl.textContent = svEntryWord(entry);
+      wordEl.className = 'sv-hero-word is-' + kind;
+      lineEl.textContent = svEntryLine(entry);
+      poolEl.innerHTML = poolHTML(data.pool);
+      spentEl.innerHTML = svSpentStrip(entry);
+
+      weekLineEl.textContent = 'Week ' + data.week;
+      ctaEl.href = '/football/survivor/pick/' + data.week;
+
+      var next = firstUnlocked(data.games || []);
+      var bits = [(data.games || []).length + ' games'];
+      if (next) bits.push('first kickoff ' + pkKickoffLabel(next.kickoff) + ' ET');
+      else bits.push('every game has kicked off');
+      weekSubEl.textContent = bits.join(' · ');
+
+      // The pick itself, as a crest. "Who do I have this week" is the question
+      // this card exists to answer and it should not need a second click.
+      if (data.pick) {
+        currentEl.innerHTML = '<span class="sv-current">Riding ' +
+          '<img src="/assets/icons/nfl/' + pkEsc(data.pick.team) + '.svg" alt="" ' +
+          'aria-hidden="true">' + pkEsc(data.pick.team) + '</span>';
+      } else {
+        currentEl.innerHTML = '<span class="sv-current"><span class="sv-none">' +
+          (next ? 'No pick in for this week yet.'
+                : 'No pick was made — this week is over.') + '</span></span>';
+      }
+
+      if (entry.status === 'out') {
+        ctaEl.textContent = 'See the board';
+      } else if (!next) {
+        ctaEl.textContent = 'See the week';
+      } else {
+        ctaEl.textContent = data.pick ? 'Change your pick' : 'Make your pick';
+      }
+    }
+
+    if (!isLoggedIn()) {
+      location.href = '/account';
+    } else {
+      survivorLoadWeek().then(renderWeek).catch(function (err) {
+        wordEl.textContent = 'Unavailable';
+        wordEl.className = 'sv-hero-word is-idle';
+        lineEl.textContent = err.message;
+        weekLineEl.textContent = 'Week unavailable';
+        spentEl.innerHTML = '<p class="pk-empty">' + pkEsc(err.message) + '</p>';
+      });
+
+      survivorStandings().then(function (data) {
+        miniEl.innerHTML = svMiniStandings(data, 8);
+      }).catch(function (err) {
+        miniEl.innerHTML = '<p class="pk-empty">' + pkEsc(err.message) + '</p>';
+      });
+    }
+  })();
+  </script>
+</body>
+</html>

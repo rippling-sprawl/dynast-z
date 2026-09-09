@@ -33,6 +33,9 @@ const NAV_SECTIONS = [
       // Next to Games because it is the same slate with something at stake on
       // it: the fixture list is where a week is read, this is where it is picked.
       { label: "Pick 'Em", href: '/football/pickem', emoji: '🏆' },
+      // Under Pick 'Em because it is the same board played by different
+      // rules: one team a week, straight up, and nobody twice.
+      { label: 'Survivor', href: '/football/survivor', emoji: '☠️' },
       // Sits next to Games because it is the same data seen from the other
       // side: Games is the fixture list, this is what has been captured off it
       // and how current each capture is.

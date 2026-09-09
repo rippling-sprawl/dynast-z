@@ -42,7 +42,11 @@ current_week = board.current_week
 group_by_week = board.group_by_week
 load_usernames = board.load_usernames
 resolve_actor = board.resolve_actor
-load_games = board.load_games
+# Deliberately NOT re-exported: board.load_games, the Pick 'Em's wide per-week
+# read. Survivor needs none of the jsonb it carries and does need the rest of
+# the season anyway, so the season read below serves the whole page. Making the
+# wide one reachable from here would invite the second board read this is
+# arranged to avoid.
 load_season_games = board.load_season_games
 q = board.q
 

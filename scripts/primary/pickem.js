@@ -99,6 +99,18 @@
     }).map(function (p) { return p.value; }).join('');
   }
 
+  /* "Saved as of 3:31 PM", or with the date when it was not today. Eastern,
+   * like every other time on these pages — a save stamp in one zone beside
+   * kickoffs in another is the kind of small inconsistency that makes a reader
+   * doubt the deadline copy. */
+  function pkSavedLabel(iso) {
+    var d = toDate(iso);
+    if (!d) return '';
+    var f = formats();
+    var today = f.dayKey.format(d) === f.dayKey.format(new Date());
+    return 'Saved as of ' + (today ? '' : f.dayRow.format(d) + ', ') + f.time.format(d);
+  }
+
   function pkKickoffLabel(iso) {
     var d = toDate(iso);
     return d ? formats().dayShort.format(d) : 'TBD';
@@ -683,6 +695,7 @@
   global.pkSpreadFor = spreadFor;
   global.pkSpreadLabel = pkSpreadLabel;
   global.pkKickoffLabel = pkKickoffLabel;
+  global.pkSavedLabel = pkSavedLabel;
   global.pkPickCount = pkPickCount;
   global.pkAssign = pkAssign;
   global.pkInitialOrder = pkInitialOrder;

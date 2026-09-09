@@ -209,6 +209,12 @@ GAME_PAGE_RE = re.compile(r"^/football/schedule/game/[0-9]{1,12}/?$")
 # vercel.json.
 PICKEM_PICKS_RE = re.compile(r"^/football/pickem/picks(?:/[0-9]{1,2})?/?$")
 
+# /football/survivor/pick and /football/survivor/pick/<week>. Same shape and
+# same reasoning as the Pick 'Em route above: the week is optional so a
+# hand-typed URL without one still lands on the page, which resolves "this
+# week" itself.
+SURVIVOR_PICK_RE = re.compile(r"^/football/survivor/pick(?:/[0-9]{1,2})?/?$")
+
 _game_odds_api = None
 
 
@@ -284,6 +290,44 @@ def pickem_standings_api():
         _pickem_standings_api = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(_pickem_standings_api)
     return _pickem_standings_api
+
+
+_survivor_api = None
+_survivor_standings_api = None
+
+
+def survivor_api():
+    """Load api/survivor.py so dev serves the Survivor board through exactly the
+    code production runs. Lazily, for the reason pickem_api() gives.
+
+    This mirror delegates rather than re-implementing, and here that is not
+    merely tidy: the elimination walk, the used-team rule and the reveal filter
+    are the whole game, and a second implementation of any of them would be a
+    second set of answers to who is still alive."""
+    global _survivor_api
+    if _survivor_api is None:
+        # No sys.path work here: api/survivor.py inserts its own directory
+        # before importing _survivor, and that insert is __file__-relative, so
+        # it lands on <repo>/api whichever runtime loaded it.
+        import importlib.util
+        path = os.path.join(DATA_DIR, "api", "survivor.py")
+        spec = importlib.util.spec_from_file_location("survivor_api", path)
+        _survivor_api = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(_survivor_api)
+    return _survivor_api
+
+
+def survivor_standings_api():
+    """Load api/survivor-standings.py. By path because the filename has a hyphen
+    in it, and lazily for the same reason as above."""
+    global _survivor_standings_api
+    if _survivor_standings_api is None:
+        import importlib.util
+        path = os.path.join(DATA_DIR, "api", "survivor-standings.py")
+        spec = importlib.util.spec_from_file_location("survivor_standings_api", path)
+        _survivor_standings_api = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(_survivor_standings_api)
+    return _survivor_standings_api
 
 
 def resolve_notes_actor(headers):
@@ -1485,6 +1529,58 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 self._json_response(200, [r["data"] for r in (rows or [])])
             except Exception as e:
                 self._json_response(500, {"error": str(e)})
+        # Exact-path, not startswith, and standings first: "/api/survivor-
+        # standings" starts with "/api/survivor", so a prefix test here would
+        # serve every standings request the week board instead. Same ordering
+        # and same reason as the Pick 'Em pair below.
+        elif self.path.split("?")[0] == "/api/survivor-standings":
+            api = survivor_standings_api()
+            store = api.store
+            user_id, err = store.resolve_actor(self.headers.get("X-User-Id"),
+                                               require_active=False)
+            if err:
+                self._json_response(*err)
+                return
+            params = parse_qs(urlparse(self.path).query)
+            now = store.now_utc()
+            raw_season = (params.get("season") or [""])[0].strip()
+            try:
+                season = int(raw_season) if raw_season else store.current_season(now)
+            except ValueError:
+                self._json_response(400, {"error": "season must be a number"})
+                return
+            if not 2000 <= season <= 2100:
+                self._json_response(400, {"error": "season is out of range"})
+                return
+            try:
+                self._json_response(200, api.build_standings(user_id, season, now))
+            except Exception as e:  # noqa: BLE001
+                self._json_response(500, {"error": str(e)})
+        elif self.path.split("?")[0] == "/api/survivor":
+            api = survivor_api()
+            store = api.store
+            user_id, err = store.resolve_actor(self.headers.get("X-User-Id"),
+                                               require_active=False)
+            if err:
+                self._json_response(*err)
+                return
+            params = parse_qs(urlparse(self.path).query)
+            now = store.now_utc()
+            season, error = api.parse_int(params, "season", 2000, 2100)
+            if not error:
+                week, error = api.parse_int(params, "week", store.MIN_WEEK,
+                                            store.MAX_WEEK)
+            if error:
+                self._json_response(400, {"error": error})
+                return
+            try:
+                season = season or store.current_season(now)
+                games = store.load_season_games(season, now)
+                week, _ = api.resolve_week(season, week, now, games)
+                self._json_response(
+                    200, api.build_week(user_id, season, week, now, games))
+            except Exception as e:  # noqa: BLE001
+                self._json_response(500, {"error": str(e)})
         # Exact-path, not startswith: "/api/pickem-standings" starts with
         # "/api/pickem", so a prefix test here would serve every standings
         # request the week board instead. The standings branch is also first,
@@ -1745,6 +1841,17 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                             self._json_response(200, dict(bundle, etag=etag))
             except Exception as e:  # noqa: BLE001
                 self._json_response(500, {"error": str(e)})
+        # Survivor. Standings and the pick page are matched before the hub for
+        # the same reason vercel.json orders them that way: most specific first.
+        elif self.path.split("?")[0] == "/football/survivor/standings":
+            self.path = "/views/football/survivor-standings.html"
+            super().do_GET()
+        elif SURVIVOR_PICK_RE.match(self.path.split("?")[0]):
+            self.path = "/views/football/survivor-pick.html"
+            super().do_GET()
+        elif self.path.split("?")[0] == "/football/survivor":
+            self.path = "/views/football/survivor.html"
+            super().do_GET()
         # Pick 'Em. Standings and the picks pages are matched before the hub
         # for the same reason vercel.json orders them that way: most specific
         # path first.
@@ -2145,6 +2252,36 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 )
                 self._json_response(200, {"ok": True, "notes": [r["data"] for r in rows]})
             except Exception as e:
+                self._json_response(500, {"error": str(e)})
+        elif self.path.split("?")[0] == "/api/survivor":
+            api = survivor_api()
+            store = api.store
+            user_id, err = store.resolve_actor(self.headers.get("X-User-Id"),
+                                               require_active=True)
+            if err:
+                self._json_response(*err)
+                return
+            try:
+                length = int(self.headers.get("Content-Length", 0))
+                body = json.loads(self.rfile.read(length)) if length else {}
+            except Exception:  # noqa: BLE001
+                self._json_response(400, {"error": "Body must be JSON"})
+                return
+            if not isinstance(body, dict):
+                self._json_response(400, {"error": "Body must be an object"})
+                return
+            now = store.now_utc()
+            season = body.get("season") or store.current_season(now)
+            week = body.get("week")
+            if not isinstance(season, int) or not isinstance(week, int) \
+                    or not store.MIN_WEEK <= week <= store.MAX_WEEK:
+                self._json_response(400, {"error": "season and week are required"})
+                return
+            try:
+                payload, status = api.apply_pick(
+                    user_id, season, week, body.get("game_id"), body.get("team"), now)
+                self._json_response(status, payload)
+            except Exception as e:  # noqa: BLE001
                 self._json_response(500, {"error": str(e)})
         elif self.path.split("?")[0] == "/api/pickem":
             api = pickem_api()

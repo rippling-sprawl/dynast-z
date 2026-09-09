@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/assets/icons/app-touch-180.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Dynast-Z">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <title>Survivor Pick | Dynast-Z</title>
+  <script src="/scripts/base/theme.js"></script>
+  <link rel="stylesheet" href="/styles/base/theme.css">
+  <link rel="stylesheet" href="/styles/base/styles.css">
+  <link rel="stylesheet" href="/styles/base/hub.css">
+  <link rel="stylesheet" href="/styles/components/nfl-pickers.css">
+  <!-- pickem.css FIRST — survivor.css layers over it. See survivor.css. -->
+  <link rel="stylesheet" href="/styles/primary/pickem.css">
+  <link rel="stylesheet" href="/styles/primary/survivor.css">
+  <script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
+  <script defer src="/_vercel/insights/script.js"></script>
+</head>
+<body class="masters-body">
+  <div id="header-mount"></div>
+  <div id="nav-drawer-mount"></div>
+  <script src="/scripts/base/auth.js"></script>
+  <script src="/scripts/base/standalone.js"></script>
+  <script src="/scripts/base/nav.js"></script>
+  <!-- The week menu, shared with /football/schedule and the Pick 'Em board. -->
+  <script src="/scripts/components/nfl-pickers.js"></script>
+  <script src="/scripts/primary/pickem.js"></script>
+  <script src="/scripts/primary/survivor-api.js"></script>
+  <script src="/scripts/primary/survivor.js"></script>
+  <script>initPage();</script>
+
+  <div class="masters-content">
+    <div class="masters-breadcrumbs">
+      <a href="/football">Football</a><span class="separator">/</span><a href="/football/survivor">Survivor</a><span class="separator">/</span><span>Pick</span>
+    </div>
+
+    <h2 id="title">Pick</h2>
+    <p class="subtitle" id="subtitle">Loading…</p>
+
+    <!-- Markup contract for scripts/components/nfl-pickers.js. -->
+    <div class="dd-row">
+      <div class="dd" id="dd-week">
+        <button type="button" class="dd-btn" id="f-week" aria-haspopup="true" aria-expanded="false">
+          <span class="dd-value">Week</span>
+        </button>
+        <div class="dd-pop dd-menu" id="week-menu" role="menu" aria-label="Week" hidden></div>
+      </div>
+      <a class="pk-cta is-secondary" href="/football/survivor/standings">Standings</a>
+    </div>
+
+    <div class="pk-bar" id="bar" hidden>
+      <span id="entry-badge"></span>
+      <span class="pk-bar-stat" id="current"></span>
+      <span class="pk-bar-spacer"></span>
+      <span class="pk-status" id="status"></span>
+      <button type="button" class="pk-save is-clear" id="clear" hidden>Clear pick</button>
+    </div>
+
+    <div id="board"><p class="pk-empty">Loading…</p></div>
+
+    <p class="pk-note" id="note"></p>
+  </div>
+
+  <script>
+  (function () {
+    'use strict';
+
+    /* The week board.
+     *
+     * THERE IS NO SAVE BUTTON, AND THAT IS THE POINT
+     *
+     * The Pick 'Em holds a working set and commits it on Save, because a week
+     * there is sixteen picks whose confidences are a permutation: no single one
+     * of them is valid on its own, so the week has to move as a unit. Survivor
+     * is one team. There is no half-made state to protect, nothing to reconcile
+     * and nothing a Save button could add except a way to leave the page
+     * believing you had picked when you had not — which is the single most
+     * expensive mistake this game has. So a tap IS the pick: written
+     * immediately, confirmed in the bar, and reverted on screen if the server
+     * refuses it.
+     *
+     * The render is optimistic and the reload afterwards is not cosmetic: the
+     * response settles what is now locked, and another entry's pick may have
+     * been revealed by a kickoff while this page sat open. */
+
+    var state = { season: null, week: null, weeks: [] };
+    var data = null;        // the last GET payload
+    var busy = false;
+
+    var boardEl = document.getElementById('board');
+    var barEl = document.getElementById('bar');
+    var titleEl = document.getElementById('title');
+    var subtitleEl = document.getElementById('subtitle');
+    var badgeEl = document.getElementById('entry-badge');
+    var currentEl = document.getElementById('current');
+    var statusEl = document.getElementById('status');
+    var clearBtn = document.getElementById('clear');
+    var noteEl = document.getElementById('note');
+    var weekBtn = document.getElementById('f-week');
+    var weekMenu = document.getElementById('week-menu');
+    var weekDd = null;
+
+    /* ---------- the URL is the state ----------
+     * /football/survivor/pick/3. Changing the week pushes rather than reloads,
+     * so the back button walks the weeks the reader actually looked at. */
+
+    function weekFromPath() {
+      var m = location.pathname.match(/\/pick\/(\d{1,2})\/?$/);
+      var n = m ? Number(m[1]) : 0;
+      return n >= 1 && n <= 18 ? n : null;
+    }
+
+    function seasonFromQuery() {
+      var v = Number(new URLSearchParams(location.search).get('season'));
+      return v >= 2000 && v <= 2100 ? v : null;
+    }
+
+    function writePath(week) {
+      history.pushState({ week: week }, '',
+        '/football/survivor/pick/' + week + location.search);
+    }
+
+    /* ---------- rendering ---------- */
+
+    // An entry that is out cannot pick, and a week whose games have all kicked
+    // off has nothing left to pick. Both are enforced by the server; this is
+    // what stops the board offering a tap it already knows will be refused.
+    function readonly() {
+      return !data || (data.entry && data.entry.status === 'out');
+    }
+
+    function render() {
+      if (!data) return;
+      boardEl.innerHTML = svRenderWeek(data.games, {
+        pick: data.pick,
+        used: data.used || {},
+        others: data.others || [],
+        readonly: readonly()
+      });
+      barEl.hidden = false;
+      badgeEl.innerHTML = svEntryBadge(data.entry);
+      currentEl.innerHTML = data.pick
+        ? '<span class="sv-current">Riding <img src="/assets/icons/nfl/' +
+          pkEsc(data.pick.team) + '.svg" alt="" aria-hidden="true">' +
+          pkEsc(data.pick.team) + '</span>'
+        : '<span class="sv-current"><span class="sv-none">No pick in yet</span></span>';
+
+      // Clearing is only offered while it is actually possible: the pick's own
+      // game must still be unlocked. The server checks the same thing.
+      var held = data.pick ? gameById(data.pick.game_id) : null;
+      clearBtn.hidden = !(data.pick && held && !held.locked && !readonly());
+      clearBtn.disabled = busy;
+    }
+
+    function gameById(gameId) {
+      var found = null;
+      (data.games || []).forEach(function (g) {
+        if (g.game_id === gameId) found = g;
+      });
+      return found;
+    }
+
+    function setStatus(text, kind) {
+      statusEl.textContent = text;
+      statusEl.className = 'pk-status' + (kind ? ' is-' + kind : '');
+    }
+
+    function savedNow() {
+      setStatus('Saved ' + new Date().toLocaleTimeString([], {
+        hour: 'numeric', minute: '2-digit' }), 'ok');
+    }
+
+    function renderHeader() {
+      titleEl.textContent = 'Week ' + state.week + ' pick';
+      var used = Object.keys((data && data.used) || {}).length;
+      subtitleEl.textContent = [
+        String(state.season),
+        'one team, straight up',
+        used + (used === 1 ? ' team spent' : ' teams spent') +
+          ' · ' + (32 - used) + ' left'
+      ].join(' · ');
+
+      noteEl.textContent = data && data.entry && data.entry.status === 'out'
+        ? 'Your entry went out in week ' + data.entry.out_week + ', so this ' +
+          'board is read-only. You can still watch the rest of the season on ' +
+          'the standings.'
+        : 'A greyed-out team is one you have already used — a team can only be ' +
+          'picked once a season. Your pick locks when the game you picked kicks ' +
+          'off, and nobody else can see it until then.';
+    }
+
+    /* ---------- picking ----------
+     * Delegated to the board, which is replaced on every render. */
+
+    function wireBoard() {
+      boardEl.addEventListener('click', function (e) {
+        var btn = e.target.closest ? e.target.closest('.pk-side') : null;
+        if (!btn || btn.disabled || !boardEl.contains(btn) || busy) return;
+        var gameId = btn.getAttribute('data-game');
+        var team = btn.getAttribute('data-team');
+        // A second tap on the team already down clears the week, which is the
+        // same gesture the Pick 'Em uses to drop a side.
+        if (data.pick && data.pick.game_id === gameId && data.pick.team === team) {
+          clear();
+        } else {
+          pick(gameId, team);
+        }
+      });
+    }
+
+    /* The optimistic edit, applied to both halves of what the board draws from.
+     * `used` has to move with the pick: switching from SF to KC leaves SF in
+     * the spent map, and the side just vacated would render struck through and
+     * disabled for the length of the round trip. Returns the undo. */
+    function apply(next) {
+      var before = { pick: data.pick, used: data.used };
+      var used = {};
+      Object.keys(data.used || {}).forEach(function (abbr) {
+        if (data.used[abbr] !== state.week) used[abbr] = data.used[abbr];
+      });
+      if (next) used[next.team] = state.week;
+      data.pick = next;
+      data.used = used;
+      return function () { data.pick = before.pick; data.used = before.used; };
+    }
+
+    function pick(gameId, team) {
+      var undo = apply({ week: state.week, game_id: gameId, team: team });
+      busy = true;
+      setStatus('Saving…', '');
+      render();
+      survivorSave(state.season, state.week, gameId, team).then(function () {
+        busy = false;
+        savedNow();
+        return load(state.season, state.week, true);
+      }).catch(function (err) {
+        busy = false;
+        undo();
+        setStatus(err.message, 'error');
+        render();
+        // A 409 means the board moved under the tap — the game kicked off, or a
+        // result landed that ended the entry. Either way what is on screen is
+        // describing a week that no longer exists.
+        if (err.status === 409) load(state.season, state.week, true);
+      });
+    }
+
+    function clear() {
+      var undo = apply(null);
+      busy = true;
+      setStatus('Clearing…', '');
+      render();
+      survivorClear(state.season, state.week).then(function () {
+        busy = false;
+        setStatus('Pick cleared', '');
+        return load(state.season, state.week, true);
+      }).catch(function (err) {
+        busy = false;
+        undo();
+        setStatus(err.message, 'error');
+        render();
+        if (err.status === 409) load(state.season, state.week, true);
+      });
+    }
+
+    /* ---------- weeks ---------- */
+
+    function wireWeeks() {
+      weekDd = registerDropdown(document.getElementById('dd-week'));
+      weekMenu.addEventListener('click', function (e) {
+        var opt = e.target.closest ? e.target.closest('.dd-opt') : null;
+        if (!opt || !weekMenu.contains(opt)) return;
+        var week = Number(opt.getAttribute('data-week'));
+        closeDropdown(weekDd, true);
+        if (week === state.week) return;
+        writePath(week);
+        load(state.season, week);
+      });
+    }
+
+    function syncWeeks() {
+      buildWeekMenu(weekMenu, state.weeks.map(function (w) {
+        return { value: w, label: 'Week ' + w };
+      }));
+      syncWeekMenu(weekBtn, weekMenu, state.week, 'Week ' + state.week);
+    }
+
+    /* ---------- loading ---------- */
+
+    function load(season, week, quiet) {
+      if (!quiet) boardEl.innerHTML = '<p class="pk-empty">Loading…</p>';
+      return survivorLoadWeek(season, week).then(function (body) {
+        data = body;
+        state.season = body.season;
+        state.week = body.week;
+        state.weeks = body.weeks && body.weeks.length ? body.weeks : [body.week];
+        syncWeeks();
+        renderHeader();
+        render();
+      }).catch(function (err) {
+        boardEl.innerHTML = '<p class="pk-empty">' + pkEsc(err.message) + '</p>';
+        barEl.hidden = true;
+      });
+    }
+
+    /* Safari hands a restored tab back rendered, with no script run: a page left
+     * open overnight would show Sunday's games as still open and let someone try
+     * to pick one. The server refuses that anyway — this is the half that stops
+     * it being offered. */
+    window.addEventListener('pageshow', function (e) {
+      if (e.persisted) load(state.season, state.week, true);
+    });
+
+    window.addEventListener('popstate', function () {
+      var week = weekFromPath();
+      if (week && week !== state.week) load(state.season, week);
+    });
+
+    clearBtn.addEventListener('click', function () {
+      if (!busy && data && data.pick) clear();
+    });
+
+    if (!isLoggedIn()) {
+      location.href = '/account';
+    } else {
+      wireBoard();
+      wireWeeks();
+      load(seasonFromQuery(), weekFromPath());
+    }
+  })();
+  </script>
+</body>
+</html>

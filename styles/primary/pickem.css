@@ -90,6 +90,18 @@
   color: var(--text-4);
 }
 
+/* The last-written stamp. Quieter than the status beside it: it is a standing
+ * fact rather than a thing that just happened, and it is on screen the whole
+ * time the page is. */
+.pk-saved {
+  font-family: var(--vi-display);
+  font-size: 13px;
+  color: var(--text-4);
+  white-space: nowrap;
+}
+
+.pk-saved[hidden] { display: none; }
+
 .pk-status.is-ok { color: var(--good); }
 .pk-status.is-error { color: var(--bad); }
 
@@ -183,9 +195,12 @@
   -webkit-user-select: text;
 }
 
-.pk-rows .pk-game:nth-child(even) { background: var(--zebra); }
-
-.pk-rows .pk-game:hover { background: var(--surface-hover); }
+/* Deliberately flat: no zebra, no hover wash. Colour on this board means one
+ * of exactly two things — the side you took, and what it is worth — and a
+ * striped or highlighted row is a third thing competing with both for the same
+ * signal. The rows are told apart by a hairline and by their own internal
+ * structure instead. */
+.pk-rows .pk-game + .pk-game { border-top: 1px solid var(--hairline); }
 
 .pk-game.is-locked { opacity: 0.85; }
 
@@ -211,6 +226,20 @@
  * way to change it is to move the row, so it takes no focus, opens no menu and
  * cannot be typed into. */
 
+/* Blue, where the picked side is gold. The two were previously the same accent
+ * tint behind the same accent border, so the row's two pieces of state — which
+ * team, and what it is worth — were indistinguishable at a glance. They are
+ * different kinds of fact and now read as different kinds of fact.
+ *
+ * It is the brand navy, filled solid, and that choice is forced by light mode:
+ * the skin's --accent is gold in the dark but the link blue (#0065cc) in the
+ * light, so a blue confidence chip would be the exact colour of a picked side
+ * on a white page. --vi-navy and --vi-band-ink are brand constants — the same
+ * in both themes — so this pairing cannot collide with the accent whichever
+ * theme it lands in.
+ *
+ * A solid block against the picked side's tint-behind-a-1px-border also makes
+ * the two differ in treatment, not only in hue. */
 .pk-conf {
   font-family: monospace;
   font-size: 19px;
@@ -218,9 +247,9 @@
   text-align: center;
   padding: 6px 0;
   border-radius: 2px;
-  border: 1px solid var(--accent-line);
-  background: var(--accent-soft);
-  color: var(--accent);
+  border: 1px solid var(--vi-navy);
+  background: var(--vi-navy);
+  color: var(--vi-band-ink);
   user-select: none;
 }
 
