@@ -416,8 +416,9 @@
       return s < 120 ? s + 's' : gap(s);
     }
 
-    /* Rendered next to the phase chip, because "final" and "captured four
-     * months ago" are two different facts and only one of them was on the page.
+    /* Rendered in the hero's bottom-right corner, because "final" and "captured
+     * four months ago" are two different facts and only one of them was on the
+     * page.
      *
      * Emitted empty and filled by freshTick() below, on a one-second ticker.
      * The line is the only refresh control this page has — there is no button
@@ -613,9 +614,112 @@
       return PHASE_TEXT[b.phase] || label(b.phase || '');
     }
 
+    /* ---------- the live situation ----------
+     * Down, distance, the spot the ball is on and the side holding it: the
+     * four facts a scoreboard carries that this bundle's `game` object does
+     * not. The feed only ever states them through a play, so they are read off
+     * the latest one, and off its `end_*` fields rather than its `start_*`
+     * ones -- a play's end is where the ball is sitting now.
+     *
+     * Latest is decided by period and clock rather than by position in the
+     * array, for the reason scoringPlays() sorts the same way: /plays comes
+     * back ordered by id and administrative rows sort out of sequence within
+     * it. Feed position breaks a tie and covers a clock that cannot be read. */
+    function laterPlay(a, ai, b, bi) {
+      var ap = Number(a.period), bp = Number(b.period);
+      if (isFinite(ap) && isFinite(bp) && ap !== bp) return ap > bp ? a : b;
+      // Counting down, so the smaller remainder is the later play.
+      var ac = clockLeft(a.clock_display), bc = clockLeft(b.clock_display);
+      if (ac !== null && bc !== null && ac !== bc) return ac < bc ? a : b;
+      return ai > bi ? a : b;
+    }
+
+    function latestPlay(b) {
+      var all = (b.plays || {}).all || [];
+      var best = null, bi = -1;
+      all.forEach(function (pl, i) {
+        if (best === null || laterPlay(pl, i, best, bi) === pl) { best = pl; bi = i; }
+      });
+      return best;
+    }
+
+    /* Who has the ball. `play.team` is not the answer: it is the team whose
+     * drive the play belongs to, which is the returning side on a kickoff and
+     * the kicking side on a punt -- so it marks the wrong crest for as long as
+     * a punt is the last play the page has.
+     *
+     * The geometry does not have that problem. end_yards_to_endzone is measured
+     * from the endzone the team in possession is running at, so a spot in the
+     * half it is named for is more than fifty yards out and one in the other
+     * half is fewer: "NE 32" with 68 to go is New England on its own 32, and
+     * the same text with 32 to go is the opponent on New England's. Midfield is
+     * the one spot that says nothing -- 50 either way -- and an abbreviation
+     * that matches neither team is a feed spelling this page does not know, so
+     * both fall back to the drive's team, which is right far more often than
+     * it is wrong. */
+    function possessing(g, pl) {
+      var m = /([A-Z]{2,4})\s+\d+/.exec(String(pl.end_possession_text || ''));
+      var side = m ? m[1] : '';
+      var y2e = Number(pl.end_yards_to_endzone);
+      if (side && isFinite(y2e) && y2e !== 50 &&
+          (side === g.away.abbr || side === g.home.abbr)) {
+        var far = side === g.away.abbr ? g.home.abbr : g.away.abbr;
+        return y2e > 50 ? side : far;
+      }
+      return (pl.team && pl.team.abbreviation) || '';
+    }
+
+    /* Live only. A final game's last play has an end spot too, and printing it
+     * under "Final" says the ball is still sitting there. */
+    function situation(b) {
+      if (b.phase !== 'live') return null;
+      var pl = latestPlay(b);
+      if (!pl) return null;
+      var spot = String(pl.end_possession_text || '').trim();
+      /* A play with no next snap behind it -- an extra point, the end of a
+       * half -- ends on down 0, and whatever down-and-distance text rides along
+       * with it describes a situation nobody is in yet. */
+      var dd = Number(pl.end_down) > 0
+        ? String(pl.end_short_down_distance_text || '').trim() : '';
+      if (!spot && !dd) return null;
+      return { spot: spot, dd: dd, team: possessing(b.game, pl) };
+    }
+
+    /* The marker rides on the crest rather than in the line below it, because
+     * the line cannot carry it: "NE 32" names the half the ball is in, and on a
+     * turnover that is the other team's name.
+     *
+     * Drawn rather than styled. A CSS ellipse is the shape the box model gives
+     * for free and it is not the shape of a football -- at 20px a rounded pill
+     * with a stripe down it reads as a badge, which is exactly what it must not
+     * be mistaken for. Four curves and three laces cost the same and are
+     * unmistakable. The outline is stroked under the fill in the hero's own
+     * background colour so the ball stays cut out from whatever crest it lands
+     * on. */
+    function possMark(abbr) {
+      var t = esc(abbr) + ' has the ball';
+      return '<span class="go-ball" role="img" title="' + t +
+        '" aria-label="' + t + '">' +
+        '<svg viewBox="0 0 24 16" aria-hidden="true" focusable="false">' +
+          '<path class="go-ball-skin" d="M1.5 8C5 1 19 1 22.5 8 19 15 5 15 1.5 8Z"/>' +
+          '<path class="go-ball-lace" d="M9 8h6M10.5 6.2v3.6M12 6v4M13.5 6.2v3.6"/>' +
+        '</svg></span>';
+    }
+
+    function sitLine(sit) {
+      var bits = [];
+      if (sit.dd) bits.push('<span class="go-dd">' + esc(sit.dd) + '</span>');
+      if (sit.spot) bits.push('<span class="go-spot">' + esc(sit.spot) + '</span>');
+      return '<span class="go-sit">' +
+        bits.join('<span class="go-sep" aria-hidden="true">·</span>') +
+        '</span>';
+    }
+
     function heroSection(b) {
       var g = b.game;
       var sc = g.score;
+      var sit = situation(b);
+      var ball = sit ? sit.team : '';
       var aw = '', hw = '';
       if (sc && sc.away !== null && sc.home !== null) {
         aw = sc.away > sc.home ? ' is-win' : (sc.away < sc.home ? ' is-loss' : '');
@@ -641,24 +745,35 @@
       /* The two crests are the headline and they sit at the far edges, away on
        * the left and home on the right, so the column between them is free for
        * everything that answers "where is this game": the neutral-site marker,
-       * the status chip with its freshness line, and the venue. The venue needs
-       * no "Venue" label down there -- a stadium name between two crests is
-       * only ever the place they are playing. */
+       * the status chip, and under it the down, the distance and the spot. The
+       * ball itself is marked on a crest instead, because that is the one fact
+       * of the four that names a team.
+       *
+       * The venue is gone from here. A stadium name is fixed the moment the
+       * fixture is, so it was the least perishable thing on a page that repaints
+       * itself every minute, and it was holding the room a live game's situation
+       * needed. The freshness line has gone the other way, out of the status
+       * column and down to the hero's bottom-right corner: it is a footnote
+       * about the page rather than a fact about the game, and beside the chip it
+       * was read as one. */
       return '<div class="go-hero"><div class="go-hero-top">' +
         '<span class="go-team' + aw + '">' +
-          teamLogo(g.away.abbr, 'go-crest', true) + '</span>' +
+          teamLogo(g.away.abbr, 'go-crest', true) +
+          (ball && ball === g.away.abbr ? possMark(g.away.abbr) : '') + '</span>' +
         '<div class="go-hero-mid">' +
           '<span class="go-at">' + (g.neutral ? 'vs' : '@') + '</span>' +
           '<span class="go-status">' +
             '<span class="go-phase ' + esc(b.phase) + '">' + esc(phaseText(b)) + '</span>' +
-            freshness(b) +
+            (sit ? sitLine(sit) : '') +
           '</span>' +
-          (g.venue ? '<span class="go-venue">' + esc(g.venue) + '</span>' : '') +
         '</div>' +
         '<span class="go-team' + hw + '">' +
-          teamLogo(g.home.abbr, 'go-crest', true) + '</span>' +
+          teamLogo(g.home.abbr, 'go-crest', true) +
+          (ball && ball === g.home.abbr ? possMark(g.home.abbr) : '') + '</span>' +
         '</div>' +
-        line + '</div>';
+        line +
+        '<div class="go-hero-foot">' + freshness(b) + '</div>' +
+        '</div>';
     }
 
     /* An empty section is worth a card only once there is something for it to

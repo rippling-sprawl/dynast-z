@@ -26,9 +26,9 @@
 /* No pull-to-refresh on this page. The gesture reloads the whole document —
  * a megabyte of bundle, the nav, the skin — to reproduce a poll the page makes
  * on its own every minute, and it fires by accident on the way to the top of a
- * long props board. The freshness line under the phase chip is the refresh UI
- * instead: it counts down to the next check, so there is nothing left for a
- * pull to tell you. Set on <html> because that is the scroller the browser
+ * long props board. The freshness line in the hero's bottom-right corner is
+ * the refresh UI instead: it counts down to the next check, so there is nothing
+ * left for a pull to tell you. Set on <html> because that is the scroller the browser
  * takes the overscroll from; this sheet loads on the Games routes only. */
 html {
   overscroll-behavior-y: contain;
@@ -48,9 +48,10 @@ html {
 }
 
 /* The hero is a three-column row: away crest, home crest, and between them
- * the column that says where the game is -- neutral-site marker, status chip
- * and venue. The crests are big enough to name the teams on their own, which
- * is why no abbreviation rides beside them here. */
+ * the column that says where the game is -- neutral-site marker, status chip,
+ * and while a game is live the down, distance and spot. The crests are big
+ * enough to name the teams on their own, which is why no abbreviation rides
+ * beside them here. */
 .go-hero-top {
   display: flex;
   align-items: center;
@@ -58,7 +59,8 @@ html {
   gap: 20px;
 }
 
-.go-team { flex: 0 0 auto; line-height: 0; }
+/* Positioned so the possession marker has something to hang off. */
+.go-team { flex: 0 0 auto; line-height: 0; position: relative; }
 
 .go-crest {
   width: 92px;
@@ -68,8 +70,45 @@ html {
 
 /* No abbreviation left to colour, so the losing side dims instead: the winner
  * keeps its crest at full strength and the row still reads at a glance. On a
- * scheduled game neither class is set and both stay lit. */
-.go-team.is-loss { opacity: 0.42; filter: grayscale(0.5); }
+ * scheduled game neither class is set and both stay lit.
+ *
+ * Set on the crest rather than on the wrapper, because opacity and grayscale
+ * on the wrapper take the possession marker down with it -- and which team has
+ * the ball is not dimmer news for being six points behind. */
+.go-team.is-loss .go-crest { opacity: 0.42; filter: grayscale(0.5); }
+
+/* Possession: a football on the crest of the side holding it, half off the
+ * bottom edge so it reads as a marker placed on the logo rather than part of
+ * it. Gold because gold is this page's "look here", and outlined in the hero's
+ * own background so the shape survives whatever colour it lands on. Positioned
+ * out of flow: the marker comes and goes every few plays and must not move the
+ * crest a pixel when it does. */
+.go-ball {
+  position: absolute;
+  left: 50%;
+  bottom: -4px;
+  transform: translateX(-50%);
+  width: 24px;
+  line-height: 0;
+}
+
+.go-ball svg { width: 100%; height: auto; display: block; overflow: visible; }
+
+/* Stroke under fill, so the outline sits outside the silhouette instead of
+ * eating into it. */
+.go-ball-skin {
+  fill: var(--vi-gold);
+  stroke: var(--surface);
+  stroke-width: 2.4;
+  paint-order: stroke fill;
+}
+
+.go-ball-lace {
+  stroke: var(--vi-navy, #10203a);
+  stroke-width: 1.1;
+  stroke-linecap: round;
+  fill: none;
+}
 
 .go-hero-mid {
   flex: 1 1 auto;
@@ -90,12 +129,32 @@ html {
   color: var(--text-4);
 }
 
-/* The venue label is gone with it: the name alone, under the chip and between
- * the crests, cannot be read as anything but the place. */
-.go-venue {
+/* Down, distance and spot, under the chip. One line rather than two fields
+ * with labels: "3RD & 3 · NE 32" is how the same fact is read on a broadcast,
+ * and either half can be missing -- a kickoff has a spot and no down -- so the
+ * separator is emitted between the halves that are there instead of being hung
+ * off one of them. The down-and-distance takes the display face because it is
+ * the half that is read first; the spot stays quiet behind it. */
+.go-sit {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
   font-size: 12px;
-  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
+
+.go-sit .go-dd {
+  font-family: var(--vi-display);
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--text-hi);
+}
+
+.go-sit .go-spot { color: var(--text-3); }
+.go-sit .go-sep { color: var(--text-4); }
 
 /* The one place the display face replaces the monospace rather than joining
  * it: the matchup is a headline, not a column, and nothing is measuring
@@ -150,14 +209,29 @@ html {
 }
 .go-phase.final   { color: var(--text-3); border-color: var(--border); background: var(--surface-2); }
 
-/* Phase and freshness read as one fact — "live, updated 40s ago" — so they sit
- * in one column rather than competing for the same row. */
+/* The chip and the situation under it read as one fact — "Q3 8:42, 3rd & 3 on
+ * the NE 32" — so they sit in one column rather than competing for the same
+ * row. Freshness used to sit here too and has moved to .go-hero-foot: it is
+ * the only line in the column that is not about the game. */
 .go-status {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 3px;
+  gap: 5px;
 }
+
+/* The bottom-right corner of the hero, under the quarter table. A footnote
+ * about the page — when it last read the feed, when it will read it again —
+ * so it sits where a footnote sits and stays out of the column the game is
+ * read down. Hidden outright when the line has nothing to say, so an empty
+ * span does not spend the margin above it. */
+.go-hero-foot {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+
+.go-hero-foot:has(.go-fresh:empty) { display: none; }
 
 .go-fresh {
   font-size: 11px;
@@ -1070,6 +1144,11 @@ html {
   .go-matchup { font-size: 22px; }
   .go-hero-top { gap: 12px; }
   .go-crest { width: 58px; height: 58px; }
+  /* Scaled with the crest it marks: 24px on a 58px logo is a ball the size of
+   * the team. */
+  .go-ball { width: 18px; bottom: -3px; }
+  .go-sit { font-size: 11px; gap: 6px; }
+  .go-sit .go-dd { font-size: 12px; }
   .go-play { grid-template-columns: 46px 40px minmax(0, 1fr); }
   .go-play .go-pscore { display: none; }
   .go-scoring .go-play { grid-template-columns: 44px 34px minmax(0, 1fr) 46px; gap: 8px; }
