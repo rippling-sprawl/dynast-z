@@ -225,10 +225,10 @@ html {
   border-radius: 2px;
   background: var(--surface);
   margin-bottom: 14px;
-  /* Visible, not hidden: a board is laid out in full and a wide one runs past
-   * the card rather than being cut off at its edge. The 2px radius the clip
-   * was rounding is not worth a hidden column. */
-  overflow: visible;
+  /* The card is the edge a wide board stops at: .go-scroll inside it carries
+   * the columns that do not fit, so nothing needs to escape the card, and the
+   * clip keeps the navy head inside the 2px radius. */
+  overflow: hidden;
 }
 
 /* The band. Every board on VegasInsider is headed by one: navy, ruled in gold
@@ -334,12 +334,23 @@ html {
  * of keys across the rows, in a scrolling table. It is plain, it cannot be
  * wrong, and it is the fastest way to see what the shape really is. */
 
-/* No board scrolls in its own box. A table is read whole — capping one and
- * letting it scroll under its own header hides rows behind an edge that looks
- * like the end of the board, and a horizontal scrollport clips a wide row at
- * the card edge with no sign there is more of it. Every row and every column
- * is laid out in full and the page carries whatever it comes to. */
-.go-scroll { overflow: visible; max-height: none; }
+/* Sideways in its own box, downwards with the page. The two axes want opposite
+ * things: a milestone ladder is two dozen columns and a phone is four of them
+ * wide, so the columns have to scroll inside the card or the whole document
+ * ends up dragging sideways under a nav that stays put — but the rows are the
+ * board itself, and capping their height puts them behind an inner edge that
+ * reads like the end of the table.
+ *
+ * So: a horizontal scrollport, and no height cap at all. Note that overflow-y
+ * computes to `auto` here whatever is written, because a box cannot clip one
+ * axis and overflow the other — `visible` states the intent, and it costs
+ * nothing, since a box with no cap is always exactly as tall as its table and
+ * has nothing to scroll. */
+.go-scroll {
+  overflow-x: auto;
+  overflow-y: visible;
+  max-height: none;
+}
 
 .go-table {
   width: 100%;
@@ -361,10 +372,13 @@ html {
   border-bottom: 1px solid var(--hairline);
 }
 
-/* The head rides with its table. It was sticky against .go-scroll's scrollport;
- * with no scrollport left it would pin to the viewport instead and sit under
- * the page's own sticky header, which is opaque — a column head hidden behind
- * the site bar is worse than one scrolled past.
+/* The head rides down with its table rather than sticking. It has no scrollport
+ * to stick to that would do anything: sticky resolves against the nearest one,
+ * which is .go-scroll, and .go-scroll has no height cap, so a head pinned to it
+ * would never come off the top of an unscrollable box. The viewport is not
+ * available to it either — .go-scroll clips the vertical axis by virtue of
+ * scrolling the horizontal one — and a head pinned to the viewport would sit
+ * under the page's own sticky header, which is opaque.
  *
  * Backed all the same. Cell boxes on the two-row head meet on a half pixel,
  * and the hairline of tbody that shows through that seam is a row of clipped
@@ -396,37 +410,51 @@ html {
 .go-table td.is-num { text-align: right; }
 .go-table td.is-null { color: var(--text-5); }
 
-/* --- Leading column ------------------------------------------------------
- * The name column used to pin itself to the left edge while the rest of the
- * row scrolled past it inside .go-scroll. There is no sideways scrollport to
- * pin against now, and a sticky column with the *page* as its scrollport would
- * slide over its own row's cells the moment the page moved. So it sits still
- * like every other cell and keeps only what it was worth on its own: the rule
- * separating the name from the numbers, and the opaque backgrounds that keep
- * the stripe unbroken across it. */
+/* --- Pinned first column -------------------------------------------------
+ * The injury report and the props ladder both go sideways inside .go-scroll,
+ * and both are read by finding a row and then tracking across it. Scroll the
+ * name off the left edge and the row loses the only thing that identifies it,
+ * so the first column stays put. This is the column the arrangement is for on
+ * a phone, where three or four cells of a two-dozen-column board are on screen
+ * at once.
+ *
+ * The cells need their own opaque backgrounds: sticky cells paint over the row
+ * they are scrolling past, and a transparent one would drag the zebra stripe
+ * of whatever is underneath along with it. */
 
 .go-pinned tbody td:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 1;
   background: var(--surface);
   border-right: 1px solid var(--border);
 }
 
 .go-pinned tbody tr:nth-child(even) td:first-child { background: var(--zebra); }
 
+/* First row only, so a two-row head can never pin its second row's leading
+ * cell to the left edge on top of the heading above it. The head does not
+ * stick downwards any more, so this cell outranks only its own row. */
 .go-pinned thead tr:first-child th:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 2;
   border-right: 1px solid var(--border);
 }
 
 /* Free text, unlike every other cell on the page. It is the only column
- * allowed to wrap — a long note stacks into a paragraph inside the row instead
- * of running the table off the side of the page.
+ * allowed to wrap — capped so a long note stacks into a paragraph inside the
+ * row instead of running out to a single line.
  *
- * No floor under it any more. The floor existed to widen the column past the
- * card while .go-scroll carried the overflow; with the board laid out in full
- * that floor is just a demand for width the page has to find somewhere, and a
- * wrapping column has no need of it — it takes what the fixed columns leave
- * and stacks. The cap stays so the note never runs to a single long line on a
- * wide screen. */
+ * The floor is what makes it a paragraph. Every other column is monospace and
+ * set not to wrap, so they take their content width and this one takes what is
+ * left; on a phone what is left is a few characters a line. The table is
+ * allowed to outgrow the card and .go-scroll carries the overflow, which is
+ * the arrangement the pinned first column is built for — the player's name
+ * stays put while the note scrolls past it. Held under two thirds of the
+ * viewport so the note itself is always most of what is on screen. */
 .go-table th.go-note, .go-table td.go-note {
+  min-width: min(62vw, 560px);
   max-width: 820px;
   white-space: normal;
 }
@@ -591,10 +619,10 @@ html {
  * title is a hover, which a phone does not have — so a tap opens this, and
  * the hover stays for a mouse.
  *
- * Fixed rather than absolute: the board it hangs off scrolls inside
+ * Fixed rather than absolute: the board it hangs off scrolls sideways inside
  * .go-scroll, and a panel positioned inside a scrollport is clipped by it, so
  * the last column of a milestone ladder would open a panel cut down the
- * middle. Above the sticky table head, which is z-index 3 at its highest. */
+ * middle. Above everything else on the board. */
 .go-pop {
   position: fixed;
   z-index: 60;
@@ -719,7 +747,24 @@ html {
   max-width: 420px;
   border: 1px solid var(--border);
   border-radius: 2px;
-  overflow: visible;
+  overflow: hidden;
+}
+
+/* Below this there is one book to a row whatever its floor says -- two of them
+ * want 538px of row before the gap is paid for, and the widest card here is
+ * under 500 -- so the floor has nothing left to decide, and holding it costs
+ * the reader a column: four monospace columns want a little over 380px, a
+ * 320px phone leaves a card about 295px wide, and a box that stands at its
+ * content width inside a row narrower than that is clipped by the card with no
+ * way to reach what was cut. So it gives up the floor and scrolls instead.
+ * Above the breakpoint the floor is what wraps a book onto a row of its own
+ * rather than letting two of them squeeze and scroll side by side, and it
+ * stays. */
+@media (max-width: 520px) {
+  .go-book {
+    min-width: 0;
+    overflow-x: auto;
+  }
 }
 
 .go-odds th, .go-odds td { padding: 6px 10px; }
@@ -953,9 +998,9 @@ html {
  * controls that way. */
 .go-pbody .dd-row { margin: 0 0 10px 9px; }
 
-/* The market a stack of over/under boards is under. Not a table caption:
- * every one of these has a sticky head of its own, and a caption inside the
- * scrollport would scroll away from the table it names. */
+/* The market a stack of over/under boards is under. A heading above the board
+ * rather than a table caption inside it: it names a market that a run of
+ * boards belongs to, and it is indented to the controls above it. */
 .go-mkt {
   margin: 22px 0 5px;
   padding: 0 0 0 13px;
