@@ -799,14 +799,11 @@
 
 .proj-float-head table { table-layout: fixed; }
 
-/* --- Expandable team card --- */
+/* --- Expandable team card ---
+ * The row is clickable and says so with the cursor and the focus ring alone. No
+ * hover repaint: no table row in this app takes one, so the pinned-cell rule
+ * that existed only to re-assert one over `#proj-table` went with it. */
 .proj-row { cursor: pointer; }
-.proj-row:hover td { background: var(--panel); }
-
-/* Re-assert hover on the pinned cell: the rule above carries an ID, so it
- * outranks `.proj-row:hover td` and would otherwise stay unhighlighted. */
-#proj-table tr.proj-row:hover > td:first-child,
-#proj-table tr.proj-row:hover > td:nth-child(2) { background: var(--panel); }
 .proj-row:focus-visible { outline: 1px solid var(--accent-2); outline-offset: -1px; }
 
 /* --- The card dialog ---

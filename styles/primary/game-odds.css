@@ -339,6 +339,18 @@ html {
  * rather than one heading per team over all eight of its groups. */
 .go-bs-body { padding-bottom: 14px; }
 
+/* One right edge down every column, the same as the prop board. genericTable
+ * hands `.is-num` only to what parses as a number, so "18/27" aside, anything
+ * the feed sent as text -- and every "—" for a stat it did not send -- landed on
+ * the table's default left and stepped out of the column. A box score is read by
+ * running an eye down a column of figures, which needs the figures to line up
+ * more than it needs to know which of them the parser recognised.
+ *
+ * Scoped to .go-bs-body rather than .go-table: genericTable draws the team
+ * comparison and the injury report too, and neither is read this way. First
+ * column excluded -- it is the player's name. */
+.go-bs-body .go-table tbody td:not(:first-child) { text-align: right; }
+
 .go-bs-grp {
   margin: 18px 14px 6px;
   font-family: var(--vi-display);
@@ -736,9 +748,19 @@ html {
 
 .go-props th.is-num { text-align: right; }
 
-/* Name, position and club, in the cell the pinned-column rules hold at the
- * left edge. Display face rather than the table's monospace: it is the label
- * on the row, not one of the numbers in it. */
+/* Every value on the board sits on one right edge. `.is-num` already put the
+ * numbers there and the exceptions were the problem: a "—" for a market nobody
+ * quoted, or a line the feed sent as a string, fell back to the table's default
+ * left and broke the edge the column is scanned down. The rule is the column
+ * rather than the value, so a cell cannot opt out of it by not parsing.
+ *
+ * The first column is excluded, not overridden -- it is the pinned name, a label
+ * and not a value, and it reads from the left like the label it is. */
+.go-props tbody td:not(:first-child) { text-align: right; }
+
+/* Name and club, in the cell the pinned-column rules hold at the left edge.
+ * Display face rather than the table's monospace: it is the label on the row,
+ * not one of the numbers in it. */
 .go-props td.go-plc {
   font-family: var(--vi-display);
   font-size: 13px;

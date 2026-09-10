@@ -258,10 +258,21 @@
 
     var PERIOD = { '1q': '1Q', '2q': '2Q', '3q': '3Q', '4q': '4Q',
                    '1h': '1H', '2h': '2H' };
+    var PERIOD_RE = /^(.*)_(1q|2q|3q|4q|1h|2h)$/;
+
+    /* The market without its period suffix. `anytime_td_1h` is the anytime
+     * touchdown market quoted over one half, not a market of its own, so
+     * anything sorting or grouping markets works off this rather than off the
+     * key the feed sends. */
+    function marketBase(key) {
+      var k = String(key == null ? '' : key);
+      var m = PERIOD_RE.exec(k);
+      return m ? m[1] : k;
+    }
 
     function marketHeading(key) {
       var k = String(key == null ? '' : key), suffix = '';
-      var m = /^(.*)_(1q|2q|3q|4q|1h|2h)$/.exec(k);
+      var m = PERIOD_RE.exec(k);
       if (m) { k = m[1]; suffix = ' (' + PERIOD[m[2]] + ')'; }
       return heading((MARKET_ABBR[k] || label(k)) + suffix,
                      fullLabel(k) + suffix);
@@ -1369,7 +1380,22 @@
         '</div>';
     }
 
+    /* A finished game has no odds worth showing. The market it was quoting has
+     * settled, the hero above carries the result the quotes were guessing at,
+     * and there is nothing left to bet -- so a book table on a final game is a
+     * price for a question already answered.
+     *
+     * It is also the least trustworthy data the bundle holds. Books suspend
+     * their markets as a game ends and post sentinel prices to do it: FanDuel
+     * closed NE@SEA in week 1 2026 at -100000 / +10000, and because the last
+     * capture before the whistle is the one that gets frozen into the archive,
+     * those sentinels are what a final bundle keeps for ever. Dropping the
+     * section on `final` means the page never renders them.
+     *
+     * Checked here rather than at the call site so the rule belongs to the
+     * section: anything that renders odds gets it without having to remember. */
     function oddsSection(b) {
+      if (b.phase === 'final') return '';
       var o = b.odds || { current: [], opening: [] };
       if (!o.current.length && !o.opening.length) {
         return card('Betting odds',
@@ -1822,11 +1848,17 @@
      * It is the pinned column instead, the arrangement the injury report
      * already scrolls under: a milestone market runs to two dozen rungs and
      * the board has to go sideways, and the name is the one thing a row cannot
-     * afford to have scroll off it. Position and club stay on the name, which
-     * is the only cell wide enough to carry them. */
+     * afford to have scroll off it. The club stays on the name, which is the only
+     * cell wide enough to carry it.
+     *
+     * The position does not. It was the least of the three and it was paying the
+     * most for the space: a market is already a position -- a passing-yards board
+     * is quarterbacks and a receptions board is not -- so "QB" beside every name
+     * on it was the column repeating what its own heading had said. The club is
+     * the fact that varies down the board and it is the one that stays. */
     function playerCell(b, id) {
       var pl = playerOf(b, id);
-      var meta = pl ? [pl.position, pl.team].filter(Boolean).join(' \u00b7 ') : '';
+      var meta = (pl && pl.team) || '';
       return '<td class="go-plc">' + esc(playerName(b, id)) +
         (meta ? '<span class="go-plmeta">' + esc(meta) + '</span>' : '') + '</td>';
     }
@@ -2106,6 +2138,157 @@
       }, 0);
     }
 
+    /* ---------- market groups ----------
+     * Seventeen markets is a long stack on the over/under board and a <select>
+     * nobody reads to the bottom of on the milestone one, and the order they
+     * arrive in is the alphabet, which is not an order anyone opens a prop
+     * board in: a reader chasing a receiving line has to know that "Rec" and
+     * "Rec Yds" sit six apart in it, with two passing markets wedged between.
+     *
+     * The box score answers the same problem with a strip of chips by side of
+     * the ball, so the prop board takes the same strip, split by phase of the
+     * offence -- passing, rushing, receiving, kicking. It is the split the
+     * markets were already in; it just had no name on the page.
+     *
+     * Touchdowns are a fifth chip, and only on the milestone board, because
+     * that is the only board they exist on: anytime and first scorer are
+     * over-only ladders with no two-sided quote anywhere in the feed. They
+     * also belong to no phase -- a receiver and a back are priced on the same
+     * anytime board -- which is what makes them a group rather than a market
+     * that could have been filed under one of the four. Passing touchdowns are
+     * not in it: that is a quarterback's board and it is read beside the yards
+     * and attempts it sits with under Passing.
+     *
+     * A market the map does not name falls into a trailing Other chip rather
+     * than off the board, for the same reason propMarkets appends the markets
+     * its own list is missing: the feed adds markets, and a board that
+     * silently drops them is worse than one with a catch-all chip on the end.
+     *
+     * Matched on the base market, so every period cut of a market lands in its
+     * parent's group -- anytime_td_1q is a touchdown market, not a seventh
+     * thing the map has never heard of.
+     *
+     * ---------- the order within a chip ----------
+     * The list is written in the order the boards are drawn in, and it is a
+     * running order rather than an alphabet: the market the group is opened
+     * for first, then the rest in falling order of how often anyone takes
+     * them. Passing led with "INT Thrown" under the alphabet, which is the
+     * least-taken market on a quarterback's board sitting above the most; it
+     * now runs yards, touchdowns, interceptions, then the two volume counts.
+     * Rushing and receiving lead with yardage for the same reason.
+     *
+     * Markets this feed has never sent are in the list anyway, in the place
+     * they would belong -- rushing touchdowns between the yards and the
+     * attempts, the longest-something markets at the back. A market with no
+     * place in the order would otherwise arrive at the front of the group the
+     * first time it is quoted, which is the one position it has not earned. */
+    var PROP_GROUP = [
+      { key: 'passing', text: 'Passing', markets: [
+          'passing_yards', 'passing_tds', 'interceptions',
+          'passing_attempts', 'passing_completions', 'longest_completion'] },
+      { key: 'rushing', text: 'Rushing', markets: [
+          'rushing_yards', 'rushing_tds', 'rushing_attempts',
+          'rushing_receiving_yards', 'longest_rush'] },
+      { key: 'receiving', text: 'Receiving', markets: [
+          'receiving_yards', 'receiving_tds', 'receptions',
+          'receiving_targets', 'longest_reception'] },
+      { key: 'kicking', text: 'Kicking', markets: [
+          'kicking_points', 'fg_made', 'extra_points_made'] },
+      /* Milestones only -- see above. */
+      { key: 'td', text: 'TDs', mileOnly: 1, markets: [
+          'anytime_td', 'first_td', 'last_td'] }
+    ];
+
+    var PROP_GROUP_OTHER = { key: 'other', text: 'Other', markets: [] };
+
+    /* The lists above inverted once at load: base market -> which chip holds
+     * it and where in that chip it sits. */
+    var MARKET_AT = {};
+    PROP_GROUP.forEach(function (g) {
+      g.markets.forEach(function (m, i) { MARKET_AT[m] = { key: g.key, rank: i }; });
+    });
+
+    function marketGroupKey(m) {
+      var at = MARKET_AT[marketBase(m)];
+      return at ? at.key : PROP_GROUP_OTHER.key;
+    }
+
+    /* A market the order does not name sorts to the back rather than off the
+     * end of a comparison: this is only ever reached inside Other, where
+     * everything is unnamed and the tie hands the group back to the order the
+     * feed sent it in. */
+    function marketRank(m) {
+      var at = MARKET_AT[marketBase(m)];
+      return at ? at.rank : 1e9;
+    }
+
+    /* The chips one board shows, each carrying its markets in the running
+     * order PROP_GROUP writes them in.
+     *
+     * Period cuts sit behind the full-game markets rather than beside their
+     * own parent, so the touchdown chip opens on Anytime and First TD -- the
+     * two markets it is opened for -- rather than burying First TD under six
+     * quarter and half cuts of Anytime it happens to sort after. Within the
+     * cuts the feed's own order stands, which is what the stable sort leaves
+     * behind once the two keys above it tie.
+     *
+     * Every named group is returned whether or not this game has a market in
+     * it, for the reason the box score draws all three of its chips: a Kicking
+     * chip over an empty board reads as "nobody has been quoted yet", and a
+     * Kicking chip that is not there reads as a board that cannot do kicking.
+     * Other is the exception -- it is not a category, it is the overflow, and
+     * an empty one names nothing. */
+    function marketGroups(markets, view) {
+      var by = {};
+      markets.forEach(function (m) {
+        var k = marketGroupKey(m);
+        (by[k] || (by[k] = [])).push(m);
+      });
+      function inOrder(list) {
+        return list.slice().sort(function (x, y) {
+          var xp = x === marketBase(x) ? 0 : 1, yp = y === marketBase(y) ? 0 : 1;
+          if (xp !== yp) return xp - yp;
+          return marketRank(x) - marketRank(y);
+        });
+      }
+      var out = PROP_GROUP.filter(function (g) {
+        return view === 'mile' || !g.mileOnly;
+      }).map(function (g) {
+        return { key: g.key, text: g.text, markets: inOrder(by[g.key] || []) };
+      });
+      if (by.other) {
+        out.push({ key: PROP_GROUP_OTHER.key, text: PROP_GROUP_OTHER.text,
+          markets: inOrder(by.other) });
+      }
+      return out;
+    }
+
+    function groupMarkets(groups, key) {
+      for (var i = 0; i < groups.length; i++) {
+        if (groups[i].key === key) return groups[i].markets;
+      }
+      return [];
+    }
+
+    function groupText(groups, key) {
+      for (var i = 0; i < groups.length; i++) {
+        if (groups[i].key === key) return groups[i].text;
+      }
+      return '';
+    }
+
+    /* A chip that stopped existing between polls -- Other, when the market
+     * that made it stops being quoted -- falls back to the first chip rather
+     * than leaving the strip with nothing pressed and the board blank. An
+     * empty named group is still a valid pick: it is the "not yet" state the
+     * strip is drawn in full for. */
+    function validGroup(groups, key) {
+      for (var i = 0; i < groups.length; i++) {
+        if (groups[i].key === key) return key;
+      }
+      return groups.length ? groups[0].key : '';
+    }
+
     /* The markets this bundle holds, split by shape and kept in the bundle's
      * own order — which is alphabetical — with anything the rows carry and the
      * market list does not appended rather than dropped. Derived rather than
@@ -2134,6 +2317,13 @@
      * against the bundle on every wire, so a market that stops being quoted
      * falls back rather than emptying the table. */
     var propView = 'ou', propMarket = '', propPlayer = '';
+
+    /* One per board rather than one shared between them, because the two do
+     * not hold the same chips: TDs exists only on the milestone strip, so a
+     * shared value would be reset to Passing the moment the reader looked at
+     * the over/under board and lost on the way back. They are read as two
+     * boards -- they are two boards -- and each keeps its own place. */
+    var ouGroup = 'passing', mileGroup = 'passing';
 
     /* ---------- the two views ----------
      * Over/under and milestones are not two filters on one board, they are two
@@ -2205,6 +2395,14 @@
       var mk = propMarkets(b);
 
       return card('Player props',
+        /* Empty here and filled by wireProps: which chips the strip holds
+         * depends on which board is up -- TDs is on one and not the other --
+         * so it is rebuilt on every view switch rather than rendered once with
+         * the card. Drawn above .go-pbody, not inside it, so it lands flush
+         * against the card head the way the box score's and the play log's
+         * strips do rather than inset by the body's own padding. */
+        '<div class="go-seg" id="prop-groups" role="group"' +
+          ' aria-label="Market group"></div>' +
         '<div class="go-pbody">' +
           /* Hidden on the over/under board rather than absent from it: the
            * pickers belong to one of the two views, and a row of controls that
@@ -2248,6 +2446,7 @@
      * render rather than once at load. */
     function wireProps(b) {
       var viewsEl = document.getElementById('prop-views');
+      var groupsEl = document.getElementById('prop-groups');
       var filtersEl = document.getElementById('prop-filters');
       var tableEl = document.getElementById('prop-table');
       if (!tableEl) return;
@@ -2255,7 +2454,26 @@
       var mk = propMarkets(b);
       if (propView === 'ou' && !mk.ou.length) propView = 'mile';
       if (propView === 'mile' && !mk.mile.length) propView = 'ou';
-      if (mk.mile.indexOf(propMarket) < 0) propMarket = mk.mile[0] || '';
+
+      var grp = {
+        ou: marketGroups(mk.ou, 'ou'),
+        mile: marketGroups(mk.mile, 'mile')
+      };
+      ouGroup = validGroup(grp.ou, ouGroup);
+      mileGroup = validGroup(grp.mile, mileGroup);
+
+      function mileMarkets() { return groupMarkets(grp.mile, mileGroup); }
+
+      /* The market picker is now the group's list rather than the game's, so
+       * a pick made under one chip has to be re-taken under the next: the
+       * receiving-yards market is not on the Passing strip. Falls to the
+       * group's first market, and to nothing where the group has none, which
+       * is the state syncMarket labels "No markets". */
+      function fixMarket() {
+        var list = mileMarkets();
+        if (list.indexOf(propMarket) < 0) propMarket = list[0] || '';
+      }
+      fixMarket();
 
       var mktBtn = document.getElementById('prop-market');
       var mktMenu = document.getElementById('prop-market-menu');
@@ -2279,8 +2497,20 @@
         filtersEl.hidden = propView !== 'mile';
       }
 
+      function curGroups() { return propView === 'ou' ? grp.ou : grp.mile; }
+      function curGroup() { return propView === 'ou' ? ouGroup : mileGroup; }
+
+      function syncGroups() {
+        var cur = curGroup();
+        groupsEl.innerHTML = curGroups().map(function (g) {
+          return '<button type="button" data-prop-group="' + esc(g.key) + '"' +
+            ' aria-pressed="' + (g.key === cur ? 'true' : 'false') + '">' +
+            esc(g.text) + '</button>';
+        }).join('');
+      }
+
       function syncMarket() {
-        buildOptionMenu(mktMenu, mk.mile.map(function (m) {
+        buildOptionMenu(mktMenu, mileMarkets().map(function (m) {
           return { value: m, label: marketHeading(m).s };
         }), 'mkt');
         syncOptionMenu(mktBtn, mktMenu, propMarket,
@@ -2321,7 +2551,7 @@
         priceDetail = [];
         var html;
         if (propView === 'ou') {
-          html = ouBoards(b, mk.ou);
+          html = ouBoards(b, groupMarkets(grp.ou, ouGroup));
         } else {
           var rows = mileRows();
           if (propPlayer) {
@@ -2331,8 +2561,20 @@
           }
           html = rows.length ? propsTable(b, rows) : '';
         }
-        tableEl.innerHTML = html ||
-          '<div class="go-empty">No quotes for that combination.</div>';
+        /* Two empty states, because they are two different answers. A group
+         * with no markets at all is the board saying nobody has priced this
+         * phase of the game -- the state the strip is drawn in full for -- and
+         * it is named, so the reader knows which chip they are looking at. A
+         * group that has markets and still drew nothing is the player filter
+         * having cut the last row, which is the message that was here before. */
+        if (!html) {
+          var empty = groupMarkets(curGroups(), curGroup()).length
+            ? 'No quotes for that combination.'
+            : 'No ' + groupText(curGroups(), curGroup()).toLowerCase() +
+              ' props quoted for this game yet.';
+          html = '<div class="go-empty">' + esc(empty) + '</div>';
+        }
+        tableEl.innerHTML = html;
       }
 
       viewsEl.addEventListener('click', function (e) {
@@ -2340,6 +2582,29 @@
         if (!btn || btn.disabled || !viewsEl.contains(btn)) return;
         propView = btn.getAttribute('data-prop-view');
         syncViews();
+        syncGroups();
+        /* The pickers belong to the milestone board and are hidden on the
+         * other one, but they are still re-synced on both switches: the two
+         * boards do not share a chip, so arriving at the milestone board means
+         * arriving under whichever group it was left on, and its market list
+         * has to be that group's before the board is drawn from it. */
+        fixMarket();
+        syncMarket();
+        syncPlayers();
+        draw();
+      });
+
+      groupsEl.addEventListener('click', function (e) {
+        var btn = e.target.closest
+          ? e.target.closest('button[data-prop-group]') : null;
+        if (!btn || !groupsEl.contains(btn)) return;
+        var key = btn.getAttribute('data-prop-group');
+        if (key === curGroup()) return;
+        if (propView === 'ou') ouGroup = key; else mileGroup = key;
+        syncGroups();
+        fixMarket();
+        syncMarket();
+        syncPlayers();
         draw();
       });
 
@@ -2380,6 +2645,7 @@
       });
 
       syncViews();
+      syncGroups();
       syncMarket();
       syncPlayers();
       draw();

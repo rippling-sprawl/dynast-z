@@ -112,12 +112,10 @@
   white-space: nowrap;
 }
 
+/* The cursor is the whole affordance -- no hover repaint, the same as every
+ * other table in the app. */
 .masters-table tr.clickable {
   cursor: pointer;
-}
-
-.masters-table tr.clickable:hover {
-  background: var(--panel-hi);
 }
 
 /* --- Selected golfer highlight --- */

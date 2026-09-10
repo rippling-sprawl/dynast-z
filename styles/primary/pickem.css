@@ -312,6 +312,36 @@
   white-space: nowrap;
 }
 
+/* The way out to the game's own page, under the kickoff it belongs with. Quiet
+ * by default and lit on hover: it is on every row of a sixteen-row board, and
+ * sixteen underlined links running down the middle of the matchups would read as
+ * the loudest thing on a page whose whole job is the two crests either side of
+ * it. It has to be reachable, not advertised.
+ *
+ * `position: relative` puts it above the sides it sits between — .pk-side is a
+ * big padded button on each shoulder, and without a stacking context of its own
+ * the last one painted takes the clicks along this seam. */
+.pk-view {
+  position: relative;
+  font-family: var(--vi-display);
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-5);
+  text-decoration: none;
+  white-space: nowrap;
+  padding: 1px 3px;
+  border-radius: 3px;
+}
+
+.pk-view:hover,
+.pk-view:focus-visible {
+  color: var(--vi-gold);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 .pk-side {
   display: flex;
   flex-direction: column;
@@ -559,11 +589,20 @@
 
 .pk-table tbody tr:last-child td { border-bottom: none; }
 
-.pk-table tbody tr:hover td { background: var(--surface-hover); }
-
 .pk-table tbody tr:nth-child(even) { background: var(--zebra); }
 
-.pk-table tr.is-me td { box-shadow: inset 3px 0 0 var(--vi-gold); }
+/* Your own row, marked once at the left edge of the table rather than once per
+ * cell. The bar is a margin drawn beside the row -- one mark saying "this one is
+ * yours" -- and on `td` it was drawn again inside every column, so a gold rule
+ * appeared between the rank and the name and between all eighteen weeks. Read
+ * across, that is not a marked row, it is a striped one.
+ *
+ * `:first-child` rather than `td.pk-rank`: the mark belongs to whatever column
+ * happens to be first, and both standings tables lead with the rank today. It is
+ * also the cell held at the left edge by the sticky rules below, so the bar
+ * stays on screen with the name when the week columns scroll past it -- which is
+ * the whole point of marking the row. */
+.pk-table tr.is-me td:first-child { box-shadow: inset 3px 0 0 var(--vi-gold); }
 
 /* Rank and player pin to the left edge. scripts/components/sticky-headers.js
  * only stacks vertical offsets, so the horizontal pin is done here: eighteen
@@ -771,6 +810,8 @@
   .pk-date { font-size: 10px; letter-spacing: 0.2px; }
 
   .pk-time { font-size: 12px; }
+
+  .pk-view { font-size: 8.5px; letter-spacing: 0.3px; padding: 1px 2px; }
 
   .pk-drag { width: 38px; height: 44px; }
 

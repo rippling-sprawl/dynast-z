@@ -251,10 +251,11 @@
    and nothing at all is added to the cell to say so: the caret that used to
    sit there taught on the first press what the first press teaches anyway,
    and it charged the club column 19px for the lesson on the width that could
-   least afford it. The cursor, the hover and the focus ring say it instead --
-   and a row with nothing behind it gets none of the three. */
+   least afford it. The cursor and the focus ring say it instead -- and a row
+   with nothing behind it gets neither. No hover repaint: no table row in this
+   app takes one, and the open state below is the feedback that matters anyway,
+   since it persists rather than following the pointer. */
 .fb .ledger tr.tm[aria-controls]{cursor:pointer}
-.fb .ledger tr.tm[aria-controls]:hover td{background:var(--sunk)}
 .fb .ledger tr.tm.on td{background:var(--head-team)}
 .fb .ledger tr.tm:focus{outline:2px solid var(--brass);outline-offset:-2px}
 .fb .ledger tr.tm.oth td.c{color:var(--muted);font-style:italic}

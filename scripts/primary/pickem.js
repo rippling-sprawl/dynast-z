@@ -310,6 +310,23 @@
       teamCell(abbr, pkSpreadLabel(spreadFor(game, side))) + '</button>';
   }
 
+  /* Out of the row and onto the game itself: the odds, the box score and the
+   * play log for this fixture, at /football/schedule/game/<balldontlie id>.
+   *
+   * The id on a board row IS that id -- pickem_games.game_id is the schedule's
+   * own key, which is why this needs no lookup and no new field in the payload.
+   *
+   * Offered on every game, including one nothing has captured yet: that page
+   * looks an unknown id up in the committed schedule and answers with when it
+   * gets captured, so the link is never a dead end. Sits under the kickoff
+   * because it is the same kind of fact -- where and when the fixture is, rather
+   * than anything about picking it. */
+  function pkViewLink(game) {
+    return '<a class="pk-view" href="/football/schedule/game/' +
+      esc(game.game_id) + '" title="Odds, box score and plays for this game">' +
+      'View game</a>';
+  }
+
   /* The centre of the matchup: the separator, then when the game is, stacked
    * under it. It sits between the two crests because that is the one place in
    * the row that is about the fixture rather than about either side of it —
@@ -321,6 +338,7 @@
       '<span class="pk-at">@</span>' +
       '<span class="pk-date">' + esc(d ? formats().dayRow.format(d) : 'TBD') + '</span>' +
       '<span class="pk-time">' + esc(d ? timeLabel(d) : '') + '</span>' +
+      pkViewLink(game) +
     '</span>';
   }
 
@@ -719,6 +737,7 @@
   global.pkSpreadFor = spreadFor;
   global.pkSpreadLabel = pkSpreadLabel;
   global.pkKickoffLabel = pkKickoffLabel;
+  global.pkViewLink = pkViewLink;
   global.pkSavedLabel = pkSavedLabel;
   global.pkPickCount = pkPickCount;
   global.pkAssign = pkAssign;

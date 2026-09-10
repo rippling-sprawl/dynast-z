@@ -88,13 +88,17 @@
       '</button>';
   }
 
-  /* The centre of the matchup: the separator and when the game is, stacked.
-   * Identical to the Pick 'Em's, deliberately — see the header. */
+  /* The centre of the matchup: the separator, when the game is, and the way out
+   * to the game's own page, stacked. Identical to the Pick 'Em's, deliberately —
+   * see the header. The link comes from pickem.js rather than being written
+   * again: the id it points at is the same id, and two copies of a URL is how
+   * one of them ends up on last season's route. */
   function centreCell(game) {
     return '<span class="pk-centre">' +
       '<span class="pk-at">@</span>' +
       '<span class="pk-date">' + esc(svDayLabel(game.kickoff)) + '</span>' +
       '<span class="pk-time">' + esc(svTimeLabel(game.kickoff)) + '</span>' +
+      global.pkViewLink(game) +
     '</span>';
   }
 
