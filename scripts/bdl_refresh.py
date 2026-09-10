@@ -219,6 +219,69 @@ def describe(g, plan, st, now):
 
 
 # --------------------------------------------------------------------------
+# Static carry-forward
+# --------------------------------------------------------------------------
+
+# Opening lines, opening props and designations are fixed before kickoff, but
+# they are also the bulk of a capture: paginated 100 rows at a time they are
+# ~54 of the ~70 requests fetch_bdl_game makes. Re-reading them every 30
+# seconds for three hours is the single largest avoidable draw on the API
+# budget, so a live game reuses what is already stored instead.
+#
+# Warm in-process first, Supabase second. The loop shape -- the one that runs
+# at the live cadence -- reads Supabase once per game and then never again,
+# because every successful capture refreshes the memo from the bundle it just
+# built. The --once cron shape misses the memo and pays one targeted read,
+# which is still far cheaper than the 54 requests it replaces.
+_CARRY = {}
+
+
+def static_carry(game_id, phase):
+    """-> the stored static sections for this game, or None to fetch them.
+
+    A read failure returns None rather than raising: the fallback is a full
+    capture, which is correct, merely more expensive. Never carries into a
+    pregame capture -- see reusable_static() in fetch_bdl_game.py."""
+    if phase == "pregame":
+        return None
+    if game_id in _CARRY:
+        return _CARRY[game_id]
+
+    url = (os.environ.get("SUPABASE_URL") or "").rstrip("/")
+    key = os.environ.get("SUPABASE_KEY") or ""
+    if not url or not key:
+        return None
+    q = (f"{url}/rest/v1/game_odds?game_id=eq.{int(game_id)}&select="
+         "odds_opening:data->odds->opening,"
+         "props_opening:data->player_props->opening,"
+         "designations:data->designations,"
+         "books:data->books_filter")
+    req = urllib.request.Request(q)
+    req.add_header("apikey", key)
+    req.add_header("Authorization", f"Bearer {key}")
+    try:
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            rows = json.loads(resp.read() or b"[]")
+    except Exception:                                        # noqa: BLE001
+        return None
+    if not rows:
+        return None
+    _CARRY[game_id] = rows[0]
+    return rows[0]
+
+
+def remember_static(game_id, bundle):
+    """Keep the memo in step with what was just built, so a loop reads Supabase
+    at most once per game however long it runs."""
+    _CARRY[game_id] = {
+        "odds_opening": bundle["odds"]["opening"],
+        "props_opening": bundle["player_props"]["opening"],
+        "designations": bundle["designations"],
+        "books": bundle.get("books_filter"),
+    }
+
+
+# --------------------------------------------------------------------------
 # Sweep
 # --------------------------------------------------------------------------
 
@@ -237,7 +300,9 @@ def capture(g, mode, books, force, publish):
         label = f"{g['away']}_{g['home']}_{g['season']}".lower()
         title = (f"Week {g['week']}, {g['season']} — {g['away']} at {g['home']}"
                  if g.get("week") else None)
-        bundle = game.build_bundle(raw, label, title, mode, books)
+        carry = static_carry(int(g["id"]), game.phase_of(raw))
+        bundle = game.build_bundle(raw, label, title, mode, books, carry=carry)
+        remember_static(int(g["id"]), bundle)
     except bdl.AuthError:
         raise
     except bdl.BdlError as e:

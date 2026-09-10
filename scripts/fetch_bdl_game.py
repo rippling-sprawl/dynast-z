@@ -154,7 +154,12 @@ STAT_IDENTITY = ("player", "team", "game")
 # frozen the moment it goes final.
 
 HOUR = 3600
-LIVE_INTERVAL = 2 * 60
+# 30s, not the 2 minutes this used to be. Affordable because a live capture no
+# longer re-fetches the static sections: measured on NE@SEA week 1 2026 a
+# capture fell from 36 requests to 10, so a 16-game live slate at 30s costs
+# ~320 req/min against GOAT's 600 -- about what the old 2-minute cadence cost
+# before the carry-forward existed. See reusable_static().
+LIVE_INTERVAL = 30
 IMMINENT_INTERVAL = 10 * 60
 GAMEDAY_INTERVAL = HOUR
 UPCOMING_INTERVAL = 6 * HOUR
@@ -487,7 +492,42 @@ def side_of(row, home_id, away_id):
     return None
 
 
-def build_bundle(g, label, title, mode, books=DEFAULT_BOOKS):
+# Sections that cannot change once a game has kicked off, and are therefore
+# worth carrying forward from the stored bundle instead of re-fetching on every
+# sweep. This is not a micro-optimisation: /odds/player_props/opening and
+# /player_designations return ~2,800 and ~2,500 rows, and bdl_common.paginate
+# walks them 100 at a time, so between them they are ~54 of the ~70 requests a
+# capture makes -- roughly 80% of the API budget spent re-reading numbers that
+# were fixed before kickoff.
+#
+# Only ever reused once the game is under way. A pregame sweep must keep
+# fetching them: opening lines are still being posted, designations still being
+# filed, and a game whose first capture happened after kickoff would otherwise
+# carry an emptiness forward for ever.
+#
+# Two guards on reuse, both of which fall back to fetching rather than to
+# writing something wrong:
+#   - an empty stored section is never reused, so a game first captured live
+#     keeps trying until the rows actually exist;
+#   - a stored section captured under a different --books filter is not reused,
+#     because it was already narrowed by keep_books and cannot be widened after
+#     the fact.
+def reusable_static(carry, phase, books):
+    """-> dict of the static sections safe to reuse this capture, possibly {}."""
+    if not carry or phase == "pregame":
+        return {}
+    want = sorted(books) if books else None
+    if (carry.get("books") or None) != want:
+        return {}
+    out = {}
+    for key in ("odds_opening", "props_opening", "designations"):
+        v = carry.get(key)
+        if v:                                    # non-empty list or dict only
+            out[key] = v
+    return out
+
+
+def build_bundle(g, label, title, mode, books=DEFAULT_BOOKS, carry=None):
     home, away = g["home_team"], g["visitor_team"]
     phase = phase_of(g)
     gid = g["id"]
@@ -561,23 +601,42 @@ def build_bundle(g, label, title, mode, books=DEFAULT_BOOKS):
     # Always attempted. On a scheduled game these are the whole point of the
     # example, and balldontlie stores no prop history — a line not captured
     # before kickoff cannot be bought back afterwards at any price.
+    reuse = reusable_static(carry, phase, books)
+
+    def carried(path, key):
+        """Log a reused section the same way try_rows logs a fetched one, so a
+        sweep's output still accounts for every section of the bundle."""
+        rows = reuse[key]
+        n = sum(len(v) for v in rows.values()) if isinstance(rows, dict) else len(rows)
+        print(f"  {path:<26} {n:>4} rows  (carried, static once live)")
+        return rows
+
     odds_cur, _ = try_rows("/odds", gp, mode, notes=notes)
-    odds_open, _ = try_rows("/odds/opening", gp, mode, notes=notes)
+    odds_open = (carried("/odds/opening", "odds_opening") if "odds_opening" in reuse
+                 else try_rows("/odds/opening", gp, mode, notes=notes)[0])
     props_cur, _ = try_rows("/odds/player_props", props_params, mode, notes=notes)
-    props_open, _ = try_rows("/odds/player_props/opening", props_params, mode,
-                             notes=notes)
+    props_open = (carried("/odds/player_props/opening", "props_opening")
+                  if "props_opening" in reuse
+                  else try_rows("/odds/player_props/opening", props_params, mode,
+                                notes=notes)[0])
     injuries, _ = try_rows("/player_injuries", tp, mode, notes=notes)
 
     # /player_designations has no team filter -- season, week and season_types
     # are all it takes -- so the whole slate comes back and the two teams are
     # picked out here.
-    dp = {"season": g.get("season"),
-          "season_types[]": [bundle["game"]["season_type"]]}
-    if g.get("week"):
-        dp["week"] = g["week"]
-    designations, _ = try_rows("/player_designations", dp, mode, notes=notes)
-    designations = [d for d in designations
-                    if ((d.get("team") or {}).get("id") in (home["id"], away["id"]))]
+    designations_split = None
+    if "designations" in reuse:
+        # Stored already split by side, so it bypasses split() below.
+        designations_split = carried("/player_designations", "designations")
+        designations = []
+    else:
+        dp = {"season": g.get("season"),
+              "season_types[]": [bundle["game"]["season_type"]]}
+        if g.get("week"):
+            dp["week"] = g["week"]
+        designations, _ = try_rows("/player_designations", dp, mode, notes=notes)
+        designations = [d for d in designations
+                        if ((d.get("team") or {}).get("id") in (home["id"], away["id"]))]
 
     # Attempted in every phase, including pregame. Whether a scheduled game's
     # /stats answers with an empty array, a 404, or a row of zeroes decides how
@@ -646,7 +705,8 @@ def build_bundle(g, label, title, mode, books=DEFAULT_BOOKS):
     if books:
         print(f"  {'books kept':<26} {', '.join(sorted(books))}")
     bundle["injuries"] = split(injuries)
-    bundle["designations"] = split(designations)
+    bundle["designations"] = (designations_split if designations_split is not None
+                              else split(designations))
     bundle["unavailable"] = notes
     bundle["timing"] = bdl.latency_summary()
     # Stamped last, off the phase this fetch actually observed -- a game that
