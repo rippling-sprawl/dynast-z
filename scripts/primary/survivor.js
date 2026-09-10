@@ -382,7 +382,7 @@
       if (r.status === 'out') rowCls.push('sv-dead');
       return '<tr' + (rowCls.length ? ' class="' + rowCls.join(' ') + '"' : '') + '>' +
         '<td class="pk-rank">' + esc(r.rank) + '</td>' +
-        '<td class="pk-who">' + esc(r.username) + '</td>' +
+        global.pkWhoCell(r.username) +
         '<td class="sv-st">' + svStatusCell(r) + '</td>' + cells +
         '<td class="pk-total">' + esc(r.survived) + '</td>' +
         '</tr>';
@@ -450,7 +450,8 @@
     return '<ol class="pk-mini sv-mini">' + rows.map(function (r) {
       return '<li class="' + (r.status === 'out' ? 'sv-dead' : '') + '">' +
         '<span class="pk-mini-rank">' + esc(r.rank) + '</span>' +
-        '<span class="pk-mini-who">' + esc(r.username) + '</span>' +
+        '<span class="pk-mini-who" title="' + esc(r.username) + '">' +
+          esc(global.pkDisplayName(r.username)) + '</span>' +
         '<span class="sv-mini-state">' +
           (r.status === 'out' ? 'out wk ' + esc(r.out_week)
             : esc(r.survived) + '-0') + '</span></li>';

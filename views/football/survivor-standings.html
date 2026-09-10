@@ -27,6 +27,7 @@
   <script src="/scripts/base/auth.js"></script>
   <script src="/scripts/base/standalone.js"></script>
   <script src="/scripts/base/nav.js"></script>
+  <script src="/scripts/components/sticky-headers.js"></script>
   <script src="/scripts/primary/pickem.js"></script>
   <script src="/scripts/primary/survivor-api.js"></script>
   <script src="/scripts/primary/survivor.js"></script>
@@ -88,10 +89,28 @@
       }).join('');
     }
 
+    /* Rank, Player and Status are held at the left edge while the week columns
+     * scroll under them, and each one has to be told the real width of the ones
+     * before it. Measured rather than guessed -- see Sticky.pinColumns. The
+     * hand-written `left` values in the stylesheets are the no-JS fallback and
+     * are only right for short usernames; this is what makes them right for
+     * grant.hafer@siriusxm.com. */
+    var PINNED = ['th.pk-rank, td.pk-rank', 'th.pk-who, td.pk-who',
+                  'th.sv-st, td.sv-st'];
+
+    function pin() {
+      var table = tableEl.querySelector('.pk-table');
+      if (table && window.Sticky) Sticky.pinColumns(table, PINNED);
+    }
+
+    // Widths move with the viewport, so the offsets are re-measured with it.
+    window.addEventListener('resize', pin);
+
     function render(data) {
       var me = getUser();
       tableEl.innerHTML = svStandingsTable(data, { me: me && me.user_id });
       poolEl.innerHTML = poolHTML(data.pool);
+      pin();
 
       var weeks = (data.weeks || []).length;
       subtitleEl.textContent = data.season + ' · ' +

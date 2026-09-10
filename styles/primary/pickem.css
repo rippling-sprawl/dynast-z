@@ -631,11 +631,20 @@
 .pk-table td.pk-who {
   position: sticky;
   z-index: 1;
-  /* --surface rather than --panel, which is the wrapper's own background: a
-   * pinned column has to be a *visible* column, and one painted the same colour
-   * as what it is pinned over reads as part of it right up until the figures
-   * start sliding underneath. .go-pinned makes the same choice. */
-  background: var(--surface);
+  /* The row's own colour, not a colour of its own. A pinned cell needs an
+   * opaque background or it drags whatever it scrolls over along with it -- but
+   * it must be opaque in the SAME paint as the row it belongs to, matched again
+   * for the zebra below.
+   *
+   * .go-pinned uses --surface for this and copying that token was a mistake: it
+   * is opaque against the prop board's card body, and against .pk-table-wrap's
+   * --panel it is a different colour. In dark theme the two are a rounding
+   * error apart and it looked fine; in light theme --surface is grey and --panel
+   * is white, so Rank and Player became a solid slab that ignored the striping
+   * of every row it was part of. The seam below is what marks the column as
+   * pinned -- that is the job, and a colour cannot do it without lying about
+   * which row the cell is in. */
+  background: var(--panel);
   text-align: left;
 }
 

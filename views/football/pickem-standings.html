@@ -27,6 +27,7 @@
   <script src="/scripts/base/standalone.js"></script>
   <script src="/scripts/base/nav.js"></script>
   <script src="/scripts/components/nfl-pickers.js"></script>
+  <script src="/scripts/components/sticky-headers.js"></script>
   <script src="/scripts/primary/pickem-api.js"></script>
   <script src="/scripts/primary/pickem.js"></script>
   <script>initPage();</script>
@@ -96,9 +97,23 @@
       return state.week ? 'Week ' + state.week : 'All weeks';
     }
 
+    /* Rank and Player are held at the left edge while the week columns scroll
+     * under them, and Player has to be told Rank's real width. Measured rather
+     * than guessed -- see Sticky.pinColumns, and the note on the same call in
+     * survivor-standings.html. */
+    var PINNED = ['th.pk-rank, td.pk-rank', 'th.pk-who, td.pk-who'];
+
+    function pin() {
+      var table = tableEl.querySelector('.pk-table');
+      if (table && window.Sticky) Sticky.pinColumns(table, PINNED);
+    }
+
+    window.addEventListener('resize', pin);
+
     function render(data) {
       var me = getUser();
       tableEl.innerHTML = pkStandingsTable(data, { me: me && me.user_id });
+      pin();
 
       buildWeekMenu(weekMenu, [{ value: 'all', label: 'All weeks' }].concat(
         (data.weeks || []).map(function (w) {

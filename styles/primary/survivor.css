@@ -311,9 +311,9 @@
   position: sticky;
   left: 118px;
   z-index: 1;
-  /* Same --surface as the two columns it pins beside -- see the note on
-   * .pk-table's pinned band. The three have to read as one held block. */
-  background: var(--surface);
+  /* The row's own colour, matched again for the zebra below -- see the note on
+   * .pk-table's pinned band for why this is not --surface. */
+  background: var(--panel);
   text-align: left;
   white-space: nowrap;
 }

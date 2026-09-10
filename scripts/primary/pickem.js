@@ -310,6 +310,29 @@
       teamCell(abbr, pkSpreadLabel(spreadFor(game, side))) + '</button>';
   }
 
+  /* An account's name as a standings row prints it: everything before the `@`.
+   *
+   * Signing up with an email leaves the address as the username, and the domain
+   * is the half that carries no information -- it is the same string for
+   * everyone at a company and it is never what anybody is called. It was also
+   * expensive in exactly the wrong column: Player is pinned at the left edge of
+   * a board that scrolls sideways, so every character of "@siriusxm.com" was
+   * width taken off the weeks for the length of the season.
+   *
+   * Display only. The stored username is untouched, it is still what the
+   * account is identified by everywhere else, and callers put the full string
+   * in a `title` so the address is one hover away -- which is also what keeps
+   * two people who share a local part apart.
+   *
+   * A name that merely *starts* with @ keeps its own name rather than becoming
+   * blank: the rule is "drop the domain", and a handle is not a domain.
+   */
+  function pkDisplayName(username) {
+    var name = String(username === null || username === undefined ? '' : username);
+    var shown = name.replace(/@.*/, '');
+    return shown || name;
+  }
+
   /* Out of the row and onto the game itself: the odds, the box score and the
    * play log for this fixture, at /football/schedule/game/<balldontlie id>.
    *
@@ -664,6 +687,15 @@
    * Normalised against the best score in each column rather than against the
    * week's maximum: a week nobody did well in should still show who did best.
    */
+  /* The Player cell. `title` only when the name was actually shortened -- a
+   * tooltip repeating the text under the cursor is noise. */
+  function whoCell(username) {
+    var shown = pkDisplayName(username);
+    return '<td class="pk-who"' +
+      (shown === username ? '' : ' title="' + esc(username) + '"') +
+      '>' + esc(shown) + '</td>';
+  }
+
   function pkStandingsTable(data, options) {
     var opts = options || {};
     var rows = data.rows || [];
@@ -708,7 +740,7 @@
       }).join('');
       return '<tr' + (opts.me && opts.me === r.user_id ? ' class="is-me"' : '') + '>' +
         '<td class="pk-rank">' + esc(r.rank) + '</td>' +
-        '<td class="pk-who">' + esc(r.username) + '</td>' + cells +
+        whoCell(r.username) + cells +
         '<td class="pk-total">' + esc(r.points) + '</td>' +
         '<td class="pk-correct">' + esc(r.correct) + '<span class="pk-of">/' +
           esc(r.picked - r.pending) + '</span></td>' +
@@ -727,7 +759,8 @@
     if (!rows.length) return '<p class="pk-empty">No picks have been made yet.</p>';
     return '<ol class="pk-mini">' + rows.map(function (r) {
       return '<li><span class="pk-mini-rank">' + esc(r.rank) + '</span>' +
-        '<span class="pk-mini-who">' + esc(r.username) + '</span>' +
+        '<span class="pk-mini-who" title="' + esc(r.username) + '">' +
+          esc(pkDisplayName(r.username)) + '</span>' +
         '<span class="pk-mini-pts">' + esc(r.points) + '</span></li>';
     }).join('') + '</ol>';
   }
@@ -738,6 +771,8 @@
   global.pkSpreadLabel = pkSpreadLabel;
   global.pkKickoffLabel = pkKickoffLabel;
   global.pkViewLink = pkViewLink;
+  global.pkDisplayName = pkDisplayName;
+  global.pkWhoCell = whoCell;
   global.pkSavedLabel = pkSavedLabel;
   global.pkPickCount = pkPickCount;
   global.pkAssign = pkAssign;

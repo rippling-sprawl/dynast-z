@@ -47,5 +47,43 @@
     return top;
   }
 
-  global.Sticky = { topOf: topOf, spanAtTop: spanAtTop, pinBelow: pinBelow };
+  /* The horizontal twin of pinBelow, and the reason it has to exist.
+   *
+   * A column pinned with `left` has to be told the exact width of everything
+   * pinned to its left, and CSS cannot ask. So the offsets were written by hand
+   * -- `left: 34px` for the player column, `left: 118px` for survivor's status
+   * -- against widths somebody measured once. They were wrong the first time a
+   * username was longer than the guess: on the survivor standings the status
+   * column was told 118px when rank and player actually span 646px, so the
+   * moment the board was wide enough to scroll, status jumped 528px to the left
+   * and landed on top of the player column.
+   *
+   * Measured instead. `cells` are the pinned columns in left-to-right order,
+   * given as selectors; each one is offset by the real rendered width of the
+   * ones before it, header and body together so a column cannot shear. Widths
+   * come from the header cell, which is the whole column's width by definition.
+   *
+   * Idempotent and cheap -- a handful of getBoundingClientRect on one row -- so
+   * callers re-run it after every render and on resize rather than trying to
+   * work out whether anything moved. */
+  function pinColumns(table, selectors) {
+    if (!table || !selectors || !selectors.length) return;
+    var offset = 0;
+    selectors.forEach(function (sel) {
+      var head = table.querySelector('thead ' + sel);
+      if (!head) return;
+      var cells = table.querySelectorAll('thead ' + sel + ', tbody ' + sel);
+      for (var i = 0; i < cells.length; i++) {
+        // Only columns CSS actually pinned. A media query that unpins one --
+        // survivor's status on a phone -- must win, so the offset is applied to
+        // what is sticky and skipped for what is not.
+        if (getComputedStyle(cells[i]).position !== 'sticky') continue;
+        cells[i].style.left = offset + 'px';
+      }
+      offset += head.getBoundingClientRect().width;
+    });
+  }
+
+  global.Sticky = { topOf: topOf, spanAtTop: spanAtTop, pinBelow: pinBelow,
+                    pinColumns: pinColumns };
 })(window);
