@@ -121,7 +121,22 @@
 }
 
 .go-phase.pregame { color: var(--warn); border-color: var(--warn-line); background: var(--warn-soft); }
-.go-phase.live    { color: var(--bad);  border-color: var(--bad-line);  background: var(--bad-soft); }
+
+/* A live chip reads a clock now -- "Q2 15:00" -- not a word, so it drops the
+ * display face and its tracking for the page's body face and tabular figures:
+ * the digits then hold their columns as the clock ticks instead of shifting the
+ * chip a pixel at a time. The red it used to wear said "alert" about a game
+ * that is merely being played, so it takes the neutral surface the other two
+ * phases use and is set apart by text weight and brightness instead. */
+.go-phase.live {
+  color: var(--text);
+  border-color: var(--border);
+  background: var(--surface-2);
+  font-family: var(--vi-body);
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  font-variant-numeric: tabular-nums;
+}
 .go-phase.final   { color: var(--text-3); border-color: var(--border); background: var(--surface-2); }
 
 /* Phase and freshness read as one fact — "live, updated 40s ago" — so they sit
@@ -682,10 +697,15 @@
 /* Flex rather than a grid of fixed tracks: the numbers are monospace and set
  * not to wrap, so a track narrower than the widest row would clip a price. A
  * flex item floors at its own content width, so a book that does not fit the
- * row wraps to the next one instead of losing a digit. */
+ * row wraps to the next one instead of losing a digit.
+ *
+ * Centred because the books stop growing at 420px: two of them on a wide card
+ * leave slack, and left-packed that slack all lands on one side and hangs the
+ * pair off the edge of a card whose every other row is full width. */
 .go-books {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 14px 18px;
   padding: 0;
 }
@@ -765,7 +785,12 @@
 }
 .go-vs td.go-val { font-family: monospace; text-align: center; width: 22%; color: var(--text); }
 .go-vs tbody tr:nth-child(even) { background: var(--zebra); }
-.go-vs td.is-better { color: var(--good); font-weight: 600; }
+/* The leader is marked by the cell it sits in, not by recolouring the number:
+ * green digits on one side and plain digits on the other read as two kinds of
+ * value rather than one comparison, and the number itself should look the same
+ * on both sides of the row. Translucent, so it layers over the zebra rows
+ * without a second rule for them. */
+.go-vs td.is-better { background: rgba(var(--good-vivid-rgb), 0.18); }
 
 /* --- Play log ------------------------------------------------------------ */
 

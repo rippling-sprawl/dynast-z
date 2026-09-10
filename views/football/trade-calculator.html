@@ -35,6 +35,7 @@
   <div id="nav-drawer-mount"></div>
   <script src="/scripts/base/standalone.js"></script>
   <script src="/scripts/base/nav.js"></script>
+  <script src="/scripts/components/sticky-headers.js"></script>
   <script src="/scripts/base/lightbox.js"></script>
   <script src="/scripts/primary/share-trade.js"></script>
   <script>initPage();</script>
@@ -369,12 +370,21 @@
     // Publish the live header height so the .app viewport calc and the mobile
     // sticky offsets stay exact — the injected header's height is content- and
     // font-dependent, so hardcoding it left rows tucked behind the filter bar.
+    //
+    // Sticky.spanAtTop rather than offsetHeight, because below 640px the same
+    // header is the tab bar fixed to the bottom edge: it publishes 0 there, and
+    // the sticky trade summary and pool controls pin to the top of the viewport
+    // where there is no longer a header to clear.
     const headerEl = document.querySelector('header');
     if (window.ResizeObserver && headerEl) {
-      const hro = new ResizeObserver(() => {
-        document.documentElement.style.setProperty('--header-h', headerEl.offsetHeight + 'px');
-      });
-      hro.observe(headerEl);
+      const publishHeaderH = () => {
+        document.documentElement.style.setProperty('--header-h', Sticky.spanAtTop(headerEl) + 'px');
+      };
+      new ResizeObserver(publishHeaderH).observe(headerEl);
+      // A ResizeObserver only fires when the box changes size. Crossing 640px
+      // changes which edge the bar is pinned to at the same height, so the
+      // breakpoint needs its own trigger.
+      window.matchMedia('(max-width: 640px)').addEventListener('change', publishHeaderH);
     }
 
     // On mobile the trade summary is pinned at the top of the page; publish its

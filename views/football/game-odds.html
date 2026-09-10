@@ -173,42 +173,49 @@
      * one stat per row and acres of space, and "ATT" in a box score where nine
      * numeric columns share that row. */
 
-    /* team_stats.away|home.* */
+    /* team_stats.away|home.*
+     *
+     * Written in Pro-Football-Reference's row order, which this table is also
+     * read down, so the map doubles as the order (see teamStatsSection). PFR
+     * packs a whole phase into one row -- "Cmp-Att-Yd-TD-INT" -- where the API
+     * hands over the parts separately, so each of its rows is a run of ours:
+     * the run sits where PFR's row sits. The stats it has no row for at all
+     * (red zone, drives, yards per play) join the run they belong to. */
     var TEAM_ABBR = {
-      first_downs: '1st Downs', first_downs_passing: '1st D Pass',
-      first_downs_rushing: '1st D Rush', first_downs_penalty: '1st D Pen',
-      third_down_efficiency: '3rd Down %', third_down_conversions: '3rd Down Conv',
-      third_down_attempts: '3rd Down Att', fourth_down_efficiency: '4th Down %',
-      fourth_down_conversions: '4th Down Conv', fourth_down_attempts: '4th Down Att',
-      total_offensive_plays: 'Off Plays', total_yards: 'Tot Yds',
-      yards_per_play: 'Y/P', total_drives: 'Drives',
-      net_passing_yards: 'Net Pass Yds', passing_completions: 'Comp',
+      first_downs: '1st Downs', first_downs_rushing: '1st D Rush',
+      first_downs_passing: '1st D Pass', first_downs_penalty: '1st D Pen',
+      rushing_attempts: 'Rush Att', rushing_yards: 'Rush Yds',
+      yards_per_rush_attempt: 'Y/C', passing_completions: 'Comp',
       passing_attempts: 'Att', yards_per_pass: 'Y/A', sacks: 'Sacks',
-      sack_yards_lost: 'Sack Yds', rushing_yards: 'Rush Yds',
-      rushing_attempts: 'Rush Att', yards_per_rush_attempt: 'Y/C',
-      red_zone_scores: 'RZ Scores', red_zone_attempts: 'RZ Att',
-      penalties: 'Pen', penalty_yards: 'Pen Yds', turnovers: 'TO',
-      fumbles_lost: 'Fum Lost', interceptions_thrown: 'INT',
-      defensive_touchdowns: 'Def TD', possession_time: 'TOP'
+      sack_yards_lost: 'Sack Yds', net_passing_yards: 'Net Pass Yds',
+      total_yards: 'Tot Yds', total_offensive_plays: 'Off Plays',
+      yards_per_play: 'Y/P', total_drives: 'Drives',
+      fumbles_lost: 'Fum Lost', turnovers: 'TO', interceptions_thrown: 'INT',
+      defensive_touchdowns: 'Def TD', penalties: 'Pen',
+      penalty_yards: 'Pen Yds', third_down_efficiency: '3rd Down %',
+      third_down_conversions: '3rd Down Conv', third_down_attempts: '3rd Down Att',
+      fourth_down_efficiency: '4th Down %', fourth_down_conversions: '4th Down Conv',
+      fourth_down_attempts: '4th Down Att', red_zone_scores: 'RZ Scores',
+      red_zone_attempts: 'RZ Att', possession_time: 'TOP'
     };
 
     /* player_stats.away|home[].<group>.* */
     var STAT_ABBR = {
       passing: {
         passing_completions: 'CMP', passing_attempts: 'ATT',
-        passing_yards: 'YDS', yards_per_pass_attempt: 'Y/A',
-        passing_touchdowns: 'TD', passing_interceptions: 'INT',
-        sacks: 'SK', sacks_loss: 'SKYL', qbr: 'QBR', qb_rating: 'RTG'
+        passing_yards: 'YDS', passing_touchdowns: 'TD',
+        passing_interceptions: 'INT', sacks: 'SK', sacks_loss: 'SKYL',
+        qb_rating: 'RTG', yards_per_pass_attempt: 'Y/A', qbr: 'QBR'
       },
       rushing: {
         rushing_attempts: 'ATT', rushing_yards: 'YDS',
-        yards_per_rush_attempt: 'AVG', rushing_touchdowns: 'TD',
-        long_rushing: 'LNG'
+        rushing_touchdowns: 'TD', long_rushing: 'LNG',
+        yards_per_rush_attempt: 'AVG'
       },
       receiving: {
-        receptions: 'REC', receiving_yards: 'YDS',
-        yards_per_reception: 'AVG', receiving_touchdowns: 'TD',
-        long_reception: 'LNG', receiving_targets: 'TGT'
+        receiving_targets: 'TGT', receptions: 'REC', receiving_yards: 'YDS',
+        receiving_touchdowns: 'TD', long_reception: 'LNG',
+        yards_per_reception: 'AVG'
       },
       defense: {
         total_tackles: 'TCK', defensive_sacks: 'SK', solo_tackles: 'SOLO',
@@ -439,7 +446,22 @@
       return out;
     }
 
-    function genericTable(rows, labelFn) {
+    /* Left to itself the payload decides what order a table's stats come out
+     * in, which is neither the order the table is read in nor stable — the
+     * first row missing a stat moves it to the end. `order` puts the keys it
+     * names in that sequence and leaves the ones it does not after them, in
+     * payload order, so a field the API adds tomorrow still shows up rather
+     * than being ordered out of existence. */
+    function orderKeys(keys, order) {
+      var rank = {};
+      keys.forEach(function (k, i) {
+        var at = order.indexOf(k);
+        rank[k] = at < 0 ? order.length + i : at;
+      });
+      return keys.slice().sort(function (a, b) { return rank[a] - rank[b]; });
+    }
+
+    function genericTable(rows, labelFn, order) {
       var headFn = labelFn || label;
       if (!rows || !rows.length) return '';
       var flat = rows.map(flatten);
@@ -452,6 +474,7 @@
       keys = keys.filter(function (k) {
         return flat.some(function (r) { return r[k] !== null && r[k] !== undefined; });
       });
+      if (order) keys = orderKeys(keys, order);
       return '<div class="go-scroll"><table class="go-table"><thead><tr>' +
         keys.map(function (k) { return thCell(headFn(k)); }).join('') +
         '</tr></thead><tbody>' +
@@ -509,11 +532,30 @@
      * so a new one from the feed shows up rather than rendering blank. */
     var PHASE_TEXT = { live: 'In progress', final: 'Final' };
 
+    /* A live game's own status carries where it is -- "15:00 - 2nd" -- which is
+     * the fact worth showing, so the clock and the quarter replace the generic
+     * "In progress". The feed writes the clock first and an ordinal second; the
+     * chip reverses that into the order a scoreboard uses, "Q2 15:00", and
+     * routes the number through periodLabel so overtime reads "OT" rather than
+     * "Q5". Anything the pattern does not match -- "Halftime", "End of 2nd" --
+     * is already a sentence about where the game is, so it is shown verbatim
+     * rather than thrown away for a word that says less. */
+    function liveClock(g) {
+      var st = (g.status || '').trim();
+      var m = /^(\d{1,2}:\d{2})\s*-\s*(\d+)/.exec(st);
+      if (m) {
+        var per = periodLabel(m[2]);
+        return per ? per + ' ' + m[1] : m[1];
+      }
+      return st || PHASE_TEXT.live;
+    }
+
     function phaseText(b) {
       var g = b.game;
       if (b.phase === 'pregame') {
         return kickoffET(g.kickoff_raw || g.kickoff_utc) || g.kickoff_et || 'Scheduled';
       }
+      if (b.phase === 'live') return liveClock(g);
       return PHASE_TEXT[b.phase] || label(b.phase || '');
     }
 
@@ -587,9 +629,9 @@
       /* possession_time_seconds is possession_time in a unit nobody reads a
        * clock in — 33:11 and 1991 are one row, not two. */
       var skip = { game: 1, team: 1, home_away: 1, possession_time_seconds: 1 };
-      var keys = Object.keys(a).filter(function (k) {
+      var keys = orderKeys(Object.keys(a).filter(function (k) {
         return !skip[k] && (typeof a[k] !== 'object' || a[k] === null);
-      });
+      }), Object.keys(TEAM_ABBR));
       var rows = keys.map(function (k) {
         var av = a[k], hv = h[k];
         var ab = isNum(av) && isNum(hv) && av > hv ? ' is-better' : '';
@@ -661,6 +703,14 @@
       };
     }
 
+    /* The STAT_ABBR entry for a group is written in the order a box score is
+     * read in — Pro-Football-Reference's, for the offensive groups — so it
+     * doubles as the column order. `player` leads every table; anything the
+     * map does not name trails the columns it does. */
+    function groupOrder(grp) {
+      return ['player'].concat(Object.keys(STAT_ABBR[grp] || {}));
+    }
+
     function playerStatsSection(b) {
       var ps = b.player_stats || {};
       var total = ['away', 'home'].reduce(function (n, s) {
@@ -671,8 +721,8 @@
           ? card('Box score', emptyState(b, ['/stats'], 'player stats'), true)
           : '';
       }
-      var groups = ['passing', 'rushing', 'receiving', 'defense', 'kicking',
-                    'returns', 'punting', 'fumbles'];
+      var groups = ['passing', 'rushing', 'receiving', 'fumbles', 'defense',
+                    'kicking', 'returns', 'punting'];
       var html = '';
       ['away', 'home'].forEach(function (side) {
         var rows = ps[side] || [];
@@ -688,7 +738,7 @@
             return o;
           });
           html += '<div class="go-sub go-bs-grp">' + esc(label(grp)) + '</div>' +
-            genericTable(flat, groupLabel(grp));
+            genericTable(flat, groupLabel(grp), groupOrder(grp));
         });
       });
       return card('Box score', html);
@@ -2309,8 +2359,8 @@
         heroSection(b) +
         oddsSection(b) +
         (pregame ? props : '') +
-        teamStatsSection(b) +
         playerStatsSection(b) +
+        teamStatsSection(b) +
         playsSection(b) +
         (pregame ? '' : props) +
         (injuriesApply(b) ? injuriesSection(b) : '') +

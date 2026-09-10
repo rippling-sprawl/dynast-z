@@ -62,6 +62,10 @@
   <script src="/scripts/base/scroll-lock.js"></script>
   <!-- Any <figure> img is lightboxable for free — see scripts/base/lightbox.js. -->
   <script src="/scripts/base/lightbox.js"></script>
+  <!-- The table's pinned header row measures the chrome above it. The site
+       header is that chrome on wide screens and is the bottom tab bar on
+       narrow ones, and this module is what knows the difference. -->
+  <script src="/scripts/components/sticky-headers.js"></script>
   <!-- Taking a note: the team and week pickers are the schedule page's, and the
        store behind them is Supabase rather than the JSON below. -->
   <script src="/scripts/components/nfl-pickers.js"></script>
@@ -2150,10 +2154,13 @@
     var thead = table.tHead;
     var pinTop = 0;
 
-    // The site header is sticky at top:0, so it owns the first N pixels.
+    /* How much chrome the bar has to clear. On wide screens that is the site
+     * header, sticky at top:0; on narrow ones the same element is the tab bar
+     * fixed to the bottom edge, which owns none of the top of the viewport, so
+     * the pinned row goes right up against it. Sticky.spanAtTop is what tells
+     * the two shapes apart — see scripts/components/sticky-headers.js. */
     function measurePinTop() {
-      var h = document.querySelector('header');
-      pinTop = h ? Math.round(h.getBoundingClientRect().height) : 0;
+      pinTop = Math.round(Sticky.spanAtTop(document.querySelector('header')));
     }
 
     /* Where the Rank column has to stop when the table is scrolled sideways:

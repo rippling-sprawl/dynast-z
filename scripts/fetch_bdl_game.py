@@ -675,6 +675,38 @@ def verify(bundle, spec):
         if g["score"] is not None:
             print("ERROR: a scheduled game carries a score", file=sys.stderr)
             ok = False
+    elif phase == "live":
+        # A game in flight cannot be held to a finished one's arithmetic, and
+        # holding it to that is not a cosmetic complaint: bdl_refresh.py gates
+        # publishing on this function, so a live bundle that fails here is
+        # never written and the page serves its last pregame capture for the
+        # whole game.
+        #
+        # Three of the final-game checks below are false mid-game by
+        # construction. balldontlie fills a quarter column only once that
+        # quarter has ended, so q1..q4 are null throughout the first quarter
+        # and q() reads every one of them as 0 -- the quarter-line sum is 0
+        # against a real score from the first touchdown onward. The play log
+        # and the box score are still filling for the same reason, so "fewer
+        # than a full game's worth" is the normal state here rather than a
+        # fault. What does hold mid-game is that a live game has a score, and
+        # that the play log never runs *ahead* of the score the game reports.
+        sc = g["score"]
+        if sc is None or sc["away"] is None or sc["home"] is None:
+            print("ERROR: a live game has a null score", file=sys.stderr)
+            ok = False
+        elif bundle["plays"]["count"]:
+            rows = bundle["plays"]["all"]
+            got = [max((r.get("away_score") or 0) for r in rows),
+                   max((r.get("home_score") or 0) for r in rows)]
+            # /games and /plays are read moments apart, so the log may trail
+            # the score by a possession. Leading it means one of the two is
+            # wrong about the same instant, which is worth refusing.
+            if got[0] > sc["away"] or got[1] > sc["home"]:
+                print(f"ERROR: the play log tops out at {got}, ahead of the "
+                      f"{[sc['away'], sc['home']]} the game reports",
+                      file=sys.stderr)
+                ok = False
     else:
         sc = g["score"]
         if sc["away"] is None or sc["home"] is None:

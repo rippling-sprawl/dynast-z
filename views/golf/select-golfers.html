@@ -36,6 +36,7 @@
   <script src="/scripts/base/auth.js"></script>
   <script src="/scripts/base/standalone.js"></script>
   <script src="/scripts/base/nav.js"></script>
+  <script src="/scripts/components/sticky-headers.js"></script>
   <script src="/scripts/base/lightbox.js"></script>
   <script>initPage();</script>
 
@@ -77,10 +78,12 @@
     let allPlayers = [];
     let sel = getSelections();
 
+    // headerH via Sticky.spanAtTop, not offsetHeight: on narrow screens the site
+    // header is the tab bar fixed to the bottom edge, and a bar's height of
+    // offset up here pushes the sticky rows away from the top of the viewport.
     function setStickyPositions() {
-      const siteHeader = document.querySelector('header');
       const stickyHeader = document.getElementById('sticky-header');
-      const headerH = siteHeader ? siteHeader.offsetHeight : 0;
+      const headerH = Sticky.spanAtTop(document.querySelector('header'));
       stickyHeader.style.top = headerH + 'px';
       const thTop = headerH + stickyHeader.offsetHeight;
       document.querySelectorAll('.masters-table th').forEach(th => {
@@ -153,6 +156,10 @@
     });
 
     setStickyPositions();
+    // Crossing 640px moves the site header from the top of the viewport to the
+    // bottom, so the offsets these rows pin at are width-dependent, not just
+    // height-dependent.
+    window.addEventListener('resize', setStickyPositions);
     init();
 
     initTournamentSync().then(result => {

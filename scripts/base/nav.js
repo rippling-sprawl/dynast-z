@@ -175,6 +175,8 @@ function buildNavDrawerHTML() {
 // no second request: one path set each, stroked in currentColor, sized by the
 // stylesheet. 24x24 box, 1.8 stroke, so the three read at one weight.
 const NAV_ICONS = {
+  // A house: the site root, which is where the hub grid lives.
+  home: '<path d="M3.5 10.7 12 4l8.5 6.7"/><path d="M5.8 9.2v9.9a1.9 1.9 0 0 0 1.9 1.9h8.6a1.9 1.9 0 0 0 1.9-1.9V9.2"/><path d="M9.9 21v-5.3a1.3 1.3 0 0 1 1.3-1.3h1.6a1.3 1.3 0 0 1 1.3 1.3V21"/>',
   // A calendar: the slate is a week of dates before it is anything else.
   odds: '<path d="M4 6.5a2.5 2.5 0 0 1 2.5-2.5h11A2.5 2.5 0 0 1 20 6.5v12a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 18.5z"/><path d="M8 2.5v4M16 2.5v4M4 10h16"/>',
   // A scored loaf: dome, base, three slashes.
@@ -187,9 +189,11 @@ function navIconHTML(name) {
     stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${NAV_ICONS[name]}</svg>`;
 }
 
-// The two shortcut destinations on the bar. Everything else is a drawer row —
-// these two are here because they are the pages people come back to daily.
+// The shortcut destinations on the bar. Everything else is a drawer row —
+// these are here because they are the pages people come back to daily. Home
+// leads, because the bar has no title on it to be the way back to "/".
 const NAV_TABS = [
+  { label: 'Home', href: '/', icon: 'home' },
   { label: 'Odds', href: '/football/schedule', icon: 'odds' },
   { label: 'Buns', href: '/football/bakers-buns', icon: 'buns' },
 ];
@@ -219,6 +223,86 @@ function buildHeaderHTML() {
   </header>`;
 }
 
+// --- Swipe the sheet down to close ---
+// Narrow screens only: there the drawer is a bottom sheet with a grab handle on
+// it, and a handle that cannot be dragged is a lie. Wide screens keep the
+// left-hand drawer, where a downward drag means nothing, so the media query is
+// the whole condition.
+//
+// The gesture starts only at the top of the sheet's own scroll — the drawer is
+// `overflow-y: auto` and a list that can still scroll up owns the touch. The
+// axis is decided once, on the first few pixels of movement: down is the sheet,
+// anything else hands the touch back to the list.
+function wireDrawerSwipe(drawer, close) {
+  const narrow = window.matchMedia('(max-width: 640px)');
+  let startY = 0, startX = 0, startT = 0, dy = 0;
+  let tracking = false, dragging = false;
+
+  drawer.addEventListener('touchstart', (e) => {
+    tracking = dragging = false;
+    dy = 0;
+    if (!narrow.matches || e.touches.length !== 1 || drawer.scrollTop > 0) return;
+    startY = e.touches[0].clientY;
+    startX = e.touches[0].clientX;
+    startT = e.timeStamp;
+    tracking = true;
+  }, { passive: true });
+
+  // Non-passive: once the drag is ours we preventDefault, or iOS rubber-bands
+  // the page behind the sheet while the sheet is moving.
+  drawer.addEventListener('touchmove', (e) => {
+    if (!tracking) return;
+    const y = e.touches[0].clientY - startY;
+    const x = e.touches[0].clientX - startX;
+    if (!dragging) {
+      if (Math.abs(y) < 6 && Math.abs(x) < 6) return;
+      // Up, or mostly sideways: not a dismiss. Give the touch back.
+      if (y <= 0 || Math.abs(x) > Math.abs(y)) { tracking = false; return; }
+      dragging = true;
+      drawer.style.transition = 'none';
+    }
+    dy = Math.max(0, y);
+    e.preventDefault();
+    drawer.style.transform = `translateY(${dy}px)`;
+  }, { passive: false });
+
+  // Dropping both inline styles in the same frame as the class change is what
+  // makes the finish animate: the browser interpolates from where the finger
+  // left the sheet to translateY(0) or translateY(100%), whichever the class
+  // now says, under the sheet's own transition.
+  const release = (e) => {
+    if (!tracking) return;
+    const flung = dy / Math.max(1, e.timeStamp - startT) > 0.5;
+    const far = dy > drawer.offsetHeight * 0.28;
+    drawer.style.transition = '';
+    drawer.style.transform = '';
+    if (dragging && (far || flung)) close();
+    tracking = dragging = false;
+    dy = 0;
+  };
+  drawer.addEventListener('touchend', release);
+  drawer.addEventListener('touchcancel', release);
+}
+
+// The drawer's behaviour, shared by both mount paths below: open, the three
+// ways of closing, and the swipe.
+function wireNavDrawer() {
+  const overlay = document.getElementById('nav-overlay');
+  if (!overlay) return;
+  const close = () => overlay.classList.remove('open');
+
+  document.getElementById('nav-toggle').addEventListener('click', () => {
+    overlay.classList.add('open');
+  });
+  document.getElementById('nav-close').addEventListener('click', close);
+  overlay.addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) close();
+  });
+
+  const drawer = overlay.querySelector('.nav-drawer');
+  if (drawer) wireDrawerSwipe(drawer, close);
+}
+
 function initPage() {
   const headerMount = document.getElementById('header-mount');
   if (headerMount) {
@@ -233,15 +317,7 @@ function initPage() {
   if (typeof Theme !== 'undefined') Theme.mountToggle();
   if (typeof Standalone !== 'undefined') Standalone.mount();
 
-  document.getElementById('nav-toggle').addEventListener('click', () => {
-    document.getElementById('nav-overlay').classList.add('open');
-  });
-  document.getElementById('nav-close').addEventListener('click', () => {
-    document.getElementById('nav-overlay').classList.remove('open');
-  });
-  document.getElementById('nav-overlay').addEventListener('click', (e) => {
-    if (e.target === e.currentTarget) e.currentTarget.classList.remove('open');
-  });
+  wireNavDrawer();
 }
 
 function initNavDrawer() {
@@ -253,13 +329,5 @@ function initNavDrawer() {
   if (typeof Theme !== 'undefined') Theme.mountToggle();
   if (typeof Standalone !== 'undefined') Standalone.mount();
 
-  document.getElementById('nav-toggle').addEventListener('click', () => {
-    document.getElementById('nav-overlay').classList.add('open');
-  });
-  document.getElementById('nav-close').addEventListener('click', () => {
-    document.getElementById('nav-overlay').classList.remove('open');
-  });
-  document.getElementById('nav-overlay').addEventListener('click', (e) => {
-    if (e.target === e.currentTarget) e.currentTarget.classList.remove('open');
-  });
+  wireNavDrawer();
 }

@@ -237,15 +237,10 @@ header h1 {
 
 header a:hover { color: var(--vi-gold); }
 
-/* Narrow screens: the bar is fixed to the bottom of the viewport (see the
- * media query in styles/base/styles.css), so the gold rule moves to the edge
- * that now faces the page. `header.site-header` to outrank the border the
- * bottom-bar rule sets there. */
-@media (max-width: 640px) {
-  header.site-header {
-    border-top: 3px solid var(--vi-gold);
-  }
-}
+/* Narrow screens: the header is the app's bottom bar, and the bar is no longer
+ * any page's to paint — styles/base/styles.css carries this same near-black
+ * band and gold rule on every route now, so the override that used to live
+ * here is gone rather than duplicated. See the --nav-* tokens there. */
 
 /* --- Page furniture ------------------------------------------------------- */
 

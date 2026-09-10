@@ -195,10 +195,34 @@ header a:hover { color: var(--accent); }
  * columns — because that is where a thumb is. The switch is the media query at
  * the end of this section; nothing about it is duplicated in the markup.
  *
- * DOM order is the mobile order (Games, Buns, Menu). Desktop pulls the menu
- * button in front of the title with `order` instead of moving it, so reading
- * order and tab order match what is on screen at both widths. */
-:root { --bottom-nav-h: 0px; }
+ * DOM order is the mobile order (Home, Odds, Buns, Menu). Desktop pulls the
+ * menu button in front of the title with `order` instead of moving it, so
+ * reading order and tab order match what is on screen at both widths. */
+
+/* --- The bottom bar's own palette ---
+ * The bar is the one piece of chrome every route shares, so it does not take
+ * the route's colours: it is the same near-black band with the same gold rule
+ * on /football/schedule, on an Oven board and on a light-theme page. That is
+ * where these values are from — the VegasInsider skin's bar, which was already
+ * theme-independent (styles/base/vegasinsider.css), promoted here so it is the
+ * whole app's bar rather than three pages' bar.
+ *
+ * They are spent by redefining the house tokens *on the bar and the sheet*
+ * further down, so the tabs, the drawer rows and the theme circles pick the
+ * palette up through inheritance from their existing rules. Nothing about the
+ * bar's markup or layout knows about this. */
+:root {
+  --bottom-nav-h: 0px;
+  --nav-bar: #1d1d25;
+  --nav-rule: #f4c255;
+  --nav-line: #3a3a45;
+  --nav-hover: #2b2b35;
+  --nav-ink: #ffffff;
+  --nav-ink-2: #c9ccd6;
+  --nav-ink-3: #a9adba;
+  --nav-accent: #f4c255;
+  --nav-scrim: rgba(0, 0, 0, 0.62);
+}
 
 .site-header {
   justify-content: flex-start;
@@ -250,8 +274,8 @@ header a:hover { color: var(--accent); }
   line-height: 1;
 }
 
-/* Wide screens: Games and Buns are drawer rows, so the bar is the menu button
- * alone and it needs no label under it. */
+/* Wide screens: the title is the home link and Odds and Buns are drawer rows,
+ * so the bar is the menu button alone and it needs no label under it. */
 .site-header > a.nav-tab { display: none; }
 .site-header .hamburger { order: -1; }
 .site-header .hamburger .nav-tab-label { display: none; }
@@ -394,7 +418,13 @@ header a:hover { color: var(--accent); }
  * follows the menu button down and comes up from the bottom edge rather than
  * in from the left, so it opens where the button that opened it is. */
 @media (max-width: 640px) {
-  :root { --bottom-nav-h: 58px; }
+  /* 58px of bar over 18px of nothing: on a phone with no home indicator to
+   * inset for, env(safe-area-inset-bottom) is 0 and the row of icons sat on
+   * the bottom edge of the glass. --bottom-nav-h is the whole band, padding
+   * and all, so everything keyed to it — the body's bottom padding below, the
+   * Buns tile button, the Oven's tools tab — clears the taller bar without
+   * being told about the change. */
+  :root { --bottom-nav-h: 76px; }
 
   /* Full-viewport width by request: the bar is a surface, not a column. */
   .site-header {
@@ -404,15 +434,48 @@ header a:hover { color: var(--accent); }
     left: 0;
     width: 100vw;
     height: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom));
-    padding: 0 0 env(safe-area-inset-bottom);
+    padding: 0 0 calc(18px + env(safe-area-inset-bottom));
     gap: 0;
     border-bottom: none;
-    border-top: 1px solid var(--border);
     z-index: 150;
   }
 
-  /* The title is the home link on desktop; down here the three buttons need
-   * the whole width, and "/" is still one tap away in the drawer. */
+  /* --- One bar and one sheet, whatever the route is painted like ---
+   * Every page sheet is free to repaint the page under it; none of them may
+   * repaint the nav. The tokens are redefined here rather than the rules
+   * restated, so .nav-tab, .nav-drawer a, .nav-section-label and the theme
+   * circles keep their single definitions above and simply resolve them
+   * against this palette.
+   *
+   * `html body header.site-header` outranks the two page sheets that reach the
+   * header by element — vegasinsider.css's `header` and bakers-oven.css's
+   * `body:has(.oven-content) header` — both of which load after this file. */
+  html body header.site-header,
+  html body .nav-overlay .nav-drawer {
+    background: var(--nav-bar);
+    border-top: 3px solid var(--nav-rule);
+    border-bottom: none;
+    --surface: var(--nav-bar);
+    --surface-2: var(--nav-hover);
+    --surface-3: var(--nav-hover);
+    --border: var(--nav-line);
+    --text-hi: var(--nav-ink);
+    --text: var(--nav-ink-2);
+    --text-2: var(--nav-ink-2);
+    --text-3: var(--nav-ink-2);
+    --text-4: var(--nav-ink-3);
+    --text-5: var(--nav-ink-3);
+    --accent: var(--nav-accent);
+    --accent-ink: var(--nav-bar);
+    --on-accent: var(--nav-bar);
+  }
+
+  /* The scrim is part of the component too — a 0.3-alpha light-theme overlay
+   * left the sheet reading as a card rather than as something over the page. */
+  html body .nav-overlay { background: var(--nav-scrim); }
+
+  /* The title is the home link on desktop; down here the four buttons need the
+   * whole width, and the Home tab is what replaces it. */
   .site-title { display: none; }
 
   .site-header > a.nav-tab { display: flex; }
@@ -447,14 +510,14 @@ header a:hover { color: var(--accent); }
     height: auto;
     max-height: 80vh;
     border-right: none;
-    border-top: 1px solid var(--border);
     border-radius: 16px 16px 0 0;
-    padding: 10px 0 calc(12px + env(safe-area-inset-bottom));
+    padding: 10px 0 calc(18px + env(safe-area-inset-bottom));
     transform: translateY(100%);
   }
 
-  /* The sheet's grab handle. Decoration only — the sheet is closed by its X,
-   * by the scrim, or by picking a row. */
+  /* The sheet's grab handle, and the thing it says is true: the sheet drags
+   * down to dismiss (wireDrawerSwipe in scripts/base/nav.js). It also closes
+   * by its X, by the scrim, or by picking a row. */
   .nav-drawer::before {
     content: '';
     flex: 0 0 auto;
