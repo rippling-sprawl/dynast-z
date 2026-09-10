@@ -43,7 +43,7 @@
       <span id="crumb">Game</span>
     </div>
 
-    <div id="page"><p class="go-empty">Loading game…</p></div>
+    <div id="page"></div>
   </div>
 
   <script>
@@ -780,7 +780,7 @@
       { key: 'offense', text: 'Offense',
         groups: ['passing', 'rushing', 'receiving', 'fumbles'] },
       { key: 'defense', text: 'Defense', groups: ['defense'] },
-      { key: 'special', text: 'Special teams',
+      { key: 'special', text: 'Kicking',
         groups: ['kicking', 'returns', 'punting'] }
     ];
 
@@ -875,7 +875,7 @@
       }
       /* All three chips always, whether or not the view behind them has rows
        * yet, for the reason the quarter filters are always four: a game where
-       * nobody has kicked reads as "not yet" from an empty Special teams, and
+       * nobody has kicked reads as "not yet" from an empty Kicking, and
        * as a missing feature from a chip that is not there. */
       var seg = BS_VIEWS.map(function (v) {
         return '<button type="button" data-bs-view="' + esc(v.key) + '"' +
@@ -1688,25 +1688,43 @@
      * rung is the column heading, and false here: the line IS the bet. Two
      * quarterbacks quoted at the same 31.5 pass attempts left a board reading
      * "Pass Att, over -106, under -120" with the 31.5 nowhere on the page. */
-    function overUnderTable(b, players, byPlayer, groups) {
+    function overUnderTable(b, groups) {
       var head = thCell('Player', 'go-plc') +
         thCell(heading('Line', 'Line quoted'), 'is-num') +
         thCell(heading('Over', 'Consensus over price'), 'is-num') +
         thCell(heading('Under', 'Consensus under price'), 'is-num');
 
-      var body = players.map(function (id) {
-        return byPlayer[id].slice().sort(function (x, y) {
-          return parseFloat(x.line) - parseFloat(y.line);
-        }).map(function (g) {
-          var i = pushDetail(playerName(b, id), g.line, [
-            { label: 'Over', quotes: g.over },
-            { label: 'Under', quotes: g.under }
-          ]);
-          return '<tr data-pd="' + i + '">' + playerCell(b, id) +
-            '<td class="is-num">' + esc(g.line) + '</td>' +
-            consCell(g.over) + consCell(g.under) +
-            '</tr>';
-        }).join('');
+      /* Ordered on the line, biggest first, across the whole board rather than
+       * within each player's rows. The board is read for the market, not for a
+       * name: on Receiving Yards the men quoted at 70.5 are the ones the market
+       * expects to be targeted, and grouping by player buried them among rows
+       * of 12.5 wherever the alphabet happened to put them. A player quoted at
+       * two numbers still takes two rows, and they no longer have to be
+       * adjacent — each row carries its own line in the cell beside the name.
+       *
+       * Ties keep the surname order the board used to be built in, so two men
+       * on the same 31.5 read alphabetically. A line that does not parse sorts
+       * last rather than as a zero: it is a number we could not read, not a
+       * small one. */
+      var ordered = groups.slice().sort(function (x, y) {
+        var xv = parseFloat(x.line), yv = parseFloat(y.line);
+        var xn = isFinite(xv), yn = isFinite(yv);
+        if (xn !== yn) return xn ? -1 : 1;
+        if (xn && xv !== yv) return yv - xv;
+        return playerName(b, x.player_id)
+          .localeCompare(playerName(b, y.player_id));
+      });
+
+      var body = ordered.map(function (g) {
+        var id = String(g.player_id);
+        var i = pushDetail(playerName(b, id), g.line, [
+          { label: 'Over', quotes: g.over },
+          { label: 'Under', quotes: g.under }
+        ]);
+        return '<tr data-pd="' + i + '">' + playerCell(b, id) +
+          '<td class="is-num">' + esc(g.line) + '</td>' +
+          consCell(g.over) + consCell(g.under) +
+          '</tr>';
       }).join('');
 
       return { head: head, body: body };
@@ -1721,9 +1739,9 @@
         if (!byPlayer[id]) { byPlayer[id] = []; players.push(id); }
         byPlayer[id].push(g);
       });
-      players.sort(function (x, y) {
-        return playerName(b, x).localeCompare(playerName(b, y));
-      });
+      /* Not sorted here. Both boards decide their own row order and neither
+       * reads this list's: the milestone board re-sorts on price down the
+       * ladder, and the two-sided board orders on the line. */
 
       /* One shape per table — the market <select> carries it — so the shape is
        * read off the first group and speaks for all of them. The two are
@@ -1733,7 +1751,7 @@
       var mile = groups[0].type === MILESTONE;
       var t = mile
         ? milestoneTable(b, players, byPlayer, groups)
-        : overUnderTable(b, players, byPlayer, groups);
+        : overUnderTable(b, groups);
 
       /* The shape is on the table as well as in its columns: the over/under
        * view stacks ten of these boards, and ten tables each sizing their own
