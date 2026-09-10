@@ -1816,6 +1816,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             query = parse_qs(urlparse(self.path).query)
             game_id = (query.get("game") or [""])[0].strip()
             known = (query.get("known") or [""])[0].strip()[:64]
+            full = (query.get("full") or [""])[0].strip() in ("1", "true", "yes")
             api = game_odds_api()
             try:
                 if not game_id:
@@ -1838,7 +1839,12 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                             self._json_response(
                                 404, {"error": f"no bundle stored for game {game_id}"})
                         else:
-                            self._json_response(200, dict(bundle, etag=etag))
+                            # Trimmed here too, or dev would serve a megabyte
+                            # where prod serves 393 KB and the page would be
+                            # tuned against the wrong payload.
+                            payload = (bundle if full
+                                       else api.trim_for_wire(bundle))
+                            self._json_response(200, dict(payload, etag=etag))
             except Exception as e:  # noqa: BLE001
                 self._json_response(500, {"error": str(e)})
         # Survivor. Standings and the pick page are matched before the hub for

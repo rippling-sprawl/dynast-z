@@ -69,6 +69,47 @@ SUMMARY_COLUMNS = ("game_id,label,title,away,home,kickoff,season,week,phase,"
 _MEMO = {}
 
 
+# WHAT THE WIRE DOES NOT CARRY
+#
+# Two sections are stored but never sent to a page, because no page reads them:
+#
+#   player_props.opening   ~610 KB, and propRows() in views/football/game-odds.html
+#                          is explicitly "current only" -- an opening prop answers
+#                          how the market moved, which that board deliberately does
+#                          not ask. Shipping it cost 60% of every poll for a
+#                          section that never reached a pixel.
+#   designations           ~103 KB, and the page reads `injuries` only. There is no
+#                          `b.designations` access anywhere in it.
+#
+# Both stay in Supabase. That is the whole point of the split: balldontlie keeps
+# no prop history, so an opening line not captured before kickoff cannot be
+# bought back at any price, and the archive is the only copy there will ever be.
+# What changes is that a live game page polling every 30 seconds stops paying for
+# them 120 times an hour.
+#
+# `?full=1` returns the stored bundle untouched, for archival reads and for
+# checking what was actually captured.
+#
+# odds.opening is NOT trimmed: the page renders it (oddsTable on the opening
+# rows), and it is ~10 rows rather than thousands.
+TRIMMED_SECTIONS = ("player_props.opening", "designations")
+
+
+def trim_for_wire(bundle):
+    """-> the bundle as a page should receive it. Never mutates the argument:
+    the memo holds one object per warm instance and every request shares it."""
+    out = dict(bundle)
+    pp = out.get("player_props")
+    if isinstance(pp, dict) and pp.get("opening"):
+        out["player_props"] = dict(pp, opening=[])
+    if out.get("designations"):
+        out["designations"] = {}
+    # Named rather than silent: a consumer that finds an empty `opening` should
+    # be able to tell "trimmed in transit" from "never captured".
+    out["trimmed"] = list(TRIMMED_SECTIONS)
+    return out
+
+
 def supabase_request(path):
     url = f"{SUPABASE_URL}/rest/v1/{path}"
     req = urllib.request.Request(url)
@@ -161,6 +202,7 @@ class handler(BaseHTTPRequestHandler):
         # simply an etag that matches nothing. Bounded anyway: an etag is a
         # sha256 and a caller sending more than that is not one of ours.
         known = (params.get("known") or [""])[0].strip()[:64]
+        full = (params.get("full") or [""])[0].strip() in ("1", "true", "yes")
 
         try:
             etag = load_etag(game_id)
@@ -204,8 +246,12 @@ class handler(BaseHTTPRequestHandler):
             return
 
         # Shallow copy: the page needs the etag to send back next time, and the
-        # memoised bundle should stay exactly as it was stored.
-        self._json(200, dict(bundle, etag=etag), etag=quoted)
+        # memoised bundle should stay exactly as it was stored. The etag is the
+        # stored bundle's hash either way -- it identifies the version, not the
+        # projection of it that went over the wire, so `?known=` still works
+        # unchanged for a trimmed and a full reader alike.
+        payload = bundle if full else trim_for_wire(bundle)
+        self._json(200, dict(payload, etag=etag), etag=quoted)
 
     def _json(self, status, data, etag=None):
         # No `cache` argument any more: vercel.json puts every /api/* route on
