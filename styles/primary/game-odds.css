@@ -1032,6 +1032,22 @@ html {
 .go-play.is-scoring { background: var(--good-tint); }
 .go-play.is-scoring .go-ptext { color: var(--text); font-weight: 600; }
 
+/* The Scoring plays card is the same rows with the tint dropped (see playRow)
+ * and the emphasis moved to the score, which is what the card is read for:
+ * the running total after each play is the column your eye goes down. The
+ * text stays at log weight — it is the explanation of the number, not the
+ * headline. */
+.go-scoring .go-play { padding-top: 6px; padding-bottom: 6px; }
+.go-scoring .go-ptext { color: var(--text-2); }
+
+.go-scoring .go-pscore {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.go-scoring .go-play:last-child { border-bottom-width: 0; }
+
 /* --- Empty states -------------------------------------------------------- */
 
 /* Links inside an empty-state body: the schedule link the not-captured-yet
@@ -1056,6 +1072,8 @@ html {
   .go-crest { width: 58px; height: 58px; }
   .go-play { grid-template-columns: 46px 40px minmax(0, 1fr); }
   .go-play .go-pscore { display: none; }
+  .go-scoring .go-play { grid-template-columns: 44px 34px minmax(0, 1fr) 46px; gap: 8px; }
+  .go-scoring .go-pscore { display: block; }
 }
 
 /* --- Props: the two views ------------------------------------------------

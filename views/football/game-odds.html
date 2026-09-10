@@ -180,32 +180,29 @@
      * packs a whole phase into one row -- "Cmp-Att-Yd-TD-INT" -- where the API
      * hands over the parts separately, so each of its rows is a run of ours:
      * the run sits where PFR's row sits. The stats it has no row for at all
-     * (red zone, drives, yards per play) join the run they belong to. */
+     * (red zone, yards per play) join the run they belong to. */
     var TEAM_ABBR = {
-      first_downs: '1st Downs', first_downs_rushing: '1st D Rush',
-      first_downs_passing: '1st D Pass', first_downs_penalty: '1st D Pen',
+      first_downs: '1st Downs',
       rushing_attempts: 'Rush Att', rushing_yards: 'Rush Yds',
       yards_per_rush_attempt: 'Y/C', passing_completions: 'Comp',
       passing_attempts: 'Att', yards_per_pass: 'Y/A', sacks: 'Sacks',
       sack_yards_lost: 'Sack Yds', net_passing_yards: 'Net Pass Yds',
       total_yards: 'Tot Yds', total_offensive_plays: 'Off Plays',
-      yards_per_play: 'Y/P', total_drives: 'Drives',
+      yards_per_play: 'Y/P',
       fumbles_lost: 'Fum Lost', turnovers: 'TO', interceptions_thrown: 'INT',
       defensive_touchdowns: 'Def TD', penalties: 'Pen',
       penalty_yards: 'Pen Yds', third_down_efficiency: '3rd Down %',
-      third_down_conversions: '3rd Down Conv', third_down_attempts: '3rd Down Att',
-      fourth_down_efficiency: '4th Down %', fourth_down_conversions: '4th Down Conv',
-      fourth_down_attempts: '4th Down Att', red_zone_scores: 'RZ Scores',
+      fourth_down_efficiency: '4th Down %', red_zone_scores: 'RZ Scores',
       red_zone_attempts: 'RZ Att', possession_time: 'TOP'
     };
 
     /* player_stats.away|home[].<group>.* */
     var STAT_ABBR = {
       passing: {
-        passing_completions: 'CMP', passing_attempts: 'ATT',
+        passing_completions: 'CMP/ATT',
         passing_yards: 'YDS', passing_touchdowns: 'TD',
-        passing_interceptions: 'INT', sacks: 'SK', sacks_loss: 'SKYL',
-        qb_rating: 'RTG', yards_per_pass_attempt: 'Y/A', qbr: 'QBR'
+        passing_interceptions: 'INT', sacks: 'SK',
+        yards_per_pass_attempt: 'Y/A', qbr: 'QBR'
       },
       rushing: {
         rushing_attempts: 'ATT', rushing_yards: 'YDS',
@@ -220,8 +217,7 @@
       defense: {
         total_tackles: 'TCK', defensive_sacks: 'SK', solo_tackles: 'SOLO',
         tackles_for_loss: 'TFL', passes_defended: 'PD', qb_hits: 'QBH',
-        defensive_interceptions: 'INT', interception_yards: 'IYDS',
-        interception_touchdowns: 'ITD'
+        defensive_interceptions: 'INT'
       },
       kicking: {
         field_goal_attempts: 'FGA', field_goals_made: 'FGM',
@@ -367,6 +363,13 @@
         return '<td class="is-null">—</td>';
       }
       if (isNum(v)) return '<td class="is-num">' + esc(v) + '</td>';
+      /* A joined pair -- "18/27" -- is a number as far as its column is
+       * concerned: it sits among numeric columns under a numeric heading, and
+       * left-aligning it alone breaks the right edge the rest of the row is
+       * read down. */
+      if (typeof v === 'string' && /^(\d+|—)\/(\d+|—)$/.test(v)) {
+        return '<td class="is-num">' + esc(v) + '</td>';
+      }
       if (typeof v === 'object') return '<td>' + esc(JSON.stringify(v)) + '</td>';
       return '<td>' + esc(v) + '</td>';
     }
@@ -678,8 +681,22 @@
           : '';
       }
       /* possession_time_seconds is possession_time in a unit nobody reads a
-       * clock in — 33:11 and 1991 are one row, not two. */
-      var skip = { game: 1, team: 1, home_away: 1, possession_time_seconds: 1 };
+       * clock in — 33:11 and 1991 are one row, not two.
+       *
+       * The rest are rows that say something the table already says. The three
+       * first-down splits sum to 1st Downs, which is the number this comparison
+       * is read for; the conversion and attempt counts are the two halves of
+       * the efficiency percentage sitting directly above them; and Drives is a
+       * count of possessions nobody compares. Skipped from the data rather than
+       * unnamed in TEAM_ABBR, because a key with no entry still draws a row
+       * under its title-cased key. */
+      var skip = {
+        game: 1, team: 1, home_away: 1, possession_time_seconds: 1,
+        first_downs_rushing: 1, first_downs_passing: 1, first_downs_penalty: 1,
+        total_drives: 1,
+        third_down_conversions: 1, third_down_attempts: 1,
+        fourth_down_conversions: 1, fourth_down_attempts: 1
+      };
       var keys = orderKeys(Object.keys(a).filter(function (k) {
         return !skip[k] && (typeof a[k] !== 'object' || a[k] === null);
       }), Object.keys(TEAM_ABBR));
@@ -735,6 +752,13 @@
       returns: []
     };
 
+    /* Long forms fullLabel() cannot derive, because the column no longer holds
+     * what its key is named: passing_completions carries the completions and
+     * the attempts both, so its tooltip has to name the pair. */
+    var STAT_FULL = {
+      passing_completions: 'Passing Completions / Attempts'
+    };
+
     function groupLabel(grp) {
       var prefixes = GROUP_PREFIX[grp] || [grp + '_'];
       var map = STAT_ABBR[grp] || {};
@@ -743,7 +767,7 @@
        * heading the group is obvious in the column and useless in the tooltip,
        * which is read on its own. */
       return function (key) {
-        if (map[key]) return heading(map[key], fullLabel(key));
+        if (map[key]) return heading(map[key], STAT_FULL[key] || fullLabel(key));
         for (var i = 0; i < prefixes.length; i++) {
           var p = prefixes[i];
           if (key.indexOf(p) === 0 && key.length > p.length) {
@@ -810,6 +834,25 @@
       defense: 'total_tackles'
     };
 
+    /* Columns a box score is not read for, dropped from the row rather than
+     * left out of STAT_ABBR: genericTable renders the union of the keys it is
+     * handed, and a key with no entry in the map trails the named columns
+     * rather than disappearing. Sack yardage and passer rating are derived
+     * numbers next to the sack count and the line they are derived from, and
+     * interception return yards and return touchdowns are a defence's rarest
+     * two columns -- empty in most games, and two more widths in the rest. */
+    var BS_DROP = {
+      sacks_loss: 1, qb_rating: 1,
+      interception_yards: 1, interception_touchdowns: 1
+    };
+
+    /* A quarterback who threw no picks threw zero of them, not "not recorded",
+     * and the feed sends null for both. Coerced before the table is built so
+     * the column also survives genericTable's drop of the all-null ones: a
+     * passing line with no INT column reads as a stat that failed to load,
+     * where a column of zeroes reads as the clean afternoon it was. */
+    var BS_ZERO = { passing_interceptions: 1, defensive_interceptions: 1 };
+
     /* One side's players for one group, flattened to what genericTable wants:
      * the name, then the group's own fields with the nesting dropped. A player
      * with no entry for the group never played that role and is left out.
@@ -821,7 +864,22 @@
       var out = rows.filter(function (r) { return r[grp]; }).map(function (r) {
         var o = { player: initialName((r.player || {}).first_name,
           (r.player || {}).last_name) || (r.player || {}).id };
-        Object.keys(r[grp]).forEach(function (k) { o[k] = r[grp][k]; });
+        Object.keys(r[grp]).forEach(function (k) {
+          if (BS_DROP[k]) return;
+          o[k] = (r[grp][k] === null && BS_ZERO[k]) ? 0 : r[grp][k];
+        });
+        /* Cmp-Att is one figure in a box score and has been for as long as box
+         * scores have been printed -- 18/27, read as a pair, because neither
+         * half means anything without the other. Two columns here only because
+         * the feed sends the parts, so they are put back together in the
+         * completions column, which is already where the pair sits in the
+         * order, and the attempts column comes out. */
+        if (grp === 'passing') {
+          var c = o.passing_completions, at = o.passing_attempts;
+          delete o.passing_attempts;
+          o.passing_completions = (c == null && at == null) ? null
+            : (c == null ? '—' : c) + '/' + (at == null ? '—' : at);
+        }
         return o;
       });
       var by = BS_SORT[grp];
@@ -923,8 +981,15 @@
       return p > 5 ? 'OT' + (p - 4) : (p > 4 ? 'OT' : 'Q' + p);
     }
 
-    function playRow(pl) {
-      return '<div class="go-play' + (pl.scoring_play ? ' is-scoring' : '') + '">' +
+    /* `tint` is opt-out rather than a per-caller class, because the tint is
+     * the only thing the two callers of this row disagree about. In the log it
+     * picks seven scoring plays out of two hundred ordinary ones, which is
+     * what a tint is for. In the Scoring plays card every row is a score, so
+     * there is nothing left to pick out and a tinted row throughout reads as
+     * one block of highlight rather than as a list of plays. */
+    function playRow(pl, tint) {
+      return '<div class="go-play' +
+        (tint !== false && pl.scoring_play ? ' is-scoring' : '') + '">' +
         '<span class="go-clock">' + esc(periodLabel(pl.period)) + ' ' +
           esc(pl.clock_display || '') + '</span>' +
         '<span class="go-pteam">' + esc((pl.team || {}).abbreviation || '') + '</span>' +
@@ -965,6 +1030,66 @@
       return out;
     }
 
+    /* ---------- Scoring plays ----------
+     *
+     * Rendered high on the page — between the odds and the box score — and
+     * defined down here beside the log it is cut from, because it is the same
+     * rows through the same row renderer. It is not a second play log: it is
+     * the answer to "how did it get to 21-17", which is the question a reader
+     * arriving at a game in the fourth quarter actually has, and which the log
+     * can only answer by being scrolled or filtered.
+     *
+     * Newest first, which is the one place on this page that reverses the
+     * feed. Everything else here reads forwards because it is a record; this
+     * card is read for what just happened, so the most recent score is the
+     * first line rather than the last.
+     *
+     * Clock, not play id, decides the order. /plays comes back ordered by id
+     * and administrative rows sort out of sequence within it (see the running
+     * score assertion in fetch_bdl_game.py), and the ids are not even a
+     * consistent width — 401772745594 and 4017727451442 are the same game. A
+     * scoring play always carries the period and clock it is shown with, so
+     * ordering on those two makes the sequence agree with what is printed in
+     * every row. Feed position breaks a tie and covers a clock we cannot read:
+     * later in the array is later in the game. */
+    function clockLeft(s) {
+      var m = /^(\d+):(\d\d)$/.exec(String(s == null ? '' : s).trim());
+      return m ? Number(m[1]) * 60 + Number(m[2]) : null;
+    }
+
+    function scoringPlays(b) {
+      var isScore = playPredicate('scoring');
+      var out = [];
+      ((b.plays || {}).all || []).forEach(function (pl, i) {
+        if (isScore(pl)) out.push({ pl: pl, i: i });
+      });
+      out.sort(function (x, y) {
+        var xp = Number(x.pl.period), yp = Number(y.pl.period);
+        if (isFinite(xp) && isFinite(yp) && xp !== yp) return yp - xp;
+        // Counting down, so the smaller remainder is the later play.
+        var xc = clockLeft(x.pl.clock_display), yc = clockLeft(y.pl.clock_display);
+        if (xc !== null && yc !== null && xc !== yc) return xc - yc;
+        return y.i - x.i;
+      });
+      return out.map(function (o) { return o.pl; });
+    }
+
+    function scoringSection(b) {
+      var p = b.plays || { count: 0, all: [] };
+      /* No log at all is the log's own empty state, said once: before kickoff
+       * there is nothing to say, and on a free key the "not captured" notice
+       * belongs on the card that is actually missing its feed. */
+      if (!p.count) return '';
+      var rows = scoringPlays(b);
+      /* A real 0-0 is a state this card has to be able to hold: a first
+       * quarter with no points is not a card that failed to load. */
+      return card('Scoring plays', rows.length
+        ? '<div class="go-plays go-scoring">' +
+            rows.map(function (pl) { return playRow(pl, false); }).join('') +
+          '</div>'
+        : '<div class="go-empty">No points on the board yet.</div>', true);
+    }
+
     function playsSection(b) {
       var p = b.plays || { count: 0, all: [] };
       if (!p.count) {
@@ -993,7 +1118,7 @@
       function draw(key) {
         var rows = all.filter(playPredicate(key));
         listEl.innerHTML = rows.length
-          ? rows.map(playRow).join('')
+          ? rows.map(function (pl) { return playRow(pl, true); }).join('')
           : '<div class="go-empty">No plays in that filter yet.</div>';
       }
 
@@ -2523,12 +2648,16 @@
        * The play log is last whatever the phase: it is the longest thing on the
        * page by an order of magnitude, and it folds away by default, so putting
        * it anywhere else leaves a shut door in the middle of the boards that
-       * are open. */
+       * are open. Scoring plays is the part of it that does not belong down
+       * there — a dozen rows answering how the score got where the hero says it
+       * is — so it sits directly under the odds, and is empty before kickoff
+       * for the same reason the box score is. */
       var props = propsSection(b);
       var pregame = b.phase === 'pregame';
       pageEl.innerHTML =
         heroSection(b) +
         oddsSection(b) +
+        scoringSection(b) +
         (pregame ? props : '') +
         playerStatsSection(b) +
         teamStatsSection(b) +
