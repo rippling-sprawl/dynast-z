@@ -333,8 +333,10 @@
   /* ---------- standings ----------
    *
    * Rank, player, status, then one column per week holding the crest of the
-   * team that entry rode. A cell is empty for a week whose game has not kicked
-   * off — the payload does not contain it, so there is nothing here to hide.
+   * team that entry rode. A week whose game has not kicked off carries no team
+   * in the payload, so there is nothing here to hide, and the cell says which
+   * kind of nothing it is: a lock where a pick is in and unreadable (`masked`),
+   * a neutral dot where no pick was made.
    *
    * The reader's own row is the exception: their own live pick IS sent, flagged
    * `hidden`, and is rendered with a dashed edge. Without it a player looking at
@@ -397,6 +399,14 @@
       if (cell && cell.outcome === 'none') {
         return '<td class="pk-wk sv-cell is-none" title="Week ' + esc(week) +
           ' — no pick, eliminated">✕</td>';
+      }
+      // A pick that is in but not readable yet — the server sends the cell with
+      // no team on purpose. The distinction this draws is the point: a lock is
+      // "they have picked", the neutral dot below is "they have not", and before
+      // the mask existed both looked like the dot.
+      if (cell && cell.masked) {
+        return '<td class="pk-wk sv-cell is-masked" title="Week ' + esc(week) +
+          ' — pick is in, hidden until kickoff">🔒</td>';
       }
       return '<td class="pk-wk sv-cell is-empty">·</td>';
     }

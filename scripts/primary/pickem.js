@@ -54,6 +54,13 @@
    * (see the note on team_index in scripts/bdl_common.py). */
   var LOGO_DIR = '/assets/icons/nfl/';
 
+  /* What a push pays, mirroring PUSH_POINTS in api/_pickem/scoring.py. The
+   * server is the authority — every pick the API returns already carries its
+   * own `points` — but the board renders a row's value from the confidence it
+   * is holding rather than from the response, so this side needs the number
+   * too. If the server's changes, change this one with it. */
+  var PUSH_POINTS = 2;
+
   function esc(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
@@ -326,12 +333,12 @@
    * would be worth, which is exactly the thing worth knowing before picking.
    *
    * The tooltip names both directions because the number is a stake, not a
-   * prize: a miss deducts exactly what a hit pays (a push costs nothing), and a
+   * prize: a miss deducts exactly what a hit pays (a push pays a flat 2), and a
    * player who only ever reads "worth 16" will rank the coin-flips wrong. */
   function confidenceCell(game, sides, confidence) {
     var live = !!sides[game.game_id];
     var stake = '+' + esc(confidence) + ' if it lands, −' + esc(confidence) +
-      ' if it does not';
+      ' if it does not, +' + PUSH_POINTS + ' on a push';
     return '<span class="pk-conf' + (live ? '' : ' is-idle') +
       (game.locked ? ' is-locked' : '') + '"' +
       ' title="' + (live ? stake : stake + ' — once you take a side') + '">' +
@@ -365,16 +372,18 @@
       var score = (game.away_score === null || game.away_score === undefined) ? ''
         : ' <span class="pk-score">' + esc(game.away_score) + '–' +
           esc(game.home_score) + '</span>';
-      // Three outcomes, not two: a push scores 0 and is neither a hit nor a
-      // miss, so it gets its own neutral chip rather than borrowing the red
-      // one and reading as a loss it is not.
+      // Three outcomes, not two: a push is neither a hit nor a miss, so it
+      // gets its own chip rather than borrowing the red one and reading as a
+      // loss it is not. It pays a flat +PUSH_POINTS rather than the confidence
+      // on it — the credit is for having made the pick, not for the rank.
       var push = game.result === 'push';
       var won = mine && !push &&
         mine === (game.result === 'home' ? game.home : game.away);
       var points = mine
         ? '<span class="pk-points ' +
             (push ? 'is-push' : (won ? 'is-hit' : 'is-miss')) + '">' +
-            (push ? '0' : (won ? '+' : '−') + esc(confidence)) + '</span>'
+            (push ? '+' + PUSH_POINTS : (won ? '+' : '−') + esc(confidence)) +
+            '</span>'
         : '';
       return '<span class="pk-state is-final">' + verdict + score + points +
         chips(game, others) + '</span>';

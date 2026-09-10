@@ -103,11 +103,30 @@ def build_week(user_id, season, week, now, games=None):
     # the pool summary below needs the whole season anyway -- walking a partial
     # history would report an entry as alive when week 4 already killed it.
     revealed = store.load_visible_picks(season, season_games, exclude=user_id)
-    usernames = store.load_usernames() if revealed else {}
+    usernames = store.load_usernames()
 
     by_user = {}
     for row in revealed:
         by_user.setdefault(row["user_id"], {})[row["week"]] = row
+
+    # The rest of the field, as teamless picks. Same read and same reasoning as
+    # api/survivor-standings.py: an entry is not a secret, its pick is, and
+    # store.load_entry_weeks() names the weeks without reading the teams. What
+    # this buys here is only the count -- the hub's Entries tile said 1 while the
+    # pool card beside it listed seven names, because an entry whose every pick
+    # was still unreadable was dropped rather than counted.
+    #
+    # It cannot leak into the board itself: chips() keys a name to a game by
+    # game_id, and these rows have none, so a masked pick attaches to nothing.
+    # That is the right outcome as well as the accidental one -- naming the field
+    # is fine, naming which of sixteen games each of them took is not.
+    for uid, weeks in store.load_entry_weeks(season).items():
+        if uid == user_id:
+            continue
+        picks = by_user.setdefault(uid, {})
+        for wk in weeks:
+            if wk not in picks:
+                picks[wk] = {"week": wk, "game_id": None, "team": None}
 
     # WHY THE VISIBLE SET IS ENOUGH TO SETTLE WHO IS ALIVE
     #
@@ -117,6 +136,11 @@ def build_week(user_id, season, week, now, games=None):
     # sits on a game that has not started, which walk_entry() would stop at
     # anyway. Filtering for secrecy therefore costs the standings nothing, which
     # is the property that lets this endpoint be honest and complete at once.
+    #
+    # The masked picks above do not disturb that. A pick is unreadable only while
+    # its game is unstarted, so walk_entry() grades one PENDING and stops -- the
+    # same place it stopped when the pick was absent entirely. They change the
+    # count and nobody's status.
     others, alive = [], 0
     for uid, picks in by_user.items():
         if uid not in usernames:

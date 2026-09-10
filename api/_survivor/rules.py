@@ -112,6 +112,10 @@ def walk_entry(picks, games_by_id, board_weeks, shut):
     """Replay one entry's season. -> a dict describing where it stands.
 
     `picks`       {week: {"game_id": str, "team": "GB"}} -- one pick per week.
+                  `team` and `game_id` may both be None, meaning "this entry
+                  picked and you may not see what": a pick whose game has not
+                  kicked off, in another player's row. It ends the walk exactly
+                  where a real unreadable pick would.
     `games_by_id` game_id -> game dict, as api/_pickem/store.py shapes them.
     `board_weeks` every week the board knows about, ascending. Weeks the season
                   has not reached are simply not in it, so the walk stops at the
@@ -168,7 +172,14 @@ def walk_entry(picks, games_by_id, board_weeks, shut):
         state["weeks"][week] = {"team": pick["team"],
                                 "game_id": pick["game_id"],
                                 "outcome": verdict}
-        state["teams"].append(pick["team"])
+        # A pick the caller was allowed to know exists but not to read carries a
+        # null team (api/survivor-standings.py builds it that way). It counts as
+        # a pick -- the week is not a missed one -- and it necessarily grades
+        # PENDING, since a pick is unreadable only while its game is unstarted.
+        # It is not a spent team, though: the spent strip must never grow an
+        # entry nobody is allowed to name.
+        if pick["team"]:
+            state["teams"].append(pick["team"])
 
         if verdict == WIN:
             state["survived"] += 1
@@ -188,7 +199,7 @@ def walk_entry(picks, games_by_id, board_weeks, shut):
             state["weeks"][week] = {"team": pick["team"],
                                     "game_id": pick["game_id"],
                                     "outcome": VOID}
-            if pick["team"] not in state["teams"]:
+            if pick["team"] and pick["team"] not in state["teams"]:
                 state["teams"].append(pick["team"])
     return state
 

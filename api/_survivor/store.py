@@ -116,6 +116,33 @@ def load_my_picks(user_id, season):
     return {int(r["week"]): _shape(r) for r in rows}
 
 
+def load_entry_weeks(season):
+    """Which weeks each entry has a pick in -- the week numbers and nothing else.
+
+    THE ONE READ IN THIS FILE THAT IS NOT KICKOFF-FILTERED, AND WHY IT IS SAFE
+
+    A survivor pick is two facts: *that* you picked, and *what* you picked. Only
+    the second is secret. The first is not a secret anybody could keep -- the
+    rules require a pick every week from every entry still alive, so "who is in
+    the pool" is common knowledge the moment the pool exists, and a standings
+    page that withholds it is not withholding information, it is just wrong
+    about the size of the field.
+
+    So the select list here is `user_id,week` and it must stay that way. No
+    `team`, no `game_id`: the columns this deliberately does not name are the
+    reason it may skip the reveal filter. load_visible_picks() below is still
+    the only path by which a team reaches a caller.
+
+    -> {user_id: {week, ...}}
+    """
+    rows = board.supabase_request(
+        f"survivor_picks?season=eq.{int(season)}&select=user_id,week") or []
+    out = {}
+    for row in rows:
+        out.setdefault(row["user_id"], set()).add(int(row["week"]))
+    return out
+
+
 def load_visible_picks(season, games, exclude=None):
     """Every entry's picks for the season, restricted to games that have already
     kicked off. Optionally excluding one user, for the pick page, which has

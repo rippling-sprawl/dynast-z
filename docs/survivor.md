@@ -80,13 +80,36 @@ not kicked off is never *selected* from the database.**
   instead of avoiding it. The one exception is the requester's own row, read in
   full and flagged `hidden` per cell so the page can say "only you can see this".
 
+**The entry is not the secret — the pick is.** A pick is two facts: *that* you
+picked, and *what* you picked. Only the second can be kept, and the first cannot:
+the rules require a pick every week from everyone still alive, so the field is
+common knowledge the moment the pool exists. Withholding it protected nobody and
+made the page wrong about the size of the pool — in week 1 of 2026, seven entries
+all read as a one-entry pool to each other, because the only game that had kicked
+off was the Thursday nighter and nobody had picked it.
+
+So `store.load_entry_weeks()` reads `select=user_id,week` — **no `team`, no
+`game_id`**, which is exactly why it is the one read in that file allowed to skip
+the reveal filter. Every entry gets a standings row; a week it names but may not
+read carries a teamless cell flagged `masked`, rendered as a lock. The distinction
+the table now draws is the one that was missing: 🔒 is "their pick is in", `·` is
+"they have not picked". `walk_entry()` grades a masked cell `pending` and stops
+there — the same place it stopped when the pick was absent entirely — so masking
+changes the **count** and never a **status**.
+
+The board endpoint takes the same read for the same reason, but only for
+`pool.entries`: `chips()` keys a name to a game by `game_id` and a masked pick has
+none, so it attaches to nothing. Naming the field is fine; naming which of sixteen
+games each of them took is not.
+
 **The property that makes this cheap:** an entry's fate turns only on weeks that
 have been played, and a played week has kicked off — so every pick that could
 change who is alive is one the request is already allowed to see. Hidden picks
 sit on games that have not started, which `walk_entry()` stops at regardless.
 The visible set is therefore not an approximation of the standings; it **is**
-the standings. Verified in the smoke test: an entry whose only pick is a hidden
-one simply does not appear yet.
+the standings. An entry whose only pick is a hidden one still appears — as a row
+with a masked cell and nothing survived — because who is in the pool was never
+the part under the lock.
 
 ## Schema
 
@@ -107,6 +130,8 @@ Pick 'Em, converted in `store._shape` and `store.save_pick` only.
 - **`api/_survivor/store.py`** — PostgREST access and `visibility_clause()`. It
   **imports** `api/_pickem/store.py` rather than restating it: "has this game
   kicked off?" has one implementation and both games consult it.
+  `load_visible_picks()` is the only path by which a team reaches a caller;
+  `load_entry_weeks()` names the field without reading one.
 - **`api/survivor.py`** — `GET` the week board, `PUT` one pick
   (`team: null` clears).
 - **`api/survivor-standings.py`** — `GET` the field. Its own file so its
@@ -143,9 +168,11 @@ Forging the header is competitively valuable here too, and no more so.
 
 1. **Schema** — run the SQL file; confirm the table, the PK, **both** indexes
    (`survivor_picks_team_idx` is the reuse rule) and RLS enabled-and-closed.
-2. **The walk** — the cases in the smoke test: a win chain, a loss, a tie, a
-   missed shut week, a late joiner, a pick made after elimination (renders
-   `void`, changes nothing), and an entry with no picks at all (not an entry).
+2. **The walk** — a win chain, a loss, a tie, a missed shut week, a late joiner,
+   a pick made after elimination (renders `void`, changes nothing), and an entry
+   with no picks at all (not an entry). Then the same set with a masked cell
+   appended: every status, `out_week` and `survived` must come back identical,
+   and `teams` must never contain a null.
 3. **Tie ≠ pending** — a 20–20 final eliminates; the same row with `status`
    still `'live'` does not.
 4. **Reuse** — picking a spent team → 400 naming the week it went in.
@@ -159,9 +186,10 @@ Forging the header is competitively valuable here too, and no more so.
    still 200 and the board renders read-only.
 8. **Isolation / reveal, the critical one** — as B pick a Sunday game, then as A
    `GET /api/survivor-standings`: the raw body contains none of B's
-   abbreviations for that week. Put that `kickoff` in the past in SQL: **only
-   that pick** appears. A's own hidden pick comes back flagged `hidden: true`
-   for A and is absent for B.
+   abbreviations for that week, but it **does** contain B's row, with that week
+   `masked: true` and `team: null`. Put that `kickoff` in the past in SQL: the
+   mask drops and the team appears. A's own hidden pick comes back flagged
+   `hidden: true` for A and `masked: true` for B — never the abbreviation.
 9. **Active gate** — `users.status = false`: `PUT` → 403, `GET` → 200.
 10. **Ownership** — a `PUT` naming a game B picked only ever writes under A's
     `user_id`.

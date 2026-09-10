@@ -380,6 +380,16 @@
 
 .sv-table td.sv-cell.is-empty { color: var(--text-5); }
 
+/* A pick that is in and not readable yet. Deliberately quiet — it is the one
+ * cell on the table carrying no information about the pick itself, and the only
+ * thing it has to do is not read as the empty dot beside it. Sized down because
+ * the glyph is a colour emoji and would otherwise out-shout the crests. */
+.sv-table td.sv-cell.is-masked {
+  font-size: 11px;
+  line-height: 26px;
+  opacity: 0.55;
+}
+
 /* Your own live pick, which nobody else can see yet. The dashed edge is the
  * page saying so — without it a player looking at their own row on Saturday
  * sees what everyone else sees, which is nothing, and wonders whether the save

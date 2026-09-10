@@ -19,6 +19,18 @@ The one exception is the requester's own row, which is read in full through
 store.load_my_picks(). You can always see what you picked; the cells that
 nobody else can see yet are flagged `hidden` so the page can say so.
 
+WHAT IS SECRET IS THE PICK, NOT THE PLAYER
+
+A pick is two facts -- that you picked, and what you picked -- and only the
+second is a secret worth keeping. The first cannot be kept anyway: the rules
+require a pick every week from everyone still alive, so the field is common
+knowledge from the moment the pool exists. Withholding it does not protect
+anybody, it just makes the page wrong about the size of the pool -- which is
+what it was, until store.load_entry_weeks() (`select=user_id,week`, no team, no
+game_id) started giving every entry a row. The weeks it names but may not read
+carry a teamless cell flagged `masked`, so the table can show that a pick is in
+without showing what it is.
+
 WHY THE FILTER COSTS THE STANDINGS NOTHING
 
 An entry's fate turns only on weeks that have been played, and a week that has
@@ -46,7 +58,7 @@ from _survivor import rules, store  # noqa: E402
 
 
 def build_standings(user_id, season, now):
-    """The whole payload. Three reads plus the roster, then the walk.
+    """The whole payload. Four reads plus the roster, then the walk.
 
     Shared with server.py's dev mirror so the two runtimes cannot disagree about
     who is still in the pool.
@@ -66,7 +78,9 @@ def build_standings(user_id, season, now):
 
     # The requester's own row, in full. `hidden` is what the page prints beside
     # a cell only they can see -- without it a player looking at their own live
-    # pick has no way to tell it is still secret.
+    # pick has no way to tell it is still secret. Read before the masking below
+    # so `hidden` is decided against what was actually revealed, not against a
+    # placeholder this function put there itself.
     hidden = set()
     if user_id in usernames:
         for week, pick in store.load_my_picks(user_id, season).items():
@@ -74,6 +88,27 @@ def build_standings(user_id, season, now):
             if week not in own:
                 hidden.add(week)
             own[week] = dict(pick, user_id=user_id)
+
+    # The rest of the field. Every entry gets a row even when nothing it has
+    # picked may be shown yet, because "who is in the pool" is not the secret --
+    # the secret is what they picked, and store.load_entry_weeks() reads the week
+    # numbers without reading the teams. A week with a pick nobody may read gets
+    # a teamless placeholder, flagged `masked` for the page and graded PENDING by
+    # the walk, which is where the walk would have stopped anyway.
+    #
+    # Before this the standings withheld the entry along with the pick, so week 1
+    # read as a one-entry pool to all seven of its players until the first
+    # kickoff that happened to be picked.
+    masked = {}
+    for uid, weeks in store.load_entry_weeks(season).items():
+        if uid not in usernames:
+            continue
+        own = by_user.setdefault(uid, {})
+        for week in weeks:
+            if week not in own:
+                masked.setdefault(uid, set()).add(week)
+                own[week] = {"week": week, "game_id": None, "team": None,
+                             "user_id": uid}
 
     rows = []
     for uid, picks in by_user.items():
@@ -89,7 +124,9 @@ def build_standings(user_id, season, now):
             "entered": state["entered"],
             "survived": state["survived"],
             "teams": state["teams"],
-            "weeks": {str(wk): dict(cell, hidden=(uid == user_id and wk in hidden))
+            "weeks": {str(wk): dict(cell,
+                                    hidden=(uid == user_id and wk in hidden),
+                                    masked=(wk in masked.get(uid, ())))
                       for wk, cell in state["weeks"].items()},
         })
     rules.rank_rows(rows)

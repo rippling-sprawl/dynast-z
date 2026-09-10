@@ -6,10 +6,19 @@ The whole of the game's rules is in this file:
   * A pick is graded against the spread as it stood at the Tuesday 3:00am ET
     freeze, not against the outright winner.
   * A correct pick scores its confidence value and a wrong pick loses it. A
-    push and an ungraded game score nothing either way: a push is a real
-    outcome that simply pays nobody, and an ungraded game has not happened yet.
+    push pays a flat PUSH_POINTS regardless of the confidence on it, and an
+    ungraded game scores nothing either way because it has not happened yet.
     Ranking is therefore a two-sided bet -- the confidence you put on a game is
     what you win on it and what you pay for it.
+
+    A push pays rather than refunds because the alternative punishes the only
+    player who did the work. The line refused to settle, so nobody read it
+    wrong; scoring 0 would make a pushed game identical to a game the player
+    never picked, and identical to a week they forgot entirely. The flat 2 is
+    small enough that it cannot be farmed -- you cannot aim for a push -- and
+    large enough that showing up beats not showing up. It is flat rather than
+    scaled by confidence for the same reason: a push is not evidence the
+    ranking was right, so it should not pay more for having been ranked high.
   * Within one week a player's confidences are distinct integers in 1..N, where
     N is how many games the week has a line for. A full week therefore uses
     exactly 1..N. A partial week uses any k of those values -- picking three
@@ -43,6 +52,12 @@ RESULTS = ("away", "home", "push")
 # a request-size guard rather than a rule -- rule 6 in validate_week_picks is
 # what actually constrains the confidences.
 MAX_PICKS = 20
+
+# What a push pays the player who picked it. Flat, and small on purpose -- see
+# the note at the top of this file. Changing this number changes past weeks
+# too: standings are scored from stored results on every request rather than
+# from a stored point total, so there is nothing to backfill.
+PUSH_POINTS = 2
 
 
 def grade(spread_home, away_score, home_score):
@@ -78,17 +93,22 @@ def winner_abbr(game):
 
 
 def points_for(pick_abbr, confidence, game):
-    """What one pick is worth: +confidence right, -confidence wrong, 0 for a
-    push and for ungraded.
+    """What one pick is worth: +confidence right, -confidence wrong,
+    +PUSH_POINTS for a push, 0 for ungraded.
 
     The penalty is symmetric with the reward on purpose. A pool that only ever
     adds makes a coin-flip pick free, so the optimal play is to rank every game
     and let the low numbers absorb the noise; making a miss cost what a hit
     pays is what turns the ranking into a statement of belief.
+
+    The push is the one asymmetry, and it is deliberate: it is the credit for
+    having a pick on the board at all.
     """
-    winner = winner_abbr(game)
-    if winner is None:
+    if game.get("result") is None:
         return 0
+    winner = winner_abbr(game)
+    if winner is None:                      # a push
+        return PUSH_POINTS
     return int(confidence) if pick_abbr == winner else -int(confidence)
 
 
@@ -99,14 +119,15 @@ def score_pick(pick_abbr, confidence, game):
 
     A push is `correct: False` rather than None: the game *is* graded, nobody
     got it, and counting it as pending would leave a finished week showing
-    outstanding games forever. It scores 0 rather than -confidence -- a push is
-    not a miss, it is a bet the line refused to settle.
+    outstanding games forever. It is `False` even though it pays PUSH_POINTS,
+    because `correct` is the standings tiebreaker and a push is not evidence
+    the pick was right -- the credit belongs in the points, not in the record.
     """
     winner = winner_abbr(game)
     if game.get("result") is None:
         return {"points": 0, "correct": None}
     if winner is None:                      # a push
-        return {"points": 0, "correct": False}
+        return {"points": PUSH_POINTS, "correct": False}
     hit = pick_abbr == winner
     return {"points": int(confidence) if hit else -int(confidence),
             "correct": hit}
@@ -117,7 +138,8 @@ def score_set(picks, games_by_id):
     (game_id, pick_abbr, confidence); `games_by_id` maps game_id -> game dict.
 
     -> {points, correct, picked, pending}. `points` is a net and can be
-    negative, since a wrong pick deducts its confidence. `pending` is how many
+    negative, since a wrong pick deducts its confidence. `correct` counts hits
+    only -- a push adds points without adding to it. `pending` is how many
     of those picks are still waiting on a verdict, which is what the pages
     print next to a total so a Sunday-afternoon leaderboard reads as
     provisional rather than final.

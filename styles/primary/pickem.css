@@ -484,10 +484,11 @@
 
 .pk-points.is-hit { background: var(--good-tint); color: var(--good); }
 .pk-points.is-miss { background: var(--bad-tint); color: var(--bad); }
-/* A push pays nobody and costs nobody, so it is neither green nor red — the
- * chip still appears, because "0" is a settled result and its absence would
- * read as a game still waiting. */
-.pk-points.is-push { background: var(--surface-2); color: var(--text-4); }
+/* A push pays a flat +2 and costs nobody, so it is not red — but it is not the
+ * green of a call that landed either, and printing it in the hit colour would
+ * overstate what happened. A muted positive: the same neutral chip, with the
+ * number at full text weight so a "+2" does not read as disabled. */
+.pk-points.is-push { background: var(--surface-2); color: var(--text-2); }
 
 /* Another player's pick on a game that has kicked off. These only ever exist
  * for locked games — the server does not send the others — so there is no
