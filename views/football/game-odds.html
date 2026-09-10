@@ -516,18 +516,65 @@
         ' key and this section fills in.</div>';
     }
 
+    /* ---------- collapsing ----------
+     *
+     * Every board on the page folds away, because the page is long and which
+     * half of it matters depends entirely on when you open it: a play log is
+     * the whole story an hour after the game and noise the day before. Three
+     * start folded -- the two longest boards and the one nobody reads twice --
+     * so the page opens on the odds and the score rather than on a scrollbar.
+     *
+     * State lives here rather than in the DOM because the DOM does not survive:
+     * a poll replaces the page wholesale every couple of minutes, and a section
+     * the reader opened must not close itself under them. Keyed by title, which
+     * is what a card has instead of an id. */
+    var CARD_CLOSED = { 'Play log': 1, 'Player props': 1, 'Injury report': 1 };
+    var cardOpen = {};
+
+    function cardIsOpen(title) {
+      if (!(title in cardOpen)) cardOpen[title] = !CARD_CLOSED[title];
+      return cardOpen[title];
+    }
+
     /* `head` is markup dropped in the card head beside the title rather than
      * appended to the body: a control that switches the whole card belongs on
      * the same line as the card's name, not on a strip the reader has to take
      * as a first row of content. Escaped titles, raw head -- the only caller
-     * passing one builds it here. */
+     * passing one builds it here.
+     *
+     * The collapse control sits at the far right of that band, after whatever
+     * head the caller brought, so its position is the same on every card
+     * whether or not the card has controls of its own. */
     function card(title, body, flush, head) {
-      return '<section class="go-card">' +
+      var open = cardIsOpen(title);
+      return '<section class="go-card' + (open ? '' : ' is-collapsed') + '">' +
         '<div class="go-card-head"><h3>' + esc(title) + '</h3>' +
-        (head || '') + '</div>' +
+        '<div class="go-card-tools">' + (head || '') +
+          '<button type="button" class="go-card-toggle" data-card="' +
+            esc(title) + '" aria-expanded="' + (open ? 'true' : 'false') + '">' +
+            '<span>' + (open ? 'Collapse' : 'Expand') + '</span>' +
+            '<span class="go-card-caret" aria-hidden="true"></span>' +
+          '</button>' +
+        '</div></div>' +
         '<div class="go-card-body' + (flush ? ' is-flush' : '') + '">' +
         body + '</div></section>';
     }
+
+    /* Delegated off the page rather than bound per card, for the same reason
+     * the state is not kept in the DOM: every poll throws the buttons away and
+     * builds new ones, and a listener on the container outlives that. */
+    pageEl.addEventListener('click', function (e) {
+      var btn = e.target.closest ? e.target.closest('.go-card-toggle') : null;
+      if (!btn || !pageEl.contains(btn)) return;
+      var title = btn.getAttribute('data-card');
+      var open = !cardIsOpen(title);
+      cardOpen[title] = open;
+      var sec = btn.closest('.go-card');
+      if (sec) sec.classList.toggle('is-collapsed', !open);
+      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      var label = btn.querySelector('span');
+      if (label) label.textContent = open ? 'Collapse' : 'Expand';
+    });
 
     /* The chip is the whole status line now. Before kickoff that is the
      * kickoff itself -- the only fact a scheduled game has -- and afterwards it
@@ -715,6 +762,107 @@
       return ['player'].concat(Object.keys(STAT_ABBR[grp] || {}));
     }
 
+    /* ---------- box score ----------
+     *
+     * Three views over the same rows, one per side of the ball, because that
+     * is how a box score is read: nobody comparing the two quarterbacks wants
+     * a punter's line sitting between them. The eight groups the feed sends
+     * divide cleanly into offence, defence and the kicking game, and `fumbles`
+     * goes with the offence — it is where a box score has always put it, and
+     * three of its four fields are charged to the player who lost the ball.
+     *
+     * Within a view the split is by stat group first and team second, not the
+     * other way round. Split by team first, the two passing tables end up half
+     * a page apart with rushing, receiving and fumbles wedged between them,
+     * which breaks the one comparison a passing table exists to make. Under a
+     * single Passing heading both teams' passers sit one above the other. */
+    var BS_VIEWS = [
+      { key: 'offense', text: 'Offense',
+        groups: ['passing', 'rushing', 'receiving', 'fumbles'] },
+      { key: 'defense', text: 'Defense', groups: ['defense'] },
+      { key: 'special', text: 'Special teams',
+        groups: ['kicking', 'returns', 'punting'] }
+    ];
+
+    /* Which view is showing survives the poll that replaces the page, for the
+     * same reason the props view and the open/shut state of every card do. */
+    var bsView = 'offense';
+
+    function bsViewFor(key) {
+      for (var i = 0; i < BS_VIEWS.length; i++) {
+        if (BS_VIEWS[i].key === key) return BS_VIEWS[i];
+      }
+      return BS_VIEWS[0];
+    }
+
+    /* What a table is ranked by, per group: the stat the group is read for.
+     * Yards on the three offensive tables, tackles on defence — put the man
+     * who did the most at the top, which is what a reader scanning a box score
+     * is looking for and is not what the feed's own order gives.
+     *
+     * The groups left out are not ranked: `fumbles` has no yardage of its own,
+     * and the kicking-game tables are short enough that feed order costs
+     * nothing to read past. */
+    var BS_SORT = {
+      passing: 'passing_yards',
+      rushing: 'rushing_yards',
+      receiving: 'receiving_yards',
+      defense: 'total_tackles'
+    };
+
+    /* One side's players for one group, flattened to what genericTable wants:
+     * the name, then the group's own fields with the nesting dropped. A player
+     * with no entry for the group never played that role and is left out.
+     *
+     * Descending on the group's own stat, with a missing or non-numeric value
+     * sorting last rather than as a zero — it is "not recorded", and the sort
+     * is stable, so anything tied keeps the order the feed sent it in. */
+    function bsRows(rows, grp) {
+      var out = rows.filter(function (r) { return r[grp]; }).map(function (r) {
+        var o = { player: initialName((r.player || {}).first_name,
+          (r.player || {}).last_name) || (r.player || {}).id };
+        Object.keys(r[grp]).forEach(function (k) { o[k] = r[grp][k]; });
+        return o;
+      });
+      var by = BS_SORT[grp];
+      if (!by) return out;
+      return out.sort(function (a, c) {
+        var av = Number(a[by]), cv = Number(c[by]);
+        var an = isFinite(av), cn = isFinite(cv);
+        if (an !== cn) return an ? -1 : 1;
+        if (!an) return 0;
+        return cv - av;
+      });
+    }
+
+    function boxscoreBody(b, key) {
+      var ps = b.player_stats || {};
+      var view = bsViewFor(key);
+      var html = '';
+      view.groups.forEach(function (grp) {
+        var tables = '';
+        ['away', 'home'].forEach(function (side) {
+          var flat = bsRows(ps[side] || [], grp);
+          if (!flat.length) return;
+          tables += '<h5 class="go-bs-team">' +
+            teamLogo(b.game[side].abbr, 'go-bs-logo') +
+            esc(b.game[side].name) + '</h5>' +
+            genericTable(flat, groupLabel(grp), groupOrder(grp));
+        });
+        /* A group nobody recorded a stat in is left out rather than shown
+         * empty: a game with no interceptions has no returns table, and a
+         * heading over nothing reads as a load that failed. */
+        if (!tables) return;
+        /* Defense is one group in a view of the same name, so its heading
+         * would repeat the pressed chip immediately above it. A view that
+         * holds one group is already named by the chip. */
+        html += (view.groups.length > 1
+          ? '<h4 class="go-bs-grp">' + esc(label(grp)) + '</h4>' : '') + tables;
+      });
+      return html || '<div class="go-empty">No ' +
+        esc(view.text.toLowerCase()) + ' stats in this box score yet.</div>';
+    }
+
     function playerStatsSection(b) {
       var ps = b.player_stats || {};
       var total = ['away', 'home'].reduce(function (n, s) {
@@ -725,27 +873,45 @@
           ? card('Box score', emptyState(b, ['/stats'], 'player stats'), true)
           : '';
       }
-      var groups = ['passing', 'rushing', 'receiving', 'fumbles', 'defense',
-                    'kicking', 'returns', 'punting'];
-      var html = '';
-      ['away', 'home'].forEach(function (side) {
-        var rows = ps[side] || [];
-        if (!rows.length) return;
-        html += '<h4 class="go-bs-team">' + esc(b.game[side].name) + '</h4>';
-        groups.forEach(function (grp) {
-          var withGrp = rows.filter(function (r) { return r[grp]; });
-          if (!withGrp.length) return;
-          var flat = withGrp.map(function (r) {
-            var o = { player: initialName((r.player || {}).first_name,
-              (r.player || {}).last_name) || (r.player || {}).id };
-            Object.keys(r[grp]).forEach(function (k) { o[k] = r[grp][k]; });
-            return o;
-          });
-          html += '<div class="go-sub go-bs-grp">' + esc(label(grp)) + '</div>' +
-            genericTable(flat, groupLabel(grp), groupOrder(grp));
-        });
+      /* All three chips always, whether or not the view behind them has rows
+       * yet, for the reason the quarter filters are always four: a game where
+       * nobody has kicked reads as "not yet" from an empty Special teams, and
+       * as a missing feature from a chip that is not there. */
+      var seg = BS_VIEWS.map(function (v) {
+        return '<button type="button" data-bs-view="' + esc(v.key) + '"' +
+          ' aria-pressed="' + (v.key === bsView ? 'true' : 'false') + '">' +
+          esc(v.text) + '</button>';
+      }).join('');
+      return card('Box score',
+        '<div class="go-seg" id="bs-views" role="group"' +
+          ' aria-label="Box score view">' + seg + '</div>' +
+        '<div class="go-bs-body" id="bs-body"></div>', true);
+    }
+
+    /* Wired after every render for the same reason wirePlays is: a poll
+     * replaces the section wholesale and takes its listeners with it. */
+    function wireBoxscore(b) {
+      var segEl = document.getElementById('bs-views');
+      var bodyEl = document.getElementById('bs-body');
+      if (!segEl || !bodyEl) return;
+
+      function draw(key) {
+        bsView = key;
+        bodyEl.innerHTML = boxscoreBody(b, key);
+      }
+
+      segEl.addEventListener('click', function (e) {
+        var btn = e.target && e.target.getAttribute &&
+          e.target.getAttribute('data-bs-view') !== null ? e.target : null;
+        if (!btn) return;
+        var buttons = segEl.querySelectorAll('[data-bs-view]');
+        for (var i = 0; i < buttons.length; i++) {
+          buttons[i].setAttribute('aria-pressed',
+            buttons[i] === btn ? 'true' : 'false');
+        }
+        draw(btn.getAttribute('data-bs-view'));
       });
-      return card('Box score', html);
+      draw(bsView);
     }
 
     /* Overtime is period 5 and up, so it was rendering as "Q5" -- not a
@@ -2174,27 +2340,6 @@
       return card('Injury report', injuryTable(groups));
     }
 
-    /* Sibling games. This listed every captured game when there were four of
-     * them; backfilling 2025 turned that into a 278-chip wall on every page,
-     * and trimming it to the game's own slate only moved the problem — a
-     * capped, re-sorted list of sixteen still spends the bottom of a page
-     * about one game on fifteen others, and still has to explain what it left
-     * out. The whole set has a page of its own now, so what stays here is the
-     * door to it: one line, one link, and the count that says how much is
-     * behind it. */
-    function othersSection(index, currentId) {
-      var games = (index && index.games) || {};
-      var n = Object.keys(games).filter(function (id) {
-        return id !== String(currentId);
-      }).length;
-      if (!n) return '';
-      return card('Other captured games',
-        '<div class="go-empty">' +
-          '<a href="/football/schedule/archive">Browse the capture archive</a>' +
-          ' — ' + n + ' other game' + (n === 1 ? '' : 's') +
-          ' captured, listed by season and week.</div>', true);
-    }
-
     function provenance(b) {
       var n = (b.unavailable || []).length;
       // Say so when the capture is not everything on offer. A prop board that
@@ -2341,22 +2486,26 @@
       }
 
       pageEl.innerHTML = card(head, '<div class="go-empty">' + body + '</div>', true) +
-        (known ? othersSection(index, id) : '') +
         '<p class="go-prov">Every row on <a href="/football/schedule">the schedule</a> ' +
         'links here. ' + known + ' game' + (known === 1 ? '' : 's') +
         ' published so far, swept by <code>scripts/bdl_refresh.py</code>.</p>';
     }
 
-    function render(b, index) {
+    function render(b) {
       var g = b.game;
       crumbEl.textContent = g.away.abbr + ' @ ' + g.home.abbr;
       document.title = g.away.abbr + ' @ ' + g.home.abbr + ' | Dynast-Z';
       /* Before kickoff the prop board is the page: there is no box score and
        * no play log, and the lines are the only thing that has moved all week.
        * Once the game is under way that inverts -- what happened outranks what
-       * it was priced at -- so the board drops below the play log rather than
+       * it was priced at -- so the board drops below the box score rather than
        * sitting between the odds and the game itself. Built once either way;
-       * only its position in the string changes. */
+       * only its position in the string changes.
+       *
+       * The play log is last whatever the phase: it is the longest thing on the
+       * page by an order of magnitude, and it folds away by default, so putting
+       * it anywhere else leaves a shut door in the middle of the boards that
+       * are open. */
       var props = propsSection(b);
       var pregame = b.phase === 'pregame';
       pageEl.innerHTML =
@@ -2365,11 +2514,11 @@
         (pregame ? props : '') +
         playerStatsSection(b) +
         teamStatsSection(b) +
-        playsSection(b) +
         (pregame ? '' : props) +
         (injuriesApply(b) ? injuriesSection(b) : '') +
-        othersSection(index, g.id);
+        playsSection(b);
       wireProps(b);
+      wireBoxscore(b);
       wirePlays(b);
     }
 
@@ -2533,7 +2682,7 @@
        * on the body rather than in the table, so it would be left pointing at
        * a row that no longer exists. A poll that lands mid-read closes it. */
       closePop();
-      if (b) render(b, currentIndex);
+      if (b) render(b);
       else if (!id) renderMissing('', currentIndex, null);
       schedulePoll(id, b);
       // After scheduling, not before: the line quotes the timer just armed.

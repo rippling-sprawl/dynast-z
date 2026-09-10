@@ -254,25 +254,18 @@ html {
   color: var(--vi-band-ink);
 }
 
-/* Small labels inside a card body -- a stat group in the box score, Current
- * vs Opening on the odds grid. The card head carries no note of its own.
- *
- * The display face, but not uppercased: the same element also carries the sentence
- * under the props filters explaining what a consensus price is, and a sentence
- * in caps is a sign, not a note. */
-.go-sub {
-  font-size: 13px;
-  color: var(--text-4);
-  font-family: var(--vi-display);
-  letter-spacing: 0.4px;
-}
-
 /* The box score's two levels of heading. Both were smaller than the rows they
  * introduced, which read as a caption under the table above rather than a
  * label over the one below. They step down instead: the card head names the
- * board, the team is the next thing down from it, the stat group the next, and
- * the column heads -- 12px -- the floor. */
-.go-bs-team {
+ * board, the stat group is the next thing down from it, the team the next, and
+ * the column heads -- 12px -- the floor.
+ *
+ * The group takes the outer level and the team the inner because that is the
+ * order the tables are nested in: one Passing heading over both sides' passers
+ * rather than one heading per team over all eight of its groups. */
+.go-bs-body { padding-bottom: 14px; }
+
+.go-bs-grp {
   margin: 18px 14px 6px;
   font-family: var(--vi-display);
   font-size: 15px;
@@ -282,16 +275,95 @@ html {
   color: var(--text);
 }
 
-.go-bs-team:first-child { margin-top: 2px; }
+.go-bs-grp:first-child { margin-top: 12px; }
 
-.go-bs-grp {
+/* The crest carries the team, so the name beside it can drop to the weight of
+ * a caption without becoming hard to place -- and at this level it is read as
+ * "whose rows are these", not as a heading in its own right. */
+.go-bs-team {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   margin: 12px 14px 4px;
   font-size: 13.5px;
+  font-weight: 600;
   color: var(--text-3);
 }
 
+.go-bs-logo { width: 16px; height: 16px; flex: none; }
+
+/* Everything the head carries besides the title, pushed to the far end by the
+ * head's own space-between. The collapse control is always the last child, so
+ * it lands in the same place on a card with controls of its own (the prop
+ * board's two view buttons) as on one without. Centred rather than baseline-
+ * aligned for the same reason .go-seg-head is: these are buttons, and a button
+ * with an icon in it has no useful baseline. */
+.go-card-tools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  align-self: center;
+  flex: none;
+}
+
+/* Outlined against the navy, like the icon buttons that sit beside it, and
+ * lettered in the display face so it reads as part of the band rather than as
+ * a widget dropped on top of one. */
+.go-card-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  border-radius: 2px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: transparent;
+  color: var(--vi-band-ink-2);
+  font-family: var(--vi-display);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+.go-card-toggle:hover {
+  border-color: var(--vi-gold);
+  color: var(--vi-band-ink);
+}
+
+/* A chevron drawn from two borders rather than an SVG: it is the only glyph
+ * here, it inherits the button's colour for free, and it turns with a
+ * transform when the card shuts. It points the way the card is about to move:
+ * up on an open card, which is where the body goes when it folds, and down on
+ * a shut one. The translate on each is the optical nudge a rotated square
+ * needs -- its ink sits high in its own box one way round and low the other. */
+.go-card-caret {
+  width: 6px;
+  height: 6px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: translateY(1px) rotate(-135deg);
+  transition: transform 0.15s ease;
+}
+
+.go-card.is-collapsed .go-card-caret { transform: translateY(-2px) rotate(45deg); }
+
+/* A shut card keeps only its own control. The prop board's view switches ride
+ * in the same band, and left showing they are two buttons that change a table
+ * nobody can see. */
+.go-card.is-collapsed .go-card-tools > :not(.go-card-toggle) { display: none; }
+
 .go-card-body { padding: 14px 0px; }
 .go-card-body.is-flush { padding: 0; }
+
+/* Shut, not merely short: the body is removed from layout so a folded card is
+ * its band and nothing else, and so nothing inside it -- a wide prop table's
+ * scroller, a focusable button -- is reachable while it is closed. */
+.go-card.is-collapsed .go-card-body { display: none; }
+
+/* The band is the whole card when it is folded, so it keeps no rule under it. */
+.go-card.is-collapsed .go-card-head { border-bottom-width: 0; }
 
 /* --- The empty state ----------------------------------------------------- */
 
@@ -960,12 +1032,12 @@ html {
 .go-play.is-scoring { background: var(--good-tint); }
 .go-play.is-scoring .go-ptext { color: var(--text); font-weight: 600; }
 
-/* --- Other games --------------------------------------------------------- */
+/* --- Empty states -------------------------------------------------------- */
 
-/* Links inside an empty-state body: the archive door under "Other captured
- * games", and the schedule link the not-captured-yet card carries. The chip
- * grid that used to live here went with the wall of sibling games it styled —
- * the whole set is at /football/schedule/archive now. */
+/* Links inside an empty-state body: the schedule link the not-captured-yet
+ * card carries. The chip grid that used to live here went with the wall of
+ * sibling games it styled, and the one-line door that replaced it has gone
+ * too — the whole set is at /football/schedule/archive now. */
 .go-empty a { color: var(--accent); text-decoration: none; font-weight: 600; }
 .go-empty a:hover { text-decoration: underline; }
 

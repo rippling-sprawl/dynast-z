@@ -47,6 +47,7 @@ Usage:
 import argparse
 import json
 import os
+import re
 import sys
 import time
 import urllib.error
@@ -114,6 +115,36 @@ def load_schedule(season):
     return out
 
 
+_TS_FRAC = re.compile(r"\.(\d+)")
+
+
+def parse_pg_ts(stamp):
+    """A PostgREST timestamp as an epoch float, or None if it is unreadable.
+
+    Postgres renders microseconds with trailing zeros trimmed, so a stamp comes
+    back as '02:02:34.60746+00:00' -- five fractional digits -- about one time
+    in ten. datetime.fromisoformat before Python 3.11 accepts three digits or
+    six and rejects everything between, so those stamps used to parse as None.
+    That was not a cosmetic loss: plan_sweep() treats a game with no timestamp
+    as due-but-never-waiting, which empties `waiting`, which drops the --loop
+    sleep to max_sleep. A live game on a 30-second cadence quietly slept ten
+    minutes instead, and describe() called an already-captured game "never
+    captured".
+
+    Padding the fraction to six digits is the whole fix, and it is done here
+    rather than at the call site so every reader of the column gets it."""
+    if not stamp:
+        return None
+    s = str(stamp).replace("Z", "+00:00")
+    m = _TS_FRAC.search(s)
+    if m:
+        s = s[:m.start()] + "." + (m.group(1) + "000000")[:6] + s[m.end():]
+    try:
+        return datetime.fromisoformat(s).timestamp()
+    except ValueError:
+        return None
+
+
 def load_stored():
     """-> {game_id: {"phase", "updated_ts", "has"}} from Supabase.
 
@@ -143,15 +174,7 @@ def load_stored():
 
     out = {}
     for r in rows:
-        ts = None
-        stamp = r.get("updated_at")
-        if stamp:
-            # PostgREST hands back microseconds and a +00:00 offset; both are
-            # fine for fromisoformat, a trailing Z is not.
-            try:
-                ts = datetime.fromisoformat(stamp.replace("Z", "+00:00")).timestamp()
-            except ValueError:
-                ts = None
+        ts = parse_pg_ts(r.get("updated_at"))
         out[str(r["game_id"])] = {"phase": r.get("phase"), "updated_ts": ts,
                                   "has": r.get("has") or {}}
     return out
@@ -213,7 +236,12 @@ def plan_sweep(schedule, stored, now, backfill=False, always=()):
 def describe(g, plan, st, now):
     tag = f"{g['away']}@{g['home']}"
     age = f"{since(st['updated_ts'], now)} old" if st and st.get("updated_ts") else "never captured"
-    every = f"every {plan['interval_s'] // 60:>3}m" if plan["interval_s"] else "one-off   "
+    if not plan["interval_s"]:
+        every = "one-off   "
+    elif plan["interval_s"] < 60:                # live is 30s -- "every 0m" lied
+        every = f"every {plan['interval_s']:>3}s"
+    else:
+        every = f"every {plan['interval_s'] // 60:>3}m"
     return (f"  {g['id']:>9}  {tag:<9} wk{str(g['week'] or '-'):<3} "
             f"{plan['policy']:<9} {every}  {age}")
 
@@ -374,7 +402,7 @@ def sweep(args, mode, books):
     if args.dry_run:
         for g, plan, st in waiting[:5]:
             print(f"  next: {g['away']}@{g['home']} at {iso(plan['next_ts'])}")
-        return 0, waiting
+        return 0, waiting, []
 
     done = 0
     for g, plan, st in capped:
@@ -382,11 +410,12 @@ def sweep(args, mode, books):
             done += 1
     print(f"  {done}/{len(capped)} captured")
 
+    still_due = []
     if capped:
         # Recompute so a --loop sleep is based on what this sweep just wrote,
         # not on what was stored before it ran.
-        _, waiting, _ = plan_sweep(schedule, load_stored(), time.time())
-    return done, waiting
+        still_due, waiting, _ = plan_sweep(schedule, load_stored(), time.time())
+    return done, waiting, still_due
 
 
 def main():
@@ -455,14 +484,23 @@ def main():
 
     while True:
         try:
-            _, waiting = sweep(args, mode, books)
+            _, waiting, still_due = sweep(args, mode, books)
         except bdl.AuthError as e:
             print(f"\n{e}", file=sys.stderr)
             return 1
         except KeyboardInterrupt:
             print("\nstopped")
             return 0
-        nxt = waiting[0][1]["next_ts"] if waiting else time.time() + args.max_sleep
+        if still_due:
+            # The recompute says something is due right now, so the next sweep
+            # is not max_sleep away. Without this the loop drops to ten minutes
+            # any time a game lands in `due` rather than `waiting` -- which is
+            # what an unreadable timestamp used to cause, and what any future
+            # gap in the stored state would cause again.
+            nxt = time.time()
+        else:
+            nxt = (waiting[0][1]["next_ts"] if waiting
+                   else time.time() + args.max_sleep)
         # Floored at 30s so a clock skew or an off-by-one cannot spin.
         nap = max(30, min(args.max_sleep, nxt - time.time()))
         print(f"  sleeping {int(nap)}s")
