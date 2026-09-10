@@ -23,6 +23,17 @@
 
 @import url('/styles/base/vegasinsider.css');
 
+/* No pull-to-refresh on this page. The gesture reloads the whole document —
+ * a megabyte of bundle, the nav, the skin — to reproduce a poll the page makes
+ * on its own every minute, and it fires by accident on the way to the top of a
+ * long props board. The freshness line under the phase chip is the refresh UI
+ * instead: it counts down to the next check, so there is nothing left for a
+ * pull to tell you. Set on <html> because that is the scroller the browser
+ * takes the overscroll from; this sheet loads on the Games routes only. */
+html {
+  overscroll-behavior-y: contain;
+}
+
 .go-wrap { max-width: 1000px; }
 
 /* --- Hero ---------------------------------------------------------------- */
@@ -155,6 +166,11 @@
   cursor: help;
 }
 
+/* The span is emitted empty and filled by the ticker. A bundle with no
+ * fetched_at and nothing scheduled leaves it empty for good, and an empty span
+ * should not spend the column's 3px gap. */
+.go-fresh:empty { display: none; }
+
 /* The empty state's own header. Smaller than the hero on purpose: there is no
  * game here yet, and a full-size matchup would promise one. */
 .go-miss-head {
@@ -209,7 +225,10 @@
   border-radius: 2px;
   background: var(--surface);
   margin-bottom: 14px;
-  overflow: hidden;
+  /* Visible, not hidden: a board is laid out in full and a wide one runs past
+   * the card rather than being cut off at its edge. The 2px radius the clip
+   * was rounding is not worth a hidden column. */
+  overflow: visible;
 }
 
 /* The band. Every board on VegasInsider is headed by one: navy, ruled in gold
@@ -315,12 +334,12 @@
  * of keys across the rows, in a scrolling table. It is plain, it cannot be
  * wrong, and it is the fastest way to see what the shape really is. */
 
-/* The tables scroll in their own box rather than with the page: a sticky
- * header sticks to its nearest scrollport, and .go-scroll is already one for
- * the horizontal axis, so pinning the head to the viewport is not available
- * to it. Capped instead — a long board scrolls under its own header, and a
- * short one is unaffected because max-height only bites when it is exceeded. */
-.go-scroll { overflow: auto; max-height: 70vh; }
+/* No board scrolls in its own box. A table is read whole — capping one and
+ * letting it scroll under its own header hides rows behind an edge that looks
+ * like the end of the board, and a horizontal scrollport clips a wide row at
+ * the card edge with no sign there is more of it. Every row and every column
+ * is laid out in full and the page carries whatever it comes to. */
+.go-scroll { overflow: visible; max-height: none; }
 
 .go-table {
   width: 100%;
@@ -342,19 +361,17 @@
   border-bottom: 1px solid var(--hairline);
 }
 
-/* The head sticks as a whole rather than row by row. Per-row offsets have to
- * name the height of the row above them, and on the grouped head that row is
- * half of a rowspan'd Player cell and lands on a fraction — the half pixel it
- * misses by is a slot for the table to show through. One sticky element has no
- * seam to leak through. */
+/* The head rides with its table. It was sticky against .go-scroll's scrollport;
+ * with no scrollport left it would pin to the viewport instead and sit under
+ * the page's own sticky header, which is opaque — a column head hidden behind
+ * the site bar is worse than one scrolled past.
+ *
+ * Backed all the same. Cell boxes on the two-row head meet on a half pixel,
+ * and the hairline of tbody that shows through that seam is a row of clipped
+ * digits sitting inside the header. The thead's own background is one unbroken
+ * box behind all of them. */
 .go-table thead {
-  position: sticky;
-  top: 0;
-  z-index: 2;
-  /* Backed as well as sticky. Cell boxes on the two-row head meet on a half
-   * pixel, and the hairline of tbody that shows through that seam is a row of
-   * clipped digits sitting inside the header. The thead's own background is
-   * one unbroken box behind all of them. */
+  position: static;
   background: var(--vi-navy);
 }
 
@@ -379,51 +396,37 @@
 .go-table td.is-num { text-align: right; }
 .go-table td.is-null { color: var(--text-5); }
 
-/* --- Pinned first column -------------------------------------------------
- * The injury report scrolls sideways, because a comment can run to a sentence,
- * and it is read by finding a player's row and then tracking across it. Scroll
- * the name off the left edge and the row loses the only thing that identifies
- * it, so the first column stays put.
- *
- * The cells need their own opaque backgrounds: sticky cells paint over the row
- * they are scrolling past, and a transparent one would drag the zebra stripe
- * of whatever is underneath along with it. Header sits at z-index 2 so the
- * pinned body cells slide under it on vertical scroll; its own first cell is
- * pinned in both directions and has to outrank both. */
+/* --- Leading column ------------------------------------------------------
+ * The name column used to pin itself to the left edge while the rest of the
+ * row scrolled past it inside .go-scroll. There is no sideways scrollport to
+ * pin against now, and a sticky column with the *page* as its scrollport would
+ * slide over its own row's cells the moment the page moved. So it sits still
+ * like every other cell and keeps only what it was worth on its own: the rule
+ * separating the name from the numbers, and the opaque backgrounds that keep
+ * the stripe unbroken across it. */
 
 .go-pinned tbody td:first-child {
-  position: sticky;
-  left: 0;
-  z-index: 1;
   background: var(--surface);
   border-right: 1px solid var(--border);
 }
 
 .go-pinned tbody tr:nth-child(even) td:first-child { background: var(--zebra); }
 
-/* First row only, so a two-row head can never pin its second row's leading
- * cell to the left edge on top of the heading above it. */
 .go-pinned thead tr:first-child th:first-child {
-  position: sticky;
-  left: 0;
-  z-index: 3;
   border-right: 1px solid var(--border);
 }
 
 /* Free text, unlike every other cell on the page. It is the only column
- * allowed to wrap — capped so a long note stacks into a paragraph inside the
- * row instead of stretching the table off the side of the viewport.
+ * allowed to wrap — a long note stacks into a paragraph inside the row instead
+ * of running the table off the side of the page.
  *
- * The cap was doing nothing on its own. Every other column is monospace and
- * set not to wrap, so they take their content width and this one takes what is
- * left; a max-width only bites when a column is trying to grow past it, and a
- * column shrinking to fit never is. The floor is what widens it: the table is
- * allowed to outgrow the card and .go-scroll carries the overflow, which is
- * the arrangement the pinned first column was already built for. Held under
- * two thirds of the viewport so the floor never becomes the reason a phone
- * scrolls sideways. */
+ * No floor under it any more. The floor existed to widen the column past the
+ * card while .go-scroll carried the overflow; with the board laid out in full
+ * that floor is just a demand for width the page has to find somewhere, and a
+ * wrapping column has no need of it — it takes what the fixed columns leave
+ * and stacks. The cap stays so the note never runs to a single long line on a
+ * wide screen. */
 .go-table th.go-note, .go-table td.go-note {
-  min-width: min(62vw, 560px);
   max-width: 820px;
   white-space: normal;
 }
@@ -716,7 +719,7 @@
   max-width: 420px;
   border: 1px solid var(--border);
   border-radius: 2px;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .go-odds th, .go-odds td { padding: 6px 10px; }
@@ -888,7 +891,12 @@
 
 .go-seg-head .go-icobtn:disabled { opacity: 0.35; cursor: default; }
 
-.go-plays { max-height: 520px; overflow-y: auto; }
+/* The play log is a table in everything but its markup — a header row of
+ * filters over rows of fixed columns — so it is laid out whole like the rest
+ * of them. A box 520px tall showed about a dozen plays of a couple of hundred
+ * and put the rest behind an inner scrollbar; the drive filters above are the
+ * way to cut it down, not a window onto it. */
+.go-plays { max-height: none; overflow: visible; }
 
 .go-play {
   display: grid;

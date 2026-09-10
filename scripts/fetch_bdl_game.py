@@ -682,15 +682,23 @@ def verify(bundle, spec):
         # never written and the page serves its last pregame capture for the
         # whole game.
         #
-        # Three of the final-game checks below are false mid-game by
-        # construction. balldontlie fills a quarter column only once that
-        # quarter has ended, so q1..q4 are null throughout the first quarter
-        # and q() reads every one of them as 0 -- the quarter-line sum is 0
-        # against a real score from the first touchdown onward. The play log
-        # and the box score are still filling for the same reason, so "fewer
-        # than a full game's worth" is the normal state here rather than a
-        # fault. What does hold mid-game is that a live game has a score, and
-        # that the play log never runs *ahead* of the score the game reports.
+        # What actually fails mid-game, measured on NE@SEA week 1 2026 rather
+        # than assumed: the two count thresholds, and only those. At 7-0 in
+        # the second quarter the game had 51 plays against the >=100 the final
+        # branch demands, which is the check that blocks publication for most
+        # of a game. The >=30 player-stat threshold fails too, but only in the
+        # opening minutes -- 4 lines at kickoff, 45 by the second quarter.
+        #
+        # The other two final-branch checks were verified to hold live and are
+        # therefore NOT the reason this branch exists. balldontlie populates
+        # the quarter columns as the game runs (q1=0, q2=7 the moment the
+        # first touchdown landed), so the quarter-line sum tracks the score
+        # mid-game; and the play log's running max matched the reported score
+        # on every sample. Kept here anyway, because both are cheap and a live
+        # feed that contradicts itself is worth refusing -- but the play-log
+        # comparison is relaxed to "never ahead of the score" rather than
+        # equality, since /games and /plays are read moments apart and the log
+        # may legitimately trail by a possession.
         sc = g["score"]
         if sc is None or sc["away"] is None or sc["home"] is None:
             print("ERROR: a live game has a null score", file=sys.stderr)

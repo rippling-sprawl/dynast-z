@@ -404,25 +404,29 @@
       } catch (e) { return String(iso); }
     }
 
+    /* A countdown ticks, so it needs finer resolution than gap() near zero:
+     * "next in 12s" is the page saying it is about to act, where gap()'s "next
+     * in 0m" reads as broken. Coarse again above two minutes — a pregame bundle
+     * six hours from its next capture has nothing worth counting down. */
+    function untilText(secs) {
+      var s = Math.max(0, Math.round(secs));
+      return s < 120 ? s + 's' : gap(s);
+    }
+
     /* Rendered next to the phase chip, because "final" and "captured four
      * months ago" are two different facts and only one of them was on the page.
-     * A bundle written before refresh_plan existed has no `refresh` block, so
-     * the age stands on its own rather than the whole line disappearing. */
+     *
+     * Emitted empty and filled by freshTick() below, on a one-second ticker.
+     * The line is the only refresh control this page has — there is no button
+     * and no pull gesture — so it has to be true continuously rather than true
+     * at the instant of the last repaint. Its "next in" is the client's own
+     * timer, not the sweep's `refresh.next_ts`: those two agree in the ordinary
+     * case, but the floors and the retries below are the page's own decisions
+     * and the countdown has to name the one that will actually fire. */
     function freshness(b) {
-      var now = Date.now() / 1000;
-      var at = stamp(b.fetched_at);
       var r = b.refresh || null;
-      var bits = [];
-      if (at !== null) bits.push('updated ' + gap(now - at) + ' ago');
-      if (r && r.frozen) bits.push('no longer updating');
-      else if (r && r.next_ts) {
-        bits.push(now >= r.next_ts ? 'next due now'
-                                   : 'next in ' + gap(r.next_ts - now));
-      }
-      if (!bits.length) return '';
       return '<span class="go-fresh"' +
-        (r && r.note ? ' title="' + esc(r.note) + '"' : '') + '>' +
-        esc(bits.join(' \u00b7 ')) + '</span>';
+        (r && r.note ? ' title="' + esc(r.note) + '"' : '') + '></span>';
     }
 
     /* ---------- generic table ----------
@@ -2387,6 +2391,8 @@
     var currentIndex = null;
     var timer = null;
     var frozen = false;         // settled: nothing upstream will change again
+    var nextPollAt = null;      // ms epoch the timer above will fire, for the line
+    var polling = false;        // a request is out right now
 
     /* `cache: 'no-store'` is not belt-and-braces, it is the fix. The endpoint's
      * own headers do not survive the hop: every /api/* response comes back
@@ -2432,34 +2438,94 @@
 
     function schedulePoll(id, b) {
       if (timer) { clearTimeout(timer); timer = null; }
+      nextPollAt = null;
       if (!id) return;
       var wait;
       if (!b) {
         wait = MISSING_POLL;
       } else if (b.refresh && b.refresh.frozen) {
         frozen = true;          // settled: there is no next capture to wait for
-        return;
+        stopTicker();
+        return freshTick();     // one last paint, to say so
       } else if (b.refresh && b.refresh.next_ts) {
         wait = b.refresh.next_ts - Date.now() / 1000;
       } else {
         wait = 300;             // a bundle from before refresh_plan existed
       }
-      timer = setTimeout(function () { poll(id); },
-                         Math.max(MIN_POLL, wait) * 1000);
+      wait = Math.max(MIN_POLL, wait);
+      nextPollAt = Date.now() + wait * 1000;
+      timer = setTimeout(function () { poll(id); }, wait * 1000);
+      startTicker();
+    }
+
+    /* ---------- the freshness line, live ----------
+     *
+     * "updated 40s ago · next in 12s" is the whole refresh UI: it says the page
+     * is current, and it says when it will check again, and a second later both
+     * halves are still true. That is what removes the need for a gesture — there
+     * is nothing a pull could tell you that the line is not already saying, and
+     * nothing it could fetch that the timer is not already about to.
+     *
+     * Both halves come off the same state the poll loop runs on, so the line
+     * cannot drift from the behaviour: `lastBundle.fetched_at` is what is on
+     * the screen, `nextPollAt` is the timer that will replace it. */
+    function freshText() {
+      var b = lastBundle;
+      if (!b) return '';
+      var now = Date.now() / 1000;
+      var at = stamp(b.fetched_at);
+      var bits = [];
+      if (at !== null) bits.push('updated ' + gap(now - at) + ' ago');
+      if (frozen) bits.push('no longer updating');
+      else if (polling) bits.push('checking now');
+      else if (nextPollAt) bits.push('next in ' + untilText(nextPollAt / 1000 - now));
+      return bits.join(' \u00b7 ');
+    }
+
+    function freshTick() {
+      var el = pageEl.querySelector('.go-fresh');
+      if (!el) return;
+      var t = freshText();
+      if (el.textContent !== t) el.textContent = t;
+    }
+
+    /* Stopped while the tab is hidden and while a settled game is on the
+     * screen. Browsers throttle a background interval to about once a minute
+     * anyway, but a page that is not counting down to anything should not be
+     * holding a timer at all. */
+    var ticker = null;
+    function startTicker() {
+      // Not while hidden: schedulePoll re-arms from the hidden branch of poll()
+      // too, and there is nobody watching the line count down.
+      if (!ticker && !document.hidden) ticker = setInterval(freshTick, 1000);
+    }
+    function stopTicker() {
+      if (ticker) { clearInterval(ticker); ticker = null; }
     }
 
     function paint(id, b) {
+      polling = false;
       if (b === FAILED) {
         // Leave whatever is on the page alone and come back sooner than the
         // sweep would have us: the request failed, the game did not change.
         if (timer) { clearTimeout(timer); timer = null; }
-        if (id) timer = setTimeout(function () { poll(id); }, MIN_POLL * 1000);
+        nextPollAt = null;
+        if (id) {
+          nextPollAt = Date.now() + MIN_POLL * 1000;
+          timer = setTimeout(function () { poll(id); }, MIN_POLL * 1000);
+          startTicker();
+        }
+        freshTick();
         return;
       }
       if (b === UNCHANGED) {
-        // Confirmed current. Nothing to repaint; re-arm on the plan the bundle
-        // we are already holding gave us.
+        /* Confirmed current. The bundle did not move, but the line did: its
+         * "updated" is now a minute older and its "next in" is a fresh timer,
+         * so the line is repainted even though nothing else is. Re-armed on the
+         * plan the bundle we are already holding gave us — which, once its
+         * next_ts is behind us, is the MIN_POLL floor until the sweep lands. */
         schedulePoll(id, lastBundle);
+        freshTick();
         return;
       }
       lastBundle = b || null;
@@ -2470,6 +2536,8 @@
       if (b) render(b, currentIndex);
       else if (!id) renderMissing('', currentIndex, null);
       schedulePoll(id, b);
+      // After scheduling, not before: the line quotes the timer just armed.
+      freshTick();
       if (!b && id) {
         scheduleLookup(id).then(function (row) {
           renderMissing(id, currentIndex, row);
@@ -2478,10 +2546,19 @@
     }
 
     function poll(id) {
+      /* Dropped first, so the pending timer cannot fire a second request while
+       * this one is still out — `resume()` below calls in off-schedule, and
+       * every path out of here re-arms. */
+      if (timer) { clearTimeout(timer); timer = null; }
       if (document.hidden) {
-        // Come back when the tab does, rather than burning the request now.
-        return schedulePoll(id, null);
+        /* Come back when the tab does, rather than burning the request now.
+         * Re-armed on the bundle we are holding rather than on `null`, so a tab
+         * that spends an hour in the background does not come back counting
+         * down to MISSING_POLL against a game that was captured all along. */
+        return schedulePoll(id, lastBundle);
       }
+      polling = true;
+      freshTick();
       fetchBundle(id).then(function (b) { paint(id, b); });
     }
 
@@ -2493,15 +2570,23 @@
      * restored with no pending timer is the case that most needs the poll. */
     function resume() {
       var id = gameParam();
-      if (id && !frozen) poll(id);
+      if (id && !frozen && !polling) poll(id);
     }
 
     document.addEventListener('visibilitychange', function () {
-      if (!document.hidden) resume();
+      if (document.hidden) return stopTicker();
+      startTicker();
+      freshTick();              // the age is however long the tab was away
+      resume();
     });
 
     window.addEventListener('pageshow', function (e) {
-      if (e.persisted) resume();
+      if (!e.persisted) return;
+      // iOS hands back the DOM from hours ago and re-runs no script: the
+      // interval is gone with it, so the line has to be restarted, not just
+      // resumed.
+      if (!frozen) { startTicker(); freshTick(); }
+      resume();
     });
 
     function load() {
