@@ -311,10 +311,21 @@
   position: sticky;
   left: 118px;
   z-index: 1;
-  background: var(--panel);
+  /* Same --surface as the two columns it pins beside -- see the note on
+   * .pk-table's pinned band. The three have to read as one held block. */
+  background: var(--surface);
   text-align: left;
   white-space: nowrap;
 }
+
+/* The pinned band is three columns wide here, not two, so the seam moves to the
+ * end of it: Status is the edge the week columns travel under, and the border
+ * pickem.css puts on Player would draw a rule through the middle of the block. */
+.sv-table th.pk-who,
+.sv-table td.pk-who { border-right: none; }
+
+.sv-table th.sv-st,
+.sv-table td.sv-st { border-right: 1px solid var(--border); }
 
 .sv-table thead th.sv-st { z-index: 3; background: var(--vi-navy); }
 
@@ -423,8 +434,14 @@
 
   .sv-hero-word { font-size: 27px; }
 
+  /* Status stops being pinned on a phone -- three held columns leave nothing of
+   * the board on screen -- so the held block is Rank and Player again, and the
+   * seam goes back to the end of it. */
   .sv-table th.sv-st,
-  .sv-table td.sv-st { position: static; }
+  .sv-table td.sv-st { position: static; border-right: none; }
+
+  .sv-table th.pk-who,
+  .sv-table td.pk-who { border-right: 1px solid var(--border); }
 
   /* Scaled down but still bigger than it was: eighteen 40px cells do not fit a
    * phone, and .pk-table-wrap scrolling sideways is a worse answer than a

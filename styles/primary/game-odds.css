@@ -1184,10 +1184,12 @@ html {
 
 .go-pbody { padding: 14px 0px; }
 
-/* The pickers, on the milestone board only. Indented to the caption under
- * them rather than to the card edge: the three lines read as one block of
- * controls that way. */
-.go-pbody .dd-row { margin: 0 0 10px 9px; }
+/* The player picker, on the milestone board only. Indented so its own label
+ * starts where the market heading under it does rather than where the card
+ * edge is -- the menu's button carries 10px of padding of its own, so the box
+ * sits left of the caption in order for the two words to line up. The menu and
+ * the stack it filters read as one block that way. */
+.go-pbody .dd-row { margin: 0 0 10px 3px; }
 
 /* The market a stack of over/under boards is under. A heading above the board
  * rather than a table caption inside it: it names a market that a run of

@@ -253,7 +253,8 @@
       passing_tds: 'Pass TD', passing_yards: 'Pass Yds',
       receptions: 'Rec', receiving_yards: 'Rec Yds',
       rushing_attempts: 'Rush Att', rushing_yards: 'Rush Yds',
-      rushing_receiving_yards: 'Rush+Rec Yds', longest_rush: 'Long Rush'
+      rushing_receiving_yards: 'Rush+Rec Yds', longest_rush: 'Long Rush',
+      longest_pass: 'Long Pass', longest_reception: 'Long Rec'
     };
 
     var PERIOD = { '1q': '1Q', '2q': '2Q', '3q': '3Q', '4q': '4Q',
@@ -542,12 +543,31 @@
      * State lives here rather than in the DOM because the DOM does not survive:
      * a poll replaces the page wholesale every couple of minutes, and a section
      * the reader opened must not close itself under them. Keyed by title, which
-     * is what a card has instead of an id. */
+     * is what a card has instead of an id.
+     *
+     * Which three are folded depends on when the page is opened, for the same
+     * reason as the paragraph above. Before kickoff there is no box score, no
+     * team stats and no play log -- the props and the injury report are the
+     * page, and they are the two things the page is opened for: who is
+     * available and what they are priced at. Shut, the pregame page is a
+     * scoreless hero, a row of odds and two closed doors, and every reader has
+     * to open both of them every time. So they start open until the game
+     * starts, and the play log is the only card folded before kickoff -- it
+     * renders nothing at all until there are plays in it. */
     var CARD_CLOSED = { 'Play log': 1, 'Player props': 1, 'Injury report': 1 };
+    var CARD_CLOSED_PREGAME = { 'Play log': 1 };
     var cardOpen = {};
 
+    /* Set by render before it builds a card, because that is the only place
+     * the bundle is in scope and cardIsOpen is reached from inside the section
+     * builders rather than passed anything. */
+    var cardPhase = '';
+
     function cardIsOpen(title) {
-      if (!(title in cardOpen)) cardOpen[title] = !CARD_CLOSED[title];
+      if (!(title in cardOpen)) {
+        var shut = cardPhase === 'pregame' ? CARD_CLOSED_PREGAME : CARD_CLOSED;
+        cardOpen[title] = !shut[title];
+      }
       return cardOpen[title];
     }
 
@@ -2185,7 +2205,7 @@
     var PROP_GROUP = [
       { key: 'passing', text: 'Passing', markets: [
           'passing_yards', 'passing_tds', 'interceptions',
-          'passing_attempts', 'passing_completions', 'longest_completion'] },
+          'passing_attempts', 'passing_completions', 'longest_pass'] },
       { key: 'rushing', text: 'Rushing', markets: [
           'rushing_yards', 'rushing_tds', 'rushing_attempts',
           'rushing_receiving_yards', 'longest_rush'] },
@@ -2222,6 +2242,20 @@
       return at ? at.rank : 1e9;
     }
 
+    /* Cuts that are folded into one board sort by the board, in the order
+     * PROP_MERGE writes them -- quarters, then halves. Without this the six
+     * anytime-touchdown cuts tie on every key above and fall back to the
+     * feed's alphabet, which interleaves the two boards' markets and would put
+     * the halves board first because "1h" precedes "1q".
+     *
+     * Cuts that are not folded sort behind all of them and keep that same feed
+     * order among themselves, which is the order the passing cuts are already
+     * read in. Nothing outside a merge changes place. */
+    function mergeRank(m) {
+      var g = MERGED_INTO[m];
+      return g ? PROP_MERGE.indexOf(g) : 1e9;
+    }
+
     /* The chips one board shows, each carrying its markets in the running
      * order PROP_GROUP writes them in.
      *
@@ -2248,7 +2282,9 @@
         return list.slice().sort(function (x, y) {
           var xp = x === marketBase(x) ? 0 : 1, yp = y === marketBase(y) ? 0 : 1;
           if (xp !== yp) return xp - yp;
-          return marketRank(x) - marketRank(y);
+          var xr = marketRank(x), yr = marketRank(y);
+          if (xr !== yr) return xr - yr;
+          return mergeRank(x) - mergeRank(y);
         });
       }
       var out = PROP_GROUP.filter(function (g) {
@@ -2316,7 +2352,7 @@
      * board that jumps back to its default while it is being read. Validated
      * against the bundle on every wire, so a market that stops being quoted
      * falls back rather than emptying the table. */
-    var propView = 'ou', propMarket = '', propPlayer = '';
+    var propView = 'ou', propPlayer = '';
 
     /* One per board rather than one shared between them, because the two do
      * not hold the same chips: TDs exists only on the milestone strip, so a
@@ -2405,11 +2441,10 @@
           ' aria-label="Market group"></div>' +
         '<div class="go-pbody">' +
           /* Hidden on the over/under board rather than absent from it: the
-           * pickers belong to one of the two views, and a row of controls that
-           * appears and disappears in place reads as part of the view it is
-           * attached to. */
+           * picker belongs to one of the two views, and a control that appears
+           * and disappears in place reads as part of the view it is attached
+           * to. */
           '<div class="dd-row" id="prop-filters" hidden>' +
-            ddControl('prop-market', 'Market') +
             ddControl('prop-player', 'Player') +
           '</div>' +
           '<div id="prop-table"></div>' +
@@ -2421,25 +2456,175 @@
         '</div>');
     }
 
-    /* Every two-sided market at once, each its own board under its own
-     * heading. Ten short tables rather than one long one: they do not share a
+    /* ---------- markets that are one market ----------
+     * Anytime touchdown comes back seven times: the full game, each half and
+     * each quarter, filed as seven prop_types. Stacked, that is seven boards
+     * of the same thirty names, each one column wide, and the question anyone
+     * opens them for -- when is this man likeliest to score -- can only be
+     * answered by scrolling between boards holding a number in your head.
+     *
+     * They are one board. A period cut is not a different market, it is the
+     * same market over a shorter clock, so the clock goes in the columns the
+     * way a milestone ladder's rungs do and the player gets one row across all
+     * four quarters. Quarters and halves stay apart: they overlap -- 1H is 1Q
+     * and 2Q together -- and a row mixing them would read as six independent
+     * chances at a touchdown when there are only four.
+     *
+     * Declared rather than derived from the suffix, because the merge only
+     * works on a market the cut prices at a single rung. Anytime TD does: every
+     * period cut in every bundle is one 1+ price per player, where the
+     * full-game market is a 1+/2+/3+ ladder and stays its own board. A yardage
+     * cut is a ladder of its own and would lose two dozen rungs to a column. */
+    var PROP_MERGE = [
+      { key: 'anytime_td_q', text: 'Anytime TD by Quarter',
+        full: 'Anytime touchdown, by quarter',
+        markets: ['anytime_td_1q', 'anytime_td_2q',
+                  'anytime_td_3q', 'anytime_td_4q'] },
+      { key: 'anytime_td_h', text: 'Anytime TD by Half',
+        full: 'Anytime touchdown, by half',
+        markets: ['anytime_td_1h', 'anytime_td_2h'] }
+    ];
+
+    /* Which merged board a market has been folded into, so the stacker can
+     * drop it from the running order without walking the list per market. */
+    var MERGED_INTO = {};
+    PROP_MERGE.forEach(function (g) {
+      g.markets.forEach(function (m) { MERGED_INTO[m] = g; });
+    });
+
+    /* The column heading for one cut: the period alone, because the market
+     * name is on the board above it and repeating "Anytime TD" four times
+     * across the head would say nothing four times. */
+    function periodLabelOf(m) {
+      var x = PERIOD_RE.exec(m);
+      return x ? PERIOD[x[2]] : marketHeading(m).s;
+    }
+
+    /* One row per player, one column per period. Built off propGroups the way
+     * the ladder board is, so a cell carries the same consensus price and the
+     * same per-book panel behind it.
+     *
+     * A cut is a single rung in every bundle we have, but it is read as the
+     * lowest one rather than assumed to be the only one: if a book ever hangs
+     * a 2+ on a quarter, the column keeps meaning "scores in this quarter" and
+     * the extra rung is left out rather than landing in another period's
+     * column or splitting the player across two rows. */
+    function periodTable(b, cols) {
+      var at = {}, players = [], seen = {};
+      cols.forEach(function (c) {
+        propGroups(c.rows).forEach(function (g) {
+          var id = String(g.player_id);
+          if (!seen[id]) { seen[id] = 1; players.push(id); }
+          var mine = at[id] || (at[id] = {});
+          var cur = mine[c.market];
+          if (!cur || parseFloat(g.line) < parseFloat(cur.line)) {
+            mine[c.market] = g;
+          }
+        });
+      });
+
+      var head = thCell('Player', 'go-plc') + cols.map(function (c) {
+        return thCell(heading(c.label,
+          marketHeading(c.market).t || c.label), 'is-num');
+      }).join('');
+
+      /* Ordered down the first period, ascending on the price, for the reason
+       * the ladder board orders down its shortest rung: the leftmost column is
+       * where the board is read from. A player nobody quoted in that period
+       * sorts below the prices rather than above them -- unlike a missing
+       * ladder rung, which is a threshold too short to bother pricing, an
+       * absent quarter is a man the book left off that board entirely. Ties
+       * fall through to the next period, then to the name. */
+      function priceAt(id, m) {
+        var g = at[id][m], c = g && consensusOdds(g.odds);
+        return c ? c.odds : Infinity;
+      }
+      players.sort(function (x, y) {
+        for (var i = 0; i < cols.length; i++) {
+          var px = priceAt(x, cols[i].market), py = priceAt(y, cols[i].market);
+          if (px !== py) return px < py ? -1 : 1;
+        }
+        return playerName(b, x).localeCompare(playerName(b, y));
+      });
+
+      var body = players.map(function (id) {
+        var mine = at[id];
+        /* The whole row period by period, which is this board's answer to the
+         * ladder's rung-by-rung panel. */
+        var i = pushDetail(playerName(b, id), null,
+          cols.filter(function (c) { return mine[c.market]; })
+            .map(function (c) {
+              return { label: c.label, quotes: mine[c.market].odds };
+            }));
+        return '<tr data-pd="' + i + '">' + playerCell(b, id) +
+          cols.map(function (c) {
+            return mine[c.market] ? consCell(mine[c.market].odds)
+              : '<td class="is-null">\u2014</td>';
+          }).join('') + '</tr>';
+      }).join('');
+
+      return '<div class="go-scroll"><table class="go-table go-props' +
+        ' go-pinned go-mile"><thead><tr>' + head + '</tr></thead>' +
+        '<tbody>' + body + '</tbody></table></div>';
+    }
+
+    /* Every market in the group at once, each its own board under its own
+     * heading. Short tables rather than one long one: they do not share a
      * line, a price or even a unit — receptions and passing yards in one table
      * would be a Line column meaning two different things — and stacked, a
      * player's name appears once per market he is quoted in, which is the
-     * sweep the board is opened for. */
-    function ouBoards(b, markets) {
+     * sweep the board is opened for.
+     *
+     * Both views are drawn this way now. The milestone one used to put its
+     * markets behind a picker, on the rule that one ladder is two dozen rungs
+     * wide and five of them would not fit on a page — but the group chips took
+     * that argument away: a phase holds a handful of markets, not seventeen,
+     * and each ladder scrolls sideways in its own box rather than widening the
+     * page. What the picker cost was that the reader could not see what a
+     * group held without opening a menu and stepping through it one market at
+     * a time, which is the opposite of what the strip above it promises.
+     *
+     * `keep` is the milestone board's player filter, applied here rather than
+     * to the rows on the way in so an unquoted market drops out of the stack
+     * with its heading instead of leaving one behind an empty table. */
+    function marketBoards(b, markets, shape, keep) {
       var byMarket = {};
       propRows(b).forEach(function (r) {
-        if (shapeOf(r) === MILESTONE) return;
+        if (shapeOf(r) !== shape) return;
+        if (keep && !keep(r)) return;
         (byMarket[r.prop_type] || (byMarket[r.prop_type] = [])).push(r);
       });
-      return markets.filter(function (m) { return byMarket[m]; })
-        .map(function (m) {
-          var h = marketHeading(m);
-          return '<div class="go-mkt"' +
-              (h.t ? ' title="' + esc(h.t) + '"' : '') + '>' + esc(h.s) +
-            '</div>' + propsTable(b, byMarket[m]);
-        }).join('');
+
+      /* A merged board is drawn once, where the first of its cuts fell in the
+       * running order, and the rest of them come out of the stack. Only the
+       * cuts this game actually quotes become columns: a book that never
+       * priced the fourth quarter leaves three, not one empty column and a
+       * board that disagrees with it. */
+      var drawn = {};
+      return markets.filter(function (m) {
+        if (!byMarket[m]) return false;
+        var g = MERGED_INTO[m];
+        if (!g || g.markets.indexOf(m) < 0) return true;
+        if (drawn[g.key]) return false;
+        drawn[g.key] = 1;
+        return true;
+      }).map(function (m) {
+        var g = MERGED_INTO[m];
+        var h = g ? heading(g.text, g.full) : marketHeading(m);
+        var body;
+        if (g) {
+          body = periodTable(b, g.markets
+            .filter(function (c) { return byMarket[c]; })
+            .map(function (c) {
+              return { market: c, label: periodLabelOf(c), rows: byMarket[c] };
+            }));
+        } else {
+          body = propsTable(b, byMarket[m]);
+        }
+        return '<div class="go-mkt"' +
+            (h.t ? ' title="' + esc(h.t) + '"' : '') + '>' + esc(h.s) +
+          '</div>' + body;
+      }).join('');
     }
 
     /* innerHTML wipes listeners, so the props controls are wired after every
@@ -2464,27 +2649,20 @@
 
       function mileMarkets() { return groupMarkets(grp.mile, mileGroup); }
 
-      /* The market picker is now the group's list rather than the game's, so
-       * a pick made under one chip has to be re-taken under the next: the
-       * receiving-yards market is not on the Passing strip. Falls to the
-       * group's first market, and to nothing where the group has none, which
-       * is the state syncMarket labels "No markets". */
-      function fixMarket() {
-        var list = mileMarkets();
-        if (list.indexOf(propMarket) < 0) propMarket = list[0] || '';
-      }
-      fixMarket();
-
-      var mktBtn = document.getElementById('prop-market');
-      var mktMenu = document.getElementById('prop-market-menu');
       var plBtn = document.getElementById('prop-player');
       var plMenu = document.getElementById('prop-player-menu');
-      var mktDd = registerDropdown(document.getElementById('dd-prop-market'));
       var plDd = registerDropdown(document.getElementById('dd-prop-player'));
 
+      /* Every milestone row the group holds, across all of its markets --
+       * which is what the board draws now that the markets are stacked rather
+       * than picked one at a time. Only the player menu reads this; the board
+       * itself goes through marketBoards, which does its own sorting into
+       * markets. */
       function mileRows() {
+        var inGroup = {};
+        mileMarkets().forEach(function (m) { inGroup[m] = 1; });
         return propRows(b).filter(function (r) {
-          return r.prop_type === propMarket && shapeOf(r) === MILESTONE;
+          return inGroup[r.prop_type] && shapeOf(r) === MILESTONE;
         });
       }
 
@@ -2509,20 +2687,12 @@
         }).join('');
       }
 
-      function syncMarket() {
-        buildOptionMenu(mktMenu, mileMarkets().map(function (m) {
-          return { value: m, label: marketHeading(m).s };
-        }), 'mkt');
-        syncOptionMenu(mktBtn, mktMenu, propMarket,
-          propMarket ? marketHeading(propMarket).s : 'No markets', 'mkt');
-      }
-
-      /* The player list is per market, not per game: a receiving-yards ladder
-       * has no quarterbacks on it, and offering every player quoted anywhere
-       * would fill the menu with names that empty the table. Named and ordered
-       * the way the first column is, so the menu and the rows read as the same
-       * list. A pick that survives a market change is kept — the same player
-       * at a different market is a common next look. */
+      /* The player list is per group, not per game: a receiving stack has no
+       * quarterbacks on it, and offering every player quoted anywhere would
+       * fill the menu with names that empty the board. Named and ordered the
+       * way the first column is, so the menu and the rows read as the same
+       * list. A pick that survives a group change is kept — the same player
+       * under a different phase is a common next look. */
       function syncPlayers() {
         var seen = {}, opts = [];
         mileRows().forEach(function (r) {
@@ -2551,15 +2721,12 @@
         priceDetail = [];
         var html;
         if (propView === 'ou') {
-          html = ouBoards(b, groupMarkets(grp.ou, ouGroup));
+          html = marketBoards(b, groupMarkets(grp.ou, ouGroup), 'over_under');
         } else {
-          var rows = mileRows();
-          if (propPlayer) {
-            rows = rows.filter(function (r) {
+          html = marketBoards(b, mileMarkets(), MILESTONE,
+            propPlayer ? function (r) {
               return String(r.player_id) === propPlayer;
-            });
-          }
-          html = rows.length ? propsTable(b, rows) : '';
+            } : null);
         }
         /* Two empty states, because they are two different answers. A group
          * with no markets at all is the board saying nobody has priced this
@@ -2583,13 +2750,11 @@
         propView = btn.getAttribute('data-prop-view');
         syncViews();
         syncGroups();
-        /* The pickers belong to the milestone board and are hidden on the
-         * other one, but they are still re-synced on both switches: the two
-         * boards do not share a chip, so arriving at the milestone board means
-         * arriving under whichever group it was left on, and its market list
-         * has to be that group's before the board is drawn from it. */
-        fixMarket();
-        syncMarket();
+        /* The player menu belongs to the milestone board and is hidden on the
+         * other one, but it is re-synced on both switches: the two boards do
+         * not share a chip, so arriving at the milestone board means arriving
+         * under whichever group it was left on, and the menu has to be that
+         * group's before the board is drawn beside it. */
         syncPlayers();
         draw();
       });
@@ -2602,18 +2767,6 @@
         if (key === curGroup()) return;
         if (propView === 'ou') ouGroup = key; else mileGroup = key;
         syncGroups();
-        fixMarket();
-        syncMarket();
-        syncPlayers();
-        draw();
-      });
-
-      mktMenu.addEventListener('click', function (e) {
-        var opt = e.target.closest ? e.target.closest('.dd-opt') : null;
-        if (!opt || !mktMenu.contains(opt)) return;
-        propMarket = opt.getAttribute('data-mkt') || '';
-        closeDropdown(mktDd, true);
-        syncMarket();
         syncPlayers();
         draw();
       });
@@ -2646,7 +2799,6 @@
 
       syncViews();
       syncGroups();
-      syncMarket();
       syncPlayers();
       draw();
     }
@@ -3017,6 +3169,11 @@
 
     function render(b) {
       var g = b.game;
+      /* Before the first card is built, and only ever read for a card this
+       * page has not drawn yet: a reader who folded the props away pregame
+       * keeps them folded through kickoff, and one who left them open keeps
+       * them open. The default decides how a card opens, not how it stays. */
+      cardPhase = b.phase;
       crumbEl.textContent = g.away.abbr + ' @ ' + g.home.abbr;
       document.title = g.away.abbr + ' @ ' + g.home.abbr + ' | Dynast-Z';
       /* Before kickoff the prop board is the page: there is no box score and

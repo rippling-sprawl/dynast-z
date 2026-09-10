@@ -557,16 +557,32 @@
   background: var(--panel);
 }
 
+/* Built to the same specification as the prop board on /football/schedule/game
+ * (.go-table in styles/primary/game-odds.css), because it is the same object: a
+ * wide grid of figures with a pinned label column, read by finding a row and
+ * tracking across it. Two tables that do that job and look different are two
+ * dialects of one idea, and the reader pays for the translation.
+ *
+ * Separate borders with no spacing, so it still draws as one ruled grid: a
+ * collapsed border is painted by the *table*, so the gold rule under a pinned
+ * head scrolls away with the body and leaves the head sitting over bare rows. A
+ * separate border belongs to its cell and travels with it -- which matters more
+ * here than it does on the prop board, whose head does not stick at all. */
 .pk-table {
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   width: 100%;
-  font-size: 14px;
+  font-size: 13px;
+  /* Figures, so a column of them lines up on the digit rather than on the glyph
+   * width. The two label columns and the head opt back out below. */
+  font-family: monospace;
+  white-space: nowrap;
 }
 
 .pk-table th,
 .pk-table td {
-  padding: 6px 10px;
-  white-space: nowrap;
+  padding: 6px 12px;
+  text-align: left;
   border-bottom: 1px solid var(--hairline);
 }
 
@@ -581,7 +597,7 @@
   font-family: var(--vi-display);
   font-size: 12px;
   font-weight: 700;
-  letter-spacing: 0.8px;
+  letter-spacing: 0.7px;
   text-transform: uppercase;
   color: var(--vi-band-ink);
   text-align: right;
@@ -615,9 +631,19 @@
 .pk-table td.pk-who {
   position: sticky;
   z-index: 1;
-  background: var(--panel);
+  /* --surface rather than --panel, which is the wrapper's own background: a
+   * pinned column has to be a *visible* column, and one painted the same colour
+   * as what it is pinned over reads as part of it right up until the figures
+   * start sliding underneath. .go-pinned makes the same choice. */
+  background: var(--surface);
   text-align: left;
 }
+
+/* The seam, on the last pinned column rather than the first: this is the edge
+ * the week columns travel under, and it is the line that says the columns to its
+ * left are held rather than scrolled. */
+.pk-table th.pk-who,
+.pk-table td.pk-who { border-right: 1px solid var(--border); }
 
 .pk-table th.pk-rank, .pk-table td.pk-rank { left: 0; width: 34px; }
 .pk-table th.pk-who, .pk-table td.pk-who { left: 34px; }
@@ -631,16 +657,19 @@
 .pk-table tbody tr:nth-child(even) td.pk-rank,
 .pk-table tbody tr:nth-child(even) td.pk-who { background: var(--zebra); }
 
+/* Monospace comes from the table now. */
 .pk-table td.pk-rank {
-  font-family: monospace;
   font-weight: 700;
   color: var(--text-4);
 }
 
+/* The label on the row, not one of the numbers in it -- the display face against
+ * the table's monospace, exactly as .go-plc is on the prop board. */
 .pk-table td.pk-who {
   font-family: var(--vi-display);
+  font-size: 13px;
   font-weight: 700;
-  color: var(--text-bright);
+  color: var(--text-hi);
 }
 
 .pk-table th.pk-wk a {
@@ -812,6 +841,11 @@
   .pk-time { font-size: 12px; }
 
   .pk-view { font-size: 8.5px; letter-spacing: 0.3px; padding: 1px 2px; }
+
+  /* The gutters are what a phone takes back, the same 6px 7px the prop board
+   * drops to -- eighteen week columns at 12px of padding each is 90px of air a
+   * narrow screen cannot spend. */
+  .pk-table th, .pk-table td { padding: 6px 7px; }
 
   .pk-drag { width: 38px; height: 44px; }
 
