@@ -128,20 +128,19 @@
 
     /* ---------- rendering ---------- */
 
-    // An entry that is out cannot pick, and a week whose games have all kicked
-    // off has nothing left to pick. Both are enforced by the server; this is
-    // what stops the board offering a tap it already knows will be refused.
-    function readonly() {
-      return !data || (data.entry && data.entry.status === 'out');
-    }
+    /* There is no read-only board any more. An entry that is out may keep
+     * picking: the walk already scores those picks `void`, so they move nothing,
+     * and the server stopped refusing them. What is still refused is per-game and
+     * per-team, not per-entry -- a kicked-off game and a spent team -- and
+     * sideButton() disables those sides on its own.
+     */
 
     function render() {
       if (!data) return;
       boardEl.innerHTML = svRenderWeek(data.games, {
         pick: data.pick,
         used: data.used || {},
-        others: data.others || [],
-        readonly: readonly()
+        others: data.others || []
       });
       barEl.hidden = false;
       badgeEl.innerHTML = svEntryBadge(data.entry);
@@ -154,7 +153,7 @@
       // Clearing is only offered while it is actually possible: the pick's own
       // game must still be unlocked. The server checks the same thing.
       var held = data.pick ? gameById(data.pick.game_id) : null;
-      clearBtn.hidden = !(data.pick && held && !held.locked && !readonly());
+      clearBtn.hidden = !(data.pick && held && !held.locked);
       clearBtn.disabled = busy;
     }
 
@@ -187,9 +186,10 @@
       ].join(' · ');
 
       noteEl.textContent = data && data.entry && data.entry.status === 'out'
-        ? 'Your entry went out in week ' + data.entry.out_week + ', so this ' +
-          'board is read-only. You can still watch the rest of the season on ' +
-          'the standings.'
+        ? 'Your entry went out in week ' + data.entry.out_week + ', so nothing ' +
+          'you pick from here changes the standings — but the board is still ' +
+          'yours. Keep picking for the fun of it; the same rules apply, a team ' +
+          'can still only be used once.'
         : 'A greyed-out team is one you have already used — a team can only be ' +
           'picked once a season. Your pick locks when the game you picked kicks ' +
           'off, and nobody else can see it until then.';

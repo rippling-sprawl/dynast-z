@@ -177,10 +177,12 @@
                 : 'No pick was made — this week is over.') + '</span></span>';
       }
 
-      if (entry.status === 'out') {
-        ctaEl.textContent = 'See the board';
-      } else if (!next) {
+      // An eliminated entry still gets the picking verb: it may still pick, the
+      // picks simply do not count. "See the board" would be telling it it cannot.
+      if (!next) {
         ctaEl.textContent = 'See the week';
+      } else if (entry.status === 'out') {
+        ctaEl.textContent = data.pick ? 'Change your pick' : 'Pick anyway';
       } else {
         ctaEl.textContent = data.pick ? 'Change your pick' : 'Make your pick';
       }

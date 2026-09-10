@@ -211,14 +211,22 @@ def apply_pick(user_id, season, week, game_id, team, now):
     mine = store.load_my_picks(user_id, season)
     current = mine.get(week)
 
-    # An entry that is out is out. Checked against the stored picks and the
-    # stored scores rather than against anything the client says, and before
-    # the pick itself is looked at, so the message is about the season rather
-    # than about this week's game.
-    entry = rules.walk_entry(mine, by_id, sorted(by_week), rules.closed_weeks(season_games))
-    if entry["status"] == rules.OUT:
-        return {"error": f"your entry was eliminated in week {entry['out_week']}",
-                "entry": entry}, 409
+    # AN ELIMINATED ENTRY MAY STILL PICK
+    #
+    # This used to 409. It no longer does, and the reason is that the refusal was
+    # never protecting anything: rules.walk_entry() stops at the week the entry
+    # died, so a pick after it is already scored VOID and already changes no
+    # status, no `survived` and no rank. The 409 bought nothing and cost the
+    # thing the pool is actually short of in November -- a reason for the people
+    # already out to keep opening the page.
+    #
+    # What still holds, and must:
+    #   * The lock, below. A kicked-off game is immovable for everyone.
+    #   * The reuse rule, in validate_pick(). Not a policy choice -- the unique
+    #     index on (user_id, season, team) is real for eliminated entries too, so
+    #     relaxing it here would trade a sentence for a 23505.
+    #   * One pick per week, by the primary key.
+    # Only the "you are out, go away" branch is gone.
 
     # A pick whose game has kicked off is immovable -- that is the whole point
     # of the lock, and it is what makes the reveal safe. Both directions:

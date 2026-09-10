@@ -58,7 +58,11 @@
     var spentIn = ctx.used[abbr];
     var used = spentIn !== undefined && spentIn !== null && !chosen;
     var winner = svWinner(game);
-    var dead = used || game.locked || ctx.readonly;
+    // Two reasons a side cannot be tapped, and being eliminated is no longer one
+    // of them: a spent team (the rule is absolute) and a kicked-off game (the
+    // lock). There is no whole-board read-only state any more, which is why the
+    // ctx flag that used to carry one is gone rather than left set to false.
+    var dead = used || game.locked;
 
     var cls = ['pk-side', 'sv-side'];
     if (chosen) cls.push('is-picked');
@@ -197,7 +201,7 @@
    * sixteen games — and the question the reader is actually asking is "what is
    * on this week", which is a schedule. So the schedule is what it renders.
    *
-   * ctx = { pick, used, others, readonly }
+   * ctx = { pick, used, others }
    */
   function svRenderWeek(games, ctx) {
     if (!games || !games.length) {
@@ -333,7 +337,10 @@
   /* ---------- standings ----------
    *
    * Rank, player, status, then one column per week holding the crest of the
-   * team that entry rode. A week whose game has not kicked off carries no team
+   * team that entry rode -- the crest alone, at a size worth reading. The
+   * abbreviation is carried by the img `alt` and the cell `title` instead of a
+   * span, which is where it was needed anyway: a screen reader and a hover.
+   * A week whose game has not kicked off carries no team
    * in the payload, so there is nothing here to hide, and the cell says which
    * kind of nothing it is: a lock where a pick is in and unreadable (`masked`),
    * a neutral dot where no pick was made.
@@ -405,7 +412,12 @@
       // "they have picked", the neutral dot below is "they have not", and before
       // the mask existed both looked like the dot.
       if (cell && cell.masked) {
-        return '<td class="pk-wk sv-cell is-masked" title="Week ' + esc(week) +
+        // `is-void` rides along when the walk never reached the week — an entry
+        // that is already out may still pick, and its hidden pick should read as
+        // drained rather than as something the season still turns on.
+        return '<td class="pk-wk sv-cell is-masked' +
+          (cell.outcome === 'void' ? ' is-void' : '') +
+          '" title="Week ' + esc(week) +
           ' — pick is in, hidden until kickoff">🔒</td>';
       }
       return '<td class="pk-wk sv-cell is-empty">·</td>';
@@ -421,8 +433,7 @@
     return '<td class="pk-wk sv-cell is-' + esc(cell.outcome) +
       (cell.hidden ? ' is-hidden' : '') + '" title="' + esc(detail) + '">' +
       '<img src="' + LOGO_DIR + esc(cell.team) + '.svg" alt="' + esc(cell.team) +
-      '" loading="lazy"><span class="sv-cell-abbr">' + esc(cell.team) +
-      '</span></td>';
+      '" loading="lazy"></td>';
   }
 
   // The survivors, for the hub. Names only — the point of the card is how many

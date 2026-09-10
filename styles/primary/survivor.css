@@ -332,10 +332,12 @@
 
 .sv-table thead th.pk-wk { text-align: center; }
 
-/* The cell IS the crest. An eighteen-column table of three-letter codes cannot
- * be read at a glance, and a glance is the entire use of this page. The
- * abbreviation rides along for anyone who does not know a crest, and is dropped
- * on narrow screens where it would force a horizontal scroll of its own. */
+/* The cell IS the crest, and nothing else. An eighteen-column table of
+ * three-letter codes cannot be read at a glance, and a glance is the entire use
+ * of this page -- so the crest is given the room to be recognised at one instead
+ * of being labelled at 9px. The abbreviation is still there for anyone who needs
+ * the word: it is the img `alt` and it is in the cell `title`, which is where a
+ * screen reader and a hover look for it. */
 .sv-table td.sv-cell {
   padding: 3px 5px;
   text-align: center;
@@ -344,18 +346,9 @@
 
 .sv-table td.sv-cell img {
   display: block;
-  width: 26px;
-  height: 26px;
+  width: 40px;
+  height: 40px;
   margin: 0 auto;
-}
-
-.sv-cell-abbr {
-  display: block;
-  font-family: var(--vi-display);
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.3px;
-  color: var(--text-4);
 }
 
 .sv-table td.sv-cell.is-win { background: var(--good-tint); }
@@ -385,8 +378,8 @@
  * thing it has to do is not read as the empty dot beside it. Sized down because
  * the glyph is a colour emoji and would otherwise out-shout the crests. */
 .sv-table td.sv-cell.is-masked {
-  font-size: 11px;
-  line-height: 26px;
+  font-size: 13px;
+  line-height: 40px;
   opacity: 0.55;
 }
 
@@ -433,9 +426,12 @@
   .sv-table th.sv-st,
   .sv-table td.sv-st { position: static; }
 
-  .sv-cell-abbr { display: none; }
+  /* Scaled down but still bigger than it was: eighteen 40px cells do not fit a
+   * phone, and .pk-table-wrap scrolling sideways is a worse answer than a
+   * slightly smaller crest. */
+  .sv-table td.sv-cell img { width: 30px; height: 30px; }
 
-  .sv-table td.sv-cell img { width: 22px; height: 22px; }
+  .sv-table td.sv-cell.is-masked { line-height: 30px; }
 
   .sv-spent-item { width: 36px; height: 36px; }
 

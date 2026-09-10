@@ -19,6 +19,7 @@ slate.
 | Missed week | **Elimination**, once every game of the week has kicked off | At that moment there is no pick left to make. Triggered on the last *kickoff*, not the last whistle, so the standings and the pick page agree about when the week is over. |
 | Lock | **Per game, at its own kickoff** | Same as the Pick 'Em. You may change your mind all week as long as *your* game has not started. |
 | Entries | **One per account**, no buybacks, no strikes | There is no roster and no sign-up step, so an entry is an account. |
+| After elimination | **Keep picking.** The picks record and count for nothing | The walk stops at the week the entry died, so a later pick is already `void` and already moves no status, `survived` or rank. Refusing it protected nothing and cost the pool the one thing it is short of in November: a reason for the people already out to keep opening the page. The lock, the reuse rule and one-pick-per-week all still apply. |
 | Entry start | **Your first pick** | A player who joins in week 4 is not retroactively eliminated for the three weeks before they had an account. From that pick onward every week counts. |
 | End of season | Survivors after week 18 split; if the field is wiped in one week, they split | Standard. Not modelled in code — there is nothing to compute. |
 
@@ -46,6 +47,14 @@ slate.
   line — the Pick 'Em's answer. `rules.winner()` reads `away_score`,
   `home_score` and `status` itself. Reusing `result` would silently make a
   line-less game unpickable and a push look like a tie.
+- **Elimination ends the season, not the account's use of the board.** The one
+  thing being out costs you is the standings, and that cost is already total —
+  `walk_entry()` stops at the week it died, so nothing after it can be worth
+  anything. Given that, a 409 on the `PUT` was a second punishment enforcing
+  nothing, and the pool loses more from November's eliminated half never opening
+  the page than it could ever lose from letting them play out the year. Removing
+  it needed no schema change and no new state: the `void` outcome the walk has
+  always produced is exactly the answer.
 - **No save button.** The Pick 'Em holds a working set and commits it on Save
   because a week there is a permutation of sixteen confidences that has to move
   as a unit. Survivor is one team: there is no half-made state, and a Save
@@ -182,8 +191,11 @@ Forging the header is competitively valuable here too, and no more so.
    board, still pickable, and grades normally off the score.
 6. **Write lock** — with a picked game's `kickoff` in the past, changing it →
    409; clearing it → 409; picking a *different* unlocked game that week → 200.
-7. **Eliminated entry** — any `PUT` → 409 naming the week it went out; `GET`
-   still 200 and the board renders read-only.
+7. **Eliminated entry** — `PUT` → **200**: it may still pick. The pick lands,
+   renders `void` in the standings, and leaves `status`, `out_week`, `survived`
+   and every rank untouched. A spent team still 400s and a kicked-off game still
+   409s, because those rules are not about being alive. The board is not
+   read-only for anyone; the note under it says the picks do not count.
 8. **Isolation / reveal, the critical one** — as B pick a Sunday game, then as A
    `GET /api/survivor-standings`: the raw body contains none of B's
    abbreviations for that week, but it **does** contain B's row, with that week
