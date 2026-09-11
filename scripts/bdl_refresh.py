@@ -27,6 +27,14 @@ Two ways to run it
            terminal from an hour before kickoff and the live games actually keep
            up.
 
+  --loop --exit-when-idle N
+           the same loop, but it gives up and exits 0 once the next game is
+           more than N seconds away. This is what lets the game-day shape run
+           unattended on a schedule: a job started hourly stays alive for a
+           live slate and exits in seconds on a day with no football, so
+           nothing has to predict kickoff times to decide when to start it.
+           See .github/workflows/bdl-live-loop.yml.
+
 Both write to Supabase and nothing else. No commit, no deploy -- the page is
 current on the next request, the same split the Action Network book uses.
 
@@ -40,6 +48,7 @@ Usage:
     python3 scripts/bdl_refresh.py --once --dry-run        # what is due, no calls
     python3 scripts/bdl_refresh.py --once --publish
     python3 scripts/bdl_refresh.py --loop --publish
+    python3 scripts/bdl_refresh.py --loop --publish --exit-when-idle 900
     python3 scripts/bdl_refresh.py --once --publish --season 2026 --week 1
     python3 scripts/bdl_refresh.py --game-id 1392216 --publish
 """
@@ -402,7 +411,12 @@ def sweep(args, mode, books):
     if args.dry_run:
         for g, plan, st in waiting[:5]:
             print(f"  next: {g['away']}@{g['home']} at {iso(plan['next_ts'])}")
-        return 0, waiting, []
+        # `due`, not [] -- a dry run captured nothing, so everything that was
+        # due still is. Returning [] here made --loop --dry-run look at the
+        # next *waiting* game instead, which told --exit-when-idle that a live
+        # slate was hours away and ended the rehearsal. A dry run has to model
+        # the real loop's decisions or it is not a rehearsal.
+        return 0, waiting, due
 
     done = 0
     for g, plan, st in capped:
@@ -446,6 +460,12 @@ def main():
     ap.add_argument("--all-books", action="store_true")
     ap.add_argument("--max-sleep", type=int, default=600,
                     help="longest --loop sleep, seconds (default 600)")
+    ap.add_argument("--exit-when-idle", type=int, default=0, metavar="SECONDS",
+                    help="--loop only: exit 0 when the next game is further "
+                         "away than this, instead of sleeping. 0 disables. "
+                         "This is what makes a long-lived scheduled job cheap "
+                         "on a day with no football -- see "
+                         ".github/workflows/bdl-live-loop.yml")
     bdl.add_mode_args(ap)
     args = ap.parse_args()
 
@@ -501,6 +521,35 @@ def main():
         else:
             nxt = (waiting[0][1]["next_ts"] if waiting
                    else time.time() + args.max_sleep)
+
+        # Decide whether to stay alive BEFORE the max_sleep clamp below. `nap`
+        # is capped at ten minutes by default, so it cannot tell "the next
+        # thing is in nine minutes" from "the next thing is on Sunday" -- and
+        # that distinction is the entire point of this branch. Ask the
+        # unclamped distance instead.
+        #
+        # The thresholds line up with refresh_plan() without restating it: a
+        # live game naps 30s and an imminent one 600s, so any --exit-when-idle
+        # above ten minutes keeps the loop running through a game and drops it
+        # on a gameday/upcoming cadence, which the */15 sweep already covers.
+        if still_due:
+            idle = 0.0
+        elif waiting:
+            idle = nxt - time.time()
+        else:
+            # Nothing due and nothing waiting is an empty horizon -- the
+            # offseason, or a season filter that matched only settled games.
+            # `nxt` fell back to max_sleep above, and reading that as "something
+            # is ten minutes out" would hold a scheduled job open for its full
+            # six hours in June, which is the exact cost this flag exists to
+            # avoid. An empty horizon is infinitely idle.
+            idle = float("inf")
+        if args.exit_when_idle and idle >= args.exit_when_idle:
+            how = "the horizon is empty" if idle == float("inf") \
+                else f"nothing due for {int(idle)}s"
+            print(f"  {how} (--exit-when-idle {args.exit_when_idle}) — exiting")
+            return 0
+
         # Floored at 30s so a clock skew or an off-by-one cannot spin.
         nap = max(30, min(args.max_sleep, nxt - time.time()))
         print(f"  sleeping {int(nap)}s")
