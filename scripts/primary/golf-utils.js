@@ -169,7 +169,9 @@ let _tournamentsCache = null;
 async function getTournamentMeta() {
   if (_tournamentsCache) return _tournamentsCache;
   try {
-    const resp = await fetch('/data/tournaments.json');
+    // `reload`: Vercel stamps every static file with one fixed Last-Modified
+    // and no ETag, so a revalidating fetch gets a 304 and keeps a stale body.
+    const resp = await fetch('/data/tournaments.json', { cache: 'reload' });
     _tournamentsCache = await resp.json();
   } catch { _tournamentsCache = {}; }
   return _tournamentsCache;

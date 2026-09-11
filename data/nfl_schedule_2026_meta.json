@@ -1,0 +1,17 @@
+{
+  "source": "balldontlie",
+  "url": "https://api.balldontlie.io/nfl/v1/games?seasons[]=2026&season_types[]=2&per_page=100",
+  "season": 2026,
+  "weeks": 18,
+  "game_count": 272,
+  "team_count": 32,
+  "scored_count": 0,
+  "slots": {
+    "odd": 67,
+    "regular": 181,
+    "tbd": 24
+  },
+  "size_bytes": 35004,
+  "fetched_at": "2026-09-07T01:58:03+00:00",
+  "fetched_ts": 1788746283
+}

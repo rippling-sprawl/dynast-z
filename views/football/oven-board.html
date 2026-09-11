@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <!-- Home-screen install. The two *-capable tags are what make an iOS icon
+       launch the site standalone — its own window, no address bar — instead of
+       opening a Safari tab; the manifest says the same thing to everyone else,
+       and to iOS 16.4+. standalone.js keys the drawer's share row off exactly
+       that state, so dropping these tags silently removes the row too. -->
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/assets/icons/app-touch-180.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Dynast-Z">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <title>Big Board | Baker's Oven</title>
+  <!-- Theme first: theme.js sets <html data-theme> before the first paint,
+       theme.css holds every colour token the sheets below spend. -->
+  <script src="/scripts/base/theme.js"></script>
+  <link rel="stylesheet" href="/styles/base/theme.css">
+  <link rel="stylesheet" href="/styles/base/styles.css">
+  <link rel="stylesheet" href="/styles/primary/bakers-oven.css">
+  <link rel="stylesheet" href="/styles/base/lightbox.css">
+  <!-- Vercel Web Analytics. The /_vercel/insights/* routes are injected by
+       Vercel at deploy time, so this 404s harmlessly when serving locally. -->
+  <script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
+  <script defer src="/_vercel/insights/script.js"></script>
+</head>
+<body>
+  <div id="header-mount"></div>
+  <div id="nav-drawer-mount"></div>
+  <script src="/scripts/base/auth.js"></script>
+  <script src="/scripts/base/standalone.js"></script>
+  <script src="/scripts/base/nav.js"></script>
+  <script src="/scripts/base/lightbox.js"></script>
+  <script src="/scripts/base/sync.js"></script>
+  <script src="/scripts/components/sticky-headers.js"></script>
+  <script src="/scripts/primary/oven-config.js"></script>
+  <script src="/scripts/primary/oven-csv.js"></script>
+  <script src="/scripts/primary/oven-draft.js"></script>
+  <script src="/scripts/primary/oven-leagues.js"></script>
+  <script src="/scripts/primary/oven-weekly.js"></script>
+  <script src="/scripts/primary/oven-board.js"></script>
+  <script src="/scripts/primary/oven-targets.js"></script>
+  <script>initPage();</script>
+
+  <main class="oven-content">
+    <div class="oven-breadcrumbs">
+      <a href="/football">Football</a><span class="sep">/</span><a href="/football/bakers-oven">Baker's Oven</a><span class="sep">/</span><a id="crumb-league" href="/football/bakers-oven">League</a><span class="sep">/</span><span id="crumb-team">Board</span>
+    </div>
+
+    <div id="loading">Loading draft board…</div>
+
+    <div id="sections" style="display:none;">
+      <!-- Status and filters are one pinned element. Two stacked sticky bars
+           cost two bands of chrome on the screen where vertical space is the
+           entire game. -->
+      <div class="oven-console" id="statusbar">
+        <div class="oven-console-top">
+          <div class="oven-next" id="next-pick">
+            <span class="oven-eyebrow">Your pick</span>
+            <span class="oven-pick-label">—</span>
+          </div>
+          <!-- Escape hatch for the heartbeat. The poller only refetches picks
+               when the draft object says something moved; if Sleeper is slow to
+               update that, or you just don't trust the dot, this refetches the
+               picks array unconditionally. -->
+          <button type="button" class="oven-refresh" id="refresh"
+                  title="Refetch picks from Sleeper" aria-label="Refresh picks from Sleeper">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.5 8a5.5 5.5 0 1 1-1.6-3.9"/><path d="M13.7 2.2v3.1h-3.1"/></svg>
+          </button>
+        </div>
+
+        <!-- Two rows, because they are two different questions: the first picks
+             what you're looking at, the second takes things away. Sharing one
+             wrapped row made "Hide drafted" read as an eighth position. -->
+        <div class="oven-controls" id="controls">
+          <div class="oven-filter-row">
+            <button class="oven-chip" data-pos="">All</button>
+            <button class="oven-chip" data-pos="QB">QB</button>
+            <button class="oven-chip" data-pos="RB">RB</button>
+            <button class="oven-chip" data-pos="WR">WR</button>
+            <button class="oven-chip" data-pos="TE">TE</button>
+            <button class="oven-chip" data-pos="K">K</button>
+            <button class="oven-chip" data-pos="DEF">DEF</button>
+            <!-- Same row as the positions because it answers the same question —
+                 what this screen is about — and stacks with them rather than
+                 replacing one. A select, not chips: 32 abbreviations as chips
+                 would be four wrapped rows of chrome on the one screen where
+                 vertical space is the whole game. Options are filled from the
+                 board at boot, so this is empty until then. -->
+            <select class="oven-select oven-select-chip" id="team-filter"
+                    aria-label="Filter by NFL team"></select>
+          </div>
+          <div class="oven-filter-row">
+            <span class="oven-filter-label">Hide:</span>
+            <button class="oven-chip" data-hide="hideDrafted" aria-pressed="false">Drafted</button>
+            <button class="oven-chip" data-hide="hideFade" aria-pressed="false">Fade</button>
+            <!-- Forces the Show group onto its own line on a phone, where the
+                 wrapped single row read as one undifferentiated pile of chips.
+                 An empty flex item rather than a second .oven-filter-row so the
+                 desktop layout — one row, one gap carrying the distinction —
+                 stays exactly as it was. -->
+            <span class="oven-filter-break" aria-hidden="true"></span>
+            <!-- Show adds annotation where Hide removes rows, which is why it
+                 sits apart from the Hide toggles rather than reading as more of
+                 them.
+
+                 Two chips, not one, because they are two different claims about
+                 a player: where he actually finished, and what the books have
+                 him priced to do. They sit on one sub-line and share a rule, but
+                 wanting the history is no reason to carry the market — and on a
+                 phone the two together are the difference between 19px of row
+                 and 33px.
+
+                 The weekly-finishes chip that used to sit here is gone; the
+                 weekly file is no longer fetched or scored (see boot). -->
+            <span class="oven-filter-label oven-filter-sep" id="show-label" hidden>Show:</span>
+            <!-- Each stays hidden until ITS file has actually loaded. A chip
+                 that toggles a line of nothing is worse than no chip. -->
+            <button class="oven-chip" id="chip-history" data-show="showHistory" aria-pressed="false" hidden>History</button>
+            <button class="oven-chip" id="chip-odds" data-show="showOdds" aria-pressed="false" hidden>Odds</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Labels, not controls. The board has one order — yours — and the
+           columns are not clickable. -->
+      <!-- <div class="oven-thead">
+        <div class="oven-rk">RK</div>
+        <span class="player-pos">POS</span>
+        <div class="oven-name">Player</div>
+        <div class="oven-delta">&Delta;</div>
+        <div class="oven-taken" style="visibility:hidden">x</div>
+      </div> -->
+      <div class="oven-list" id="list"></div>
+
+      <p class="oven-note" id="footnote"></p>
+    </div>
+  </main>
+
+  <script>
+  (function () {
+    // Per-account data — any signed-in user, their own leagues.
+    if (!requireLogin()) return;
+
+    var loading = document.getElementById('loading');
+    var sections = document.getElementById('sections');
+    var listEl = document.getElementById('list');
+    var S = OvenBoard.state;
+
+    // Both segments come from the route, which only matches digits — no
+    // fallback roster, because there is no longer a "my" roster to fall back to.
+    var seg = location.pathname.match(/\/football\/bakers-oven\/(\d+)\/(\d+)/) || [];
+    var leagueId = seg[1];
+    var rosterId = parseInt(seg[2], 10);
+
+    var ctx = null, draft = null, poller = null;
+    /* The tab title carries the league, because draft night is the one time
+     * several of these boards are open at once and the tabs are all the same
+     * width. Set from the saved record first, then from ctx.league.name the
+     * moment the network says the league was renamed. */
+    var leagueName = '';
+    function setTitle(name) {
+      if (name) leagueName = name;
+      document.title = (leagueName ? leagueName + ' - ' : '') + "Big Board | Baker's Oven";
+    }
+    // The per-league rankings blob and its storage keys, held at page scope so a
+    // drag-reorder can write the new order back into the same object the CSV
+    // import wrote.
+    var board = null, bk = null;
+    var prevDrafted = {};
+    // Kept for the Targets & Projections drawer, which needs the raw picks
+    // (keepers carry their player in metadata, not on my board) and the pick
+    // plan (which rounds I actually own after trades).
+    var latestPicks = [], plan = [];
+
+    /* A live draft opens with the drafted players hidden. Mid-draft the board is
+     * a list of who is still THERE, and the forty names already off it are
+     * scrolling between you and your own next pick. Before the draft starts
+     * nothing is drafted, so the filter would only be a chip lit for no reason;
+     * after it finishes the board is a record of the draft and the picks are the
+     * whole point of reading it. So the default is on for exactly the window
+     * where it's the answer.
+     *
+     * Paused is underway: the picks are in, somebody just stepped away. */
+    var LIVE_STATUS = { drafting: true, paused: true };
+    /* Set the moment you touch the chip yourself. After that the draft going
+     * live can't overrule what you just said you wanted to see. */
+    var hideDraftedTouched = false;
+
+    function syncHideChip(btn, key) {
+      var on = !!S.filters[key];
+      btn.classList.toggle('active', on);
+      btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    }
+
+    function renderClock() {
+      var c = S.clock;
+      var nextEl = document.getElementById('next-pick');
+      var consoleEl = document.getElementById('statusbar');
+      if (!c) return;
+
+      if (c.myNext == null) {
+        nextEl.className = 'oven-next';
+        nextEl.innerHTML = '<span class="oven-eyebrow">Your draft</span>' +
+          '<span class="oven-pick-label">Done</span>';
+        consoleEl.classList.remove('is-live');
+      } else {
+        var label = OvenDraft.roundPickLabel(c.myNext, S.teamsCount);
+        var away = c.untilMyTurn;
+        var onClock = away === 0;
+        nextEl.className = 'oven-next' + (onClock ? ' onclock' : (away <= 3 ? ' imminent' : ''));
+        nextEl.innerHTML =
+          '<span class="oven-eyebrow">' + (onClock ? 'You’re on the clock' : 'Your pick') + '</span>' +
+          '<span class="oven-pick-label">' + label + '</span>' +
+          (onClock ? '' : '<span class="oven-pick-away">' + away + ' away</span>');
+        consoleEl.classList.toggle('is-live', onClock);
+        // The two urgent states stay short on purpose — a truncated tab has to
+        // show the alert, not the league name. Idle goes back to the full title.
+        var base = "Baker's Oven";
+        if (onClock) document.title = 'ON THE CLOCK — ' + base;
+        else if (away <= 5) document.title = '(' + away + ') ' + base;
+        else setTitle();
+      }
+    }
+
+    function onPicks(picks) {
+      var drafted = OvenBoard.indexPicks(picks, S.rows);
+      var newly = {};
+      Object.keys(drafted).forEach(function (k) { if (!prevDrafted[k]) newly[k] = true; });
+      S.drafted = drafted;
+      latestPicks = picks || [];
+      plan = OvenDraft.buildPickPlan(draft, ctx.tradedPicks);
+      S.clock = OvenDraft.computeClock(plan, picks, rosterId, S.teamsCount * draft.settings.rounds);
+      /* A poll normally patches classes and leaves the list standing — that is
+       * what keeps your scroll and the cross-off animation. But under
+       * Hide: Drafted, "he's gone" means the row has to LEAVE, and no class
+       * patch removes a row; only a re-filter does. So a poll that actually
+       * moved the drafted set re-renders instead of patching. That is also the
+       * boot case: picks land after the first render, so without this the chip
+       * comes up lit over a board that still shows all forty taken players.
+       * Polls where nothing moved — including refreshNow's unconditional
+       * refetch — still take the cheap path. */
+      var moved = Object.keys(newly).length > 0 ||
+        Object.keys(drafted).length !== Object.keys(prevDrafted).length;
+      if (S.filters.hideDrafted && moved) OvenBoard.render(listEl);
+      else OvenBoard.applyDraftState(newly, Object.keys(prevDrafted).length === 0);
+      prevDrafted = drafted;
+      renderClock();
+      OvenTargets.refresh();
+    }
+
+    /* Both row edits land here: dragging re-ranks him, the grade control records
+     * what I think of him, and either one has to persist or it lives until
+     * reload. One writer for both, because they are one blob — the same
+     * per-league object the CSV import writes, so the league page's summary and
+     * the CSV export always show the board you are actually looking at, and it
+     * follows you to your phone through sync. That shared writer is why grading
+     * needed no storage key of its own.
+     *
+     * A board still seeded from FantasyPros (nothing imported for this league
+     * yet) becomes a real saved board on the first edit: dragging a player, or
+     * grading one, IS authoring your rankings, and refusing to save that would
+     * be the surprise. */
+    function saveBoardOrder(rows) {
+      if (!board) board = { filename: null, importedAt: Date.now(), warnings: [] };
+      board.rows = rows;
+      board.updatedAt = Date.now();
+      saveWithSync(bk.sport, bk.syncKey, bk.storageKey, board);
+    }
+
+    function wireControls() {
+      /* The position chips are markup, so they list all six; the league decides
+       * which of them can exist. A chip for a position with no rows behind it
+       * isn't a filter, it's a button that empties the board — and in a league
+       * that starts no kicker it would be advertising a decision you never get
+       * to make. Pruned before wiring, so a removed chip is simply gone rather
+       * than a live listener on a detached node. */
+      document.querySelectorAll('.oven-chip[data-pos]').forEach(function (btn) {
+        var pos = btn.getAttribute('data-pos');
+        if (pos && S.positions && !S.positions[pos]) btn.remove();
+      });
+
+      document.querySelectorAll('.oven-chip[data-pos]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var pos = btn.getAttribute('data-pos');
+          S.filters.pos = pos || null;
+          document.querySelectorAll('.oven-chip[data-pos]').forEach(function (b) { b.classList.remove('active'); });
+          btn.classList.add('active');
+          OvenBoard.render(listEl);
+        });
+      });
+      document.querySelector('.oven-chip[data-pos=""]').classList.add('active');
+
+      /* Team filter. Built from the rows the board actually holds — see
+       * boardTeams() — so an abbreviation is only offered when there is somebody
+       * behind it, and a league that starts no DEF never offers the four teams
+       * whose only row was their defense. It composes with the position chips
+       * rather than resetting them: RB + BUF is a question people ask on draft
+       * night ("who's left in that backfield"), and having one control clear the
+       * other would be answering a different one. */
+      var teamSel = document.getElementById('team-filter');
+      var teams = OvenBoard.boardTeams();
+      var opts = ['<option value="">All Teams</option>'];
+      teams.forEach(function (t) {
+        opts.push('<option value="' + OvenBoard.esc(t) + '">' + OvenBoard.esc(t) + '</option>');
+      });
+      teamSel.innerHTML = opts.join('');
+      // Nothing to filter by — one option that reads "All Teams" is a control
+      // that can only ever do nothing.
+      if (!teams.length) teamSel.hidden = true;
+      teamSel.addEventListener('change', function () {
+        S.filters.team = teamSel.value || null;
+        teamSel.classList.toggle('active', !!S.filters.team);
+        OvenBoard.render(listEl);
+      });
+
+      // The Hide chips are independent toggles, not a radio group like the
+      // positions — each names one filter key on S.filters.
+      document.querySelectorAll('.oven-chip[data-hide]').forEach(function (btn) {
+        var key = btn.getAttribute('data-hide');
+        // Painted from the filter, not from the markup: Drafted comes up already
+        // on in a live draft, and a chip that lies about the filter behind it is
+        // worse than no chip.
+        syncHideChip(btn, key);
+        btn.addEventListener('click', function () {
+          S.filters[key] = !S.filters[key];
+          if (key === 'hideDrafted') hideDraftedTouched = true;
+          syncHideChip(btn, key);
+          OvenBoard.render(listEl);
+        });
+      });
+
+      /* Force refresh. The poller owns the request, so this is just a button on
+       * refreshNow() — no second fetch path that could disagree with the live
+       * one about what the board shows. Disabled for the round trip so an
+       * impatient double-click can't stack overlapping fetches. */
+      var refreshBtn = document.getElementById('refresh');
+      refreshBtn.addEventListener('click', function () {
+        if (!poller || refreshBtn.disabled) return;
+        refreshBtn.disabled = true;
+        refreshBtn.classList.add('spinning');
+        poller.refreshNow().then(function () {
+          refreshBtn.disabled = false;
+          refreshBtn.classList.remove('spinning');
+        });
+      });
+
+      /* Show adds annotation, not rows: nothing is filtered, so there is nothing
+       * to re-render. Each chip flips one class on the list and CSS reveals its
+       * group — which keeps your scroll position, where a full rebuild at row
+       * 180 would throw you back to the top of the board mid-run.
+       *
+       * Both are wired the same way, off the chip's own data-show key, because
+       * they are the same gesture on two independent groups. The rule between
+       * the groups is CSS's problem (.show-history.show-odds): a separator is
+       * only a separator when there is something on both sides of it. */
+      document.querySelectorAll('.oven-chip[data-show]').forEach(function (btn) {
+        var key = btn.getAttribute('data-show');
+        // show-history / show-odds — the class is the key, hyphenated.
+        var cls = key.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
+        btn.addEventListener('click', function () {
+          S.filters[key] = !S.filters[key];
+          listEl.classList.toggle(cls, S.filters[key]);
+          btn.classList.toggle('active', S.filters[key]);
+          btn.setAttribute('aria-pressed', S.filters[key] ? 'true' : 'false');
+        });
+      });
+    }
+
+    async function boot() {
+      try {
+        if (!leagueId || !rosterId || isNaN(rosterId)) {
+          loading.innerHTML = 'Not a board URL. <a href="/football/bakers-oven">Pick a league →</a>';
+          return;
+        }
+
+        await OvenLeagues.load();
+
+        // Paint the league crumb from the saved record before any network call;
+        // ctx.league.name replaces it below if the league was renamed.
+        var rec = OvenLeagues.get(leagueId);
+        var leagueCrumb = document.getElementById('crumb-league');
+        leagueCrumb.href = '/football/bakers-oven/' + leagueId;
+        if (rec) { leagueCrumb.textContent = rec.name; setTitle(rec.name); }
+
+        bk = OvenLeagues.boardKeys(leagueId);
+        var results = await Promise.all([
+          OvenDraft.loadLeague(leagueId),
+          fetch(OVEN.FP_DATA, { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : []; }).catch(function () { return []; }),
+          fetch(OVEN.FP_META, { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }),
+          loadWithSync(bk.sport, bk.syncKey, bk.storageKey, null),
+          // OVEN.WEEKLY_DATA is deliberately NOT fetched. It is 2 MB, and it
+          // cost a scoring pass over 860 players at boot, to fill a column whose
+          // chip is gone — dead weight on the one screen where draft-night load
+          // time is the whole game. Everything behind it (OvenWeekly,
+          // setWeekly, .oven-weekly) is intact, so restoring the chip is
+          // restoring this fetch and the scoring block below it.
+          //
+          // 31 KB, immutable for three finished seasons, so unlike everything
+          // else the Oven fetches it wants the HTTP cache. Degrades to null:
+          // this is an opt-in annotation, and a 404 here must never be the
+          // reason the board fails to open on draft night — without it every row
+          // simply loses its history line and the chip never appears.
+          fetch(OVEN.POSRANK_DATA).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }),
+          // 14 KB of season-long consensus lines. Unlike the file above
+          // this one is NOT immutable — the books move their numbers all
+          // summer, and it is rebuilt whenever a Recorder bundle lands — but a
+          // stale line is a line the market held yesterday, which is still a
+          // usable fact on draft night. So it takes the same shared HTTP cache
+          // (an hour, per vercel.json) and the same degrade-to-null.
+          fetch(OVEN.PROPS_DATA).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }),
+        ]);
+        ctx = results[0];
+        var fp = results[1] || [], fpMeta = results[2];
+        board = results[3];
+        var posRanks = results[4];
+        var propLines = results[5];
+        leagueCrumb.textContent = ctx.league.name;
+        setTitle(ctx.league.name);
+
+        draft = await OvenDraft.loadDraft(ctx.draftId);
+        // Underway means the board opens on what's left — see LIVE_STATUS. Set
+        // before wireControls(), which paints the chip from this.
+        S.filters.hideDrafted = !!LIVE_STATUS[draft.status];
+        S.teamsCount = draft.settings.teams;
+        S.myRosterId = rosterId;
+        ctx.teams.forEach(function (t) { S.teams[t.roster_id] = t; });
+
+        var me = S.teams[rosterId];
+        document.getElementById('crumb-team').textContent = me ? me.teamName : 'Roster ' + rosterId;
+
+        // What this league starts, before the board is built from it — the
+        // filter has to be in place first, because buildBoard is the gate every
+        // downstream reader (the list, the pool, the drawer) sees rows through.
+        OvenBoard.setPositions(ctx.league.roster_positions);
+        S.rows = OvenBoard.buildBoard(board && board.rows, fp);
+
+        // Where each player finished the last three seasons, half-PPR. Handed
+        // over whole — the file names its own seasons, so nothing here
+        // hardcodes a year, and re-running the fetch over a different window
+        // changes the row without touching this page.
+        OvenBoard.setPosRanks(posRanks);
+
+        // And what the books have him doing next season, on the same sub-line.
+        OvenBoard.setPropLines(propLines);
+
+        /* One chip per file, revealed only if its file actually arrived: a chip
+         * that toggles a line nothing feeds is a button that does nothing, and
+         * either of these can 404 without the other. The seasons in the title
+         * come off the payload for the same reason setPosRanks takes it whole —
+         * the file decides which years it is about. */
+        var showLabel = document.getElementById('show-label');
+        if (posRanks) {
+          var histChip = document.getElementById('chip-history');
+          histChip.title = 'Half-PPR positional finish in ' +
+            posRanks.seasons.join(', ') + ', under each name — Sleeper';
+          histChip.hidden = false;
+          showLabel.hidden = false;
+        }
+        if (propLines) {
+          var oddsChip = document.getElementById('chip-odds');
+          oddsChip.title = 'Season-long consensus lines — yards, TDs' +
+            (OvenBoard.state.hasRecs ? ', receptions' : '') + ' — under each name';
+          oddsChip.hidden = false;
+          showLabel.hidden = false;
+        }
+
+        wireControls();
+        OvenBoard.render(listEl);
+        OvenBoard.enableReorder({ onReorder: saveBoardOrder });
+        // Same writer, and it has to be wired before the drawer mounts: both
+        // listen for Escape on the document, and closing the grade menu has to
+        // get the first one.
+        OvenBoard.enableGrading({ onGrade: saveBoardOrder });
+
+        // One accessor is the whole contract with the drawer — it reads, it
+        // never writes to the board.
+        OvenTargets.mount({
+          getState: function () {
+            return {
+              rows: S.rows,
+              drafted: S.drafted,
+              picks: latestPicks,
+              plan: plan,
+              teamsCount: S.teamsCount,
+              rounds: draft.settings.rounds,
+              myRosterId: rosterId,
+              // The Team view's lineup shape. From the league, not the draft —
+              // roster_positions is where the starting slots are defined.
+              rosterPositions: ctx.league.roster_positions || [],
+            };
+          },
+          leagueId: leagueId,
+        });
+
+        var picks = await OvenDraft.loadPicks(ctx.draftId, draft.last_picked || draft.status);
+        onPicks(picks);
+
+        // Freshness + provenance note.
+        var notes = [];
+        // Say it, because the alternative is a board that is quietly missing 64
+        // players you know you ranked. The count is the proof that they were
+        // read and set aside, not lost on the way in.
+        if (OvenBoard.state.offBoard.length) {
+          var held = {};
+          OvenBoard.state.offBoard.forEach(function (r) { held[r.pos || '?'] = true; });
+          notes.push('Hiding ' + OvenBoard.state.offBoard.length + ' ' +
+            Object.keys(held).sort().join('/') + ' — this league starts none. ' +
+            'They stay in your saved rankings.');
+        }
+        if (!board || !board.rows || !board.rows.length) {
+          notes.push('Showing <strong>FantasyPros half-PPR ranks</strong> — <a href="/football/bakers-oven/' + leagueId + '">import your rankings for this league</a> to use your own board.');
+        }
+        if (fpMeta) {
+          var ageDays = (Date.now() / 1000 - (fpMeta.fetched_ts || 0)) / 86400;
+          notes.push('FantasyPros ECR updated ' + OvenBoard.esc(fpMeta.last_updated || '?') +
+            ', fetched ' + Math.floor(ageDays) + 'd ago' +
+            (ageDays > OVEN.FP_STALE_DAYS ? ' — <span class="stale">stale, re-run scripts/fetch_fp_redraft.py</span>' : '') + '.');
+        }
+        document.getElementById('footnote').innerHTML = notes.join(' ');
+
+        loading.style.display = 'none';
+        sections.style.display = '';
+
+        // One pinned element now — status and filters live in the same console.
+        Sticky.pinBelow(document.getElementById('statusbar'), [document.querySelector('header')]);
+
+        poller = OvenDraft.createPoller({
+          draftId: ctx.draftId,
+          onPicks: onPicks,
+          /* Boards get opened early and left open. When the commissioner hits
+           * go, the default flips under you exactly as it would have on a fresh
+           * load — and flips back when the draft finishes, since a finished
+           * draft is a record and hiding the picks hides the record. Silent when
+           * the value already agrees, which is what makes the poller's opening
+           * null -> status transition a no-op over what boot already set. */
+          onStatusChange: function (prev, status) {
+            if (hideDraftedTouched) return;
+            var live = !!LIVE_STATUS[status];
+            if (live === !!S.filters.hideDrafted) return;
+            S.filters.hideDrafted = live;
+            var chip = document.querySelector('.oven-chip[data-hide="hideDrafted"]');
+            if (chip) syncHideChip(chip, 'hideDrafted');
+            OvenBoard.render(listEl);
+          },
+        });
+        poller.start();
+      } catch (e) {
+        loading.textContent = 'Error: ' + e.message;
+      }
+    }
+
+    boot();
+  })();
+  </script>
+</body>
+</html>

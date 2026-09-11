@@ -1,0 +1,347 @@
+/* === Shared NFL schedule rows ===
+ * The condensed one-line-per-game list rendered by
+ * scripts/components/nfl-schedule.js, from data/nfl_schedule_{season}.json.
+ *
+ * Lives in components/ rather than with the schedule page because two views
+ * render it: /football/schedule, where it started, and the team card on
+ * /football/bakers-buns, which shows one team's season in place of linking to
+ * it. What stays in styles/primary/nfl-schedule.css is what only the standalone
+ * page has — the Reset beside its filters.
+ *
+ * Density is the point: a full week is 16 games and "all weeks" is 272, so the
+ * row is tuned to be scannable in a single column rather than comfortable. Row
+ * height lands near 22px — tight enough that a whole week fits without
+ * scrolling, loose enough that the day headers still separate. */
+
+/* --- Group headers: a calendar day within a week, or a week in all-weeks --- */
+
+.sched-group {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 13px 0 2px;
+  padding-bottom: 2px;
+  border-bottom: 1px solid var(--surface-2);
+}
+
+.sched-group:first-child { margin-top: 0; }
+
+.sched-group h3 {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  color: var(--text-3);
+  font-family: monospace;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.sched-group .sched-group-sub {
+  font-size: 10px;
+  color: var(--text-5);
+  font-family: monospace;
+}
+
+/* --- One game, one line ---
+ * Grid rather than a table: the time wants a fixed column down the page, the
+ * rest of the row is a single flow.
+ *
+ * Each leading column is sized to exactly its widest content in the 11px
+ * monospace it renders in — "Sep 14" is 6 characters, every kickoff that
+ * renders is 4 ("1:00" through "9:30"), a week number is 2 — and the content is
+ * right-aligned inside it. Nothing floats in slack space, so the single 10px
+ * gap is the whole of the spacing between date, time and matchup and the three
+ * gutters are visually identical down the page. */
+
+.sched-game {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  align-items: baseline;
+  gap: 10px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* Leading columns for the all-weeks lists, where the row has to say which day
+ * it is (no day header above it) and, for a single team's season, which week. */
+.sched-game.has-date { grid-template-columns: 42px 28px minmax(0, 1fr); }
+.sched-game.has-week.has-date { grid-template-columns: 15px 42px 28px minmax(0, 1fr); }
+
+.sched-game .sched-wk,
+.sched-game .sched-date {
+  font-family: monospace;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.sched-game .sched-wk {
+  color: var(--text-5);
+  text-align: right;
+}
+
+/* Right-aligned so the gap to the time column is the same on a "Sep 9" row as
+ * on a "Sep 14" one. */
+.sched-game .sched-date {
+  color: var(--text-3);
+  text-align: right;
+}
+
+.sched-game.is-tbd .sched-date { color: var(--text-4); }
+
+/* Striping restarts inside each .sched-rows group — the day/week headers are
+ * siblings of the rows, so counting across the whole list stripes arbitrarily. */
+.sched-rows .sched-game:nth-child(even) { background: var(--zebra); }
+
+/* --- Slate break ---
+ * The rule between the 1:00 games and the 4:00 ones. A Sunday is two blocks of
+ * games, not one run of twelve rows, and the day headers can't say so — they
+ * are one level up. Heavier than the header underline so it reads as a divider
+ * inside the day rather than as the start of a new one. */
+.sched-rows .sched-game.is-slate-break {
+  border-top: 2px solid var(--border);
+  margin-top: 4px;
+  padding-top: 4px;
+  border-radius: 0 0 4px 4px;
+}
+
+.sched-game .sched-time {
+  font-family: monospace;
+  font-size: 11px;
+  color: var(--text-3);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.sched-game.is-tbd .sched-time { color: var(--text-5); }
+
+.sched-matchup {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+
+/* Fixed-width cells so the badge that follows starts at the same x on every
+ * row. Abbreviations run 2-3 characters ("NE" to "WSH") and the separator is
+ * either "@" or "vs", so a monospace 3ch/2ch/3ch block is exactly wide enough
+ * and never ragged — without this the "odd" badges zigzag down the page. */
+.sched-teams {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  font-family: monospace;
+  flex: none;
+}
+
+.sched-team {
+  display: inline-block;
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+/* The 3ch that used to be on .sched-team now sits on the letters alone, so the
+ * cell is logo + gap + 3ch and still an identical width on every row — which is
+ * what keeps the slot badges after it from zigzagging down the page. */
+.sched-abbr {
+  display: inline-block;
+  width: 3ch;
+}
+
+.sched-team.away .sched-abbr { text-align: right; }
+.sched-team.home .sched-abbr { text-align: left; }
+
+/* Optical, not geometric: the baseline of a 12px monospace capital sits a few
+ * pixels above the box bottom, so a box-aligned logo reads as floating. */
+.sched-logo {
+  width: 14px;
+  height: 14px;
+  vertical-align: -3px;
+  margin-right: 4px;
+}
+
+/* The filtered team, so a single row still reads at a glance which side is
+ * "yours" when the matchup is scanned in a list of seventeen. */
+.sched-team.is-picked { color: var(--accent); }
+
+.sched-at {
+  width: 2ch;
+  text-align: center;
+  color: var(--text-5);
+  font-size: 10px;
+}
+
+.sched-venue {
+  font-size: 10px;
+  color: var(--text-5);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* --- Final score ---
+ * Only on a season that has finished, so the 2026 rows are exactly as wide as
+ * they were before this column existed. Fixed minimum width for the same reason
+ * the team cells have one: on a team's season every row carries a result, and a
+ * ragged column would zigzag the slot badges that follow it down the page.
+ *
+ * "W 24-20" is the widest thing that renders here at 7 characters; the bare
+ * "17-31" of an all-teams list is narrower and sits inside the same column. */
+
+.sched-result {
+  font-family: monospace;
+  font-size: 11px;
+  font-weight: 600;
+  min-width: 7ch;
+  color: var(--text-3);
+  white-space: nowrap;
+  flex: none;
+}
+
+/* The verdict is the thing being read, so it carries the colour — the same
+ * green and red the score cells elsewhere on the site use. A tie keeps the
+ * neutral grey above: it is neither, and there have been two since 2020. */
+.sched-result.is-w { color: var(--good); }
+.sched-result.is-l { color: var(--bad); }
+
+/* --- Slot badge ---
+ * There is deliberately no `.regular` rule: a regular game renders no badge at
+ * all, so the marker reads as an exception rather than as a column. */
+
+.sched-slot {
+  font-size: 9px;
+  font-weight: 700;
+  font-family: monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  padding: 0 5px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  white-space: nowrap;
+  flex: none;
+}
+
+.sched-slot.odd {
+  color: var(--warn);
+  border-color: var(--warn-line);
+  background: var(--warn-soft);
+}
+
+.sched-slot.tbd {
+  color: var(--text-4);
+  border-color: var(--border);
+  border-style: dashed;
+}
+
+/* --- Bye + empty --- */
+
+/* A bye is a .sched-game so it keeps the row rhythm and the striping count —
+ * it is a week of the season, just one with no game in it. */
+.sched-bye,
+.sched-bye .sched-date {
+  color: var(--text-5);
+  font-style: italic;
+}
+
+.sched-empty {
+  font-size: 13px;
+  color: var(--text-3);
+  padding: 16px 8px;
+}
+
+/* --- Per-team links ---
+ * Sits under the picked team's season. The rule above it separates it from the
+ * last row without reading as another group header, and the label is the same
+ * 10px monospace caps as those headers so the block belongs to the list rather
+ * than arriving as a separate card. */
+
+.sched-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 14px;
+  margin-top: 14px;
+  padding-top: 9px;
+  border-top: 1px solid var(--surface-2);
+}
+
+.sched-links-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  color: var(--text-3);
+  font-family: monospace;
+}
+
+.sched-links a {
+  font-size: 12px;
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.sched-links a:hover { text-decoration: underline; }
+
+@media (max-width: 560px) {
+  /* The columns are already at their content width — only the gutters give. */
+  .sched-game { gap: 8px; }
+
+  /* Two logos add ~36px to a row that had none. Shrinking them buys most of it
+   * back; the crest is still identifiable at 12px, which is all it has to be. */
+  .sched-logo {
+    width: 12px;
+    height: 12px;
+    vertical-align: -2px;
+    margin-right: 3px;
+  }
+
+  /* The venue no longer fits beside the matchup at this width, and dropping it
+   * loses the one thing a neutral-site row exists to say. It wraps to its own
+   * line under the teams instead: full-basis so it always breaks rather than
+   * squeezing in after the badge, and free to run to two lines if the stadium
+   * name is long. The row's column gap would be far too much air between the
+   * two lines of one matchup, so the row gap is set separately. */
+  .sched-matchup {
+    flex-wrap: wrap;
+    row-gap: 0;
+  }
+
+  .sched-venue {
+    flex-basis: 100%;
+    white-space: normal;
+    overflow: visible;
+    line-height: 1.3;
+  }
+}
+
+/* --- The row as a link ---
+ * The row itself is the <a> to the game page when the game has an id — the
+ * matchup used to be, but the target was three characters of an abbreviation on
+ * a line the reader is already pointing at. It has to look like exactly what it
+ * looked like before — the team abbreviation colours, including the picked-team
+ * accent, are the information here and a link colour would overwrite it — so
+ * the anchor inherits everything and announces itself only on hover and focus.
+ * The grid geometry comes from .sched-game above and is unchanged by the tag. */
+
+a.sched-game {
+  color: inherit;
+  text-decoration: none;
+}
+
+a.sched-game:hover .sched-team,
+a.sched-game:focus-visible .sched-team { color: var(--accent); }
+
+a.sched-game:hover .sched-at,
+a.sched-game:focus-visible .sched-at { color: var(--accent); }
+
+/* Inset, because on the schedule page the rows sit inside a board with
+ * `overflow: hidden` — an outward outline on the first or last row is clipped
+ * by the box it is drawn against. */
+a.sched-game:focus-visible {
+  outline: 2px solid var(--accent-ring);
+  outline-offset: -2px;
+}

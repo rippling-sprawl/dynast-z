@@ -37,7 +37,7 @@
   gap: 6px;
   padding: 6px 4px;
   font-size: 13px;
-  color: #58a6ff;
+  color: var(--accent);
   background: none;
   border: none;
   cursor: pointer;
@@ -59,8 +59,8 @@
 .scout-pinned {
   flex: 0 0 320px;
   overflow-y: auto;
-  border-right: 2px solid #58a6ff;
-  background: #0f1117;
+  border-right: 2px solid var(--accent);
+  background: var(--bg);
   z-index: 10;
 }
 
@@ -68,7 +68,7 @@
   position: sticky;
   top: 0;
   z-index: 1;
-  border-bottom-color: #58a6ff;
+  border-bottom-color: var(--accent);
 }
 
 /* Scrolling other teams */
@@ -83,7 +83,7 @@
 .scout-team-col {
   flex: 0 0 300px;
   overflow-y: auto;
-  border-right: 1px solid #21262d;
+  border-right: 1px solid var(--surface-2);
   scroll-snap-align: start;
 }
 
@@ -99,8 +99,8 @@
   align-items: center;
   gap: 10px;
   padding: 10px 12px;
-  background: #161b22;
-  border-bottom: 1px solid #30363d;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
   z-index: 1;
 }
 
@@ -117,7 +117,7 @@
 .scout-team-header .team-name {
   font-size: 14px;
   font-weight: 600;
-  color: #f0f6fc;
+  color: var(--text-hi);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -125,7 +125,7 @@
 
 .scout-team-header .team-owner {
   font-size: 11px;
-  color: #8b949e;
+  color: var(--text-3);
 }
 
 /* Position section headers */
@@ -149,13 +149,13 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  border-bottom: 1px solid #21262d;
+  border-bottom: 1px solid var(--surface-2);
 }
 
 .scout-team-col .player-card-empty,
 .scout-pinned .player-card-empty {
   padding: 6px 12px;
-  border-bottom: 1px solid #21262d;
+  border-bottom: 1px solid var(--surface-2);
   min-height: 37px;
 }
 
@@ -192,9 +192,9 @@
 /* === Trade button on team headers === */
 .scout-trade-btn {
   margin-left: auto;
-  background: #21262d;
-  border: 1px solid #30363d;
-  color: #8b949e;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text-3);
   font-size: 16px;
   width: 30px;
   height: 30px;
@@ -208,9 +208,9 @@
 }
 
 .scout-trade-btn:hover {
-  background: #58a6ff;
-  color: #fff;
-  border-color: #58a6ff;
+  background: var(--accent);
+  color: var(--on-accent);
+  border-color: var(--accent);
 }
 
 /* === Scout trade view === */
@@ -263,7 +263,7 @@
 }
 
 .scout-trade-area.scout-trade-a {
-  border-right: 1px solid #30363d;
+  border-right: 1px solid var(--border);
 }
 
 .scout-trade-rosters {
@@ -281,13 +281,13 @@
 }
 
 .scout-trade-roster-col.scout-trade-a {
-  border-right: 1px solid #30363d;
+  border-right: 1px solid var(--border);
 }
 
 .scout-trade-header {
   padding: 10px 14px;
-  border-bottom: 1px solid #30363d;
-  background: #161b22;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
   display: flex;
   align-items: center;
   gap: 10px;
@@ -309,20 +309,20 @@
   text-overflow: ellipsis;
 }
 
-.trade-header-a h2 { color: #f78166; }
-.trade-header-b h2 { color: #7ee787; }
+.trade-header-a h2 { color: var(--orange-soft); }
+.trade-header-b h2 { color: var(--good-bright); }
 
 .scout-trade-total {
   font-size: 18px;
   font-weight: 700;
 }
 
-.scout-trade-a .scout-trade-total { color: #f78166; }
-.scout-trade-b .scout-trade-total { color: #7ee787; }
+.scout-trade-a .scout-trade-total { color: var(--orange-soft); }
+.scout-trade-b .scout-trade-total { color: var(--good-bright); }
 
 .scout-trade-zone {
   padding: 8px;
-  border-bottom: 1px solid #30363d;
+  border-bottom: 1px solid var(--border);
   flex-shrink: 1;
   overflow-y: auto;
 }
@@ -332,7 +332,7 @@
   align-items: center;
   justify-content: center;
   height: 44px;
-  color: #484f58;
+  color: var(--text-5);
   font-size: 13px;
   pointer-events: none;
 }
@@ -341,8 +341,8 @@
   display: flex;
   align-items: center;
   padding: 6px 10px;
-  background: #161b22;
-  border: 1px solid #30363d;
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 6px;
   margin-bottom: 4px;
 }
@@ -350,7 +350,7 @@
 .trade-player .player-name {
   font-size: 13px;
   font-weight: 500;
-  color: #f0f6fc;
+  color: var(--text-hi);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -358,7 +358,7 @@
 
 .trade-player .player-team {
   font-size: 10px;
-  color: #6e7681;
+  color: var(--text-4);
 }
 
 .trade-player .player-info {
@@ -384,7 +384,7 @@
 .trade-player .player-value {
   font-size: 12px;
   font-weight: 600;
-  color: #eee;
+  color: var(--text-bright);
   margin-left: 8px;
   white-space: nowrap;
   padding: 2px 6px;
@@ -399,7 +399,7 @@
 .trade-remove-btn {
   background: none;
   border: none;
-  color: #484f58;
+  color: var(--text-5);
   cursor: pointer;
   font-size: 16px;
   padding: 0 4px;
@@ -407,7 +407,7 @@
   line-height: 1;
 }
 
-.trade-remove-btn:hover { color: #f85149; }
+.trade-remove-btn:hover { color: var(--bad); }
 
 .scout-trade-roster-header {
   padding: 6px 14px;
@@ -415,9 +415,9 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: #8b949e;
-  background: #161b22;
-  border-bottom: 1px solid #30363d;
+  color: var(--text-3);
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
   flex-shrink: 0;
 }
 
@@ -429,19 +429,19 @@
 
 .scout-trade-roster::-webkit-scrollbar { width: 8px; }
 .scout-trade-roster::-webkit-scrollbar-track { background: transparent; }
-.scout-trade-roster::-webkit-scrollbar-thumb { background: #30363d; border-radius: 4px; }
+.scout-trade-roster::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
 
 .scout-trade-roster-card {
   display: flex;
   align-items: center;
   padding: 6px 14px;
   cursor: pointer;
-  border-bottom: 1px solid #21262d;
+  border-bottom: 1px solid var(--surface-2);
   transition: background 0.1s;
 }
 
 .scout-trade-roster-card:hover:not(.scout-trade-roster-empty) {
-  background: #161b22;
+  background: var(--surface);
 }
 
 .scout-trade-roster-empty {
@@ -452,7 +452,7 @@
 .scout-trade-roster-card .player-name {
   font-size: 13px;
   font-weight: 500;
-  color: #f0f6fc;
+  color: var(--text-hi);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -460,7 +460,7 @@
 
 .scout-trade-roster-card .player-team {
   font-size: 10px;
-  color: #6e7681;
+  color: var(--text-4);
 }
 
 .scout-trade-roster-card .player-info {
@@ -471,7 +471,7 @@
 .scout-trade-roster-card .player-value {
   font-size: 12px;
   font-weight: 600;
-  color: #eee;
+  color: var(--text-bright);
   margin-left: 8px;
   white-space: nowrap;
   padding: 2px 6px;
@@ -482,8 +482,8 @@
 .scout-trade-result {
   width: 100%;
   padding: 10px 16px;
-  border-top: 1px solid #30363d;
-  background: #161b22;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -498,12 +498,12 @@
 
 .scout-trade-result .label {
   font-size: 13px;
-  color: #8b949e;
+  color: var(--text-3);
 }
 
-.scout-trade-result .favor-a { color: #f78166; }
-.scout-trade-result .favor-b { color: #7ee787; }
-.scout-trade-result .favor-even { color: #8b949e; }
+.scout-trade-result .favor-a { color: var(--orange-soft); }
+.scout-trade-result .favor-b { color: var(--good-bright); }
+.scout-trade-result .favor-even { color: var(--text-3); }
 
 /* Source tooltip in trade views */
 .trade-player .player-value[data-sources]:hover::after,
@@ -512,14 +512,14 @@
   position: absolute;
   bottom: 100%;
   right: 0;
-  background: #1c2128;
-  border: 1px solid #30363d;
+  background: var(--surface-3);
+  border: 1px solid var(--border);
   padding: 6px 10px;
   border-radius: 6px;
   font-size: 11px;
   white-space: pre;
   z-index: 10;
-  color: #8b949e;
+  color: var(--text-3);
   pointer-events: none;
 }
 
@@ -567,8 +567,8 @@
   .swipe-hint {
     display: inline-flex;
     align-items: center;
-    background: #58a6ff;
-    color: #fff;
+    background: var(--accent);
+    color: var(--on-accent);
     font-size: 11px;
     font-weight: 600;
     padding: 5px 10px;
@@ -656,4 +656,12 @@
     height: 26px;
     font-size: 14px;
   }
+}
+
+/* The z-score wash. The view sets --z (0..1, how far above the field this
+ * player's aggregate is) and the colour is mixed here, so the scale re-reads
+ * itself when the theme flips. --heat-z-max caps it below full strength in
+ * the light, where a solid green would swallow the number on top of it. */
+.player-value {
+  background: color-mix(in oklab, var(--heat-z-fill) calc(var(--z, 0) * var(--heat-z-max)), transparent);
 }

@@ -4,62 +4,238 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <link rel="icon" type="image/png" href="/favicon.png">
+  <!-- Home-screen install. The two *-capable tags are what make an iOS icon
+       launch the site standalone — its own window, no address bar — instead of
+       opening a Safari tab; the manifest says the same thing to everyone else,
+       and to iOS 16.4+. standalone.js keys the drawer's share row off exactly
+       that state, so dropping these tags silently removes the row too. -->
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/assets/icons/app-touch-180.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Dynast-Z">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <title>Dynast-Z</title>
-  <link rel="stylesheet" href="/styles/base/styles.css?v=abec71e4">
-  <link rel="stylesheet" href="/styles/primary/index.css?v=a1371a86">
+  <!-- Theme first: theme.js sets <html data-theme> before the first paint,
+       theme.css holds every colour token the sheets below spend. -->
+  <script src="/scripts/base/theme.js"></script>
+  <link rel="stylesheet" href="/styles/base/theme.css">
+  <link rel="stylesheet" href="/styles/base/styles.css">
+  <!-- Same hub shell the section landing pages use (/football, /golf), so the
+       home page reads as the top of that same ladder. -->
+  <link rel="stylesheet" href="/styles/base/hub.css">
+  <link rel="stylesheet" href="/styles/base/lightbox.css">
+  <!-- The VegasInsider skin /football/schedule wears, spent on the hub
+       shell. Loaded last so it repaints the sheets above it. -->
+  <link rel="stylesheet" href="/styles/primary/hub.css">
+  <style>
+    /* Signed-out sign-in card. Sits above the Football section on the home page
+       and is the only thing here that is not a nav card, so it stays quiet: a
+       hairline panel the width of the hub grid, not a hero. Hidden until
+       auth.js confirms there is no session, so signed-in visitors never see it
+       flash. */
+    .home-auth {
+      background: var(--panel-hi);
+      border: 1px solid var(--hairline);
+      border-radius: 6px;
+      padding: 14px 16px;
+      margin-top: 4px;
+    }
+
+    .home-auth-label {
+      font-size: 11px;
+      font-family: monospace;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-4);
+      display: block;
+      margin-bottom: 10px;
+    }
+
+    /* One row on desktop (username, password, button), stacked under 600px. */
+    .home-auth-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .home-auth input {
+      flex: 1 1 160px;
+      min-width: 0;
+      background: var(--hairline);
+      border: 1px solid var(--hairline-hi);
+      border-radius: 4px;
+      padding: 8px 10px;
+      font-size: 13px;
+      font-family: monospace;
+      color: var(--text-bright);
+    }
+
+    .home-auth input::placeholder { color: var(--text-4); }
+    .home-auth input:focus { outline: none; border-color: var(--accent-2); }
+
+    .home-auth button[type="submit"] {
+      flex: 0 0 auto;
+      padding: 8px 18px;
+      border: 1px solid var(--accent-2);
+      border-radius: 4px;
+      background: var(--accent-2);
+      color: var(--bg);
+      font-size: 13px;
+      font-weight: 600;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .home-auth button[type="submit"]:hover {
+      background: var(--accent-hover);
+      border-color: var(--accent-hover);
+    }
+
+    .home-auth button[type="submit"]:disabled { opacity: 0.55; cursor: default; }
+
+    /* Signing up is the secondary path, so it is an outlined link rather than a
+       second filled button competing with Sign In. */
+    .home-auth-foot {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .home-auth-signup {
+      font-size: 11px;
+      font-family: monospace;
+      color: var(--text-3);
+      text-decoration: none;
+      padding: 4px 10px;
+      border: 1px solid var(--hairline-hi);
+      border-radius: 4px;
+      transition: color 0.15s, border-color 0.15s;
+    }
+
+    .home-auth-signup:hover { color: var(--text-bright); border-color: var(--accent-2); }
+
+    .home-auth-note {
+      font-size: 11px;
+      font-family: monospace;
+      color: var(--text-4);
+    }
+
+    .home-auth-error {
+      font-size: 11px;
+      font-family: monospace;
+      color: var(--bad-soft);
+      margin-top: 8px;
+    }
+
+    @media (max-width: 600px) {
+      .home-auth-row { flex-direction: column; align-items: stretch; }
+      /* Stacked, the flex main axis is vertical, so the 160px basis above would
+         be read as a 160px-tall field. Height comes from the padding only. */
+      .home-auth input { flex: 0 0 auto; }
+      .home-auth button[type="submit"] { width: 100%; }
+    }
+  </style>
+  <!-- Vercel Web Analytics. The /_vercel/insights/* routes are injected by
+       Vercel at deploy time, so this 404s harmlessly when serving locally. -->
+  <script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
+  <script defer src="/_vercel/insights/script.js"></script>
 </head>
-<body class="index-body">
+<body class="masters-body">
   <div id="header-mount"></div>
   <div id="nav-drawer-mount"></div>
-  <script src="/scripts/base/auth.js?v=a1b2c3d4"></script>
-  <script src="/scripts/base/nav.js?v=e5f6a7b8"></script>
+  <script src="/scripts/base/auth.js"></script>
+  <script src="/scripts/base/standalone.js"></script>
+  <script src="/scripts/base/nav.js"></script>
+  <script src="/scripts/base/lightbox.js"></script>
   <script>initPage();</script>
 
-  <main class="home">
-    <div class="home-grid">
-      <a class="home-tile" href="/football">
-        <span class="home-tile-emoji">🏈</span>
-        <span class="home-tile-text">
-          <span class="home-tile-title">Football</span>
-          <span class="home-tile-desc">Trade tools &amp; dynasty leagues</span>
-        </span>
-      </a>
-      <a class="home-tile" href="/odds">
-        <span class="home-tile-emoji">🎲</span>
-        <span class="home-tile-text">
-          <span class="home-tile-title">NFL Odds</span>
-          <span class="home-tile-desc">From Fanduel, Draft Kings, and The Score</span>
-        </span>
-      </a>
-      <a class="home-tile" href="/bets">
-        <span class="home-tile-emoji">🎯</span>
-        <span class="home-tile-text">
-          <span class="home-tile-title">Bets</span>
-          <span class="home-tile-desc">Track your wagers &amp; history</span>
-        </span>
-      </a>
-      <a class="home-tile" href="/golf">
-        <span class="home-tile-emoji">🏌️</span>
-        <span class="home-tile-text">
-          <span class="home-tile-title">Golf</span>
-          <span class="home-tile-desc">Majors, leaderboards, 3-balls &amp; groups</span>
-        </span>
-      </a>
-      <a class="home-tile" href="https://sharplystupid.substack.com/" target="_blank">
-        <span class="home-tile-emoji">📰</span>
-        <span class="home-tile-text">
-          <span class="home-tile-title">News</span>
-          <span class="home-tile-desc">The Sharply Stupid blog</span>
-        </span>
-      </a>
-      <a class="home-tile" href="/acknowledgements">
-        <span class="home-tile-emoji">🧠</span>
-        <span class="home-tile-text">
-          <span class="home-tile-title">About</span>
-          <span class="home-tile-desc">Resources &amp; acknowledgements</span>
-        </span>
-      </a>
-    </div>
-  </main>
+  <div class="masters-content">
+    <h2>Dynast-Z</h2>
+    <p class="subtitle">Tools, Trackers, &amp; Pools for NFL Fantasy &amp; Gambling</p>
+
+    <!-- Signed-out only. Same /api/auth login as /account, so the home page is
+         a shortcut into a session rather than a second way to make one —
+         creating an account still happens on /account. -->
+    <form class="home-auth" id="home-auth" hidden autocomplete="on">
+      <span class="home-auth-label">Sign in</span>
+      <div class="home-auth-row">
+        <input type="text" id="home-login-name" placeholder="Username" autocomplete="username" aria-label="Username">
+        <input type="password" id="home-login-password" placeholder="Password" autocomplete="current-password" aria-label="Password">
+        <button type="submit" id="home-login-btn">Sign In</button>
+      </div>
+      <div class="home-auth-foot">
+        <a class="home-auth-signup" href="/account">Create an account</a>
+        <span class="home-auth-note">Syncs your picks across devices</span>
+      </div>
+      <div class="home-auth-error" id="home-login-error" hidden></div>
+    </form>
+
+    <!-- Filled from NAV_SECTIONS in scripts/base/nav.js, so the home page, the
+         /football hub and the drawer can never disagree about what the site
+         contains. Three headings rather than one Football heading: the split is
+         by what you are doing, not by sport. Everything outside them lives on
+         /appendix, which the drawer links to directly.
+
+         The headings are plain text, not links — none of the three has a
+         landing page of its own; /football is the hub for all three. -->
+    <h3 class="hub-section">Gambling</h3>
+    <div class="hub-grid" data-nav-section="Gambling"></div>
+
+    <h3 class="hub-section">Games</h3>
+    <div class="hub-grid" data-nav-section="Games"></div>
+
+    <h3 class="hub-section">Fantasy</h3>
+    <div class="hub-grid" data-nav-section="Fantasy"></div>
+  </div>
+
+  <script src="/scripts/base/sync.js"></script>
+  <script>
+    mountHubGrids();
+
+    // Only offer the form to signed-out visitors. It ships `hidden` so a signed-in
+    // visitor never sees it paint before this runs.
+    (function () {
+      const form = document.getElementById('home-auth');
+      if (isLoggedIn()) return;
+      form.hidden = false;
+
+      const btn = document.getElementById('home-login-btn');
+      const errEl = document.getElementById('home-login-error');
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const name = document.getElementById('home-login-name').value.trim();
+        const password = document.getElementById('home-login-password').value;
+        errEl.hidden = true;
+        if (!name || !password) {
+          errEl.textContent = 'Enter username and password';
+          errEl.hidden = false;
+          return;
+        }
+
+        try {
+          btn.disabled = true;
+          await login(name, password);
+
+          // Same post-sign-in pull as /account: the new session reads the
+          // server's data rather than whatever this browser last cached.
+          const sel = await syncPull('masters', 'selections');
+          if (sel) localStorage.setItem('masters_selections', JSON.stringify(sel));
+          const ball = await syncPull('masters', '3ball');
+          if (ball) localStorage.setItem('masters_3ball', JSON.stringify(ball));
+
+          window.location.reload();
+        } catch (err) {
+          errEl.textContent = err.message;
+          errEl.hidden = false;
+          btn.disabled = false;
+        }
+      });
+    })();
+  </script>
 </body>
 </html>

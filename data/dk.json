@@ -4,7 +4,7 @@
       "id": "3",
       "seoIdentifier": "football",
       "name": "Football",
-      "sortOrder": 66
+      "sortOrder": 62
     }
   ],
   "leagues": [
@@ -27,15 +27,15 @@
       "sportId": "3",
       "leagueId": "88808",
       "name": "NFL 2026/27 - Win Totals",
-      "startEventDate": "2026-09-13T16:28:00.0000000Z",
+      "startEventDate": "2026-09-13T16:29:00.0000000Z",
       "status": "NOT_STARTED",
       "tags": [
         "OSB"
       ],
       "metadata": {
-        "settlementDate": "2027-01-11T21:30:00Z"
+        "settlementDate": "2027-02-01T00:00:00Z"
       },
-      "sortOrder": 547202852,
+      "sortOrder": 547202952,
       "subscriptionKey": "events--1084254432"
     },
     {
@@ -8810,7 +8810,8 @@
       "displayOdds": {
         "american": "\u2212320",
         "decimal": "1.31",
-        "fractional": "5/16"
+        "fractional": "5/16",
+        "percentage": "76.1%"
       },
       "trueOdds": 1.3125,
       "points": 2.5,
@@ -8828,7 +8829,8 @@
       "displayOdds": {
         "american": "+250",
         "decimal": "3.50",
-        "fractional": "5/2"
+        "fractional": "5/2",
+        "percentage": "28.5%"
       },
       "trueOdds": 3.5,
       "points": 2.5,
@@ -8844,11 +8846,12 @@
       "marketId": "311505773",
       "label": "Over",
       "displayOdds": {
-        "american": "\u2212130",
-        "decimal": "1.76",
-        "fractional": "10/13"
+        "american": "\u2212136",
+        "decimal": "1.73",
+        "fractional": "25/34",
+        "percentage": "57.6%"
       },
-      "trueOdds": 1.76923077,
+      "trueOdds": 1.73529412,
       "points": 3.5,
       "outcomeType": "Over",
       "sortOrder": 3500,
@@ -8863,11 +8866,12 @@
       "marketId": "311505773",
       "label": "Under",
       "displayOdds": {
-        "american": "+110",
-        "decimal": "2.10",
-        "fractional": "11/10"
+        "american": "+115",
+        "decimal": "2.15",
+        "fractional": "23/20",
+        "percentage": "46.5%"
       },
-      "trueOdds": 2.1,
+      "trueOdds": 2.15,
       "points": 3.5,
       "outcomeType": "Under",
       "sortOrder": 3502,
@@ -8882,11 +8886,12 @@
       "marketId": "311505773",
       "label": "Over",
       "displayOdds": {
-        "american": "+160",
-        "decimal": "2.60",
-        "fractional": "8/5"
+        "american": "+154",
+        "decimal": "2.54",
+        "fractional": "77/50",
+        "percentage": "39.3%"
       },
-      "trueOdds": 2.6,
+      "trueOdds": 2.54,
       "points": 4.5,
       "outcomeType": "Over",
       "sortOrder": 4500,
@@ -8900,11 +8905,12 @@
       "marketId": "311505773",
       "label": "Under",
       "displayOdds": {
-        "american": "\u2212190",
-        "decimal": "1.52",
-        "fractional": "10/19"
+        "american": "\u2212186",
+        "decimal": "1.53",
+        "fractional": "50/93",
+        "percentage": "65%"
       },
-      "trueOdds": 1.52631579,
+      "trueOdds": 1.53763441,
       "points": 4.5,
       "outcomeType": "Under",
       "sortOrder": 4502,
@@ -8920,7 +8926,8 @@
       "displayOdds": {
         "american": "+270",
         "decimal": "3.70",
-        "fractional": "27/10"
+        "fractional": "27/10",
+        "percentage": "27%"
       },
       "trueOdds": 3.7,
       "points": 5.5,
@@ -8938,7 +8945,8 @@
       "displayOdds": {
         "american": "\u2212350",
         "decimal": "1.28",
-        "fractional": "2/7"
+        "fractional": "2/7",
+        "percentage": "77.7%"
       },
       "trueOdds": 1.28571429,
       "points": 5.5,
@@ -8956,7 +8964,8 @@
       "displayOdds": {
         "american": "+500",
         "decimal": "6.00",
-        "fractional": "5/1"
+        "fractional": "5/1",
+        "percentage": "16.6%"
       },
       "trueOdds": 6,
       "points": 6.5,
@@ -8974,7 +8983,8 @@
       "displayOdds": {
         "american": "\u2212750",
         "decimal": "1.13",
-        "fractional": "2/15"
+        "fractional": "2/15",
+        "percentage": "88.2%"
       },
       "trueOdds": 1.13333334,
       "points": 6.5,
@@ -8990,11 +9000,12 @@
       "marketId": "311506003",
       "label": "Over",
       "displayOdds": {
-        "american": "\u2212210",
-        "decimal": "1.47",
-        "fractional": "10/21"
+        "american": "\u2212240",
+        "decimal": "1.41",
+        "fractional": "5/12",
+        "percentage": "70.5%"
       },
-      "trueOdds": 1.47619048,
+      "trueOdds": 1.41666667,
       "points": 5.5,
       "outcomeType": "Over",
       "sortOrder": 5500,
@@ -9008,11 +9019,12 @@
       "marketId": "311506003",
       "label": "Under",
       "displayOdds": {
-        "american": "+170",
-        "decimal": "2.70",
-        "fractional": "17/10"
+        "american": "+190",
+        "decimal": "2.90",
+        "fractional": "19/10",
+        "percentage": "34.4%"
       },
-      "trueOdds": 2.7,
+      "trueOdds": 2.9,
       "points": 5.5,
       "outcomeType": "Under",
       "sortOrder": 5502,
@@ -9026,16 +9038,16 @@
       "marketId": "311506003",
       "label": "Over",
       "displayOdds": {
-        "american": "\u2212115",
-        "decimal": "1.86",
-        "fractional": "20/23"
+        "american": "\u2212150",
+        "decimal": "1.66",
+        "fractional": "4/6",
+        "percentage": "59.9%"
       },
-      "trueOdds": 1.86956522,
+      "trueOdds": 1.66666667,
       "points": 6.5,
       "outcomeType": "Over",
       "sortOrder": 6500,
       "tags": [
-        "MainPointLine",
         "OSB"
       ],
       "metadata": {}
@@ -9045,16 +9057,16 @@
       "marketId": "311506003",
       "label": "Under",
       "displayOdds": {
-        "american": "\u2212105",
-        "decimal": "1.95",
-        "fractional": "20/21"
+        "american": "+130",
+        "decimal": "2.30",
+        "fractional": "13/10",
+        "percentage": "43.4%"
       },
-      "trueOdds": 1.95238096,
+      "trueOdds": 2.3,
       "points": 6.5,
       "outcomeType": "Under",
       "sortOrder": 6502,
       "tags": [
-        "MainPointLine",
         "OSB"
       ],
       "metadata": {}
@@ -9064,15 +9076,17 @@
       "marketId": "311506003",
       "label": "Over",
       "displayOdds": {
-        "american": "+136",
-        "decimal": "2.36",
-        "fractional": "34/25"
+        "american": "+120",
+        "decimal": "2.20",
+        "fractional": "6/5",
+        "percentage": "45.4%"
       },
-      "trueOdds": 2.36,
+      "trueOdds": 2.2,
       "points": 7.5,
       "outcomeType": "Over",
       "sortOrder": 7500,
       "tags": [
+        "MainPointLine",
         "OSB"
       ],
       "metadata": {}
@@ -9082,15 +9096,17 @@
       "marketId": "311506003",
       "label": "Under",
       "displayOdds": {
-        "american": "\u2212166",
-        "decimal": "1.60",
-        "fractional": "50/83"
+        "american": "\u2212140",
+        "decimal": "1.71",
+        "fractional": "5/7",
+        "percentage": "58.3%"
       },
-      "trueOdds": 1.60240964,
+      "trueOdds": 1.71428572,
       "points": 7.5,
       "outcomeType": "Under",
       "sortOrder": 7502,
       "tags": [
+        "MainPointLine",
         "OSB"
       ],
       "metadata": {}
@@ -9100,11 +9116,12 @@
       "marketId": "311506003",
       "label": "Over",
       "displayOdds": {
-        "american": "+250",
-        "decimal": "3.50",
-        "fractional": "5/2"
+        "american": "+220",
+        "decimal": "3.20",
+        "fractional": "11/5",
+        "percentage": "31.2%"
       },
-      "trueOdds": 3.5,
+      "trueOdds": 3.2,
       "points": 8.5,
       "outcomeType": "Over",
       "sortOrder": 8500,
@@ -9118,11 +9135,12 @@
       "marketId": "311506003",
       "label": "Under",
       "displayOdds": {
-        "american": "\u2212320",
-        "decimal": "1.31",
-        "fractional": "5/16"
+        "american": "\u2212280",
+        "decimal": "1.35",
+        "fractional": "5/14",
+        "percentage": "73.6%"
       },
-      "trueOdds": 1.3125,
+      "trueOdds": 1.35714286,
       "points": 8.5,
       "outcomeType": "Under",
       "sortOrder": 8502,
@@ -9136,11 +9154,12 @@
       "marketId": "311506003",
       "label": "Over",
       "displayOdds": {
-        "american": "+450",
-        "decimal": "5.50",
-        "fractional": "9/2"
+        "american": "+425",
+        "decimal": "5.25",
+        "fractional": "17/4",
+        "percentage": "19%"
       },
-      "trueOdds": 5.5,
+      "trueOdds": 5.25,
       "points": 9.5,
       "outcomeType": "Over",
       "sortOrder": 9500,
@@ -9156,7 +9175,8 @@
       "displayOdds": {
         "american": "\u2212650",
         "decimal": "1.15",
-        "fractional": "2/13"
+        "fractional": "2/13",
+        "percentage": "86.6%"
       },
       "trueOdds": 1.15384616,
       "points": 9.5,
@@ -9174,7 +9194,8 @@
       "displayOdds": {
         "american": "\u2212280",
         "decimal": "1.35",
-        "fractional": "5/14"
+        "fractional": "5/14",
+        "percentage": "73.6%"
       },
       "trueOdds": 1.35714286,
       "points": 9.5,
@@ -9192,7 +9213,8 @@
       "displayOdds": {
         "american": "+220",
         "decimal": "3.20",
-        "fractional": "11/5"
+        "fractional": "11/5",
+        "percentage": "31.2%"
       },
       "trueOdds": 3.2,
       "points": 9.5,
@@ -9210,7 +9232,8 @@
       "displayOdds": {
         "american": "\u2212150",
         "decimal": "1.66",
-        "fractional": "4/6"
+        "fractional": "4/6",
+        "percentage": "59.9%"
       },
       "trueOdds": 1.66666667,
       "points": 10.5,
@@ -9228,7 +9251,8 @@
       "displayOdds": {
         "american": "+125",
         "decimal": "2.25",
-        "fractional": "5/4"
+        "fractional": "5/4",
+        "percentage": "44.4%"
       },
       "trueOdds": 2.25,
       "points": 10.5,
@@ -9246,7 +9270,8 @@
       "displayOdds": {
         "american": "+115",
         "decimal": "2.15",
-        "fractional": "23/20"
+        "fractional": "23/20",
+        "percentage": "46.5%"
       },
       "trueOdds": 2.15,
       "points": 11.5,
@@ -9265,7 +9290,8 @@
       "displayOdds": {
         "american": "\u2212140",
         "decimal": "1.71",
-        "fractional": "5/7"
+        "fractional": "5/7",
+        "percentage": "58.3%"
       },
       "trueOdds": 1.71428572,
       "points": 11.5,
@@ -9284,7 +9310,8 @@
       "displayOdds": {
         "american": "+215",
         "decimal": "3.15",
-        "fractional": "43/20"
+        "fractional": "43/20",
+        "percentage": "31.7%"
       },
       "trueOdds": 3.15,
       "points": 12.5,
@@ -9302,7 +9329,8 @@
       "displayOdds": {
         "american": "\u2212270",
         "decimal": "1.37",
-        "fractional": "10/27"
+        "fractional": "10/27",
+        "percentage": "72.9%"
       },
       "trueOdds": 1.37037038,
       "points": 12.5,
@@ -9320,7 +9348,8 @@
       "displayOdds": {
         "american": "+425",
         "decimal": "5.25",
-        "fractional": "17/4"
+        "fractional": "17/4",
+        "percentage": "19%"
       },
       "trueOdds": 5.25,
       "points": 13.5,
@@ -9338,7 +9367,8 @@
       "displayOdds": {
         "american": "\u2212600",
         "decimal": "1.16",
-        "fractional": "1/6"
+        "fractional": "1/6",
+        "percentage": "85.7%"
       },
       "trueOdds": 1.16666667,
       "points": 13.5,
@@ -9356,7 +9386,8 @@
       "displayOdds": {
         "american": "\u2212400",
         "decimal": "1.25",
-        "fractional": "1/4"
+        "fractional": "1/4",
+        "percentage": "80%"
       },
       "trueOdds": 1.25,
       "points": 8.5,
@@ -9374,7 +9405,8 @@
       "displayOdds": {
         "american": "+310",
         "decimal": "4.10",
-        "fractional": "31/10"
+        "fractional": "31/10",
+        "percentage": "24.3%"
       },
       "trueOdds": 4.1,
       "points": 8.5,
@@ -9392,7 +9424,8 @@
       "displayOdds": {
         "american": "\u2212210",
         "decimal": "1.47",
-        "fractional": "10/21"
+        "fractional": "10/21",
+        "percentage": "67.7%"
       },
       "trueOdds": 1.47619048,
       "points": 9.5,
@@ -9410,7 +9443,8 @@
       "displayOdds": {
         "american": "+170",
         "decimal": "2.70",
-        "fractional": "17/10"
+        "fractional": "17/10",
+        "percentage": "37%"
       },
       "trueOdds": 2.7,
       "points": 9.5,
@@ -9428,7 +9462,8 @@
       "displayOdds": {
         "american": "\u2212120",
         "decimal": "1.83",
-        "fractional": "5/6"
+        "fractional": "5/6",
+        "percentage": "54.5%"
       },
       "trueOdds": 1.83333334,
       "points": 10.5,
@@ -9447,7 +9482,8 @@
       "displayOdds": {
         "american": "+100",
         "decimal": "2.00",
-        "fractional": "1/1"
+        "fractional": "1/1",
+        "percentage": "50%"
       },
       "trueOdds": 2,
       "points": 10.5,
@@ -9466,7 +9502,8 @@
       "displayOdds": {
         "american": "+154",
         "decimal": "2.54",
-        "fractional": "77/50"
+        "fractional": "77/50",
+        "percentage": "39.3%"
       },
       "trueOdds": 2.54,
       "points": 11.5,
@@ -9484,7 +9521,8 @@
       "displayOdds": {
         "american": "\u2212190",
         "decimal": "1.52",
-        "fractional": "10/19"
+        "fractional": "10/19",
+        "percentage": "65.5%"
       },
       "trueOdds": 1.52631579,
       "points": 11.5,
@@ -9502,7 +9540,8 @@
       "displayOdds": {
         "american": "+290",
         "decimal": "3.90",
-        "fractional": "29/10"
+        "fractional": "29/10",
+        "percentage": "25.6%"
       },
       "trueOdds": 3.9,
       "points": 12.5,
@@ -9520,7 +9559,8 @@
       "displayOdds": {
         "american": "\u2212380",
         "decimal": "1.26",
-        "fractional": "5/19"
+        "fractional": "5/19",
+        "percentage": "79.1%"
       },
       "trueOdds": 1.2631579,
       "points": 12.5,
@@ -9538,7 +9578,8 @@
       "displayOdds": {
         "american": "\u2212310",
         "decimal": "1.32",
-        "fractional": "10/31"
+        "fractional": "10/31",
+        "percentage": "75.6%"
       },
       "trueOdds": 1.32258065,
       "points": 5.5,
@@ -9556,7 +9597,8 @@
       "displayOdds": {
         "american": "+245",
         "decimal": "3.45",
-        "fractional": "49/20"
+        "fractional": "49/20",
+        "percentage": "28.9%"
       },
       "trueOdds": 3.45,
       "points": 5.5,
@@ -9574,7 +9616,8 @@
       "displayOdds": {
         "american": "\u2212166",
         "decimal": "1.60",
-        "fractional": "50/83"
+        "fractional": "50/83",
+        "percentage": "62.4%"
       },
       "trueOdds": 1.60240964,
       "points": 6.5,
@@ -9592,7 +9635,8 @@
       "displayOdds": {
         "american": "+134",
         "decimal": "2.34",
-        "fractional": "67/50"
+        "fractional": "67/50",
+        "percentage": "42.7%"
       },
       "trueOdds": 2.34,
       "points": 6.5,
@@ -9608,11 +9652,12 @@
       "marketId": "311506686",
       "label": "Over",
       "displayOdds": {
-        "american": "+110",
-        "decimal": "2.10",
-        "fractional": "11/10"
+        "american": "+115",
+        "decimal": "2.15",
+        "fractional": "23/20",
+        "percentage": "46.5%"
       },
-      "trueOdds": 2.1,
+      "trueOdds": 2.15,
       "points": 7.5,
       "outcomeType": "Over",
       "sortOrder": 7500,
@@ -9627,11 +9672,12 @@
       "marketId": "311506686",
       "label": "Under",
       "displayOdds": {
-        "american": "\u2212130",
-        "decimal": "1.76",
-        "fractional": "10/13"
+        "american": "\u2212136",
+        "decimal": "1.73",
+        "fractional": "25/34",
+        "percentage": "57.6%"
       },
-      "trueOdds": 1.76923077,
+      "trueOdds": 1.73529412,
       "points": 7.5,
       "outcomeType": "Under",
       "sortOrder": 7502,
@@ -9648,7 +9694,8 @@
       "displayOdds": {
         "american": "+180",
         "decimal": "2.80",
-        "fractional": "9/5"
+        "fractional": "9/5",
+        "percentage": "35.7%"
       },
       "trueOdds": 2.8,
       "points": 8.5,
@@ -9666,7 +9713,8 @@
       "displayOdds": {
         "american": "\u2212220",
         "decimal": "1.45",
-        "fractional": "5/11"
+        "fractional": "5/11",
+        "percentage": "68.7%"
       },
       "trueOdds": 1.45454546,
       "points": 8.5,
@@ -9684,7 +9732,8 @@
       "displayOdds": {
         "american": "+320",
         "decimal": "4.20",
-        "fractional": "16/5"
+        "fractional": "16/5",
+        "percentage": "23.8%"
       },
       "trueOdds": 4.2,
       "points": 9.5,
@@ -9702,7 +9751,8 @@
       "displayOdds": {
         "american": "\u2212430",
         "decimal": "1.23",
-        "fractional": "10/43"
+        "fractional": "10/43",
+        "percentage": "81.1%"
       },
       "trueOdds": 1.23255814,
       "points": 9.5,
@@ -9720,7 +9770,8 @@
       "displayOdds": {
         "american": "\u2212320",
         "decimal": "1.31",
-        "fractional": "5/16"
+        "fractional": "5/16",
+        "percentage": "76.1%"
       },
       "trueOdds": 1.3125,
       "points": 7.5,
@@ -9738,7 +9789,8 @@
       "displayOdds": {
         "american": "+250",
         "decimal": "3.50",
-        "fractional": "5/2"
+        "fractional": "5/2",
+        "percentage": "28.5%"
       },
       "trueOdds": 3.5,
       "points": 7.5,
@@ -9754,11 +9806,12 @@
       "marketId": "311506905",
       "label": "Over",
       "displayOdds": {
-        "american": "\u2212175",
-        "decimal": "1.57",
-        "fractional": "4/7"
+        "american": "\u2212180",
+        "decimal": "1.55",
+        "fractional": "5/9",
+        "percentage": "64.2%"
       },
-      "trueOdds": 1.57142858,
+      "trueOdds": 1.55555556,
       "points": 8.5,
       "outcomeType": "Over",
       "sortOrder": 8500,
@@ -9772,11 +9825,12 @@
       "marketId": "311506905",
       "label": "Under",
       "displayOdds": {
-        "american": "+144",
-        "decimal": "2.44",
-        "fractional": "36/25"
+        "american": "+140",
+        "decimal": "2.40",
+        "fractional": "7/5",
+        "percentage": "41.6%"
       },
-      "trueOdds": 2.44,
+      "trueOdds": 2.4,
       "points": 8.5,
       "outcomeType": "Under",
       "sortOrder": 8502,
@@ -9790,11 +9844,12 @@
       "marketId": "311506905",
       "label": "Over",
       "displayOdds": {
-        "american": "+100",
-        "decimal": "2.00",
-        "fractional": "1/1"
+        "american": "+105",
+        "decimal": "2.05",
+        "fractional": "21/20",
+        "percentage": "48.7%"
       },
-      "trueOdds": 2,
+      "trueOdds": 2.05,
       "points": 9.5,
       "outcomeType": "Over",
       "sortOrder": 9500,
@@ -9809,11 +9864,12 @@
       "marketId": "311506905",
       "label": "Under",
       "displayOdds": {
-        "american": "\u2212120",
-        "decimal": "1.83",
-        "fractional": "5/6"
+        "american": "\u2212125",
+        "decimal": "1.80",
+        "fractional": "4/5",
+        "percentage": "55.5%"
       },
-      "trueOdds": 1.83333334,
+      "trueOdds": 1.8,
       "points": 9.5,
       "outcomeType": "Under",
       "sortOrder": 9502,
@@ -9830,7 +9886,8 @@
       "displayOdds": {
         "american": "+170",
         "decimal": "2.70",
-        "fractional": "17/10"
+        "fractional": "17/10",
+        "percentage": "37%"
       },
       "trueOdds": 2.7,
       "points": 10.5,
@@ -9848,7 +9905,8 @@
       "displayOdds": {
         "american": "\u2212210",
         "decimal": "1.47",
-        "fractional": "10/21"
+        "fractional": "10/21",
+        "percentage": "67.7%"
       },
       "trueOdds": 1.47619048,
       "points": 10.5,
@@ -9866,7 +9924,8 @@
       "displayOdds": {
         "american": "+310",
         "decimal": "4.10",
-        "fractional": "31/10"
+        "fractional": "31/10",
+        "percentage": "24.3%"
       },
       "trueOdds": 4.1,
       "points": 11.5,
@@ -9884,7 +9943,8 @@
       "displayOdds": {
         "american": "\u2212400",
         "decimal": "1.25",
-        "fractional": "1/4"
+        "fractional": "1/4",
+        "percentage": "80%"
       },
       "trueOdds": 1.25,
       "points": 11.5,
@@ -9902,7 +9962,8 @@
       "displayOdds": {
         "american": "\u2212500",
         "decimal": "1.20",
-        "fractional": "1/5"
+        "fractional": "1/5",
+        "percentage": "83.3%"
       },
       "trueOdds": 1.2,
       "points": 7.5,
@@ -9920,7 +9981,8 @@
       "displayOdds": {
         "american": "+370",
         "decimal": "4.70",
-        "fractional": "37/10"
+        "fractional": "37/10",
+        "percentage": "21.2%"
       },
       "trueOdds": 4.7,
       "points": 7.5,
@@ -9938,7 +10000,8 @@
       "displayOdds": {
         "american": "\u2212265",
         "decimal": "1.37",
-        "fractional": "20/53"
+        "fractional": "20/53",
+        "percentage": "72.6%"
       },
       "trueOdds": 1.3773585,
       "points": 8.5,
@@ -9956,7 +10019,8 @@
       "displayOdds": {
         "american": "+210",
         "decimal": "3.10",
-        "fractional": "21/10"
+        "fractional": "21/10",
+        "percentage": "32.2%"
       },
       "trueOdds": 3.1,
       "points": 8.5,
@@ -9972,11 +10036,12 @@
       "marketId": "311507067",
       "label": "Over",
       "displayOdds": {
-        "american": "\u2212150",
-        "decimal": "1.66",
-        "fractional": "4/6"
+        "american": "\u2212160",
+        "decimal": "1.62",
+        "fractional": "5/8",
+        "percentage": "61.5%"
       },
-      "trueOdds": 1.66666667,
+      "trueOdds": 1.625,
       "points": 9.5,
       "outcomeType": "Over",
       "sortOrder": 9500,
@@ -9990,11 +10055,12 @@
       "marketId": "311507067",
       "label": "Under",
       "displayOdds": {
-        "american": "+125",
-        "decimal": "2.25",
-        "fractional": "5/4"
+        "american": "+130",
+        "decimal": "2.30",
+        "fractional": "13/10",
+        "percentage": "43.4%"
       },
-      "trueOdds": 2.25,
+      "trueOdds": 2.3,
       "points": 9.5,
       "outcomeType": "Under",
       "sortOrder": 9502,
@@ -10010,7 +10076,8 @@
       "displayOdds": {
         "american": "+115",
         "decimal": "2.15",
-        "fractional": "23/20"
+        "fractional": "23/20",
+        "percentage": "46.5%"
       },
       "trueOdds": 2.15,
       "points": 10.5,
@@ -10029,7 +10096,8 @@
       "displayOdds": {
         "american": "\u2212140",
         "decimal": "1.71",
-        "fractional": "5/7"
+        "fractional": "5/7",
+        "percentage": "58.3%"
       },
       "trueOdds": 1.71428572,
       "points": 10.5,
@@ -10048,7 +10116,8 @@
       "displayOdds": {
         "american": "+210",
         "decimal": "3.10",
-        "fractional": "21/10"
+        "fractional": "21/10",
+        "percentage": "32.2%"
       },
       "trueOdds": 3.1,
       "points": 11.5,
@@ -10066,7 +10135,8 @@
       "displayOdds": {
         "american": "\u2212265",
         "decimal": "1.37",
-        "fractional": "20/53"
+        "fractional": "20/53",
+        "percentage": "72.6%"
       },
       "trueOdds": 1.3773585,
       "points": 11.5,
@@ -10082,11 +10152,12 @@
       "marketId": "311507449",
       "label": "Over",
       "displayOdds": {
-        "american": "\u2212290",
-        "decimal": "1.34",
-        "fractional": "10/29"
+        "american": "\u2212225",
+        "decimal": "1.44",
+        "fractional": "4/9",
+        "percentage": "69.2%"
       },
-      "trueOdds": 1.34482759,
+      "trueOdds": 1.44444445,
       "points": 4.5,
       "outcomeType": "Over",
       "sortOrder": 4500,
@@ -10100,11 +10171,12 @@
       "marketId": "311507449",
       "label": "Under",
       "displayOdds": {
-        "american": "+230",
-        "decimal": "3.30",
-        "fractional": "23/10"
+        "american": "+175",
+        "decimal": "2.75",
+        "fractional": "7/4",
+        "percentage": "36.3%"
       },
-      "trueOdds": 3.3,
+      "trueOdds": 2.75,
       "points": 4.5,
       "outcomeType": "Under",
       "sortOrder": 4502,
@@ -10118,11 +10190,12 @@
       "marketId": "311507449",
       "label": "Over",
       "displayOdds": {
-        "american": "\u2212150",
-        "decimal": "1.66",
-        "fractional": "4/6"
+        "american": "\u2212136",
+        "decimal": "1.73",
+        "fractional": "25/34",
+        "percentage": "57.6%"
       },
-      "trueOdds": 1.66666667,
+      "trueOdds": 1.73529412,
       "points": 5.5,
       "outcomeType": "Over",
       "sortOrder": 5500,
@@ -10137,11 +10210,12 @@
       "marketId": "311507449",
       "label": "Under",
       "displayOdds": {
-        "american": "+125",
-        "decimal": "2.25",
-        "fractional": "5/4"
+        "american": "+115",
+        "decimal": "2.15",
+        "fractional": "23/20",
+        "percentage": "46.5%"
       },
-      "trueOdds": 2.25,
+      "trueOdds": 2.15,
       "points": 5.5,
       "outcomeType": "Under",
       "sortOrder": 5502,
@@ -10156,11 +10230,12 @@
       "marketId": "311507449",
       "label": "Over",
       "displayOdds": {
-        "american": "+130",
-        "decimal": "2.30",
-        "fractional": "13/10"
+        "american": "+140",
+        "decimal": "2.40",
+        "fractional": "7/5",
+        "percentage": "41.6%"
       },
-      "trueOdds": 2.3,
+      "trueOdds": 2.4,
       "points": 6.5,
       "outcomeType": "Over",
       "sortOrder": 6500,
@@ -10174,11 +10249,12 @@
       "marketId": "311507449",
       "label": "Under",
       "displayOdds": {
-        "american": "\u2212160",
-        "decimal": "1.62",
-        "fractional": "5/8"
+        "american": "\u2212170",
+        "decimal": "1.58",
+        "fractional": "10/17",
+        "percentage": "62.9%"
       },
-      "trueOdds": 1.625,
+      "trueOdds": 1.5882353,
       "points": 6.5,
       "outcomeType": "Under",
       "sortOrder": 6502,
@@ -10194,7 +10270,8 @@
       "displayOdds": {
         "american": "+205",
         "decimal": "3.05",
-        "fractional": "41/20"
+        "fractional": "41/20",
+        "percentage": "32.7%"
       },
       "trueOdds": 3.05,
       "points": 7.5,
@@ -10212,7 +10289,8 @@
       "displayOdds": {
         "american": "\u2212260",
         "decimal": "1.38",
-        "fractional": "5/13"
+        "fractional": "5/13",
+        "percentage": "72.2%"
       },
       "trueOdds": 1.38461539,
       "points": 7.5,
@@ -10230,7 +10308,8 @@
       "displayOdds": {
         "american": "+350",
         "decimal": "4.50",
-        "fractional": "7/2"
+        "fractional": "7/2",
+        "percentage": "22.2%"
       },
       "trueOdds": 4.5,
       "points": 8.5,
@@ -10248,7 +10327,8 @@
       "displayOdds": {
         "american": "\u2212470",
         "decimal": "1.21",
-        "fractional": "10/47"
+        "fractional": "10/47",
+        "percentage": "82.4%"
       },
       "trueOdds": 1.21276596,
       "points": 8.5,
@@ -10266,7 +10346,8 @@
       "displayOdds": {
         "american": "\u2212275",
         "decimal": "1.36",
-        "fractional": "4/11"
+        "fractional": "4/11",
+        "percentage": "73.3%"
       },
       "trueOdds": 1.36363637,
       "points": 7.5,
@@ -10284,7 +10365,8 @@
       "displayOdds": {
         "american": "+220",
         "decimal": "3.20",
-        "fractional": "11/5"
+        "fractional": "11/5",
+        "percentage": "31.2%"
       },
       "trueOdds": 3.2,
       "points": 7.5,
@@ -10300,11 +10382,12 @@
       "marketId": "311507701",
       "label": "Over",
       "displayOdds": {
-        "american": "\u2212150",
-        "decimal": "1.66",
-        "fractional": "4/6"
+        "american": "\u2212160",
+        "decimal": "1.62",
+        "fractional": "5/8",
+        "percentage": "61.5%"
       },
-      "trueOdds": 1.66666667,
+      "trueOdds": 1.625,
       "points": 8.5,
       "outcomeType": "Over",
       "sortOrder": 8500,
@@ -10318,11 +10401,12 @@
       "marketId": "311507701",
       "label": "Under",
       "displayOdds": {
-        "american": "+125",
-        "decimal": "2.25",
-        "fractional": "5/4"
+        "american": "+134",
+        "decimal": "2.34",
+        "fractional": "67/50",
+        "percentage": "42.7%"
       },
-      "trueOdds": 2.25,
+      "trueOdds": 2.34,
       "points": 8.5,
       "outcomeType": "Under",
       "sortOrder": 8502,
@@ -10336,11 +10420,12 @@
       "marketId": "311507701",
       "label": "Over",
       "displayOdds": {
-        "american": "+115",
-        "decimal": "2.15",
-        "fractional": "23/20"
+        "american": "+105",
+        "decimal": "2.05",
+        "fractional": "21/20",
+        "percentage": "48.7%"
       },
-      "trueOdds": 2.15,
+      "trueOdds": 2.05,
       "points": 9.5,
       "outcomeType": "Over",
       "sortOrder": 9500,
@@ -10355,11 +10440,12 @@
       "marketId": "311507701",
       "label": "Under",
       "displayOdds": {
-        "american": "\u2212140",
-        "decimal": "1.71",
-        "fractional": "5/7"
+        "american": "\u2212125",
+        "decimal": "1.80",
+        "fractional": "4/5",
+        "percentage": "55.5%"
       },
-      "trueOdds": 1.71428572,
+      "trueOdds": 1.8,
       "points": 9.5,
       "outcomeType": "Under",
       "sortOrder": 9502,
@@ -10376,7 +10462,8 @@
       "displayOdds": {
         "american": "+200",
         "decimal": "3.00",
-        "fractional": "2/1"
+        "fractional": "2/1",
+        "percentage": "33.3%"
       },
       "trueOdds": 3,
       "points": 10.5,
@@ -10394,7 +10481,8 @@
       "displayOdds": {
         "american": "\u2212250",
         "decimal": "1.40",
-        "fractional": "2/5"
+        "fractional": "2/5",
+        "percentage": "71.4%"
       },
       "trueOdds": 1.4,
       "points": 10.5,
@@ -10412,7 +10500,8 @@
       "displayOdds": {
         "american": "+370",
         "decimal": "4.70",
-        "fractional": "37/10"
+        "fractional": "37/10",
+        "percentage": "21.2%"
       },
       "trueOdds": 4.7,
       "points": 11.5,
@@ -10430,7 +10519,8 @@
       "displayOdds": {
         "american": "\u2212500",
         "decimal": "1.20",
-        "fractional": "1/5"
+        "fractional": "1/5",
+        "percentage": "83.3%"
       },
       "trueOdds": 1.2,
       "points": 11.5,
@@ -10448,7 +10538,8 @@
       "displayOdds": {
         "american": "\u2212370",
         "decimal": "1.27",
-        "fractional": "10/37"
+        "fractional": "10/37",
+        "percentage": "78.7%"
       },
       "trueOdds": 1.27027028,
       "points": 7.5,
@@ -10466,7 +10557,8 @@
       "displayOdds": {
         "american": "+280",
         "decimal": "3.80",
-        "fractional": "14/5"
+        "fractional": "14/5",
+        "percentage": "26.3%"
       },
       "trueOdds": 3.8,
       "points": 7.5,
@@ -10484,7 +10576,8 @@
       "displayOdds": {
         "american": "\u2212200",
         "decimal": "1.50",
-        "fractional": "1/2"
+        "fractional": "1/2",
+        "percentage": "66.6%"
       },
       "trueOdds": 1.5,
       "points": 8.5,
@@ -10502,7 +10595,8 @@
       "displayOdds": {
         "american": "+164",
         "decimal": "2.64",
-        "fractional": "41/25"
+        "fractional": "41/25",
+        "percentage": "37.8%"
       },
       "trueOdds": 2.64,
       "points": 8.5,
@@ -10518,11 +10612,12 @@
       "marketId": "311507815",
       "label": "Over",
       "displayOdds": {
-        "american": "\u2212110",
-        "decimal": "1.90",
-        "fractional": "10/11"
+        "american": "\u2212115",
+        "decimal": "1.86",
+        "fractional": "20/23",
+        "percentage": "53.4%"
       },
-      "trueOdds": 1.90909091,
+      "trueOdds": 1.86956522,
       "points": 9.5,
       "outcomeType": "Over",
       "sortOrder": 9500,
@@ -10537,11 +10632,12 @@
       "marketId": "311507815",
       "label": "Under",
       "displayOdds": {
-        "american": "\u2212110",
-        "decimal": "1.90",
-        "fractional": "10/11"
+        "american": "\u2212105",
+        "decimal": "1.95",
+        "fractional": "20/21",
+        "percentage": "51.2%"
       },
-      "trueOdds": 1.90909091,
+      "trueOdds": 1.95238096,
       "points": 9.5,
       "outcomeType": "Under",
       "sortOrder": 9502,
@@ -10556,11 +10652,12 @@
       "marketId": "311507815",
       "label": "Over",
       "displayOdds": {
-        "american": "+164",
-        "decimal": "2.64",
-        "fractional": "41/25"
+        "american": "+160",
+        "decimal": "2.60",
+        "fractional": "8/5",
+        "percentage": "38.4%"
       },
-      "trueOdds": 2.64,
+      "trueOdds": 2.6,
       "points": 10.5,
       "outcomeType": "Over",
       "sortOrder": 10500,
@@ -10574,11 +10671,12 @@
       "marketId": "311507815",
       "label": "Under",
       "displayOdds": {
-        "american": "\u2212200",
-        "decimal": "1.50",
-        "fractional": "1/2"
+        "american": "\u2212196",
+        "decimal": "1.51",
+        "fractional": "25/49",
+        "percentage": "66.2%"
       },
-      "trueOdds": 1.5,
+      "trueOdds": 1.51020409,
       "points": 10.5,
       "outcomeType": "Under",
       "sortOrder": 10502,
@@ -10594,7 +10692,8 @@
       "displayOdds": {
         "american": "+285",
         "decimal": "3.85",
-        "fractional": "57/20"
+        "fractional": "57/20",
+        "percentage": "25.9%"
       },
       "trueOdds": 3.85,
       "points": 11.5,
@@ -10612,7 +10711,8 @@
       "displayOdds": {
         "american": "\u2212370",
         "decimal": "1.27",
-        "fractional": "10/37"
+        "fractional": "10/37",
+        "percentage": "78.7%"
       },
       "trueOdds": 1.27027028,
       "points": 11.5,
@@ -10630,7 +10730,8 @@
       "displayOdds": {
         "american": "\u2212320",
         "decimal": "1.31",
-        "fractional": "5/16"
+        "fractional": "5/16",
+        "percentage": "76.1%"
       },
       "trueOdds": 1.3125,
       "points": 8.5,
@@ -10648,7 +10749,8 @@
       "displayOdds": {
         "american": "+250",
         "decimal": "3.50",
-        "fractional": "5/2"
+        "fractional": "5/2",
+        "percentage": "28.5%"
       },
       "trueOdds": 3.5,
       "points": 8.5,
@@ -10664,11 +10766,12 @@
       "marketId": "311507892",
       "label": "Over",
       "displayOdds": {
-        "american": "\u2212170",
-        "decimal": "1.58",
-        "fractional": "10/17"
+        "american": "\u2212180",
+        "decimal": "1.55",
+        "fractional": "5/9",
+        "percentage": "64.2%"
       },
-      "trueOdds": 1.5882353,
+      "trueOdds": 1.55555556,
       "points": 9.5,
       "outcomeType": "Over",
       "sortOrder": 9500,
@@ -10682,11 +10785,12 @@
       "marketId": "311507892",
       "label": "Under",
       "displayOdds": {
-        "american": "+140",
-        "decimal": "2.40",
-        "fractional": "7/5"
+        "american": "+150",
+        "decimal": "2.50",
+        "fractional": "6/4",
+        "percentage": "40%"
       },
-      "trueOdds": 2.4,
+      "trueOdds": 2.5,
       "points": 9.5,
       "outcomeType": "Under",
       "sortOrder": 9502,
@@ -10700,11 +10804,12 @@
       "marketId": "311507892",
       "label": "Over",
       "displayOdds": {
-        "american": "\u2212110",
-        "decimal": "1.90",
-        "fractional": "10/11"
+        "american": "\u2212115",
+        "decimal": "1.86",
+        "fractional": "20/23",
+        "percentage": "53.4%"
       },
-      "trueOdds": 1.90909091,
+      "trueOdds": 1.86956522,
       "points": 10.5,
       "outcomeType": "Over",
       "sortOrder": 10500,
@@ -10719,11 +10824,12 @@
       "marketId": "311507892",
       "label": "Under",
       "displayOdds": {
-        "american": "\u2212112",
-        "decimal": "1.89",
-        "fractional": "25/28"
+        "american": "\u2212105",
+        "decimal": "1.95",
+        "fractional": "20/21",
+        "percentage": "51.2%"
       },
-      "trueOdds": 1.89285715,
+      "trueOdds": 1.95238096,
       "points": 10.5,
       "outcomeType": "Under",
       "sortOrder": 10502,
@@ -10740,7 +10846,8 @@
       "displayOdds": {
         "american": "+175",
         "decimal": "2.75",
-        "fractional": "7/4"
+        "fractional": "7/4",
+        "percentage": "36.3%"
       },
       "trueOdds": 2.75,
       "points": 11.5,
@@ -10758,7 +10865,8 @@
       "displayOdds": {
         "american": "\u2212215",
         "decimal": "1.46",
-        "fractional": "20/43"
+        "fractional": "20/43",
+        "percentage": "68.2%"
       },
       "trueOdds": 1.46511628,
       "points": 11.5,
@@ -10776,7 +10884,8 @@
       "displayOdds": {
         "american": "+320",
         "decimal": "4.20",
-        "fractional": "16/5"
+        "fractional": "16/5",
+        "percentage": "23.8%"
       },
       "trueOdds": 4.2,
       "points": 12.5,
@@ -10794,7 +10903,8 @@
       "displayOdds": {
         "american": "\u2212430",
         "decimal": "1.23",
-        "fractional": "10/43"
+        "fractional": "10/43",
+        "percentage": "81.1%"
       },
       "trueOdds": 1.23255814,
       "points": 12.5,
@@ -10812,7 +10922,8 @@
       "displayOdds": {
         "american": "\u2212240",
         "decimal": "1.41",
-        "fractional": "5/12"
+        "fractional": "5/12",
+        "percentage": "70.5%"
       },
       "trueOdds": 1.41666667,
       "points": 8.5,
@@ -10830,7 +10941,8 @@
       "displayOdds": {
         "american": "+194",
         "decimal": "2.94",
-        "fractional": "97/50"
+        "fractional": "97/50",
+        "percentage": "34%"
       },
       "trueOdds": 2.94,
       "points": 8.5,
@@ -10846,11 +10958,12 @@
       "marketId": "311507970",
       "label": "Over",
       "displayOdds": {
-        "american": "\u2212140",
-        "decimal": "1.71",
-        "fractional": "5/7"
+        "american": "\u2212130",
+        "decimal": "1.76",
+        "fractional": "10/13",
+        "percentage": "56.5%"
       },
-      "trueOdds": 1.71428572,
+      "trueOdds": 1.76923077,
       "points": 9.5,
       "outcomeType": "Over",
       "sortOrder": 9500,
@@ -10865,11 +10978,12 @@
       "marketId": "311507970",
       "label": "Under",
       "displayOdds": {
-        "american": "+115",
-        "decimal": "2.15",
-        "fractional": "23/20"
+        "american": "+110",
+        "decimal": "2.10",
+        "fractional": "11/10",
+        "percentage": "47.6%"
       },
-      "trueOdds": 2.15,
+      "trueOdds": 2.1,
       "points": 9.5,
       "outcomeType": "Under",
       "sortOrder": 9502,
@@ -10884,11 +10998,12 @@
       "marketId": "311507970",
       "label": "Over",
       "displayOdds": {
-        "american": "+125",
-        "decimal": "2.25",
-        "fractional": "5/4"
+        "american": "+140",
+        "decimal": "2.40",
+        "fractional": "7/5",
+        "percentage": "41.6%"
       },
-      "trueOdds": 2.25,
+      "trueOdds": 2.4,
       "points": 10.5,
       "outcomeType": "Over",
       "sortOrder": 10500,
@@ -10902,11 +11017,12 @@
       "marketId": "311507970",
       "label": "Under",
       "displayOdds": {
-        "american": "\u2212150",
-        "decimal": "1.66",
-        "fractional": "4/6"
+        "american": "\u2212166",
+        "decimal": "1.60",
+        "fractional": "50/83",
+        "percentage": "62.4%"
       },
-      "trueOdds": 1.66666667,
+      "trueOdds": 1.60240964,
       "points": 10.5,
       "outcomeType": "Under",
       "sortOrder": 10502,
@@ -10922,7 +11038,8 @@
       "displayOdds": {
         "american": "+230",
         "decimal": "3.30",
-        "fractional": "23/10"
+        "fractional": "23/10",
+        "percentage": "30.3%"
       },
       "trueOdds": 3.3,
       "points": 11.5,
@@ -10940,7 +11057,8 @@
       "displayOdds": {
         "american": "\u2212290",
         "decimal": "1.34",
-        "fractional": "10/29"
+        "fractional": "10/29",
+        "percentage": "74.3%"
       },
       "trueOdds": 1.34482759,
       "points": 11.5,
@@ -10958,7 +11076,8 @@
       "displayOdds": {
         "american": "+395",
         "decimal": "4.95",
-        "fractional": "79/20"
+        "fractional": "79/20",
+        "percentage": "20.2%"
       },
       "trueOdds": 4.95,
       "points": 12.5,
@@ -10976,7 +11095,8 @@
       "displayOdds": {
         "american": "\u2212550",
         "decimal": "1.18",
-        "fractional": "2/11"
+        "fractional": "2/11",
+        "percentage": "84.6%"
       },
       "trueOdds": 1.18181819,
       "points": 12.5,
@@ -10994,7 +11114,8 @@
       "displayOdds": {
         "american": "\u2212400",
         "decimal": "1.25",
-        "fractional": "1/4"
+        "fractional": "1/4",
+        "percentage": "80%"
       },
       "trueOdds": 1.25,
       "points": 7.5,
@@ -11012,7 +11133,8 @@
       "displayOdds": {
         "american": "+305",
         "decimal": "4.05",
-        "fractional": "61/20"
+        "fractional": "61/20",
+        "percentage": "24.6%"
       },
       "trueOdds": 4.05,
       "points": 7.5,
@@ -11030,7 +11152,8 @@
       "displayOdds": {
         "american": "\u2212235",
         "decimal": "1.42",
-        "fractional": "20/47"
+        "fractional": "20/47",
+        "percentage": "70.1%"
       },
       "trueOdds": 1.42553192,
       "points": 8.5,
@@ -11048,7 +11171,8 @@
       "displayOdds": {
         "american": "+190",
         "decimal": "2.90",
-        "fractional": "19/10"
+        "fractional": "19/10",
+        "percentage": "34.4%"
       },
       "trueOdds": 2.9,
       "points": 8.5,
@@ -11064,11 +11188,12 @@
       "marketId": "311508198",
       "label": "Over",
       "displayOdds": {
-        "american": "\u2212125",
-        "decimal": "1.80",
-        "fractional": "4/5"
+        "american": "\u2212146",
+        "decimal": "1.68",
+        "fractional": "50/73",
+        "percentage": "59.3%"
       },
-      "trueOdds": 1.8,
+      "trueOdds": 1.68493151,
       "points": 9.5,
       "outcomeType": "Over",
       "sortOrder": 9500,
@@ -11083,11 +11208,12 @@
       "marketId": "311508198",
       "label": "Under",
       "displayOdds": {
-        "american": "+105",
-        "decimal": "2.05",
-        "fractional": "21/20"
+        "american": "+124",
+        "decimal": "2.24",
+        "fractional": "31/25",
+        "percentage": "44.6%"
       },
-      "trueOdds": 2.05,
+      "trueOdds": 2.24,
       "points": 9.5,
       "outcomeType": "Under",
       "sortOrder": 9502,
@@ -11102,11 +11228,12 @@
       "marketId": "311508198",
       "label": "Over",
       "displayOdds": {
-        "american": "+136",
-        "decimal": "2.36",
-        "fractional": "34/25"
+        "american": "+130",
+        "decimal": "2.30",
+        "fractional": "13/10",
+        "percentage": "43.4%"
       },
-      "trueOdds": 2.36,
+      "trueOdds": 2.3,
       "points": 10.5,
       "outcomeType": "Over",
       "sortOrder": 10500,
@@ -11120,11 +11247,12 @@
       "marketId": "311508198",
       "label": "Under",
       "displayOdds": {
-        "american": "\u2212166",
-        "decimal": "1.60",
-        "fractional": "50/83"
+        "american": "\u2212156",
+        "decimal": "1.64",
+        "fractional": "25/39",
+        "percentage": "60.9%"
       },
-      "trueOdds": 1.60240964,
+      "trueOdds": 1.64102565,
       "points": 10.5,
       "outcomeType": "Under",
       "sortOrder": 10502,
@@ -11140,7 +11268,8 @@
       "displayOdds": {
         "american": "+235",
         "decimal": "3.35",
-        "fractional": "47/20"
+        "fractional": "47/20",
+        "percentage": "29.8%"
       },
       "trueOdds": 3.35,
       "points": 11.5,
@@ -11158,7 +11287,8 @@
       "displayOdds": {
         "american": "\u2212300",
         "decimal": "1.33",
-        "fractional": "1/3"
+        "fractional": "1/3",
+        "percentage": "74.9%"
       },
       "trueOdds": 1.33333334,
       "points": 11.5,
@@ -11176,7 +11306,8 @@
       "displayOdds": {
         "american": "\u2212450",
         "decimal": "1.22",
-        "fractional": "2/9"
+        "fractional": "2/9",
+        "percentage": "81.8%"
       },
       "trueOdds": 1.22222223,
       "points": 5.5,
@@ -11194,7 +11325,8 @@
       "displayOdds": {
         "american": "+340",
         "decimal": "4.40",
-        "fractional": "17/5"
+        "fractional": "17/5",
+        "percentage": "22.7%"
       },
       "trueOdds": 4.4,
       "points": 5.5,
@@ -11212,7 +11344,8 @@
       "displayOdds": {
         "american": "\u2212240",
         "decimal": "1.41",
-        "fractional": "5/12"
+        "fractional": "5/12",
+        "percentage": "70.5%"
       },
       "trueOdds": 1.41666667,
       "points": 6.5,
@@ -11230,7 +11363,8 @@
       "displayOdds": {
         "american": "+194",
         "decimal": "2.94",
-        "fractional": "97/50"
+        "fractional": "97/50",
+        "percentage": "34%"
       },
       "trueOdds": 2.94,
       "points": 6.5,
@@ -11248,7 +11382,8 @@
       "displayOdds": {
         "american": "\u2212140",
         "decimal": "1.71",
-        "fractional": "5/7"
+        "fractional": "5/7",
+        "percentage": "58.3%"
       },
       "trueOdds": 1.71428572,
       "points": 7.5,
@@ -11267,7 +11402,8 @@
       "displayOdds": {
         "american": "+115",
         "decimal": "2.15",
-        "fractional": "23/20"
+        "fractional": "23/20",
+        "percentage": "46.5%"
       },
       "trueOdds": 2.15,
       "points": 7.5,
@@ -11284,11 +11420,12 @@
       "marketId": "311508347",
       "label": "Over",
       "displayOdds": {
-        "american": "+125",
-        "decimal": "2.25",
-        "fractional": "5/4"
+        "american": "+132",
+        "decimal": "2.32",
+        "fractional": "33/25",
+        "percentage": "43.1%"
       },
-      "trueOdds": 2.25,
+      "trueOdds": 2.32,
       "points": 8.5,
       "outcomeType": "Over",
       "sortOrder": 8500,
@@ -11302,11 +11439,12 @@
       "marketId": "311508347",
       "label": "Under",
       "displayOdds": {
-        "american": "\u2212150",
-        "decimal": "1.66",
-        "fractional": "4/6"
+        "american": "\u2212160",
+        "decimal": "1.62",
+        "fractional": "5/8",
+        "percentage": "61.5%"
       },
-      "trueOdds": 1.66666667,
+      "trueOdds": 1.625,
       "points": 8.5,
       "outcomeType": "Under",
       "sortOrder": 8502,
@@ -11322,7 +11460,8 @@
       "displayOdds": {
         "american": "+215",
         "decimal": "3.15",
-        "fractional": "43/20"
+        "fractional": "43/20",
+        "percentage": "31.7%"
       },
       "trueOdds": 3.15,
       "points": 9.5,
@@ -11340,7 +11479,8 @@
       "displayOdds": {
         "american": "\u2212270",
         "decimal": "1.37",
-        "fractional": "10/27"
+        "fractional": "10/27",
+        "percentage": "72.9%"
       },
       "trueOdds": 1.37037038,
       "points": 9.5,
@@ -11358,7 +11498,8 @@
       "displayOdds": {
         "american": "\u2212220",
         "decimal": "1.45",
-        "fractional": "5/11"
+        "fractional": "5/11",
+        "percentage": "68.7%"
       },
       "trueOdds": 1.45454546,
       "points": 7.5,
@@ -11376,7 +11517,8 @@
       "displayOdds": {
         "american": "+180",
         "decimal": "2.80",
-        "fractional": "9/5"
+        "fractional": "9/5",
+        "percentage": "35.7%"
       },
       "trueOdds": 2.8,
       "points": 7.5,
@@ -11392,11 +11534,12 @@
       "marketId": "311508476",
       "label": "Over",
       "displayOdds": {
-        "american": "\u2212125",
-        "decimal": "1.80",
-        "fractional": "4/5"
+        "american": "\u2212140",
+        "decimal": "1.71",
+        "fractional": "5/7",
+        "percentage": "58.3%"
       },
-      "trueOdds": 1.8,
+      "trueOdds": 1.71428572,
       "points": 8.5,
       "outcomeType": "Over",
       "sortOrder": 8500,
@@ -11411,11 +11554,12 @@
       "marketId": "311508476",
       "label": "Under",
       "displayOdds": {
-        "american": "+105",
-        "decimal": "2.05",
-        "fractional": "21/20"
+        "american": "+116",
+        "decimal": "2.16",
+        "fractional": "29/25",
+        "percentage": "46.2%"
       },
-      "trueOdds": 2.05,
+      "trueOdds": 2.16,
       "points": 8.5,
       "outcomeType": "Under",
       "sortOrder": 8502,
@@ -11430,11 +11574,12 @@
       "marketId": "311508476",
       "label": "Over",
       "displayOdds": {
-        "american": "+140",
-        "decimal": "2.40",
-        "fractional": "7/5"
+        "american": "+120",
+        "decimal": "2.20",
+        "fractional": "6/5",
+        "percentage": "45.4%"
       },
-      "trueOdds": 2.4,
+      "trueOdds": 2.2,
       "points": 9.5,
       "outcomeType": "Over",
       "sortOrder": 9500,
@@ -11448,11 +11593,12 @@
       "marketId": "311508476",
       "label": "Under",
       "displayOdds": {
-        "american": "\u2212166",
-        "decimal": "1.60",
-        "fractional": "50/83"
+        "american": "\u2212146",
+        "decimal": "1.68",
+        "fractional": "50/73",
+        "percentage": "59.3%"
       },
-      "trueOdds": 1.60240964,
+      "trueOdds": 1.68493151,
       "points": 9.5,
       "outcomeType": "Under",
       "sortOrder": 9502,
@@ -11468,7 +11614,8 @@
       "displayOdds": {
         "american": "+240",
         "decimal": "3.40",
-        "fractional": "12/5"
+        "fractional": "12/5",
+        "percentage": "29.4%"
       },
       "trueOdds": 3.4,
       "points": 10.5,
@@ -11486,7 +11633,8 @@
       "displayOdds": {
         "american": "\u2212300",
         "decimal": "1.33",
-        "fractional": "1/3"
+        "fractional": "1/3",
+        "percentage": "74.9%"
       },
       "trueOdds": 1.33333334,
       "points": 10.5,
@@ -11504,7 +11652,8 @@
       "displayOdds": {
         "american": "+425",
         "decimal": "5.25",
-        "fractional": "17/4"
+        "fractional": "17/4",
+        "percentage": "19%"
       },
       "trueOdds": 5.25,
       "points": 11.5,
@@ -11522,7 +11671,8 @@
       "displayOdds": {
         "american": "\u2212600",
         "decimal": "1.16",
-        "fractional": "1/6"
+        "fractional": "1/6",
+        "percentage": "85.7%"
       },
       "trueOdds": 1.16666667,
       "points": 11.5,
@@ -11540,7 +11690,8 @@
       "displayOdds": {
         "american": "\u2212285",
         "decimal": "1.35",
-        "fractional": "20/57"
+        "fractional": "20/57",
+        "percentage": "74%"
       },
       "trueOdds": 1.3508772,
       "points": 8.5,
@@ -11558,7 +11709,8 @@
       "displayOdds": {
         "american": "+225",
         "decimal": "3.25",
-        "fractional": "9/4"
+        "fractional": "9/4",
+        "percentage": "30.7%"
       },
       "trueOdds": 3.25,
       "points": 8.5,
@@ -11576,7 +11728,8 @@
       "displayOdds": {
         "american": "\u2212160",
         "decimal": "1.62",
-        "fractional": "5/8"
+        "fractional": "5/8",
+        "percentage": "61.5%"
       },
       "trueOdds": 1.625,
       "points": 9.5,
@@ -11594,7 +11747,8 @@
       "displayOdds": {
         "american": "+134",
         "decimal": "2.34",
-        "fractional": "67/50"
+        "fractional": "67/50",
+        "percentage": "42.7%"
       },
       "trueOdds": 2.34,
       "points": 9.5,
@@ -11612,7 +11766,8 @@
       "displayOdds": {
         "american": "+115",
         "decimal": "2.15",
-        "fractional": "23/20"
+        "fractional": "23/20",
+        "percentage": "46.5%"
       },
       "trueOdds": 2.15,
       "points": 10.5,
@@ -11631,7 +11786,8 @@
       "displayOdds": {
         "american": "\u2212140",
         "decimal": "1.71",
-        "fractional": "5/7"
+        "fractional": "5/7",
+        "percentage": "58.3%"
       },
       "trueOdds": 1.71428572,
       "points": 10.5,
@@ -11650,7 +11806,8 @@
       "displayOdds": {
         "american": "+200",
         "decimal": "3.00",
-        "fractional": "2/1"
+        "fractional": "2/1",
+        "percentage": "33.3%"
       },
       "trueOdds": 3,
       "points": 11.5,
@@ -11668,7 +11825,8 @@
       "displayOdds": {
         "american": "\u2212250",
         "decimal": "1.40",
-        "fractional": "2/5"
+        "fractional": "2/5",
+        "percentage": "71.4%"
       },
       "trueOdds": 1.4,
       "points": 11.5,
@@ -11686,7 +11844,8 @@
       "displayOdds": {
         "american": "+370",
         "decimal": "4.70",
-        "fractional": "37/10"
+        "fractional": "37/10",
+        "percentage": "21.2%"
       },
       "trueOdds": 4.7,
       "points": 12.5,
@@ -11704,7 +11863,8 @@
       "displayOdds": {
         "american": "\u2212500",
         "decimal": "1.20",
-        "fractional": "1/5"
+        "fractional": "1/5",
+        "percentage": "83.3%"
       },
       "trueOdds": 1.2,
       "points": 12.5,
@@ -11722,7 +11882,8 @@
       "displayOdds": {
         "american": "\u2212230",
         "decimal": "1.43",
-        "fractional": "10/23"
+        "fractional": "10/23",
+        "percentage": "69.6%"
       },
       "trueOdds": 1.43478261,
       "points": 8.5,
@@ -11740,7 +11901,8 @@
       "displayOdds": {
         "american": "+184",
         "decimal": "2.84",
-        "fractional": "46/25"
+        "fractional": "46/25",
+        "percentage": "35.2%"
       },
       "trueOdds": 2.84,
       "points": 8.5,
@@ -11756,11 +11918,12 @@
       "marketId": "311508695",
       "label": "Over",
       "displayOdds": {
-        "american": "\u2212130",
-        "decimal": "1.76",
-        "fractional": "10/13"
+        "american": "\u2212140",
+        "decimal": "1.71",
+        "fractional": "5/7",
+        "percentage": "58.3%"
       },
-      "trueOdds": 1.76923077,
+      "trueOdds": 1.71428572,
       "points": 9.5,
       "outcomeType": "Over",
       "sortOrder": 9500,
@@ -11775,11 +11938,12 @@
       "marketId": "311508695",
       "label": "Under",
       "displayOdds": {
-        "american": "+110",
-        "decimal": "2.10",
-        "fractional": "11/10"
+        "american": "+115",
+        "decimal": "2.15",
+        "fractional": "23/20",
+        "percentage": "46.5%"
       },
-      "trueOdds": 2.1,
+      "trueOdds": 2.15,
       "points": 9.5,
       "outcomeType": "Under",
       "sortOrder": 9502,
@@ -11794,11 +11958,12 @@
       "marketId": "311508695",
       "label": "Over",
       "displayOdds": {
-        "american": "+134",
-        "decimal": "2.34",
-        "fractional": "67/50"
+        "american": "+130",
+        "decimal": "2.30",
+        "fractional": "13/10",
+        "percentage": "43.4%"
       },
-      "trueOdds": 2.34,
+      "trueOdds": 2.3,
       "points": 10.5,
       "outcomeType": "Over",
       "sortOrder": 10500,
@@ -11812,11 +11977,12 @@
       "marketId": "311508695",
       "label": "Under",
       "displayOdds": {
-        "american": "\u2212166",
-        "decimal": "1.60",
-        "fractional": "50/83"
+        "american": "\u2212160",
+        "decimal": "1.62",
+        "fractional": "5/8",
+        "percentage": "61.5%"
       },
-      "trueOdds": 1.60240964,
+      "trueOdds": 1.625,
       "points": 10.5,
       "outcomeType": "Under",
       "sortOrder": 10502,
@@ -11832,7 +11998,8 @@
       "displayOdds": {
         "american": "+240",
         "decimal": "3.40",
-        "fractional": "12/5"
+        "fractional": "12/5",
+        "percentage": "29.4%"
       },
       "trueOdds": 3.4,
       "points": 11.5,
@@ -11850,7 +12017,8 @@
       "displayOdds": {
         "american": "\u2212300",
         "decimal": "1.33",
-        "fractional": "1/3"
+        "fractional": "1/3",
+        "percentage": "74.9%"
       },
       "trueOdds": 1.33333334,
       "points": 11.5,
@@ -11868,7 +12036,8 @@
       "displayOdds": {
         "american": "+450",
         "decimal": "5.50",
-        "fractional": "9/2"
+        "fractional": "9/2",
+        "percentage": "18.1%"
       },
       "trueOdds": 5.5,
       "points": 12.5,
@@ -11886,7 +12055,8 @@
       "displayOdds": {
         "american": "\u2212650",
         "decimal": "1.15",
-        "fractional": "2/13"
+        "fractional": "2/13",
+        "percentage": "86.6%"
       },
       "trueOdds": 1.15384616,
       "points": 12.5,
@@ -11904,7 +12074,8 @@
       "displayOdds": {
         "american": "\u2212370",
         "decimal": "1.27",
-        "fractional": "10/37"
+        "fractional": "10/37",
+        "percentage": "78.7%"
       },
       "trueOdds": 1.27027028,
       "points": 9.5,
@@ -11922,7 +12093,8 @@
       "displayOdds": {
         "american": "+285",
         "decimal": "3.85",
-        "fractional": "57/20"
+        "fractional": "57/20",
+        "percentage": "25.9%"
       },
       "trueOdds": 3.85,
       "points": 9.5,
@@ -11938,11 +12110,12 @@
       "marketId": "311508387",
       "label": "Over",
       "displayOdds": {
-        "american": "\u2212200",
-        "decimal": "1.50",
-        "fractional": "1/2"
+        "american": "\u2212210",
+        "decimal": "1.47",
+        "fractional": "10/21",
+        "percentage": "67.7%"
       },
-      "trueOdds": 1.5,
+      "trueOdds": 1.47619048,
       "points": 10.5,
       "outcomeType": "Over",
       "sortOrder": 10500,
@@ -11956,11 +12129,12 @@
       "marketId": "311508387",
       "label": "Under",
       "displayOdds": {
-        "american": "+164",
-        "decimal": "2.64",
-        "fractional": "41/25"
+        "american": "+170",
+        "decimal": "2.70",
+        "fractional": "17/10",
+        "percentage": "37%"
       },
-      "trueOdds": 2.64,
+      "trueOdds": 2.7,
       "points": 10.5,
       "outcomeType": "Under",
       "sortOrder": 10502,
@@ -11974,11 +12148,12 @@
       "marketId": "311508387",
       "label": "Over",
       "displayOdds": {
-        "american": "\u2212115",
-        "decimal": "1.86",
-        "fractional": "20/23"
+        "american": "\u2212125",
+        "decimal": "1.80",
+        "fractional": "4/5",
+        "percentage": "55.5%"
       },
-      "trueOdds": 1.86956522,
+      "trueOdds": 1.8,
       "points": 11.5,
       "outcomeType": "Over",
       "sortOrder": 11500,
@@ -11993,11 +12168,12 @@
       "marketId": "311508387",
       "label": "Under",
       "displayOdds": {
-        "american": "\u2212105",
-        "decimal": "1.95",
-        "fractional": "20/21"
+        "american": "+105",
+        "decimal": "2.05",
+        "fractional": "21/20",
+        "percentage": "48.7%"
       },
-      "trueOdds": 1.95238096,
+      "trueOdds": 2.05,
       "points": 11.5,
       "outcomeType": "Under",
       "sortOrder": 11502,
@@ -12012,11 +12188,12 @@
       "marketId": "311508387",
       "label": "Over",
       "displayOdds": {
-        "american": "+175",
-        "decimal": "2.75",
-        "fractional": "7/4"
+        "american": "+154",
+        "decimal": "2.54",
+        "fractional": "77/50",
+        "percentage": "39.3%"
       },
-      "trueOdds": 2.75,
+      "trueOdds": 2.54,
       "points": 12.5,
       "outcomeType": "Over",
       "sortOrder": 12500,
@@ -12030,11 +12207,12 @@
       "marketId": "311508387",
       "label": "Under",
       "displayOdds": {
-        "american": "\u2212215",
-        "decimal": "1.46",
-        "fractional": "20/43"
+        "american": "\u2212200",
+        "decimal": "1.50",
+        "fractional": "1/2",
+        "percentage": "66.6%"
       },
-      "trueOdds": 1.46511628,
+      "trueOdds": 1.5,
       "points": 12.5,
       "outcomeType": "Under",
       "sortOrder": 12502,
@@ -12048,11 +12226,12 @@
       "marketId": "311508387",
       "label": "Over",
       "displayOdds": {
-        "american": "+320",
-        "decimal": "4.20",
-        "fractional": "16/5"
+        "american": "+300",
+        "decimal": "4.00",
+        "fractional": "3/1",
+        "percentage": "25%"
       },
-      "trueOdds": 4.2,
+      "trueOdds": 4,
       "points": 13.5,
       "outcomeType": "Over",
       "sortOrder": 13500,
@@ -12066,11 +12245,12 @@
       "marketId": "311508387",
       "label": "Under",
       "displayOdds": {
-        "american": "\u2212430",
-        "decimal": "1.23",
-        "fractional": "10/43"
+        "american": "\u2212400",
+        "decimal": "1.25",
+        "fractional": "1/4",
+        "percentage": "80%"
       },
-      "trueOdds": 1.23255814,
+      "trueOdds": 1.25,
       "points": 13.5,
       "outcomeType": "Under",
       "sortOrder": 13502,
@@ -12086,7 +12266,8 @@
       "displayOdds": {
         "american": "\u2212550",
         "decimal": "1.18",
-        "fractional": "2/11"
+        "fractional": "2/11",
+        "percentage": "84.6%"
       },
       "trueOdds": 1.18181819,
       "points": 3.5,
@@ -12104,7 +12285,8 @@
       "displayOdds": {
         "american": "+400",
         "decimal": "5.00",
-        "fractional": "4/1"
+        "fractional": "4/1",
+        "percentage": "20%"
       },
       "trueOdds": 5,
       "points": 3.5,
@@ -12122,7 +12304,8 @@
       "displayOdds": {
         "american": "\u2212270",
         "decimal": "1.37",
-        "fractional": "10/27"
+        "fractional": "10/27",
+        "percentage": "72.9%"
       },
       "trueOdds": 1.37037038,
       "points": 4.5,
@@ -12140,7 +12323,8 @@
       "displayOdds": {
         "american": "+215",
         "decimal": "3.15",
-        "fractional": "43/20"
+        "fractional": "43/20",
+        "percentage": "31.7%"
       },
       "trueOdds": 3.15,
       "points": 4.5,
@@ -12158,7 +12342,8 @@
       "displayOdds": {
         "american": "\u2212146",
         "decimal": "1.68",
-        "fractional": "50/73"
+        "fractional": "50/73",
+        "percentage": "59.3%"
       },
       "trueOdds": 1.68493151,
       "points": 5.5,
@@ -12177,7 +12362,8 @@
       "displayOdds": {
         "american": "+120",
         "decimal": "2.20",
-        "fractional": "6/5"
+        "fractional": "6/5",
+        "percentage": "45.4%"
       },
       "trueOdds": 2.2,
       "points": 5.5,
@@ -12196,7 +12382,8 @@
       "displayOdds": {
         "american": "+125",
         "decimal": "2.25",
-        "fractional": "5/4"
+        "fractional": "5/4",
+        "percentage": "44.4%"
       },
       "trueOdds": 2.25,
       "points": 6.5,
@@ -12214,7 +12401,8 @@
       "displayOdds": {
         "american": "\u2212150",
         "decimal": "1.66",
-        "fractional": "4/6"
+        "fractional": "4/6",
+        "percentage": "59.9%"
       },
       "trueOdds": 1.66666667,
       "points": 6.5,
@@ -12232,7 +12420,8 @@
       "displayOdds": {
         "american": "+220",
         "decimal": "3.20",
-        "fractional": "11/5"
+        "fractional": "11/5",
+        "percentage": "31.2%"
       },
       "trueOdds": 3.2,
       "points": 7.5,
@@ -12250,7 +12439,8 @@
       "displayOdds": {
         "american": "\u2212275",
         "decimal": "1.36",
-        "fractional": "4/11"
+        "fractional": "4/11",
+        "percentage": "73.3%"
       },
       "trueOdds": 1.36363637,
       "points": 7.5,
@@ -12266,11 +12456,12 @@
       "marketId": "311508349",
       "label": "Over",
       "displayOdds": {
-        "american": "\u2212440",
-        "decimal": "1.22",
-        "fractional": "5/22"
+        "american": "\u2212400",
+        "decimal": "1.25",
+        "fractional": "1/4",
+        "percentage": "80%"
       },
-      "trueOdds": 1.22727273,
+      "trueOdds": 1.25,
       "points": 2.5,
       "outcomeType": "Over",
       "sortOrder": 2500,
@@ -12284,11 +12475,12 @@
       "marketId": "311508349",
       "label": "Under",
       "displayOdds": {
-        "american": "+330",
-        "decimal": "4.30",
-        "fractional": "33/10"
+        "american": "+310",
+        "decimal": "4.10",
+        "fractional": "31/10",
+        "percentage": "24.3%"
       },
-      "trueOdds": 4.3,
+      "trueOdds": 4.1,
       "points": 2.5,
       "outcomeType": "Under",
       "sortOrder": 2502,
@@ -12302,15 +12494,17 @@
       "marketId": "311508349",
       "label": "Over",
       "displayOdds": {
-        "american": "\u2212190",
-        "decimal": "1.52",
-        "fractional": "10/19"
+        "american": "\u2212150",
+        "decimal": "1.66",
+        "fractional": "4/6",
+        "percentage": "59.9%"
       },
-      "trueOdds": 1.52631579,
+      "trueOdds": 1.66666667,
       "points": 3.5,
       "outcomeType": "Over",
       "sortOrder": 3500,
       "tags": [
+        "MainPointLine",
         "OSB"
       ],
       "metadata": {}
@@ -12320,15 +12514,17 @@
       "marketId": "311508349",
       "label": "Under",
       "displayOdds": {
-        "american": "+154",
-        "decimal": "2.54",
-        "fractional": "77/50"
+        "american": "+120",
+        "decimal": "2.20",
+        "fractional": "6/5",
+        "percentage": "45.4%"
       },
-      "trueOdds": 2.54,
+      "trueOdds": 2.2,
       "points": 3.5,
       "outcomeType": "Under",
       "sortOrder": 3502,
       "tags": [
+        "MainPointLine",
         "OSB"
       ],
       "metadata": {}
@@ -12338,16 +12534,16 @@
       "marketId": "311508349",
       "label": "Over",
       "displayOdds": {
-        "american": "+100",
-        "decimal": "2.00",
-        "fractional": "1/1"
+        "american": "+134",
+        "decimal": "2.34",
+        "fractional": "67/50",
+        "percentage": "42.7%"
       },
-      "trueOdds": 2,
+      "trueOdds": 2.34,
       "points": 4.5,
       "outcomeType": "Over",
       "sortOrder": 4500,
       "tags": [
-        "MainPointLine",
         "OSB"
       ],
       "metadata": {}
@@ -12357,16 +12553,16 @@
       "marketId": "311508349",
       "label": "Under",
       "displayOdds": {
-        "american": "\u2212120",
-        "decimal": "1.83",
-        "fractional": "5/6"
+        "american": "\u2212156",
+        "decimal": "1.64",
+        "fractional": "25/39",
+        "percentage": "60.9%"
       },
-      "trueOdds": 1.83333334,
+      "trueOdds": 1.64102565,
       "points": 4.5,
       "outcomeType": "Under",
       "sortOrder": 4502,
       "tags": [
-        "MainPointLine",
         "OSB"
       ],
       "metadata": {}
@@ -12376,11 +12572,12 @@
       "marketId": "311508349",
       "label": "Over",
       "displayOdds": {
-        "american": "+180",
-        "decimal": "2.80",
-        "fractional": "9/5"
+        "american": "+200",
+        "decimal": "3.00",
+        "fractional": "2/1",
+        "percentage": "33.3%"
       },
-      "trueOdds": 2.8,
+      "trueOdds": 3,
       "points": 5.5,
       "outcomeType": "Over",
       "sortOrder": 5500,
@@ -12394,11 +12591,12 @@
       "marketId": "311508349",
       "label": "Under",
       "displayOdds": {
-        "american": "\u2212220",
-        "decimal": "1.45",
-        "fractional": "5/11"
+        "american": "\u2212235",
+        "decimal": "1.42",
+        "fractional": "20/47",
+        "percentage": "70.1%"
       },
-      "trueOdds": 1.45454546,
+      "trueOdds": 1.42553192,
       "points": 5.5,
       "outcomeType": "Under",
       "sortOrder": 5502,
@@ -12412,11 +12610,12 @@
       "marketId": "311508349",
       "label": "Over",
       "displayOdds": {
-        "american": "+330",
-        "decimal": "4.30",
-        "fractional": "33/10"
+        "american": "+350",
+        "decimal": "4.50",
+        "fractional": "7/2",
+        "percentage": "22.2%"
       },
-      "trueOdds": 4.3,
+      "trueOdds": 4.5,
       "points": 6.5,
       "outcomeType": "Over",
       "sortOrder": 6500,
@@ -12430,11 +12629,12 @@
       "marketId": "311508349",
       "label": "Under",
       "displayOdds": {
-        "american": "\u2212440",
-        "decimal": "1.22",
-        "fractional": "5/22"
+        "american": "\u2212480",
+        "decimal": "1.20",
+        "fractional": "5/24",
+        "percentage": "82.7%"
       },
-      "trueOdds": 1.22727273,
+      "trueOdds": 1.20833334,
       "points": 6.5,
       "outcomeType": "Under",
       "sortOrder": 6502,
@@ -12450,7 +12650,8 @@
       "displayOdds": {
         "american": "\u2212350",
         "decimal": "1.28",
-        "fractional": "2/7"
+        "fractional": "2/7",
+        "percentage": "77.7%"
       },
       "trueOdds": 1.28571429,
       "points": 6.5,
@@ -12468,7 +12669,8 @@
       "displayOdds": {
         "american": "+270",
         "decimal": "3.70",
-        "fractional": "27/10"
+        "fractional": "27/10",
+        "percentage": "27%"
       },
       "trueOdds": 3.7,
       "points": 6.5,
@@ -12486,7 +12688,8 @@
       "displayOdds": {
         "american": "\u2212190",
         "decimal": "1.52",
-        "fractional": "10/19"
+        "fractional": "10/19",
+        "percentage": "65.5%"
       },
       "trueOdds": 1.52631579,
       "points": 7.5,
@@ -12504,7 +12707,8 @@
       "displayOdds": {
         "american": "+154",
         "decimal": "2.54",
-        "fractional": "77/50"
+        "fractional": "77/50",
+        "percentage": "39.3%"
       },
       "trueOdds": 2.54,
       "points": 7.5,
@@ -12520,11 +12724,12 @@
       "marketId": "311508343",
       "label": "Over",
       "displayOdds": {
-        "american": "\u2212105",
-        "decimal": "1.95",
-        "fractional": "20/21"
+        "american": "\u2212120",
+        "decimal": "1.83",
+        "fractional": "5/6",
+        "percentage": "54.5%"
       },
-      "trueOdds": 1.95238096,
+      "trueOdds": 1.83333334,
       "points": 8.5,
       "outcomeType": "Over",
       "sortOrder": 8500,
@@ -12539,11 +12744,12 @@
       "marketId": "311508343",
       "label": "Under",
       "displayOdds": {
-        "american": "\u2212115",
-        "decimal": "1.86",
-        "fractional": "20/23"
+        "american": "+100",
+        "decimal": "2.00",
+        "fractional": "1/1",
+        "percentage": "50%"
       },
-      "trueOdds": 1.86956522,
+      "trueOdds": 2,
       "points": 8.5,
       "outcomeType": "Under",
       "sortOrder": 8502,
@@ -12558,11 +12764,12 @@
       "marketId": "311508343",
       "label": "Over",
       "displayOdds": {
-        "american": "+160",
-        "decimal": "2.60",
-        "fractional": "8/5"
+        "american": "+154",
+        "decimal": "2.54",
+        "fractional": "77/50",
+        "percentage": "39.3%"
       },
-      "trueOdds": 2.6,
+      "trueOdds": 2.54,
       "points": 9.5,
       "outcomeType": "Over",
       "sortOrder": 9500,
@@ -12576,11 +12783,12 @@
       "marketId": "311508343",
       "label": "Under",
       "displayOdds": {
-        "american": "\u2212196",
-        "decimal": "1.51",
-        "fractional": "25/49"
+        "american": "\u2212186",
+        "decimal": "1.53",
+        "fractional": "50/93",
+        "percentage": "65%"
       },
-      "trueOdds": 1.51020409,
+      "trueOdds": 1.53763441,
       "points": 9.5,
       "outcomeType": "Under",
       "sortOrder": 9502,
@@ -12596,7 +12804,8 @@
       "displayOdds": {
         "american": "+270",
         "decimal": "3.70",
-        "fractional": "27/10"
+        "fractional": "27/10",
+        "percentage": "27%"
       },
       "trueOdds": 3.7,
       "points": 10.5,
@@ -12614,7 +12823,8 @@
       "displayOdds": {
         "american": "\u2212350",
         "decimal": "1.28",
-        "fractional": "2/7"
+        "fractional": "2/7",
+        "percentage": "77.7%"
       },
       "trueOdds": 1.28571429,
       "points": 10.5,
@@ -12632,7 +12842,8 @@
       "displayOdds": {
         "american": "\u2212500",
         "decimal": "1.20",
-        "fractional": "1/5"
+        "fractional": "1/5",
+        "percentage": "83.3%"
       },
       "trueOdds": 1.2,
       "points": 7.5,
@@ -12650,7 +12861,8 @@
       "displayOdds": {
         "american": "+370",
         "decimal": "4.70",
-        "fractional": "37/10"
+        "fractional": "37/10",
+        "percentage": "21.2%"
       },
       "trueOdds": 4.7,
       "points": 7.5,
@@ -12668,7 +12880,8 @@
       "displayOdds": {
         "american": "\u2212280",
         "decimal": "1.35",
-        "fractional": "5/14"
+        "fractional": "5/14",
+        "percentage": "73.6%"
       },
       "trueOdds": 1.35714286,
       "points": 8.5,
@@ -12686,7 +12899,8 @@
       "displayOdds": {
         "american": "+220",
         "decimal": "3.20",
-        "fractional": "11/5"
+        "fractional": "11/5",
+        "percentage": "31.2%"
       },
       "trueOdds": 3.2,
       "points": 8.5,
@@ -12704,7 +12918,8 @@
       "displayOdds": {
         "american": "\u2212150",
         "decimal": "1.66",
-        "fractional": "4/6"
+        "fractional": "4/6",
+        "percentage": "59.9%"
       },
       "trueOdds": 1.66666667,
       "points": 9.5,
@@ -12722,7 +12937,8 @@
       "displayOdds": {
         "american": "+125",
         "decimal": "2.25",
-        "fractional": "5/4"
+        "fractional": "5/4",
+        "percentage": "44.4%"
       },
       "trueOdds": 2.25,
       "points": 9.5,
@@ -12738,11 +12954,12 @@
       "marketId": "311508339",
       "label": "Over",
       "displayOdds": {
-        "american": "+120",
-        "decimal": "2.20",
-        "fractional": "6/5"
+        "american": "+115",
+        "decimal": "2.15",
+        "fractional": "23/20",
+        "percentage": "46.5%"
       },
-      "trueOdds": 2.2,
+      "trueOdds": 2.15,
       "points": 10.5,
       "outcomeType": "Over",
       "sortOrder": 10500,
@@ -12757,11 +12974,12 @@
       "marketId": "311508339",
       "label": "Under",
       "displayOdds": {
-        "american": "\u2212146",
-        "decimal": "1.68",
-        "fractional": "50/73"
+        "american": "\u2212140",
+        "decimal": "1.71",
+        "fractional": "5/7",
+        "percentage": "58.3%"
       },
-      "trueOdds": 1.68493151,
+      "trueOdds": 1.71428572,
       "points": 10.5,
       "outcomeType": "Under",
       "sortOrder": 10502,
@@ -12778,7 +12996,8 @@
       "displayOdds": {
         "american": "+205",
         "decimal": "3.05",
-        "fractional": "41/20"
+        "fractional": "41/20",
+        "percentage": "32.7%"
       },
       "trueOdds": 3.05,
       "points": 11.5,
@@ -12796,7 +13015,8 @@
       "displayOdds": {
         "american": "\u2212255",
         "decimal": "1.39",
-        "fractional": "20/51"
+        "fractional": "20/51",
+        "percentage": "71.8%"
       },
       "trueOdds": 1.39215687,
       "points": 11.5,
@@ -18390,7 +18610,8 @@
       "displayOdds": {
         "american": "\u2212400",
         "decimal": "1.25",
-        "fractional": "1/4"
+        "fractional": "1/4",
+        "percentage": "80%"
       },
       "trueOdds": 1.25,
       "points": 5.5,
@@ -18408,7 +18629,8 @@
       "displayOdds": {
         "american": "+310",
         "decimal": "4.10",
-        "fractional": "31/10"
+        "fractional": "31/10",
+        "percentage": "24.3%"
       },
       "trueOdds": 4.1,
       "points": 5.5,
@@ -18424,11 +18646,12 @@
       "marketId": "311507907",
       "label": "Over",
       "displayOdds": {
-        "american": "\u2212210",
-        "decimal": "1.47",
-        "fractional": "10/21"
+        "american": "\u2212215",
+        "decimal": "1.46",
+        "fractional": "20/43",
+        "percentage": "68.2%"
       },
-      "trueOdds": 1.47619048,
+      "trueOdds": 1.46511628,
       "points": 6.5,
       "outcomeType": "Over",
       "sortOrder": 6500,
@@ -18442,11 +18665,12 @@
       "marketId": "311507907",
       "label": "Under",
       "displayOdds": {
-        "american": "+170",
-        "decimal": "2.70",
-        "fractional": "17/10"
+        "american": "+175",
+        "decimal": "2.75",
+        "fractional": "7/4",
+        "percentage": "36.3%"
       },
-      "trueOdds": 2.7,
+      "trueOdds": 2.75,
       "points": 6.5,
       "outcomeType": "Under",
       "sortOrder": 6502,
@@ -18462,7 +18686,8 @@
       "displayOdds": {
         "american": "\u2212120",
         "decimal": "1.83",
-        "fractional": "5/6"
+        "fractional": "5/6",
+        "percentage": "54.5%"
       },
       "trueOdds": 1.83333334,
       "points": 7.5,
@@ -18481,7 +18706,8 @@
       "displayOdds": {
         "american": "+100",
         "decimal": "2.00",
-        "fractional": "1/1"
+        "fractional": "1/1",
+        "percentage": "50%"
       },
       "trueOdds": 2,
       "points": 7.5,
@@ -18500,7 +18726,8 @@
       "displayOdds": {
         "american": "+150",
         "decimal": "2.50",
-        "fractional": "6/4"
+        "fractional": "6/4",
+        "percentage": "40%"
       },
       "trueOdds": 2.5,
       "points": 8.5,
@@ -18518,7 +18745,8 @@
       "displayOdds": {
         "american": "\u2212180",
         "decimal": "1.55",
-        "fractional": "5/9"
+        "fractional": "5/9",
+        "percentage": "64.2%"
       },
       "trueOdds": 1.55555556,
       "points": 8.5,
@@ -18536,7 +18764,8 @@
       "displayOdds": {
         "american": "+260",
         "decimal": "3.60",
-        "fractional": "13/5"
+        "fractional": "13/5",
+        "percentage": "27.7%"
       },
       "trueOdds": 3.6,
       "points": 9.5,
@@ -18554,7 +18783,8 @@
       "displayOdds": {
         "american": "\u2212330",
         "decimal": "1.30",
-        "fractional": "10/33"
+        "fractional": "10/33",
+        "percentage": "76.7%"
       },
       "trueOdds": 1.30303031,
       "points": 9.5,
@@ -18572,7 +18802,8 @@
       "displayOdds": {
         "american": "\u2212350",
         "decimal": "1.28",
-        "fractional": "2/7"
+        "fractional": "2/7",
+        "percentage": "77.7%"
       },
       "trueOdds": 1.28571429,
       "points": 5.5,
@@ -18590,7 +18821,8 @@
       "displayOdds": {
         "american": "+270",
         "decimal": "3.70",
-        "fractional": "27/10"
+        "fractional": "27/10",
+        "percentage": "27%"
       },
       "trueOdds": 3.7,
       "points": 5.5,
@@ -18608,7 +18840,8 @@
       "displayOdds": {
         "american": "\u2212190",
         "decimal": "1.52",
-        "fractional": "10/19"
+        "fractional": "10/19",
+        "percentage": "65.5%"
       },
       "trueOdds": 1.52631579,
       "points": 6.5,
@@ -18626,7 +18859,8 @@
       "displayOdds": {
         "american": "+154",
         "decimal": "2.54",
-        "fractional": "77/50"
+        "fractional": "77/50",
+        "percentage": "39.3%"
       },
       "trueOdds": 2.54,
       "points": 6.5,
@@ -18644,7 +18878,8 @@
       "displayOdds": {
         "american": "\u2212110",
         "decimal": "1.90",
-        "fractional": "10/11"
+        "fractional": "10/11",
+        "percentage": "52.3%"
       },
       "trueOdds": 1.90909091,
       "points": 7.5,
@@ -18663,7 +18898,8 @@
       "displayOdds": {
         "american": "\u2212110",
         "decimal": "1.90",
-        "fractional": "10/11"
+        "fractional": "10/11",
+        "percentage": "52.3%"
       },
       "trueOdds": 1.90909091,
       "points": 7.5,
@@ -18682,7 +18918,8 @@
       "displayOdds": {
         "american": "+160",
         "decimal": "2.60",
-        "fractional": "8/5"
+        "fractional": "8/5",
+        "percentage": "38.4%"
       },
       "trueOdds": 2.6,
       "points": 8.5,
@@ -18700,7 +18937,8 @@
       "displayOdds": {
         "american": "\u2212196",
         "decimal": "1.51",
-        "fractional": "25/49"
+        "fractional": "25/49",
+        "percentage": "66.2%"
       },
       "trueOdds": 1.51020409,
       "points": 8.5,
@@ -18718,7 +18956,8 @@
       "displayOdds": {
         "american": "+285",
         "decimal": "3.85",
-        "fractional": "57/20"
+        "fractional": "57/20",
+        "percentage": "25.9%"
       },
       "trueOdds": 3.85,
       "points": 9.5,
@@ -18736,7 +18975,8 @@
       "displayOdds": {
         "american": "\u2212370",
         "decimal": "1.27",
-        "fractional": "10/37"
+        "fractional": "10/37",
+        "percentage": "78.7%"
       },
       "trueOdds": 1.27027028,
       "points": 9.5,
@@ -18754,7 +18994,8 @@
       "displayOdds": {
         "american": "\u2212550",
         "decimal": "1.18",
-        "fractional": "2/11"
+        "fractional": "2/11",
+        "percentage": "84.6%"
       },
       "trueOdds": 1.18181819,
       "points": 3.5,
@@ -18772,7 +19013,8 @@
       "displayOdds": {
         "american": "+400",
         "decimal": "5.00",
-        "fractional": "4/1"
+        "fractional": "4/1",
+        "percentage": "20%"
       },
       "trueOdds": 5,
       "points": 3.5,
@@ -18788,11 +19030,12 @@
       "marketId": "311507899",
       "label": "Over",
       "displayOdds": {
-        "american": "\u2212250",
-        "decimal": "1.40",
-        "fractional": "2/5"
+        "american": "\u2212220",
+        "decimal": "1.45",
+        "fractional": "5/11",
+        "percentage": "68.7%"
       },
-      "trueOdds": 1.4,
+      "trueOdds": 1.45454546,
       "points": 4.5,
       "outcomeType": "Over",
       "sortOrder": 4500,
@@ -18806,11 +19049,12 @@
       "marketId": "311507899",
       "label": "Under",
       "displayOdds": {
-        "american": "+200",
-        "decimal": "3.00",
-        "fractional": "2/1"
+        "american": "+175",
+        "decimal": "2.75",
+        "fractional": "7/4",
+        "percentage": "36.3%"
       },
-      "trueOdds": 3,
+      "trueOdds": 2.75,
       "points": 4.5,
       "outcomeType": "Under",
       "sortOrder": 4502,
@@ -18826,7 +19070,8 @@
       "displayOdds": {
         "american": "\u2212120",
         "decimal": "1.83",
-        "fractional": "5/6"
+        "fractional": "5/6",
+        "percentage": "54.5%"
       },
       "trueOdds": 1.83333334,
       "points": 5.5,
@@ -18845,7 +19090,8 @@
       "displayOdds": {
         "american": "+100",
         "decimal": "2.00",
-        "fractional": "1/1"
+        "fractional": "1/1",
+        "percentage": "50%"
       },
       "trueOdds": 2,
       "points": 5.5,
@@ -18862,11 +19108,12 @@
       "marketId": "311507899",
       "label": "Over",
       "displayOdds": {
-        "american": "+140",
-        "decimal": "2.40",
-        "fractional": "7/5"
+        "american": "+160",
+        "decimal": "2.60",
+        "fractional": "8/5",
+        "percentage": "38.4%"
       },
-      "trueOdds": 2.4,
+      "trueOdds": 2.6,
       "points": 6.5,
       "outcomeType": "Over",
       "sortOrder": 6500,
@@ -18880,11 +19127,12 @@
       "marketId": "311507899",
       "label": "Under",
       "displayOdds": {
-        "american": "\u2212170",
-        "decimal": "1.58",
-        "fractional": "10/17"
+        "american": "\u2212200",
+        "decimal": "1.50",
+        "fractional": "1/2",
+        "percentage": "66.6%"
       },
-      "trueOdds": 1.5882353,
+      "trueOdds": 1.5,
       "points": 6.5,
       "outcomeType": "Under",
       "sortOrder": 6502,
@@ -18900,7 +19148,8 @@
       "displayOdds": {
         "american": "+245",
         "decimal": "3.45",
-        "fractional": "49/20"
+        "fractional": "49/20",
+        "percentage": "28.9%"
       },
       "trueOdds": 3.45,
       "points": 7.5,
@@ -18918,7 +19167,8 @@
       "displayOdds": {
         "american": "\u2212310",
         "decimal": "1.32",
-        "fractional": "10/31"
+        "fractional": "10/31",
+        "percentage": "75.6%"
       },
       "trueOdds": 1.32258065,
       "points": 7.5,
@@ -18936,7 +19186,8 @@
       "displayOdds": {
         "american": "\u2212270",
         "decimal": "1.37",
-        "fractional": "10/27"
+        "fractional": "10/27",
+        "percentage": "72.9%"
       },
       "trueOdds": 1.37037038,
       "points": 8.5,
@@ -18954,7 +19205,8 @@
       "displayOdds": {
         "american": "+215",
         "decimal": "3.15",
-        "fractional": "43/20"
+        "fractional": "43/20",
+        "percentage": "31.7%"
       },
       "trueOdds": 3.15,
       "points": 8.5,
@@ -18972,7 +19224,8 @@
       "displayOdds": {
         "american": "\u2212156",
         "decimal": "1.64",
-        "fractional": "25/39"
+        "fractional": "25/39",
+        "percentage": "60.9%"
       },
       "trueOdds": 1.64102565,
       "points": 9.5,
@@ -18990,7 +19243,8 @@
       "displayOdds": {
         "american": "+130",
         "decimal": "2.30",
-        "fractional": "13/10"
+        "fractional": "13/10",
+        "percentage": "43.4%"
       },
       "trueOdds": 2.3,
       "points": 9.5,
@@ -19008,7 +19262,8 @@
       "displayOdds": {
         "american": "+115",
         "decimal": "2.15",
-        "fractional": "23/20"
+        "fractional": "23/20",
+        "percentage": "46.5%"
       },
       "trueOdds": 2.15,
       "points": 10.5,
@@ -19027,7 +19282,8 @@
       "displayOdds": {
         "american": "\u2212140",
         "decimal": "1.71",
-        "fractional": "5/7"
+        "fractional": "5/7",
+        "percentage": "58.3%"
       },
       "trueOdds": 1.71428572,
       "points": 10.5,
@@ -19046,7 +19302,8 @@
       "displayOdds": {
         "american": "+215",
         "decimal": "3.15",
-        "fractional": "43/20"
+        "fractional": "43/20",
+        "percentage": "31.7%"
       },
       "trueOdds": 3.15,
       "points": 11.5,
@@ -19064,7 +19321,8 @@
       "displayOdds": {
         "american": "\u2212270",
         "decimal": "1.37",
-        "fractional": "10/27"
+        "fractional": "10/27",
+        "percentage": "72.9%"
       },
       "trueOdds": 1.37037038,
       "points": 11.5,
@@ -19082,7 +19340,8 @@
       "displayOdds": {
         "american": "+370",
         "decimal": "4.70",
-        "fractional": "37/10"
+        "fractional": "37/10",
+        "percentage": "21.2%"
       },
       "trueOdds": 4.7,
       "points": 12.5,
@@ -19100,7 +19359,8 @@
       "displayOdds": {
         "american": "\u2212500",
         "decimal": "1.20",
-        "fractional": "1/5"
+        "fractional": "1/5",
+        "percentage": "83.3%"
       },
       "trueOdds": 1.2,
       "points": 12.5,
@@ -19116,11 +19376,12 @@
       "marketId": "311507890",
       "label": "Over",
       "displayOdds": {
-        "american": "\u2212330",
-        "decimal": "1.30",
-        "fractional": "10/33"
+        "american": "\u2212310",
+        "decimal": "1.32",
+        "fractional": "10/31",
+        "percentage": "75.6%"
       },
-      "trueOdds": 1.30303031,
+      "trueOdds": 1.32258065,
       "points": 6.5,
       "outcomeType": "Over",
       "sortOrder": 6500,
@@ -19134,11 +19395,12 @@
       "marketId": "311507890",
       "label": "Under",
       "displayOdds": {
-        "american": "+255",
-        "decimal": "3.55",
-        "fractional": "51/20"
+        "american": "+235",
+        "decimal": "3.35",
+        "fractional": "47/20",
+        "percentage": "29.8%"
       },
-      "trueOdds": 3.55,
+      "trueOdds": 3.35,
       "points": 6.5,
       "outcomeType": "Under",
       "sortOrder": 6502,
@@ -19152,11 +19414,12 @@
       "marketId": "311507890",
       "label": "Over",
       "displayOdds": {
-        "american": "\u2212180",
-        "decimal": "1.55",
-        "fractional": "5/9"
+        "american": "\u2212160",
+        "decimal": "1.62",
+        "fractional": "5/8",
+        "percentage": "61.5%"
       },
-      "trueOdds": 1.55555556,
+      "trueOdds": 1.625,
       "points": 7.5,
       "outcomeType": "Over",
       "sortOrder": 7500,
@@ -19170,11 +19433,12 @@
       "marketId": "311507890",
       "label": "Under",
       "displayOdds": {
-        "american": "+150",
-        "decimal": "2.50",
-        "fractional": "6/4"
+        "american": "+134",
+        "decimal": "2.34",
+        "fractional": "67/50",
+        "percentage": "42.7%"
       },
-      "trueOdds": 2.5,
+      "trueOdds": 2.34,
       "points": 7.5,
       "outcomeType": "Under",
       "sortOrder": 7502,
@@ -19188,11 +19452,12 @@
       "marketId": "311507890",
       "label": "Over",
       "displayOdds": {
-        "american": "+100",
-        "decimal": "2.00",
-        "fractional": "1/1"
+        "american": "+110",
+        "decimal": "2.10",
+        "fractional": "11/10",
+        "percentage": "47.6%"
       },
-      "trueOdds": 2,
+      "trueOdds": 2.1,
       "points": 8.5,
       "outcomeType": "Over",
       "sortOrder": 8500,
@@ -19207,11 +19472,12 @@
       "marketId": "311507890",
       "label": "Under",
       "displayOdds": {
-        "american": "\u2212120",
-        "decimal": "1.83",
-        "fractional": "5/6"
+        "american": "\u2212130",
+        "decimal": "1.76",
+        "fractional": "10/13",
+        "percentage": "56.5%"
       },
-      "trueOdds": 1.83333334,
+      "trueOdds": 1.76923077,
       "points": 8.5,
       "outcomeType": "Under",
       "sortOrder": 8502,
@@ -19228,7 +19494,8 @@
       "displayOdds": {
         "american": "+164",
         "decimal": "2.64",
-        "fractional": "41/25"
+        "fractional": "41/25",
+        "percentage": "37.8%"
       },
       "trueOdds": 2.64,
       "points": 9.5,
@@ -19246,7 +19513,8 @@
       "displayOdds": {
         "american": "\u2212205",
         "decimal": "1.48",
-        "fractional": "20/41"
+        "fractional": "20/41",
+        "percentage": "67.2%"
       },
       "trueOdds": 1.48780488,
       "points": 9.5,
@@ -19264,7 +19532,8 @@
       "displayOdds": {
         "american": "+290",
         "decimal": "3.90",
-        "fractional": "29/10"
+        "fractional": "29/10",
+        "percentage": "25.6%"
       },
       "trueOdds": 3.9,
       "points": 10.5,
@@ -19282,7 +19551,8 @@
       "displayOdds": {
         "american": "\u2212380",
         "decimal": "1.26",
-        "fractional": "5/19"
+        "fractional": "5/19",
+        "percentage": "79.1%"
       },
       "trueOdds": 1.2631579,
       "points": 10.5,
@@ -19300,7 +19570,8 @@
       "displayOdds": {
         "american": "\u2212340",
         "decimal": "1.29",
-        "fractional": "5/17"
+        "fractional": "5/17",
+        "percentage": "77.2%"
       },
       "trueOdds": 1.29411765,
       "points": 8.5,
@@ -19318,7 +19589,8 @@
       "displayOdds": {
         "american": "+265",
         "decimal": "3.65",
-        "fractional": "53/20"
+        "fractional": "53/20",
+        "percentage": "27.3%"
       },
       "trueOdds": 3.65,
       "points": 8.5,
@@ -19336,7 +19608,8 @@
       "displayOdds": {
         "american": "\u2212196",
         "decimal": "1.51",
-        "fractional": "25/49"
+        "fractional": "25/49",
+        "percentage": "66.2%"
       },
       "trueOdds": 1.51020409,
       "points": 9.5,
@@ -19354,7 +19627,8 @@
       "displayOdds": {
         "american": "+160",
         "decimal": "2.60",
-        "fractional": "8/5"
+        "fractional": "8/5",
+        "percentage": "38.4%"
       },
       "trueOdds": 2.6,
       "points": 9.5,
@@ -19372,7 +19646,8 @@
       "displayOdds": {
         "american": "\u2212115",
         "decimal": "1.86",
-        "fractional": "20/23"
+        "fractional": "20/23",
+        "percentage": "53.4%"
       },
       "trueOdds": 1.86956522,
       "points": 10.5,
@@ -19391,7 +19666,8 @@
       "displayOdds": {
         "american": "\u2212105",
         "decimal": "1.95",
-        "fractional": "20/21"
+        "fractional": "20/21",
+        "percentage": "51.2%"
       },
       "trueOdds": 1.95238096,
       "points": 10.5,
@@ -19410,7 +19686,8 @@
       "displayOdds": {
         "american": "+162",
         "decimal": "2.62",
-        "fractional": "81/50"
+        "fractional": "81/50",
+        "percentage": "38.1%"
       },
       "trueOdds": 2.62,
       "points": 11.5,
@@ -19428,7 +19705,8 @@
       "displayOdds": {
         "american": "\u2212200",
         "decimal": "1.50",
-        "fractional": "1/2"
+        "fractional": "1/2",
+        "percentage": "66.6%"
       },
       "trueOdds": 1.5,
       "points": 11.5,
@@ -19446,7 +19724,8 @@
       "displayOdds": {
         "american": "+305",
         "decimal": "4.05",
-        "fractional": "61/20"
+        "fractional": "61/20",
+        "percentage": "24.6%"
       },
       "trueOdds": 4.05,
       "points": 12.5,
@@ -19464,7 +19743,8 @@
       "displayOdds": {
         "american": "\u2212400",
         "decimal": "1.25",
-        "fractional": "1/4"
+        "fractional": "1/4",
+        "percentage": "80%"
       },
       "trueOdds": 1.25,
       "points": 12.5,
@@ -19482,7 +19762,8 @@
       "displayOdds": {
         "american": "\u2212250",
         "decimal": "1.40",
-        "fractional": "2/5"
+        "fractional": "2/5",
+        "percentage": "71.4%"
       },
       "trueOdds": 1.4,
       "points": 8.5,
@@ -19500,7 +19781,8 @@
       "displayOdds": {
         "american": "+200",
         "decimal": "3.00",
-        "fractional": "2/1"
+        "fractional": "2/1",
+        "percentage": "33.3%"
       },
       "trueOdds": 3,
       "points": 8.5,
@@ -19518,7 +19800,8 @@
       "displayOdds": {
         "american": "\u2212146",
         "decimal": "1.68",
-        "fractional": "50/73"
+        "fractional": "50/73",
+        "percentage": "59.3%"
       },
       "trueOdds": 1.68493151,
       "points": 9.5,
@@ -19537,7 +19820,8 @@
       "displayOdds": {
         "american": "+120",
         "decimal": "2.20",
-        "fractional": "6/5"
+        "fractional": "6/5",
+        "percentage": "45.4%"
       },
       "trueOdds": 2.2,
       "points": 9.5,
@@ -19556,7 +19840,8 @@
       "displayOdds": {
         "american": "+125",
         "decimal": "2.25",
-        "fractional": "5/4"
+        "fractional": "5/4",
+        "percentage": "44.4%"
       },
       "trueOdds": 2.25,
       "points": 10.5,
@@ -19574,7 +19859,8 @@
       "displayOdds": {
         "american": "\u2212150",
         "decimal": "1.66",
-        "fractional": "4/6"
+        "fractional": "4/6",
+        "percentage": "59.9%"
       },
       "trueOdds": 1.66666667,
       "points": 10.5,
@@ -19592,7 +19878,8 @@
       "displayOdds": {
         "american": "+235",
         "decimal": "3.35",
-        "fractional": "47/20"
+        "fractional": "47/20",
+        "percentage": "29.8%"
       },
       "trueOdds": 3.35,
       "points": 11.5,
@@ -19610,7 +19897,8 @@
       "displayOdds": {
         "american": "\u2212300",
         "decimal": "1.33",
-        "fractional": "1/3"
+        "fractional": "1/3",
+        "percentage": "74.9%"
       },
       "trueOdds": 1.33333334,
       "points": 11.5,
@@ -19628,7 +19916,8 @@
       "displayOdds": {
         "american": "+425",
         "decimal": "5.25",
-        "fractional": "17/4"
+        "fractional": "17/4",
+        "percentage": "19%"
       },
       "trueOdds": 5.25,
       "points": 12.5,
@@ -19646,7 +19935,8 @@
       "displayOdds": {
         "american": "\u2212600",
         "decimal": "1.16",
-        "fractional": "1/6"
+        "fractional": "1/6",
+        "percentage": "85.7%"
       },
       "trueOdds": 1.16666667,
       "points": 12.5,
@@ -19662,11 +19952,12 @@
       "marketId": "311507243",
       "label": "Over",
       "displayOdds": {
-        "american": "\u2212300",
-        "decimal": "1.33",
-        "fractional": "1/3"
+        "american": "\u2212270",
+        "decimal": "1.37",
+        "fractional": "10/27",
+        "percentage": "72.9%"
       },
-      "trueOdds": 1.33333334,
+      "trueOdds": 1.37037038,
       "points": 6.5,
       "outcomeType": "Over",
       "sortOrder": 6500,
@@ -19680,11 +19971,12 @@
       "marketId": "311507243",
       "label": "Under",
       "displayOdds": {
-        "american": "+240",
-        "decimal": "3.40",
-        "fractional": "12/5"
+        "american": "+220",
+        "decimal": "3.20",
+        "fractional": "11/5",
+        "percentage": "31.2%"
       },
-      "trueOdds": 3.4,
+      "trueOdds": 3.2,
       "points": 6.5,
       "outcomeType": "Under",
       "sortOrder": 6502,
@@ -19698,11 +19990,12 @@
       "marketId": "311507243",
       "label": "Over",
       "displayOdds": {
-        "american": "\u2212170",
-        "decimal": "1.58",
-        "fractional": "10/17"
+        "american": "\u2212150",
+        "decimal": "1.66",
+        "fractional": "4/6",
+        "percentage": "59.9%"
       },
-      "trueOdds": 1.5882353,
+      "trueOdds": 1.66666667,
       "points": 7.5,
       "outcomeType": "Over",
       "sortOrder": 7500,
@@ -19716,11 +20009,12 @@
       "marketId": "311507243",
       "label": "Under",
       "displayOdds": {
-        "american": "+140",
-        "decimal": "2.40",
-        "fractional": "7/5"
+        "american": "+130",
+        "decimal": "2.30",
+        "fractional": "13/10",
+        "percentage": "43.4%"
       },
-      "trueOdds": 2.4,
+      "trueOdds": 2.3,
       "points": 7.5,
       "outcomeType": "Under",
       "sortOrder": 7502,
@@ -19734,11 +20028,12 @@
       "marketId": "311507243",
       "label": "Over",
       "displayOdds": {
-        "american": "+105",
-        "decimal": "2.05",
-        "fractional": "21/20"
+        "american": "+115",
+        "decimal": "2.15",
+        "fractional": "23/20",
+        "percentage": "46.5%"
       },
-      "trueOdds": 2.05,
+      "trueOdds": 2.15,
       "points": 8.5,
       "outcomeType": "Over",
       "sortOrder": 8500,
@@ -19753,11 +20048,12 @@
       "marketId": "311507243",
       "label": "Under",
       "displayOdds": {
-        "american": "\u2212125",
-        "decimal": "1.80",
-        "fractional": "4/5"
+        "american": "\u2212136",
+        "decimal": "1.73",
+        "fractional": "25/34",
+        "percentage": "57.6%"
       },
-      "trueOdds": 1.8,
+      "trueOdds": 1.73529412,
       "points": 8.5,
       "outcomeType": "Under",
       "sortOrder": 8502,
@@ -19772,11 +20068,12 @@
       "marketId": "311507243",
       "label": "Over",
       "displayOdds": {
-        "american": "+170",
-        "decimal": "2.70",
-        "fractional": "17/10"
+        "american": "+180",
+        "decimal": "2.80",
+        "fractional": "9/5",
+        "percentage": "35.7%"
       },
-      "trueOdds": 2.7,
+      "trueOdds": 2.8,
       "points": 9.5,
       "outcomeType": "Over",
       "sortOrder": 9500,
@@ -19790,11 +20087,12 @@
       "marketId": "311507243",
       "label": "Under",
       "displayOdds": {
-        "american": "\u2212210",
-        "decimal": "1.47",
-        "fractional": "10/21"
+        "american": "\u2212220",
+        "decimal": "1.45",
+        "fractional": "5/11",
+        "percentage": "68.7%"
       },
-      "trueOdds": 1.47619048,
+      "trueOdds": 1.45454546,
       "points": 9.5,
       "outcomeType": "Under",
       "sortOrder": 9502,
@@ -19808,11 +20106,12 @@
       "marketId": "311507243",
       "label": "Over",
       "displayOdds": {
-        "american": "+300",
-        "decimal": "4.00",
-        "fractional": "3/1"
+        "american": "+320",
+        "decimal": "4.20",
+        "fractional": "16/5",
+        "percentage": "23.8%"
       },
-      "trueOdds": 4,
+      "trueOdds": 4.2,
       "points": 10.5,
       "outcomeType": "Over",
       "sortOrder": 10500,
@@ -19826,11 +20125,12 @@
       "marketId": "311507243",
       "label": "Under",
       "displayOdds": {
-        "american": "\u2212390",
-        "decimal": "1.25",
-        "fractional": "10/39"
+        "american": "\u2212450",
+        "decimal": "1.22",
+        "fractional": "2/9",
+        "percentage": "81.8%"
       },
-      "trueOdds": 1.25641026,
+      "trueOdds": 1.22222223,
       "points": 10.5,
       "outcomeType": "Under",
       "sortOrder": 10502,
@@ -19846,7 +20146,8 @@
       "displayOdds": {
         "american": "\u2212430",
         "decimal": "1.23",
-        "fractional": "10/43"
+        "fractional": "10/43",
+        "percentage": "81.1%"
       },
       "trueOdds": 1.23255814,
       "points": 4.5,
@@ -19864,7 +20165,8 @@
       "displayOdds": {
         "american": "+320",
         "decimal": "4.20",
-        "fractional": "16/5"
+        "fractional": "16/5",
+        "percentage": "23.8%"
       },
       "trueOdds": 4.2,
       "points": 4.5,
@@ -19880,11 +20182,12 @@
       "marketId": "311507235",
       "label": "Over",
       "displayOdds": {
-        "american": "\u2212215",
-        "decimal": "1.46",
-        "fractional": "20/43"
+        "american": "\u2212196",
+        "decimal": "1.51",
+        "fractional": "25/49",
+        "percentage": "66.2%"
       },
-      "trueOdds": 1.46511628,
+      "trueOdds": 1.51020409,
       "points": 5.5,
       "outcomeType": "Over",
       "sortOrder": 5500,
@@ -19898,11 +20201,12 @@
       "marketId": "311507235",
       "label": "Under",
       "displayOdds": {
-        "american": "+175",
-        "decimal": "2.75",
-        "fractional": "7/4"
+        "american": "+154",
+        "decimal": "2.54",
+        "fractional": "77/50",
+        "percentage": "39.3%"
       },
-      "trueOdds": 2.75,
+      "trueOdds": 2.54,
       "points": 5.5,
       "outcomeType": "Under",
       "sortOrder": 5502,
@@ -19916,11 +20220,12 @@
       "marketId": "311507235",
       "label": "Over",
       "displayOdds": {
-        "american": "\u2212110",
-        "decimal": "1.90",
-        "fractional": "10/11"
+        "american": "\u2212105",
+        "decimal": "1.95",
+        "fractional": "20/21",
+        "percentage": "51.2%"
       },
-      "trueOdds": 1.90909091,
+      "trueOdds": 1.95238096,
       "points": 6.5,
       "outcomeType": "Over",
       "sortOrder": 6500,
@@ -19935,11 +20240,12 @@
       "marketId": "311507235",
       "label": "Under",
       "displayOdds": {
-        "american": "\u2212110",
-        "decimal": "1.90",
-        "fractional": "10/11"
+        "american": "\u2212115",
+        "decimal": "1.86",
+        "fractional": "20/23",
+        "percentage": "53.4%"
       },
-      "trueOdds": 1.90909091,
+      "trueOdds": 1.86956522,
       "points": 6.5,
       "outcomeType": "Under",
       "sortOrder": 6502,
@@ -19954,11 +20260,12 @@
       "marketId": "311507235",
       "label": "Over",
       "displayOdds": {
-        "american": "+144",
-        "decimal": "2.44",
-        "fractional": "36/25"
+        "american": "+150",
+        "decimal": "2.50",
+        "fractional": "6/4",
+        "percentage": "40%"
       },
-      "trueOdds": 2.44,
+      "trueOdds": 2.5,
       "points": 7.5,
       "outcomeType": "Over",
       "sortOrder": 7500,
@@ -19972,11 +20279,12 @@
       "marketId": "311507235",
       "label": "Under",
       "displayOdds": {
-        "american": "\u2212175",
-        "decimal": "1.57",
-        "fractional": "4/7"
+        "american": "\u2212186",
+        "decimal": "1.53",
+        "fractional": "50/93",
+        "percentage": "65%"
       },
-      "trueOdds": 1.57142858,
+      "trueOdds": 1.53763441,
       "points": 7.5,
       "outcomeType": "Under",
       "sortOrder": 7502,
@@ -19992,7 +20300,8 @@
       "displayOdds": {
         "american": "+250",
         "decimal": "3.50",
-        "fractional": "5/2"
+        "fractional": "5/2",
+        "percentage": "28.5%"
       },
       "trueOdds": 3.5,
       "points": 8.5,
@@ -20010,7 +20319,8 @@
       "displayOdds": {
         "american": "\u2212320",
         "decimal": "1.31",
-        "fractional": "5/16"
+        "fractional": "5/16",
+        "percentage": "76.1%"
       },
       "trueOdds": 1.3125,
       "points": 8.5,
@@ -20028,7 +20338,8 @@
       "displayOdds": {
         "american": "\u2212400",
         "decimal": "1.25",
-        "fractional": "1/4"
+        "fractional": "1/4",
+        "percentage": "80%"
       },
       "trueOdds": 1.25,
       "points": 5.5,
@@ -20046,7 +20357,8 @@
       "displayOdds": {
         "american": "+305",
         "decimal": "4.05",
-        "fractional": "61/20"
+        "fractional": "61/20",
+        "percentage": "24.6%"
       },
       "trueOdds": 4.05,
       "points": 5.5,
@@ -20062,11 +20374,12 @@
       "marketId": "311507228",
       "label": "Over",
       "displayOdds": {
-        "american": "\u2212215",
-        "decimal": "1.46",
-        "fractional": "20/43"
+        "american": "\u2212200",
+        "decimal": "1.50",
+        "fractional": "1/2",
+        "percentage": "66.6%"
       },
-      "trueOdds": 1.46511628,
+      "trueOdds": 1.5,
       "points": 6.5,
       "outcomeType": "Over",
       "sortOrder": 6500,
@@ -20080,11 +20393,12 @@
       "marketId": "311507228",
       "label": "Under",
       "displayOdds": {
-        "american": "+175",
-        "decimal": "2.75",
-        "fractional": "7/4"
+        "american": "+160",
+        "decimal": "2.60",
+        "fractional": "8/5",
+        "percentage": "38.4%"
       },
-      "trueOdds": 2.75,
+      "trueOdds": 2.6,
       "points": 6.5,
       "outcomeType": "Under",
       "sortOrder": 6502,
@@ -20098,11 +20412,12 @@
       "marketId": "311507228",
       "label": "Over",
       "displayOdds": {
-        "american": "\u2212125",
-        "decimal": "1.80",
-        "fractional": "4/5"
+        "american": "\u2212105",
+        "decimal": "1.95",
+        "fractional": "20/21",
+        "percentage": "51.2%"
       },
-      "trueOdds": 1.8,
+      "trueOdds": 1.95238096,
       "points": 7.5,
       "outcomeType": "Over",
       "sortOrder": 7500,
@@ -20117,11 +20432,12 @@
       "marketId": "311507228",
       "label": "Under",
       "displayOdds": {
-        "american": "+105",
-        "decimal": "2.05",
-        "fractional": "21/20"
+        "american": "\u2212115",
+        "decimal": "1.86",
+        "fractional": "20/23",
+        "percentage": "53.4%"
       },
-      "trueOdds": 2.05,
+      "trueOdds": 1.86956522,
       "points": 7.5,
       "outcomeType": "Under",
       "sortOrder": 7502,
@@ -20136,11 +20452,12 @@
       "marketId": "311507228",
       "label": "Over",
       "displayOdds": {
-        "american": "+140",
-        "decimal": "2.40",
-        "fractional": "7/5"
+        "american": "+150",
+        "decimal": "2.50",
+        "fractional": "6/4",
+        "percentage": "40%"
       },
-      "trueOdds": 2.4,
+      "trueOdds": 2.5,
       "points": 8.5,
       "outcomeType": "Over",
       "sortOrder": 8500,
@@ -20154,11 +20471,12 @@
       "marketId": "311507228",
       "label": "Under",
       "displayOdds": {
-        "american": "\u2212170",
-        "decimal": "1.58",
-        "fractional": "10/17"
+        "american": "\u2212175",
+        "decimal": "1.57",
+        "fractional": "4/7",
+        "percentage": "63.6%"
       },
-      "trueOdds": 1.5882353,
+      "trueOdds": 1.57142858,
       "points": 8.5,
       "outcomeType": "Under",
       "sortOrder": 8502,
@@ -20172,11 +20490,12 @@
       "marketId": "311507228",
       "label": "Over",
       "displayOdds": {
-        "american": "+245",
-        "decimal": "3.45",
-        "fractional": "49/20"
+        "american": "+270",
+        "decimal": "3.70",
+        "fractional": "27/10",
+        "percentage": "27%"
       },
-      "trueOdds": 3.45,
+      "trueOdds": 3.7,
       "points": 9.5,
       "outcomeType": "Over",
       "sortOrder": 9500,
@@ -20190,11 +20509,12 @@
       "marketId": "311507228",
       "label": "Under",
       "displayOdds": {
-        "american": "\u2212310",
-        "decimal": "1.32",
-        "fractional": "10/31"
+        "american": "\u2212350",
+        "decimal": "1.28",
+        "fractional": "2/7",
+        "percentage": "77.7%"
       },
-      "trueOdds": 1.32258065,
+      "trueOdds": 1.28571429,
       "points": 9.5,
       "outcomeType": "Under",
       "sortOrder": 9502,

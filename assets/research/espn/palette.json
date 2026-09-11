@@ -1,0 +1,74 @@
+{
+  "slug": "espn",
+  "url": "https://www.espn.com/",
+  "assets": [
+    {
+      "file": "favicon.ico",
+      "src": "https://a.espncdn.com/favicon.ico",
+      "bytes": 24838,
+      "content_type": "image/x-icon"
+    },
+    {
+      "file": "logo-alt.png",
+      "src": "https://a.espncdn.com/i/espn/espn_logos/espn_red.png",
+      "bytes": 10210,
+      "content_type": "image/png"
+    }
+  ],
+  "palette": [],
+  "meta": {},
+  "errors": [
+    "retry asset logo: HTTP Error 404: Not Found"
+  ],
+  "final_url": "https://www.espn.com/",
+  "fonts_inline": [
+    ""
+  ],
+  "fonts_google": [],
+  "retry_notes": [
+    "https://www.espn.com/nfl/scoreboard -> ok (1987 bytes)"
+  ],
+  "image_palette": {
+    "logo-alt.png": [
+      {
+        "hex": "#c6212c",
+        "pct": 78.6
+      },
+      {
+        "hex": "#fdfdfd",
+        "pct": 11.3
+      },
+      {
+        "hex": "#f2e7e7",
+        "pct": 0.8
+      },
+      {
+        "hex": "#d13742",
+        "pct": 0.7
+      },
+      {
+        "hex": "#f2c6c6",
+        "pct": 0.7
+      },
+      {
+        "hex": "#dc7979",
+        "pct": 0.3
+      },
+      {
+        "hex": "#c60b16",
+        "pct": 0.1
+      },
+      {
+        "hex": "#e79a9a",
+        "pct": 0.1
+      }
+    ],
+    "favicon.ico": [
+      {
+        "hex": "#c60000",
+        "pct": 100.0
+      }
+    ]
+  },
+  "fonts_resolved": []
+}

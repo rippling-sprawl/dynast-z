@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <!-- Home-screen install. The two *-capable tags are what make an iOS icon
+       launch the site standalone — its own window, no address bar — instead of
+       opening a Safari tab; the manifest says the same thing to everyone else,
+       and to iOS 16.4+. standalone.js keys the drawer's share row off exactly
+       that state, so dropping these tags silently removes the row too. -->
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/assets/icons/app-touch-180.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Dynast-Z">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <title>Odds | Dynast-Z</title>
+  <!-- Theme first: theme.js sets <html data-theme> before the first paint,
+       theme.css holds every colour token the sheets below spend. -->
+  <script src="/scripts/base/theme.js"></script>
+  <link rel="stylesheet" href="/styles/base/theme.css">
+  <link rel="stylesheet" href="/styles/base/styles.css">
+  <link rel="stylesheet" href="/styles/base/hub.css">
+  <link rel="stylesheet" href="/styles/components/nfl-pickers.css">
+  <link rel="stylesheet" href="/styles/components/nfl-schedule.css">
+  <link rel="stylesheet" href="/styles/primary/nfl-schedule.css">
+  <link rel="stylesheet" href="/styles/base/lightbox.css">
+  <!-- Vercel Web Analytics. The /_vercel/insights/* routes are injected by
+       Vercel at deploy time, so this 404s harmlessly when serving locally. -->
+  <script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
+  <script defer src="/_vercel/insights/script.js"></script>
+</head>
+<body class="masters-body">
+  <div id="header-mount"></div>
+  <div id="nav-drawer-mount"></div>
+  <script src="/scripts/base/auth.js"></script>
+  <script src="/scripts/base/standalone.js"></script>
+  <script src="/scripts/base/nav.js"></script>
+  <script src="/scripts/base/lightbox.js"></script>
+  <!-- Both shared with /football/bakers-buns: the pickers below, and the rows
+       the card renders a team's season with. -->
+  <script src="/scripts/components/nfl-pickers.js"></script>
+  <script src="/scripts/components/nfl-schedule.js"></script>
+  <script>initPage();</script>
+
+  <div class="masters-content">
+    <div class="masters-breadcrumbs">
+      <a href="/football">Football</a><span class="separator">/</span><span>Odds</span>
+    </div>
+
+    <h2>Odds</h2>
+
+    <!-- Markup contract for scripts/components/nfl-pickers.js. -->
+    <div class="dd-row">
+      <div class="dd" id="dd-week">
+        <button type="button" class="dd-btn" id="f-week" aria-haspopup="true" aria-expanded="false">
+          <span class="dd-value">All weeks</span>
+        </button>
+        <div class="dd-pop dd-menu" id="week-menu" role="menu" aria-label="Week" hidden></div>
+      </div>
+
+      <div class="dd" id="dd-team">
+        <button type="button" class="dd-btn" id="f-team" aria-haspopup="dialog" aria-expanded="false">
+          <span class="dd-value">All teams</span>
+        </button>
+        <div class="dd-pop dd-overlay" id="team-overlay" role="dialog" aria-modal="true" aria-label="Team" hidden>
+          <div class="tp" id="team-grid"></div>
+        </div>
+      </div>
+
+      <!-- Last, not first: the season is the control that moves least, and week
+           and team are where a reader who has been here before expects them. -->
+      <div class="dd" id="dd-season">
+        <button type="button" class="dd-btn" id="f-season" aria-haspopup="true" aria-expanded="false">
+          <span class="dd-value">2026</span>
+        </button>
+        <div class="dd-pop dd-menu" id="season-menu" role="menu" aria-label="Season" hidden></div>
+      </div>
+
+      <button type="button" class="sched-reset" id="f-reset" hidden>Reset</button>
+    </div>
+
+    <div id="list"><p class="sched-empty">Loading schedule…</p></div>
+  </div>
+
+  <script>
+  (function () {
+    'use strict';
+
+    /* The rows, the time handling and the three lists live in
+     * scripts/components/nfl-schedule.js, because the team card on
+     * /football/bakers-buns renders a team's season too. What stays here is what
+     * is particular to a page with filters on it: which season and week are
+     * being looked at, what the three controls do, and how that survives a
+     * reload in the URL. */
+
+    var doc = null;
+    // The week the clock is in, for the season in view — and null for a season
+    // that has already finished, which has no "this week" to be in.
+    var nowWeek = null;
+    var state = { season: SCHED_CURRENT_SEASON, week: 1, team: '' };
+
+    var listEl = document.getElementById('list');
+    var weekBtn = document.getElementById('f-week');
+    var weekMenu = document.getElementById('week-menu');
+    var teamBtn = document.getElementById('f-team');
+    var teamPicker = document.getElementById('team-grid');
+    var seasonBtn = document.getElementById('f-season');
+    var seasonMenu = document.getElementById('season-menu');
+    var resetBtn = document.getElementById('f-reset');
+
+    function esc(s) {
+      return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+      });
+    }
+
+    /* ---------- params ----------
+     * The season is read before anything loads, since it decides what loads.
+     * The week and the team are read after, because both are only meaningful
+     * against a file: a week has to be one the season has, and a team has to be
+     * one the file knows.
+     */
+
+    function readSeasonParam() {
+      var v = Number(new URLSearchParams(location.search).get('season'));
+      return SCHED_SEASONS.indexOf(v) >= 0 ? v : SCHED_CURRENT_SEASON;
+    }
+
+    function readParams() {
+      var q = new URLSearchParams(location.search);
+      var w = q.get('week');
+      var t = (q.get('team') || '').toUpperCase();
+
+      if (w === 'all') state.week = 'all';
+      else if (w && doc.weeks.some(function (x) { return String(x.week) === w; })) state.week = Number(w);
+
+      if (t && schedTeamsByAbbr(doc)[t]) state.team = t;
+    }
+
+    // The season is written only when it is not the current one, so every URL
+    // that worked before this page had seasons still reads the same and still
+    // means the same thing.
+    function writeParams() {
+      var q = new URLSearchParams();
+      q.set('week', String(state.week));
+      if (state.team) q.set('team', state.team);
+      if (state.season !== SCHED_CURRENT_SEASON) q.set('season', String(state.season));
+      history.replaceState(null, '', location.pathname + '?' + q.toString());
+    }
+
+    /* ---------- the filter controls ----------
+     * The controls themselves — the option menus, the league's logo grid, and
+     * the open/shut behaviour they share — live in
+     * scripts/components/nfl-pickers.js, because /football/bakers-buns files a
+     * note against the same team and the same week this page filters by. What
+     * stays here is what is particular to a schedule: which weeks the file
+     * actually has, which one is "now", and what picking one means.
+     */
+
+    function weekOptions() {
+      return [{ value: 'all', label: 'All weeks' }].concat(
+        doc.weeks.map(function (w) {
+          return {
+            value: w.week,
+            label: 'Week ' + w.week,
+            note: w.week === nowWeek ? 'this week' : ''
+          };
+        }));
+    }
+
+    function weekLabel() {
+      if (state.week === 'all') return 'All weeks';
+      return 'Week ' + state.week + (state.week === nowWeek ? ' — this week' : '');
+    }
+
+    function seasonOptions() {
+      return SCHED_SEASONS.map(function (s) {
+        return {
+          value: s,
+          label: String(s),
+          note: s === SCHED_CURRENT_SEASON ? 'current' : ''
+        };
+      });
+    }
+
+    // The week the page opens a season on. For the season in progress that is
+    // whichever week the clock is in — the page is read during the season far
+    // more often than before it, and week 1 in December is never what was
+    // wanted. A finished season has no such week, so it opens at its start.
+    function defaultWeek() {
+      return nowWeek || 1;
+    }
+
+    function syncFilters() {
+      syncWeekMenu(weekBtn, weekMenu, state.week, weekLabel());
+      syncTeamPicker(teamBtn, teamPicker, state.team, doc.teams);
+      syncOptionMenu(seasonBtn, seasonMenu, state.season, String(state.season), 'season');
+    }
+
+    // Rebuilt on every load: the week list is the file's, and a season the page
+    // has not shown yet has its own.
+    function refreshPanels() {
+      buildWeekMenu(weekMenu, weekOptions());
+      buildTeamPicker(teamPicker, doc.teams);
+    }
+
+    // Wired once. The panels below them are replaced on every season change, so
+    // every handler here is delegated to the panel rather than to its options.
+    function wireFilters() {
+      buildOptionMenu(seasonMenu, seasonOptions(), 'season');
+
+      var weekDd = registerDropdown(document.getElementById('dd-week'));
+      var teamDd = registerDropdown(document.getElementById('dd-team'));
+      var seasonDd = registerDropdown(document.getElementById('dd-season'));
+
+      weekMenu.addEventListener('click', function (e) {
+        var opt = e.target.closest ? e.target.closest('.dd-opt') : null;
+        if (!opt || !weekMenu.contains(opt)) return;
+        var v = opt.getAttribute('data-week');
+        state.week = v === 'all' ? 'all' : Number(v);
+        closeDropdown(weekDd, true);
+        apply();
+      });
+
+      // Picking a team means looking for that team, and a team plays once a
+      // week — a single-week view answers "are they playing Sunday" and nothing
+      // else. The week snaps to all-weeks so the pick lands on their season.
+      // Clicking the picked team again is how you get back to all teams; the
+      // week stays where it was put.
+      teamPicker.addEventListener('click', function (e) {
+        var btn = e.target.closest ? e.target.closest('.tp-team') : null;
+        if (!btn || !teamPicker.contains(btn)) return;
+        var abbr = btn.getAttribute('data-team');
+        state.team = state.team === abbr ? '' : abbr;
+        if (state.team) state.week = 'all';
+        closeDropdown(teamDd, true);
+        apply();
+      });
+
+      // The team survives a season change — comparing a team's two seasons is
+      // the reason to have both — but the week cannot: "this week" means
+      // something different in each, and week 1 of a finished season is not the
+      // week the reader was just looking at either.
+      seasonMenu.addEventListener('click', function (e) {
+        var opt = e.target.closest ? e.target.closest('.dd-opt') : null;
+        if (!opt || !seasonMenu.contains(opt)) return;
+        var season = Number(opt.getAttribute('data-season'));
+        closeDropdown(seasonDd, true);
+        if (season !== state.season) load(season, false);
+      });
+
+      resetBtn.addEventListener('click', function () {
+        state.team = '';
+        closeAllDropdowns();
+        if (state.season !== SCHED_CURRENT_SEASON) {
+          load(SCHED_CURRENT_SEASON, false);
+        } else {
+          state.week = defaultWeek();
+          apply();
+        }
+      });
+    }
+
+    function apply() {
+      syncFilters();
+      resetBtn.hidden = state.season === SCHED_CURRENT_SEASON &&
+        state.week === nowWeek && !state.team;
+      var html = state.week === 'all'
+        ? schedRenderAll(doc, { team: state.team })
+        : schedRenderWeek(doc, state.week, { team: state.team });
+      // Below the schedule, not above it: the games are what was asked for and
+      // the links are where to go next.
+      listEl.innerHTML = html + (state.team ? schedTeamLinks(doc, state.team) : '');
+      writeParams();
+    }
+
+    /* `fromParams` is the first load only: an explicit ?week=/?team= is the
+     * reader arriving with a question already asked, and it outranks the
+     * defaults. A season picked from the menu is a question asked here, and
+     * carrying the old URL's week into it would be answering the wrong one. */
+    function load(season, fromParams) {
+      listEl.innerHTML = '<p class="sched-empty">Loading schedule…</p>';
+      schedLoad(season).then(function (d) {
+        doc = d;
+        state.season = season;
+        nowWeek = season === SCHED_CURRENT_SEASON ? schedCurrentWeek(doc) : null;
+        state.week = state.team ? 'all' : defaultWeek();
+
+        if (fromParams) readParams();
+        refreshPanels();
+        apply();
+      }).catch(function (e) {
+        listEl.innerHTML = '<p class="sched-empty">Error: ' + esc(e.message) + '</p>';
+      });
+    }
+
+    /* A restored page is not a loaded one. iOS keeps open tabs as a rendered
+     * snapshot and hands the DOM back untouched — no fetch, no script — so a
+     * tab left open across a deploy keeps drawing rows built from whatever the
+     * schedule file said at the time. That is not hypothetical here: the ids
+     * these rows link by changed from ESPN's to balldontlie's, and a restored
+     * tab links every game to a page that cannot resolve it. `no-store` on the
+     * document does not prevent this; Safari's back/forward cache keeps
+     * no-store pages anyway.
+     *
+     * Re-fetch and repaint rather than calling load(): the reader's week and
+     * team are still on the screen and still what they asked for, and load()
+     * would reset them to the defaults for the season. */
+    function restore() {
+      schedInvalidate();
+      schedLoad(state.season).then(function (d) {
+        doc = d;
+        refreshPanels();
+        apply();
+      }).catch(function () {
+        // Offline, most likely. What is on the page is stale but readable, and
+        // wiping it for an error message trades one wrong thing for a worse one.
+      });
+    }
+
+    window.addEventListener('pageshow', function (e) {
+      if (e.persisted) restore();
+    });
+
+    state.season = readSeasonParam();
+    wireFilters();
+    load(state.season, true);
+  })();
+  </script>
+</body>
+</html>

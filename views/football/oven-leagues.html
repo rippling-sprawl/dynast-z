@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <!-- Home-screen install. The two *-capable tags are what make an iOS icon
+       launch the site standalone — its own window, no address bar — instead of
+       opening a Safari tab; the manifest says the same thing to everyone else,
+       and to iOS 16.4+. standalone.js keys the drawer's share row off exactly
+       that state, so dropping these tags silently removes the row too. -->
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/assets/icons/app-touch-180.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Dynast-Z">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <title>Baker's Oven | Dynast-Z</title>
+  <!-- Theme first: theme.js sets <html data-theme> before the first paint,
+       theme.css holds every colour token the sheets below spend. -->
+  <script src="/scripts/base/theme.js"></script>
+  <link rel="stylesheet" href="/styles/base/theme.css">
+  <link rel="stylesheet" href="/styles/base/styles.css">
+  <link rel="stylesheet" href="/styles/primary/bakers-oven.css">
+  <link rel="stylesheet" href="/styles/base/lightbox.css">
+  <!-- Vercel Web Analytics. The /_vercel/insights/* routes are injected by
+       Vercel at deploy time, so this 404s harmlessly when serving locally. -->
+  <script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
+  <script defer src="/_vercel/insights/script.js"></script>
+</head>
+<body>
+  <div id="header-mount"></div>
+  <div id="nav-drawer-mount"></div>
+  <script src="/scripts/base/auth.js"></script>
+  <script src="/scripts/base/standalone.js"></script>
+  <script src="/scripts/base/nav.js"></script>
+  <script src="/scripts/base/lightbox.js"></script>
+  <script src="/scripts/base/sync.js"></script>
+  <script src="/scripts/primary/oven-config.js"></script>
+  <script src="/scripts/primary/oven-draft.js"></script>
+  <script src="/scripts/primary/oven-leagues.js"></script>
+  <script src="/scripts/primary/oven-board.js"></script>
+  <script>initPage();</script>
+
+  <main class="oven-content">
+    <div class="oven-breadcrumbs">
+      <a href="/football">Football</a><span class="sep">/</span><span>Baker's Oven</span>
+    </div>
+    <h2 class="oven-h2">🔥 Baker's Oven</h2>
+    <p class="oven-sub">Your leagues, live against the Sleeper draft. Open a league to load your rankings and your draft board — players cross off as they're picked or kept, and your next pick tracks itself down the board.</p>
+
+    <div id="loading">Loading your leagues…</div>
+
+    <!-- Signed-out pitch. The page is public; everything it does is not. -->
+    <div id="signed-out" style="display:none;">
+      <div class="oven-card oven-signin">
+        <h3>Sign in to open the Oven</h3>
+        <p>
+          Your leagues, rankings and draft board live on your account, so the Oven needs
+          one before it can load anything. Creating one takes a username and a password.
+        </p>
+        <div class="oven-btn-row">
+          <a class="oven-btn primary" href="/account?next=/football/bakers-oven">Sign in</a>
+          <a class="oven-btn" href="/account?next=/football/bakers-oven">Create account</a>
+        </div>
+      </div>
+
+      <!-- Opted out of the shared lightbox (scripts/base/lightbox.js): this
+           preview already opens its own full-size viewer below. -->
+      <figure class="oven-preview" data-no-lightbox>
+        <button type="button" class="oven-preview-shot" id="preview-open"
+                aria-label="Open a larger preview of the draft board">
+          <img src="/assets/screenshots/bakers-oven-preview.png" alt="Baker's Oven draft board mid-draft: your pick on the clock, the big board tiered and crossed off, and the projections drawer showing who is likely to reach each of your next picks.">
+        </button>
+        <figcaption>The board, live at 1.01 — click to enlarge</figcaption>
+      </figure>
+    </div>
+
+    <div id="sections" style="display:none;">
+      <div class="oven-card">
+        <h3>My leagues</h3>
+        <div class="oven-team-grid one-col" id="leagues"></div>
+      </div>
+
+      <div class="oven-card">
+        <h3>Add a league</h3>
+        <div class="oven-field-row">
+          <input type="text" class="oven-search" id="add-input" placeholder="Sleeper league ID or league URL" autocomplete="off">
+          <button class="oven-btn primary" id="add-btn">Look up</button>
+        </div>
+        <div id="add-msg"></div>
+        <div id="picker"></div>
+        <p class="oven-note">
+          Find the ID in your Sleeper league URL: <code>sleeper.com/leagues/<strong>1384025526670233600</strong>/team</code>.
+          Paste either the ID or the whole URL. Your leagues and your rankings are private to your
+          account.
+        </p>
+      </div>
+    </div>
+  </main>
+
+  <div class="oven-lightbox" id="lightbox" hidden>
+    <button type="button" class="oven-lightbox-close" id="lightbox-close" aria-label="Close preview">&times;</button>
+    <img src="/assets/screenshots/bakers-oven-preview.png" alt="Baker's Oven draft board, full size.">
+  </div>
+
+  <script>
+  (function () {
+    var loading = document.getElementById('loading');
+    var sections = document.getElementById('sections');
+
+    // Set while the "which team is yours?" picker is open, so clicking a team
+    // knows which league it is completing the add for.
+    var pending = null;   // { league, teams }
+
+    /* ---------- my leagues ---------- */
+
+    function renderLeagues() {
+      var el = document.getElementById('leagues');
+      var leagues = OvenLeagues.list();
+
+      if (!leagues.length) {
+        el.innerHTML = '<div class="oven-msg warn">No leagues yet — add one below.</div>';
+        return;
+      }
+
+      el.innerHTML = leagues.map(function (l) {
+        var sub = [l.season, (l.total_rosters || '?') + ' teams', (l.status || '').replace('_', ' ')]
+          .filter(Boolean).map(OvenBoard.esc).join(' · ');
+        var mine = l.my_team_name
+          ? '<span class="oven-you-tag">you</span> ' + OvenBoard.esc(l.my_team_name)
+          : '<span class="oven-league-unclaimed">no team picked</span>';
+        return '<div class="oven-team-card is-league" data-id="' + OvenBoard.esc(l.league_id) + '">' +
+          (l.avatar
+            ? '<img class="oven-team-avatar" src="' + OvenBoard.esc(l.avatar) + '" alt="" referrerpolicy="no-referrer">'
+            : '<div class="oven-team-avatar"></div>') +
+          '<div class="oven-team-meta">' +
+            '<a class="oven-league-link oven-team-name" href="/football/bakers-oven/' + OvenBoard.esc(l.league_id) + '">' +
+              OvenBoard.esc(l.name) + '</a>' +
+            '<div class="oven-team-sub">' + sub + '</div>' +
+            '<div class="oven-team-sub">' + mine + '</div>' +
+          '</div>' +
+          '<div class="oven-league-actions">' +
+            '<button class="oven-btn sm" data-act="remove">Remove</button>' +
+          '</div></div>';
+      }).join('');
+
+      el.querySelectorAll('button[data-act="remove"]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var id = btn.closest('.oven-team-card').getAttribute('data-id');
+          var rec = OvenLeagues.get(id);
+          if (!confirm('Remove ' + (rec ? rec.name : 'this league') + ' from your leagues? Its rankings are kept.')) return;
+          OvenLeagues.remove(id);
+          renderLeagues();
+        });
+      });
+    }
+
+    /* ---------- add a league ---------- */
+
+    function addMsg(cls, text) {
+      document.getElementById('add-msg').innerHTML = text
+        ? '<div class="oven-msg ' + cls + '">' + text + '</div>' : '';
+    }
+
+    async function lookup(raw) {
+      var id = OvenLeagues.parseId(raw);
+      if (!id) {
+        addMsg('err', "That doesn't look like a Sleeper league ID.");
+        return;
+      }
+      if (OvenLeagues.get(id)) {
+        addMsg('warn', "Already saved — it's in your list above.");
+        document.getElementById('picker').innerHTML = '';
+        return;
+      }
+      addMsg('warn', 'Looking up ' + OvenBoard.esc(id) + '…');
+      try {
+        var meta = await OvenLeagues.fetchMeta(id);
+        addMsg('ok', OvenBoard.esc(meta.league.name) + ' · ' + OvenBoard.esc(String(meta.league.season)) +
+          ' · ' + meta.teams.length + ' teams');
+        pending = { league: meta.league, teams: meta.teams };
+        renderPicker();
+      } catch (e) {
+        addMsg('err', OvenBoard.esc(e.message));
+        document.getElementById('picker').innerHTML = '';
+      }
+    }
+
+    function renderPicker() {
+      var el = document.getElementById('picker');
+      if (!pending) { el.innerHTML = ''; return; }
+
+      el.innerHTML = '<p class="oven-picker-label">Which team is yours in ' +
+          OvenBoard.esc(pending.league.name) + '?</p>' +
+        '<div class="oven-team-grid">' + pending.teams.map(function (t) {
+          return '<button type="button" class="oven-team-card" data-roster="' + t.roster_id + '">' +
+            (t.avatar
+              ? '<img class="oven-team-avatar" src="' + OvenBoard.esc(t.avatar) + '" alt="" referrerpolicy="no-referrer">'
+              : '<div class="oven-team-avatar"></div>') +
+            '<div class="oven-team-meta">' +
+              '<div class="oven-team-name">' + OvenBoard.esc(t.teamName) + '</div>' +
+              '<div class="oven-team-sub">@' + OvenBoard.esc(t.username) + '</div>' +
+            '</div></button>';
+        }).join('') + '</div>';
+
+      el.querySelectorAll('button[data-roster]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var id = Number(btn.getAttribute('data-roster'));
+          var team = pending.teams.filter(function (t) { return t.roster_id === id; })[0];
+          if (!team) return;
+
+          OvenLeagues.add(pending.league, team);
+
+          var name = pending.league.name;
+          pending = null;
+          el.innerHTML = '';
+          document.getElementById('add-input').value = '';
+          addMsg('ok', OvenBoard.esc(name) + ' saved as ' + OvenBoard.esc(team.teamName) + '.');
+          renderLeagues();
+        });
+      });
+    }
+
+    function wireAdd() {
+      var input = document.getElementById('add-input');
+      document.getElementById('add-btn').addEventListener('click', function () { lookup(input.value); });
+      input.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') { e.preventDefault(); lookup(input.value); }
+      });
+    }
+
+    /* ---------- signed-out preview ---------- */
+
+    function wireLightbox() {
+      var box = document.getElementById('lightbox');
+      function close() { box.hidden = true; document.body.style.overflow = ''; }
+      document.getElementById('preview-open').addEventListener('click', function () {
+        box.hidden = false;
+        document.body.style.overflow = 'hidden';
+        document.getElementById('lightbox-close').focus();
+      });
+      document.getElementById('lightbox-close').addEventListener('click', close);
+      // Anywhere on the scrim closes it — the image is the only thing in there,
+      // and clicking the image is how you'd expect to dismiss a lightbox too.
+      box.addEventListener('click', close);
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && !box.hidden) close();
+      });
+    }
+
+    async function boot() {
+      // No requireLogin() here: the route is public so the tool can be seen
+      // before it's used. There is nothing to gate — every league and board on
+      // this page comes from the account's own storage, which is empty without
+      // one, and the Python endpoints still check X-User-Id.
+      if (!isLoggedIn()) {
+        loading.style.display = 'none';
+        document.getElementById('signed-out').style.display = '';
+        wireLightbox();
+        return;
+      }
+
+      try {
+        // No Sleeper call on this page at all — the list paints from the
+        // metadata snapshot stored when each league was added, and the league
+        // page refreshes that snapshot when you open it.
+        await OvenLeagues.load();
+
+        renderLeagues();
+        wireAdd();
+
+        loading.style.display = 'none';
+        sections.style.display = '';
+      } catch (e) {
+        loading.textContent = 'Error: ' + e.message;
+      }
+    }
+
+    boot();
+  })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,2614 @@
+/* === Baker's Buns ===
+ * Football notes, organised around teams rather than topics.
+ *
+ * The page has two kinds of surface, and they are styled independently:
+ *
+ *   1. The projections table (`#proj-table`), whose rows open a `.team-card`
+ *      dialog holding everything known about one team. All of it renders
+ *      from data/nfl_projections_2026.json, so a new per-team note is a data
+ *      change, never a markup one.
+ *   2. League-wide `.note` cards inside `.bun-section` groups, for the handful
+ *      of things that genuinely are not about a single team.
+ *
+ * Anything team-shaped belongs in (1). Adding a team's fact to (2) is what
+ * produced the duplication this layout was built to remove. */
+
+/* --- Section nav (jump links) --- */
+.bun-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 12px 0 20px;
+}
+
+.bun-nav a {
+  font-family: monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-3);
+  text-decoration: none;
+  padding: 5px 10px;
+  border: 1px solid var(--hairline);
+  border-radius: 999px;
+  background: var(--panel);
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.bun-nav a:hover {
+  color: var(--text);
+  border-color: var(--accent-2);
+}
+
+/* --- Section --- */
+.bun-section {
+  margin: 28px 0 0;
+  scroll-margin-top: 72px;
+}
+
+.bun-section > h3 {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-3);
+  font-family: monospace;
+  font-weight: 700;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--hairline);
+}
+
+/* A heading with a control beside it. The underline belongs to the row now,
+   because .bun-section > h3 draws it and its h3 is no longer a direct child. */
+.bun-head-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--hairline);
+}
+
+.bun-head-row > h3 {
+  margin: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-3);
+  font-family: monospace;
+  font-weight: 700;
+}
+
+/* Says the score is the reader's blend rather than the sheet's. Blue, the
+   page's "this is yours / this is interactive" color, rather than a warning
+   color — re-weighting is the feature, not a fault. */
+.wt-flag {
+  padding: 1px 6px;
+  border: 1px solid var(--accent-line);
+  border-radius: 999px;
+  background: var(--accent-soft-2);
+  font-family: monospace;
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent-2);
+  white-space: nowrap;
+}
+
+.wt-flag[hidden] { display: none; }
+
+.wt-edit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 8px;
+  margin-left: auto;
+  color: var(--text-3);
+  background: var(--panel-hi);
+  border: 1px solid var(--hairline);
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.wt-edit-label {
+  font-family: monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  line-height: 1;
+}
+
+.wt-edit:hover { color: var(--text); border-color: var(--hairline-hi); }
+.wt-edit:focus-visible { outline: none; border-color: var(--accent-2); color: var(--accent-2); }
+
+.bun-section > .bun-section-note,
+.masters-content > .bun-section-note {
+  margin-top: 6px;
+  font-size: 11px;
+  font-family: monospace;
+  color: var(--text-5);
+}
+
+.bun-section > .bun-section-note a,
+.masters-content > .bun-section-note a {
+  color: var(--text-3);
+  text-decoration: none;
+  border-bottom: 1px dotted var(--hairline-hi);
+}
+
+.bun-section > .bun-section-note a:hover,
+.masters-content > .bun-section-note a:hover {
+  color: var(--accent-2);
+  border-bottom-color: var(--accent-2);
+}
+
+/* --- Note cards --- */
+.bun-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+  align-items: start;
+}
+
+.note {
+  background: var(--panel-hi);
+  border: 1px solid var(--hairline);
+  border-left: 3px solid var(--hairline);
+  border-radius: 6px;
+  padding: 14px 16px;
+}
+
+.note.accent-warn { border-left-color: var(--warn-deep); }
+.note.accent-good { border-left-color: var(--good-strong); }
+.note.accent-info { border-left-color: var(--accent-2); }
+
+.note h4 {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-bright);
+  margin: 0;
+}
+
+.note .note-meta {
+  display: block;
+  margin-top: 2px;
+  font-size: 10px;
+  font-family: monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-5);
+}
+
+.note ul {
+  margin: 8px 0 0;
+  padding-left: 16px;
+}
+
+.note li {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-2);
+  margin-bottom: 3px;
+}
+
+.note p {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-2);
+  margin: 8px 0 0;
+}
+
+/* A conclusion / actionable line at the bottom of a note. */
+.note .note-take {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--hairline);
+  font-size: 12px;
+  color: var(--text);
+}
+
+.note .note-take strong { color: var(--text-bright); }
+
+/* --- Odds pill --- */
+.odds {
+  font-family: monospace;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.odds.plus { color: var(--good-strong); }
+.odds.minus { color: var(--orange); }
+
+/* Odds inside the projections table sit outside the heat map — see fmtOdds in
+ * the view for why a signed price must not be colored like a metric. */
+.odds.odds-plain { color: var(--text-2); }
+
+/* --- Tables --- */
+.bun-table-wrap {
+  margin-top: 12px;
+  overflow-x: auto;
+}
+
+.bun-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.bun-table caption {
+  text-align: left;
+  font-family: monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-4);
+  padding-bottom: 6px;
+}
+
+.bun-table th {
+  text-align: left;
+  font-family: monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-4);
+  font-weight: 700;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--hairline);
+  white-space: nowrap;
+}
+
+.bun-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--panel-hi2);
+  color: var(--text-2);
+  vertical-align: top;
+}
+
+.bun-table tbody tr:last-child td { border-bottom: none; }
+
+.bun-table .col-team {
+  color: var(--text-bright);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+
+.bun-table .num {
+  font-family: monospace;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.bun-table ul {
+  margin: 0;
+  padding-left: 15px;
+}
+
+.bun-table li {
+  line-height: 1.45;
+  margin-bottom: 2px;
+}
+
+.bun-table .muted { color: var(--text-5); font-style: italic; }
+
+
+/* --- Appendix graphs ---
+ * Charts lifted out of the source doc. They are wide and text-dense, so they
+ * get one full-width column rather than a card grid — a half-width chart is
+ * unreadable, and the lightbox is there for a proper look. */
+.graph-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+  margin-top: 12px;
+}
+
+.graph {
+  margin: 0;
+  background: var(--panel-hi);
+  border: 1px solid var(--hairline);
+  border-radius: 6px;
+  padding: 12px;
+}
+
+.graph img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 4px;
+  cursor: zoom-in;
+  transition: opacity 0.15s;
+}
+
+.graph img:hover { opacity: 0.88; }
+
+.graph img:focus-visible {
+  outline: 2px solid var(--accent-2);
+  outline-offset: 2px;
+}
+
+.graph figcaption {
+  margin-top: 8px;
+  font-size: 11px;
+  font-family: monospace;
+  color: var(--text-4);
+  line-height: 1.5;
+}
+
+.graph figcaption strong {
+  color: var(--text-2);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* --- Link list --- */
+.bun-links {
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bun-links li {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--panel-hi2);
+}
+
+.bun-links li:last-child { border-bottom: none; }
+
+.bun-links > li > a {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent-2);
+  text-decoration: none;
+}
+
+.bun-links a:hover { text-decoration: underline; }
+
+.bun-links .link-src {
+  display: inline-block;
+  font-family: monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-5);
+  margin-left: 8px;
+}
+
+/* The summary of what the link actually says — the reason the list exists. */
+.bun-links p {
+  margin: 4px 0 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-2);
+}
+
+.bun-links p a { font-size: inherit; font-weight: 400; }
+
+/* A second heading inside a section that already opened with one — the Links
+   index under Sources. The look comes from .bun-section > h3; all this adds is
+   the air that a mid-section heading needs and the first one does not. */
+.bun-sub { margin-top: 24px; }
+
+/* The index repeats what the list above says, so it carries the URL in full:
+   readable off the page, and copyable without following the link. */
+.bun-links-index .link-url {
+  margin-top: 4px;
+  font-family: monospace;
+  font-size: 11px;
+  color: var(--text-4);
+  overflow-wrap: anywhere;
+}
+
+/* --- Projections table ---
+ * Rendered from /data/nfl_projections_2026.json by the inline script in
+ * views/football/bakers-buns.html. */
+/* Filters: one row per conference, each led by its conference chip. Rows keep
+ * the short division labels ("South") unambiguous even when they wrap, since
+ * the conference chip stays at the head of its own row. */
+.proj-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.proj-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.proj-toggle {
+  font-family: monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-3);
+  background: var(--panel);
+  border: 1px solid var(--hairline);
+  border-radius: 999px;
+  padding: 5px 12px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+
+.proj-toggle:hover { color: var(--text); border-color: var(--hairline-hi); }
+
+.proj-toggle.active {
+  color: var(--panel-lo);
+  background: var(--accent-2);
+  border-color: var(--accent-2);
+  font-weight: 700;
+}
+
+/* The conference chip anchors its row, so it reads a step stronger than the
+ * divisions after it and takes a fixed width to line the two rows up. Declared
+ * after .active so a selected conference still turns blue like any other chip. */
+.proj-toggle.is-conf {
+  min-width: 58px;
+  color: var(--text-2);
+  border-color: var(--hairline-hi);
+}
+
+.proj-toggle.is-conf.active { color: var(--panel-lo); border-color: var(--accent-2); }
+
+/* The first-run hint. Shaped like a selected filter chip rather than invented
+ * fresh — it sits directly under that row, so a second pill vocabulary here
+ * would read as a third kind of control. It fades on dismissal (see
+ * HINT_FADE_MS in the page script) the way the Scout page's swipe hint does,
+ * and `hidden` has to be re-stated because `display: inline-flex` outranks the
+ * attribute's UA rule. */
+.bun-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  font-family: monospace;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--panel-lo);
+  background: var(--accent-2);
+  border: 1px solid var(--accent-2);
+  border-radius: 999px;
+  padding: 5px 12px;
+  cursor: pointer;
+  transition: opacity 0.4s ease;
+}
+
+.bun-hint[hidden] { display: none; }
+
+.bun-hint.is-hiding { opacity: 0; }
+
+.bun-hint-x { font-size: 13px; line-height: 1; opacity: 0.6; }
+
+
+/* The team column is the logo alone — the name is carried by alt/title, and
+ * the mark is quicker to scan and far narrower, which matters because this
+ * column is pinned and eats fixed width on every horizontal scroll. */
+.team-logo {
+  width: 40px;
+  height: 40px;
+  vertical-align: middle;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Sortable headers */
+.bun-table th.sortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.bun-table th.sortable:hover { color: var(--text-2); }
+
+.bun-table th.sortable .sort-caret {
+  color: var(--accent-2);
+  margin-left: 3px;
+}
+
+.bun-table th .th-sub {
+  display: block;
+  font-size: 9px;
+  color: var(--text-5);
+  letter-spacing: 0;
+  text-transform: none;
+  font-weight: 400;
+}
+
+/* A z-score cell: the normalized value alone. The raw input it came from is
+ * in the team's card (`.tc-raw`), not under it here. */
+.z-cell { font-family: monospace; text-align: right; white-space: nowrap; }
+
+/* --- Heat map ---
+ * Each value carries a --heat of 0..1, set inline by the view: 0 at the field
+ * average, 1 at the most extreme team in that column (see heat() there). Text
+ * and wash both scale with it, so a column reads as a gradient from its best
+ * team down to its worst instead of splitting into two flat colors at zero.
+ *
+ * Every rule states its flat color first and the mix second: a browser
+ * without color-mix() drops the mixes and lands on the old two-color table
+ * rather than on unstyled text.
+ *
+ * The four colors, the gray they fade to, and how hard the wash tints are
+ * all --heat-* tokens in styles/base/theme.css. Light mode does not just
+ * darken them: the text darkens to stay legible on white while the wash
+ * stays bright, since a 24% mix of a dark green over white reads gray. */
+/* The pill is an inline-block, so line-height sets its height — which is what
+ * gives the wash room to read as a wash rather than a highlighter stripe. */
+.z-cell .z-val {
+  display: inline-block;
+  min-width: 42px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-size: 12px;
+  line-height: 1.6;
+  text-align: right;
+}
+
+.z-val.pos {
+  color: var(--heat-good);
+  color: color-mix(in oklab, var(--heat-good) calc(var(--heat, 1) * 100%), var(--heat-base));
+  background: color-mix(in oklab, var(--heat-good-fill) calc(var(--heat, 0) * var(--heat-fill-max)), transparent);
+}
+
+.z-val.neg {
+  color: var(--heat-bad);
+  color: color-mix(in oklab, var(--heat-bad) calc(var(--heat, 1) * 100%), var(--heat-base));
+  background: color-mix(in oklab, var(--heat-bad-fill) calc(var(--heat, 0) * var(--heat-fill-max)), transparent);
+}
+
+.z-val.flat { color: var(--text-3); }
+
+/* Composite score: the number, and beneath it the four contributions that add
+ * up to it. Two lines, matching the z-cells either side of it. */
+.score-num { font-weight: 700; color: var(--text-bright); }
+.score-num .score-val { display: block; line-height: 1.6; }
+
+/* --- Rank composition bar ---
+ * A diverging stack centerd on zero: each input's weight × z, laid outward
+ * from the middle in weight order. Which side of center a segment sits on is
+ * the whole direction encoding — the colors reinforce it and are never asked
+ * to carry it, because this page's green and orange are 5.7 ΔE apart under
+ * deuteranopia and a bar, unlike the table cells, prints no number of its own.
+ *
+ * Which input a segment is comes from two redundant channels: its place in the
+ * stack (always O-Line, SoS, Eye, Rest, outward) and the opacity ramp below,
+ * which runs in the same order. The key above the table shows both. */
+.comp-bar {
+  position: relative;
+  display: block;
+  width: 76px;
+  height: 7px;
+  margin: 2px 0 1px auto;
+  border-radius: 2px;
+  background: var(--panel-hi);
+}
+
+/* The center line the segments are measured from, and the only thing on the
+ * bar that says which way is up. It has to be painted over the stack rather
+ * than under it: a team with contributions on both sides butts a segment
+ * against zero from each direction, and a line behind them is a line you
+ * cannot see — which costs the bar its whole direction encoding the moment
+ * color is taken away. Hence the z-index, and the 2px of overhang top and
+ * bottom that keeps it findable at a glance. */
+.comp-zero {
+  position: absolute;
+  z-index: 1;
+  left: 50%;
+  top: -2px;
+  bottom: -2px;
+  width: 1px;
+  background: var(--text-4);
+}
+
+/* Each segment is inset 2px on its outer edge, which is what separates it from
+ * the next one out; min-width keeps the smallest contributions from collapsing
+ * to nothing once that inset is taken off. */
+.comp-seg {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  min-width: 3px;
+  border-radius: 1px;
+}
+
+.comp-seg.is-up { background: var(--good); }
+.comp-seg.is-down { background: var(--orange); }
+
+/* The weight ramp, shared by the bar and its key. Step 0 is O-Line at 25% and
+ * runs down to Luck at 5%, so a heavier input is always the more solid band.
+ * The middle of the ramp is tighter than its ends because the inputs there are
+ * tied — SoS with Havoc, Rest with Coaches: the ramp separates them enough to
+ * be told apart in a stack without claiming one outweighs another.
+ * The steps are COMP's order, which orderMetrics() takes from the sheet's own
+ * weights at boot — never from the live ones. A reader who re-weights the blend
+ * would otherwise watch the bands swap shades under them, and the key above the
+ * table would be describing a different bar every time a slider moved. It is
+ * the same order the columns are in, so a swatch and its column always line
+ * up. */
+.comp-seg.step-0, .comp-sw.step-0 { opacity: 1; }
+.comp-seg.step-1, .comp-sw.step-1 { opacity: 0.78; }
+.comp-seg.step-2, .comp-sw.step-2 { opacity: 0.58; }
+.comp-seg.step-3, .comp-sw.step-3 { opacity: 0.42; }
+.comp-seg.step-4, .comp-sw.step-4 { opacity: 0.30; }
+.comp-seg.step-5, .comp-sw.step-5 { opacity: 0.22; }
+.comp-seg.step-6, .comp-sw.step-6 { opacity: 0.16; }
+
+/* --- the key above the table --- */
+.comp-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  margin: 20px 0 12px;
+  font-family: monospace;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--text-3);
+}
+
+.comp-legend-lead { color: var(--text-2); font-weight: 700; }
+.comp-legend-tail { color: var(--text-4); }
+
+.comp-key {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+
+/* Green, because the key describes the shape of a lift; a segment that drags
+ * is the same band on the other side of center, which the tail sentence says. */
+.comp-sw {
+  width: 12px;
+  height: 7px;
+  border-radius: 1px;
+  background: var(--good);
+}
+
+.proj-empty { padding: 16px 0; font-size: 12px; font-family: monospace; color: var(--text-5); }
+
+/* Luck carries no palette of its own. It is an inverted z-score like the O-Line
+ * and SoS ranks, so .pos and .neg say the same true thing about it that they
+ * say about every other metric column: green is better than the field, orange
+ * is worse. The amber-and-blue pair that used to live here is still the right
+ * mark for a direction rather than a grade, and it survives on .tc-luck below,
+ * where the card calls a team a regression or a bounce-back candidate. */
+
+/* Row height here is set by the 40px team logo, not by the text, so top-aligned
+ * values sit high against it. centerd, every column reads on one line through
+ * the middle of the row — including the two-line z-cells, which center as a
+ * unit. Scoped to this table; .bun-table's default stays top-aligned. */
+#proj-table td { vertical-align: middle; }
+
+/* --- Pinned team column ---
+ * The metric columns run off the right edge on narrow screens, and a scrolled
+ * row is unreadable once you lose the team. Scoped to #proj-table so the other
+ * tables are unaffected. Sticky cells need an opaque background or the columns
+ * sliding beneath show through, so each row state repaints it. */
+#proj-table th:first-child,
+#proj-table tr.proj-row > td:first-child,
+.proj-float-head th:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: var(--panel-lo);
+}
+
+/* Rank is pinned with the logo, not left behind with the metrics. A frozen
+ * crest and nothing else says which team the row is; the number beside it is
+ * what every other column is being compared against, and scrolling it away
+ * costs the reader the one value the sheet is actually sorted on.
+ *
+ * Its offset is the width of the team column, measured after each render and
+ * written onto the table as --pin-rank by syncPinWidth() in the view: the
+ * logo cell's padding changes at the 600px breakpoint, so a number written
+ * here would be wrong on one side of it. The fallback is the desktop width,
+ * used only in the frame before the first measurement lands. */
+#proj-table tr.col-heads th:nth-child(2),
+#proj-table tr.proj-row > td:nth-child(2),
+.proj-float-head tr.col-heads th:nth-child(2) {
+  position: sticky;
+  left: var(--pin-rank, 60px);
+  z-index: 2;
+  background: var(--panel-lo);
+}
+
+/* The edge of the frozen pair — on Rank now, and on the band cell that spans
+ * Team and Rank, so the line runs the full height of the header. */
+#proj-table tr.col-heads th:nth-child(2),
+#proj-table tr.proj-row > td:nth-child(2),
+#proj-table tr.col-bands th:first-child,
+.proj-float-head tr.col-heads th:nth-child(2),
+.proj-float-head tr.col-bands th:first-child {
+  border-right: 1px solid var(--hairline);
+}
+
+/* --- Column bands ---
+ * The row above the headings, saying which half of the table a column belongs
+ * to: Metrics carry the heat map and are scaled against the 32-team field,
+ * Odds are prices and are left uncolored. Smaller and dimmer than the headings
+ * they sit over, because they name a group rather than a sortable column —
+ * nothing in this row responds to a click. */
+#proj-table tr.col-bands th,
+.proj-float-head tr.col-bands th {
+  padding: 4px 10px 3px;
+  font-size: 9px;
+  letter-spacing: 1px;
+  color: var(--text-3);
+  text-align: center;
+  border-bottom: 1px solid var(--panel-hi2);
+}
+
+/* The span over Team and Rank is a spacer, not a band: it gets no rule under
+ * it, so the two labels read as the only things in the row. */
+#proj-table tr.col-bands th.band-none,
+.proj-float-head tr.col-bands th.band-none { border-bottom: none; }
+
+/* Where Metrics ends and Odds begins. The other boundary is already drawn by
+ * the pinned pair's right edge, so this is the only divider the bands need. */
+#proj-table tr.col-bands th:last-child,
+#proj-table tr.col-heads th:nth-child(10),
+#proj-table tr.proj-row > td:nth-child(10),
+.proj-float-head tr.col-bands th:last-child,
+.proj-float-head tr.col-heads th:nth-child(10) {
+  border-left: 1px solid var(--panel-hi2);
+}
+
+/* The consensus win total: a line rather than a price, so it is set in the
+ * table's own text color instead of the price grey, and never signed. */
+.win-line {
+  font-family: monospace;
+  color: var(--text-2);
+}
+
+/* --- Pinned header row ---
+ * The header row that follows the reader down the table, built and positioned
+ * by the view — see the comment there for why `position: sticky` cannot do
+ * this. It sits under the site header's z-index (100), so when it rides the
+ * last row out of view it slides behind it rather than over it.
+ *
+ * Column widths are written on by the script; the clone has no body to size
+ * itself from, so the layout has to be fixed. */
+.proj-float-head {
+  position: fixed;
+  z-index: 50;
+  display: none;
+  overflow: hidden;
+  background: var(--panel-lo);
+  box-shadow: 0 6px 14px var(--shadow-color);
+}
+
+.proj-float-head.is-pinned { display: block; }
+
+.proj-float-head table { table-layout: fixed; }
+
+/* --- Expandable team card ---
+ * The row is clickable and says so with the cursor and the focus ring alone. No
+ * hover repaint: no table row in this app takes one, so the pinned-cell rule
+ * that existed only to re-assert one over `#proj-table` went with it. */
+.proj-row { cursor: pointer; }
+.proj-row:focus-visible { outline: 1px solid var(--accent-2); outline-offset: -1px; }
+
+/* --- The card dialog ---
+ * The card used to be a row inside .bun-table-wrap, which scrolls sideways on
+ * narrow screens — so the card scrolled off with the columns. As a <dialog> it
+ * is positioned against the viewport instead: centerd on desktop, a bottom
+ * sheet on mobile, and never wider than the screen either way. */
+.tc-modal {
+  /* The site reset zeroes margins, which is also what centers a modal dialog —
+   * so the centring is restored explicitly here. */
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  padding: 0;
+  border: 1px solid var(--hairline);
+  border-radius: 10px;
+  background: var(--panel-lo);
+  color: var(--text-2);
+  width: min(760px, calc(100vw - 32px));
+  max-width: none;
+  max-height: min(86vh, 860px);
+  overflow: hidden;              /* the rounded corners clip the scroller */
+  box-shadow: 0 24px 60px var(--shadow-color-lg);
+}
+
+/* dialog is display:none until opened, so the layout mode belongs on [open]. */
+.tc-modal[open] {
+  display: flex;
+  flex-direction: column;
+}
+
+.tc-modal::backdrop { background: var(--overlay-strong); }
+
+.tc-modal-scroll {
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.tc-modal-close {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  z-index: 3;
+  width: 30px;
+  height: 30px;
+  line-height: 1;
+  font-size: 20px;
+  color: var(--text-3);
+  background: var(--panel-hi);
+  border: 1px solid var(--hairline);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.tc-modal-close:hover { color: var(--text); border-color: var(--hairline-hi); }
+
+/* The page behind the dialog is locked by scripts/base/scroll-lock.js — a modal
+ * dialog does not stop the page behind it from scrolling in every browser, and
+ * on iOS it does not stop it in any. The rule that does the pinning is
+ * body.scroll-locked in styles/base/styles.css.
+ *
+ * The note form opens over the card, so while it is up the card's scroller is
+ * frozen too: only the form should move. It is a plain overflow:hidden rather
+ * than a lock because the card is not the page — it has no scroll position that
+ * has to survive being pinned, and the browser keeps its scrollTop across the
+ * change. */
+body:has(.bn-modal[open]) .tc-modal-scroll { overflow: hidden; }
+
+/* The team card. Every fact about a team renders here — the doc's notes, the
+ * offensive line and the 2025 luck read — so the page never has to repeat a
+ * team in a topic-shaped section elsewhere. */
+.team-card { padding: 14px 16px 16px; }
+
+/* Sticky, so the team you opened stays named while its notes scroll. */
+.tc-head {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 2px 40px 10px 0;
+  margin-bottom: 12px;
+  background: var(--panel-lo);
+  border-bottom: 1px solid var(--panel-hi2);
+}
+
+.tc-logo { width: 34px; height: 34px; flex: none; }
+
+.tc-id h4 {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-bright);
+  margin: 0;
+}
+
+.tc-sub {
+  display: block;
+  margin-top: 2px;
+  font-family: monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-4);
+}
+
+/* --- The view tabs ---
+ * Notes, then the two schedule seasons. Pushed to the trailing edge of the
+ * head, clear of the close button, where the link out to /football/schedule
+ * used to sit. Same 10px monospace caps it had: this is a label on the head,
+ * not a control bar, and it should not compete with the team's name for the
+ * eye.
+ *
+ * The two views they switch between are .tc-view; the rows one of them renders
+ * are the shared ones in styles/components/nfl-schedule.css. */
+
+.tc-sched-tabs {
+  margin-left: auto;
+  flex: none;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-family: monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.tc-sched-label { color: var(--text-4); }
+
+.tc-tab {
+  background: none;
+  border: none;
+  padding: 2px 1px;
+  font: inherit;
+  letter-spacing: inherit;
+  color: var(--text-4);
+  cursor: pointer;
+}
+
+.tc-tab:hover { color: var(--accent-hover); }
+
+/* The active season takes the blue the link used to have, and an underline —
+ * colour alone would make the pressed state the only thing distinguishing two
+ * otherwise identical years. */
+.tc-tab[aria-pressed="true"] {
+  color: var(--accent-2);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.tc-tab-sep { color: var(--hairline); }
+
+/* Only ever one of the two is on screen; the other is `hidden`, which the
+ * reset in styles/base/styles.css does not cover for a div. */
+.tc-view[hidden] { display: none; }
+
+/* Two fixed columns rather than as many 215px ones as fit. The blocks are not
+ * interchangeable tiles: the offensive line carries two boards and a dozen
+ * bullets while coaches and notes are a few lines each, so an auto-fit row
+ * dealt them out three-across and left two columns of whitespace under the
+ * short ones. Coaches and notes stack down the first column, the line takes the
+ * second on its own, and the two sides finish at roughly the same depth.
+ *
+ * Everything is pinned to column 1 and the line overrides itself into column 2,
+ * so auto-placement can never wrap a block around it. */
+.tc-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px 20px;
+  align-items: start;
+}
+
+/* Column one, holding the short blocks. Its gap matches the grid's row gap, so
+ * once the grid drops to one column the wrapper leaves no trace. */
+.tc-col {
+  display: grid;
+  gap: 14px;
+  align-content: start;
+}
+
+/* One heading style for every block in the card, Inputs included. The blocks
+ * used to each take their own colour, which made five hues compete for the eye
+ * in a card whose content is already colour-coded; the heading's job is only to
+ * name the block, so it is one grey and a size up from the body it heads. */
+.tc-block h4 {
+  font-family: monospace;
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 700;
+  margin: 0 0 6px;
+  color: var(--text-3);
+}
+
+/* One level below it, used only by the offensive line — the one block that
+ * carries two boards and needs to name each. The ramp is size on the same grey
+ * rather than a colour per level, so the nesting still reads as one column. */
+.tc-block h5 {
+  font-family: monospace;
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 700;
+  margin: 0 0 5px;
+  color: var(--text-3);
+}
+
+.tc-block ul { margin: 0; padding-left: 15px; }
+
+.tc-block li {
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: var(--text-2);
+  margin-bottom: 3px;
+}
+
+.tc-block p {
+  margin: 0 0 6px;
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: var(--text-2);
+}
+
+/* Nested blocks inside the offensive-line block sit tighter than top-level
+ * ones, so the card reads as one column rather than six loose fragments. */
+.tc-block .tc-block { margin-top: 8px; }
+
+/* The bullet each board's list opens on: its one-line summary, lit a shade
+ * brighter than the findings under it. Two classes, so it outranks the plain
+ * `.tc-block li` colour. */
+.tc-block .tc-verdict { color: var(--text); }
+
+/* Both ranks on one line, above the two boards that gave them. Carrying them
+ * together is the point — the gap between them is the read — so the separator
+ * is what gets dimmed rather than the second number. Two classes, because the
+ * plain `.tc-block p` colour would otherwise outrank one. */
+.tc-block .tc-ol-ranks {
+  font-family: monospace;
+  font-size: 11px;
+  letter-spacing: 0.3px;
+  color: var(--text);
+  margin-bottom: 9px;
+}
+
+.tc-ol-sep { color: var(--hairline-hi); padding: 0 3px; }
+
+/* Action Network's tier, set like the O-Line block's rank line above it: the
+ * two blocks both open with the number the score was built from, so they should
+ * read the same way. The tier's name is the source's own and is dimmed to sit
+ * under the number rather than beside it. */
+.tc-block .tc-coach-tier {
+  font-family: monospace;
+  font-size: 11px;
+  letter-spacing: 0.3px;
+  color: var(--text);
+  margin-bottom: 9px;
+}
+
+.tc-coach-tier-name { color: var(--text-3); }
+
+/* The coaching staff: three fixed rows rather than a list of findings, so the
+ * role carries the marker's job and the bullets come off. The prior job is
+ * greyed — it is the footnote to the name, not a second name. */
+.tc-coaches { list-style: none; padding-left: 0; }
+
+.tc-role {
+  font-family: monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: var(--text-3);
+  margin-right: 4px;
+}
+
+.tc-coach-prev { color: var(--text-3); }
+
+/* --- Stats & regression ---
+ * The block between the grid and the inputs: five 2025 numbers, each tinted by
+ * which way it points into 2026. It sits full width for the same reason the
+ * inputs do — it is a worksheet, not a column of prose — but above them,
+ * because it is an argument about the season behind the score rather than an
+ * itemisation of the score itself.
+ *
+ * The palette is the Luck column's, not the z-score columns': green is a
+ * tailwind and orange is last year's bounce. That inversion matters here more
+ * than anywhere else on the page, because the orange tiles are frequently the
+ * *good* numbers — a 13-win team living off one-score games is exactly the
+ * thing this block was built to flag, and colouring its record green would say
+ * the opposite of what is meant.
+ *
+ * Two rows. The three tiles that are regression calls lead, then havoc and dead
+ * cap under them in a flatter treatment — see .tc-reg-context. Tiles are
+ * auto-fit rather than a fixed count: the card is a dialog that ranges from a
+ * phone's full width to 760px, and the row has to fall to two columns and then
+ * one without any of it being placed by rule. */
+.tc-reg-block {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--panel-hi2);
+}
+
+/* The legend, and the only place the colours are explained. One line, above
+ * the tiles rather than under them, because a reader meeting a green tile for
+ * the first time needs the key before the tile and not after it. */
+.tc-block .tc-reg-note {
+  font-size: 10px;
+  line-height: 1.45;
+  color: var(--text-4);
+  margin: -2px 0 9px;
+}
+
+.tc-reg-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(148px, 1fr));
+  gap: 8px;
+}
+
+/* Each tile carries its lean as a left edge and a wash rather than as coloured
+ * text: the value is the thing being read, so it stays the same near-white in
+ * every tile and the direction is said around it. A tinted number would put the
+ * two on the same channel and make an orange 11-2 look like a bad record. */
+.tc-reg-tile {
+  border: 1px solid var(--panel-hi2);
+  border-left: 2px solid var(--border);
+  border-radius: 4px;
+  padding: 7px 9px 6px;
+  background: var(--bg);
+}
+
+.tc-reg-label {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px;
+  font-family: monospace;
+  font-size: 9.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 700;
+  color: var(--text-3);
+}
+
+/* Where the number sits in the field of 32 — the context that turns a bare
+ * "14.6%" into a read. Dimmer than the label it shares a line with: it is the
+ * footnote to the tile, and every tile has one, so it must not compete. */
+.tc-reg-rank {
+  font-weight: 400;
+  letter-spacing: 0;
+  color: var(--text-5);
+  white-space: nowrap;
+}
+
+.tc-reg-val {
+  font-family: monospace;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--text);
+  margin-top: 3px;
+}
+
+/* What the number is made of: the sacks behind the havoc rate, the takeaways
+ * behind the margin. Always present, always one line, so the tiles keep a
+ * common height without a min-height to enforce it. */
+.tc-reg-sub {
+  font-size: 10px;
+  line-height: 1.4;
+  color: var(--text-3);
+  margin-top: 1px;
+}
+
+.tc-reg-lean {
+  font-family: monospace;
+  font-size: 9.5px;
+  letter-spacing: 0.3px;
+  color: var(--text-4);
+  margin-top: 4px;
+}
+
+/* Green: the number is either sustainable or was a headwind that should ease.
+ * Orange: 2025 was kind here and is unlikely to be again. Grey (`lean-flat`) is
+ * the default the tile already carries, so it needs no rule — most teams are
+ * unremarkable on most of these, and a card of five coloured tiles would say
+ * nothing. */
+.tc-reg-tile.lean-up {
+  border-left-color: var(--good-strong);
+  background: color-mix(in oklab, var(--good-strong) 7%, var(--bg));
+}
+
+.tc-reg-tile.lean-up .tc-reg-lean { color: var(--good); }
+
+.tc-reg-tile.lean-down {
+  border-left-color: var(--warn-deep);
+  background: color-mix(in oklab, var(--warn) 7%, var(--bg));
+}
+
+.tc-reg-tile.lean-down .tc-reg-lean { color: var(--warn); }
+
+/* The second row: the two numbers that are not regression calls. Everything
+ * that says "finding" on the tiles above is taken away here — the accent edge,
+ * the wash, the arrow — and what is left is a plain bordered box with the
+ * league's middle under it. The demotion is the whole point: these two are the
+ * ground the three above are read against, not four and five in a list of five.
+ *
+ * The rule and the heading are what actually separate them; the tile styling
+ * alone was too quiet to carry it, because a grey tile is also what a
+ * regression tile with nothing to say looks like. */
+.tc-reg-context {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--panel-hi2);
+}
+
+/* The h5 the offensive line already uses for its two boards, reused rather than
+ * restyled: this is the same relationship — one block, two things under it that
+ * need naming. */
+.tc-reg-context h5 { margin-bottom: 4px; }
+
+/* Wider than a regression tile and capped rather than stretched. Since havoc
+ * left for the trend above, dead cap is alone in this row, and a 1fr column
+ * would have run one tile the full 760px of the card — which would have made
+ * the block's quietest number its widest object. */
+.tc-reg-grid.is-context {
+  grid-template-columns: repeat(auto-fit, minmax(210px, 320px));
+}
+
+.tc-reg-tile.is-context {
+  border: 1px solid var(--panel-hi);
+  background: none;
+}
+
+.tc-reg-tile.is-context .tc-reg-val {
+  font-size: 15px;
+  font-weight: 400;
+  color: var(--text-2);
+}
+
+/* Where a regression tile puts its arrow. The league's middle is the only
+ * context either of these numbers needs, and reading it as a comparison rather
+ * than a verdict is the point — whether a team's pressure rate is good news
+ * depends entirely on the three tiles above it. */
+.tc-reg-vs {
+  font-family: monospace;
+  font-size: 9.5px;
+  letter-spacing: 0.3px;
+  color: var(--text-5);
+  margin-top: 4px;
+}
+
+/* --- The four-year trend ---
+ * Where the team placed in havoc rate and in turnover margin, as two lines over
+ * four seasons, between the regression tiles and the dead-cap footnote. It
+ * replaces the two tiles that used to print those numbers once each; see
+ * trendChart in the view for why the lines are ranks and not the numbers
+ * themselves, which the legend above the chart still prints.
+ *
+ * Everything with a colour lives here rather than in the SVG's attributes, so
+ * the two themes are one rule apiece and a theme flipped under an open card
+ * re-paints without the card being rebuilt. --series-a is havoc, --series-b is
+ * the margin, and neither is --good or --orange: those two are spent on
+ * direction everywhere else on this page, and a reader meeting a green line
+ * would read "good" where only "which one" is meant. */
+.tc-reg-trend {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--panel-hi2);
+}
+
+.tc-reg-trend h5 { margin-bottom: 6px; }
+
+/* The legend, above the chart rather than under it: a reader meeting two
+ * unlabelled lines needs the key before them. It is also where the ranks and
+ * the counts the old tiles carried now live, which is what keeps this from
+ * being a picture that costs the block its numbers. */
+.tc-trend-legend {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(228px, 1fr));
+  gap: 4px 14px;
+  margin-bottom: 6px;
+}
+
+.tc-trend-key {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0 6px;
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+/* The swatch repeats the mark on the line, shape and all — a round one for
+ * havoc, a square for the margin — so the pair is told apart in greyscale, in
+ * print, and by a reader who cannot separate the hues. */
+.tc-trend-swatch {
+  width: 8px;
+  height: 8px;
+  flex: none;
+  align-self: center;
+}
+
+.tc-trend-swatch.is-dot { border-radius: 50%; }
+.tc-trend-swatch.is-a { background: var(--series-a); }
+.tc-trend-swatch.is-b { background: var(--series-b); }
+
+/* The name is ink, not the series colour: the swatch beside it already carries
+ * identity, and colouring the text as well would put a legend's two labels on
+ * the same channel as the page's good/bad tinting. */
+.tc-trend-name {
+  font-family: monospace;
+  font-size: 9.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 700;
+  color: var(--text-3);
+}
+
+.tc-trend-val {
+  font-family: monospace;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.tc-trend-rank {
+  font-family: monospace;
+  font-size: 9.5px;
+  color: var(--text-5);
+  white-space: nowrap;
+}
+
+/* Its own line under the rest, because the counts are the footnote to the value
+ * and wrapping them mid-phrase between "30 sacks" and "72 pressures" read as
+ * two separate facts. */
+.tc-trend-sub {
+  flex: 1 0 100%;
+  padding-left: 14px;
+  font-size: 10px;
+  color: var(--text-4);
+}
+
+/* Let out to the card's width against a fixed viewBox: four points across do
+ * not need the tick density rethought at every breakpoint the way the page's
+ * 32-team scatter does, and the card ranges from a phone to 760px. */
+.tc-trend-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.tt-grid {
+  stroke: var(--hairline);
+  stroke-width: 1;
+}
+
+.tt-tick,
+.tt-season,
+.tt-axis {
+  font-family: monospace;
+  fill: var(--text-5);
+}
+
+.tt-tick { font-size: 9px; }
+.tt-season { font-size: 9.5px; fill: var(--text-4); }
+
+/* Both series are ranks now, so there is one scale and the axis belongs to
+ * neither of them. It is scenery in the same ink as the ticks and the seasons —
+ * the two colours on this chart are spent entirely on the lines, which is where
+ * identity is decided, and the legend above repeats both of them. An axis
+ * tinted to a series would be claiming a side it no longer has. */
+.tt-axis {
+  font-size: 9.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  font-weight: 700;
+}
+
+.tt-line {
+  fill: none;
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.tt-line.is-a { stroke: var(--series-a); }
+
+/* Dashed as well as orange. Redundant on a colour screen and the only thing
+ * separating the two lines on a monochrome one. */
+.tt-line.is-b {
+  stroke: var(--series-b);
+  stroke-dasharray: 6 3.5;
+}
+
+/* The ring is the card's own background, so where the two series cross, the
+ * mark on top reads as in front of the other line rather than merged into it. */
+.tt-dot {
+  stroke: var(--bg);
+  stroke-width: 2;
+  paint-order: stroke;
+}
+
+.tt-dot.is-a { fill: var(--series-a); }
+.tt-dot.is-b { fill: var(--series-b); }
+
+/* One hit column per season, invisible and the full height of the plot: the
+ * marks are 8px and nobody is hitting one with a thumb. The native tooltip is
+ * deliberate — every other explanation on this card is a title attribute, and a
+ * bespoke hover layer inside a dialog would be the only one. */
+.tt-hit {
+  fill: transparent;
+  cursor: help;
+}
+
+/* Below 600px the card goes full width of the phone, and the SVG is then drawn
+ * at anything from 1.0 down to about 0.6 of its viewBox — which takes a 9px
+ * tick to 5.5px and a 2px line to a hairline. Everything in the frame is sized
+ * back up in user units rather than the chart being redrawn portrait the way
+ * the page's 32-team scatter is: four points across a card have no crowding to
+ * resolve, only legibility, and legibility is a font size.
+ *
+ * Two steps rather than one, because one covered a scale range wide enough that
+ * whatever size fixed the 390px phone was visibly chunky at 600px, where the
+ * SVG is barely scaled at all. Each step aims for about 9px on the glass across
+ * the widths it owns. */
+@media (max-width: 600px) {
+  .tt-tick { font-size: 10.5px; }
+  .tt-season { font-size: 11px; }
+  .tt-axis { font-size: 10.5px; letter-spacing: 0.5px; }
+  .tt-line { stroke-width: 2.2; }
+  .tt-dot { stroke-width: 2.2; }
+}
+
+@media (max-width: 430px) {
+  .tt-tick { font-size: 13px; }
+  .tt-season { font-size: 13.5px; }
+  .tt-axis { font-size: 13px; letter-spacing: 0.4px; }
+  .tt-line { stroke-width: 2.9; }
+  .tt-line.is-b { stroke-dasharray: 7 4; }
+  .tt-dot { stroke-width: 2.9; }
+}
+
+/* --- Raw inputs ---
+ * The bottom block of the card: each input in the units the sheet recorded it
+ * in, beside the z-score it normalizes to. It sits below the grid rather than
+ * in it, full width, because it is the card's appendix — the reader who wants
+ * to know what a +1.2 was built from, rather than the first thing anyone came
+ * for. The z column reuses `.z-val`, heat and all, so a number reads the same
+ * here as it does in the row that opened this card. */
+.tc-raw-block {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--panel-hi2);
+}
+
+.tc-raw {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: monospace;
+}
+
+.tc-raw thead th {
+  padding: 0 0 4px;
+  font-size: 9px;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-5);
+  text-align: right;
+  border-bottom: 1px solid var(--panel-hi2);
+}
+
+.tc-raw thead th:first-child { text-align: left; }
+
+.tc-raw tbody th {
+  padding: 4px 0;
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--text-2);
+  text-align: left;
+  white-space: nowrap;
+}
+
+/* The unit rides with the label rather than taking a column of its own: it
+ * never changes between teams, so it is part of the row's name. */
+.tc-raw-unit {
+  margin-left: 6px;
+  font-size: 9px;
+  color: var(--text-5);
+}
+
+.tc-raw td {
+  padding: 4px 0;
+  font-size: 11px;
+  color: var(--text);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.tc-raw td.tc-raw-val { padding-right: 10px; }
+
+/* Every row but the last is ruled, so the columns stay tracked across a row
+ * whose label wraps. */
+.tc-raw tbody tr + tr th,
+.tc-raw tbody tr + tr td { border-top: 1px solid var(--panel); }
+
+/* The 2025 luck call: the first bullet in the notes list. Amber for a team due
+ * to regress, blue for one due to bounce back — a direction rather than a
+ * grade, which is why it does not use the green-and-orange its Luck cell now
+ * carries. Two classes, so it outranks the plain `.tc-block li` color. */
+.tc-luck.luck-hot { color: var(--warn); }
+.tc-luck.luck-cold { color: var(--accent); }
+.tc-luck.luck-even { color: var(--text-3); }
+
+/* The standouts: every metric the team is top or bottom five of the league in,
+ * opening its notes. There can be several on one team, which rules out the
+ * treatment the two calls above them get — a whole bullet tinted a colour works
+ * for one line and turns a run of six into a wall.
+ *
+ * So only the discriminating part is lit. The metric's name stays the ordinary
+ * note colour because it is the ordinary kind of thing to say; the placing is
+ * cyan, because it is the new information and the only part of the line a
+ * reader is scanning for; and the value trails in grey as the receipt. Cyan
+ * rather than green or orange on purpose: a placing is not a verdict. Being
+ * first in turnover margin is bad news for next season and first in dead cap is
+ * good news, and the same colour has to carry both.
+ *
+ * Two classes on each, like the luck and staff rules, to outrank `.tc-block li`. */
+.tc-notes .tc-standout { color: var(--text-2); }
+
+.tc-notes .tc-standout-rank {
+  color: var(--cyan);
+  font-family: monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.3px;
+}
+
+.tc-notes .tc-standout-val {
+  color: var(--text-4);
+  font-family: monospace;
+  font-size: 10.5px;
+}
+
+/* The all-new / all-returning staff call, which sits beside the luck note and
+ * is deliberately not tinted like it. Luck's color is a direction — hot, cold,
+ * even — and a staff in its first year is neither good nor bad, so it takes
+ * the purple the Coaches block's heading already uses instead. That is where
+ * the reader goes to check it, and it is the one thing on this list that
+ * points somewhere else in the card. Two selectors for the same reason the
+ * luck rules carry two classes: it has to outrank the plain `.tc-block li`. */
+.tc-notes .tc-staff {
+  color: var(--purple-2);
+  font-family: monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.3px;
+}
+
+@media (max-width: 600px) {
+  .bun-grid { grid-template-columns: 1fr; }
+  .bun-table th, .bun-table td { padding: 6px 8px; }
+
+  /* One column, in source order — coaches, notes, offensive line. The line's
+   * explicit placement has to be undone or it would sit on top of the coaches
+   * block in the single column it now shares with it. */
+  .tc-grid { grid-template-columns: 1fr; }
+
+  /* Bottom sheet: pinned to the bottom edge, full width, and tall enough to
+   * read without covering the whole screen. */
+  .tc-modal {
+    width: 100%;
+    max-height: 88vh;
+    position: fixed;
+    inset: auto 0 0 0;
+    margin: 0;
+    border-radius: 14px 14px 0 0;
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
+  }
+
+  .tc-modal[open] { animation: tc-sheet-up 0.18s ease-out; }
+
+  .team-card { padding: 12px 14px calc(16px + env(safe-area-inset-bottom)); }
+
+  /* The logo, a full team name and "Notes | Schedule: 2026 | 2025" do not share
+   * a line at this width. The tabs wrap under the name rather than squeezing
+   * it, and lose the auto margin that was pushing them right — wrapped, that
+   * would strand them under the close button instead. */
+  .tc-head { flex-wrap: wrap; }
+
+  .tc-sched-tabs {
+    /* The row is four controls wide now; on the narrowest phones it breaks
+       rather than running off the card. */
+    flex-wrap: wrap;
+    /* Indented past the logo so the tabs line up under the team name rather
+     * than under the crest. The width is the line less that indent — a flat
+     * 100% is measured before the margin is added and runs the row off the
+     * card's right edge by exactly the indent. */
+    margin-left: 44px;   /* the logo's width plus the head's gap */
+    width: calc(100% - 44px);
+  }
+}
+
+@keyframes tc-sheet-up {
+  from { transform: translateY(14px); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tc-modal[open] { animation: none; }
+}
+
+
+/* ================= NOTES =================
+ * Taking a note, and what a taken note looks like. Behaviour is in
+ * scripts/primary/bun-notes.js; everything here is admin-only in practice,
+ * because nothing that writes is rendered for anyone else. */
+
+/* --- League notes ---
+ * A note filed against no team is about the league, and there is no team card
+ * for it to open in — so it gets the top of the page, above the table the rest
+ * of the notes hang off. Hidden entirely when there are none and the reader
+ * cannot add any. */
+.bun-league-notes { margin-bottom: 22px; }
+
+.bun-league-notes[hidden] { display: none; }
+
+.bun-league-notes h3 {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-bright);
+  margin: 0 0 6px;
+}
+
+.bun-league-notes ul { margin: 0; padding-left: 16px; }
+
+.bun-league-notes li {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-2);
+  margin-bottom: 3px;
+}
+
+/* --- The bullet --- */
+
+/* Which week a note is about, when it is about one at all. A general note —
+ * most of them — carries no chip, so the chip means "this one is dated". */
+.tc-note-wk {
+  display: inline-block;
+  margin-right: 6px;
+  font-family: monospace;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-3);
+  background: var(--panel-hi2);
+  border: 1px solid var(--hairline);
+  border-radius: 4px;
+  padding: 0 4px;
+  vertical-align: 1px;
+}
+
+/* Where the note came from, in the same shape the Sources list uses: the
+ * handle, because that is all an X link tells us without an API key. */
+.tc-note-src {
+  margin-left: 5px;
+  font-family: monospace;
+  font-size: 10px;
+  color: var(--accent-2);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.tc-note-src:hover { text-decoration: underline; }
+
+/* The pencil rides at the end of the note it edits rather than in a column of
+ * its own — the notes are one to five lines each and a gutter of pencils would
+ * outweigh them. Dim until the bullet is hovered or it is focused. */
+.tc-note-edit {
+  margin-left: 5px;
+  padding: 0 2px;
+  background: none;
+  border: none;
+  color: var(--text-5);
+  cursor: pointer;
+  vertical-align: 1px;
+  opacity: 0;
+  transition: opacity 0.12s ease, color 0.12s ease;
+}
+
+li:hover > .tc-note-edit,
+.tc-note-edit:focus-visible { opacity: 1; }
+
+.tc-note-edit:hover { color: var(--accent-2); }
+
+.tc-note-edit:focus-visible { outline: none; color: var(--accent-2); }
+
+/* Coarse pointers have no hover to reveal it with. */
+@media (hover: none) {
+  .tc-note-edit { opacity: 0.55; }
+}
+
+/* Sits under the list, and — unlike the list — renders even when the team has
+ * nothing written about it yet, which is exactly when it is wanted. */
+.tc-note-add {
+  display: inline-block;
+  margin-top: 6px;
+  font-family: monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--accent-2);
+  background: none;
+  border: 1px dashed var(--accent-line-soft);
+  border-radius: 6px;
+  padding: 3px 8px;
+  cursor: pointer;
+}
+
+.tc-note-add:hover { border-color: var(--accent-2); background: var(--accent-faint); }
+
+/* --- The floating "take a note" button ---
+ * The one control on the page that is not about reading it, so it does not sit
+ * in the filter row with the ones that are. Bottom right, above the fold on any
+ * scroll position, and out of the way of the horizontally-scrolling table. */
+.bn-fab {
+  position: fixed;
+  right: 16px;
+  /* --bottom-nav-h is 0 on wide screens and the height of the fixed bottom bar
+   * on narrow ones (styles/base/styles.css), so the button clears the bar
+   * without a breakpoint of its own. */
+  bottom: calc(16px + var(--bottom-nav-h, 0px) + env(safe-area-inset-bottom));
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  color: var(--panel-lo);
+  background: var(--accent-2);
+  border: 1px solid var(--accent-2);
+  cursor: pointer;
+  box-shadow: 0 8px 24px var(--shadow-color);
+  transition: transform 0.12s ease, background-color 0.12s ease;
+}
+
+.bn-fab[hidden] { display: none; }
+
+.bn-fab:hover { background: var(--accent-hover); transform: translateY(-1px); }
+
+.bn-fab:focus-visible { outline: 2px solid var(--accent-hover); outline-offset: 2px; }
+
+/* A dialog is on the top layer and the button is not, so while one is open the
+ * button would sit under the backdrop as a dimmed disc. Keyed off the open
+ * dialog itself rather than a class the page has to remember to take back off:
+ * there are three dialogs here and one of them closes another on its way open. */
+body:has(dialog[open]) .bn-fab { display: none; }
+
+/* --- The note modal ---
+ * Same shape as the team card's dialog, because it is the other half of the
+ * same object: one opens a team's notes, the other writes them. */
+.bn-modal {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  padding: 0;
+  border: 1px solid var(--hairline);
+  border-radius: 10px;
+  background: var(--panel-lo);
+  color: var(--text-2);
+  width: min(520px, calc(100vw - 32px));
+  max-width: none;
+  max-height: min(86vh, 760px);
+  overflow: hidden;
+  box-shadow: 0 24px 60px var(--shadow-color-lg);
+}
+
+.bn-modal[open] {
+  display: flex;
+  flex-direction: column;
+}
+
+.bn-modal::backdrop { background: var(--overlay-strong); }
+
+/* Saving locks the form rather than closing it: a write that fails has to be
+ * able to hand the text back. */
+.bn-modal.is-saving .bn-body,
+.bn-modal.is-saving .bn-actions { opacity: 0.5; pointer-events: none; }
+
+.bn-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px 10px;
+  border-bottom: 1px solid var(--panel-hi2);
+}
+
+.bn-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-bright);
+}
+
+.bn-close {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  color: var(--text-3);
+  background: var(--panel-hi);
+  border: 1px solid var(--hairline);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.bn-close:hover { color: var(--text); border-color: var(--hairline-hi); }
+
+.bn-body {
+  padding: 12px 14px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* The shared pickers carry the schedule page's palette; this dialog is a shade
+ * darker, so only the surfaces are restated — the behaviour and the layout are
+ * the component's. */
+.bn-modal .dd-btn { background: var(--panel-hi); border-color: var(--hairline); }
+.bn-modal .dd-btn:hover { border-color: var(--hairline-hi); }
+
+.bn-modal .dd-btn:focus-visible,
+.bn-modal .dd-btn[aria-expanded="true"] { border-color: var(--accent-2); }
+
+.bn-modal .dd-menu { background: var(--panel-lo); border-color: var(--hairline); }
+.bn-modal .dd-opt:hover { background: var(--panel-hi); }
+.bn-modal .dd-opt.is-on { color: var(--accent-2); background: var(--accent-soft-2); }
+.bn-modal .dd-overlay .tp { background: var(--panel-lo); border-color: var(--hairline); }
+
+.bn-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.bn-input {
+  flex: 1;
+  min-width: 0;
+  background: var(--panel-hi);
+  border: 1px solid var(--hairline);
+  border-radius: 6px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13px;
+  padding: 7px 9px;
+}
+
+.bn-input::placeholder { color: var(--text-5); }
+
+.bn-input:focus {
+  outline: none;
+  border-color: var(--accent-2);
+}
+
+/* The "+" on the first row and the "×" on the rest: same box, so the column of
+ * buttons stays a column. */
+.bn-row-btn {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  font-size: 16px;
+  line-height: 1;
+  color: var(--text-3);
+  background: var(--panel-hi);
+  border: 1px solid var(--hairline);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.bn-row-btn:hover { color: var(--text); border-color: var(--hairline-hi); }
+
+.bn-row-btn:focus-visible { outline: none; border-color: var(--accent-2); }
+
+.bn-label {
+  display: block;
+  margin: 12px 0 4px;
+  font-family: monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-4);
+}
+
+.bn-label span { color: var(--text-5); text-transform: none; letter-spacing: 0; }
+
+#bn-src { width: 100%; }
+
+/* Echoes back what was parsed out of the link — the handle the bullet will
+ * show — so a mistyped URL is caught before it is saved rather than after. */
+.bn-hint {
+  margin: 4px 0 0;
+  min-height: 14px;
+  font-family: monospace;
+  font-size: 10px;
+  color: var(--text-4);
+}
+
+.bn-hint.is-ok { color: var(--good-strong); }
+.bn-hint.is-bad { color: var(--orange); }
+
+.bn-error {
+  margin: 0;
+  padding: 0 14px 10px;
+  font-size: 12px;
+  color: var(--bad);
+}
+
+.bn-error[hidden] { display: none; }
+
+.bn-actions {
+  display: flex;
+  gap: 8px;
+  padding: 10px 14px calc(12px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--panel-hi2);
+}
+
+.bn-btn {
+  background: var(--panel-hi);
+  border: 1px solid var(--hairline);
+  border-radius: 6px;
+  color: var(--text-2);
+  font-family: inherit;
+  font-size: 13px;
+  padding: 7px 14px;
+  cursor: pointer;
+}
+
+.bn-btn:hover { border-color: var(--hairline-hi); color: var(--text); }
+
+.bn-btn:focus-visible { outline: none; border-color: var(--accent-2); }
+
+/* Save is the last thing in the row and the only filled control in the dialog.
+ * Delete leads it from the far end, so the destructive action is nowhere near
+ * the one the writer is aiming for. */
+.bn-btn.is-primary {
+  margin-left: auto;
+  color: var(--panel-lo);
+  background: var(--accent-2);
+  border-color: var(--accent-2);
+  font-weight: 700;
+}
+
+.bn-btn.is-primary:hover { background: var(--accent-hover); color: var(--panel-lo); }
+
+.bn-btn.is-danger { color: var(--bad); }
+
+.bn-btn.is-danger:hover { color: var(--bad-bright); border-color: var(--bad); }
+
+/* Delete sits alone on the left; Cancel and Save keep the right. */
+.bn-btn.is-danger + .bn-btn { margin-left: auto; }
+.bn-btn.is-danger + .bn-btn + .bn-btn.is-primary { margin-left: 0; }
+
+@media (max-width: 600px) {
+  /* Bottom sheet, like the team card. */
+  .bn-modal {
+    width: 100%;
+    max-height: 90vh;
+    position: fixed;
+    inset: auto 0 0 0;
+    margin: 0;
+    border-radius: 14px 14px 0 0;
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
+  }
+
+  .bn-modal[open] { animation: tc-sheet-up 0.18s ease-out; }
+
+  .bn-fab {
+    width: 48px;
+    height: 48px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bn-modal[open] { animation: none; }
+}
+
+/* =========================================================================
+   EDIT WEIGHTS
+   Shell, buttons and backdrop are the note dialog's — .bn-modal, .bn-head,
+   .bn-body, .bn-actions, .bn-btn — so only the slider rows live here.
+   ========================================================================= */
+
+.wt-modal { width: min(430px, calc(100vw - 32px)); }
+
+.wt-intro {
+  margin: 0 0 14px;
+  font-size: 11px;
+  line-height: 1.55;
+  color: var(--text-3);
+}
+
+.wt-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Name, then the track, then the value. The value column is fixed-width so the
+   numbers stay in a line while a slider is being dragged. */
+.wt-row {
+  display: grid;
+  grid-template-columns: 88px 1fr 40px;
+  align-items: center;
+  gap: 10px;
+}
+
+.wt-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: monospace;
+  font-size: 11px;
+  color: var(--text-2);
+  cursor: pointer;
+}
+
+/* The same swatch, in the same order and the same opacity ramp, as the key
+   above the table and the segments in the bar — so the row a reader is
+   dragging is visibly the band they are dragging. */
+.wt-name .comp-sw { flex: none; }
+
+.wt-val {
+  font-family: monospace;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-bright);
+  text-align: right;
+}
+
+.wt-range {
+  width: 100%;
+  height: 18px;
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.wt-range:focus-visible { outline: none; }
+
+.wt-range::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--hairline);
+}
+
+.wt-range::-moz-range-track {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--hairline);
+}
+
+.wt-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 13px;
+  height: 13px;
+  margin-top: -4.5px;
+  border: none;
+  border-radius: 50%;
+  background: var(--accent-2);
+}
+
+.wt-range::-moz-range-thumb {
+  width: 13px;
+  height: 13px;
+  border: none;
+  border-radius: 50%;
+  background: var(--accent-2);
+}
+
+.wt-range:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px var(--accent-ring); }
+.wt-range:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 3px var(--accent-ring); }
+
+/* The gate, in words. role="status" on the element means a screen reader is
+   told the running total as it changes, which is the only way that reader
+   learns why Save is refusing them. */
+.wt-total {
+  margin: 14px 0 0;
+  padding-top: 10px;
+  border-top: 1px solid var(--panel-hi2);
+  font-family: monospace;
+  font-size: 11px;
+}
+
+.wt-total.is-ok { color: var(--good); }
+.wt-total.is-bad { color: var(--orange); }
+
+.bn-btn[disabled] {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.bn-btn.is-primary[disabled]:hover { background: var(--accent-2); }
+
+/* =========================================================================
+   THE BOARD — model vs market
+   The chart itself is built in scripts/primary/bun-charts.js, which owns every
+   color inside the <svg> because it is measuring pixels there anyway. What is
+   left for the stylesheet is the frame around it: the scroll wrapper, the
+   tooltip, and the two read-out lists underneath.
+   ========================================================================= */
+
+/* The chart fits a phone on its own now — below 560px bun-charts.js redraws it
+   portrait and compact rather than at a fixed 560 — so overflow-x is a floor of
+   last resort for the handful of viewports under 300px, not the mobile
+   strategy. Positioned, because the tooltip is placed against it. */
+.board-wrap {
+  position: relative;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 4px 0 2px;
+  background: var(--panel-hi);
+  border: 1px solid var(--panel-hi2);
+  border-radius: 6px;
+}
+
+.board-chart { position: relative; }
+.board-svg { display: block; }
+
+/* A halo the color of the plot background. The marks overlap below ~820px wide
+   and always have — see decision (3) in bun-charts.js — and a 1px dark edge is
+   what keeps an overlapping pair as two logos instead of one shape. Cheaper
+   than a backdrop plate, which would cover the residual stem the chart is
+   built to show. */
+.board-pt image { filter: drop-shadow(0 0 1px var(--panel-hi)); }
+
+/* The axis titles, at the widths too narrow to draw them inside the SVG. Real
+   text rather than SVG glyphs: it wraps, it is selectable, and it scales with
+   the reader's font size. */
+.board-axis-note {
+  margin: 6px 0 0;
+  font-family: monospace;
+  font-size: 10px;
+  line-height: 1.5;
+  color: var(--text-5);
+}
+
+.board-axis-note[hidden] { display: none; }
+
+/* --- the two pickers ---
+   Market on the left, team on the right, and they wrap onto separate lines
+   before either one squeezes. The market row reuses .proj-toggle wholesale:
+   it is the same gesture as the conference chips directly above it, and a
+   second chip style would say the two rows work differently when they do not.
+   The one difference is that this row is a single choice, which is carried by
+   only ever having one .active rather than by looking like a different thing. */
+.board-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  margin: 10px 0 4px;
+}
+
+.board-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* A radar already has all five markets on it, so while one is up this row has
+   nothing left to choose. Dimmed rather than hidden: a control that vanishes
+   reads as a bug, one that greys out reads as an explanation. */
+.board-picker.is-off { opacity: 0.35; }
+.board-picker .proj-toggle[disabled] { cursor: not-allowed; }
+
+.board-team-pick {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  font-family: monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-3);
+}
+
+.board-team-pick select {
+  padding: 5px 8px;
+  font-family: monospace;
+  font-size: 11px;
+  color: var(--text);
+  background: var(--panel);
+  border: 1px solid var(--hairline);
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.board-team-pick select:hover { border-color: var(--accent-2); }
+.board-team-pick select:focus-visible { outline: 1px solid var(--accent-2); outline-offset: 2px; }
+
+/* --- the one-team radar --- */
+.radar-svg { display: block; margin: 0 auto; }
+.radar-pt { cursor: default; }
+.radar-pt:focus-visible { outline: 1px solid var(--accent-2); outline-offset: 2px; }
+
+/* The radar's read-out. A table rather than the scatter's two ranked lists:
+   five markets for one team is a row per market, and there is no over/under
+   split to make two columns out of. */
+.radar-table {
+  width: 100%;
+  margin-top: 12px;
+  border-collapse: collapse;
+  font-family: monospace;
+  font-size: 12px;
+}
+
+.radar-table caption {
+  text-align: left;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-4);
+  padding-bottom: 6px;
+}
+
+.radar-table th {
+  text-align: left;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-4);
+  font-weight: 700;
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--hairline);
+}
+
+.radar-table td {
+  padding: 6px 8px;
+  color: var(--text-2);
+  border-bottom: 1px solid var(--panel-hi2);
+}
+
+.radar-table th:not(:first-child),
+.radar-table .radar-num { text-align: right; }
+
+/* Same colors the scatter's read-outs use, and the same way round: the market
+   sitting above the model is the market liking a team the model does not. */
+.radar-table .is-over { color: var(--good); }
+.radar-table .is-under { color: var(--orange); }
+
+@media (max-width: 600px) {
+  .board-team-pick { margin-left: 0; }
+}
+
+.board-empty {
+  padding: 24px 12px;
+  font-family: monospace;
+  font-size: 12px;
+  color: var(--text-5);
+  text-align: center;
+}
+
+/* A logo the filter chips have excluded. It keeps its place — the field is the
+   point of the chart — but stops competing with the teams that were asked for. */
+.board-pt.is-off { opacity: 0.16; }
+
+.board-pt { cursor: default; }
+.board-pt:focus-visible { outline: 1px solid var(--accent-2); outline-offset: 2px; }
+
+/* --- tooltip --- */
+.board-tip {
+  position: absolute;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 132px;
+  padding: 6px 8px;
+  pointer-events: none;
+  background: var(--panel-lo);
+  border: 1px solid var(--hairline);
+  border-radius: 5px;
+  box-shadow: 0 6px 14px var(--shadow-color);
+  font-family: monospace;
+  font-size: 10px;
+  line-height: 1.5;
+  color: var(--text-3);
+}
+
+.board-tip[hidden] { display: none; }
+.board-tip strong { font-size: 11px; color: var(--text-bright); }
+.board-tip b { color: var(--text-2); font-weight: 700; }
+.board-tip .is-over b { color: var(--good); }
+.board-tip .is-under b { color: var(--orange); }
+
+/* --- the read-out beneath the chart ---
+   The chart's text equivalent, and the part most people will quote. Same
+   auto-fit grid as the team card, so the two columns fold to one at the same
+   width the rest of the page does. */
+.board-reads {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.board-read {
+  padding: 10px 12px 12px;
+  background: var(--panel-hi);
+  border: 1px solid var(--panel-hi2);
+  border-left: 3px solid var(--hairline);
+  border-radius: 4px;
+}
+
+.board-read.is-over { border-left-color: var(--good-strong); }
+.board-read.is-under { border-left-color: var(--orange); }
+
+.board-read h4 {
+  margin: 0 0 3px;
+  font-family: monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.board-read.is-over h4 { color: var(--good); }
+.board-read.is-under h4 { color: var(--orange); }
+
+.board-read p {
+  margin: 0 0 8px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--text-4);
+}
+
+.board-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.board-list li {
+  display: grid;
+  grid-template-columns: 18px 1fr auto auto;
+  align-items: center;
+  gap: 8px;
+  font-family: monospace;
+  font-size: 11px;
+}
+
+.board-list img { width: 18px; height: 18px; }
+.board-list .board-abbr { color: var(--text-2); }
+
+/* The residual is the number the list is sorted on, so it is the one that gets
+   the weight; the market price beside it is context and stays recessive. */
+.board-list .board-resid { font-weight: 700; }
+.board-list.is-over .board-resid { color: var(--good); }
+.board-list.is-under .board-resid { color: var(--orange); }
+.board-list .board-mkt { min-width: 30px; text-align: right; color: var(--text-5); }
+
+
+/* --- Projected 2026 Standings ---
+ * Two conference tables, the model played against the schedule rather than
+ * against a price. Built by scripts/primary/bun-standings.js.
+ *
+ * The whole visual argument of the section is the two rules inside each table.
+ * A ranked list of sixteen teams says nothing about January; the heavy rule
+ * after the seventh row says the thing the numbers beside it cannot, which is
+ * where the field closes. The light rule after the fourth is the smaller of the
+ * two claims — division winner or wild card — so it is drawn as the smaller
+ * mark, and neither of them is a color: the section has to keep working for a
+ * reader who cannot separate this page's green from its orange, and a border
+ * weight is the one encoding that never asks them to.
+ *
+ * Both are drawn as a top border on the row that opens a block rather than a
+ * bottom border on the row that closes one, so a conference whose table is a
+ * row short still puts its rules in the right place.
+ */
+.ps-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 12px 28px;
+  margin-top: 14px;
+}
+
+/* Each conference gets its own scroll box. Side by side the pair is wide, and
+ * a single wrapper around both would scroll the AFC sideways to read the NFC. */
+.ps-conf { min-width: 0; overflow-x: auto; }
+
+.ps-table { table-layout: auto; }
+
+.ps-table caption {
+  padding-bottom: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-2);
+  letter-spacing: 0.08em;
+}
+
+.ps-table th { padding: 6px 8px; }
+.ps-table td { padding: 5px 8px; vertical-align: middle; }
+
+/* The seed number, and the column that holds it for the nine teams that have
+ * none. Fixed width so the team column starts in the same place in both
+ * halves of the table and in both conferences. */
+.ps-table .ps-seed {
+  width: 22px;
+  padding-right: 0;
+  font-family: monospace;
+  font-size: 11px;
+  text-align: right;
+  color: var(--text-4);
+}
+
+/* The cell stays a table cell; the flex row is the span inside it. A <td> set
+ * to display:flex is no longer a table cell, so it drops out of the table's
+ * border collapsing and paints its top rule on its own box edge — which put
+ * this section's two dividers a pixel or two below the rest of the row they
+ * belong to. */
+.ps-team {
+  color: var(--text-bright);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.ps-team-in {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+/* Name and division tag, boxed together so that when the tag has to drop to a
+ * second line it lands under the name rather than under the logo. Which is the
+ * whole reason this span exists: wrapping the outer row instead put "SOUTH"
+ * hard against the left edge of the cell, reading as a label for the crest. */
+.ps-label {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+}
+
+.ps-logo { width: 20px; height: 20px; flex: none; }
+
+.ps-name { overflow: hidden; text-overflow: ellipsis; }
+
+/* Which division a champion won. Only on the top four rows, because it is the
+ * one fact those rows carry that their placing does not — a wild card's
+ * division has no bearing on why it is seeded where it is. */
+.ps-div {
+  font-family: monospace;
+  font-size: 9px;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-5);
+}
+
+/* The projection is the column the table is sorted on, so it gets the weight.
+ * cursor: help because the cell carries something the number does not: the
+ * 10th-to-90th percentile of the simulated seasons behind it, as a title. */
+.ps-rec {
+  font-weight: 700;
+  color: var(--text-bright);
+  cursor: help;
+}
+
+/* nowrap so the edge stays on the number's line: these two cells now hold two
+ * things, and an edge that wrapped underneath would read as a second row of
+ * the table rather than as an annotation on the percentage above it. */
+.ps-pct { color: var(--text-4); white-space: nowrap; }
+.ps-pct.is-po { color: var(--text-3); }
+
+/* cursor: help for the same reason .ps-rec has it — the cell carries the price
+ * the edge was measured against, which is not printed. Attribute selector
+ * rather than a class, so a cell with no market behind it does not offer a
+ * tooltip it has nothing to put in. */
+.ps-pct[title] { cursor: help; }
+
+/* --- The edge ---
+ * The model's percentage against the books' de-vigged price for the same
+ * event, in points of probability. Smaller than the number beside it because
+ * it is the second thing in the cell: the column is the model's forecast, and
+ * the disagreement is the annotation on it, not a rival for it.
+ *
+ * Heat-mapped on the same --heat-* tokens and the same inline 0..1 --heat as
+ * the projections table's z columns, so a green here means what a green means
+ * two sections up. The scale is per column and set in bun-standings.js.
+ *
+ * Text only, no wash. Every other heat-mapped number on this page is a pill,
+ * but these sit five pixels from the number they qualify inside a table whose
+ * whole visual argument is two horizontal rules — thirty-two tinted boxes
+ * running down the middle of it would compete with the lines, and the sign is
+ * already carrying the direction for anyone the color does not reach.
+ *
+ * Fixed width, and the reason is the column to its left. These cells are
+ * right-aligned, so an edge that sized itself to its own text would push the
+ * percentage a different distance in every row — "+9" and "−29" are two
+ * glyphs apart, which is enough to make a column of thirty-two percentages
+ * read as ragged. The width is set for the widest thing the cell can hold
+ * (three glyphs: sign and two digits) with tabular figures underneath it, so
+ * the percentages stay in one line down the table and the edges stay in
+ * another. Wide enough that nothing clips; nothing here has ever needed more,
+ * since the two ends of a de-vigged market cannot be a hundred points apart in
+ * a column whose values both sum to a structural total. */
+.ps-edge {
+  display: inline-block;
+  width: 19px;
+  margin-left: 5px;
+  font-size: 9.5px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+  text-align: right;
+}
+
+/* Flat color first, mix second — same contract as .z-val: a browser without
+ * color-mix() lands on the two-color version rather than on unstyled text. */
+.ps-edge.pos {
+  color: var(--heat-good);
+  color: color-mix(in oklab, var(--heat-good) calc(var(--heat, 1) * 100%), var(--heat-base));
+}
+
+.ps-edge.neg {
+  color: var(--heat-bad);
+  color: color-mix(in oklab, var(--heat-bad) calc(var(--heat, 1) * 100%), var(--heat-base));
+}
+
+/* Under half a point of probability. The two numbers round to the same
+ * percent, so the cell says so rather than picking a side. */
+.ps-edge.flat { color: var(--text-5); }
+
+/* Both rules are two pixels or more, which is not a taste call: under
+ * border-collapse a 1px top border ties with the 1px bottom border of the row
+ * above it, and a tie is broken in favour of the earlier cell — so a hairline
+ * rule drawn this way is simply not drawn at all in some of the columns. Being
+ * strictly wider than the row separators is what makes each of these one line
+ * across the whole table instead of a line across some of it. */
+.ps-row.is-wildcard td { border-top: 2px solid var(--hairline-hi); }
+
+/* The cut. Three pixels of the brightest gray the theme has for a rule, which
+ * makes it the heaviest line anywhere on this page — nothing else here divides
+ * a table into two things that mean different things. */
+.ps-row.is-cut td { border-top: 3px solid var(--text-4); }
+
+/* Below the line the rows step back rather than disappearing: they are the
+ * same forecast, they just did not clear it. */
+.ps-row.is-cut ~ .ps-row .ps-team,
+.ps-row.is-cut .ps-team { color: var(--text-2); font-weight: 500; }
+
+.ps-row.is-cut ~ .ps-row .ps-rec,
+.ps-row.is-cut .ps-rec { color: var(--text-2); font-weight: 600; }
+
+/* The arithmetic checks, in the same monospace footnote voice The Board's
+ * de-vig total uses — a thing to be verified, not a thing to be read. */
+.ps-check {
+  margin: 14px 0 0;
+  font-family: monospace;
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--text-5);
+}
+
+@media (max-width: 700px) {
+  .ps-grid { gap: 22px; }
+  .ps-table td, .ps-table th { padding-left: 6px; padding-right: 6px; }
+  /* Both tables fit a 390px screen as they stand. These two are what happens
+   * if that ever stops being true — a heading and a division tag are the only
+   * things here that can afford a second line, so they are what gives rather
+   * than the table taking a sideways scroll. Neither wraps at any width the
+   * current labels and team names produce. */
+  .ps-table th { white-space: normal; }
+  .ps-team { white-space: normal; }
+  .ps-label { flex-wrap: wrap; row-gap: 0; }
+}
+
+/* The rank-vs-finish read-out under the two tables. Borrowed wholesale from
+ * The Board's .board-read cards — same two-column grid, same over/orange and
+ * under/green edges, same list geometry — because it is the same move: two
+ * ranked lists of where a model and the thing it is being measured against
+ * came apart. A second vocabulary for the same idea, two sections apart, would
+ * read as two different claims. */
+.ps-reads { margin-top: 18px; }
+
+/* The from → to pair. Wider than the market price this column normally holds,
+ * so the min-width goes and the text is left to size itself; it stays
+ * recessive because the number that ranks the list is the move beside it. */
+.ps-reads .ps-move-from {
+  min-width: 0;
+  letter-spacing: -0.02em;
+}

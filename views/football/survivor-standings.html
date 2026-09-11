@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/assets/icons/app-touch-180.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Dynast-Z">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <title>Survivor Standings | Dynast-Z</title>
+  <script src="/scripts/base/theme.js"></script>
+  <link rel="stylesheet" href="/styles/base/theme.css">
+  <link rel="stylesheet" href="/styles/base/styles.css">
+  <link rel="stylesheet" href="/styles/base/hub.css">
+  <!-- pickem.css FIRST — survivor.css layers over it. See survivor.css. -->
+  <link rel="stylesheet" href="/styles/primary/pickem.css">
+  <link rel="stylesheet" href="/styles/primary/survivor.css">
+  <script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
+  <script defer src="/_vercel/insights/script.js"></script>
+</head>
+<body class="masters-body">
+  <div id="header-mount"></div>
+  <div id="nav-drawer-mount"></div>
+  <script src="/scripts/base/auth.js"></script>
+  <script src="/scripts/base/standalone.js"></script>
+  <script src="/scripts/base/nav.js"></script>
+  <script src="/scripts/components/sticky-headers.js"></script>
+  <script src="/scripts/primary/pickem.js"></script>
+  <script src="/scripts/primary/survivor-api.js"></script>
+  <script src="/scripts/primary/survivor.js"></script>
+  <script>initPage();</script>
+
+  <div class="masters-content">
+    <div class="masters-breadcrumbs">
+      <a href="/football">Football</a><span class="separator">/</span><a href="/football/survivor">Survivor</a><span class="separator">/</span><span>Standings</span>
+    </div>
+
+    <h2>Survivor standings</h2>
+    <p class="subtitle" id="subtitle">Loading…</p>
+
+    <p><a class="pk-cta" href="/football/survivor/pick">Make your pick</a></p>
+
+    <div class="sv-pool" id="pool"></div>
+
+    <div id="table"><p class="pk-empty">Loading…</p></div>
+
+    <p class="pk-note" id="note"></p>
+  </div>
+
+  <script>
+  (function () {
+    'use strict';
+
+    /* The field, in order. One row per entry, one column per week, and the crest
+     * of whoever they rode in the cell.
+     *
+     * A cell is blank for a week whose game has not kicked off, and it is blank
+     * because the payload does not contain it — api/_survivor/store.py filters
+     * by kickoff in the query, so there is nothing on this page to hide and no
+     * way for a change to the table to start showing it. The one exception is
+     * the reader's own live pick, which is sent flagged and rendered with a
+     * dashed edge; see svCell in scripts/primary/survivor.js.
+     *
+     * There is no week filter, unlike the Pick 'Em standings. Eighteen columns
+     * of one crest each fit where eighteen columns of points did not, and the
+     * whole point of a survivor board is reading a season across rather than a
+     * week down. */
+
+    var tableEl = document.getElementById('table');
+    var subtitleEl = document.getElementById('subtitle');
+    var poolEl = document.getElementById('pool');
+    var noteEl = document.getElementById('note');
+    var season = null;
+
+    function seasonFromQuery() {
+      var v = Number(new URLSearchParams(location.search).get('season'));
+      return v >= 2000 && v <= 2100 ? v : null;
+    }
+
+    function poolHTML(pool) {
+      return [['alive', 'Still alive'], ['out', 'Eliminated'],
+              ['entries', 'Entries']].map(function (pair) {
+        return '<span class="sv-pool-stat">' +
+          '<span class="sv-pool-n">' + pkEsc(pool[pair[0]]) + '</span>' +
+          '<span class="sv-pool-k">' + pkEsc(pair[1]) + '</span></span>';
+      }).join('');
+    }
+
+    /* Rank, Player and Status are held at the left edge while the week columns
+     * scroll under them, and each one has to be told the real width of the ones
+     * before it. Measured rather than guessed -- see Sticky.pinColumns. The
+     * hand-written `left` values in the stylesheets are the no-JS fallback and
+     * are only right for short usernames; this is what makes them right for
+     * grant.hafer@siriusxm.com. */
+    var PINNED = ['th.pk-rank, td.pk-rank', 'th.pk-who, td.pk-who',
+                  'th.sv-st, td.sv-st'];
+
+    function pin() {
+      var table = tableEl.querySelector('.pk-table');
+      if (table && window.Sticky) Sticky.pinColumns(table, PINNED);
+    }
+
+    // Widths move with the viewport, so the offsets are re-measured with it.
+    window.addEventListener('resize', pin);
+
+    function render(data) {
+      var me = getUser();
+      tableEl.innerHTML = svStandingsTable(data, { me: me && me.user_id });
+      poolEl.innerHTML = poolHTML(data.pool);
+      pin();
+
+      var weeks = (data.weeks || []).length;
+      subtitleEl.textContent = data.season + ' · ' +
+        data.pool.alive + ' of ' + data.pool.entries + ' still alive · ' +
+        weeks + (weeks === 1 ? ' week' : ' weeks') + ' on the board';
+
+      noteEl.textContent = 'A pick appears here once its game has kicked off, ' +
+        'and not before — your own live pick is outlined and is visible only to ' +
+        'you. Green is a week survived, red is the week an entry went out, and ' +
+        'a ✕ is an entry that had nothing down once the week had started. ' +
+        '"Won" counts the weeks an entry has actually come through.';
+    }
+
+    function load() {
+      tableEl.innerHTML = '<p class="pk-empty">Loading…</p>';
+      survivorStandings(season).then(function (data) {
+        season = data.season;
+        render(data);
+      }).catch(function (err) {
+        tableEl.innerHTML = '<p class="pk-empty">' + pkEsc(err.message) + '</p>';
+        subtitleEl.textContent = 'Standings unavailable';
+      });
+    }
+
+    if (!isLoggedIn()) {
+      location.href = '/account';
+    } else {
+      season = seasonFromQuery();
+      load();
+    }
+  })();
+  </script>
+</body>
+</html>

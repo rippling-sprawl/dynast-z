@@ -1,0 +1,456 @@
+/* === Survivor ===
+ * /football/survivor, /football/survivor/pick/<week>, /football/survivor/standings.
+ *
+ * This sheet is a layer, not a skin. The pages load styles/primary/pickem.css
+ * first and this one after, so every shape the Pick 'Em already defines — the
+ * navy day band, the boxed board under it, the matchup row, the crest buttons,
+ * the standings table, the card — arrives already built, in the VegasInsider
+ * palette, and what is written here is only the part where Survivor differs.
+ *
+ * Loaded as two <link>s rather than an @import for a reason: build.py hashes
+ * literal href/src references only, so an @import target never gets a ?v= and
+ * would go stale behind Vercel's caching (see ARCHITECTURE.md). Two links means
+ * two hashed URLs and no third rule to remember. pickem.css's own @import of
+ * the skin is the pre-existing exception, not a pattern to extend.
+ *
+ * ORDER MATTERS AND IS LOAD-BEARING
+ *
+ * Several rules below win on source order alone against an equal-specificity
+ * rule in pickem.css — .sv-game's single-column grid over .pk-game's three, and
+ * the state line's column span with it. Swapping the two <link>s in a view
+ * silently re-lays-out the board. The three views all list pickem.css first.
+ *
+ * Every colour is a token; nothing here writes a hex.
+ */
+
+/* --- The board row ---
+ * The Pick 'Em row is confidence | matchup | drag-handle, because sixteen picks
+ * a week have to be ranked. Survivor has one pick and nothing to rank, so both
+ * outer columns go and the matchup takes the whole width. The result line, which
+ * spanned from column 2 in that layout, now spans from column 1. */
+
+.sv-game {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 6px;
+  padding: 10px 12px;
+}
+
+.sv-game .pk-state { grid-column: 1 / -1; }
+
+/* The two sides get more room than the Pick 'Em gives them — there is no
+ * confidence cell and no handle competing for the row — so the crests grow and
+ * the centre block sits wider. */
+.sv-game .pk-matchup { grid-template-columns: 1fr auto 1fr; gap: 10px; }
+
+.sv-game .pk-logo { width: 46px; height: 46px; }
+
+.sv-side { position: relative; }
+
+/* The spread, still printed and deliberately quiet. Survivor grades on the
+ * score, so this number decides nothing here — it is the best one-line answer
+ * to "who is likely to win", which is the only question the page asks, and it
+ * would be perverse to hide it and equally perverse to give it the emphasis it
+ * carries three clicks away on the Pick 'Em board. */
+.sv-line {
+  color: var(--text-4);
+  font-weight: 400;
+}
+
+.pk-side.is-picked .sv-line { color: var(--accent-2); }
+
+/* --- A team already spent ---
+ * THE rule of the game, and the board is where it has to be legible. Rendered
+ * dead rather than merely dim: the crest desaturates, the abbreviation is
+ * struck through, and the week it went in is stamped across the bottom. The
+ * button is disabled, so the tap is not offered and then refused.
+ *
+ * This is explanation, not enforcement. api/_survivor/rules.validate_pick
+ * refuses a reused team and the unique index on (user_id, season, team) refuses
+ * it again; if this styling vanished the rule would still hold. */
+.pk-side.is-used {
+  border-style: dashed;
+  border-color: var(--hairline);
+  background: none;
+  cursor: not-allowed;
+  padding-bottom: 20px;
+}
+
+.pk-side.is-used .pk-logo {
+  filter: grayscale(1);
+  opacity: 0.4;
+}
+
+.pk-side.is-used .pk-abbr {
+  color: var(--text-5);
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+}
+
+.pk-side.is-used .sv-line { color: var(--text-5); opacity: 0.6; }
+
+.sv-spent {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 4px;
+  font-family: var(--vi-display);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  text-align: center;
+  color: var(--text-5);
+}
+
+/* The side that lost a game already played. Not an error state — nobody did
+ * anything wrong — so it recedes rather than turning red, and lets the winning
+ * side (.is-covered, green, inherited) carry the row. */
+.sv-fell { opacity: 0.55; }
+
+.sv-game.is-final .pk-side:disabled { cursor: default; }
+
+/* --- The state line --- */
+
+.sv-verdict {
+  font-family: var(--vi-display);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-3);
+}
+
+/* What the game did to YOUR entry, which is the one thing on this page that is
+ * never a matter of degree. Survived or eliminated; there is no partial credit
+ * to shade, so these are the two flat plates and nothing between them. */
+.sv-badge {
+  font-family: var(--vi-display);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  padding: 2px 8px;
+  border-radius: 2px;
+  border: 1px solid transparent;
+}
+
+.sv-badge.is-win { background: var(--good-tint); border-color: var(--good-line); color: var(--good); }
+.sv-badge.is-loss,
+.sv-badge.is-tie { background: var(--bad-tint); border-color: var(--bad-line); color: var(--bad); }
+.sv-badge.is-pending { background: var(--panel-hi2); border-color: var(--hairline); color: var(--text-4); }
+
+/* --- Entry status ---
+ * One word, used on all three pages: the hub hero, the pick page's bar and the
+ * standings table. It says the same thing in the same colour everywhere, which
+ * is the whole reason it is a shared class rather than three bits of markup. */
+
+.sv-status {
+  display: inline-block;
+  font-family: var(--vi-display);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 2px 9px;
+  border-radius: 2px;
+  border: 1px solid transparent;
+}
+
+.sv-status.is-alive { background: var(--good-tint); border-color: var(--good-line); color: var(--good); }
+.sv-status.is-out { background: var(--bad-tint); border-color: var(--bad-line); color: var(--bad); }
+.sv-status.is-idle { background: var(--panel-hi2); border-color: var(--hairline); color: var(--text-4); }
+
+/* --- The hub hero ---
+ * The pool is a yes/no question about the reader, so the card that answers it
+ * says the word at display size and puts the arithmetic underneath. */
+
+.sv-hero-word {
+  font-family: var(--vi-display);
+  font-size: 34px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  line-height: 1.05;
+  margin-bottom: 6px;
+  color: var(--text-bright);
+}
+
+.sv-hero-word.is-out { color: var(--bad); }
+.sv-hero-word.is-alive { color: var(--good); }
+.sv-hero-word.is-idle { color: var(--text-3); }
+
+.sv-hero-line {
+  font-family: var(--vi-display);
+  font-size: 14px;
+  color: var(--text-4);
+  margin-bottom: 14px;
+}
+
+/* The pool's own count, beside the reader's. Two numbers, so a strip rather
+ * than a table. */
+.sv-pool {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  padding: 10px 0 0;
+  border-top: 1px solid var(--hairline);
+  margin-top: 12px;
+}
+
+.sv-pool-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.sv-pool-n {
+  font-family: monospace;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-bright);
+}
+
+.sv-pool-k {
+  font-family: var(--vi-display);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--text-5);
+}
+
+/* --- Teams spent ---
+ * The crests, in the order they went in. The same crests the board greys, so
+ * the two say the same thing and a reader who has seen one recognises the
+ * other. */
+
+.sv-spent-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.sv-spent-item {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 2px;
+  border: 1px solid var(--hairline);
+  background: var(--panel-hi);
+}
+
+.sv-spent-item img { width: 30px; height: 30px; }
+
+.sv-spent-item.is-win { border-color: var(--good-line); background: var(--good-tint); }
+.sv-spent-item.is-loss,
+.sv-spent-item.is-tie { border-color: var(--bad-line); background: var(--bad-tint); }
+.sv-spent-item.is-void { opacity: 0.45; }
+
+/* The week it was spent in, tucked into the corner: small enough not to compete
+ * with the crest, present because "which week did I use them" is the question
+ * the strip exists to answer. */
+.sv-spent-wk {
+  position: absolute;
+  right: 1px;
+  bottom: 0;
+  font-family: monospace;
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1;
+  padding: 1px 2px;
+  border-radius: 2px;
+  background: var(--panel);
+  color: var(--text-4);
+}
+
+/* --- The pick bar ---
+ * The pick page's header strip. Same furniture as .pk-bar, which it reuses
+ * outright; what is added is the current pick sitting in it as a crest, because
+ * "who do I have this week" should be answerable without reading the board. */
+
+.sv-current {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--vi-display);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  color: var(--text-bright);
+}
+
+.sv-current img { width: 24px; height: 24px; }
+
+.sv-current .sv-none { color: var(--text-5); font-weight: 400; }
+
+/* Clearing is a retreat, not the action the bar is for, so it takes the
+ * secondary treatment rather than the gold plate .pk-save wears. Rendered at
+ * all only while the pick's own game is still unlocked. */
+.pk-save.is-clear {
+  background: none;
+  border-color: var(--hairline-hi);
+  color: var(--text-3);
+}
+
+.pk-save.is-clear:hover:not(:disabled) {
+  background: var(--bad-tint);
+  border-color: var(--bad-line);
+  color: var(--bad);
+}
+
+/* --- Standings ---
+ * The Pick 'Em table's shape, with crests in the week cells instead of points.
+ * Rank and player stay pinned by the inherited rule; Status pins beside them,
+ * because a row scrolled sideways with no name and no verdict on it is a row of
+ * logos belonging to nobody. */
+
+.sv-table th.sv-st,
+.sv-table td.sv-st {
+  position: sticky;
+  left: 118px;
+  z-index: 1;
+  /* The row's own colour, matched again for the zebra below -- see the note on
+   * .pk-table's pinned band for why this is not --surface. */
+  background: var(--panel);
+  text-align: left;
+  white-space: nowrap;
+}
+
+/* The pinned band is three columns wide here, not two, so the seam moves to the
+ * end of it: Status is the edge the week columns travel under, and the border
+ * pickem.css puts on Player would draw a rule through the middle of the block. */
+.sv-table th.pk-who,
+.sv-table td.pk-who { border-right: none; }
+
+.sv-table th.sv-st,
+.sv-table td.sv-st { border-right: 1px solid var(--border); }
+
+.sv-table thead th.sv-st { z-index: 3; background: var(--vi-navy); }
+
+.sv-table tbody tr:nth-child(even) td.sv-st { background: var(--zebra); }
+
+.sv-table th.pk-who,
+.sv-table td.pk-who { min-width: 84px; }
+
+.sv-out-wk {
+  font-family: monospace;
+  font-size: 11px;
+  color: var(--text-5);
+  margin-left: 5px;
+}
+
+.sv-table thead th.pk-wk { text-align: center; }
+
+/* The cell IS the crest, and nothing else. An eighteen-column table of
+ * three-letter codes cannot be read at a glance, and a glance is the entire use
+ * of this page -- so the crest is given the room to be recognised at one instead
+ * of being labelled at 9px. The abbreviation is still there for anyone who needs
+ * the word: it is the img `alt` and it is in the cell `title`, which is where a
+ * screen reader and a hover look for it. */
+.sv-table td.sv-cell {
+  padding: 3px 5px;
+  text-align: center;
+  background: none;
+}
+
+.sv-table td.sv-cell img {
+  display: block;
+  width: 40px;
+  height: 40px;
+  margin: 0 auto;
+}
+
+.sv-table td.sv-cell.is-win { background: var(--good-tint); }
+.sv-table td.sv-cell.is-loss,
+.sv-table td.sv-cell.is-tie { background: var(--bad-tint); }
+.sv-table td.sv-cell.is-loss img,
+.sv-table td.sv-cell.is-tie img { filter: grayscale(1); opacity: 0.65; }
+
+/* Made, but after the entry was already out. Shown rather than hidden — someone
+ * did make it — and drained of colour so nothing reads it as live. */
+.sv-table td.sv-cell.is-void { opacity: 0.3; }
+
+/* Eliminated for having nothing down. The absence is the content, so it gets a
+ * mark of its own rather than the same neutral dot a week before the entry
+ * started uses. */
+.sv-table td.sv-cell.is-none {
+  background: var(--bad-tint);
+  color: var(--bad);
+  font-family: var(--vi-display);
+  font-weight: 700;
+}
+
+.sv-table td.sv-cell.is-empty { color: var(--text-5); }
+
+/* A pick that is in and not readable yet. Deliberately quiet — it is the one
+ * cell on the table carrying no information about the pick itself, and the only
+ * thing it has to do is not read as the empty dot beside it. Sized down because
+ * the glyph is a colour emoji and would otherwise out-shout the crests. */
+.sv-table td.sv-cell.is-masked {
+  font-size: 13px;
+  line-height: 40px;
+  opacity: 0.55;
+}
+
+/* Your own live pick, which nobody else can see yet. The dashed edge is the
+ * page saying so — without it a player looking at their own row on Saturday
+ * sees what everyone else sees, which is nothing, and wonders whether the save
+ * took. */
+.sv-table td.sv-cell.is-hidden {
+  outline: 1px dashed var(--vi-gold-line);
+  outline-offset: -2px;
+}
+
+/* An eliminated entry stays on the board — the order of the field is the story
+ * of the season — and recedes. */
+.sv-table tr.sv-dead td.pk-who { color: var(--text-4); font-weight: 400; }
+
+.pk-mini li.sv-dead .pk-mini-who { color: var(--text-4); font-weight: 400; }
+
+.sv-mini-state {
+  font-family: monospace;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-4);
+}
+
+.pk-mini li.sv-dead .sv-mini-state { color: var(--bad); }
+
+/* --- Narrow screens ---
+ * The board keeps its shape: the crest and the abbreviation identify a team and
+ * both stay, exactly as they do on the Pick 'Em. Only the gutters give ground.
+ * The standings drop the abbreviation under each crest — eighteen columns is
+ * already more than a phone has, and the crest alone is what is being read. */
+@media (max-width: 640px) {
+  .sv-game { padding: 8px 6px; }
+
+  .sv-game .pk-matchup { gap: 6px; }
+
+  .sv-game .pk-logo { width: 34px; height: 34px; }
+
+  .pk-side.is-used { padding-bottom: 17px; }
+
+  .sv-hero-word { font-size: 27px; }
+
+  /* Status stops being pinned on a phone -- three held columns leave nothing of
+   * the board on screen -- so the held block is Rank and Player again, and the
+   * seam goes back to the end of it. */
+  .sv-table th.sv-st,
+  .sv-table td.sv-st { position: static; border-right: none; }
+
+  .sv-table th.pk-who,
+  .sv-table td.pk-who { border-right: 1px solid var(--border); }
+
+  /* Scaled down but still bigger than it was: eighteen 40px cells do not fit a
+   * phone, and .pk-table-wrap scrolling sideways is a worse answer than a
+   * slightly smaller crest. */
+  .sv-table td.sv-cell img { width: 30px; height: 30px; }
+
+  .sv-table td.sv-cell.is-masked { line-height: 30px; }
+
+  .sv-spent-item { width: 36px; height: 36px; }
+
+  .sv-spent-item img { width: 26px; height: 26px; }
+}

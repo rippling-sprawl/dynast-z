@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <!-- Home-screen install. The two *-capable tags are what make an iOS icon
+       launch the site standalone — its own window, no address bar — instead of
+       opening a Safari tab; the manifest says the same thing to everyone else,
+       and to iOS 16.4+. standalone.js keys the drawer's share row off exactly
+       that state, so dropping these tags silently removes the row too. -->
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/assets/icons/app-touch-180.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Dynast-Z">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <title>Methodology | Baker&rsquo;s Buns</title>
+  <!-- Theme first: theme.js sets <html data-theme> before the first paint,
+       theme.css holds every colour token the sheets below spend. -->
+  <script src="/scripts/base/theme.js"></script>
+  <link rel="stylesheet" href="/styles/base/theme.css">
+  <link rel="stylesheet" href="/styles/base/styles.css">
+  <link rel="stylesheet" href="/styles/base/hub.css">
+  <link rel="stylesheet" href="/styles/primary/bakers-buns.css">
+  <!-- Vercel Web Analytics. The /_vercel/insights/* routes are injected by
+       Vercel at deploy time, so this 404s harmlessly when serving locally. -->
+  <script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
+  <script defer src="/_vercel/insights/script.js"></script>
+</head>
+<!--
+  How the Baker's Buns score is built — split out of the table's page.
+
+  It used to be a section there, reached by a nav pill. But it is not somewhere
+  a reader goes: it is the answer to a question the Rank column raises, asked
+  once and then not asked again. So it lives at its own route and the table
+  links to it, which keeps the page that people actually read to the table and
+  its cards.
+
+  The two lines that have to move with the data — the blend and the OFF Tier
+  scale — are still built from the JSON rather than typed here, and still read
+  this device's saved weights, so a reader who set their own blend on the table
+  sees that blend described here rather than the sheet's.
+-->
+<body class="masters-body">
+  <div id="header-mount"></div>
+  <div id="nav-drawer-mount"></div>
+  <script src="/scripts/base/auth.js"></script>
+  <script src="/scripts/base/standalone.js"></script>
+  <script src="/scripts/base/nav.js"></script>
+  <script>initPage();</script>
+
+  <div class="masters-content">
+    <div class="masters-breadcrumbs">
+      <a href="/football">Football</a><span class="separator">/</span><a href="/football/bakers-buns">Baker&rsquo;s Buns</a><span class="separator">/</span><span>Methodology</span>
+    </div>
+
+    <h2>Methodology</h2>
+
+    <section class="bun-section" id="methodology">
+      <p class="bun-section-note"><a href="/football/bakers-buns">&larr; Back to the projections</a></p>
+
+      <div class="bun-grid">
+        <article class="note accent-info">
+          <h4>How the score is built</h4>
+          <span class="note-meta">Weighted z-scores</span>
+          <p id="proj-weights"></p>
+          <p>
+            Each input is converted to a z-score against the 32-team field, then
+            blended. The ones that count down &mdash; O-Line and SoS ranks, the
+            two tiers, and last season&rsquo;s luck &mdash; are inverted first,
+            so a positive z-score always means &ldquo;better than average.&rdquo;
+          </p>
+          <p>
+            Four of the seven describe an offense and its circumstances.
+            <strong>Havoc</strong> is the one that describes a defense, which is
+            why it carries 15% &mdash; the only look the model gets at the other
+            side of the ball, and pressure is the stickiest thing a defense does.
+            It is still short of the line because one pressure rate is not a
+            defense and the rate here is a floor on the real thing. Its 15% came
+            ten points off O-Line and five off SoS.
+          </p>
+          <p>
+            <strong>Coaches</strong> is the one that describes neither &mdash;
+            the people deciding what the players run, in a year when ten teams
+            changed head coach and 25 changed at least one coordinator. It is
+            light for a different reason: it is one outlet&rsquo;s opinion rather
+            than a measurement, and 10% says the model has a view here, not that
+            it knows. Its five points each came off O-Line and Rest. The line is
+            still the heaviest input in the blend after both of them.
+          </p>
+          <p>
+            <strong>Luck</strong> is the last in and the lightest at
+            <strong>5%</strong>, taken off SoS, which drops to 15%. It is 2025
+            wins above Pythagorean expectation &mdash; what a team actually won
+            minus what its points scored and allowed said it should have &mdash;
+            and it is inverted, so the team that won <em>fewer</em> games than
+            its points implied scores as the positive. That is the claim: a
+            record ahead of its points is carried, not established, and the
+            league&rsquo;s history is that it does not repeat. It is 5% rather
+            than more because it is a single season of a single point
+            differential, the noisiest input here, and some real part of it
+            &mdash; close-game coaching, a kicker &mdash; is not luck at all.
+          </p>
+          <p class="note-take" id="proj-legend"></p>
+        </article>
+
+        <article class="note accent-good">
+          <h4>Where the inputs come from</h4>
+          <span class="note-meta">Verified against the sources</span>
+          <ul>
+            <li><strong>O-Line</strong> &mdash; the PFF 2026 ranking, 1&ndash;32, matching all 32 rows exactly</li>
+            <li><strong>SoS</strong> &mdash; Sharp Football&rsquo;s odds-based strength of schedule; the five easiest and hardest match exactly</li>
+            <li><strong>Rest</strong> &mdash; Sharp Football&rsquo;s net rest edge in days (Bears +15 to Chargers &minus;24)</li>
+            <li><strong>OFF Tier</strong> &mdash; <a href="https://www.actionnetwork.com/nfl/2026-nfl-offense-rankings-all-32-teams-ranked">Action Network&rsquo;s 2026 offense rankings</a>, tiers 1&ndash;9; tier 1 is the best offense, so the tier is inverted into its z-score the way the O-Line rank is</li>
+            <li><strong>Coaches</strong> &mdash; <a href="https://www.actionnetwork.com/nfl/2026-nfl-coaching-staff-rankings-for-all-32-teams" target="_blank" rel="noopener">Action Network&rsquo;s 2026 coaching staff rankings</a>, head coach and both coordinators judged together. The <em>tier</em> is scored, not the 1&ndash;32 order: the gap between the 13th and 14th staff is a tie broken inside one bucket, while the gap between two tiers is the claim being made. Tier 1 is the best staff, so it is inverted. The eight tiers are uneven on purpose &mdash; two teams at the top, eight in tier 7 &mdash; and z-scoring keeps that</li>
+            <li><strong>Luck</strong> &mdash; 2025 wins above Pythagorean expectation, from each team&rsquo;s own points scored and allowed. Inverted, so a bounce-back candidate scores positive and a regression candidate scores negative; the raw gap, the record and the expected wins are all in the <strong>Inputs</strong> worksheet on the team card</li>
+            <li><strong>Havoc</strong> &mdash; share of dropbacks faced ending in a sack or a QB hit, from <a href="https://github.com/nflverse/nflverse-data/releases/tag/pbp" target="_blank" rel="noopener">nflverse</a> play-by-play, blended <strong>75% last season / 25% the season before</strong>. Higher is better, so nothing is inverted. It is a floor on pressure rather than PFF&rsquo;s number &mdash; hurries are hand-charted and in no free feed &mdash; which is part of why it sits at 15% rather than level with the line</li>
+          </ul>
+        </article>
+
+        <!-- The evidence for the heaviest weight in the score, and the only
+             thing on the site that back-tests it. The chart itself is in
+             Graphs, back on the table's page; this is what it says. -->
+        <article class="note accent-info">
+          <h4>Why O-Line carries the most weight</h4>
+          <span class="note-meta">Preseason rank vs playoffs, 2016&ndash;2025</span>
+          <p>
+            Ten years of PFF&rsquo;s preseason ranking, sorted into quartiles and
+            counted on who actually made the playoffs:
+          </p>
+          <ul>
+            <li><strong>Ranks 1&ndash;8</strong> &mdash; 59% made it (the top four alone: 65%)</li>
+            <li><strong>9&ndash;16</strong> &mdash; 48%</li>
+            <li><strong>17&ndash;24</strong> &mdash; 33%</li>
+            <li><strong>25&ndash;32</strong> &mdash; 26%</li>
+          </ul>
+          <p class="note-take">
+            <strong>Edge</strong> in the chart is that quartile base rate minus
+            what FanDuel&rsquo;s price implies (8/13/26), against the raw number
+            rather than a de-vigged one. The widest disagreements: Cardinals
+            <span class="odds odds-plain">+28%</span> and Jets
+            <span class="odds odds-plain">+21%</span> to make, Ravens
+            <span class="odds odds-plain">+39%</span> and Texans
+            <span class="odds odds-plain">+35%</span> to miss. See
+            <a href="/football/bakers-buns#graphs">Graphs</a>.
+          </p>
+        </article>
+
+        <!-- The one column in the table that is computed here rather than
+             copied off a book, so it is the one that owes the reader a note. -->
+        <article class="note accent-info">
+          <h4>Where the win total comes from</h4>
+          <span class="note-meta">DraftKings, FanDuel, theScore</span>
+          <p>
+            The books do not always hang the total on the same number &mdash;
+            DraftKings had the Cardinals at 3.5 while FanDuel and theScore had
+            4.5 &mdash; so the <strong>Wins</strong> column is chosen rather
+            than copied. Of every line the three of them quote, it takes the one
+            whose de-vigged Over price sits closest to even: the number the
+            market cannot lean off, which is what a main line is.
+          </p>
+          <p class="note-take">
+            <strong>Over</strong> and <strong>Under</strong> are the plain
+            average of the books&rsquo; prices at that line with the vig left in
+            &mdash; something to hold up against a screen, not a fair value
+            nobody is offering. Hover a total to see which books priced it;
+            where a market is thin it can be one.
+          </p>
+        </article>
+
+        <article class="note accent-warn">
+          <h4>Reading the colors</h4>
+          <ul>
+            <li><span class="z-val pos">Green</span> / <span class="z-val neg">orange</span> on the metric columns: better or worse than the 32-team average</li>
+            <li>The <strong>Metrics</strong> and <strong>Odds</strong> bands above the headings mark that split: everything under Metrics is heat-mapped against the field, everything under Odds is a price and is left alone</li>
+            <li>The colors is a heat map, not a switch &mdash; it deepens with distance from that average, scaled to each column&rsquo;s own spread, so the strongest tint in a column is that column&rsquo;s most extreme team</li>
+            <li><strong>Luck</strong> is heat-mapped like everything else beside it, because it is inverted before it is scored: <span class="z-val pos">green</span> means they won fewer games than their points implied and are due to bounce back, <span class="z-val neg">orange</span> means they won more and are due to regress. The team card puts that in words &mdash; a <span class="tc-luck luck-cold">bounce-back</span> or <span class="tc-luck luck-hot">regression</span> candidate, for anyone a full win either side of their expectation</li>
+            <li>Odds columns are left uncolorsed &mdash; a plus price means opposite things on Make and Miss, and the Wins line is not a price at all, so it carries no sign</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+  </div>
+
+  <script>
+  /*
+   * Everything on this page is prose except one sentence, and that sentence is
+   * the blend. It is built here the same way the table builds it — from the
+   * JSON's own weights, with this device's saved override on top — because a
+   * methodology that describes a blend the reader is not scoring with is worse
+   * than no methodology at all.
+   *
+   * The weights key, its shape, and the rules for rejecting a bad stored value
+   * are the table's; see views/football/bakers-buns.html for why a saved blend
+   * that matches the sheet's is cleared rather than pinned.
+   */
+  (function () {
+    'use strict';
+
+    var DATA_URL = '/data/nfl_projections_2026.json';
+
+    var COMP = [
+      { key: 'oLine',   full: 'O-Line' },
+      { key: 'eyeTest', full: 'OFF Tier' },
+      { key: 'sos',     full: 'SoS' },
+      { key: 'havoc',   full: 'Havoc' },
+      { key: 'rest',    full: 'Rest' },
+      { key: 'coaches', full: 'Coaches' },
+      { key: 'luck',    full: 'Luck' }
+    ];
+
+    var WEIGHT_KEY = 'dz_buns_weights_v2';
+
+    function esc(s) {
+      return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+      });
+    }
+
+    function weightsMatch(a, b) {
+      return COMP.every(function (c) {
+        return Math.abs((a[c.key] || 0) - (b[c.key] || 0)) < 0.0005;
+      });
+    }
+
+    function loadWeights() {
+      var raw;
+      try { raw = localStorage.getItem(WEIGHT_KEY); } catch (e) { return null; }
+      if (!raw) return null;
+
+      try {
+        var w = JSON.parse(raw), out = {}, sum = 0;
+        for (var i = 0; i < COMP.length; i++) {
+          var v = w[COMP[i].key];
+          if (typeof v !== 'number' || !isFinite(v) || v < 0 || v > 1) return null;
+          out[COMP[i].key] = v;
+          sum += v;
+        }
+        return Math.abs(sum - 1) < 0.005 ? out : null;
+      } catch (e) { return null; }
+    }
+
+    fetch(DATA_URL, { cache: 'no-store' })
+      .then(function (r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      })
+      .then(function (d) {
+        var baseWeights = d.weights || {};
+        var saved = loadWeights();
+        var weights = saved || baseWeights;
+        var customWeights = !!saved && !weightsMatch(weights, baseWeights);
+
+        var byWeight = COMP.slice().sort(function (a, b) {
+          return (weights[b.key] || 0) - (weights[a.key] || 0);
+        });
+
+        document.getElementById('proj-weights').innerHTML = 'Score = ' +
+          byWeight
+            .filter(function (c) { return weights[c.key] != null; })
+            .map(function (c) {
+              return '<strong>' + Math.round(weights[c.key] * 100) + '%</strong> ' + esc(c.full);
+            })
+            .join(' &middot; ') +
+          (customWeights
+            ? ' <span class="wt-flag">custom</span> — your weights, not the sheet’s ' +
+              '(' + COMP.map(function (c) {
+                return Math.round((baseWeights[c.key] || 0) * 100) + '%';
+              }).join('/') + ' in ' + COMP.map(function (c) { return c.full; }).join('/') +
+              ' order).'
+            : '');
+
+        var legend = document.getElementById('proj-legend');
+        if (d.eyeTestLegend) {
+          legend.innerHTML = '<strong>OFF Tier scale:</strong> ' + esc(d.eyeTestLegend);
+        } else {
+          legend.remove();
+        }
+      })
+      /* The four cards are the page and they are static markup; a data file
+       * that never arrives costs the blend sentence, not the page. */
+      .catch(function () {
+        document.getElementById('proj-weights').textContent =
+          'Score = a weighted blend of O-Line, OFF Tier, SoS, Havoc, Rest, '
+          + 'Coaches and Luck. ' +
+          'The exact percentages could not be loaded.';
+        document.getElementById('proj-legend').remove();
+      });
+  })();
+  </script>
+</body>
+</html>

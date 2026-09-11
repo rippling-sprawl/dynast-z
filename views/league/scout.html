@@ -4,18 +4,40 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <link rel="icon" type="image/png" href="/favicon.png">
+  <!-- Home-screen install. The two *-capable tags are what make an iOS icon
+       launch the site standalone — its own window, no address bar — instead of
+       opening a Safari tab; the manifest says the same thing to everyone else,
+       and to iOS 16.4+. standalone.js keys the drawer's share row off exactly
+       that state, so dropping these tags silently removes the row too. -->
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/assets/icons/app-touch-180.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Dynast-Z">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <title>Scout | Dynast-Z</title>
-  <link rel="stylesheet" href="/styles/base/styles.css?v=abec71e4">
-  <link rel="stylesheet" href="/styles/primary/league.css?v=b4174893">
-  <link rel="stylesheet" href="/styles/primary/scout.css?v=92522547">
+  <!-- Theme first: theme.js sets <html data-theme> before the first paint,
+       theme.css holds every colour token the sheets below spend. -->
+  <script src="/scripts/base/theme.js"></script>
+  <link rel="stylesheet" href="/styles/base/theme.css">
+  <link rel="stylesheet" href="/styles/base/styles.css">
+  <link rel="stylesheet" href="/styles/primary/league.css">
+  <link rel="stylesheet" href="/styles/primary/scout.css">
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <link rel="stylesheet" href="/styles/base/lightbox.css">
+  <!-- Vercel Web Analytics. The /_vercel/insights/* routes are injected by
+       Vercel at deploy time, so this 404s harmlessly when serving locally. -->
+  <script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
+  <script defer src="/_vercel/insights/script.js"></script>
 </head>
 <body>
   <div id="header-mount"></div>
   <div id="nav-drawer-mount"></div>
-  <script src="/scripts/base/nav.js?v=e5f6a7b8"></script>
-  <script src="/scripts/components/tabs.js?v=fd164a40"></script>
-  <script src="/scripts/primary/share-trade.js?v=d6e07501"></script>
+  <script src="/scripts/base/standalone.js"></script>
+  <script src="/scripts/base/nav.js"></script>
+  <script src="/scripts/base/lightbox.js"></script>
+  <script src="/scripts/components/tabs.js"></script>
+  <script src="/scripts/primary/share-trade.js"></script>
   <script>initPage();</script>
 
   <div class="league-content">
@@ -26,7 +48,7 @@
 
       <!-- Step 1: Pick Team A -->
       <div id="scout-select">
-        <p style="color: #8b949e; font-size: 13px; margin-bottom: 12px;">Select a team to compare to the rest of the teams:</p>
+        <p style="color: var(--text-3); font-size: 13px; margin-bottom: 12px;">Select a team to compare to the rest of the teams:</p>
         <div id="team-picker" class="team-grid"></div>
       </div>
 
@@ -90,7 +112,6 @@
     const leagueId = window.location.pathname.match(/\/league\/([^/]+)/)[1];
     let teamsData = [];
     let globalZMax = 1;
-    let globalZMin = -1;
 
     initTabBar(leagueId);
 
@@ -98,15 +119,15 @@
 
     function fmtZ(z) {
       if (z == null) return '\u2014';
-      const sign = z >= 0 ? '+' : '';
-      return sign + z.toFixed(2);
+      return Math.round(z).toString();
     }
 
-    function zColor(z) {
-      if (z == null) return '';
-      if (z > 0) return `rgba(34, 197, 94, ${Math.min(z / globalZMax, 1).toFixed(2)})`;
-      if (z < 0) return `rgba(220, 38, 38, ${Math.min(Math.abs(z) / Math.abs(globalZMin), 1).toFixed(2)})`;
-      return 'transparent';
+    function zHeat(z) {
+      /* The intensity only. The colour it drives lives in CSS as --heat-z-fill,
+       * so a z-score wash that reads on the dark page also reads on the light
+       * one without this table being rebuilt. */
+      if (z == null || z <= 0) return '0';
+      return Math.min(z / globalZMax, 1).toFixed(2);
     }
 
     const sourceAbbr = {'keeptradecut.com':'KTC','fantasypros.com':'FP','fantasycalc.com':'FC'};
@@ -144,7 +165,7 @@
             <div class="player-name">${fmtName(p.name, p.position)}</div>
             <div class="player-team">${p.team || ''}${rookieLabel}${taxiLabel}</div>
           </div>
-          <span class="player-value${zClass}" style="background:${zColor(p.aggregate)}" ${tooltip ? `data-sources="${tooltip}"` : ''}>${fmtZ(p.aggregate)}</span>
+          <span class="player-value${zClass}" style="--z:${zHeat(p.aggregate)}" ${tooltip ? `data-sources="${tooltip}"` : ''}>${fmtZ(p.aggregate)}</span>
         </div>
       `;
     }
@@ -256,7 +277,7 @@
 
       const pinnedEl = document.getElementById('pinned-team');
       const othersEl = document.getElementById('other-teams');
-      pinnedEl.innerHTML = teamHeader(team) + '<div style="text-align:center;padding:24px;color:#8b949e;font-size:13px;">Loading...</div>';
+      pinnedEl.innerHTML = teamHeader(team) + '<div style="text-align:center;padding:24px;color:var(--text-3);font-size:13px;">Loading...</div>';
       othersEl.innerHTML = '';
       allTeamData = [];
 
@@ -264,7 +285,6 @@
       const teamAData = await loadTeamRoster(team.roster_id);
       const allVals = teamAData.players.filter(p => p.aggregate != null).map(p => p.aggregate);
       globalZMax = Math.max(...allVals) || 1;
-      globalZMin = Math.min(...allVals) || -1;
 
       allTeamData.push({ team, grouped: groupByPosition(teamAData.players) });
       renderCompareView();
@@ -276,7 +296,7 @@
       othersEl.innerHTML = otherTeams.map(t => `
         <div class="scout-team-col" id="scout-col-${t.roster_id}">
           ${teamHeader(t)}
-          <div style="text-align:center;padding:24px;color:#8b949e;font-size:13px;">Loading...</div>
+          <div style="text-align:center;padding:24px;color:var(--text-3);font-size:13px;">Loading...</div>
         </div>
       `).join('');
 
@@ -287,7 +307,6 @@
           const vals = data.players.filter(p => p.aggregate != null).map(p => p.aggregate);
           if (vals.length) {
             globalZMax = Math.max(globalZMax, ...vals);
-            globalZMin = Math.min(globalZMin, ...vals);
           }
           allTeamData.push({ team: t, grouped: groupByPosition(data.players) });
         } catch (e) {
@@ -376,7 +395,7 @@
             <div class="player-name">${fmtName(p.name, p.position)}</div>
             <div class="player-meta"><span class="player-pos pos-${p.position}">${fmtPos(p.position)}</span><span class="player-team">${p.team || ''}</span>${p.rookie ? '<span class="taxi-label">R</span>' : ''}${p.taxi ? '<span class="taxi-label">PS</span>' : ''}</div>
           </div>
-          <span class="player-value" style="background:${zColor(p.aggregate)}" ${sourcesTooltip(p.sources) ? `data-sources="${sourcesTooltip(p.sources)}"` : ''}>${fmtZ(p.aggregate)}</span>
+          <span class="player-value" style="--z:${zHeat(p.aggregate)}" ${sourcesTooltip(p.sources) ? `data-sources="${sourcesTooltip(p.sources)}"` : ''}>${fmtZ(p.aggregate)}</span>
           <button class="trade-remove-btn" data-name="${p.name.replace(/"/g, '&quot;')}">&times;</button>
         `;
         el.querySelector('.trade-remove-btn').addEventListener('click', () => {
@@ -407,7 +426,7 @@
                   <div class="player-name">${fmtName(p.name, p.position)}</div>
                   <div class="player-team">${p.team || ''}${p.rookie ? '<span class="taxi-label">R</span>' : ''}${p.taxi ? '<span class="taxi-label">PS</span>' : ''}</div>
                 </div>
-                <span class="player-value" style="background:${zColor(p.aggregate)}" ${sourcesTooltip(p.sources) ? `data-sources="${sourcesTooltip(p.sources)}"` : ''}>${fmtZ(p.aggregate)}</span>
+                <span class="player-value" style="--z:${zHeat(p.aggregate)}" ${sourcesTooltip(p.sources) ? `data-sources="${sourcesTooltip(p.sources)}"` : ''}>${fmtZ(p.aggregate)}</span>
               </div>
             `;
           } else {

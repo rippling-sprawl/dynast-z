@@ -4,43 +4,112 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <link rel="icon" type="image/png" href="/favicon.png">
+  <!-- Home-screen install. The two *-capable tags are what make an iOS icon
+       launch the site standalone — its own window, no address bar — instead of
+       opening a Safari tab; the manifest says the same thing to everyone else,
+       and to iOS 16.4+. standalone.js keys the drawer's share row off exactly
+       that state, so dropping these tags silently removes the row too. -->
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/assets/icons/app-touch-180.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Dynast-Z">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <title>Football | Dynast-Z</title>
-  <link rel="stylesheet" href="/styles/base/styles.css?v=abec71e4">
-  <link rel="stylesheet" href="/styles/base/hub.css?v=2b363e8e">
+  <!-- Theme first: theme.js sets <html data-theme> before the first paint,
+       theme.css holds every colour token the sheets below spend. -->
+  <script src="/scripts/base/theme.js"></script>
+  <link rel="stylesheet" href="/styles/base/theme.css">
+  <link rel="stylesheet" href="/styles/base/styles.css">
+  <link rel="stylesheet" href="/styles/base/hub.css">
+  <!-- The VegasInsider skin /football/schedule wears, spent on the hub
+       shell. Loaded last so it repaints the sheets above it. -->
+  <link rel="stylesheet" href="/styles/primary/hub.css">
+  <!-- Vercel Web Analytics. The /_vercel/insights/* routes are injected by
+       Vercel at deploy time, so this 404s harmlessly when serving locally. -->
+  <script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
+  <script defer src="/_vercel/insights/script.js"></script>
 </head>
 <body class="masters-body">
   <div id="header-mount"></div>
   <div id="nav-drawer-mount"></div>
-  <script src="/scripts/base/auth.js?v=a1b2c3d4"></script>
-  <script src="/scripts/base/nav.js?v=e5f6a7b8"></script>
+  <script src="/scripts/base/auth.js"></script>
+  <script src="/scripts/base/standalone.js"></script>
+  <script src="/scripts/base/nav.js"></script>
   <script>initPage();</script>
 
   <div class="masters-content">
     <h2>Football</h2>
     <p class="subtitle">Dynasty Tools &amp; Leagues</p>
 
-    <h3 class="hub-section">Tools</h3>
-    <div class="hub-grid">
-      <a class="hub-card" href="/trade-calculator"><h3>Trade Calculator</h3><p>Value any dynasty trade with blended rankings</p></a>
-    </div>
+    <div id="fp-stale-banner" class="fp-stale-banner" hidden></div>
+    
+    <!-- Three grids, filled from the Gambling, Games and Fantasy sections of
+         NAV_SECTIONS in scripts/base/nav.js — the same list behind the drawer
+         and the home page, including the admin-only Baker's Action card and
+         the hidden NFL Odds entry. This page is the only place all three are
+         shown under one Football heading; the drawer names them separately. -->
+    <h3 class="hub-section">Gambling</h3>
+    <div class="hub-grid" data-nav-section="Gambling"></div>
 
-    <h3 class="hub-section">Leagues</h3>
-    <div class="hub-grid">
-      <a class="hub-card" href="/league/1314983622930870272"><h3>JHBC</h3><p>Rosters, trades, power rankings &amp; schedule</p></a>
-      <a class="hub-card" href="/league/1312081645817327616"><h3>Drew Dynasty</h3><p>Rosters, trades, power rankings &amp; schedule</p></a>
-    </div>
+    <h3 class="hub-section">Games</h3>
+    <div class="hub-grid" data-nav-section="Games"></div>
+
+    <h3 class="hub-section">Fantasy</h3>
+    <div class="hub-grid" data-nav-section="Fantasy"></div>
+
   </div>
 
+  <script>
+    // Cards come from the nav list, which does the admin gating for the Action
+    // entry itself. UI gating only — every page under /football/action is a
+    // static file and is served to anyone who requests it directly (see
+    // auth.js requireAdmin).
+    mountHubGrids();
+  </script>
+
   <style>
-    .hub-section {
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      color: #888;
-      font-family: monospace;
-      font-weight: 700;
-      margin: 28px 0 0;
+    .fp-stale-banner {
+      margin: 16px 0 4px;
+      padding: 10px 14px;
+      border: 1px solid var(--warn-deep);
+      border-left-width: 4px;
+      border-radius: 6px;
+      background: var(--warn-soft);
+      color: var(--warn-deep);
+      font-size: 13px;
+      line-height: 1.4;
     }
   </style>
+
+  <script>
+    // Warn when the served FantasyPros data is from an article older than the
+    // current real-life month (per Date.now()). Refreshing the data (running
+    // scripts/fetch_fp.py against the latest article) rewrites data/fp_meta.json
+    // and clears this banner once its month matches the current month.
+    (function () {
+      const MONTHS = ["January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"];
+      fetch("/data/fp_meta.json", { cache: "no-store" })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((meta) => {
+          if (!meta || !meta.month || !meta.year) return;
+          const now = new Date();
+          const curYear = now.getFullYear();
+          const curMonth = now.getMonth() + 1; // 1-12
+          const isStale =
+            meta.year < curYear ||
+            (meta.year === curYear && meta.month < curMonth);
+          if (!isStale) return;
+          const banner = document.getElementById("fp-stale-banner");
+          const label = meta.label || `${MONTHS[meta.month - 1]} ${meta.year}`;
+          banner.textContent =
+            `⚠️ FantasyPros values were last refreshed for the ${label} update. ` +
+            `A newer chart is available — values may be out of date until the data is refreshed.`;
+          banner.hidden = false;
+        })
+        .catch(() => {});
+    })();
+  </script>
 </body>
 </html>

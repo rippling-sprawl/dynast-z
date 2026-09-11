@@ -1,0 +1,868 @@
+/* === Pick 'Em ===
+ * /football/pickem, /football/pickem/picks/<week>, /football/pickem/standings.
+ *
+ * These pages wear the VegasInsider skin, the same one /football/schedule,
+ * /football/schedule/game/<id> and /football/schedule/archive wear — see
+ * styles/base/vegasinsider.css for where the palette and the faces came from.
+ * Pick 'Em is the Games slate with something at stake on it, so it belongs to
+ * that family rather than to the house palette: a reader moving from the
+ * fixture list to the pick board should not cross a visual seam.
+ *
+ * Importing it does most of the work on its own. The skin redefines the token
+ * layer, so --accent becomes the brand gold and every rule below that already
+ * spent --accent, --panel or --hairline repaints itself: the picked side, the
+ * confidence control and the save button all turn gold without being named
+ * here. What this sheet adds past that is the *shape* the skin gives a list —
+ * the navy day band, the boxed board under it, squared edges and the display
+ * face on anything that is a heading or a chip.
+ *
+ * Every colour is a token; nothing here writes a hex. The one place colour
+ * carries data is the week columns in the standings table, and those follow the
+ * rule the rest of the app follows: the view hands over a bare 0..1 number as
+ * --heat and the colour is mixed here, so the scale re-colours on a theme
+ * change without the table being rebuilt.
+ *
+ * CACHING CAVEAT, inherited rather than introduced: build.py hashes literal
+ * href/src references only, so an @import target never gets a ?v=. That is
+ * already true of the three Games sheets that pull this file in the same way,
+ * and matching them beats being the one page that loads the skin differently.
+ */
+@import url('/styles/base/vegasinsider.css');
+
+/* --- Page furniture --- */
+
+.pk-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+}
+
+.pk-bar-stat {
+  font-family: var(--vi-display);
+  font-size: 13px;
+  letter-spacing: 0.3px;
+  color: var(--text-3);
+  white-space: nowrap;
+}
+
+.pk-bar-stat b {
+  color: var(--text-bright);
+  font-weight: 700;
+}
+
+/* Pushes Save to the right edge on a wide screen and lets it wrap to its own
+ * line on a phone, where a 100%-wide button is the easier target anyway. */
+.pk-bar-spacer { flex: 1 1 auto; }
+
+.pk-save {
+  font-family: var(--vi-display);
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  padding: 8px 20px;
+  border-radius: 2px;
+  border: 1px solid var(--accent-line);
+  background: var(--accent);
+  color: var(--accent-ink);
+  cursor: pointer;
+}
+
+.pk-save:hover:not(:disabled) { background: var(--accent-hover); }
+
+.pk-save:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* The save result sits beside the button rather than in a toast: it is the
+ * answer to the thing just pressed, and a message that fades takes the only
+ * evidence of a failed save with it. */
+.pk-status {
+  font-family: var(--vi-display);
+  font-size: 13px;
+  color: var(--text-4);
+}
+
+/* The last-written stamp. Quieter than the status beside it: it is a standing
+ * fact rather than a thing that just happened, and it is on screen the whole
+ * time the page is. */
+.pk-saved {
+  font-family: var(--vi-display);
+  font-size: 13px;
+  color: var(--text-4);
+  white-space: nowrap;
+}
+
+.pk-saved[hidden] { display: none; }
+
+.pk-status.is-ok { color: var(--good); }
+.pk-status.is-error { color: var(--bad); }
+
+.pk-note {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-4);
+  margin: 14px 0;
+}
+
+.pk-empty {
+  font-size: 15px;
+  color: var(--text-4);
+  padding: 20px 12px;
+  text-align: center;
+}
+
+/* --- Day groups --- */
+
+/* A day of football is one board with a navy strip at its head, gold-ruled
+ * along the bottom — the .vi-band pattern, restated here because there is no
+ * markup to hang the class on. The margin is the gap between one day's board
+ * and the next; :first-child zeroes the top one. */
+.pk-day {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin: 22px 0 0;
+  padding: 9px 12px 8px;
+  background: var(--vi-navy);
+  border-bottom: 2px solid var(--vi-gold);
+  border-radius: 2px 2px 0 0;
+}
+
+.pk-day:first-child { margin-top: 0; }
+
+.pk-day h3 {
+  font-family: var(--vi-display);
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--vi-band-ink);
+}
+
+/* Boxed, so the rows read as the table the band heads rather than as a run of
+ * rows loose in the margin. The top edge is dropped where a band sits above it
+ * so the gold rule is the only line between the two. */
+.pk-rows {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: 0 0 2px 2px;
+  background: var(--panel);
+  overflow: hidden;
+}
+
+.pk-day + .pk-rows { border-top: 0; }
+
+/* --- One game ---
+ * confidence | matchup | drag anchor, with the result line spanning underneath
+ * when there is one.
+ *
+ * The confidence leads because it is what the row is worth and what the reader
+ * is arranging; the anchor trails because it is the instrument, not the
+ * content. Between them the matchup carries its own date and time, since the
+ * list is ordered by rank and no day header sits above it any more. */
+
+.pk-game {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) 40px;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: 0;
+  background: var(--panel);
+
+  /* Nothing on a row is text anyone wants to select, and a drag that starts a
+   * selection instead is the drag failing. On a phone a long press would also
+   * raise the copy/define callout over the board, so that goes too. The result
+   * line is opted back in below — a score is worth copying. */
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* The one part of a row that is prose rather than furniture. */
+.pk-state {
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+/* Deliberately flat: no zebra, no hover wash. Colour on this board means one
+ * of exactly two things — the side you took, and what it is worth — and a
+ * striped or highlighted row is a third thing competing with both for the same
+ * signal. The rows are told apart by a hairline and by their own internal
+ * structure instead. */
+.pk-rows .pk-game + .pk-game { border-top: 1px solid var(--hairline); }
+
+.pk-game.is-locked { opacity: 0.85; }
+
+/* Not in the ranking at all: no line was available, so there is nothing to
+ * grade a pick against. Listed after the board rather than hidden, because a
+ * missing row reads as a bug and this is a stated outcome. */
+.pk-off-list {
+  margin-top: 10px;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  background: var(--panel);
+}
+
+.pk-game.is-off {
+  display: block;
+  color: var(--text-5);
+  font-size: 13px;
+  font-style: italic;
+}
+
+/* --- Confidence ---
+ * A field, not a control. It shows the row's position as a number and the only
+ * way to change it is to move the row, so it takes no focus, opens no menu and
+ * cannot be typed into. */
+
+/* Blue, where the picked side is gold. The two were previously the same accent
+ * tint behind the same accent border, so the row's two pieces of state — which
+ * team, and what it is worth — were indistinguishable at a glance. They are
+ * different kinds of fact and now read as different kinds of fact.
+ *
+ * It is the brand navy, filled solid, and that choice is forced by light mode:
+ * the skin's --accent is gold in the dark but the link blue (#0065cc) in the
+ * light, so a blue confidence chip would be the exact colour of a picked side
+ * on a white page. --vi-navy and --vi-band-ink are brand constants — the same
+ * in both themes — so this pairing cannot collide with the accent whichever
+ * theme it lands in.
+ *
+ * A solid block against the picked side's tint-behind-a-1px-border also makes
+ * the two differ in treatment, not only in hue. */
+.pk-conf {
+  font-family: monospace;
+  font-size: 19px;
+  font-weight: 700;
+  text-align: center;
+  padding: 6px 0;
+  border-radius: 2px;
+  border: 1px solid var(--vi-navy);
+  background: var(--vi-navy);
+  color: var(--vi-band-ink);
+  user-select: none;
+}
+
+/* No side taken yet, so the number is what the row *would* be worth. Present
+ * but recessive — it is information, not a commitment. */
+.pk-conf.is-idle {
+  border-color: var(--hairline);
+  background: none;
+  color: var(--text-5);
+}
+
+.pk-conf.is-locked {
+  border-color: var(--hairline);
+  background: var(--panel-hi2);
+  color: var(--text-3);
+}
+
+/* --- The two sides --- */
+
+.pk-matchup {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+/* The separator and when the game is, stacked between the crests. */
+.pk-centre {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  min-width: 74px;
+  padding: 0 2px;
+}
+
+.pk-at {
+  font-family: monospace;
+  font-size: 12px;
+  color: var(--text-5);
+  line-height: 1.2;
+}
+
+.pk-date {
+  font-family: var(--vi-display);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--text-3);
+  white-space: nowrap;
+}
+
+.pk-time {
+  font-family: monospace;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-2);
+  white-space: nowrap;
+}
+
+/* The way out to the game's own page, under the kickoff it belongs with. Quiet
+ * by default and lit on hover: it is on every row of a sixteen-row board, and
+ * sixteen underlined links running down the middle of the matchups would read as
+ * the loudest thing on a page whose whole job is the two crests either side of
+ * it. It has to be reachable, not advertised.
+ *
+ * `position: relative` puts it above the sides it sits between — .pk-side is a
+ * big padded button on each shoulder, and without a stacking context of its own
+ * the last one painted takes the clicks along this seam. */
+.pk-view {
+  position: relative;
+  font-family: var(--vi-display);
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-5);
+  text-decoration: none;
+  white-space: nowrap;
+  padding: 1px 3px;
+  border-radius: 3px;
+}
+
+.pk-view:hover,
+.pk-view:focus-visible {
+  color: var(--vi-gold);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.pk-side {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  padding: 8px 6px;
+  font-family: inherit;
+  border-radius: 2px;
+  border: 1px solid var(--hairline);
+  background: var(--panel-hi);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.pk-side:hover:not(:disabled) { border-color: var(--hairline-hi); }
+
+.pk-side:disabled { cursor: default; }
+
+.pk-side.is-picked {
+  border-color: var(--accent-line);
+  background: var(--accent-soft);
+}
+
+.pk-side.is-picked .pk-abbr,
+.pk-side.is-picked .pk-line { color: var(--accent-2); }
+
+.pk-side.is-covered {
+  border-color: var(--good-line);
+  background: var(--good-tint);
+}
+
+.pk-logo {
+  width: 40px;
+  height: 40px;
+  flex: none;
+}
+
+.pk-meta {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 5px;
+  min-width: 0;
+}
+
+/* The one thing in the row that is a name rather than a measurement, so it
+ * takes the display face. Everything else here — the kickoff, the line, the
+ * confidence — is a number in a column and stays monospace, the same split the
+ * schedule board makes. */
+.pk-abbr {
+  font-family: var(--vi-display);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: var(--text);
+}
+
+.pk-line {
+  font-family: monospace;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-bright);
+  white-space: nowrap;
+}
+
+/* --- Drag anchor ---
+ * touch-action: none is the whole reason this works on a phone. Without it the
+ * browser claims the vertical gesture for scrolling before the first
+ * pointermove is delivered, and the row never moves. It is scoped to the
+ * handle, so the rest of the board scrolls normally. */
+
+.pk-drag {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid var(--hairline);
+  border-radius: 2px;
+  background: var(--panel-hi);
+  color: var(--text-4);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.pk-drag:hover { border-color: var(--vi-gold-line); color: var(--accent); }
+
+.pk-drag:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.pk-drag:active { cursor: grabbing; }
+
+.pk-drag.is-locked {
+  border-style: dashed;
+  background: none;
+  cursor: default;
+  font-size: 14px;
+}
+
+/* Three bars, drawn rather than set as a glyph so the target is the 40px
+ * button and not the size of a character inside it. */
+.pk-grip {
+  width: 16px;
+  height: 2px;
+  background: currentColor;
+  box-shadow: 0 -5px 0 currentColor, 0 5px 0 currentColor;
+}
+
+/* The row under the pointer, lifted out of flow and following it. The inline
+ * position/left/width/top are set by pkDragList; what belongs here is only how
+ * it looks while detached. */
+.pk-rows.is-reordering { cursor: grabbing; }
+
+/* overflow:hidden gives the board its rounded corners, and a fixed-position
+ * child is not clipped by it — but a UA that ever promoted this element to a
+ * containing block would clip the dragged row to the list. Cheap insurance for
+ * the duration of the gesture only. */
+.pk-rows.is-reordering { overflow: visible; }
+
+.pk-game.is-dragging {
+  z-index: 20;
+  background: var(--accent-soft);
+  box-shadow: 0 8px 24px var(--overlay);
+  outline: 1px solid var(--vi-gold-line);
+  pointer-events: none;      /* so the rows underneath answer elementFromPoint */
+}
+
+.pk-game.is-dragging .pk-drag { cursor: grabbing; }
+
+/* Holds the gap the lifted row left, so the rows below do not jump up by a row
+ * height the instant a drag starts. It is what actually moves through the list;
+ * the row itself is only put back into its slot on release. */
+.pk-placeholder {
+  border: 1px dashed var(--vi-gold-line);
+  background: var(--accent-faint);
+  border-radius: 2px;
+}
+
+/* --- State column --- */
+
+/* The result and the pool, on their own line under the matchup rather than
+ * squeezed into a trailing cell — there can be one chip per player, and they
+ * were wrapping into a column two characters wide. */
+.pk-state {
+  grid-column: 1 / -1;
+  font-family: monospace;
+  font-size: 12px;
+  color: var(--text-3);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  align-items: center;
+}
+
+.pk-lock { color: var(--text-5); }
+
+.pk-score { color: var(--text-4); }
+
+.pk-points {
+  font-family: var(--vi-display);
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 2px;
+}
+
+.pk-points.is-hit { background: var(--good-tint); color: var(--good); }
+.pk-points.is-miss { background: var(--bad-tint); color: var(--bad); }
+/* A push pays a flat +2 and costs nobody, so it is not red — but it is not the
+ * green of a call that landed either, and printing it in the hit colour would
+ * overstate what happened. A muted positive: the same neutral chip, with the
+ * number at full text weight so a "+2" does not read as disabled. */
+.pk-points.is-push { background: var(--surface-2); color: var(--text-2); }
+
+/* Another player's pick on a game that has kicked off. These only ever exist
+ * for locked games — the server does not send the others — so there is no
+ * "hidden" variant to style. */
+.pk-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  padding: 2px 7px;
+  border-radius: 2px;
+  border: 1px solid var(--hairline);
+  background: var(--panel-hi2);
+  font-family: var(--vi-display);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 11px;
+}
+
+/* Once the game is graded the chip says who was right, so the pool reads as a
+   result rather than as a list. */
+.pk-chip.is-hit { border-color: var(--good-line); background: var(--good-tint); }
+.pk-chip.is-miss { border-color: var(--bad-line); background: var(--bad-tint); }
+.pk-chip.is-push { opacity: 0.6; }
+
+.pk-chip-who { color: var(--text-4); }
+.pk-chip-pick { font-weight: 700; color: var(--text); }
+.pk-chip-conf { color: var(--accent-2); font-weight: 700; }
+
+/* --- Standings --- */
+
+.pk-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  background: var(--panel);
+}
+
+/* Built to the same specification as the prop board on /football/schedule/game
+ * (.go-table in styles/primary/game-odds.css), because it is the same object: a
+ * wide grid of figures with a pinned label column, read by finding a row and
+ * tracking across it. Two tables that do that job and look different are two
+ * dialects of one idea, and the reader pays for the translation.
+ *
+ * Separate borders with no spacing, so it still draws as one ruled grid: a
+ * collapsed border is painted by the *table*, so the gold rule under a pinned
+ * head scrolls away with the body and leaves the head sitting over bare rows. A
+ * separate border belongs to its cell and travels with it -- which matters more
+ * here than it does on the prop board, whose head does not stick at all. */
+.pk-table {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+  font-size: 13px;
+  /* Figures, so a column of them lines up on the digit rather than on the glyph
+   * width. The two label columns and the head opt back out below. */
+  font-family: monospace;
+  white-space: nowrap;
+}
+
+.pk-table th,
+.pk-table td {
+  padding: 6px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--hairline);
+}
+
+/* The column heads are the board's navy strip, gold-ruled — the same band the
+ * day headers and the card heads wear, so the three read as one system. */
+.pk-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--vi-navy);
+  border-bottom: 2px solid var(--vi-gold);
+  font-family: var(--vi-display);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+  color: var(--vi-band-ink);
+  text-align: right;
+}
+
+.pk-table tbody tr:last-child td { border-bottom: none; }
+
+.pk-table tbody tr:nth-child(even) { background: var(--zebra); }
+
+/* Your own row, marked once at the left edge of the table rather than once per
+ * cell. The bar is a margin drawn beside the row -- one mark saying "this one is
+ * yours" -- and on `td` it was drawn again inside every column, so a gold rule
+ * appeared between the rank and the name and between all eighteen weeks. Read
+ * across, that is not a marked row, it is a striped one.
+ *
+ * `:first-child` rather than `td.pk-rank`: the mark belongs to whatever column
+ * happens to be first, and both standings tables lead with the rank today. It is
+ * also the cell held at the left edge by the sticky rules below, so the bar
+ * stays on screen with the name when the week columns scroll past it -- which is
+ * the whole point of marking the row. */
+.pk-table tr.is-me td:first-child { box-shadow: inset 3px 0 0 var(--vi-gold); }
+
+/* Rank and player pin to the left edge. scripts/components/sticky-headers.js
+ * only stacks vertical offsets, so the horizontal pin is done here: eighteen
+ * week columns will never fit a phone, and a row scrolled sideways with no name
+ * on it is unreadable. Two columns, so the offset of the second is the width of
+ * the first. */
+.pk-table th.pk-rank,
+.pk-table td.pk-rank,
+.pk-table th.pk-who,
+.pk-table td.pk-who {
+  position: sticky;
+  z-index: 1;
+  /* The row's own colour, not a colour of its own. A pinned cell needs an
+   * opaque background or it drags whatever it scrolls over along with it -- but
+   * it must be opaque in the SAME paint as the row it belongs to, matched again
+   * for the zebra below.
+   *
+   * .go-pinned uses --surface for this and copying that token was a mistake: it
+   * is opaque against the prop board's card body, and against .pk-table-wrap's
+   * --panel it is a different colour. In dark theme the two are a rounding
+   * error apart and it looked fine; in light theme --surface is grey and --panel
+   * is white, so Rank and Player became a solid slab that ignored the striping
+   * of every row it was part of. The seam below is what marks the column as
+   * pinned -- that is the job, and a colour cannot do it without lying about
+   * which row the cell is in. */
+  background: var(--panel);
+  text-align: left;
+}
+
+/* The seam, on the last pinned column rather than the first: this is the edge
+ * the week columns travel under, and it is the line that says the columns to its
+ * left are held rather than scrolled. */
+.pk-table th.pk-who,
+.pk-table td.pk-who { border-right: 1px solid var(--border); }
+
+.pk-table th.pk-rank, .pk-table td.pk-rank { left: 0; width: 34px; }
+.pk-table th.pk-who, .pk-table td.pk-who { left: 34px; }
+
+.pk-table thead th.pk-rank,
+.pk-table thead th.pk-who {
+  z-index: 3;
+  background: var(--vi-navy);
+}
+
+.pk-table tbody tr:nth-child(even) td.pk-rank,
+.pk-table tbody tr:nth-child(even) td.pk-who { background: var(--zebra); }
+
+/* Monospace comes from the table now. */
+.pk-table td.pk-rank {
+  font-weight: 700;
+  color: var(--text-4);
+}
+
+/* The label on the row, not one of the numbers in it -- the display face against
+ * the table's monospace, exactly as .go-plc is on the prop board. */
+.pk-table td.pk-who {
+  font-family: var(--vi-display);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-hi);
+}
+
+.pk-table th.pk-wk a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.pk-table th.pk-wk a:hover { color: var(--vi-gold); }
+
+/* The one place colour carries data. --heat is a 0..1 share of the best score
+ * in that week's column, handed over by the view as a bare number; the wash is
+ * mixed here against the page so it re-colours with the theme. Normalised per
+ * column rather than against the week's theoretical maximum, so a low-scoring
+ * week still shows who won it. */
+.pk-table td.pk-wk {
+  font-family: monospace;
+  text-align: right;
+  color: var(--text-2);
+  background: color-mix(in srgb,
+    var(--heat-z-fill) calc(var(--heat, 0) * var(--heat-fill-max)),
+    transparent);
+}
+
+.pk-table td.pk-wk.is-none { color: var(--text-5); background: none; }
+
+/* A week that finished under water. It carries no heat — the wash only ranks
+ * the positive end — so the sign is the only thing left to say it, and a bare
+ * "-12" in body text is too easy to read as a 12. */
+.pk-table td.pk-wk.is-down { color: var(--bad); }
+
+.pk-table td.pk-total,
+.pk-table td.pk-correct,
+.pk-table td.pk-pending {
+  font-family: monospace;
+  text-align: right;
+}
+
+.pk-table td.pk-total {
+  font-weight: 700;
+  color: var(--text-bright);
+}
+
+.pk-table .pk-of { color: var(--text-5); }
+
+.pk-table td.pk-pending { color: var(--text-5); }
+
+/* --- Hub --- */
+
+/* A card is a board: navy strip across the head, gold rule under it, the
+ * content boxed below. Same shape as a day of games, one level up. */
+.pk-card {
+  margin-bottom: 16px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.pk-card h3 {
+  font-family: var(--vi-display);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--vi-band-ink);
+  background: var(--vi-navy);
+  border-bottom: 2px solid var(--vi-gold);
+  padding: 8px 12px;
+  margin: 0;
+}
+
+.pk-card > *:not(h3) { margin-left: 14px; margin-right: 14px; }
+.pk-card > *:first-of-type:not(h3) { margin-top: 14px; }
+.pk-card > *:last-child { margin-bottom: 14px; }
+
+.pk-week-line {
+  font-family: var(--vi-display);
+  font-size: 22px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-bright);
+  margin-bottom: 4px;
+}
+
+.pk-week-sub {
+  font-family: var(--vi-display);
+  font-size: 14px;
+  color: var(--text-4);
+  margin-bottom: 14px;
+}
+
+.pk-cta {
+  display: inline-block;
+  padding: 8px 20px;
+  font-family: var(--vi-display);
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  border-radius: 2px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  text-decoration: none;
+}
+
+.pk-cta:hover { background: var(--accent-hover); }
+
+.pk-cta.is-secondary {
+  background: none;
+  border: 1px solid var(--vi-gold-line);
+  color: var(--accent);
+}
+
+.pk-mini {
+  list-style: none;
+  font-size: 12px;
+}
+
+.pk-mini li {
+  display: grid;
+  grid-template-columns: 28px 1fr auto;
+  gap: 8px;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--hairline);
+}
+
+.pk-mini li:last-child { border-bottom: none; }
+
+.pk-mini-rank { font-family: monospace; color: var(--vi-gold); font-weight: 700; }
+.pk-mini-who { font-family: var(--vi-display); color: var(--text-bright); font-weight: 700; }
+.pk-mini-pts { font-family: monospace; font-weight: 700; color: var(--text-bright); }
+
+.pk-rules {
+  font-size: 14px;
+  line-height: 1.75;
+  color: var(--text-3);
+}
+
+.pk-rules li {
+  margin-left: 18px;
+  padding-left: 2px;
+}
+
+.pk-rules b { color: var(--text-bright); }
+
+/* --- Narrow screens ---
+ * The shape holds: confidence, matchup, anchor. Only the gutters, the crest
+ * and the type give ground, so a phone shows the same row rather than a
+ * different one — and the 40px anchor keeps its full size, because it is the
+ * one thing on the row that has to be hit with a thumb. */
+@media (max-width: 640px) {
+  .pk-game {
+    grid-template-columns: 34px minmax(0, 1fr) 38px;
+    gap: 6px;
+    padding: 8px 6px;
+  }
+
+  .pk-logo { width: 30px; height: 30px; }
+
+  .pk-abbr, .pk-line { font-size: 13px; }
+
+  .pk-conf { font-size: 16px; padding: 5px 0; }
+
+  .pk-centre { min-width: 62px; }
+
+  .pk-date { font-size: 10px; letter-spacing: 0.2px; }
+
+  .pk-time { font-size: 12px; }
+
+  .pk-view { font-size: 8.5px; letter-spacing: 0.3px; padding: 1px 2px; }
+
+  /* The gutters are what a phone takes back, the same 6px 7px the prop board
+   * drops to -- eighteen week columns at 12px of padding each is 90px of air a
+   * narrow screen cannot spend. */
+  .pk-table th, .pk-table td { padding: 6px 7px; }
+
+  .pk-drag { width: 38px; height: 44px; }
+
+  .pk-side { padding: 6px 2px; }
+
+  .pk-matchup { gap: 4px; }
+
+  .pk-bar-spacer { display: none; }
+
+  .pk-save { flex: 1 1 100%; }
+}

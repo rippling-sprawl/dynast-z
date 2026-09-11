@@ -1,0 +1,138 @@
+{
+  "slug": "oddsjam",
+  "url": "https://oddsjam.com/",
+  "assets": [
+    {
+      "file": "logo.png",
+      "src": "https://oddsjam.com/logo.png",
+      "bytes": 51370,
+      "content_type": "text/html; charset=utf-8"
+    },
+    {
+      "file": "favicon.ico",
+      "src": "https://oddsjam.com/favicon.ico",
+      "bytes": 15406,
+      "content_type": "image/x-icon"
+    }
+  ],
+  "palette": [
+    {
+      "hex": "#000000",
+      "count": 591
+    },
+    {
+      "hex": "#ffffff",
+      "count": 230
+    },
+    {
+      "hex": "#00193e",
+      "count": 52
+    },
+    {
+      "hex": "#6b8392",
+      "count": 35
+    },
+    {
+      "hex": "#deeaf1",
+      "count": 29
+    },
+    {
+      "hex": "#e95f6a",
+      "count": 26
+    },
+    {
+      "hex": "#32343a",
+      "count": 16
+    },
+    {
+      "hex": "#80cbc4",
+      "count": 15
+    },
+    {
+      "hex": "#12ca93",
+      "count": 13
+    },
+    {
+      "hex": "#f6f8fa",
+      "count": 13
+    },
+    {
+      "hex": "#f07178",
+      "count": 12
+    },
+    {
+      "hex": "#ff5370",
+      "count": 12
+    },
+    {
+      "hex": "#7aa2f7",
+      "count": 12
+    },
+    {
+      "hex": "#f9fafb",
+      "count": 12
+    }
+  ],
+  "meta": {
+    "og_image": "https://cdn.readme.io/og-image/create?type=reference&amp;title=Getting%20Started&amp;projectTitle=OpticOdds&amp;description=Welcome%20to%20the%20OpticOdds%20API%20%E2%80%94%20your%20all-in-one%20source%20for%20real-time%20and%20historical%20sports%20betting%20data.%20You%E2%80%99ll%20be%20up%20and%20running%20in%20no%20time!&amp;logoUrl=https%3A%2F%2Ffiles.readme.io%2F8b59670-logo-icon.svg&amp;color=%2300193e&amp;variant=light",
+    "site_name": "OpticOdds",
+    "og_description": "Welcome to the OpticOdds API \u2014 your all-in-one source for real-time and historical sports betting data. You\u2019ll be up and running in no time!"
+  },
+  "errors": [
+    "page: HTTP Error 403: Forbidden",
+    "retry asset og-image: HTTP Error 400: Bad Request",
+    "img logo.png: cannot identify image file '/Users/kyle/Desktop/Code/dynast-"
+  ],
+  "retry_notes": [
+    "https://oddsjam.com/odds-api -> HTTP Error 403: Forbidden",
+    "https://developer.oddsjam.com/ -> ok (196273 bytes)"
+  ],
+  "css_files": [
+    "https://cdn.readme.io/public/hub/web/main.24d9a910530a90262fbb.css",
+    "https://cdn.readme.io/public/hub/web/Containers-EndUserContainer.251247c3f24604f12123.css",
+    "https://cdn.readme.io/public/hub/web/ui-styles.64d7618c4cd30dcbf8b8.css",
+    "https://cdn.readme.io/public/hub/web/Header.f5ce1a113f3f421f7819.css"
+  ],
+  "image_palette": {
+    "favicon.ico": [
+      {
+        "hex": "#000b16",
+        "pct": 63.1
+      },
+      {
+        "hex": "#00a5e7",
+        "pct": 25.1
+      },
+      {
+        "hex": "#0084bb",
+        "pct": 1.4
+      },
+      {
+        "hex": "#002c42",
+        "pct": 0.8
+      },
+      {
+        "hex": "#004d6e",
+        "pct": 0.7
+      },
+      {
+        "hex": "#006e9a",
+        "pct": 0.4
+      }
+    ]
+  },
+  "fonts_resolved": [
+    "\"Apple Color Emoji\",\"Segoe UI Emoji\"",
+    "\"Font Awesome 6 Pro\"",
+    "\"Font Awesome 6 Pro\"\n *   - our packages/react/src/ui/API/Log/style.module.scss\n *   - customer cust",
+    "\"Font Awesome 7 Brands\"",
+    "\"Font Awesome 7 Duotone\"",
+    "\"Font Awesome 7 Pro\"",
+    "\"Helvetica Neue\",Helvetica,Arial,sans-serif",
+    "'Font Awesome 6 Brands'",
+    "'Font Awesome 6 Duotone'",
+    "'Font Awesome 6 Pro'",
+    "'ReadMe-Icons'",
+    "'ReadMe-Icons' !important"
+  ]
+}

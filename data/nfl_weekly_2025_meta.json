@@ -1,0 +1,29 @@
+{
+  "source": "Sleeper",
+  "season": 2025,
+  "weeks": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17
+  ],
+  "player_count": 704,
+  "player_weeks": 7638,
+  "size_bytes": 2028387,
+  "fetched_at": "2026-08-05T18:12:35+00:00",
+  "fetched_ts": 1785953555,
+  "url": "https://api.sleeper.app/v1/stats/nfl/regular/2025/{week}"
+}

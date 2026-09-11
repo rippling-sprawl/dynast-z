@@ -15,6 +15,7 @@ except ImportError:
 
 import http.server
 import json
+import math
 import os
 import re
 import hashlib
@@ -23,13 +24,25 @@ import secrets
 import subprocess
 import time
 import urllib.request
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from urllib.parse import urlparse, parse_qs
 
 PORT = 8000
 IS_VERCEL = os.environ.get("VERCEL") == "1"
 CACHE_DIR = "/tmp/dynast-z-cache" if IS_VERCEL else os.path.join(os.path.dirname(os.path.abspath(__file__)), "cache")
 CACHE_TTL = 129600  # 36 hours in seconds
+
+# Player-value curve. Each source's players are ranked by value and turned into
+# a percentile position p in [0, 1] (0 = best, 1 = worst); the percentiles a
+# player appears in are averaged, and the blended p is mapped onto a 0-VALUE_SCALE
+# grade via  value = SCALE * exp(-(TOP_DECAY * p + TAIL_DECAY * p**4)).
+#   - TOP_DECAY is a gentle, whole-field slope that sets how separated the top is.
+#   - TAIL_DECAY is a quartic term: negligible near the top, but it accelerates
+#     hard over the bottom third so those players collapse toward zero.
+# Together they keep elite players ahead while thoroughly de-emphasizing the tail.
+VALUE_SCALE = 100
+VALUE_TOP_DECAY = 5.5
+VALUE_TAIL_DECAY = 6.0
 
 KTC_URL = "https://keeptradecut.com/dynasty-rankings"
 FANTASYCALC_URL = "https://api.fantasycalc.com/values/current?isDynasty=true&numQbs=2&numTeams=12&ppr=1"
@@ -55,6 +68,9 @@ SUPABASE_URL = os.environ.get("SUPABASE_URL", "")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "")
 PBKDF2_ITERATIONS = 200_000
 MIN_PASSWORD_LEN = 8
+RESET_CODE_TTL_MINUTES = 30
+# No 0/O/1/I/L: these codes get read aloud or retyped off a screenshot.
+RESET_CODE_ALPHABET = "23456789ABCDEFGHJKMNPQRSTUVWXYZ"
 
 
 def supabase_request(path, method="GET", body=None, extra_headers=None):
@@ -70,7 +86,8 @@ def supabase_request(path, method="GET", body=None, extra_headers=None):
         for k, v in extra_headers.items():
             req.add_header(k, v)
     with urllib.request.urlopen(req) as resp:
-        return json.loads(resp.read())
+        raw = resp.read()          # PATCH/DELETE answer 204 with no body
+        return json.loads(raw) if raw else None
 
 
 def hash_password(password):
@@ -90,6 +107,46 @@ def verify_password(password, stored):
         return hmac.compare_digest(digest.hex(), hash_hex)
     except (ValueError, AttributeError):
         return False
+
+
+def q(value):
+    """Escape a PostgREST filter value. safe='' matters for timestamps, where a
+    bare '+' in the UTC offset would otherwise decode as a space."""
+    return urllib.request.quote(str(value), safe="")
+
+
+def new_reset_code():
+    raw = "".join(secrets.choice(RESET_CODE_ALPHABET) for _ in range(8))
+    return f"{raw[:4]}-{raw[4:]}"
+
+
+def hash_reset_code(code):
+    """Codes are stored as a digest only, so a dump of password_resets can't be
+    replayed. Normalized first, so '8f3k-92qx', '8F3K92QX' and ' 8F3K 92QX '
+    all redeem the same row."""
+    normalized = "".join(ch for ch in (code or "").upper() if ch.isalnum())
+    return hashlib.sha256(normalized.encode()).hexdigest()
+
+
+def retire_reset_codes(user_id):
+    """Burn every outstanding code for a user. Called when one is redeemed, when
+    a fresh one is issued, and when the password changes by any route — so at
+    most one code is ever live, and changing your password kills a code an admin
+    handed out while you still knew the old one."""
+    supabase_request(
+        f"password_resets?user_id=eq.{q(user_id)}&used_at=is.null",
+        method="PATCH",
+        body={"used_at": datetime.now(timezone.utc).isoformat()},
+    )
+
+
+def set_password(user_id, password):
+    supabase_request(
+        f"users?id=eq.{q(user_id)}",
+        method="PATCH",
+        body={"password_hash": hash_password(password)},
+    )
+    retire_reset_codes(user_id)
 
 
 def fetch_user(user_id):
@@ -120,6 +177,169 @@ def resolve_bets_user(headers, require_active):
         if not user or user.get("status") is not True:
             return None, (403, {"error": "Account is inactive"})
     return user_id, None
+
+
+_action_api = None
+
+
+def action_api():
+    """Load api/action.py so dev renders the book exactly as production does.
+
+    Loaded by path and lazily for the same reasons as bun_notes_api() below, plus
+    one of its own: importing it inserts api/ on sys.path so that `from _action
+    import render` resolves, which is a side effect worth paying only when
+    somebody actually opens the book."""
+    global _action_api
+    if _action_api is None:
+        import importlib.util
+        path = os.path.join(DATA_DIR, "api", "action.py")
+        spec = importlib.util.spec_from_file_location("action_api", path)
+        _action_api = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(_action_api)
+    return _action_api
+
+
+# /football/schedule/game/<balldontlie game id>. Anchored and digits-only so it
+# cannot swallow a future /football/schedule/... route.
+GAME_PAGE_RE = re.compile(r"^/football/schedule/game/[0-9]{1,12}/?$")
+
+# /football/pickem/picks and /football/pickem/picks/<week>. The week is optional
+# so a hand-typed URL without one still lands on the page, which resolves "this
+# week" itself. Digits-only and capped at two, matching the rewrite in
+# vercel.json.
+PICKEM_PICKS_RE = re.compile(r"^/football/pickem/picks(?:/[0-9]{1,2})?/?$")
+
+# /football/survivor/pick and /football/survivor/pick/<week>. Same shape and
+# same reasoning as the Pick 'Em route above: the week is optional so a
+# hand-typed URL without one still lands on the page, which resolves "this
+# week" itself.
+SURVIVOR_PICK_RE = re.compile(r"^/football/survivor/pick(?:/[0-9]{1,2})?/?$")
+
+_game_odds_api = None
+
+
+def game_odds_api():
+    """Load api/game-odds.py so dev reads the game bundles exactly as production
+    does. By path because the filename has a hyphen in it, and lazily because a
+    dev who never opens /game-odds should not pay for the import."""
+    global _game_odds_api
+    if _game_odds_api is None:
+        import importlib.util
+        path = os.path.join(DATA_DIR, "api", "game-odds.py")
+        spec = importlib.util.spec_from_file_location("game_odds_api", path)
+        _game_odds_api = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(_game_odds_api)
+    return _game_odds_api
+
+
+_bun_notes_api = None
+
+
+def bun_notes_api():
+    """Load api/bun-notes.py for its note validation, so this local mirror and
+    the deployed function can never disagree about what a valid note is. Loaded
+    by path because the filename has a hyphen in it, and lazily because a dev
+    who never opens Baker's Buns should not pay for it."""
+    global _bun_notes_api
+    if _bun_notes_api is None:
+        import importlib.util
+        path = os.path.join(DATA_DIR, "api", "bun-notes.py")
+        spec = importlib.util.spec_from_file_location("bun_notes_api", path)
+        _bun_notes_api = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(_bun_notes_api)
+    return _bun_notes_api
+
+
+_pickem_api = None
+_pickem_standings_api = None
+
+
+def pickem_api():
+    """Load api/pickem.py so dev serves the Pick 'Em week board through exactly
+    the code production runs. Lazily, because a dev who never opens Pick 'Em
+    should not pay for the import.
+
+    This mirror delegates rather than re-implementing: the confidence rule, the
+    kickoff lock and the reveal filter are one implementation with two callers,
+    which is the only way the two runtimes cannot drift on the one rule where
+    drifting means leaking somebody's picks. Note that it is also why the
+    return=representation quirk the /api/bets mirror needs does not apply here
+    — these handlers use api/_pickem/store.py's own supabase_request, not the
+    shared one at the top of this file, and that one tolerates an empty body."""
+    global _pickem_api
+    if _pickem_api is None:
+        # No sys.path work here: api/pickem.py inserts its own directory before
+        # importing _pickem, and that insert is __file__-relative, so it lands
+        # on <repo>/api whichever runtime loaded it.
+        import importlib.util
+        path = os.path.join(DATA_DIR, "api", "pickem.py")
+        spec = importlib.util.spec_from_file_location("pickem_api", path)
+        _pickem_api = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(_pickem_api)
+    return _pickem_api
+
+
+def pickem_standings_api():
+    """Load api/pickem-standings.py. By path because the filename has a hyphen
+    in it, and lazily for the same reason as above."""
+    global _pickem_standings_api
+    if _pickem_standings_api is None:
+        import importlib.util
+        path = os.path.join(DATA_DIR, "api", "pickem-standings.py")
+        spec = importlib.util.spec_from_file_location("pickem_standings_api", path)
+        _pickem_standings_api = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(_pickem_standings_api)
+    return _pickem_standings_api
+
+
+_survivor_api = None
+_survivor_standings_api = None
+
+
+def survivor_api():
+    """Load api/survivor.py so dev serves the Survivor board through exactly the
+    code production runs. Lazily, for the reason pickem_api() gives.
+
+    This mirror delegates rather than re-implementing, and here that is not
+    merely tidy: the elimination walk, the used-team rule and the reveal filter
+    are the whole game, and a second implementation of any of them would be a
+    second set of answers to who is still alive."""
+    global _survivor_api
+    if _survivor_api is None:
+        # No sys.path work here: api/survivor.py inserts its own directory
+        # before importing _survivor, and that insert is __file__-relative, so
+        # it lands on <repo>/api whichever runtime loaded it.
+        import importlib.util
+        path = os.path.join(DATA_DIR, "api", "survivor.py")
+        spec = importlib.util.spec_from_file_location("survivor_api", path)
+        _survivor_api = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(_survivor_api)
+    return _survivor_api
+
+
+def survivor_standings_api():
+    """Load api/survivor-standings.py. By path because the filename has a hyphen
+    in it, and lazily for the same reason as above."""
+    global _survivor_standings_api
+    if _survivor_standings_api is None:
+        import importlib.util
+        path = os.path.join(DATA_DIR, "api", "survivor-standings.py")
+        spec = importlib.util.spec_from_file_location("survivor_standings_api", path)
+        _survivor_standings_api = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(_survivor_standings_api)
+    return _survivor_standings_api
+
+
+def resolve_notes_actor(headers):
+    """Baker's Buns notes are a published, global store: anyone may read them,
+    any active account may add to them, and a note belongs to whoever filed it.
+    Returns (user_id, is_admin, error) — the ownership check itself is
+    api.may_write, against the authors api.fetch_authors reads back.
+
+    Delegated to the deployed function so the two can never disagree about who
+    may write. No audit-target indirection: a note's owner writes it directly,
+    and an admin can already edit any of them."""
+    return bun_notes_api().resolve_actor(headers.get("X-User-Id"))
 
 
 def read_cache(name, ttl=None):
@@ -153,6 +373,21 @@ def http_fetch(url):
     return result.stdout
 
 
+def extract_ktc_players(html):
+    """KTC embeds its rankings payload in the page. It used to be a literal
+    `var playersArray = [...]`; it now ships as a JSON script tag the page
+    parses at runtime. Try the current shape first, fall back to the old one so
+    a revert on their end doesn't break us."""
+    match = re.search(
+        r"<script[^>]*id=[\"']ktc-players[\"'][^>]*>(.*?)</script>", html, re.DOTALL
+    )
+    if not match:
+        match = re.search(r"var\s+playersArray\s*=\s*(\[.*?\]);\s*\n", html, re.DOTALL)
+    if not match:
+        raise RuntimeError("Could not find playersArray in KTC page")
+    return match.group(1).strip()
+
+
 def fetch_ktc():
     cached = read_cache("ktc.json")
     if cached is not None:
@@ -160,10 +395,7 @@ def fetch_ktc():
         return cached
     print("Fetching fresh KTC data...")
     html = http_fetch(KTC_URL)
-    match = re.search(r"var\s+playersArray\s*=\s*(\[.*?\]);\s*\n", html, re.DOTALL)
-    if not match:
-        raise RuntimeError("Could not find playersArray in KTC page")
-    data = json.loads(match.group(1))
+    data = json.loads(extract_ktc_players(html))
     write_cache("ktc.json", data)
     print("KTC data complete.")
     return data
@@ -219,6 +451,23 @@ def norm_pos(pos):
     return "PICK" if pos == "RDP" else pos
 
 
+# Value sources use their own team codes; canonicalize to Sleeper's convention
+# (Sleeper is what player resolution joins against).
+_TEAM_ALIASES = {
+    "GBP": "GB", "JAC": "JAX", "KCC": "KC", "LVR": "LV",
+    "NEP": "NE", "NOS": "NO", "SFO": "SF", "TBB": "TB",
+}
+
+
+def normalize_team(team):
+    """Canonicalize a team code to Sleeper's convention. Empty/None and 'FA'
+    both mean free agent -> 'FA'. Not for picks (they have no team)."""
+    t = (team or "").strip().upper()
+    if not t or t == "FA":
+        return "FA"
+    return _TEAM_ALIASES.get(t, t)
+
+
 _SUFFIXES = re.compile(r"\s+(Jr\.?|Sr\.?|III|II|IV|V)$", re.IGNORECASE)
 _DOTTED_INITIALS = re.compile(r"\b([A-Z])\.")
 
@@ -238,10 +487,11 @@ def normalize_ktc(raw):
         value = sf.get("value", 0)
         if name and value:
             key = norm_name(name)
+            pos = norm_pos(p.get("position", ""))
             players[key] = {
                 "name": key,
-                "position": norm_pos(p.get("position", "")),
-                "team": p.get("team", ""),
+                "position": pos,
+                "team": "" if pos == "PICK" else normalize_team(p.get("team", "")),
                 "value": value,
             }
     return players
@@ -255,10 +505,11 @@ def normalize_fc(raw):
         value = entry.get("value", 0)
         if name and value:
             key = norm_name(name)
+            pos = norm_pos(p.get("position", ""))
             players[key] = {
                 "name": key,
-                "position": norm_pos(p.get("position", "")),
-                "team": p.get("maybeTeam", ""),
+                "position": pos,
+                "team": "" if pos == "PICK" else normalize_team(p.get("maybeTeam", "")),
                 "value": value,
             }
     return players
@@ -273,6 +524,37 @@ def load_fp():
         return json.load(f)
 
 
+_PICK_TIER_RE = re.compile(r"^(\d{4})\s+(Early|Mid|Late)\s+(\d+(?:st|nd|rd|th))$")
+
+
+def _fill_missing_mid_picks(players):
+    """FantasyPros publishes 2nd/3rd-round picks in only two tiers (Early/Late),
+    while KTC and our internal model use three (Early/Mid/Late). Left alone, an
+    Early pick present in FP is blended across a different set of sources than the
+    Mid pick FP omits, which can invert their ranking (e.g. Mid 2nd scoring above
+    Early 2nd). Synthesize the missing Mid tier by interpolating between Early and
+    Late so every tier is covered by every source and the merge stays monotonic."""
+    grouped = {}  # (year, ordinal) -> {tier: key}
+    for key, p in players.items():
+        m = _PICK_TIER_RE.match(key)
+        if m:
+            year, tier, ordinal = m.groups()
+            grouped.setdefault((year, ordinal), {})[tier] = key
+    for (year, ordinal), tiers in grouped.items():
+        if "Mid" in tiers or "Early" not in tiers or "Late" not in tiers:
+            continue
+        early = players[tiers["Early"]]
+        late = players[tiers["Late"]]
+        key = f"{year} Mid {ordinal}"
+        players[key] = {
+            "name": key,
+            "position": early["position"],
+            "team": early["team"],
+            "value": (early["value"] + late["value"]) / 2,
+        }
+    return players
+
+
 def normalize_fp(raw):
     """Normalize FantasyPros data into {name: {name, position, team, value}} dict."""
     players = {}
@@ -281,26 +563,24 @@ def normalize_fp(raw):
         value = p.get("value", 0)
         if name and value:
             key = norm_name(name)
+            pos = p.get("position", "")
             players[key] = {
                 "name": key,
-                "position": p.get("position", ""),
-                "team": p.get("team", ""),
+                "position": pos,
+                "team": "" if pos == "PICK" else normalize_team(p.get("team", "")),
                 "value": value,
             }
-    return players
+    return _fill_missing_mid_picks(players)
 
 
-def compute_z_scores(players_dict):
-    """Convert raw values to z-scores for a single source's player dict."""
-    values = [p["value"] for p in players_dict.values()]
-    if len(values) < 2:
-        return {name: 0.0 for name in players_dict}
-    mean = sum(values) / len(values)
-    variance = sum((v - mean) ** 2 for v in values) / len(values)
-    std = variance ** 0.5
-    if std == 0:
-        return {name: 0.0 for name in players_dict}
-    return {name: (p["value"] - mean) / std for name, p in players_dict.items()}
+def compute_percentiles(players_dict):
+    """Rank a single source's players by value and return each player's
+    percentile position in [0, 1] (0 = best, 1 = worst)."""
+    order = sorted(players_dict.items(), key=lambda kv: -kv[1]["value"])
+    n = len(order)
+    if n == 1:
+        return {order[0][0]: 0.0}
+    return {name: i / (n - 1) for i, (name, _) in enumerate(order)}
 
 
 def fetch_sleeper_players():
@@ -357,31 +637,63 @@ def fetch_league_picks(league_id):
 
 
 _ORDINALS = {1: "1st", 2: "2nd", 3: "3rd", 4: "4th", 5: "5th", 6: "6th", 7: "7th"}
+_ORDINAL_TO_ROUND = {v: k for k, v in _ORDINALS.items()}
+
+
+def canonical_pick_key(season, rd, tier):
+    """One canonical identifier for a rookie draft pick, e.g. '2026|1|Early'.
+
+    Shared by the value pool and the roster views so both sides match picks the
+    same way instead of via two different name-variant heuristics. `tier` is
+    'Early' | 'Mid' | 'Late'.
+    """
+    return f"{int(season)}|{int(rd)}|{tier}"
+
+
+def pick_tier_from_slot(slot, total_rosters):
+    """Bucket a draft slot (1-based) into Early/Mid/Late by thirds, or None if
+    the slot is unknown (e.g. a future season whose draft order isn't set)."""
+    if not slot:
+        return None
+    third = max(total_rosters // 3, 1)
+    if slot <= third:
+        return "Early"
+    if slot <= third * 2:
+        return "Mid"
+    return "Late"
+
+
+def parse_pick_name(name):
+    """Parse a value-source pick name like '2026 Early 1st' into a canonical
+    pick key, or None if it isn't a tiered pick. Lets the pool index its picks
+    under the same keys the roster views look them up by."""
+    m = _PICK_TIER_RE.match(name)
+    if not m:
+        return None
+    season, tier, ordinal = m.groups()
+    rd = _ORDINAL_TO_ROUND.get(ordinal)
+    if not rd:
+        return None
+    return canonical_pick_key(season, rd, tier)
 
 
 def _pick_name_variants(season, rd, slot, total_rosters):
-    """Return a list of name variants to try matching against z_lookup, best first."""
+    """Return a list of name variants to try matching against z_lookup, best first.
+
+    Legacy fallback for picks the canonical-key lookup misses.
+    """
     ordinal = _ORDINALS.get(rd, f"{rd}th")
     names = []
     if slot:
         names.append(f"{season} Pick {rd}.{slot:02d}")
-    third = max(total_rosters // 3, 1)
-    if slot:
-        if slot <= third:
-            tier = "Early"
-        elif slot <= third * 2:
-            tier = "Mid"
-        else:
-            tier = "Late"
-        names.append(f"{season} {tier} {ordinal}")
-    else:
-        names.append(f"{season} Mid {ordinal}")
+    tier = pick_tier_from_slot(slot, total_rosters)
+    names.append(f"{season} {tier or 'Mid'} {ordinal}")
     names.append(f"{season} {ordinal}")
     return names
 
 
 def build_picks_for_roster(roster_id, rosters, users, league, traded_picks, draft_order, z_lookup,
-                           completed_seasons=()):
+                           completed_seasons=(), pick_lookup=None):
     """Compute all draft picks owned by a roster and return as player-like dicts.
 
     Seasons whose draft is already complete are skipped — those picks have become
@@ -426,19 +738,21 @@ def build_picks_for_roster(roster_id, rosters, users, league, traded_picks, draf
                 owner_uid = roster_owner.get(orig_rid)
                 slot = user_slot.get(owner_uid) if owner_uid else None
                 pick_slot = slot if season == current_season else None
-                variants = _pick_name_variants(str(season), rd, pick_slot, total_rosters)
                 # Display name: include original team label if traded
                 ordinal = _ORDINALS.get(rd, f"{rd}th")
                 if orig_rid != roster_id:
                     display = f"{season} {ordinal} ({roster_label(orig_rid)})"
                 else:
                     display = f"{season} {ordinal}"
-                # Try to match z_lookup
-                z = None
-                for v in variants:
-                    z = z_lookup.get(norm_name(v))
-                    if z:
-                        break
+                # Match values by canonical pick key (same key the pool indexes
+                # under); fall back to legacy name-variant matching on a miss.
+                tier = pick_tier_from_slot(pick_slot, total_rosters) or "Mid"
+                z = (pick_lookup or {}).get(canonical_pick_key(season, rd, tier))
+                if z is None:
+                    for v in _pick_name_variants(str(season), rd, pick_slot, total_rosters):
+                        z = z_lookup.get(norm_name(v))
+                        if z:
+                            break
                 pick_data = {
                     "name": display,
                     "position": "PICK",
@@ -727,8 +1041,10 @@ def build_team_roster(league_id, roster_id):
     rosters, users, league = fetch_league_data(league_id)
     sleeper_players = fetch_sleeper_players()
 
-    # Build z-score lookup from trade calculator data
+    # Build value lookups from trade calculator data: z_lookup keyed by
+    # normalized name (players), pick_lookup keyed by canonical pick key (picks).
     z_lookup = {}
+    pick_lookup = {}
     try:
         ktc_raw = fetch_ktc()
         fc_raw = fetch_fc()
@@ -742,8 +1058,12 @@ def build_team_roster(league_id, roster_id):
             ("fantasypros.com", fp),
         ):
             z_lookup[p["name"]] = p
+            if p["position"] == "PICK":
+                key = parse_pick_name(p["name"])
+                if key:
+                    pick_lookup[key] = p
     except Exception:
-        pass  # z-scores are a bonus, not required
+        pass  # values are a bonus, not required
 
     # Find the roster by roster_id
     target_roster = None
@@ -773,8 +1093,9 @@ def build_team_roster(league_id, roster_id):
             continue
         name = f"{sp.get('first_name', '')} {sp.get('last_name', '')}".strip()
         position = norm_pos(sp.get("position", ""))
-        team = sp.get("team", "") or ""
+        team = normalize_team(sp.get("team"))
         player_data = {
+            "player_id": pid,
             "name": name,
             "position": position,
             "team": team,
@@ -793,7 +1114,7 @@ def build_team_roster(league_id, roster_id):
         traded_picks, draft_order, completed_seasons = fetch_league_picks(league_id)
         picks = build_picks_for_roster(
             int(roster_id), rosters, users, league, traded_picks, draft_order, z_lookup,
-            completed_seasons,
+            completed_seasons, pick_lookup,
         )
         players.extend(picks)
     except Exception:
@@ -813,14 +1134,14 @@ def merge_players(*source_pairs):
 
     Each source_pair is ("source_name", {name: {name, position, team, value}}).
     """
-    # Compute z-scores per source
-    z_maps = []
+    # Turn each source's raw values into percentiles (0 = best, 1 = worst)
+    pct_maps = []
     for label, players_dict in source_pairs:
-        z_maps.append((label, players_dict, compute_z_scores(players_dict)))
+        pct_maps.append((label, players_dict, compute_percentiles(players_dict)))
 
     # Collect all player names
     all_names = set()
-    for _, players_dict, _ in z_maps:
+    for _, players_dict, _ in pct_maps:
         all_names |= players_dict.keys()
 
     merged = []
@@ -828,16 +1149,20 @@ def merge_players(*source_pairs):
         position = None
         team = None
         sources = {}
-        z_scores = []
-        for label, players_dict, z_dict in z_maps:
+        pcts = []
+        for label, players_dict, pct_dict in pct_maps:
             p = players_dict.get(name)
             if p:
                 if position is None:
                     position = p["position"]
                     team = p["team"]
                 sources[label] = p["value"]
-                z_scores.append(z_dict[name])
-        aggregate = round(sum(z_scores) / len(z_scores), 3)
+                pcts.append(pct_dict[name])
+        # Average the percentiles a player appears in, then map onto the value curve
+        pct = sum(pcts) / len(pcts)
+        aggregate = round(
+            VALUE_SCALE * math.exp(-(VALUE_TOP_DECAY * pct + VALUE_TAIL_DECAY * pct ** 4)), 2
+        )
         merged.append({
             "name": name,
             "position": position,
@@ -849,7 +1174,222 @@ def merge_players(*source_pairs):
     return merged
 
 
+FANTASY_POSITIONS = {"QB", "RB", "WR", "TE", "K"}
+
+
+def build_player_resolver():
+    """Build a name -> Sleeper player index for resolving value-pool entries to
+    stable player_ids.
+
+    The value sources (KTC/FantasyCalc/FantasyPros) identify players by name
+    only, so resolving to a Sleeper player_id is still a name lookup at its core
+    — but doing it once here lets everything downstream (rookie flag, dedup,
+    roster cross-referencing) key on the ID instead of on name+position.
+
+    Returns (index, ok) where index maps norm_name -> list of compact Sleeper
+    records; ok is False if Sleeper data was unavailable. Restricted to fantasy
+    positions to cut collisions with the DB's thousands of inactive/IDP entries.
+    """
+    try:
+        sleeper_players = fetch_sleeper_players()
+    except Exception:
+        return {}, False
+    index = {}
+    for pid, sp in sleeper_players.items():
+        if not isinstance(sp, dict):
+            continue
+        pos = norm_pos(sp.get("position", "") or "")
+        if pos not in FANTASY_POSITIONS:
+            continue
+        name = f"{sp.get('first_name', '')} {sp.get('last_name', '')}".strip()
+        if not name:
+            continue
+        index.setdefault(norm_name(name), []).append({
+            "player_id": pid,
+            "position": pos,
+            "team": normalize_team(sp.get("team")),
+            "years_exp": sp.get("years_exp"),
+            "active": bool(sp.get("active")),
+        })
+    return index, True
+
+
+def resolve_player(index, name, position, team):
+    """Resolve a value-pool entry to a single Sleeper record, or None if there's
+    no unambiguous match. Disambiguates same-name players by position, then team
+    (the only signals the value sources carry); a genuinely ambiguous entry —
+    same name, position, and team — stays unresolved rather than guess."""
+    candidates = index.get(norm_name(name))
+    if not candidates:
+        return None
+    if len(candidates) == 1:
+        return candidates[0]
+    pos = norm_pos(position or "")
+    pool = [c for c in candidates if c["position"] == pos] or candidates
+    if len(pool) == 1:
+        return pool[0]
+    team_c = normalize_team(team)
+    if team_c != "FA":
+        by_team = [c for c in pool if c["team"] == team_c]
+        if len(by_team) == 1:
+            return by_team[0]
+        if by_team:
+            pool = by_team
+    # Last resort: a single active candidate breaks the remaining tie.
+    active = [c for c in pool if c["active"]]
+    return active[0] if len(active) == 1 else None
+
+
+### Baker's Oven ###############################################################
+# Resolving board rows to Sleeper player_ids happens once, at CSV upload, so the
+# live draft path is an exact ID match and no fuzzy matching can fail mid-draft.
+
+# FantasyPros calls team defenses "DST", Sleeper calls them "DEF". Sleeper also
+# uses the team abbreviation itself as the defense's player_id ("SEA"), so
+# defenses resolve by team code and never touch the name index.
+_DEF_POSITIONS = {"DEF", "DST", "D/ST", "DS"}
+
+# Team defenses are commonly written as a city or full team name in a hand-built
+# board ("Seattle", "Seattle Seahawks", "Seahawks"); map the nickname/city back
+# to Sleeper's abbreviation.
+_DEF_NAME_HINTS = {
+    "cardinals": "ARI", "arizona": "ARI", "falcons": "ATL", "atlanta": "ATL",
+    "ravens": "BAL", "baltimore": "BAL", "bills": "BUF", "buffalo": "BUF",
+    "panthers": "CAR", "carolina": "CAR", "bears": "CHI", "chicago": "CHI",
+    "bengals": "CIN", "cincinnati": "CIN", "browns": "CLE", "cleveland": "CLE",
+    "cowboys": "DAL", "dallas": "DAL", "broncos": "DEN", "denver": "DEN",
+    "lions": "DET", "detroit": "DET", "packers": "GB", "green bay": "GB",
+    "texans": "HOU", "houston": "HOU", "colts": "IND", "indianapolis": "IND",
+    "jaguars": "JAX", "jacksonville": "JAX", "chiefs": "KC", "kansas city": "KC",
+    "raiders": "LV", "las vegas": "LV", "chargers": "LAC", "rams": "LAR",
+    "dolphins": "MIA", "miami": "MIA", "vikings": "MIN", "minnesota": "MIN",
+    "patriots": "NE", "new england": "NE", "saints": "NO", "new orleans": "NO",
+    "giants": "NYG", "jets": "NYJ", "eagles": "PHI", "philadelphia": "PHI",
+    "steelers": "PIT", "pittsburgh": "PIT", "49ers": "SF", "niners": "SF",
+    "san francisco": "SF", "seahawks": "SEA", "seattle": "SEA",
+    "buccaneers": "TB", "bucs": "TB", "tampa bay": "TB", "titans": "TEN",
+    "tennessee": "TEN", "commanders": "WAS", "washington": "WAS",
+}
+
+
+def _loose_name(name):
+    """Aggressive name key for hand-typed board entries: lowercase, suffixes and
+    all punctuation removed. Only used as a fallback after norm_name() misses —
+    norm_name() itself is left alone because the trade calculator depends on its
+    exact behavior."""
+    return re.sub(r"[^a-z0-9]", "", norm_name(name or "").lower())
+
+
+def resolve_defense(name, team):
+    """Resolve a team defense to Sleeper's player_id (the team abbreviation)."""
+    code = normalize_team(team)
+    if code != "FA":
+        return code
+    key = (name or "").strip().lower()
+    if key in _DEF_NAME_HINTS:
+        return _DEF_NAME_HINTS[key]
+    # Fall back to any nickname/city appearing in the string ("Seattle D/ST").
+    for hint, abbr in _DEF_NAME_HINTS.items():
+        if hint in key:
+            return abbr
+    guess = normalize_team(name)
+    return guess if guess != "FA" else None
+
+
+def resolve_board_players(entries):
+    """Resolve board rows to Sleeper player_ids.
+
+    Takes [{name, pos, team}, ...] and returns one result per entry, in order,
+    with player_id set to None when no unambiguous match exists. Unmatched rows
+    are always returned rather than dropped, so the UI can name them.
+    """
+    index, ok = build_player_resolver()
+    if not ok:
+        raise RuntimeError("Sleeper player data unavailable")
+
+    # Loose index built once, consulted only when the strict pass misses.
+    loose = {}
+    for norm, candidates in index.items():
+        loose.setdefault(re.sub(r"[^a-z0-9]", "", norm.lower()), []).extend(candidates)
+
+    results = []
+    for entry in entries:
+        name = (entry.get("name") or "").strip()
+        pos = (entry.get("pos") or "").strip().upper()
+        team = (entry.get("team") or "").strip()
+
+        if not name:
+            results.append({"player_id": None, "reason": "empty name"})
+            continue
+
+        if pos in _DEF_POSITIONS:
+            pid = resolve_defense(name, team)
+            results.append({
+                "player_id": pid, "position": "DEF", "team": pid,
+                "reason": None if pid else "unknown defense",
+            })
+            continue
+
+        match = resolve_player(index, name, pos, team)
+        if not match:
+            candidates = loose.get(_loose_name(name)) or []
+            if pos:
+                narrowed = [c for c in candidates if c["position"] == norm_pos(pos)]
+                if narrowed:
+                    candidates = narrowed
+            if len(candidates) == 1:
+                match = candidates[0]
+            elif candidates:
+                active = [c for c in candidates if c.get("active")]
+                match = active[0] if len(active) == 1 else None
+
+        if match:
+            results.append({
+                "player_id": match["player_id"],
+                "position": match["position"],
+                "team": match["team"],
+                "rookie": match.get("years_exp") == 0,
+                "reason": None,
+            })
+        else:
+            results.append({"player_id": None, "reason": "no unambiguous match"})
+
+    return results
+
+
+def rookie_keys_from_resolver(index):
+    """Fallback rookie set ('normname|POS') derived from the resolver index, for
+    pool entries that don't resolve to a unique player_id. One DB pass, same
+    name+position signal the pool used before IDs."""
+    keys = set()
+    for norm, candidates in index.items():
+        for c in candidates:
+            if c.get("years_exp") == 0:
+                keys.add(f"{norm}|{c['position']}")
+    return keys
+
+
 class Handler(http.server.SimpleHTTPRequestHandler):
+    # Mirror vercel.json: HTML is no-store so a refresh always gets the current
+    # build. Locally we extend that to /styles and /scripts too, because dev
+    # serves them unhashed (build.py only runs on deploy) and a cached copy
+    # under an unversioned URL would survive an edit.
+    NO_STORE_PREFIXES = ("/views/", "/styles/", "/scripts/")
+
+    def send_head(self):
+        # Only static serving reaches send_head; the /api branches in do_GET
+        # write their own headers and set their own Cache-Control.
+        self._no_store = self.path.startswith(self.NO_STORE_PREFIXES)
+        try:
+            return super().send_head()
+        finally:
+            self._no_store = False
+
+    def end_headers(self):
+        if getattr(self, "_no_store", False):
+            self.send_header("Cache-Control", "no-store")
+        super().end_headers()
+
     def do_GET(self):
         if self.path == "/api/players":
             self.send_response(200)
@@ -870,6 +1410,19 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     ("fantasycalc.com", fc),
                     ("fantasypros.com", fp),
                 )
+                resolver, resolver_ok = build_player_resolver()
+                rookie_fallback = rookie_keys_from_resolver(resolver) if resolver_ok else set()
+                for p in players:
+                    match = resolve_player(resolver, p["name"], p["position"], p["team"])
+                    if match:
+                        # Resolved to a stable Sleeper player_id: flag rookies the
+                        # same ID-based way the roster views do (years_exp == 0).
+                        p["player_id"] = match["player_id"]
+                        p["rookie"] = match.get("years_exp") == 0
+                    else:
+                        # Unresolved (ambiguous name or Sleeper down): fall back to
+                        # the name+position rookie signal so it isn't lost.
+                        p["rookie"] = f"{p['name']}|{p['position']}" in rookie_fallback
                 self.wfile.write(json.dumps(players).encode())
             except Exception as e:
                 self.wfile.write(json.dumps({"error": str(e)}).encode())
@@ -963,6 +1516,125 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     self._json_response(200, {r["data_key"]: r["data"] for r in rows})
             except Exception as e:
                 self._json_response(500, {"error": str(e)})
+        elif self.path.startswith("/api/bun-notes"):
+            # Public: the notes are published reading, and the page renders them
+            # for signed-out visitors.
+            try:
+                params = parse_qs(urlparse(self.path).query, keep_blank_values=True)
+                query = "bun_notes?select=data&order=created_at"
+                if "team" in params:
+                    team = (params["team"][0] or "").upper()
+                    query += "&team=eq." + urllib.request.quote(team)
+                rows = supabase_request(query)
+                self._json_response(200, [r["data"] for r in (rows or [])])
+            except Exception as e:
+                self._json_response(500, {"error": str(e)})
+        # Exact-path, not startswith, and standings first: "/api/survivor-
+        # standings" starts with "/api/survivor", so a prefix test here would
+        # serve every standings request the week board instead. Same ordering
+        # and same reason as the Pick 'Em pair below.
+        elif self.path.split("?")[0] == "/api/survivor-standings":
+            api = survivor_standings_api()
+            store = api.store
+            user_id, err = store.resolve_actor(self.headers.get("X-User-Id"),
+                                               require_active=False)
+            if err:
+                self._json_response(*err)
+                return
+            params = parse_qs(urlparse(self.path).query)
+            now = store.now_utc()
+            raw_season = (params.get("season") or [""])[0].strip()
+            try:
+                season = int(raw_season) if raw_season else store.current_season(now)
+            except ValueError:
+                self._json_response(400, {"error": "season must be a number"})
+                return
+            if not 2000 <= season <= 2100:
+                self._json_response(400, {"error": "season is out of range"})
+                return
+            try:
+                self._json_response(200, api.build_standings(user_id, season, now))
+            except Exception as e:  # noqa: BLE001
+                self._json_response(500, {"error": str(e)})
+        elif self.path.split("?")[0] == "/api/survivor":
+            api = survivor_api()
+            store = api.store
+            user_id, err = store.resolve_actor(self.headers.get("X-User-Id"),
+                                               require_active=False)
+            if err:
+                self._json_response(*err)
+                return
+            params = parse_qs(urlparse(self.path).query)
+            now = store.now_utc()
+            season, error = api.parse_int(params, "season", 2000, 2100)
+            if not error:
+                week, error = api.parse_int(params, "week", store.MIN_WEEK,
+                                            store.MAX_WEEK)
+            if error:
+                self._json_response(400, {"error": error})
+                return
+            try:
+                season = season or store.current_season(now)
+                games = store.load_season_games(season, now)
+                week, _ = api.resolve_week(season, week, now, games)
+                self._json_response(
+                    200, api.build_week(user_id, season, week, now, games))
+            except Exception as e:  # noqa: BLE001
+                self._json_response(500, {"error": str(e)})
+        # Exact-path, not startswith: "/api/pickem-standings" starts with
+        # "/api/pickem", so a prefix test here would serve every standings
+        # request the week board instead. The standings branch is also first,
+        # which makes that ordering visible rather than incidental.
+        elif self.path.split("?")[0] == "/api/pickem-standings":
+            api = pickem_standings_api()
+            store = api.store
+            user_id, err = store.resolve_actor(self.headers.get("X-User-Id"),
+                                               require_active=False)
+            if err:
+                self._json_response(*err)
+                return
+            params = parse_qs(urlparse(self.path).query)
+            now = store.now_utc()
+            try:
+                raw_season = (params.get("season") or [""])[0].strip()
+                raw_week = (params.get("week") or [""])[0].strip()
+                season = int(raw_season) if raw_season else store.current_season(now)
+                week = int(raw_week) if raw_week else None
+            except ValueError:
+                self._json_response(400, {"error": "season and week must be numbers"})
+                return
+            if week is not None and not store.MIN_WEEK <= week <= store.MAX_WEEK:
+                self._json_response(400, {"error": "week is out of range"})
+                return
+            try:
+                self._json_response(200, api.build_standings(season, week, now))
+            except Exception as e:  # noqa: BLE001
+                self._json_response(500, {"error": str(e)})
+        elif self.path.split("?")[0] == "/api/pickem":
+            api = pickem_api()
+            store = api.store
+            user_id, err = store.resolve_actor(self.headers.get("X-User-Id"),
+                                               require_active=False)
+            if err:
+                self._json_response(*err)
+                return
+            params = parse_qs(urlparse(self.path).query)
+            now = store.now_utc()
+            season, error = api.parse_int(params, "season", 2000, 2100)
+            if not error:
+                week, error = api.parse_int(params, "week", store.MIN_WEEK,
+                                            store.MAX_WEEK)
+            if error:
+                self._json_response(400, {"error": error})
+                return
+            try:
+                season = season or store.current_season(now)
+                season, week, weeks = api.resolve_week(season, week, now)
+                payload = api.build_week(user_id, season, week, now)
+                payload["weeks"] = weeks
+                self._json_response(200, payload)
+            except Exception as e:  # noqa: BLE001
+                self._json_response(500, {"error": str(e)})
         elif self.path.startswith("/api/bets"):
             eff, err = resolve_bets_user(self.headers, require_active=False)
             if err:
@@ -1053,7 +1725,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 self.wfile.write(json.dumps(data).encode())
             except Exception as e:
                 self.wfile.write(json.dumps({"error": str(e)}).encode())
-        elif self.path == "/account":
+        # Query string tolerated: gated pages link here as /account?next=…, and
+        # Vercel's rewrites match on the path alone, so dev must too.
+        elif self.path.split("?")[0] == "/account":
             self.path = "/views/home/account.html"
             super().do_GET()
         elif self.path == "/archive":
@@ -1070,12 +1744,180 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self.send_header("Location", f"/golf/2026/masters/{page}")
             self.end_headers()
         # Hub pages
+        # /appendix is the second one: everything that is not football, listed
+        # off the same NAV_SECTIONS the drawer reads.
+        elif self.path == "/appendix":
+            self.path = "/views/home/appendix.html"
+            super().do_GET()
         elif self.path == "/golf":
             self.path = "/views/home/golf-hub.html"
             super().do_GET()
         elif self.path == "/football":
             self.path = "/views/home/football.html"
             super().do_GET()
+        elif self.path == "/football/grading-system":
+            self.path = "/views/home/grading-system.html"
+            super().do_GET()
+        # The Action Network book. One page per slate: /football/action is the
+        # index, /futures the season book, /week/{n} one week of the schedule.
+        #
+        # These used to be twenty committed HTML files served straight off disk.
+        # They are rendered per request now, so dev delegates to the deployed
+        # function rather than re-implementing it — the same reason bun_notes_api()
+        # exists, and the same guarantee: the two cannot disagree about what a
+        # page of the book looks like. Needs SUPABASE_URL/KEY in .env, as the
+        # other Supabase-backed routes here do.
+        #
+        # Matched longest-path-first, and the week id is digits-only so a junk
+        # segment 404s rather than being looked up. Mirrors the rewrites block in
+        # vercel.json, which orders them the same way for the same reason.
+        elif re.match(r"^/football/action/week/\d+/?$", self.path.split("?")[0]):
+            week = self.path.split("?")[0].rstrip("/").rsplit("/", 1)[1]
+            self.serve_action(f"week-{week}")
+        elif re.match(r"^/football/action/[a-z]+/?$", self.path.split("?")[0]):
+            self.serve_action(self.path.split("?")[0].rstrip("/").rsplit("/", 1)[1])
+        elif self.path.split("?")[0] == "/football/action":
+            self.serve_action("index")
+        # The book used to be one page at /football/futures. Anything already
+        # bookmarked lands on its replacement in one hop, as in vercel.json.
+        elif self.path.split("?")[0] == "/football/futures":
+            self.send_response(301)
+            self.send_header("Location", "/football/action/futures")
+            self.end_headers()
+        # How the game pages get their data, and how current each one is. Plain
+        # prose plus the board of what has been captured -- the /football tile
+        # points here.
+        elif self.path.split("?")[0] == "/football/live-stats":
+            self.path = "/views/football/live-stats.html"
+            super().do_GET()
+        # The full listing of what has been captured. Ahead of the game route
+        # and the schedule itself for the same reason vercel.json orders them
+        # this way: most specific path first.
+        elif self.path.split("?")[0] == "/football/schedule/archive":
+            self.path = "/views/football/schedule-archive.html"
+            super().do_GET()
+        # Query string tolerated: the schedule page keeps its week/team filters
+        # in ?week=&team= so a view is linkable, and Vercel matches on the path
+        # alone, so dev must too.
+        elif self.path.split("?")[0] == "/football/schedule":
+            self.path = "/views/football/schedule.html"
+            super().do_GET()
+        # One game's odds and box score, under the schedule it hangs off:
+        # /football/schedule/game/1392216, where the last segment is the
+        # balldontlie game id every schedule row carries. Matched before the
+        # schedule itself, the way vercel.json orders them.
+        elif GAME_PAGE_RE.match(self.path.split("?")[0]):
+            self.path = "/views/football/game-odds.html"
+            super().do_GET()
+        # The data behind that page. Delegated to the deployed function's own
+        # loaders so dev and prod can never disagree about the shape — the same
+        # reason action_api() and bun_notes_api() exist.
+        elif self.path.split("?")[0] == "/api/game-odds":
+            query = parse_qs(urlparse(self.path).query)
+            game_id = (query.get("game") or [""])[0].strip()
+            known = (query.get("known") or [""])[0].strip()[:64]
+            full = (query.get("full") or [""])[0].strip() in ("1", "true", "yes")
+            api = game_odds_api()
+            try:
+                if not game_id:
+                    self._json_response(200, api.load_index())
+                elif not api.GAME_ID_RE.match(game_id):
+                    self._json_response(400, {"error": "game must be a numeric game id"})
+                else:
+                    # Same two-step the function does: the etag column is a few
+                    # hundred bytes and the data column is a megabyte, so a poll
+                    # that finds nothing new must never reach for the second.
+                    etag = api.load_etag(game_id)
+                    if etag is None:
+                        self._json_response(
+                            404, {"error": f"no bundle stored for game {game_id}"})
+                    elif known == etag:
+                        self._json_response(200, {"unchanged": True, "etag": etag})
+                    else:
+                        bundle = api.load_bundle(game_id, etag)
+                        if bundle is None:
+                            self._json_response(
+                                404, {"error": f"no bundle stored for game {game_id}"})
+                        else:
+                            # Trimmed here too, or dev would serve a megabyte
+                            # where prod serves 393 KB and the page would be
+                            # tuned against the wrong payload.
+                            payload = (bundle if full
+                                       else api.trim_for_wire(bundle))
+                            self._json_response(200, dict(payload, etag=etag))
+            except Exception as e:  # noqa: BLE001
+                self._json_response(500, {"error": str(e)})
+        # Survivor. Standings and the pick page are matched before the hub for
+        # the same reason vercel.json orders them that way: most specific first.
+        elif self.path.split("?")[0] == "/football/survivor/standings":
+            self.path = "/views/football/survivor-standings.html"
+            super().do_GET()
+        elif SURVIVOR_PICK_RE.match(self.path.split("?")[0]):
+            self.path = "/views/football/survivor-pick.html"
+            super().do_GET()
+        elif self.path.split("?")[0] == "/football/survivor":
+            self.path = "/views/football/survivor.html"
+            super().do_GET()
+        # Pick 'Em. Standings and the picks pages are matched before the hub
+        # for the same reason vercel.json orders them that way: most specific
+        # path first.
+        elif self.path.split("?")[0] == "/football/pickem/standings":
+            self.path = "/views/football/pickem-standings.html"
+            super().do_GET()
+        elif PICKEM_PICKS_RE.match(self.path.split("?")[0]):
+            self.path = "/views/football/pickem-picks.html"
+            super().do_GET()
+        elif self.path.split("?")[0] == "/football/pickem":
+            self.path = "/views/football/pickem.html"
+            super().do_GET()
+        # Methodology is its own route rather than a section of the table's
+        # page, so it must be matched before the page it hangs off.
+        elif self.path.split("?")[0] == "/football/bakers-buns/methodology":
+            self.path = "/views/football/bakers-buns-methodology.html"
+            super().do_GET()
+        elif self.path.split("?")[0] == "/football/bakers-buns":
+            self.path = "/views/football/bakers-buns.html"
+            super().do_GET()
+        # Baker's Oven — live draft companion. /football/bakers-oven is the
+        # account's saved-league list; /{leagueId} is that league's draft and
+        # team picker; /{leagueId}/{rosterId} is that team's big board. Only
+        # digits match: Sleeper ids are always numeric, and a junk segment
+        # should 404 rather than boot a page that will fail against Sleeper.
+        # A legacy one-segment roster id lands on oven-league.html, which
+        # detects it by length and redirects.
+        elif self.path.split("?")[0] == "/football/bakers-oven":
+            self.path = "/views/football/oven-leagues.html"
+            super().do_GET()
+        # Ahead of the roster-id branch below, and ahead of the equivalent
+        # rewrite in vercel.json for the same reason: Vercel's :rosterId is a
+        # wildcard that would swallow "week-1". The regex here is digits-only
+        # and could not, but the two files should read alike.
+        elif re.match(r"^/football/bakers-oven/\d+/week-1/?$", self.path.split("?")[0]):
+            self.path = "/views/football/oven-week1.html"
+            super().do_GET()
+        elif re.match(r"^/football/bakers-oven/\d+/\d+/?$", self.path.split("?")[0]):
+            self.path = "/views/football/oven-board.html"
+            super().do_GET()
+        elif re.match(r"^/football/bakers-oven/\d+/?$", self.path.split("?")[0]):
+            self.path = "/views/football/oven-league.html"
+            super().do_GET()
+        elif self.path.split("?")[0] == "/football/trade-calculator":
+            self.path = "/views/football/trade-calculator.html"
+            super().do_GET()
+        # Both tools used to live at the top level, and the Oven before that at
+        # /the-bakers-oven. Saved bookmarks and any board link already shared
+        # keep working via a 301 onto the nested route. Mirrors the redirects
+        # block in vercel.json — the old prefixes go straight to the final
+        # path, so there is never a second hop.
+        elif self.path.split("?")[0] in ("/the-bakers-oven", "/bakers-oven") or (
+            self.path.startswith("/the-bakers-oven/") or self.path.startswith("/bakers-oven/")
+        ):
+            article = "/the-bakers-oven" if self.path.startswith("/the-bakers-oven") else "/bakers-oven"
+            self.send_response(301)
+            self.send_header(
+                "Location", "/football/bakers-oven" + self.path[len(article):]
+            )
+            self.end_headers()
         elif self.path == "/odds":
             self.path = "/views/odds/index.html"
             super().do_GET()
@@ -1093,21 +1935,6 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             super().do_GET()
         elif self.path.split("?")[0] == "/bets":
             self.path = "/views/bets/index.html"
-            super().do_GET()
-        elif self.path == "/jane":
-            self.path = "/views/jane/index.html"
-            super().do_GET()
-        elif self.path == "/jane/jobs":
-            self.path = "/views/jane/jobs.html"
-            super().do_GET()
-        elif self.path == "/jane/admin":
-            self.path = "/views/jane/admin.html"
-            super().do_GET()
-        elif self.path == "/jane/marketing-coordinator":
-            self.path = "/views/jane/marketing-coordinator.html"
-            super().do_GET()
-        elif self.path == "/jane/asheville-rentals":
-            self.path = "/views/jane/asheville-rentals.html"
             super().do_GET()
         # Golf routes: /golf/:year/:tournament/:page
         elif re.match(r"/golf/\d{4}$", self.path) or re.match(r"/season/\d{4}$", self.path):
@@ -1169,9 +1996,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         elif self.path == "/acknowledgements":
             self.path = "/views/home/acknowledgements.html"
             super().do_GET()
-        elif self.path == "/trade-calculator":
-            self.path = "/views/tools/trade-calculator.html"
-            super().do_GET()
+        elif self.path.split("?")[0] == "/trade-calculator":
+            self.send_response(301)
+            self.send_header("Location", "/football/trade-calculator")
+            self.end_headers()
         elif self.path == "/" or self.path == "":
             self.path = "/views/index.html"
             super().do_GET()
@@ -1179,6 +2007,28 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             super().do_GET()
 
     def do_POST(self):
+        # Baker's Oven: resolve uploaded board rows to Sleeper player_ids
+        # once, at import, so the live draft path is an exact ID match.
+        if self.path == "/api/football/resolve":
+            try:
+                length = int(self.headers.get("Content-Length", 0))
+                body = json.loads(self.rfile.read(length)) if length else {}
+                entries = body.get("players") or []
+                if not isinstance(entries, list):
+                    self._json_response(400, {"error": "players must be a list"})
+                    return
+                if len(entries) > 2000:
+                    self._json_response(400, {"error": "Too many players (max 2000)"})
+                    return
+                results = resolve_board_players(entries)
+                self._json_response(200, {
+                    "players": results,
+                    "matched": sum(1 for r in results if r.get("player_id")),
+                    "total": len(results),
+                })
+            except Exception as e:
+                self._json_response(500, {"error": str(e)})
+            return
         if self.path == "/api/auth":
             length = int(self.headers.get("Content-Length", 0))
             body = json.loads(self.rfile.read(length)) if length else {}
@@ -1225,35 +2075,102 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                         "user_id": user["id"], "username": user["username"],
                         "role": user["role"],
                     })
+                # Signed-in change. The current password is the proof of
+                # identity, which is why this doesn't settle for X-User-Id.
+                elif action == "change_password":
+                    user_id = self.headers.get("X-User-Id")
+                    if not user_id:
+                        self._json_response(401, {"error": "Not authenticated"})
+                        return
+                    current = body.get("current_password") or ""
+                    new_password = body.get("new_password") or ""
+                    if len(new_password) < MIN_PASSWORD_LEN:
+                        self._json_response(400, {"error": f"Password must be at least {MIN_PASSWORD_LEN} characters"})
+                        return
+                    users = supabase_request(
+                        f"users?id=eq.{q(user_id)}&select=id,password_hash,status"
+                    )
+                    if not users or users[0].get("status") is not True:
+                        self._json_response(403, {"error": "Account is inactive"})
+                        return
+                    if not verify_password(current, users[0].get("password_hash") or ""):
+                        self._json_response(401, {"error": "Current password is incorrect"})
+                        return
+                    set_password(user_id, new_password)
+                    self._json_response(200, {"ok": True})
+                # Admin hands the returned code to the locked-out user out of
+                # band. It is shown once and never stored in the clear.
+                elif action == "issue_reset":
+                    actor_id = self.headers.get("X-User-Id")
+                    if not actor_id:
+                        self._json_response(401, {"error": "Not authenticated"})
+                        return
+                    actor = fetch_user(actor_id)
+                    if (not actor or actor.get("status") is not True
+                            or actor.get("role") != "admin"):
+                        self._json_response(403, {"error": "Admin access required"})
+                        return
+                    username = (body.get("username") or "").strip()
+                    if not username:
+                        self._json_response(400, {"error": "Username is required"})
+                        return
+                    rows = supabase_request(
+                        f"users?username=eq.{q(username)}&select=id,username"
+                    )
+                    if not rows:
+                        self._json_response(404, {"error": "No such user"})
+                        return
+                    user = rows[0]
+                    retire_reset_codes(user["id"])
+                    code = new_reset_code()
+                    expires = datetime.now(timezone.utc) + timedelta(minutes=RESET_CODE_TTL_MINUTES)
+                    supabase_request("password_resets", method="POST", body={
+                        "code_hash": hash_reset_code(code),
+                        "user_id": user["id"],
+                        "expires_at": expires.isoformat(),
+                    }, extra_headers={"Prefer": "return=representation"})
+                    self._json_response(200, {
+                        "code": code, "username": user["username"],
+                        "expires_in_minutes": RESET_CODE_TTL_MINUTES,
+                    })
+                # Redeem a code. Signs the user straight in, the same shape
+                # login returns, so they aren't bounced to a form they can't fill.
+                elif action == "reset_password":
+                    username = (body.get("username") or "").strip()
+                    code = body.get("code") or ""
+                    new_password = body.get("new_password") or ""
+                    if not username or not code:
+                        self._json_response(400, {"error": "Username and reset code are required"})
+                        return
+                    if len(new_password) < MIN_PASSWORD_LEN:
+                        self._json_response(400, {"error": f"Password must be at least {MIN_PASSWORD_LEN} characters"})
+                        return
+                    # One filter covers the whole check — right code,
+                    # unredeemed, unexpired — so a stale row fails to match.
+                    now = datetime.now(timezone.utc).isoformat()
+                    rows = supabase_request(
+                        f"password_resets?code_hash=eq.{hash_reset_code(code)}"
+                        f"&used_at=is.null&expires_at=gt.{q(now)}&select=user_id"
+                    )
+                    users = supabase_request(
+                        f"users?username=eq.{q(username)}&select=id,username,role,status"
+                    ) if rows else []
+                    # The code must belong to the account being named, so a code
+                    # issued for one user can't be spent on another.
+                    if not rows or not users or users[0]["id"] != rows[0]["user_id"]:
+                        self._json_response(400, {"error": "That reset code is invalid or has expired"})
+                        return
+                    user = users[0]
+                    if user.get("status") is not True:
+                        self._json_response(403, {"error": "Account is inactive"})
+                        return
+                    set_password(user["id"], new_password)   # also burns the code
+                    self._json_response(200, {
+                        "user_id": user["id"], "username": user["username"],
+                        "role": user["role"],
+                    })
                 else:
                     self._json_response(400, {"error": "Unknown action"})
-            except Exception as e:
-                self._json_response(500, {"error": str(e)})
-        elif self.path == "/api/asheville-rentals/refresh":
-            # Local-only: re-scrape every Asheville rental source by running the
-            # Node scraper, which writes both data.json copies. Then return the
-            # fresh site-served file. (This endpoint only exists on the local dev
-            # server; production has no equivalent, so the page hides the button.)
-            root = os.path.dirname(os.path.abspath(__file__))
-            scraper_dir = os.path.join(root, "asheville-rentals")
-            try:
-                proc = subprocess.run(
-                    ["node", "scrape.mjs"],
-                    cwd=scraper_dir, capture_output=True, text=True, timeout=240,
-                )
-                if proc.returncode != 0:
-                    err = (proc.stderr or proc.stdout or "unknown error").strip()
-                    self._json_response(500, {"error": "Scrape failed: " + err[-500:]})
-                    return
-                with open(os.path.join(root, "data", "asheville-rentals.json")) as f:
-                    payload = f.read()
-                self.send_response(200)
-                self.send_header("Content-Type", "application/json")
-                self.send_header("Access-Control-Allow-Origin", "*")
-                self.end_headers()
-                self.wfile.write(payload.encode())
-            except subprocess.TimeoutExpired:
-                self._json_response(504, {"error": "Scrape timed out after 240s"})
             except Exception as e:
                 self._json_response(500, {"error": str(e)})
         else:
@@ -1289,6 +2206,119 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 self._json_response(200, {"ok": True})
             except Exception as e:
                 self._json_response(500, {"error": str(e)})
+        elif self.path.startswith("/api/bun-notes"):
+            api = bun_notes_api()
+            user_id, is_admin, err = resolve_notes_actor(self.headers)
+            if err:
+                self._json_response(*err)
+                return
+            try:
+                length = int(self.headers.get("Content-Length", 0))
+                body = json.loads(self.rfile.read(length)) if length else {}
+            except Exception:
+                self._json_response(400, {"error": "Body must be JSON"})
+                return
+            notes = body.get("notes") if isinstance(body, dict) and "notes" in body else [body]
+            if not isinstance(notes, list) or not notes:
+                self._json_response(400, {"error": "No notes in the request"})
+                return
+            if len(notes) > api.MAX_BATCH:
+                self._json_response(400, {"error": f"At most {api.MAX_BATCH} notes per request"})
+                return
+            ids = []
+            for note in notes:
+                note_id, error = api.note_id_of(note)
+                if error:
+                    self._json_response(400, {"error": error})
+                    return
+                ids.append(note_id)
+            try:
+                authors = api.fetch_authors(ids)
+            except Exception as e:
+                self._json_response(500, {"error": str(e)})
+                return
+            rows = []
+            for note, note_id in zip(notes, ids):
+                refused = api.may_write(authors, note_id, user_id, is_admin)
+                if refused:
+                    self._json_response(403, {"error": refused})
+                    return
+                # An existing note keeps the author it was filed under; a new
+                # one is owned by whoever is writing it.
+                row, error = api.normalize(note, authors.get(note_id, user_id))
+                if error:
+                    self._json_response(400, {"error": error})
+                    return
+                rows.append(row)
+            try:
+                supabase_request(
+                    "bun_notes?on_conflict=id",
+                    method="POST", body=rows,
+                    extra_headers={"Prefer": "resolution=merge-duplicates,return=representation"},
+                )
+                self._json_response(200, {"ok": True, "notes": [r["data"] for r in rows]})
+            except Exception as e:
+                self._json_response(500, {"error": str(e)})
+        elif self.path.split("?")[0] == "/api/survivor":
+            api = survivor_api()
+            store = api.store
+            user_id, err = store.resolve_actor(self.headers.get("X-User-Id"),
+                                               require_active=True)
+            if err:
+                self._json_response(*err)
+                return
+            try:
+                length = int(self.headers.get("Content-Length", 0))
+                body = json.loads(self.rfile.read(length)) if length else {}
+            except Exception:  # noqa: BLE001
+                self._json_response(400, {"error": "Body must be JSON"})
+                return
+            if not isinstance(body, dict):
+                self._json_response(400, {"error": "Body must be an object"})
+                return
+            now = store.now_utc()
+            season = body.get("season") or store.current_season(now)
+            week = body.get("week")
+            if not isinstance(season, int) or not isinstance(week, int) \
+                    or not store.MIN_WEEK <= week <= store.MAX_WEEK:
+                self._json_response(400, {"error": "season and week are required"})
+                return
+            try:
+                payload, status = api.apply_pick(
+                    user_id, season, week, body.get("game_id"), body.get("team"), now)
+                self._json_response(status, payload)
+            except Exception as e:  # noqa: BLE001
+                self._json_response(500, {"error": str(e)})
+        elif self.path.split("?")[0] == "/api/pickem":
+            api = pickem_api()
+            store = api.store
+            user_id, err = store.resolve_actor(self.headers.get("X-User-Id"),
+                                               require_active=True)
+            if err:
+                self._json_response(*err)
+                return
+            try:
+                length = int(self.headers.get("Content-Length", 0))
+                body = json.loads(self.rfile.read(length)) if length else {}
+            except Exception:  # noqa: BLE001
+                self._json_response(400, {"error": "Body must be JSON"})
+                return
+            if not isinstance(body, dict):
+                self._json_response(400, {"error": "Body must be an object"})
+                return
+            now = store.now_utc()
+            season = body.get("season") or store.current_season(now)
+            week = body.get("week")
+            if not isinstance(season, int) or not isinstance(week, int) \
+                    or not store.MIN_WEEK <= week <= store.MAX_WEEK:
+                self._json_response(400, {"error": "season and week are required"})
+                return
+            try:
+                payload, status = api.apply_week_picks(
+                    user_id, season, week, body.get("picks"), now)
+                self._json_response(status, payload)
+            except Exception as e:  # noqa: BLE001
+                self._json_response(500, {"error": str(e)})
         elif self.path == "/api/bets":
             eff, err = resolve_bets_user(self.headers, require_active=True)
             if err:
@@ -1318,7 +2348,40 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self.end_headers()
 
     def do_DELETE(self):
-        if self.path.startswith("/api/bets"):
+        if self.path.startswith("/api/bun-notes"):
+            api = bun_notes_api()
+            user_id, is_admin, err = resolve_notes_actor(self.headers)
+            if err:
+                self._json_response(*err)
+                return
+            params = parse_qs(urlparse(self.path).query)
+            note_id = (params.get("id", [None])[0] or "").strip()
+            if not note_id:
+                self._json_response(400, {"error": "id parameter is required"})
+                return
+            if not api.NOTE_ID.match(note_id):
+                self._json_response(400, {"error": f"invalid note id {note_id!r}"})
+                return
+            try:
+                # An id that matches nothing stays a 200 no-op, as it always was.
+                refused = api.may_write(
+                    api.fetch_authors([note_id]), note_id, user_id, is_admin)
+            except Exception as e:
+                self._json_response(500, {"error": str(e)})
+                return
+            if refused:
+                self._json_response(403, {"error": refused})
+                return
+            try:
+                supabase_request(
+                    "bun_notes?id=eq." + urllib.request.quote(note_id),
+                    method="DELETE",
+                    extra_headers={"Prefer": "return=representation"},
+                )
+                self._json_response(200, {"ok": True})
+            except Exception as e:
+                self._json_response(500, {"error": str(e)})
+        elif self.path.startswith("/api/bets"):
             eff, err = resolve_bets_user(self.headers, require_active=True)
             if err:
                 self._json_response(*err)
@@ -1349,6 +2412,42 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         self.send_header("Access-Control-Allow-Headers", "Content-Type, X-User-Id, X-Audit-User-Id")
         self.end_headers()
 
+    def serve_action(self, slug):
+        """One page of the Action Network book, rendered by the deployed function.
+
+        ETag handling included, so `curl -H 'If-None-Match: ...'` behaves in dev
+        exactly as it does on Vercel and the 304 path is testable without a
+        deploy."""
+        api = action_api()
+        if not api.SLUG_RE.match(slug):
+            self.send_error(404, "No such slate")
+            return
+        try:
+            etag, html = api.render(slug)
+        except Exception as e:  # noqa: BLE001
+            self.send_error(500, f"Could not read the book: {e}")
+            return
+        if etag is None:
+            self.send_error(404, "Page not pushed — run scripts/build_action.py")
+            return
+
+        quoted = f'"{etag}"'
+        if self.headers.get("If-None-Match") == quoted:
+            self.send_response(304)
+            self.send_header("ETag", quoted)
+            self.send_header("Cache-Control", "public, max-age=0, must-revalidate")
+            self.end_headers()
+            return
+
+        body = html.encode()
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        self.send_header("ETag", quoted)
+        self.send_header("Cache-Control", "public, max-age=0, must-revalidate")
+        self.end_headers()
+        self.wfile.write(body)
+
     def _json_response(self, status, data):
         self.send_response(status)
         self.send_header("Content-Type", "application/json")
@@ -1358,7 +2457,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         self.wfile.write(json.dumps(data).encode())
 
     def log_message(self, format, *args):
-        if "/api/" in (args[0] if args else ""):
+        # send_error() routes through here with an HTTPStatus as args[0], not a
+        # string, so coerce before the substring test — otherwise every 404 in
+        # local dev raises inside the logger and resets the connection.
+        if "/api/" in str(args[0] if args else ""):
             super().log_message(format, *args)
 
 

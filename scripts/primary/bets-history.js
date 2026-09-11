@@ -11,7 +11,7 @@ function renderBetsHistory(els, all) {
   const ALL = all || [];
 
   if (!ALL.length) {
-    els.list.innerHTML = '<div class="bets-empty">No bets yet. <a href="/bets/place" style="color:#58a6ff">Track your first →</a></div>';
+    els.list.innerHTML = '<div class="bets-empty">No bets yet. <a href="/bets/place" style="color:var(--accent)">Track your first →</a></div>';
     els.perf.style.display = 'none';
     const filters = document.querySelector('.bets-filters');
     if (filters) filters.style.display = 'none';
@@ -132,6 +132,13 @@ function renderBetsHistory(els, all) {
   }
 
   // ---- cumulative P/L graph (vanilla SVG, split green/red at zero) ---------
+  /* SVG presentation attributes do not resolve var(), so the graph's colours
+   * are read from the theme tokens at draw time instead. Re-read on every
+   * render, and the graph is re-rendered on `themechange` below. */
+  function gc(token, fallback) {
+    return (window.Theme && window.Theme.color) ? window.Theme.color(token, fallback) : fallback;
+  }
+
   function svgText(x, y, s, o) {
     o = o || {};
     return '<text x="' + x + '" y="' + y + '"' +
@@ -190,18 +197,18 @@ function renderBetsHistory(els, all) {
           '<clipPath id="plAbove"><rect x="' + x0 + '" y="' + yTop + '" width="' + plotW + '" height="' + aboveH + '"/></clipPath>' +
           '<clipPath id="plBelow"><rect x="' + x0 + '" y="' + zeroY.toFixed(1) + '" width="' + plotW + '" height="' + belowH + '"/></clipPath>' +
         '</defs>' +
-        svgText(W / 2, 16, 'Cumulative Profit / Loss', { fill: '#f0f6fc', size: 12, weight: 700, anchor: 'middle' }) +
+        svgText(W / 2, 16, 'Cumulative Profit / Loss', { fill: gc('--text-hi', '#f0f6fc'), size: 12, weight: 700, anchor: 'middle' }) +
         // axes
-        '<line x1="' + x0 + '" y1="' + yTop + '" x2="' + x0 + '" y2="' + yBot + '" stroke="#30363d" stroke-width="1"/>' +
-        '<line x1="' + x0 + '" y1="' + yBot + '" x2="' + x1 + '" y2="' + yBot + '" stroke="#30363d" stroke-width="1"/>' +
+        '<line x1="' + x0 + '" y1="' + yTop + '" x2="' + x0 + '" y2="' + yBot + '" stroke="' + gc('--border', '#30363d') + '" stroke-width="1"/>' +
+        '<line x1="' + x0 + '" y1="' + yBot + '" x2="' + x1 + '" y2="' + yBot + '" stroke="' + gc('--border', '#30363d') + '" stroke-width="1"/>' +
         // zero baseline
-        '<line x1="' + x0 + '" y1="' + zeroY.toFixed(1) + '" x2="' + x1 + '" y2="' + zeroY.toFixed(1) + '" stroke="#484f58" stroke-width="1" stroke-dasharray="3 3"/>' +
+        '<line x1="' + x0 + '" y1="' + zeroY.toFixed(1) + '" x2="' + x1 + '" y2="' + zeroY.toFixed(1) + '" stroke="' + gc('--text-5', '#484f58') + '" stroke-width="1" stroke-dasharray="3 3"/>' +
         // split area fills
-        '<polygon points="' + areaPts + '" fill="rgba(46,160,67,0.13)" clip-path="url(#plAbove)"/>' +
-        '<polygon points="' + areaPts + '" fill="rgba(248,81,73,0.13)" clip-path="url(#plBelow)"/>' +
+        '<polygon points="' + areaPts + '" fill="' + gc('--pl-up-fill', 'rgba(46,160,67,0.13)') + '" clip-path="url(#plAbove)"/>' +
+        '<polygon points="' + areaPts + '" fill="' + gc('--pl-down-fill', 'rgba(248,81,73,0.13)') + '" clip-path="url(#plBelow)"/>' +
         // split line: green above zero, red below
-        '<polyline points="' + linePts + '" fill="none" stroke="#2ea043" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" clip-path="url(#plAbove)"/>' +
-        '<polyline points="' + linePts + '" fill="none" stroke="#f85149" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" clip-path="url(#plBelow)"/>' +
+        '<polyline points="' + linePts + '" fill="none" stroke="' + gc('--good-strong', '#2ea043') + '" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" clip-path="url(#plAbove)"/>' +
+        '<polyline points="' + linePts + '" fill="none" stroke="' + gc('--bad', '#f85149') + '" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" clip-path="url(#plBelow)"/>' +
         // y-axis value labels (max / 0 / min)
         svgText(x0 - 7, yAt(max) + 3, sMoney(max), { anchor: 'end' }) +
         svgText(x0 - 7, zeroY + 3, '$0', { anchor: 'end' }) +
@@ -227,7 +234,7 @@ function renderBetsHistory(els, all) {
   function renderSub(bets) {
     if (!els.sub) return;
     const s = statsFor(bets);
-    const color = s.net > 0 ? '#2ea043' : (s.net < 0 ? '#f85149' : '#8b949e');
+    const color = s.net > 0 ? 'var(--good-strong)' : (s.net < 0 ? 'var(--bad)' : 'var(--text-3)');
     els.sub.innerHTML = bets.length + ' bet' + (bets.length === 1 ? '' : 's') +
       ' &middot; ' + s.settled + ' settled &middot; Net P/L: ' +
       '<strong style="color:' + color + '">' + signMoney(s.net) + '</strong>';
@@ -260,6 +267,10 @@ function renderBetsHistory(els, all) {
     clearTimeout(resizeTimer);
     resizeTimer = setTimeout(() => renderGraph(lastFiltered), 150);
   });
+
+  // Its colours are baked into the SVG as attribute strings, so a theme change
+  // means a redraw for the same reason a resize does.
+  window.addEventListener('themechange', () => renderGraph(lastFiltered));
 
   // ---- build filter UI ----------------------------------------------------
   function chip(label, dataAttr, val) {

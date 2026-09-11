@@ -21,26 +21,26 @@ body {
   padding: 4px 16px;
   font-size: 11px;
   font-weight: 600;
-  color: #484f58;
+  color: var(--text-5);
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  background: #0d1117;
-  border-top: 1px solid #21262d;
-  border-bottom: 1px solid #21262d;
+  background: var(--bg-alt);
+  border-top: 1px solid var(--surface-2);
+  border-bottom: 1px solid var(--surface-2);
 }
 
 .no-zscore {
-  color: #484f58;
+  color: var(--text-5);
 }
 
 .breadcrumbs {
   padding: 10px 16px;
   font-size: 13px;
-  color: #484f58;
+  color: var(--text-5);
 }
 
 .breadcrumbs a {
-  color: #58a6ff;
+  color: var(--accent);
   text-decoration: none;
 }
 
@@ -50,5 +50,13 @@ body {
 
 .breadcrumbs .separator {
   margin: 0 6px;
-  color: #484f58;
+  color: var(--text-5);
+}
+
+/* The z-score wash. The view sets --z (0..1, how far above the field this
+ * player's aggregate is) and the colour is mixed here, so the scale re-reads
+ * itself when the theme flips. --heat-z-max caps it below full strength in
+ * the light, where a solid green would swallow the number on top of it. */
+.player-value {
+  background: color-mix(in oklab, var(--heat-z-fill) calc(var(--z, 0) * var(--heat-z-max)), transparent);
 }

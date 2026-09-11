@@ -1,0 +1,115 @@
+# Keep LIVE games current, which the */15 sweep in bdl-refresh.yml cannot.
+#
+# THE PROBLEM THIS SOLVES
+#
+# refresh_plan() asks for a 30-second cadence while a game is in flight. A cron
+# can never serve that: */15 is thirty times too coarse even if GitHub honoured
+# it, and GitHub does not. Measured on this repo over 2026-09-10, the */15
+# schedule above actually fired at 00:37, 05:19, 09:57, 14:09, 17:42, 20:03,
+# 22:35 -- every run succeeded, they were simply delivered two to four hours
+# apart. SF@LAR kicked at 00:35Z, the nearest sweep landed 70 seconds earlier,
+# and the page served a pregame bundle for the whole first half.
+#
+# THE FIX: DO NOT ASK CRON FOR A CADENCE, ASK IT TO START A PROCESS
+#
+# `--loop` owns its own cadence -- it sweeps, sleeps exactly as long as the
+# soonest due game allows (floor 30s), and sweeps again. So the schedule below
+# does not have to be punctual, or even close to it. It has to land *sometime*
+# in the hours before kickoff, which is a bar GitHub's best-effort scheduler
+# clears comfortably. Drift stops being load-bearing.
+#
+# WHY THIS IS NOT EXPENSIVE
+#
+# This repo is public, so Actions minutes are free and unlimited. Even so, a job
+# that idles for six hours on a Tuesday is rude, so the loop is started with
+# --exit-when-idle 900: after each sweep it asks how far off the next game is,
+# and anything beyond fifteen minutes ends the run. On a day with no football
+# this exits within seconds of the runner booting. The number is not arbitrary
+# -- a live game naps 30s and an imminent one 600s, so 900 keeps the loop alive
+# through a game and hands everything slower back to the */15 sweep.
+#
+# HANDOFF ACROSS THE SIX-HOUR CAP
+#
+# 360 minutes is GitHub's hard per-job ceiling and a Sunday slate is ~11 hours,
+# so one job cannot cover it. It does not need to. The concurrency group holds
+# at most one in-progress run plus one pending run; when the running job hits
+# its timeout the pending one starts immediately, and it rebuilds its entire
+# picture from Supabase on the first sweep. Nothing lives in the job, so nothing
+# is lost when the job dies. Being killed by the timeout is the expected end of
+# a busy run, not a failure.
+#
+# RELATIONSHIP TO bdl-refresh.yml
+#
+# Both stay. That one is the floor -- it covers upcoming/gameday/settling
+# cadences, and the seven-day horizon, on a schedule that does not care about
+# being late. This one covers the minutes that actually move. They compose for
+# the reason that file already gives: the state is in Supabase, so whichever ran
+# last simply moves the next-due time. They are deliberately in separate
+# concurrency groups; a duplicated capture is an idempotent upsert, and
+# publish() refuses to replace a rich bundle with a thin one.
+#
+# Same three secrets as the sweep: BALLDONTLIE_API_KEY, SUPABASE_URL,
+# SUPABASE_KEY. And the same 60-day rule -- scheduled workflows are disabled
+# automatically after 60 days without a commit to the repo.
+
+name: Live NFL refresh loop
+
+on:
+  schedule:
+    # Hourly, offset off the hour. Everyone's cron fires at :00 and that is
+    # exactly when GitHub's scheduler is most contended, which is a fair share
+    # of why the */15 above drifts the way it does.
+    - cron: '7 * * * *'
+  workflow_dispatch:
+    inputs:
+      exit_when_idle:
+        description: 'Exit once the next game is this many seconds away (0 = never)'
+        default: '900'
+      max_sleep:
+        description: 'Longest sleep between sweeps, seconds'
+        default: '600'
+
+# At most one loop alive. cancel-in-progress: false is the important half --
+# a new run must WAIT for the current one rather than kill it, which is also
+# what makes the six-hour handoff seamless.
+concurrency:
+  group: bdl-live-loop
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  loop:
+    runs-on: ubuntu-latest
+    # Ten minutes under GitHub's 360 ceiling, so the run ends on its own terms
+    # and the queued successor starts from a clean exit rather than a hard kill.
+    timeout-minutes: 350
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      # No install step, same as the sweep: everything under scripts/ is
+      # stdlib-only and shells out to curl, which the runner already has.
+      - name: Loop
+        env:
+          BALLDONTLIE_API_KEY: ${{ secrets.BALLDONTLIE_API_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        # --limit 0 (uncapped) on purpose. due games are sorted by kickoff and
+        # a full Sunday window is up to 16 games that all kick at the same
+        # second, so a cap of 12 would deterministically starve the same two
+        # games every sweep rather than rotating through them. Uncapped is safe
+        # here because the loop is self-pacing: bdl_common's rate limiter is the
+        # real governor, and a sweep that takes longer simply starts the next
+        # one later.
+        run: |
+          python3 scripts/bdl_refresh.py \
+            --loop --publish \
+            --limit 0 \
+            --max-sleep "${{ github.event.inputs.max_sleep || 600 }}" \
+            --exit-when-idle "${{ github.event.inputs.exit_when_idle || 900 }}"

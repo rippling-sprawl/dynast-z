@@ -1,0 +1,290 @@
+/* === VegasInsider skin, spent on the hub pages ===
+ * The home page (/), the football landing page (/football) and /account, given
+ * the same look /football/schedule took. See styles/base/vegasinsider.css for
+ * where the palette and the two faces came from, and what the skin is allowed
+ * to touch: it repaints, it does not lay out. Nothing here moves an element or
+ * changes a grid.
+ *
+ * The import below is what carries the palette, the body face, the black-and-
+ * gold header bar and the page furniture — h2, subtitle, breadcrumbs — so this
+ * sheet only has to repaint what those three pages own that the schedule does
+ * not: the hub cards, the section heads, and the account forms.
+ *
+ * Specificity, not source order. The schedule's sheet wins on order alone
+ * because everything under it is a linked component sheet. Two of these three
+ * pages instead keep an inline <style> in their own head, which no linked sheet
+ * can be loaded after, so the rules below that collide with one are written a
+ * step more specific than it — `.masters-content .home-auth`, `.account-page
+ * .masters-content .group-form` — and win wherever the link is placed. The
+ * rest are plain. */
+
+@import url('/styles/base/vegasinsider.css');
+
+/* --- Section heads, as bands ---------------------------------------------
+ * The home page's section labels (Gambling, Games, Fantasy) become the navy strip
+ * VegasInsider heads every listing with — the same band the schedule gives a
+ * day of football — and the grid under it closes up to sit as the board that
+ * band heads. */
+
+.hub-section {
+  font-family: var(--vi-display);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--vi-band-ink);
+  background: var(--vi-navy);
+  border-bottom: 2px solid var(--vi-gold);
+  border-radius: 2px 2px 0 0;
+  padding: 9px 12px 8px;
+  margin: 22px 0 0;
+}
+
+.hub-section a { color: inherit; }
+.hub-section a:hover { color: var(--vi-gold); }
+
+.hub-section + .hub-grid { margin-top: 10px; }
+
+/* --- Cards ----------------------------------------------------------------
+ * Squared off, on the white board the light theme puts everything on, with the
+ * gold picking out the card under the pointer. The title takes the display
+ * caps; the emoji in front of it is left at its own size and case, since
+ * text-transform does not touch it and the caps beside it are what it is being
+ * sized against. */
+
+.hub-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.hub-card:hover {
+  border-color: var(--vi-gold);
+  background: var(--surface-hover);
+}
+
+.hub-card h3 {
+  font-family: var(--vi-display);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  color: var(--text-hi);
+}
+
+.hub-card.is-title-only h3 { font-size: 16px; }
+
+.hub-card p {
+  font-family: var(--vi-body);
+  font-size: 12px;
+  color: var(--text-3);
+}
+
+/* --- The rest of the hub shell -------------------------------------------- */
+
+.masters-page-nav {
+  font-family: var(--vi-display);
+  font-size: 13px;
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+  border-top: 2px solid var(--vi-gold);
+}
+
+.masters-page-nav a { font-weight: 700; }
+
+.subtle-link {
+  font-family: var(--vi-display);
+  font-size: 13px;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.masters-cta {
+  font-family: var(--vi-display);
+  font-size: 14px;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  border-radius: 2px;
+  color: var(--on-accent);
+}
+
+.masters-hint {
+  font-family: var(--vi-display);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  border-radius: 2px;
+}
+
+/* --- /football: the stale-data banner -------------------------------------
+ * Its colours are already the skin's, because it is drawn in --warn-* and the
+ * skin pulls that family onto the brand gold. What is left is the shape: a
+ * squared box with the gold as a left rule rather than a rounded amber card.
+ * One step more specific than the inline block that sets it, per the note at
+ * the top. */
+
+.masters-content .fp-stale-banner {
+  border-radius: 2px;
+  border-color: var(--vi-gold-line);
+  border-left-color: var(--vi-gold);
+  font-family: var(--vi-body);
+}
+
+/* --- /: the signed-out sign-in card ---------------------------------------
+ * Same panel, squared, with the label and the button in display caps so the
+ * one non-card thing on the home page still reads as part of the board. */
+
+.masters-content .home-auth {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+}
+
+.masters-content .home-auth-label {
+  font-family: var(--vi-display);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  color: var(--text-3);
+}
+
+.masters-content .home-auth input {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  font-family: var(--vi-body);
+  font-size: 14px;
+}
+
+.masters-content .home-auth input:focus { border-color: var(--vi-gold); }
+
+.masters-content .home-auth button[type="submit"] {
+  font-family: var(--vi-display);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+  border-radius: 2px;
+  color: var(--on-accent);
+}
+
+.masters-content .home-auth-signup {
+  font-family: var(--vi-display);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  border-radius: 2px;
+  border-color: var(--border);
+}
+
+.masters-content .home-auth-signup:hover { border-color: var(--vi-gold); }
+
+.masters-content .home-auth-note,
+.masters-content .home-auth-error {
+  font-family: var(--vi-body);
+  font-size: 12px;
+}
+
+/* --- /account -------------------------------------------------------------
+ * The page's inline block gives it a lighter, higher-contrast treatment than
+ * the rest of the hub: page on --panel-hi, forms a shade above it. Under the
+ * skin that inverts what the palette is for — the light theme's --panel-hi is
+ * the white a board is drawn in, not the grey a page stands on — so the two
+ * surfaces go back to the arrangement every other skinned page uses: forms are
+ * white boards on the grey page. Each rule below outranks the inline one it
+ * replaces rather than relying on where the link sits. */
+
+body.masters-body.account-page { background: var(--panel-lo); }
+
+.account-page .masters-content .group-form {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  box-shadow: none;
+  padding: 14px;
+}
+
+/* The eyebrow over each form — "SIGN IN", "CREATE ACCOUNT" — is already caps;
+   the skin gives it the face and the gold rule that make it a heading. The
+   inline block sets its colour with !important, so that one is left alone. */
+.account-page .masters-content .group-form > span {
+  font-family: var(--vi-display) !important;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  border-bottom: 2px solid var(--vi-gold);
+  padding-bottom: 6px;
+  margin-bottom: 10px;
+}
+
+.account-page .masters-content .group-form label {
+  font-family: var(--vi-display);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.7px;
+  color: var(--text-4);
+}
+
+.account-page .masters-content .masters-search,
+.account-page .masters-content .group-form select {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  font-family: var(--vi-body);
+  font-size: 14px;
+}
+
+.account-page .masters-content .masters-search:focus,
+.account-page .masters-content .group-form select:focus {
+  border-color: var(--vi-gold);
+}
+
+.account-page .masters-content .masters-btn {
+  font-family: var(--vi-display);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+  border-radius: 2px;
+}
+
+.account-page .masters-content .masters-btn:not(.danger) { color: var(--on-accent); }
+
+.account-page .masters-content .masters-btn.danger {
+  background: none;
+  color: var(--bad-soft);
+  border-color: var(--bad-soft);
+}
+
+.account-page .masters-content .link-btn {
+  font-family: var(--vi-display);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+
+.account-page .masters-content .note,
+.account-page .masters-content .ok-msg,
+.account-page .masters-content .err-msg {
+  font-family: var(--vi-body);
+  font-size: 12px;
+}
+
+/* The one-time reset code. It stays dashed — that is the whole point of it —
+   but squares off and takes the gold, since on this page the gold is what
+   "read this now" is said in. */
+.account-page .masters-content .reset-code {
+  border: 1px dashed var(--vi-gold);
+  border-radius: 2px;
+  background: var(--vi-gold-soft);
+}
+
+.account-page .masters-content .reset-code button {
+  font-family: var(--vi-display);
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  border-radius: 2px;
+  color: var(--on-accent);
+}

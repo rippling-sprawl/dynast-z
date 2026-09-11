@@ -1,5 +1,11 @@
 /* === Share Trade as Image === */
 
+// The shared image has to match the page it was taken from — a dark card
+// exported onto a white plate, or the reverse, is the bug this reads around.
+function shotColor(token, fallback) {
+  return (window.Theme && window.Theme.color) ? window.Theme.color(token, fallback) : fallback;
+}
+
 async function captureTradeImage(element) {
   // Temporarily hide remove buttons, hints, and share button
   const hideEls = element.querySelectorAll('.trade-remove-btn, .remove-btn, .scout-trade-hint, .drop-hint, .share-btn');
@@ -7,7 +13,7 @@ async function captureTradeImage(element) {
 
   try {
     const canvas = await html2canvas(element, {
-      backgroundColor: '#0d1117',
+      backgroundColor: shotColor('--bg-alt', '#0d1117'),
       useCORS: true,
       scale: 2,
       logging: false,
@@ -16,7 +22,7 @@ async function captureTradeImage(element) {
     // Draw watermark on the canvas directly
     const ctx = canvas.getContext('2d');
     ctx.font = '600 ' + (11 * 2) + 'px -apple-system, BlinkMacSystemFont, sans-serif';
-    ctx.fillStyle = '#484f58';
+    ctx.fillStyle = shotColor('--text-5', '#484f58');
     ctx.textAlign = 'center';
     ctx.fillText('dynastz.com', canvas.width / 2, canvas.height - 12);
 

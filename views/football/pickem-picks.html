@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/assets/icons/app-touch-180.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Dynast-Z">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <title>Pick 'Em | Dynast-Z</title>
+  <!-- Theme first: theme.js sets <html data-theme> before the first paint,
+       theme.css holds every colour token the sheets below spend. -->
+  <script src="/scripts/base/theme.js"></script>
+  <link rel="stylesheet" href="/styles/base/theme.css">
+  <link rel="stylesheet" href="/styles/base/styles.css">
+  <link rel="stylesheet" href="/styles/base/hub.css">
+  <link rel="stylesheet" href="/styles/components/nfl-pickers.css">
+  <link rel="stylesheet" href="/styles/primary/pickem.css">
+  <script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
+  <script defer src="/_vercel/insights/script.js"></script>
+</head>
+<body class="masters-body">
+  <div id="header-mount"></div>
+  <div id="nav-drawer-mount"></div>
+  <script src="/scripts/base/auth.js"></script>
+  <script src="/scripts/base/standalone.js"></script>
+  <script src="/scripts/base/nav.js"></script>
+  <!-- The week menu, shared with /football/schedule. -->
+  <script src="/scripts/components/nfl-pickers.js"></script>
+  <script src="/scripts/primary/pickem-api.js"></script>
+  <script src="/scripts/primary/pickem.js"></script>
+  <script>initPage();</script>
+
+  <div class="masters-content">
+    <div class="masters-breadcrumbs">
+      <a href="/football">Football</a><span class="separator">/</span><a href="/football/pickem">Pick 'Em</a><span class="separator">/</span><span>Picks</span>
+    </div>
+
+    <h2 id="title">Picks</h2>
+    <p class="subtitle" id="subtitle">Loading…</p>
+
+    <!-- Markup contract for scripts/components/nfl-pickers.js. -->
+    <div class="dd-row">
+      <div class="dd" id="dd-week">
+        <button type="button" class="dd-btn" id="f-week" aria-haspopup="true" aria-expanded="false">
+          <span class="dd-value">Week</span>
+        </button>
+        <div class="dd-pop dd-menu" id="week-menu" role="menu" aria-label="Week" hidden></div>
+      </div>
+      <a class="pk-cta is-secondary" href="/football/pickem/standings">Standings</a>
+    </div>
+
+    <div class="pk-bar" id="bar" hidden>
+      <span class="pk-bar-stat" id="stat-picked"></span>
+      <span class="pk-bar-stat" id="stat-points"></span>
+      <span class="pk-bar-spacer"></span>
+      <span class="pk-saved" id="saved" hidden></span>
+      <span class="pk-status" id="status"></span>
+      <button type="button" class="pk-save" id="save" disabled>Save picks</button>
+    </div>
+
+    <div id="board"><p class="pk-empty">Loading…</p></div>
+  </div>
+
+  <script>
+  (function () {
+    'use strict';
+
+    /* The week board. What lives here is what is particular to a page you can
+     * change: which week is in view, the working set of picks, and whether it
+     * has been saved. The row markup and the confidence rules are in
+     * scripts/primary/pickem.js, because the hub renders rows too.
+     *
+     * THE WORKING SET IS NOT THE SERVER'S
+     *
+     * `order` and `sides` are edited locally and only become real on Save.
+     * `saved` is the last thing the server confirmed, and comparing the two is
+     * what enables the button and what makes leaving with unsaved edits worth
+     * warning about. A pick that only exists in this tab has not been made. */
+
+    var state = { season: null, week: null, weeks: [] };
+    var data = null;        // the last GET payload
+    var order = [];         // game ids, best first — this IS the ranking
+    var sides = {};         // { game_id: 'GB' } — which team, where one is taken
+    var locked = {};        // { game_id: confidence } — kicked off, immutable
+    var saved = '';         // JSON of the last confirmed set
+    var savedAt = null;     // when the server last wrote this week, ISO
+    var busy = false;
+
+    var boardEl = document.getElementById('board');
+    var barEl = document.getElementById('bar');
+    var titleEl = document.getElementById('title');
+    var subtitleEl = document.getElementById('subtitle');
+    var statPicked = document.getElementById('stat-picked');
+    var statPoints = document.getElementById('stat-points');
+    var statusEl = document.getElementById('status');
+    var savedEl = document.getElementById('saved');
+    var saveBtn = document.getElementById('save');
+    var weekBtn = document.getElementById('f-week');
+    var weekMenu = document.getElementById('week-menu');
+    var weekDd = null;
+
+    /* ---------- the URL is the state ----------
+     * /football/pickem/picks/3. Changing the week pushes rather than reloads,
+     * so the back button walks the weeks the reader actually looked at. */
+
+    function weekFromPath() {
+      var m = location.pathname.match(/\/picks\/(\d{1,2})\/?$/);
+      var n = m ? Number(m[1]) : 0;
+      return n >= 1 && n <= 18 ? n : null;
+    }
+
+    function seasonFromQuery() {
+      var v = Number(new URLSearchParams(location.search).get('season'));
+      return v >= 2000 && v <= 2100 ? v : null;
+    }
+
+    function writePath(week) {
+      var q = location.search;
+      history.pushState({ week: week }, '', '/football/pickem/picks/' + week + q);
+    }
+
+    /* ---------- rendering ---------- */
+
+    function payload() {
+      return pkToPayload(order, sides, locked, data ? data.n : 0);
+    }
+
+    /* Keyed by game id rather than by list position, so it compares what will
+     * actually be sent. Moving a row that has no side taken changes the order
+     * but changes nothing submittable, and that should not light up Save. */
+    function normalisedPayload() {
+      return JSON.stringify(payload().slice().sort(function (a, b) {
+        return a.game_id < b.game_id ? -1 : 1;
+      }));
+    }
+
+    function dirty() { return normalisedPayload() !== saved; }
+
+    function render() {
+      if (!data) return;
+      var k = pkPickCount(sides);
+      var conf = pkAssign(order, locked, data.n);
+
+      // What is still riding on ungraded games: the confidences sitting on
+      // games that have a side taken and are not graded yet. It swings both
+      // ways — a wrong pick deducts its confidence — so this is exposure, not
+      // winnings-in-waiting. Counted rather than derived, since a partial week
+      // is worth whichever ranks the reader put their picks on.
+      var live = 0, byId = {};
+      (data.games || []).forEach(function (g) { byId[g.game_id] = g; });
+      order.forEach(function (gameId) {
+        var g = byId[gameId];
+        if (sides[gameId] && g && !g.result) live += conf[gameId] || 0;
+      });
+
+      boardEl.innerHTML = pkRenderWeek(data.games, order, sides, data.others,
+                                       locked, data.n);
+      // The board element is replaced on every render, so the drag listeners
+      // go on the list inside it once and are re-attached each time.
+      wireDrag();
+      barEl.hidden = false;
+      statPicked.innerHTML = '<b>' + k + '</b> of ' + data.n + ' picked' +
+        ' · drag to rank, best at the top';
+      statPoints.innerHTML = (data.totals.mine.points ? '<b>' +
+          data.totals.mine.points + '</b> points so far' : '') +
+        (data.totals.mine.points && live ? ' · ' : '') +
+        (live ? '<b>' + live + '</b> at stake' : '');
+      renderSaved();
+      saveBtn.disabled = busy || !dirty();
+      if (!busy && dirty()) setStatus('Unsaved changes', '');
+    }
+
+    /* The transient line: what is happening right now, or what went wrong.
+     * Cleared freely — it is never the record of anything. */
+    function setStatus(text, kind) {
+      statusEl.textContent = text;
+      statusEl.className = 'pk-status' + (kind ? ' is-' + kind : '');
+    }
+
+    /* The persistent one: when this week was last written. It is state, not a
+     * message, so it is rendered from `savedAt` on every pass and survives an
+     * edit, a re-render, a week change and a reload — the server sends it back
+     * on every load. Only a successful save replaces it. */
+    function renderSaved() {
+      savedEl.hidden = !savedAt;
+      savedEl.textContent = savedAt ? pkSavedLabel(savedAt) : '';
+    }
+
+    function renderHeader() {
+      titleEl.textContent = 'Week ' + state.week + ' picks';
+      var bits = [String(state.season)];
+      if (data && data.deadline_at) {
+        bits.push('lines frozen ' + pkKickoffLabel(data.deadline_at) + ' ET');
+      }
+      bits.push('higher confidence is worth more');
+      subtitleEl.textContent = bits.join(' · ');
+    }
+
+    /* ---------- events ----------
+     * Delegated to the board, which is replaced on every render. */
+
+    function wireBoard() {
+      boardEl.addEventListener('click', function (e) {
+        var btn = e.target.closest ? e.target.closest('.pk-side') : null;
+        if (!btn || btn.disabled || !boardEl.contains(btn)) return;
+        sides = pkToggleSide(sides, btn.getAttribute('data-game'),
+                             btn.getAttribute('data-side'));
+        render();
+      });
+    }
+
+    /* The drag list lives on .pk-rows, which pkRenderWeek rebuilds from scratch
+     * on every render — so this must re-attach every time, unconditionally.
+     *
+     * There was a guard here that skipped the re-attach on the render a drop
+     * itself triggered, meant to avoid re-entering mid-gesture. It was wrong
+     * twice over: pkDragList tears its document listeners down before it calls
+     * back, so there is no gesture still running, and skipping the attach left
+     * the freshly-built list with no listeners at all — which is why a board
+     * could be dragged exactly once and then went dead.
+     *
+     * Re-attaching costs nothing and leaks nothing: the old .pk-rows node is
+     * discarded with its listeners when innerHTML is replaced. */
+    function wireDrag() {
+      var list = boardEl.querySelector('[data-sortable]');
+      if (!list) return;
+      pkDragList(list, function (next, keepFocus) {
+        // Settle the locked rows back onto their own numbers, so the
+        // confidence column always reads straight down the board.
+        order = pkAfterDrop(next, locked, data.n);
+        render();
+        // A keyboard move has to keep the handle it was made from focused, or
+        // the second arrow press goes nowhere.
+        if (keepFocus) {
+          var el = boardEl.querySelector('[data-drag][data-game="' +
+            keepFocus.replace(/"/g, '\\"') + '"]');
+          if (el) el.focus();
+        }
+      });
+    }
+
+    function wireWeeks() {
+      weekDd = registerDropdown(document.getElementById('dd-week'));
+      weekMenu.addEventListener('click', function (e) {
+        var opt = e.target.closest ? e.target.closest('.dd-opt') : null;
+        if (!opt || !weekMenu.contains(opt)) return;
+        var week = Number(opt.getAttribute('data-week'));
+        closeDropdown(weekDd, true);
+        if (week === state.week) return;
+        // Changing week throws away unsaved edits, so say so first. The prompt
+        // is the whole guard: there is nowhere to stash a half-made week.
+        if (dirty() && !confirm('You have unsaved picks for week ' + state.week +
+                                '. Leave them behind?')) return;
+        writePath(week);
+        load(state.season, week);
+      });
+    }
+
+    function syncWeeks() {
+      buildWeekMenu(weekMenu, state.weeks.map(function (w) {
+        return { value: w, label: 'Week ' + w };
+      }));
+      syncWeekMenu(weekBtn, weekMenu, state.week, 'Week ' + state.week);
+    }
+
+    /* ---------- save ----------
+     * Awaited, unlike the fire-and-forget writes in bets-api.js. A bet that
+     * fails to save is still sitting in the form it was typed into; a week of
+     * picks that fails silently is discovered on the standings page in
+     * February. */
+
+    function save() {
+      if (busy || !dirty()) return;
+      busy = true;
+      saveBtn.disabled = true;
+      setStatus('Saving…', '');
+      pickemSave(state.season, state.week, payload()).then(function () {
+        busy = false;
+        saved = normalisedPayload();
+        // Stamped optimistically so the change is immediate; the reload below
+        // replaces it with the instant the server actually recorded.
+        savedAt = new Date().toISOString();
+        renderSaved();
+        setStatus('Saved', 'ok');
+        saveBtn.disabled = true;
+        // Re-read rather than trusting the local set: the response settles what
+        // is now locked, and another player's picks may have been revealed by a
+        // kickoff while this page was open.
+        return load(state.season, state.week, true);
+      }).catch(function (err) {
+        busy = false;
+        setStatus(err.message, 'error');
+        // A 409 means a game kicked off mid-edit, so the board on screen is
+        // describing a week that no longer exists. Reload it rather than
+        // leaving the reader to press Save into the same refusal again.
+        if (err.status === 409) load(state.season, state.week, true);
+        else saveBtn.disabled = false;
+      });
+    }
+
+    /* ---------- loading ---------- */
+
+    function load(season, week, quiet) {
+      if (!quiet) boardEl.innerHTML = '<p class="pk-empty">Loading…</p>';
+      return pickemLoadWeek(season, week).then(function (body) {
+        data = body;
+        state.season = body.season;
+        state.week = body.week;
+        state.weeks = body.weeks && body.weeks.length
+          ? body.weeks : [body.week];
+        savedAt = body.saved_at || null;
+        sides = pkSidesFromServer(body.mine);
+        locked = pkLockedFromServer(body.games, body.mine);
+        order = pkInitialOrder(body.games, body.mine);
+        saved = normalisedPayload();
+        syncWeeks();
+        renderHeader();
+        render();
+        if (!busy) setStatus('', '');
+      }).catch(function (err) {
+        boardEl.innerHTML = '<p class="pk-empty">' + pkEsc(err.message) + '</p>';
+        barEl.hidden = true;
+      });
+    }
+
+    /* Safari hands a restored tab back rendered, with no script run: a page
+     * left open overnight would show Sunday's games as still open and let
+     * someone try to pick them. The server refuses that anyway — this is the
+     * half that stops it being offered. */
+    window.addEventListener('pageshow', function (e) {
+      if (e.persisted && !dirty()) load(state.season, state.week, true);
+    });
+
+    window.addEventListener('popstate', function () {
+      var week = weekFromPath();
+      if (week && week !== state.week) load(state.season, week);
+    });
+
+    window.addEventListener('beforeunload', function (e) {
+      if (!dirty()) return;
+      e.preventDefault();
+      e.returnValue = '';
+    });
+
+    saveBtn.addEventListener('click', save);
+
+    if (!isLoggedIn()) {
+      location.href = '/account';
+    } else {
+      wireBoard();
+      wireWeeks();
+      // Nothing is read from the committed schedule file any more: the crest
+      // and the abbreviation name the team, so the board needs only the API.
+      load(seasonFromQuery(), weekFromPath());
+    }
+  })();
+  </script>
+</body>
+</html>

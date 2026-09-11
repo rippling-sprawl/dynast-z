@@ -1,0 +1,3445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <!-- Home-screen install. The two *-capable tags are what make an iOS icon
+       launch the site standalone — its own window, no address bar — instead of
+       opening a Safari tab; the manifest says the same thing to everyone else,
+       and to iOS 16.4+. standalone.js keys the drawer's share row off exactly
+       that state, so dropping these tags silently removes the row too. -->
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/assets/icons/app-touch-180.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Dynast-Z">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <title>Game Odds | Dynast-Z</title>
+  <script src="/scripts/base/theme.js"></script>
+  <link rel="stylesheet" href="/styles/base/theme.css">
+  <link rel="stylesheet" href="/styles/base/styles.css">
+  <link rel="stylesheet" href="/styles/base/hub.css">
+  <!-- The dropdown the props board filters with is /football/schedule's week
+       menu, unchanged: same trigger, same panel, same keyboard. -->
+  <link rel="stylesheet" href="/styles/components/nfl-pickers.css">
+  <link rel="stylesheet" href="/styles/primary/game-odds.css">
+  <script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
+  <script defer src="/_vercel/insights/script.js"></script>
+</head>
+<body class="masters-body">
+  <div id="header-mount"></div>
+  <div id="nav-drawer-mount"></div>
+  <script src="/scripts/base/auth.js"></script>
+  <script src="/scripts/base/standalone.js"></script>
+  <script src="/scripts/base/nav.js"></script>
+  <script src="/scripts/components/nfl-pickers.js"></script>
+  <script>initPage();</script>
+
+  <div class="masters-content go-wrap">
+    <div class="masters-breadcrumbs">
+      <a href="/football">Football</a><span class="separator">/</span>
+      <a href="/football/schedule">Games</a><span class="separator">/</span>
+      <span id="crumb">Game</span>
+    </div>
+
+    <div id="page"></div>
+  </div>
+
+  <script>
+  (function () {
+    'use strict';
+
+    /* One game, from /api/game-odds?game=<id> — the bundle
+     * scripts/fetch_bdl_game.py writes to Supabase with --publish.
+     *
+     * Not a file under /data: a bundle is ~900 KB, nearly all of it player
+     * props, and committing one per game would add ~15 MB a week during the
+     * season to the repo forever. It lives in Supabase `game_odds` and moves on
+     * a push with no deploy, the same split the Action Network book uses.
+     *
+     * Deep-linked by balldontlie game id, as the last segment of the path:
+     * /football/schedule/game/1392216. It sits under the schedule because that
+     * is the only thing that links to it, and the id is the same one the rows
+     * carry since data/nfl_schedule_*.json moved to balldontlie as its source —
+     * so there is no lookup table in between.
+     *
+     * The page is built to be mostly empty and still say something useful. Of
+     * the six sections below, five are behind balldontlie's paid tiers, so on a
+     * free key the honest render is a game header plus five explanations. Each
+     * section states which tier it needs, taken from the bundle's own
+     * `unavailable` notes rather than from a constant here — the fetcher already
+     * recorded exactly why each endpoint refused, and repeating that judgement
+     * in the page would be a second place to get it wrong.
+     *
+     * ES5 globals, like the rest of scripts/ — no modules, no build step.
+     */
+
+    var INDEX_URL = '/api/game-odds';
+
+    var pageEl = document.getElementById('page');
+    var crumbEl = document.getElementById('crumb');
+
+    function esc(s) {
+      return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+      });
+    }
+
+    /* The same 32 files /football/schedule and the team picker use, served
+     * from this app rather than hotlinked. No lazy loading here: there are at
+     * most four on the page and two of them are above the fold. */
+    var LOGO_DIR = '/assets/icons/nfl/';
+
+    function teamLogo(abbr, cls, alt) {
+      // The crest is decorative wherever the abbreviation sits beside it. In
+      // the hero it is the only thing naming the team, so it takes the name.
+      return '<img class="' + cls + '" src="' + LOGO_DIR + esc(abbr) +
+        '.svg" alt="' + (alt ? esc(abbr) : '') + '"' +
+        (alt ? '' : ' aria-hidden="true"') + '>';
+    }
+
+    /* The id is the last path segment, not a query parameter. Anchored and
+     * digits-only for the same reason api/game-odds.py validates it: this value
+     * ends up in a request URL, and a path is as capable of carrying junk as a
+     * query string is. */
+    var PATH_RE = /^\/football\/schedule\/game\/([0-9]{1,12})\/?$/;
+
+    function gameParam() {
+      var m = PATH_RE.exec(location.pathname || '');
+      return m ? m[1] : '';
+    }
+
+    /* ---------- formatting ---------- */
+
+    /* Stat keys arrive as snake_case straight off the API. Title-casing them is
+     * the floor, and it is what keeps the bundle a faithful copy of what was
+     * fetched: a field the API adds tomorrow still renders under a readable
+     * name rather than vanishing because nobody updated a map.
+     *
+     * Above that floor sit the ABBR maps below, which shorten the ~130 headings
+     * this page can draw to the forms a box score is actually read in. The
+     * widths are the argument: "Long Reception" is four times the width of the
+     * number under it and pushes eight sibling columns off the screen, where
+     * "LNG" does not. They are overrides, not a replacement — a key with no
+     * entry falls through to label() — and every abbreviated heading carries
+     * its long form as a title, so nothing that was on the page is gone, only
+     * folded up. */
+    function label(key) {
+      return String(key).replace(/_/g, ' ').replace(/\b\w/g, function (c) {
+        return c.toUpperCase();
+      });
+    }
+
+    /* The tooltips are built out of label(), which title-cases every word and
+     * so turns the acronyms in these keys into words: `qbr` reads "Qbr" and
+     * `anytime_td` reads "Anytime Td". Spelled-out is the whole point of a
+     * tooltip, so the handful of keys that are acronyms are put back up. */
+    var ACRONYM = {
+      Qb: 'QB', Qbr: 'QBR', Td: 'TD', Tds: 'TDs', Fg: 'FG', Fgs: 'FGs',
+      Int: 'INT', Ints: 'INTs', Rz: 'RZ', Xp: 'XP', Ot: 'OT', Pat: 'PAT'
+    };
+
+    function fullLabel(key) {
+      return label(key).replace(/[A-Za-z]+/g, function (w) {
+        return ACRONYM[w] || w;
+      });
+    }
+
+    /* A heading is the short form plus the long one it stands for. `t` is null
+     * when the two say the same thing, so an unabbreviated heading gets no
+     * tooltip rather than one that repeats the text already under the cursor.
+     * Compared case-insensitively: "QBR" abbreviates nothing when the long form
+     * is also QBR, however label() happened to case it. */
+    function heading(short, full) {
+      var same = full && String(full).toLowerCase() === String(short).toLowerCase();
+      return { s: short, t: (full && !same) ? full : null };
+    }
+
+    function thCell(h, cls) {
+      if (typeof h === 'string') h = heading(h, null);
+      return '<th' + (cls ? ' class="' + cls + '"' : '') +
+        (h.t ? ' title="' + esc(h.t) + '"' : '') + '>' + esc(h.s) + '</th>';
+    }
+
+    /* ---------- abbreviations ----------
+     * Keyed on the JSON path a value arrives under rather than on its rendered
+     * string, so a heading can be traced back to the field it came from by
+     * grepping the key, and the map does not break the day balldontlie changes
+     * its own title-casing.
+     *
+     * Scoped per section because the same key wants a different width in
+     * different places: `passing_attempts` is "Att" in a team comparison with
+     * one stat per row and acres of space, and "ATT" in a box score where nine
+     * numeric columns share that row. */
+
+    /* team_stats.away|home.*
+     *
+     * Written in Pro-Football-Reference's row order, which this table is also
+     * read down, so the map doubles as the order (see teamStatsSection). PFR
+     * packs a whole phase into one row -- "Cmp-Att-Yd-TD-INT" -- where the API
+     * hands over the parts separately, so each of its rows is a run of ours:
+     * the run sits where PFR's row sits. The stats it has no row for at all
+     * (red zone, yards per play) join the run they belong to. */
+    var TEAM_ABBR = {
+      first_downs: '1st Downs',
+      rushing_attempts: 'Rush Att', rushing_yards: 'Rush Yds',
+      yards_per_rush_attempt: 'Y/C', passing_completions: 'Comp',
+      passing_attempts: 'Att', yards_per_pass: 'Y/A', sacks: 'Sacks',
+      sack_yards_lost: 'Sack Yds', net_passing_yards: 'Net Pass Yds',
+      total_yards: 'Tot Yds', total_offensive_plays: 'Off Plays',
+      yards_per_play: 'Y/P',
+      fumbles_lost: 'Fum Lost', turnovers: 'TO', interceptions_thrown: 'INT',
+      defensive_touchdowns: 'Def TD', penalties: 'Pen',
+      penalty_yards: 'Pen Yds', third_down_efficiency: '3rd Down %',
+      fourth_down_efficiency: '4th Down %', red_zone_scores: 'RZ Scores',
+      red_zone_attempts: 'RZ Att', possession_time: 'TOP'
+    };
+
+    /* player_stats.away|home[].<group>.* */
+    var STAT_ABBR = {
+      passing: {
+        passing_completions: 'CMP/ATT',
+        passing_yards: 'YDS', passing_touchdowns: 'TD',
+        passing_interceptions: 'INT', sacks: 'SK',
+        yards_per_pass_attempt: 'Y/A', qbr: 'QBR'
+      },
+      rushing: {
+        rushing_attempts: 'ATT', rushing_yards: 'YDS',
+        rushing_touchdowns: 'TD', long_rushing: 'LNG',
+        yards_per_rush_attempt: 'AVG'
+      },
+      receiving: {
+        receiving_targets: 'TGT', receptions: 'REC', receiving_yards: 'YDS',
+        receiving_touchdowns: 'TD', long_reception: 'LNG',
+        yards_per_reception: 'AVG'
+      },
+      defense: {
+        total_tackles: 'TCK', defensive_sacks: 'SK', solo_tackles: 'SOLO',
+        tackles_for_loss: 'TFL', passes_defended: 'PD', qb_hits: 'QBH',
+        defensive_interceptions: 'INT'
+      },
+      kicking: {
+        field_goal_attempts: 'FGA', field_goals_made: 'FGM',
+        field_goal_pct: 'FG%', long_field_goal_made: 'LNG',
+        extra_points_made: 'XPM', total_points: 'PTS'
+      },
+      returns: {
+        kick_returns: 'KR', kick_return_yards: 'KR YDS',
+        yards_per_kick_return: 'KR AVG', long_kick_return: 'KR LNG',
+        kick_return_touchdowns: 'KR TD', punt_returns: 'PR',
+        punt_return_yards: 'PR YDS', yards_per_punt_return: 'PR AVG',
+        long_punt_return: 'PR LNG', punt_return_touchdowns: 'PR TD'
+      },
+      punting: {
+        punts: 'PUNTS', punt_yards: 'YDS', gross_avg_punt_yards: 'AVG',
+        touchbacks: 'TB', punts_inside_20: 'IN20', long_punt: 'LNG'
+      },
+      fumbles: {
+        fumbles: 'FUM', fumbles_lost: 'LOST', fumbles_recovered: 'REC',
+        fumbles_touchdowns: 'TD'
+      }
+    };
+
+    /* player_props.markets[] / player_props.<which>[].prop_type — the market
+     * <select>. A period is a mechanical suffix on half of the 35 markets, so
+     * it is split off, the base abbreviated, and the period put back. Listing
+     * every combination would be 35 rows that disagree with each other the
+     * first time a market picks up a suffix the list does not have. */
+    var MARKET_ABBR = {
+      anytime_td: 'Anytime TD', first_td: 'First TD', fg_made: 'FG Made',
+      kicking_points: 'Kicking Pts', interceptions: 'INT Thrown',
+      passing_attempts: 'Pass Att', passing_completions: 'Pass Comp',
+      passing_tds: 'Pass TD', passing_yards: 'Pass Yds',
+      receptions: 'Rec', receiving_yards: 'Rec Yds',
+      rushing_attempts: 'Rush Att', rushing_yards: 'Rush Yds',
+      rushing_receiving_yards: 'Rush+Rec Yds', longest_rush: 'Long Rush',
+      longest_pass: 'Long Pass', longest_reception: 'Long Rec'
+    };
+
+    var PERIOD = { '1q': '1Q', '2q': '2Q', '3q': '3Q', '4q': '4Q',
+                   '1h': '1H', '2h': '2H' };
+    var PERIOD_RE = /^(.*)_(1q|2q|3q|4q|1h|2h)$/;
+
+    /* The market without its period suffix. `anytime_td_1h` is the anytime
+     * touchdown market quoted over one half, not a market of its own, so
+     * anything sorting or grouping markets works off this rather than off the
+     * key the feed sends. */
+    function marketBase(key) {
+      var k = String(key == null ? '' : key);
+      var m = PERIOD_RE.exec(k);
+      return m ? m[1] : k;
+    }
+
+    function marketHeading(key) {
+      var k = String(key == null ? '' : key), suffix = '';
+      var m = PERIOD_RE.exec(k);
+      if (m) { k = m[1]; suffix = ' (' + PERIOD[m[2]] + ')'; }
+      return heading((MARKET_ABBR[k] || label(k)) + suffix,
+                     fullLabel(k) + suffix);
+    }
+
+    function teamHeading(key) {
+      return heading(TEAM_ABBR[key] || label(key), fullLabel(key));
+    }
+
+    /* injuries.away|home|unknown[].status. Matched case-insensitively and
+     * carrying more than the six statuses these bundles happen to contain: the
+     * rest of the designation list turns up in-season, and a status with no
+     * entry renders whole rather than blank. */
+    var STATUS_ABBR = {
+      'questionable': 'Q', 'doubtful': 'D', 'out': 'OUT',
+      'injured reserve': 'IR', 'ir': 'IR', 'ir-r': 'IR-R',
+      'pup-p': 'PUP-P', 'pup-r': 'PUP-R', 'nfi-a': 'NFI-A', 'nfi-r': 'NFI-R',
+      'reserve-dnr': 'DNR', 'suspended': 'SUSP', 'active': 'ACT'
+    };
+
+    /* Questionable and Out are the two designations the report is scanned for
+     * -- one is a lineup question and the other closes it -- so those two
+     * carry colour and the rest of the list stays neutral. A season-long
+     * designation like IR or PUP is a fact about the roster rather than about
+     * Sunday, and colouring all twelve would leave nothing standing out. */
+    var STATUS_TONE = { 'questionable': 'is-q', 'out': 'is-out' };
+
+    /* The exception to the paragraph above, and the reason it is worded as it
+     * is: a reserve designation is a fact about the roster *once it has been
+     * one for a while*. In the fortnight after it is filed it is the loudest
+     * thing on the report -- a starter has just gone on IR, and the club has
+     * not replaced him yet -- and reading it off a grey pill identical to the
+     * eleven men who went on the list in July is the one case where the
+     * neutral default hides the news. So a reserve status carries the same red
+     * as Out while its report is recent, and fades to grey on its own. */
+    var STATUS_RESERVE = {
+      'injured reserve': 1, 'ir': 1, 'ir-r': 1, 'pup-p': 1, 'pup-r': 1
+    };
+
+    /* Sort order within a club. The feed hands the report back in no order
+     * anyone would choose -- roughly the order the rows were written -- so the
+     * player who is ruled out sits between two men on IR from August. Ordered
+     * by how much the designation says about Sunday instead: the three game
+     * statuses first, hardest first, then the season-long reserve lists, then
+     * anyone listed active. A designation with no entry lands between the two
+     * halves rather than at either end, on the reasoning that an unrecognised
+     * status is more likely to be a new game designation than a new list. */
+    var STATUS_RANK = {
+      'out': 0, 'doubtful': 1, 'questionable': 2,
+      'injured reserve': 4, 'ir': 4, 'ir-r': 5, 'pup-p': 6, 'pup-r': 7,
+      'nfi-a': 8, 'nfi-r': 9, 'reserve-dnr': 10, 'suspended': 11,
+      'active': 12
+    };
+
+    function statusRank(v) {
+      var k = String(v == null ? '' : v).trim().toLowerCase();
+      var r = STATUS_RANK[k];
+      return r === undefined ? 3 : r;
+    }
+
+    /* `hot` is passed by the injury report for a reserve designation filed
+       inside INJ_HOT_DAYS; nothing else on the page calls this with it. */
+    function statusBadge(v, hot) {
+      var full = String(v == null ? '' : v).trim();
+      if (!full) return '';
+      var k = full.toLowerCase();
+      var h = heading(STATUS_ABBR[k] || full, full);
+      var tone = STATUS_TONE[k] || (hot && STATUS_RESERVE[k] ? 'is-hot'
+                                                            : 'is-plain');
+      return '<span class="go-ibadge ' + tone + '"' +
+        (h.t ? ' title="' + esc(h.t) + '"' : '') + '>' + esc(h.s) + '</span>';
+    }
+
+    function isNum(v) { return typeof v === 'number'; }
+
+    /* Players are named in three tables that are all short on width -- the box
+     * score, the prop board and the injury report -- and the given name is the
+     * part none of them are read for. "P. Mahomes" identifies the same player
+     * and hands the width back to the numbers beside it. */
+    function initialName(first, last) {
+      var f = String(first == null ? '' : first).trim();
+      var l = String(last == null ? '' : last).trim();
+      if (!f) return l;
+      if (!l) return f;
+      return f.charAt(0).toUpperCase() + '. ' + l;
+    }
+
+    /* The prop board carries the name already joined, so it is split back on
+     * the first space only -- everything after it is the surname, which leaves
+     * "Amon-Ra St. Brown" and "Michael Pittman Jr." intact. */
+    function shortenName(full) {
+      var s = String(full == null ? '' : full).trim();
+      var i = s.indexOf(' ');
+      return i < 0 ? s : initialName(s.slice(0, i), s.slice(i + 1));
+    }
+
+    function cell(v) {
+      if (v === null || v === undefined || v === '') {
+        return '<td class="is-null">—</td>';
+      }
+      if (isNum(v)) return '<td class="is-num">' + esc(v) + '</td>';
+      /* A joined pair -- "18/27" -- is a number as far as its column is
+       * concerned: it sits among numeric columns under a numeric heading, and
+       * left-aligning it alone breaks the right edge the rest of the row is
+       * read down. */
+      if (typeof v === 'string' && /^(\d+|—)\/(\d+|—)$/.test(v)) {
+        return '<td class="is-num">' + esc(v) + '</td>';
+      }
+      if (typeof v === 'object') return '<td>' + esc(JSON.stringify(v)) + '</td>';
+      return '<td>' + esc(v) + '</td>';
+    }
+
+    /* ---------- freshness ----------
+     * When this bundle was captured, and when it changes next. Both are read
+     * off the bundle rather than decided here: `fetched_at` is stamped by the
+     * fetcher, and `refresh` is refresh_plan()'s answer in
+     * scripts/fetch_bdl_game.py — the same function scripts/bdl_refresh.py
+     * sweeps on. So the "next in 6h" this page prints is the cadence a sweep
+     * will actually run, not a second guess at it. */
+
+    function gap(secs) {
+      var s = Math.abs(Math.round(secs));
+      if (s < 60) return s + 's';
+      if (s < 5400) return Math.round(s / 60) + 'm';
+      if (s < 172800) return Math.round(s / 3600) + 'h';
+      return Math.round(s / 86400) + 'd';
+    }
+
+    function stamp(iso) {
+      if (!iso) return null;
+      var t = Date.parse(String(iso).replace(/T(\d\d:\d\d)Z$/, 'T$1:00Z'));
+      return isFinite(t) ? t / 1000 : null;
+    }
+
+    function kickoffET(iso) {
+      var t = stamp(iso);
+      if (t === null) return '';
+      try {
+        return new Date(t * 1000).toLocaleString('en-US', {
+          timeZone: 'America/New_York', weekday: 'short', month: 'short',
+          day: 'numeric', hour: 'numeric', minute: '2-digit'
+        }) + ' ET';
+      } catch (e) { return String(iso); }
+    }
+
+    /* A countdown ticks, so it needs finer resolution than gap() near zero:
+     * "next in 12s" is the page saying it is about to act, where gap()'s "next
+     * in 0m" reads as broken. Coarse again above two minutes — a pregame bundle
+     * six hours from its next capture has nothing worth counting down. */
+    function untilText(secs) {
+      var s = Math.max(0, Math.round(secs));
+      return s < 120 ? s + 's' : gap(s);
+    }
+
+    /* Rendered in the hero's bottom-right corner, because "final" and "captured
+     * four months ago" are two different facts and only one of them was on the
+     * page.
+     *
+     * Emitted empty and filled by freshTick() below, on a one-second ticker.
+     * The line is the only refresh control this page has — there is no button
+     * and no pull gesture — so it has to be true continuously rather than true
+     * at the instant of the last repaint. Its "next in" is the client's own
+     * timer, not the sweep's `refresh.next_ts`: those two agree in the ordinary
+     * case, but the floors and the retries below are the page's own decisions
+     * and the countdown has to name the one that will actually fire. */
+    function freshness(b) {
+      var r = b.refresh || null;
+      return '<span class="go-fresh"' +
+        (r && r.note ? ' title="' + esc(r.note) + '"' : '') + '></span>';
+    }
+
+    /* ---------- generic table ----------
+     * Used for odds and props, whose row shapes are undocumented and have never
+     * been observed against a live key. Rendering the union of whatever keys
+     * arrive cannot be wrong, and is the quickest way to learn the real shape
+     * the first time a paid key runs. Nested objects (a player, a team) are
+     * flattened one level so their fields become columns rather than JSON. */
+    function flatten(row) {
+      var out = {};
+      Object.keys(row).forEach(function (k) {
+        var v = row[k];
+        if (v && typeof v === 'object' && !Array.isArray(v)) {
+          Object.keys(v).forEach(function (k2) {
+            if (v[k2] === null || typeof v[k2] !== 'object') out[k + '.' + k2] = v[k2];
+          });
+        } else {
+          out[k] = v;
+        }
+      });
+      return out;
+    }
+
+    /* Left to itself the payload decides what order a table's stats come out
+     * in, which is neither the order the table is read in nor stable — the
+     * first row missing a stat moves it to the end. `order` puts the keys it
+     * names in that sequence and leaves the ones it does not after them, in
+     * payload order, so a field the API adds tomorrow still shows up rather
+     * than being ordered out of existence. */
+    function orderKeys(keys, order) {
+      var rank = {};
+      keys.forEach(function (k, i) {
+        var at = order.indexOf(k);
+        rank[k] = at < 0 ? order.length + i : at;
+      });
+      return keys.slice().sort(function (a, b) { return rank[a] - rank[b]; });
+    }
+
+    function genericTable(rows, labelFn, order) {
+      var headFn = labelFn || label;
+      if (!rows || !rows.length) return '';
+      var flat = rows.map(flatten);
+      var keys = [];
+      flat.forEach(function (r) {
+        Object.keys(r).forEach(function (k) { if (keys.indexOf(k) < 0) keys.push(k); });
+      });
+      // Drop columns that are null in every row — an undocumented payload
+      // carries a lot of them and they add nothing but width.
+      keys = keys.filter(function (k) {
+        return flat.some(function (r) { return r[k] !== null && r[k] !== undefined; });
+      });
+      if (order) keys = orderKeys(keys, order);
+      return '<div class="go-scroll"><table class="go-table"><thead><tr>' +
+        keys.map(function (k) { return thCell(headFn(k)); }).join('') +
+        '</tr></thead><tbody>' +
+        flat.map(function (r) {
+          return '<tr>' + keys.map(function (k) { return cell(r[k]); }).join('') + '</tr>';
+        }).join('') +
+        '</tbody></table></div>';
+    }
+
+    /* ---------- sections ---------- */
+
+    function unavailableFor(bundle, paths) {
+      var notes = bundle.unavailable || [];
+      for (var i = 0; i < notes.length; i++) {
+        if (paths.indexOf(notes[i].path) >= 0) return notes[i];
+      }
+      return null;
+    }
+
+    function emptyState(bundle, paths, what) {
+      var note = unavailableFor(bundle, paths);
+      if (!note) {
+        return '<div class="go-empty">No ' + esc(what) +
+          ' in this bundle — the endpoint answered, with nothing in it.</div>';
+      }
+      var tier = String(note.needs_tier || '').toUpperCase();
+      var reason = note.error === 'CassetteMiss'
+        ? 'was never recorded, so <code>--replay</code> has nothing to serve'
+        : 'needs a plan this key is not on';
+      return '<div class="go-empty">' +
+        'No ' + esc(what) + ' captured. <code>' + esc(note.path) + '</code> ' + reason +
+        ' — <span class="go-tier">' + esc(tier) + '</span><br>' +
+        'Re-run <code>python3 scripts/fetch_bdl_game.py --game-id ' +
+        esc(bundle.game.id) + ' --record --publish</code> on a ' + esc(tier) +
+        ' key and this section fills in.</div>';
+    }
+
+    /* ---------- collapsing ----------
+     *
+     * Every board on the page folds away, because the page is long and which
+     * half of it matters depends entirely on when you open it: a play log is
+     * the whole story an hour after the game and noise the day before. Three
+     * start folded -- the two longest boards and the one nobody reads twice --
+     * so the page opens on the odds and the score rather than on a scrollbar.
+     *
+     * State lives here rather than in the DOM because the DOM does not survive:
+     * a poll replaces the page wholesale every couple of minutes, and a section
+     * the reader opened must not close itself under them. Keyed by title, which
+     * is what a card has instead of an id.
+     *
+     * Which three are folded depends on when the page is opened, for the same
+     * reason as the paragraph above. Before kickoff there is no box score, no
+     * team stats and no play log -- the props and the injury report are the
+     * page, and they are the two things the page is opened for: who is
+     * available and what they are priced at. Shut, the pregame page is a
+     * scoreless hero, a row of odds and two closed doors, and every reader has
+     * to open both of them every time. So they start open until the game
+     * starts, and the play log is the only card folded before kickoff -- it
+     * renders nothing at all until there are plays in it. */
+    var CARD_CLOSED = { 'Play log': 1, 'Player props': 1, 'Injury report': 1 };
+    var CARD_CLOSED_PREGAME = { 'Play log': 1 };
+    var cardOpen = {};
+
+    /* Set by render before it builds a card, because that is the only place
+     * the bundle is in scope and cardIsOpen is reached from inside the section
+     * builders rather than passed anything. */
+    var cardPhase = '';
+
+    function cardIsOpen(title) {
+      if (!(title in cardOpen)) {
+        var shut = cardPhase === 'pregame' ? CARD_CLOSED_PREGAME : CARD_CLOSED;
+        cardOpen[title] = !shut[title];
+      }
+      return cardOpen[title];
+    }
+
+    /* `head` is markup dropped in the card head beside the title rather than
+     * appended to the body: a control that switches the whole card belongs on
+     * the same line as the card's name, not on a strip the reader has to take
+     * as a first row of content. Escaped titles, raw head -- the only caller
+     * passing one builds it here.
+     *
+     * The collapse control sits at the far right of that band, after whatever
+     * head the caller brought, so its position is the same on every card
+     * whether or not the card has controls of its own. */
+    function card(title, body, flush, head) {
+      var open = cardIsOpen(title);
+      return '<section class="go-card' + (open ? '' : ' is-collapsed') + '">' +
+        '<div class="go-card-head"><h3>' + esc(title) + '</h3>' +
+        '<div class="go-card-tools">' + (head || '') +
+          '<button type="button" class="go-card-toggle" data-card="' +
+            esc(title) + '" aria-expanded="' + (open ? 'true' : 'false') + '">' +
+            '<span>' + (open ? 'Collapse' : 'Expand') + '</span>' +
+            '<span class="go-card-caret" aria-hidden="true"></span>' +
+          '</button>' +
+        '</div></div>' +
+        '<div class="go-card-body' + (flush ? ' is-flush' : '') + '">' +
+        body + '</div></section>';
+    }
+
+    /* Delegated off the page rather than bound per card, for the same reason
+     * the state is not kept in the DOM: every poll throws the buttons away and
+     * builds new ones, and a listener on the container outlives that. */
+    pageEl.addEventListener('click', function (e) {
+      var btn = e.target.closest ? e.target.closest('.go-card-toggle') : null;
+      if (!btn || !pageEl.contains(btn)) return;
+      var title = btn.getAttribute('data-card');
+      var open = !cardIsOpen(title);
+      cardOpen[title] = open;
+      var sec = btn.closest('.go-card');
+      if (sec) sec.classList.toggle('is-collapsed', !open);
+      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      var label = btn.querySelector('span');
+      if (label) label.textContent = open ? 'Collapse' : 'Expand';
+    });
+
+    /* The chip is the whole status line now. Before kickoff that is the
+     * kickoff itself -- the only fact a scheduled game has -- and afterwards it
+     * is where the game is, in words rather than the bundle's `pregame` /
+     * `live` / `final` enum. An unrecognised phase falls back to its own name
+     * so a new one from the feed shows up rather than rendering blank. */
+    var PHASE_TEXT = { live: 'In progress', final: 'Final' };
+
+    /* A live game's own status carries where it is -- "15:00 - 2nd" -- which is
+     * the fact worth showing, so the clock and the quarter replace the generic
+     * "In progress". The feed writes the clock first and an ordinal second; the
+     * chip reverses that into the order a scoreboard uses, "Q2 15:00", and
+     * routes the number through periodLabel so overtime reads "OT" rather than
+     * "Q5". Anything the pattern does not match -- "Halftime", "End of 2nd" --
+     * is already a sentence about where the game is, so it is shown verbatim
+     * rather than thrown away for a word that says less. */
+    function liveClock(g) {
+      var st = (g.status || '').trim();
+      var m = /^(\d{1,2}:\d{2})\s*-\s*(\d+)/.exec(st);
+      if (m) {
+        var per = periodLabel(m[2]);
+        return per ? per + ' ' + m[1] : m[1];
+      }
+      return st || PHASE_TEXT.live;
+    }
+
+    function phaseText(b) {
+      var g = b.game;
+      if (b.phase === 'pregame') {
+        return kickoffET(g.kickoff_raw || g.kickoff_utc) || g.kickoff_et || 'Scheduled';
+      }
+      if (b.phase === 'live') return liveClock(g);
+      return PHASE_TEXT[b.phase] || label(b.phase || '');
+    }
+
+    /* ---------- the live situation ----------
+     * Down, distance, the spot the ball is on and the side holding it: the
+     * four facts a scoreboard carries that this bundle's `game` object does
+     * not. The feed only ever states them through a play, so they are read off
+     * the latest one, and off its `end_*` fields rather than its `start_*`
+     * ones -- a play's end is where the ball is sitting now.
+     *
+     * Latest is decided by period and clock rather than by position in the
+     * array, for the reason scoringPlays() sorts the same way: /plays comes
+     * back ordered by id and administrative rows sort out of sequence within
+     * it. Feed position breaks a tie and covers a clock that cannot be read. */
+    function laterPlay(a, ai, b, bi) {
+      var ap = Number(a.period), bp = Number(b.period);
+      if (isFinite(ap) && isFinite(bp) && ap !== bp) return ap > bp ? a : b;
+      // Counting down, so the smaller remainder is the later play.
+      var ac = clockLeft(a.clock_display), bc = clockLeft(b.clock_display);
+      if (ac !== null && bc !== null && ac !== bc) return ac < bc ? a : b;
+      return ai > bi ? a : b;
+    }
+
+    function latestPlay(b) {
+      var all = (b.plays || {}).all || [];
+      var best = null, bi = -1;
+      all.forEach(function (pl, i) {
+        if (best === null || laterPlay(pl, i, best, bi) === pl) { best = pl; bi = i; }
+      });
+      return best;
+    }
+
+    /* Who has the ball. `play.team` is not the answer: it is the team whose
+     * drive the play belongs to, which is the returning side on a kickoff and
+     * the kicking side on a punt -- so it marks the wrong crest for as long as
+     * a punt is the last play the page has.
+     *
+     * The geometry does not have that problem. end_yards_to_endzone is measured
+     * from the endzone the team in possession is running at, so a spot in the
+     * half it is named for is more than fifty yards out and one in the other
+     * half is fewer: "NE 32" with 68 to go is New England on its own 32, and
+     * the same text with 32 to go is the opponent on New England's. Midfield is
+     * the one spot that says nothing -- 50 either way -- and an abbreviation
+     * that matches neither team is a feed spelling this page does not know, so
+     * both fall back to the drive's team, which is right far more often than
+     * it is wrong. */
+    function possessing(g, pl) {
+      var m = /([A-Z]{2,4})\s+\d+/.exec(String(pl.end_possession_text || ''));
+      var side = m ? m[1] : '';
+      var y2e = Number(pl.end_yards_to_endzone);
+      if (side && isFinite(y2e) && y2e !== 50 &&
+          (side === g.away.abbr || side === g.home.abbr)) {
+        var far = side === g.away.abbr ? g.home.abbr : g.away.abbr;
+        return y2e > 50 ? side : far;
+      }
+      return (pl.team && pl.team.abbreviation) || '';
+    }
+
+    /* Live only. A final game's last play has an end spot too, and printing it
+     * under "Final" says the ball is still sitting there. */
+    function situation(b) {
+      if (b.phase !== 'live') return null;
+      var pl = latestPlay(b);
+      if (!pl) return null;
+      var spot = String(pl.end_possession_text || '').trim();
+      /* A play with no next snap behind it -- an extra point, the end of a
+       * half -- ends on down 0, and whatever down-and-distance text rides along
+       * with it describes a situation nobody is in yet. */
+      var dd = Number(pl.end_down) > 0
+        ? String(pl.end_short_down_distance_text || '').trim() : '';
+      if (!spot && !dd) return null;
+      return { spot: spot, dd: dd, team: possessing(b.game, pl) };
+    }
+
+    /* The marker rides on the crest rather than in the line below it, because
+     * the line cannot carry it: "NE 32" names the half the ball is in, and on a
+     * turnover that is the other team's name.
+     *
+     * Drawn rather than styled. A CSS ellipse is the shape the box model gives
+     * for free and it is not the shape of a football -- at 20px a rounded pill
+     * with a stripe down it reads as a badge, which is exactly what it must not
+     * be mistaken for. Four curves and three laces cost the same and are
+     * unmistakable. The outline is stroked under the fill in the hero's own
+     * background colour so the ball stays cut out from whatever crest it lands
+     * on. */
+    function possMark(abbr) {
+      var t = esc(abbr) + ' has the ball';
+      return '<span class="go-ball" role="img" title="' + t +
+        '" aria-label="' + t + '">' +
+        '<svg viewBox="0 0 24 16" aria-hidden="true" focusable="false">' +
+          '<path class="go-ball-skin" d="M1.5 8C5 1 19 1 22.5 8 19 15 5 15 1.5 8Z"/>' +
+          '<path class="go-ball-lace" d="M9 8h6M10.5 6.2v3.6M12 6v4M13.5 6.2v3.6"/>' +
+        '</svg></span>';
+    }
+
+    function sitLine(sit) {
+      var bits = [];
+      if (sit.dd) bits.push('<span class="go-dd">' + esc(sit.dd) + '</span>');
+      if (sit.spot) bits.push('<span class="go-spot">' + esc(sit.spot) + '</span>');
+      return '<span class="go-sit">' +
+        bits.join('<span class="go-sep" aria-hidden="true">·</span>') +
+        '</span>';
+    }
+
+    function heroSection(b) {
+      var g = b.game;
+      var sc = g.score;
+      var sit = situation(b);
+      var ball = sit ? sit.team : '';
+      var aw = '', hw = '';
+      if (sc && sc.away !== null && sc.home !== null) {
+        aw = sc.away > sc.home ? ' is-win' : (sc.away < sc.home ? ' is-loss' : '');
+        hw = sc.home > sc.away ? ' is-win' : (sc.home < sc.away ? ' is-loss' : '');
+      }
+      // The quarter table is drawn only once there is a game to draw it from.
+      var line = '';
+      if (sc && sc.away_line) {
+        var cols = ['1', '2', '3', '4', 'OT'];
+        // Overtime column only when someone actually scored in it.
+        var n = (sc.away_line[4] || sc.home_line[4]) ? 5 : 4;
+        line = '<table class="go-line"><thead><tr><th></th>' +
+          cols.slice(0, n).map(function (c) { return '<th>' + c + '</th>'; }).join('') +
+          '<th>T</th></tr></thead><tbody>' +
+          [['away', g.away.abbr, sc.away_line, sc.away],
+           ['home', g.home.abbr, sc.home_line, sc.home]].map(function (r) {
+            return '<tr><td>' + esc(r[1]) + '</td>' +
+              r[2].slice(0, n).map(function (v) { return '<td>' + esc(v) + '</td>'; }).join('') +
+              '<td class="go-total">' + esc(r[3]) + '</td></tr>';
+          }).join('') + '</tbody></table>';
+      }
+
+      /* The two crests are the headline and they sit at the far edges, away on
+       * the left and home on the right, so the column between them is free for
+       * everything that answers "where is this game": the neutral-site marker,
+       * the status chip, and under it the down, the distance and the spot. The
+       * ball itself is marked on a crest instead, because that is the one fact
+       * of the four that names a team.
+       *
+       * The venue is gone from here. A stadium name is fixed the moment the
+       * fixture is, so it was the least perishable thing on a page that repaints
+       * itself every minute, and it was holding the room a live game's situation
+       * needed. The freshness line has gone the other way, out of the status
+       * column and down to the hero's bottom-right corner: it is a footnote
+       * about the page rather than a fact about the game, and beside the chip it
+       * was read as one. */
+      return '<div class="go-hero"><div class="go-hero-top">' +
+        '<span class="go-team' + aw + '">' +
+          teamLogo(g.away.abbr, 'go-crest', true) +
+          (ball && ball === g.away.abbr ? possMark(g.away.abbr) : '') + '</span>' +
+        '<div class="go-hero-mid">' +
+          '<span class="go-at">' + (g.neutral ? 'vs' : '@') + '</span>' +
+          '<span class="go-status">' +
+            '<span class="go-phase ' + esc(b.phase) + '">' + esc(phaseText(b)) + '</span>' +
+            (sit ? sitLine(sit) : '') +
+          '</span>' +
+        '</div>' +
+        '<span class="go-team' + hw + '">' +
+          teamLogo(g.home.abbr, 'go-crest', true) +
+          (ball && ball === g.home.abbr ? possMark(g.home.abbr) : '') + '</span>' +
+        '</div>' +
+        line +
+        '<div class="go-hero-foot">' + freshness(b) + '</div>' +
+        '</div>';
+    }
+
+    /* An empty section is worth a card only once there is something for it to
+     * be empty *of*. After kickoff "no team stats" is news — the capture is
+     * behind, or the key is on the wrong plan, and the card says which. Before
+     * it, the same card says a game that has not been played has no statistics,
+     * three times over, between the odds and the injury report. So team stats,
+     * the box score and the play log draw nothing at all in the pregame phase,
+     * and reappear the moment the bundle has rows for them — the test is the
+     * data, not the phase, so a game whose phase is behind its feed still
+     * renders what arrived. */
+    function playedYet(b) { return b.phase !== 'pregame'; }
+
+    function teamStatsSection(b) {
+      var a = b.team_stats && b.team_stats.away;
+      var h = b.team_stats && b.team_stats.home;
+      if (!a || !h) {
+        return playedYet(b)
+          ? card('Team stats', emptyState(b, ['/team_stats'], 'team stats'), true)
+          : '';
+      }
+      /* possession_time_seconds is possession_time in a unit nobody reads a
+       * clock in — 33:11 and 1991 are one row, not two.
+       *
+       * The rest are rows that say something the table already says. The three
+       * first-down splits sum to 1st Downs, which is the number this comparison
+       * is read for; the conversion and attempt counts are the two halves of
+       * the efficiency percentage sitting directly above them; and Drives is a
+       * count of possessions nobody compares. Skipped from the data rather than
+       * unnamed in TEAM_ABBR, because a key with no entry still draws a row
+       * under its title-cased key. */
+      var skip = {
+        game: 1, team: 1, home_away: 1, possession_time_seconds: 1,
+        first_downs_rushing: 1, first_downs_passing: 1, first_downs_penalty: 1,
+        total_drives: 1,
+        third_down_conversions: 1, third_down_attempts: 1,
+        fourth_down_conversions: 1, fourth_down_attempts: 1
+      };
+      var keys = orderKeys(Object.keys(a).filter(function (k) {
+        return !skip[k] && (typeof a[k] !== 'object' || a[k] === null);
+      }), Object.keys(TEAM_ABBR));
+      var rows = keys.map(function (k) {
+        var av = a[k], hv = h[k];
+        var ab = isNum(av) && isNum(hv) && av > hv ? ' is-better' : '';
+        var hb = isNum(av) && isNum(hv) && hv > av ? ' is-better' : '';
+        var hd = teamHeading(k);
+        return '<tr><td class="go-val' + ab + '">' + esc(av === null ? '—' : av) + '</td>' +
+          '<td class="go-stat"' + (hd.t ? ' title="' + esc(hd.t) + '"' : '') + '>' +
+            esc(hd.s) + '</td>' +
+          '<td class="go-val' + hb + '">' + esc(hv === null ? '—' : hv) + '</td></tr>';
+      }).join('');
+      /* The crest alone names the column -- the abbreviation beside it said the
+       * same thing twice in a table three columns wide, so the logo takes the
+       * space it was using and the alt text it was carrying. */
+      return card('Team stats',
+        '<table class="go-vs"><thead><tr>' +
+          '<th class="go-vs-team">' +
+            teamLogo(b.game.away.abbr, 'go-vs-logo', true) + '</th><th></th>' +
+          '<th class="go-vs-team">' +
+            teamLogo(b.game.home.abbr, 'go-vs-logo', true) + '</th>' +
+        '</tr></thead><tbody>' + rows + '</tbody></table>');
+    }
+
+    /* The fallback for a box-score key STAT_ABBR has no entry for — a field
+     * balldontlie adds after this map was written.
+     *
+     * A stat's group already names it. Under the Receiving heading, a column
+     * called "Receiving Targets" says "receiving" twice and pushes the word that
+     * distinguishes it — Targets — to where it is read last. So the group's own
+     * prefix comes off its children, which is most of the way to the
+     * abbreviation and costs nothing to keep for the keys nobody has seen yet.
+     *
+     * The prefixes are listed rather than derived from the group name, because
+     * three of them do not match it: defense's fields are `defensive_*`,
+     * kicking's are `field_goal*`, punting's are `punt_*`. And `returns` is
+     * deliberately empty — its fields are `kick_return_yards` and
+     * `punt_return_yards`, so stripping to "Yards" would produce two identically
+     * named columns and lose the only thing that told them apart.
+     *
+     * Only a prefix that leaves something behind is removed: the `fumbles` group
+     * contains a bare `fumbles`, which must stay "Fumbles" rather than become
+     * blank. */
+    var GROUP_PREFIX = {
+      passing: ['passing_'],
+      rushing: ['rushing_'],
+      receiving: ['receiving_'],
+      fumbles: ['fumbles_'],
+      defense: ['defensive_'],
+      kicking: ['field_goals_', 'field_goal_'],
+      punting: ['punt_'],
+      returns: []
+    };
+
+    /* Long forms fullLabel() cannot derive, because the column no longer holds
+     * what its key is named: passing_completions carries the completions and
+     * the attempts both, so its tooltip has to name the pair. */
+    var STAT_FULL = {
+      passing_completions: 'Passing Completions / Attempts'
+    };
+
+    function groupLabel(grp) {
+      var prefixes = GROUP_PREFIX[grp] || [grp + '_'];
+      var map = STAT_ABBR[grp] || {};
+      /* The tooltip is always the whole key spelled out — "Receiving Yards",
+       * not the "Yards" the prefix-stripping would leave. Under a Receiving
+       * heading the group is obvious in the column and useless in the tooltip,
+       * which is read on its own. */
+      return function (key) {
+        if (map[key]) return heading(map[key], STAT_FULL[key] || fullLabel(key));
+        for (var i = 0; i < prefixes.length; i++) {
+          var p = prefixes[i];
+          if (key.indexOf(p) === 0 && key.length > p.length) {
+            return heading(label(key.slice(p.length)), fullLabel(key));
+          }
+        }
+        return heading(label(key), null);
+      };
+    }
+
+    /* The STAT_ABBR entry for a group is written in the order a box score is
+     * read in — Pro-Football-Reference's, for the offensive groups — so it
+     * doubles as the column order. `player` leads every table; anything the
+     * map does not name trails the columns it does. */
+    function groupOrder(grp) {
+      return ['player'].concat(Object.keys(STAT_ABBR[grp] || {}));
+    }
+
+    /* ---------- box score ----------
+     *
+     * Three views over the same rows, one per side of the ball, because that
+     * is how a box score is read: nobody comparing the two quarterbacks wants
+     * a punter's line sitting between them. The eight groups the feed sends
+     * divide cleanly into offence, defence and the kicking game, and `fumbles`
+     * goes with the offence — it is where a box score has always put it, and
+     * three of its four fields are charged to the player who lost the ball.
+     *
+     * Within a view the split is by stat group first and team second, not the
+     * other way round. Split by team first, the two passing tables end up half
+     * a page apart with rushing, receiving and fumbles wedged between them,
+     * which breaks the one comparison a passing table exists to make. Under a
+     * single Passing heading both teams' passers sit one above the other. */
+    var BS_VIEWS = [
+      { key: 'offense', text: 'Offense',
+        groups: ['passing', 'rushing', 'receiving', 'fumbles'] },
+      { key: 'defense', text: 'Defense', groups: ['defense'] },
+      { key: 'special', text: 'Kicking',
+        groups: ['kicking', 'returns', 'punting'] }
+    ];
+
+    /* Which view is showing survives the poll that replaces the page, for the
+     * same reason the props view and the open/shut state of every card do. */
+    var bsView = 'offense';
+
+    function bsViewFor(key) {
+      for (var i = 0; i < BS_VIEWS.length; i++) {
+        if (BS_VIEWS[i].key === key) return BS_VIEWS[i];
+      }
+      return BS_VIEWS[0];
+    }
+
+    /* What a table is ranked by, per group: the stat the group is read for.
+     * Yards on the three offensive tables, tackles on defence — put the man
+     * who did the most at the top, which is what a reader scanning a box score
+     * is looking for and is not what the feed's own order gives.
+     *
+     * The groups left out are not ranked: `fumbles` has no yardage of its own,
+     * and the kicking-game tables are short enough that feed order costs
+     * nothing to read past. */
+    var BS_SORT = {
+      passing: 'passing_yards',
+      rushing: 'rushing_yards',
+      receiving: 'receiving_yards',
+      defense: 'total_tackles'
+    };
+
+    /* Columns a box score is not read for, dropped from the row rather than
+     * left out of STAT_ABBR: genericTable renders the union of the keys it is
+     * handed, and a key with no entry in the map trails the named columns
+     * rather than disappearing. Sack yardage and passer rating are derived
+     * numbers next to the sack count and the line they are derived from, and
+     * interception return yards and return touchdowns are a defence's rarest
+     * two columns -- empty in most games, and two more widths in the rest. */
+    var BS_DROP = {
+      sacks_loss: 1, qb_rating: 1,
+      interception_yards: 1, interception_touchdowns: 1
+    };
+
+    /* A quarterback who threw no picks threw zero of them, not "not recorded",
+     * and the feed sends null for both. Coerced before the table is built so
+     * the column also survives genericTable's drop of the all-null ones: a
+     * passing line with no INT column reads as a stat that failed to load,
+     * where a column of zeroes reads as the clean afternoon it was. */
+    var BS_ZERO = { passing_interceptions: 1, defensive_interceptions: 1 };
+
+    /* One side's players for one group, flattened to what genericTable wants:
+     * the name, then the group's own fields with the nesting dropped. A player
+     * with no entry for the group never played that role and is left out.
+     *
+     * Descending on the group's own stat, with a missing or non-numeric value
+     * sorting last rather than as a zero — it is "not recorded", and the sort
+     * is stable, so anything tied keeps the order the feed sent it in. */
+    function bsRows(rows, grp) {
+      var out = rows.filter(function (r) { return r[grp]; }).map(function (r) {
+        var o = { player: initialName((r.player || {}).first_name,
+          (r.player || {}).last_name) || (r.player || {}).id };
+        Object.keys(r[grp]).forEach(function (k) {
+          if (BS_DROP[k]) return;
+          o[k] = (r[grp][k] === null && BS_ZERO[k]) ? 0 : r[grp][k];
+        });
+        /* Cmp-Att is one figure in a box score and has been for as long as box
+         * scores have been printed -- 18/27, read as a pair, because neither
+         * half means anything without the other. Two columns here only because
+         * the feed sends the parts, so they are put back together in the
+         * completions column, which is already where the pair sits in the
+         * order, and the attempts column comes out. */
+        if (grp === 'passing') {
+          var c = o.passing_completions, at = o.passing_attempts;
+          delete o.passing_attempts;
+          o.passing_completions = (c == null && at == null) ? null
+            : (c == null ? '—' : c) + '/' + (at == null ? '—' : at);
+        }
+        return o;
+      });
+      var by = BS_SORT[grp];
+      if (!by) return out;
+      return out.sort(function (a, c) {
+        var av = Number(a[by]), cv = Number(c[by]);
+        var an = isFinite(av), cn = isFinite(cv);
+        if (an !== cn) return an ? -1 : 1;
+        if (!an) return 0;
+        return cv - av;
+      });
+    }
+
+    function boxscoreBody(b, key) {
+      var ps = b.player_stats || {};
+      var view = bsViewFor(key);
+      var html = '';
+      view.groups.forEach(function (grp) {
+        var tables = '';
+        ['away', 'home'].forEach(function (side) {
+          var flat = bsRows(ps[side] || [], grp);
+          if (!flat.length) return;
+          tables += '<h5 class="go-bs-team">' +
+            teamLogo(b.game[side].abbr, 'go-bs-logo') +
+            esc(b.game[side].name) + '</h5>' +
+            genericTable(flat, groupLabel(grp), groupOrder(grp));
+        });
+        /* A group nobody recorded a stat in is left out rather than shown
+         * empty: a game with no interceptions has no returns table, and a
+         * heading over nothing reads as a load that failed. */
+        if (!tables) return;
+        /* Defense is one group in a view of the same name, so its heading
+         * would repeat the pressed chip immediately above it. A view that
+         * holds one group is already named by the chip. */
+        html += (view.groups.length > 1
+          ? '<h4 class="go-bs-grp">' + esc(label(grp)) + '</h4>' : '') + tables;
+      });
+      return html || '<div class="go-empty">No ' +
+        esc(view.text.toLowerCase()) + ' stats in this box score yet.</div>';
+    }
+
+    function playerStatsSection(b) {
+      var ps = b.player_stats || {};
+      var total = ['away', 'home'].reduce(function (n, s) {
+        return n + ((ps[s] || []).length);
+      }, 0);
+      if (!total) {
+        return playedYet(b)
+          ? card('Box score', emptyState(b, ['/stats'], 'player stats'), true)
+          : '';
+      }
+      /* All three chips always, whether or not the view behind them has rows
+       * yet, for the reason the quarter filters are always four: a game where
+       * nobody has kicked reads as "not yet" from an empty Kicking, and
+       * as a missing feature from a chip that is not there. */
+      var seg = BS_VIEWS.map(function (v) {
+        return '<button type="button" data-bs-view="' + esc(v.key) + '"' +
+          ' aria-pressed="' + (v.key === bsView ? 'true' : 'false') + '">' +
+          esc(v.text) + '</button>';
+      }).join('');
+      return card('Box score',
+        '<div class="go-seg" id="bs-views" role="group"' +
+          ' aria-label="Box score view">' + seg + '</div>' +
+        '<div class="go-bs-body" id="bs-body"></div>', true);
+    }
+
+    /* Wired after every render for the same reason wirePlays is: a poll
+     * replaces the section wholesale and takes its listeners with it. */
+    function wireBoxscore(b) {
+      var segEl = document.getElementById('bs-views');
+      var bodyEl = document.getElementById('bs-body');
+      if (!segEl || !bodyEl) return;
+
+      function draw(key) {
+        bsView = key;
+        bodyEl.innerHTML = boxscoreBody(b, key);
+      }
+
+      segEl.addEventListener('click', function (e) {
+        var btn = e.target && e.target.getAttribute &&
+          e.target.getAttribute('data-bs-view') !== null ? e.target : null;
+        if (!btn) return;
+        var buttons = segEl.querySelectorAll('[data-bs-view]');
+        for (var i = 0; i < buttons.length; i++) {
+          buttons[i].setAttribute('aria-pressed',
+            buttons[i] === btn ? 'true' : 'false');
+        }
+        draw(btn.getAttribute('data-bs-view'));
+      });
+      draw(bsView);
+    }
+
+    /* Overtime is period 5 and up, so it was rendering as "Q5" -- not a
+     * quarter, and not something the quarter filters below could name either.
+     * One label function now answers both. */
+    function periodLabel(n) {
+      var p = Number(n);
+      if (!(p > 0)) return '';
+      return p > 5 ? 'OT' + (p - 4) : (p > 4 ? 'OT' : 'Q' + p);
+    }
+
+    /* `tint` is opt-out rather than a per-caller class, because the tint is
+     * the only thing the two callers of this row disagree about. In the log it
+     * picks seven scoring plays out of two hundred ordinary ones, which is
+     * what a tint is for. In the Scoring plays card every row is a score, so
+     * there is nothing left to pick out and a tinted row throughout reads as
+     * one block of highlight rather than as a list of plays. */
+    function playRow(pl, tint) {
+      return '<div class="go-play' +
+        (tint !== false && pl.scoring_play ? ' is-scoring' : '') + '">' +
+        '<span class="go-clock">' + esc(periodLabel(pl.period)) + ' ' +
+          esc(pl.clock_display || '') + '</span>' +
+        '<span class="go-pteam">' + esc((pl.team || {}).abbreviation || '') + '</span>' +
+        '<span class="go-ptext">' + esc(pl.text || pl.short_text || '') + '</span>' +
+        '<span class="go-pscore">' + esc(pl.away_score) + '–' + esc(pl.home_score) +
+        '</span></div>';
+    }
+
+    /* A filter is one predicate over rows that are already on the page -- the
+     * whole log ships inside the bundle, so switching view is not a fetch and
+     * not a re-render of anything but the list. `scoring` reads the feed's own
+     * flag rather than matching on the play text, and a quarter key is just the
+     * period number it ends with, which is what lets the overtime chips fall
+     * out of the same three lines. */
+    function playPredicate(key) {
+      if (key === 'scoring') return function (pl) { return !!pl.scoring_play; };
+      if (key.charAt(0) === 'q') {
+        var n = parseInt(key.slice(1), 10);
+        return function (pl) { return Number(pl.period) === n; };
+      }
+      return function () { return true; };
+    }
+
+    /* Q1 through Q4 always, so a game at halftime offers the same controls a
+     * final one does and an empty quarter reads as "not yet" rather than as a
+     * missing button. Overtime is the exception: those chips appear only when
+     * the log actually reaches that period, because most games never do. */
+    function playFilters(p) {
+      var periods = [1, 2, 3, 4];
+      (p.all || []).forEach(function (pl) {
+        var n = Number(pl.period);
+        if (n > 4 && periods.indexOf(n) < 0) periods.push(n);
+      });
+      periods.sort(function (a, c) { return a - c; });
+      var out = [{ key: 'all', text: 'All' }];
+      periods.forEach(function (n) { out.push({ key: 'q' + n, text: periodLabel(n) }); });
+      if (p.scoring_count) out.push({ key: 'scoring', text: 'Scoring' });
+      return out;
+    }
+
+    /* ---------- Scoring plays ----------
+     *
+     * Rendered high on the page — between the odds and the box score — and
+     * defined down here beside the log it is cut from, because it is the same
+     * rows through the same row renderer. It is not a second play log: it is
+     * the answer to "how did it get to 21-17", which is the question a reader
+     * arriving at a game in the fourth quarter actually has, and which the log
+     * can only answer by being scrolled or filtered.
+     *
+     * Newest first, which is the one place on this page that reverses the
+     * feed. Everything else here reads forwards because it is a record; this
+     * card is read for what just happened, so the most recent score is the
+     * first line rather than the last.
+     *
+     * Clock, not play id, decides the order. /plays comes back ordered by id
+     * and administrative rows sort out of sequence within it (see the running
+     * score assertion in fetch_bdl_game.py), and the ids are not even a
+     * consistent width — 401772745594 and 4017727451442 are the same game. A
+     * scoring play always carries the period and clock it is shown with, so
+     * ordering on those two makes the sequence agree with what is printed in
+     * every row. Feed position breaks a tie and covers a clock we cannot read:
+     * later in the array is later in the game. */
+    function clockLeft(s) {
+      var m = /^(\d+):(\d\d)$/.exec(String(s == null ? '' : s).trim());
+      return m ? Number(m[1]) * 60 + Number(m[2]) : null;
+    }
+
+    function scoringPlays(b) {
+      var isScore = playPredicate('scoring');
+      var out = [];
+      ((b.plays || {}).all || []).forEach(function (pl, i) {
+        if (isScore(pl)) out.push({ pl: pl, i: i });
+      });
+      out.sort(function (x, y) {
+        var xp = Number(x.pl.period), yp = Number(y.pl.period);
+        if (isFinite(xp) && isFinite(yp) && xp !== yp) return yp - xp;
+        // Counting down, so the smaller remainder is the later play.
+        var xc = clockLeft(x.pl.clock_display), yc = clockLeft(y.pl.clock_display);
+        if (xc !== null && yc !== null && xc !== yc) return xc - yc;
+        return y.i - x.i;
+      });
+      return out.map(function (o) { return o.pl; });
+    }
+
+    function scoringSection(b) {
+      var p = b.plays || { count: 0, all: [] };
+      /* No log at all is the log's own empty state, said once: before kickoff
+       * there is nothing to say, and on a free key the "not captured" notice
+       * belongs on the card that is actually missing its feed. */
+      if (!p.count) return '';
+      var rows = scoringPlays(b);
+      /* A real 0-0 is a state this card has to be able to hold: a first
+       * quarter with no points is not a card that failed to load. */
+      return card('Scoring plays', rows.length
+        ? '<div class="go-plays go-scoring">' +
+            rows.map(function (pl) { return playRow(pl, false); }).join('') +
+          '</div>'
+        : '<div class="go-empty">No points on the board yet.</div>', true);
+    }
+
+    function playsSection(b) {
+      var p = b.plays || { count: 0, all: [] };
+      if (!p.count) {
+        return playedYet(b)
+          ? card('Play log', emptyState(b, ['/plays'], 'plays'), true)
+          : '';
+      }
+      var seg = playFilters(p).map(function (f, i) {
+        return '<button type="button" data-play-filter="' + esc(f.key) +
+          '" aria-pressed="' + (i ? 'false' : 'true') + '">' + esc(f.text) +
+          '</button>';
+      }).join('');
+      return card('Play log',
+        '<div class="go-seg" id="play-filters">' + seg + '</div>' +
+        '<div class="go-plays" id="play-list"></div>', true);
+    }
+
+    /* Wired after every render for the same reason wireProps is: a poll
+     * replaces the section wholesale and takes its listeners with it. */
+    function wirePlays(b) {
+      var segEl = document.getElementById('play-filters');
+      var listEl = document.getElementById('play-list');
+      if (!segEl || !listEl) return;
+      var all = (b.plays || {}).all || [];
+
+      function draw(key) {
+        var rows = all.filter(playPredicate(key));
+        listEl.innerHTML = rows.length
+          ? rows.map(function (pl) { return playRow(pl, true); }).join('')
+          : '<div class="go-empty">No plays in that filter yet.</div>';
+      }
+
+      segEl.addEventListener('click', function (e) {
+        var btn = e.target && e.target.getAttribute &&
+          e.target.getAttribute('data-play-filter') !== null ? e.target : null;
+        if (!btn) return;
+        var buttons = segEl.querySelectorAll('[data-play-filter]');
+        for (var i = 0; i < buttons.length; i++) {
+          buttons[i].setAttribute('aria-pressed',
+            buttons[i] === btn ? 'true' : 'false');
+        }
+        draw(btn.getAttribute('data-play-filter'));
+      });
+      draw('all');
+    }
+
+    /* ---------- odds ----------
+     * Shape settled by probing a live key, not by the docs: one row per
+     * sportsbook with spread / moneyline / total in flat columns, and the book
+     * in `vendor`. Rendered as one small table per book rather than one wide
+     * one: laid out flat, the two sides of every market sit in eight columns
+     * that no phone can hold, so the table scrolled sideways and the price a
+     * reader came for was off-screen. Pivoted, a book is four columns — team,
+     * spread, moneyline, total — and the two teams are the two rows, which
+     * fits without scrolling and puts the two sides of a market adjacent. */
+
+    /* Books arrive as their API slug — `draftkings`, `fanduel`. The odds card
+     * heads a book's table with it and the props board lists it beside a price,
+     * both times against narrow numeric columns where the full name is several
+     * times the width of the numbers, so it is shortened to the ticker a
+     * line-shopping grid is read with. An unmapped book falls back to its slug
+     * uppercased: wrong-looking enough to notice and add rather than quietly
+     * rendering as something else. */
+    var BOOK_SHORT = {
+      draftkings: 'DK', fanduel: 'FD', betmgm: 'MGM', caesars: 'CZR',
+      betrivers: 'BR', fanatics: 'FAN', espnbet: 'ESPN', bet365: 'B365',
+      pointsbet: 'PB', hardrock: 'HR'
+    };
+
+    var BOOK_NAME = {
+      draftkings: 'DraftKings', fanduel: 'FanDuel', betmgm: 'BetMGM',
+      caesars: 'Caesars', betrivers: 'BetRivers', fanatics: 'Fanatics',
+      espnbet: 'ESPN BET', bet365: 'bet365', pointsbet: 'PointsBet',
+      hardrock: 'Hard Rock Bet'
+    };
+
+    function bookLabel(v) {
+      var k = String(v == null ? '' : v).toLowerCase();
+      return BOOK_SHORT[k] || k.toUpperCase();
+    }
+
+    function bookName(v) {
+      var k = String(v == null ? '' : v).toLowerCase();
+      return BOOK_NAME[k] || bookLabel(v);
+    }
+
+    function bookHeading(v) {
+      var k = String(v == null ? '' : v).toLowerCase();
+      return heading(bookLabel(v), BOOK_NAME[k] || null);
+    }
+
+    function fmtOdds(n) {
+      if (n === null || n === undefined || n === '') return '—';
+      return (n > 0 ? '+' : '') + n;
+    }
+
+    function fmtSpread(v) {
+      if (v === null || v === undefined || v === '') return '—';
+      var s = String(v);
+      return s.charAt(0) === '-' ? s : '+' + s;
+    }
+
+    /* A market cell is the line and the price it is offered at — `-3.5 (-110)`.
+     * Either half can be missing on a book that has posted one and not the
+     * other, and `-3.5 (—)` reads as a price rather than an absence, so a
+     * half-quoted market renders only the half that exists. */
+    function lineCell(value, odds, fmt) {
+      var hasV = value !== null && value !== undefined && value !== '';
+      var hasO = odds !== null && odds !== undefined && odds !== '';
+      if (!hasV) return hasO ? fmtOdds(odds) : '—';
+      return fmt(value) + (hasO ? ' (' + fmtOdds(odds) + ')' : '');
+    }
+
+    /* The total is one line quoted from both sides, so it is not a property of
+     * either team the way the spread and the moneyline are. It is split down
+     * the same two rows anyway — over on top, under below, each prefixed with
+     * the side it is — because a third row for one market would cost more than
+     * the small fiction that the over belongs to the away team. */
+    function totalCell(r, side) {
+      return lineCell(r.total_value,
+        side === 'over' ? r.total_over_odds : r.total_under_odds,
+        function (v) { return (side === 'over' ? 'o' : 'u') + v; });
+    }
+
+    function oddsRow(t, spread, ml, tot) {
+      return '<tr><th scope="row" class="go-tm">' + teamLogo(t.abbr, 'go-logo-sm') +
+        esc(t.abbr) + '</th>' +
+        '<td class="is-num">' + esc(spread) + '</td>' +
+        '<td class="is-num">' + esc(ml) + '</td>' +
+        '<td class="is-num">' + esc(tot) + '</td></tr>';
+    }
+
+    /* One book, one table: the book names the team column, the markets are the
+     * other three headings, and the away team leads the way it does everywhere
+     * else on the page. */
+    function bookTable(r, g) {
+      var b = bookHeading(r.vendor);
+      return '<div class="go-book"><table class="go-table go-odds"><thead><tr>' +
+          '<th class="go-tm"' + (b.t ? ' title="' + esc(b.t) + '"' : '') + '>' +
+            esc(b.s) + '</th>' +
+          thCell(heading('Spread', 'Point spread'), 'is-num') +
+          thCell(heading('ML', 'Moneyline'), 'is-num') +
+          thCell(heading('Total', 'Total points line'), 'is-num') +
+        '</tr></thead><tbody>' +
+        oddsRow(g.away,
+          lineCell(r.spread_away_value, r.spread_away_odds, fmtSpread),
+          fmtOdds(r.moneyline_away_odds),
+          totalCell(r, 'over')) +
+        oddsRow(g.home,
+          lineCell(r.spread_home_value, r.spread_home_odds, fmtSpread),
+          fmtOdds(r.moneyline_home_odds),
+          totalCell(r, 'under')) +
+        '</tbody></table></div>';
+    }
+
+    function oddsTable(rows, g) {
+      var quotes = rows.slice().sort(function (a, b2) {
+        return String(a.vendor).localeCompare(String(b2.vendor));
+      });
+      return '<div class="go-books">' +
+        quotes.map(function (r) { return bookTable(r, g); }).join('') +
+        '</div>';
+    }
+
+    /* A finished game has no odds worth showing. The market it was quoting has
+     * settled, the hero above carries the result the quotes were guessing at,
+     * and there is nothing left to bet -- so a book table on a final game is a
+     * price for a question already answered.
+     *
+     * It is also the least trustworthy data the bundle holds. Books suspend
+     * their markets as a game ends and post sentinel prices to do it: FanDuel
+     * closed NE@SEA in week 1 2026 at -100000 / +10000, and because the last
+     * capture before the whistle is the one that gets frozen into the archive,
+     * those sentinels are what a final bundle keeps for ever. Dropping the
+     * section on `final` means the page never renders them.
+     *
+     * Checked here rather than at the call site so the rule belongs to the
+     * section: anything that renders odds gets it without having to remember. */
+    function oddsSection(b) {
+      if (b.phase === 'final') return '';
+      var o = b.odds || { current: [], opening: [] };
+      if (!o.current.length && !o.opening.length) {
+        return card('Betting odds',
+          emptyState(b, ['/odds', '/odds/opening'], 'odds'), true);
+      }
+      var body = '';
+      if (o.current.length) {
+        body += oddsTable(o.current, b.game);
+      }
+      if (o.opening.length) {
+        body += oddsTable(o.opening, b.game);
+      }
+      
+      return card('Betting odds', body);
+    }
+
+    /* ---------- props ----------
+     * Several thousand rows per game — 34 players x 25 markets x 2 books, and
+     * both sides of every over/under — so a flat dump is unreadable and a
+     * truncated one is a lie. Two selects cut it to one market, and inside it
+     * a player is a row and the lines he is quoted at are the columns.
+     *
+     * ---------- market shapes ----------
+     * Two shapes come back under the same prop_type and they are different
+     * bets. `milestone` is an over-only ladder — 50+, 60+, 70+ receiving yards,
+     * anytime touchdown, 2+ touchdowns — one price per rung and no under to
+     * take. `over_under` is the conventional two-sided line at 59.5.
+     *
+     * They used to share a table, because the feed shares a market name. A
+     * receiving-yards board was then 206 ladder rungs and 19 two-sided lines
+     * under three price columns, two of which were empty on every row: a blank
+     * Over and Under beside each rung, a blank Odds beside each line. So the
+     * split is made at the <select> — Milestones and Over / Under are separate
+     * options — and one table only ever holds one shape, which is what lets
+     * each of them be laid out as the board it actually is.
+     *
+     * Anything that is not a milestone is treated as two-sided, which is what
+     * the price cells assumed before the split: a third shape the feed adds
+     * later renders with Over and Under rather than vanishing from the menu. */
+    var MILESTONE = 'milestone';
+
+    function shapeOf(r) {
+      return ((r && r.market) || {}).type === MILESTONE ? MILESTONE : 'over_under';
+    }
+
+    /* A milestone line is a floor, not a number the market can land on: 50 is
+     * "50 or more receiving yards", and the 0.5 an anytime-touchdown quote
+     * hangs on is "1 or more". Shown with the + and rounded up, because "0.5"
+     * in a touchdown column reads as half a touchdown. */
+    function mileLine(v) {
+      var n = parseFloat(v);
+      return isFinite(n) ? Math.ceil(n) + '+' : String(v == null ? '' : v);
+    }
+
+    /* ---------- markets wearing another market's name ----------
+     * DraftKings prices markets the feed has no name for — pass + rush yards,
+     * longest completion, longest reception, both quarterbacks' passing yards
+     * added together — and they arrive wearing the nearest name it does have,
+     * with nothing on the row to tell them apart: same vendor, same prop_type,
+     * same timestamp, prices in the same range. Dak Prescott came back at
+     * 261.5 and 273.5 passing yards, Matthew Stafford at 23.5 and 38.5
+     * completions, Brock Purdy at 243.5 and 513.5. Left alone the board reads
+     * the second one as two books disagreeing, which is what a second line
+     * means between books, and the reader has no way to tell which to take.
+     *
+     * Both boards are cleaned here, because both are hit: over a full week,
+     * 22,140 rows, 873 of them belong to a market other than the one they are
+     * filed under, and every single one is DraftKings.
+     *
+     * ---------- 1. one book, one line ----------
+     * Keep the lowest, because every impostor is a superset of the market it
+     * lands in — a longest-something, a combined something, a this-plus-that —
+     * and a superset can only price above the thing it contains. That is the
+     * whole rule where no other book quotes the market, which is most of them:
+     * completions and receptions are a DraftKings board in almost every game.
+     *
+     * Where other books do quote it they are the check, and they overrule the
+     * lowest line only when decisive: the median of their lines is an anchor,
+     * and a higher quote has to sit at less than half the lowest one's
+     * distance from it to be believed. Books straddle an impostor often
+     * enough to matter — in one game the other two were at 267.5 and 273.5
+     * around DraftKings' real 264.5, and their median leant toward the 274.5
+     * that was 264.5 plus a rushing line.
+     *
+     * Of 1,549 two-sided quotes 55 doubled up. The lowest line is the real one
+     * in all 55; the anchor agrees in 51 of the 52 it can speak to, and the
+     * half-distance margin is what keeps the 52nd.
+     *
+     * ---------- 2. one ladder, one market ----------
+     * A milestone ladder is a cumulative price — 50+, 60+, 70+ — so it can
+     * only get longer as the rung rises. That is what makes a foreign rung
+     * visible without knowing what it is: a price that jumps back toward even
+     * money at a higher rung is quoting something else. Puka Nacua's
+     * receptions ladder ran 3+ at -10000 out to 14+ at +2100 and then offered
+     * 20+ at -437, because 20+ was his longest reception in yards; Purdy's
+     * completions ladder did the same thing at 30+, and Stafford's passing
+     * ladder opened with a -23.5 rung, which is a handicap.
+     *
+     * So keep the longest run of rungs that stays a ladder, and drop what will
+     * not fit into it — the smallest edit that leaves one coherent market. A
+     * run may not skip a hole wider than three times the ladder's own step,
+     * which is what stops it stitching the bottom of one market to the top of
+     * another; ties go to the run holding the rung the book's own line sits
+     * on, then to whole-numbered rungs, since a fractional rung in a yardage
+     * ladder is almost always some other line's twin.
+     *
+     * Then the ladder has to be this market's at all. A ladder crosses even
+     * money about five yards above the two-sided line it belongs to; where it
+     * crosses somewhere else entirely, it is another market's ladder with this
+     * market's rung sitting in it. Seventeen DraftKings passing ladders read
+     * that way in one week — every one of them a quarterback with a pass +
+     * rush line, and every one crossing within six yards of that line rather
+     * than his passing line. Those go whole; the other books' ladders for the
+     * same player stay, so the board still has prices.
+     *
+     * Nothing here fires without a violation to point at, which is why 96% of
+     * the feed passes through untouched. */
+    var NOISE = 0.02;        // price wobble that is not a market changing
+    var REACH = 3;           // how many steps a ladder may skip over a bad rung
+    var CROSS_STEPS = 1.5;   // how far from its line a ladder may cross even money
+    var ANCHOR_MARGIN = 0.5; // how much closer than the lowest line an anchor must be
+
+    function ouLine(r) {
+      return shapeOf(r) === MILESTONE ? NaN : parseFloat(r.line_value);
+    }
+
+    function rungProb(r) {
+      return impliedProb((r.market || {}).odds);
+    }
+
+    function median(ns) {
+      var s = ns.slice().sort(function (a, b) { return a - b; });
+      var i = Math.floor(s.length / 2);
+      return s.length % 2 ? s[i] : (s[i - 1] + s[i]) / 2;
+    }
+
+    /* The one quote to keep out of the several a book is showing for one
+     * player in one market. */
+    function realQuote(quotes, others) {
+      var low = quotes.reduce(function (best, r) {
+        return ouLine(r) < ouLine(best) ? r : best;
+      });
+      if (!others.length) return low;
+
+      var anchor = median(others);
+      var near = quotes.reduce(function (best, r) {
+        var d = Math.abs(ouLine(r) - anchor);
+        var bd = Math.abs(ouLine(best) - anchor);
+        return d < bd || (d === bd && ouLine(r) < ouLine(best)) ? r : best;
+      });
+      /* A lowest line the books agree with leaves nothing to overrule: its
+       * distance is zero and no margin gets under it. */
+      return Math.abs(ouLine(near) - anchor) <
+             ANCHOR_MARGIN * Math.abs(ouLine(low) - anchor) ? near : low;
+    }
+
+    /* rungs: [{line, prob}] in rung order -> which of them to keep.
+     * The longest run whose prices only lengthen, scored so that ties go to
+     * the run holding `anchor` and then to whole-numbered rungs. */
+    function coherentRungs(rungs, anchor) {
+      var gaps = [], i, j;
+      for (i = 1; i < rungs.length; i++) gaps.push(rungs[i].line - rungs[i - 1].line);
+      var reach = gaps.length ? REACH * median(gaps) : Infinity;
+
+      var score = [], from = [], best = -1, end = -1;
+      for (i = 0; i < rungs.length; i++) {
+        var w = 1 + (rungs[i].line === anchor ? 0.5 : 0) +
+                    (rungs[i].line % 1 === 0 ? 0.001 : 0);
+        score[i] = w;
+        from[i] = -1;
+        for (j = 0; j < i; j++) {
+          if (rungs[i].line - rungs[j].line > reach) continue;
+          if (rungs[j].prob >= rungs[i].prob - NOISE && score[j] + w > score[i]) {
+            score[i] = score[j] + w;
+            from[i] = j;
+          }
+        }
+        if (score[i] > best) { best = score[i]; end = i; }
+      }
+
+      var keep = [];
+      for (i = end; i >= 0; i = from[i]) keep[i] = true;
+      return keep;
+    }
+
+    /* Where a ladder's price passes through even money, in the ladder's own
+     * units. A ladder that has been spliced together crosses more than once. */
+    function evenMoneyAt(rungs) {
+      var out = [];
+      for (var i = 1; i < rungs.length; i++) {
+        var a = rungs[i - 1], b = rungs[i];
+        if (a.prob >= 0.5 && b.prob <= 0.5 && a.prob !== b.prob) {
+          out.push(a.line + (b.line - a.line) * ((a.prob - 0.5) / (a.prob - b.prob)));
+        }
+      }
+      return out;
+    }
+
+    function cleanProps(rows) {
+      var drop = [], keyOf = function (r) {
+        return r.vendor + '|' + r.prop_type + '|' + r.player_id;
+      };
+      var quotes = {}, ladders = {}, market = {}, real = {};
+
+      rows.forEach(function (r, i) {
+        var k = keyOf(r), mkt = r.prop_type + '|' + r.player_id;
+        if (shapeOf(r) !== MILESTONE) {
+          if (!isFinite(ouLine(r))) return;
+          (quotes[k] || (quotes[k] = [])).push(i);
+          (market[mkt] || (market[mkt] = [])).push(i);
+        } else if (isFinite(rungProb(r))) {
+          (ladders[k] || (ladders[k] = [])).push(i);
+        }
+      });
+
+      // 1. one book, one line
+      Object.keys(quotes).forEach(function (k) {
+        var mine = quotes[k].map(function (i) { return rows[i]; });
+        var others = [];
+        if (mine.length > 1) {
+          others = market[mine[0].prop_type + '|' + mine[0].player_id]
+            .map(function (i) { return rows[i]; })
+            .filter(function (r) { return r.vendor !== mine[0].vendor; })
+            .map(ouLine);
+        }
+        var keep = realQuote(mine, others);
+        real[k] = ouLine(keep);
+        quotes[k].forEach(function (i) { if (rows[i] !== keep) drop[i] = true; });
+      });
+
+      // 2. one ladder, one market
+      Object.keys(ladders).forEach(function (k) {
+        var idx = ladders[k].slice().sort(function (a, b) {
+          return parseFloat(rows[a].line_value) - parseFloat(rows[b].line_value);
+        });
+        var line = real.hasOwnProperty(k) ? real[k] : null;
+
+        /* The rung that goes with a line the book is not offering after all. */
+        var twin = {};
+        (quotes[k] || []).forEach(function (i) {
+          if (drop[i]) twin[Math.ceil(ouLine(rows[i]))] = true;
+        });
+        idx = idx.filter(function (i) {
+          if (!twin[parseFloat(rows[i].line_value)]) return true;
+          drop[i] = true;
+          return false;
+        });
+        if (idx.length < 3) return;
+
+        var rungs = idx.map(function (i) {
+          return { line: parseFloat(rows[i].line_value), prob: rungProb(rows[i]) };
+        });
+
+        var broken = rungs.some(function (r, n) {
+          return n > 0 && r.prob > rungs[n - 1].prob + NOISE;
+        });
+        if (broken) {
+          var keep = coherentRungs(rungs, line === null ? NaN : Math.ceil(line));
+          idx = idx.filter(function (i, n) {
+            if (keep[n]) return true;
+            drop[i] = true;
+            return false;
+          });
+          rungs = rungs.filter(function (r, n) { return keep[n]; });
+        }
+        if (line === null || rungs.length < 3) return;
+
+        /* Whose ladder is it? One that never comes near even money says
+         * nothing either way — a bench player's ladder is long odds top to
+         * bottom — so only a ladder that crosses somewhere is asked where. */
+        var steps = [], n;
+        for (n = 1; n < rungs.length; n++) steps.push(rungs[n].line - rungs[n - 1].line);
+        var crosses = evenMoneyAt(rungs);
+        if (!crosses.length) return;
+        var nearest = crosses.reduce(function (a, x) {
+          return Math.abs(x - line) < Math.abs(a - line) ? x : a;
+        });
+        if (Math.abs(nearest - line) <= CROSS_STEPS * median(steps)) return;
+        idx.forEach(function (i) { drop[i] = true; });
+      });
+
+      var kept = rows.filter(function (r, i) { return !drop[i]; });
+      return kept.length === rows.length ? rows : kept;
+    }
+
+    /* Current only. An opening line answers a different question — how the
+     * market moved — and that is not what this board is for; carrying it as a
+     * filter put a second decision in front of the one price anyone came to
+     * read. */
+    function propRows(b) {
+      return cleanProps((b.player_props && b.player_props.current) || []);
+    }
+
+    function playerOf(b, id) {
+      return (b.players && b.players[String(id)]) || null;
+    }
+
+    /* ---------- consensus ----------
+     * The board used to give each book a column group of its own — Line, Odds,
+     * Over, Under, once per book — which is how a line-shopping grid is read,
+     * and is nine columns wide before a third book turns up. On a phone that
+     * scrolled sideways, so the price a reader came for was off the right edge.
+     * It also bought very little: the books hang their ladders on different
+     * numbers (DraftKings on tens, FanDuel on twenty-fives), so most of a row
+     * was the em dashes saying the other book is not at this line.
+     *
+     * One price per line instead, priced the way scripts/build_bun_win_totals.py
+     * prices a win total so the two agree: the mean of the books' implied
+     * probabilities at that line, converted back to American. The vig stays in —
+     * this is a number to hold against a screen, not a fair value nobody can
+     * bet. A line only one book hangs is that book's price, and the Books
+     * column says which.
+     */
+    function impliedProb(odds) {
+      var o = Number(odds);
+      if (!isFinite(o) || o === 0) return null;
+      return o < 0 ? (-o) / ((-o) + 100) : 100 / (o + 100);
+    }
+
+    function toAmerican(p) {
+      if (p >= 0.5) return -Math.round(100 * p / (1 - p));
+      return Math.round(100 * (1 - p) / p);
+    }
+
+    /* [{vendor, odds}, …] -> {odds, books:[{name, odds}]}, or null when no
+     * book priced it. The books come back whole rather than folded into a
+     * string: they are the column group this board replaced, and both the
+     * hover and the tap overlay below are built out of them. */
+    function consensusOdds(quotes) {
+      var ps = [], books = [];
+      quotes.forEach(function (q) {
+        var p = impliedProb(q.odds);
+        if (p === null) return;
+        ps.push(p);
+        books.push({ name: bookName(q.vendor), odds: q.odds });
+      });
+      if (!ps.length) return null;
+      var mean = ps.reduce(function (a, c) { return a + c; }, 0) / ps.length;
+      return { odds: toAmerican(mean), books: books };
+    }
+
+    /* ---------- price detail ----------
+     * What each book is hanging a line at, behind the one consensus number the
+     * board shows. It was a title attribute and nothing else, which is a
+     * hover, which a phone does not have — and a prop board is mostly read on
+     * a phone. The hover stays for a mouse; a tap opens the same thing as an
+     * overlay.
+     *
+     * The row is what carries it, not the price cell. A price cell is a 40px
+     * target on a phone and there are three of them in a two-sided row, so
+     * tapping the name — the widest, most obvious thing in the row — did
+     * nothing, and tapping a price meant hitting the right number rather than
+     * the right bet. One panel per row instead: it is a superset of what the
+     * per-cell panels held, since a row's sides or rungs are all in it.
+     *
+     * The row carries an index into this rather than the detail itself: the
+     * payload is a player, a line and a price per book per side, and encoding
+     * that as attributes on every row of a forty-column ladder is a lot of
+     * markup to say what an array position says. Reset per render, which is
+     * safe because a render replaces every table on the page. */
+    var priceDetail = [];
+
+    /* rows: [{label, quotes}] — the sides of a two-sided line, or the rungs of
+     * one player's ladder. Returns the index the <tr> hangs off. */
+    function pushDetail(player, line, rows) {
+      var vendors = [], seen = {};
+      rows.forEach(function (r) {
+        r.quotes.forEach(function (q) {
+          if (seen[q.vendor]) return;
+          seen[q.vendor] = 1;
+          vendors.push(q.vendor);
+        });
+      });
+      vendors.sort(function (x, y) {
+        return bookLabel(x).localeCompare(bookLabel(y));
+      });
+      return priceDetail.push({
+        player: player, line: line, books: vendors,
+        rows: rows.map(function (r) {
+          var by = {}, c = consensusOdds(r.quotes);
+          r.quotes.forEach(function (q) { by[q.vendor] = q.odds; });
+          return { label: r.label, by: by, cons: c ? c.odds : null };
+        })
+      }) - 1;
+    }
+
+    /* The hover stays per cell: a mouse is already pointing at one price, and
+     * the whole row is what the tap is for. */
+    function consCell(quotes) {
+      var c = consensusOdds(quotes);
+      if (!c) return '<td class="is-null">—</td>';
+      var hover = c.books.map(function (bk) {
+        return bk.name + ' ' + fmtOdds(bk.odds);
+      }).join(' \u00b7 ');
+      return '<td class="is-num" title="' + esc(hover) + '">' +
+        esc(fmtOdds(c.odds)) + '</td>';
+    }
+
+    /* Every line one player is quoted at, in this market. Keyed on the market
+     * shape as well as the number, because a 250+ milestone rung and a 250.5
+     * two-sided line are different bets that round to the same place — folded
+     * into one row, one book's price would sit in the other's column. */
+    function propGroups(rows) {
+      var order = [], byKey = {};
+      rows.forEach(function (r) {
+        var m = r.market || {};
+        var k = r.player_id + '|' + r.line_value + '|' + (m.type || '');
+        if (!byKey[k]) {
+          byKey[k] = {
+            player_id: r.player_id, line: r.line_value, type: m.type,
+            odds: [], over: [], under: []
+          };
+          order.push(k);
+        }
+        var g = byKey[k];
+        if (shapeOf(r) === MILESTONE) {
+          g.odds.push({ vendor: r.vendor, odds: m.odds });
+        } else {
+          g.over.push({ vendor: r.vendor, odds: m.over_odds });
+          g.under.push({ vendor: r.vendor, odds: m.under_odds });
+        }
+      });
+      /* Sorted by ticker rather than left in whatever order the feed listed
+       * the books in, which differs between markets and would read as an
+       * unsorted list in the hover the prices are folded into. */
+      function byBook(x, y) {
+        return bookLabel(x.vendor).localeCompare(bookLabel(y.vendor));
+      }
+      return order.map(function (k) {
+        var g = byKey[k];
+        g.odds.sort(byBook); g.over.sort(byBook); g.under.sort(byBook);
+        return g;
+      });
+    }
+
+    /* Sorted on the name as it is displayed, which is the surname: ordering
+     * by the full name while showing "P. Mahomes" reads as unsorted to anyone
+     * scanning down the page. */
+    function playerName(b, id) {
+      var pl = playerOf(b, id);
+      return (pl && shortenName(pl.name)) || String(id);
+    }
+
+    /* The player as the first cell of his own row, rather than a header row
+     * spanning the table above the lines that hang off it. A milestone board
+     * is one row per player now — the ladder went into the columns — and a
+     * two-sided board is one row, two when the books disagree on where to hang
+     * the line, so a group header would be a banner over a single line.
+     *
+     * It is the pinned column instead, the arrangement the injury report
+     * already scrolls under: a milestone market runs to two dozen rungs and
+     * the board has to go sideways, and the name is the one thing a row cannot
+     * afford to have scroll off it. The club stays on the name, which is the only
+     * cell wide enough to carry it.
+     *
+     * The position does not. It was the least of the three and it was paying the
+     * most for the space: a market is already a position -- a passing-yards board
+     * is quarterbacks and a receptions board is not -- so "QB" beside every name
+     * on it was the column repeating what its own heading had said. The club is
+     * the fact that varies down the board and it is the one that stays. */
+    function playerCell(b, id) {
+      var pl = playerOf(b, id);
+      var meta = (pl && pl.team) || '';
+      return '<td class="go-plc">' + esc(playerName(b, id)) +
+        (meta ? '<span class="go-plmeta">' + esc(meta) + '</span>' : '') + '</td>';
+    }
+
+    /* The ladder as columns, one row per player: every rung anyone in this
+     * market is quoted at across the head, ascending, and a player's row is
+     * his price at each of them.
+     *
+     * Read down a column it answers the question a milestone board is opened
+     * for — who is worth taking at 50+, and at what price — which the old
+     * layout could not be read for at all: a rung was one row inside one
+     * player's block, so comparing two players at 50+ meant scrolling between
+     * two blocks and holding a number in your head.
+     *
+     * Wide, and allowed to be. A book prices each player's own line as well as
+     * the round numbers, so 57 and 63 turn up between 50 and 70 as columns
+     * with a single price in them. They stay: it is a real quote, and a board
+     * that drops it disagrees with the book it came from. */
+    function milestoneTable(b, players, byPlayer, groups) {
+      var lines = [], seen = {};
+      groups.forEach(function (g) {
+        if (seen[g.line]) return;
+        seen[g.line] = 1;
+        lines.push(g.line);
+      });
+      lines.sort(function (x, y) { return parseFloat(x) - parseFloat(y); });
+
+      /* One rung is not a ladder, and a board of them is headed Odds rather
+       * than by the rung — but only when the rung is 1+, which is every
+       * touchdown market and says nothing the market name has not. Any other
+       * single rung keeps its number: a board quoted at 50+ and nowhere else
+       * headed "Odds" would be a price with no threshold on the page, which is
+       * the hole the two-sided board had with its Line column. */
+      var trivial = lines.length === 1 && mileLine(lines[0]) === '1+';
+      var head = thCell('Player', 'go-plc') + (trivial
+        ? thCell(heading('Odds', 'Consensus price for the line and up'), 'is-num')
+        : lines.map(function (v) {
+            return thCell(heading(mileLine(v),
+              'Consensus price for ' + mileLine(v).slice(0, -1) + ' or more'), 'is-num');
+          }).join(''));
+
+      /* Ordered down the first rung rather than by name. The board is opened
+       * to find who is worth taking at the shortest milestone — the leftmost
+       * column — so that column is the order, ascending on the price, chalk at
+       * the top.
+       *
+       * A player the books have not quoted at that rung sorts above every
+       * price rather than below them: an unquoted 50+ on a back who is quoted
+       * at 70+ is a rung too short for a book to bother hanging, so the blank
+       * is shorter than any number in the column, not longer. Ties fall
+       * through to the next rung, which is what the players sharing a blank
+       * first column have to be separated on, and a name breaks a tie the
+       * whole ladder does not. */
+      var at = {};
+      players.forEach(function (id) {
+        var byLine = {};
+        byPlayer[id].forEach(function (g) { byLine[g.line] = g; });
+        at[id] = byLine;
+      });
+      function priceAt(id, v) {
+        var g = at[id][v], c = g && consensusOdds(g.odds);
+        return c ? c.odds : -Infinity;
+      }
+      players = players.slice().sort(function (x, y) {
+        for (var i = 0; i < lines.length; i++) {
+          var px = priceAt(x, lines[i]), py = priceAt(y, lines[i]);
+          if (px !== py) return px < py ? -1 : 1;
+        }
+        return playerName(b, x).localeCompare(playerName(b, y));
+      });
+
+      var body = players.map(function (id) {
+        /* The whole ladder in one panel, rung by rung — which is the board's
+         * own row read book by book, and the line shopping the per-book column
+         * groups used to be for. */
+        var mine = at[id];
+        var i = pushDetail(playerName(b, id), null,
+          lines.filter(function (v) { return mine[v]; }).map(function (v) {
+            return { label: mileLine(v), quotes: mine[v].odds };
+          }));
+        return '<tr data-pd="' + i + '">' + playerCell(b, id) +
+          lines.map(function (v) {
+            return mine[v] ? consCell(mine[v].odds) : '<td class="is-null">—</td>';
+          }).join('') + '</tr>';
+      }).join('');
+
+      return { head: head, body: body };
+    }
+
+    /* One row per line, because the books do not agree on where to hang it:
+     * FanDuel at 59.5 and DraftKings at 62.5 are two different bets, not two
+     * prices on one, and folding them into a row would average across a line
+     * that neither book is offering. So the line stays a column and a player
+     * takes a second row when he is quoted at a second number.
+     *
+     * Always drawn, even when every row on the board says the same number.
+     * It used to be dropped in that case, on the rule that a column saying one
+     * thing says nothing — which is true of the milestone board, where the
+     * rung is the column heading, and false here: the line IS the bet. Two
+     * quarterbacks quoted at the same 31.5 pass attempts left a board reading
+     * "Pass Att, over -106, under -120" with the 31.5 nowhere on the page. */
+    function overUnderTable(b, groups) {
+      var head = thCell('Player', 'go-plc') +
+        thCell(heading('Line', 'Line quoted'), 'is-num') +
+        thCell(heading('Over', 'Consensus over price'), 'is-num') +
+        thCell(heading('Under', 'Consensus under price'), 'is-num');
+
+      /* Ordered on the line, biggest first, across the whole board rather than
+       * within each player's rows. The board is read for the market, not for a
+       * name: on Receiving Yards the men quoted at 70.5 are the ones the market
+       * expects to be targeted, and grouping by player buried them among rows
+       * of 12.5 wherever the alphabet happened to put them. A player quoted at
+       * two numbers still takes two rows, and they no longer have to be
+       * adjacent — each row carries its own line in the cell beside the name.
+       *
+       * Ties keep the surname order the board used to be built in, so two men
+       * on the same 31.5 read alphabetically. A line that does not parse sorts
+       * last rather than as a zero: it is a number we could not read, not a
+       * small one. */
+      var ordered = groups.slice().sort(function (x, y) {
+        var xv = parseFloat(x.line), yv = parseFloat(y.line);
+        var xn = isFinite(xv), yn = isFinite(yv);
+        if (xn !== yn) return xn ? -1 : 1;
+        if (xn && xv !== yv) return yv - xv;
+        return playerName(b, x.player_id)
+          .localeCompare(playerName(b, y.player_id));
+      });
+
+      var body = ordered.map(function (g) {
+        var id = String(g.player_id);
+        var i = pushDetail(playerName(b, id), g.line, [
+          { label: 'Over', quotes: g.over },
+          { label: 'Under', quotes: g.under }
+        ]);
+        return '<tr data-pd="' + i + '">' + playerCell(b, id) +
+          '<td class="is-num">' + esc(g.line) + '</td>' +
+          consCell(g.over) + consCell(g.under) +
+          '</tr>';
+      }).join('');
+
+      return { head: head, body: body };
+    }
+
+    function propsTable(b, rows) {
+      var groups = propGroups(rows);
+
+      var players = [], byPlayer = {};
+      groups.forEach(function (g) {
+        var id = String(g.player_id);
+        if (!byPlayer[id]) { byPlayer[id] = []; players.push(id); }
+        byPlayer[id].push(g);
+      });
+      /* Not sorted here. Both boards decide their own row order and neither
+       * reads this list's: the milestone board re-sorts on price down the
+       * ladder, and the two-sided board orders on the line. */
+
+      /* One shape per table — the market <select> carries it — so the shape is
+       * read off the first group and speaks for all of them. The two are
+       * different boards, not one board with a column swapped: an over-only
+       * ladder has a price per rung and no under anywhere on it, and drawing
+       * it the two-sided way left a third of the table permanently empty. */
+      var mile = groups[0].type === MILESTONE;
+      var t = mile
+        ? milestoneTable(b, players, byPlayer, groups)
+        : overUnderTable(b, groups);
+
+      /* The shape is on the table as well as in its columns: the over/under
+       * view stacks ten of these boards, and ten tables each sizing their own
+       * columns puts Over and Under at a different place on every one. */
+      return '<div class="go-scroll"><table class="go-table go-props go-pinned ' +
+        (mile ? 'go-mile' : 'go-ou') + '">' +
+        '<thead><tr>' + t.head + '</tr></thead>' +
+        '<tbody>' + t.body + '</tbody></table></div>';
+    }
+
+    /* ---------- the overlay ----------
+     * Fixed to the viewport and parented to the body rather than to the table.
+     * The board scrolls sideways inside .go-scroll, and anything positioned
+     * inside a scrollport is clipped by it: an overlay on the last column of a
+     * milestone ladder would open half outside the box and be cut in half.
+     * Placed off the cell's rect instead, flipped above the cell when there is
+     * no room below it, and clamped to the viewport on the left and right so a
+     * price at the edge of a phone opens a panel that is all on screen.
+     *
+     * A rect goes stale the moment anything moves, so the panel closes on
+     * everything that could move it — a click outside, Escape, a scroll of the
+     * page or of the board, a resize — rather than trying to follow it. */
+    var openPop = null;
+
+    function closePop() {
+      if (!openPop) return;
+      var p = openPop;
+      openPop = null;
+      if (p.el.parentNode) p.el.parentNode.removeChild(p.el);
+      if (p.cell) p.cell.classList.remove('is-open');
+      document.removeEventListener('mousedown', p.onDoc, true);
+      document.removeEventListener('touchstart', p.onDoc, true);
+      document.removeEventListener('keydown', p.onKey, true);
+      window.removeEventListener('resize', closePop);
+      window.removeEventListener('scroll', p.onScroll, true);
+    }
+
+    /* A book per column, and a side — or a rung — per row: the column group
+     * this board folded up, DK against FD at a glance, on the one bet the
+     * reader has just pointed at. The mean is the last column and only when
+     * there is a second book for it to be a mean of; on one book it would be
+     * that book's price written twice. */
+    function popTable(d) {
+      var multi = d.books.length > 1;
+      return '<table class="go-pop-t"><thead><tr><th></th>' +
+          d.books.map(function (v) {
+            return '<th title="' + esc(bookName(v)) + '">' +
+              esc(bookName(v)) + '</th>';
+          }).join('') +
+          (multi ? '<th class="go-pop-avg">Avg</th>' : '') +
+        '</tr></thead><tbody>' +
+        d.rows.map(function (r) {
+          return '<tr><th>' + esc(r.label) + '</th>' +
+            d.books.map(function (v) {
+              var o = r.by[v];
+              return '<td>' +
+                esc(o === undefined ? '\u2014' : fmtOdds(o)) + '</td>';
+            }).join('') +
+            (multi ? '<td class="go-pop-avg">' + esc(fmtOdds(r.cons)) +
+              '</td>' : '') +
+            '</tr>';
+        }).join('') +
+        '</tbody></table>';
+    }
+
+    function openPricePop(row, anchor) {
+      var d = priceDetail[Number(row.getAttribute('data-pd'))];
+      if (!d || !d.rows.length) return;
+      closePop();
+
+      var el = document.createElement('div');
+      el.className = 'go-pop';
+      el.innerHTML =
+        '<div class="go-pop-h">' +
+          esc([d.player, d.line].filter(Boolean).join(' \u00b7 ')) +
+        '</div>' + popTable(d);
+      document.body.appendChild(el);
+
+      var r = (anchor || row).getBoundingClientRect();
+      var w = el.offsetWidth, h = el.offsetHeight, pad = 8;
+      var left = r.left + r.width / 2 - w / 2;
+      left = Math.max(pad, Math.min(left, window.innerWidth - w - pad));
+      var top = r.bottom + 6;
+      if (top + h > window.innerHeight - pad) top = Math.max(pad, r.top - h - 6);
+      el.style.left = Math.round(left) + 'px';
+      el.style.top = Math.round(top) + 'px';
+      row.classList.add('is-open');
+
+      var p = {
+        el: el, cell: row,
+        onDoc: function (e) { if (!el.contains(e.target)) closePop(); },
+        /* A ladder of two dozen rungs is taller than the panel is allowed to
+         * be, so the panel scrolls inside itself — and that scroll is not the
+         * page moving out from under it. */
+        onScroll: function (e) {
+          var t = e.target;
+          if (!t || !t.nodeType || !el.contains(t)) closePop();
+        },
+        onKey: function (e) { if (e.key === 'Escape' || e.keyCode === 27) closePop(); }
+      };
+      openPop = p;
+      /* Registered on the next tick: the click that opened the panel is still
+       * on its way up to the document, and a listener added inside it would
+       * take that same click as the one dismissing it. */
+      setTimeout(function () {
+        if (openPop !== p) return;
+        document.addEventListener('mousedown', p.onDoc, true);
+        document.addEventListener('touchstart', p.onDoc, true);
+        document.addEventListener('keydown', p.onKey, true);
+        window.addEventListener('resize', closePop);
+        window.addEventListener('scroll', p.onScroll, true);
+      }, 0);
+    }
+
+    /* ---------- market groups ----------
+     * Seventeen markets is a long stack on the over/under board and a <select>
+     * nobody reads to the bottom of on the milestone one, and the order they
+     * arrive in is the alphabet, which is not an order anyone opens a prop
+     * board in: a reader chasing a receiving line has to know that "Rec" and
+     * "Rec Yds" sit six apart in it, with two passing markets wedged between.
+     *
+     * The box score answers the same problem with a strip of chips by side of
+     * the ball, so the prop board takes the same strip, split by phase of the
+     * offence -- passing, rushing, receiving, kicking. It is the split the
+     * markets were already in; it just had no name on the page.
+     *
+     * Touchdowns are a fifth chip, and only on the milestone board, because
+     * that is the only board they exist on: anytime and first scorer are
+     * over-only ladders with no two-sided quote anywhere in the feed. They
+     * also belong to no phase -- a receiver and a back are priced on the same
+     * anytime board -- which is what makes them a group rather than a market
+     * that could have been filed under one of the four. Passing touchdowns are
+     * not in it: that is a quarterback's board and it is read beside the yards
+     * and attempts it sits with under Passing.
+     *
+     * A market the map does not name falls into a trailing Other chip rather
+     * than off the board, for the same reason propMarkets appends the markets
+     * its own list is missing: the feed adds markets, and a board that
+     * silently drops them is worse than one with a catch-all chip on the end.
+     *
+     * Matched on the base market, so every period cut of a market lands in its
+     * parent's group -- anytime_td_1q is a touchdown market, not a seventh
+     * thing the map has never heard of.
+     *
+     * ---------- the order within a chip ----------
+     * The list is written in the order the boards are drawn in, and it is a
+     * running order rather than an alphabet: the market the group is opened
+     * for first, then the rest in falling order of how often anyone takes
+     * them. Passing led with "INT Thrown" under the alphabet, which is the
+     * least-taken market on a quarterback's board sitting above the most; it
+     * now runs yards, touchdowns, interceptions, then the two volume counts.
+     * Rushing and receiving lead with yardage for the same reason.
+     *
+     * Markets this feed has never sent are in the list anyway, in the place
+     * they would belong -- rushing touchdowns between the yards and the
+     * attempts, the longest-something markets at the back. A market with no
+     * place in the order would otherwise arrive at the front of the group the
+     * first time it is quoted, which is the one position it has not earned. */
+    var PROP_GROUP = [
+      { key: 'passing', text: 'Passing', markets: [
+          'passing_yards', 'passing_tds', 'interceptions',
+          'passing_attempts', 'passing_completions', 'longest_pass'] },
+      { key: 'rushing', text: 'Rushing', markets: [
+          'rushing_yards', 'rushing_tds', 'rushing_attempts',
+          'rushing_receiving_yards', 'longest_rush'] },
+      { key: 'receiving', text: 'Receiving', markets: [
+          'receiving_yards', 'receiving_tds', 'receptions',
+          'receiving_targets', 'longest_reception'] },
+      { key: 'kicking', text: 'Kicking', markets: [
+          'kicking_points', 'fg_made', 'extra_points_made'] },
+      /* Milestones only -- see above. */
+      { key: 'td', text: 'TDs', mileOnly: 1, markets: [
+          'anytime_td', 'first_td', 'last_td'] }
+    ];
+
+    var PROP_GROUP_OTHER = { key: 'other', text: 'Other', markets: [] };
+
+    /* The lists above inverted once at load: base market -> which chip holds
+     * it and where in that chip it sits. */
+    var MARKET_AT = {};
+    PROP_GROUP.forEach(function (g) {
+      g.markets.forEach(function (m, i) { MARKET_AT[m] = { key: g.key, rank: i }; });
+    });
+
+    function marketGroupKey(m) {
+      var at = MARKET_AT[marketBase(m)];
+      return at ? at.key : PROP_GROUP_OTHER.key;
+    }
+
+    /* A market the order does not name sorts to the back rather than off the
+     * end of a comparison: this is only ever reached inside Other, where
+     * everything is unnamed and the tie hands the group back to the order the
+     * feed sent it in. */
+    function marketRank(m) {
+      var at = MARKET_AT[marketBase(m)];
+      return at ? at.rank : 1e9;
+    }
+
+    /* Cuts that are folded into one board sort by the board, in the order
+     * PROP_MERGE writes them -- quarters, then halves. Without this the six
+     * anytime-touchdown cuts tie on every key above and fall back to the
+     * feed's alphabet, which interleaves the two boards' markets and would put
+     * the halves board first because "1h" precedes "1q".
+     *
+     * Cuts that are not folded sort behind all of them and keep that same feed
+     * order among themselves, which is the order the passing cuts are already
+     * read in. Nothing outside a merge changes place. */
+    function mergeRank(m) {
+      var g = MERGED_INTO[m];
+      return g ? PROP_MERGE.indexOf(g) : 1e9;
+    }
+
+    /* The chips one board shows, each carrying its markets in the running
+     * order PROP_GROUP writes them in.
+     *
+     * Period cuts sit behind the full-game markets rather than beside their
+     * own parent, so the touchdown chip opens on Anytime and First TD -- the
+     * two markets it is opened for -- rather than burying First TD under six
+     * quarter and half cuts of Anytime it happens to sort after. Within the
+     * cuts the feed's own order stands, which is what the stable sort leaves
+     * behind once the two keys above it tie.
+     *
+     * Every named group is returned whether or not this game has a market in
+     * it, for the reason the box score draws all three of its chips: a Kicking
+     * chip over an empty board reads as "nobody has been quoted yet", and a
+     * Kicking chip that is not there reads as a board that cannot do kicking.
+     * Other is the exception -- it is not a category, it is the overflow, and
+     * an empty one names nothing. */
+    function marketGroups(markets, view) {
+      var by = {};
+      markets.forEach(function (m) {
+        var k = marketGroupKey(m);
+        (by[k] || (by[k] = [])).push(m);
+      });
+      function inOrder(list) {
+        return list.slice().sort(function (x, y) {
+          var xp = x === marketBase(x) ? 0 : 1, yp = y === marketBase(y) ? 0 : 1;
+          if (xp !== yp) return xp - yp;
+          var xr = marketRank(x), yr = marketRank(y);
+          if (xr !== yr) return xr - yr;
+          return mergeRank(x) - mergeRank(y);
+        });
+      }
+      var out = PROP_GROUP.filter(function (g) {
+        return view === 'mile' || !g.mileOnly;
+      }).map(function (g) {
+        return { key: g.key, text: g.text, markets: inOrder(by[g.key] || []) };
+      });
+      if (by.other) {
+        out.push({ key: PROP_GROUP_OTHER.key, text: PROP_GROUP_OTHER.text,
+          markets: inOrder(by.other) });
+      }
+      return out;
+    }
+
+    function groupMarkets(groups, key) {
+      for (var i = 0; i < groups.length; i++) {
+        if (groups[i].key === key) return groups[i].markets;
+      }
+      return [];
+    }
+
+    function groupText(groups, key) {
+      for (var i = 0; i < groups.length; i++) {
+        if (groups[i].key === key) return groups[i].text;
+      }
+      return '';
+    }
+
+    /* A chip that stopped existing between polls -- Other, when the market
+     * that made it stops being quoted -- falls back to the first chip rather
+     * than leaving the strip with nothing pressed and the board blank. An
+     * empty named group is still a valid pick: it is the "not yet" state the
+     * strip is drawn in full for. */
+    function validGroup(groups, key) {
+      for (var i = 0; i < groups.length; i++) {
+        if (groups[i].key === key) return key;
+      }
+      return groups.length ? groups[0].key : '';
+    }
+
+    /* The markets this bundle holds, split by shape and kept in the bundle's
+     * own order — which is alphabetical — with anything the rows carry and the
+     * market list does not appended rather than dropped. Derived rather than
+     * stored because the two views are built out of it twice: once to lay the
+     * card out and once, on every draw, to decide what is still valid. */
+    function propMarkets(b) {
+      var p = b.player_props || { current: [] };
+      var have = {};
+      propRows(b).forEach(function (r) {
+        (have[r.prop_type] || (have[r.prop_type] = {}))[shapeOf(r)] = 1;
+      });
+      var order = (p.markets || []).filter(function (m) { return have[m]; });
+      Object.keys(have).forEach(function (m) {
+        if (order.indexOf(m) < 0) order.push(m);
+      });
+      return {
+        ou: order.filter(function (m) { return have[m].over_under; }),
+        mile: order.filter(function (m) { return have[m][MILESTONE]; })
+      };
+    }
+
+    /* Which board is up, and what the milestone one is filtered to. Kept out
+     * here rather than in the DOM because a poll replaces the whole card every
+     * thirty seconds: a market held in a control that is thrown away is a
+     * board that jumps back to its default while it is being read. Validated
+     * against the bundle on every wire, so a market that stops being quoted
+     * falls back rather than emptying the table. */
+    var propView = 'ou', propPlayer = '';
+
+    /* One per board rather than one shared between them, because the two do
+     * not hold the same chips: TDs exists only on the milestone strip, so a
+     * shared value would be reset to Passing the moment the reader looked at
+     * the over/under board and lost on the way back. They are read as two
+     * boards -- they are two boards -- and each keeps its own place. */
+    var ouGroup = 'passing', mileGroup = 'passing';
+
+    /* ---------- the two views ----------
+     * Over/under and milestones are not two filters on one board, they are two
+     * boards: one is every player's line in a market and the price on each
+     * side of it, the other is one player's ladder priced rung by rung. They
+     * had to share a <select>, which meant the same market name appeared twice
+     * in one list meaning two different bets, and reading both meant knowing
+     * that the second half of the menu was a different kind of thing.
+     *
+     * A switch instead, in the card head beside the title, marked with icons
+     * rather than words. Over/under is the default and needs no market picker
+     * at all: there are ten of these
+     * markets, each a dozen rows, and all ten fit on the page at once — which
+     * is how a prop board is actually read, down the page for a name rather
+     * than market by market. Milestones cannot be shown that way — one market
+     * is two dozen rungs wide on its own — so that view keeps the pickers.
+     */
+
+    /* Both icons are one colour and drawn in strokes of `currentColor`, so the
+     * pressed state inverts the glyph along with the button rather than
+     * needing a second artwork: gold fill, bar-dark strokes.
+     *
+     * The over/under mark is the two directions a two-sided line is taken in,
+     * one arrow each way. The milestone mark is a ladder because that is what
+     * the board is -- rungs at 50+, 60+, 70+, climbed until the price stops
+     * being worth it. */
+    var PROP_VIEW_ICON = {
+      ou: '<path d="M7 20V4"/><path d="M3.2 8L7 4.2 10.8 8"/>' +
+          '<path d="M17 4v16"/><path d="M13.2 16l3.8 3.8 3.8-3.8"/>',
+      mile: '<path d="M7.5 3v18"/><path d="M16.5 3v18"/>' +
+            '<path d="M7.5 7.5h9"/><path d="M7.5 12h9"/><path d="M7.5 16.5h9"/>'
+    };
+
+    /* Icons, so the label is a name for the button rather than its face: with
+     * the switch in the card head there is one line for a title and two
+     * controls, and two words of caps on each button would crowd the title off
+     * it. The name still has to be readable, hence aria-label and title. */
+    function propViewButton(view, text, count) {
+      return '<button type="button" class="go-icobtn" data-prop-view="' +
+        esc(view) + '"' + (count ? '' : ' disabled') +
+        ' aria-pressed="false" title="' + esc(text) + '"' +
+        ' aria-label="' + esc(text) + '">' +
+        '<svg viewBox="0 0 24 24" width="17" height="17" fill="none"' +
+          ' stroke="currentColor" stroke-width="2" stroke-linecap="round"' +
+          ' stroke-linejoin="round" aria-hidden="true" focusable="false">' +
+          PROP_VIEW_ICON[view] +
+        '</svg></button>';
+    }
+
+    /* The markup contract scripts/components/nfl-pickers.js registers against,
+     * verbatim from /football/schedule. */
+    function ddControl(id, label) {
+      return '<div class="dd" id="dd-' + id + '">' +
+          '<button type="button" class="dd-btn" id="' + id + '"' +
+            ' aria-haspopup="true" aria-expanded="false">' +
+            '<span class="dd-value"></span>' +
+          '</button>' +
+          '<div class="dd-pop dd-menu" id="' + id + '-menu" role="menu"' +
+            ' aria-label="' + esc(label) + '" hidden></div>' +
+        '</div>';
+    }
+
+    function propsSection(b) {
+      var p = b.player_props || { current: [] };
+      if (!p.current.length) {
+        return card('Player props',
+          emptyState(b, ['/odds/player_props'], 'player props'), true);
+      }
+      var mk = propMarkets(b);
+
+      return card('Player props',
+        /* Empty here and filled by wireProps: which chips the strip holds
+         * depends on which board is up -- TDs is on one and not the other --
+         * so it is rebuilt on every view switch rather than rendered once with
+         * the card. Drawn above .go-pbody, not inside it, so it lands flush
+         * against the card head the way the box score's and the play log's
+         * strips do rather than inset by the body's own padding. */
+        '<div class="go-seg" id="prop-groups" role="group"' +
+          ' aria-label="Market group"></div>' +
+        '<div class="go-pbody">' +
+          /* Hidden on the over/under board rather than absent from it: the
+           * picker belongs to one of the two views, and a control that appears
+           * and disappears in place reads as part of the view it is attached
+           * to. */
+          '<div class="dd-row" id="prop-filters" hidden>' +
+            ddControl('prop-player', 'Player') +
+          '</div>' +
+          '<div id="prop-table"></div>' +
+        '</div>', true,
+        '<div class="go-seg go-seg-head" id="prop-views" role="group"' +
+          ' aria-label="Prop board">' +
+          propViewButton('ou', 'Player O/U', mk.ou.length) +
+          propViewButton('mile', 'Milestones', mk.mile.length) +
+        '</div>');
+    }
+
+    /* ---------- markets that are one market ----------
+     * Anytime touchdown comes back seven times: the full game, each half and
+     * each quarter, filed as seven prop_types. Stacked, that is seven boards
+     * of the same thirty names, each one column wide, and the question anyone
+     * opens them for -- when is this man likeliest to score -- can only be
+     * answered by scrolling between boards holding a number in your head.
+     *
+     * They are one board. A period cut is not a different market, it is the
+     * same market over a shorter clock, so the clock goes in the columns the
+     * way a milestone ladder's rungs do and the player gets one row across all
+     * four quarters. Quarters and halves stay apart: they overlap -- 1H is 1Q
+     * and 2Q together -- and a row mixing them would read as six independent
+     * chances at a touchdown when there are only four.
+     *
+     * Declared rather than derived from the suffix, because the merge only
+     * works on a market the cut prices at a single rung. Anytime TD does: every
+     * period cut in every bundle is one 1+ price per player, where the
+     * full-game market is a 1+/2+/3+ ladder and stays its own board. A yardage
+     * cut is a ladder of its own and would lose two dozen rungs to a column. */
+    var PROP_MERGE = [
+      { key: 'anytime_td_q', text: 'Anytime TD by Quarter',
+        full: 'Anytime touchdown, by quarter',
+        markets: ['anytime_td_1q', 'anytime_td_2q',
+                  'anytime_td_3q', 'anytime_td_4q'] },
+      { key: 'anytime_td_h', text: 'Anytime TD by Half',
+        full: 'Anytime touchdown, by half',
+        markets: ['anytime_td_1h', 'anytime_td_2h'] }
+    ];
+
+    /* Which merged board a market has been folded into, so the stacker can
+     * drop it from the running order without walking the list per market. */
+    var MERGED_INTO = {};
+    PROP_MERGE.forEach(function (g) {
+      g.markets.forEach(function (m) { MERGED_INTO[m] = g; });
+    });
+
+    /* The column heading for one cut: the period alone, because the market
+     * name is on the board above it and repeating "Anytime TD" four times
+     * across the head would say nothing four times. */
+    function periodLabelOf(m) {
+      var x = PERIOD_RE.exec(m);
+      return x ? PERIOD[x[2]] : marketHeading(m).s;
+    }
+
+    /* One row per player, one column per period. Built off propGroups the way
+     * the ladder board is, so a cell carries the same consensus price and the
+     * same per-book panel behind it.
+     *
+     * A cut is a single rung in every bundle we have, but it is read as the
+     * lowest one rather than assumed to be the only one: if a book ever hangs
+     * a 2+ on a quarter, the column keeps meaning "scores in this quarter" and
+     * the extra rung is left out rather than landing in another period's
+     * column or splitting the player across two rows. */
+    function periodTable(b, cols) {
+      var at = {}, players = [], seen = {};
+      cols.forEach(function (c) {
+        propGroups(c.rows).forEach(function (g) {
+          var id = String(g.player_id);
+          if (!seen[id]) { seen[id] = 1; players.push(id); }
+          var mine = at[id] || (at[id] = {});
+          var cur = mine[c.market];
+          if (!cur || parseFloat(g.line) < parseFloat(cur.line)) {
+            mine[c.market] = g;
+          }
+        });
+      });
+
+      var head = thCell('Player', 'go-plc') + cols.map(function (c) {
+        return thCell(heading(c.label,
+          marketHeading(c.market).t || c.label), 'is-num');
+      }).join('');
+
+      /* Ordered down the first period, ascending on the price, for the reason
+       * the ladder board orders down its shortest rung: the leftmost column is
+       * where the board is read from. A player nobody quoted in that period
+       * sorts below the prices rather than above them -- unlike a missing
+       * ladder rung, which is a threshold too short to bother pricing, an
+       * absent quarter is a man the book left off that board entirely. Ties
+       * fall through to the next period, then to the name. */
+      function priceAt(id, m) {
+        var g = at[id][m], c = g && consensusOdds(g.odds);
+        return c ? c.odds : Infinity;
+      }
+      players.sort(function (x, y) {
+        for (var i = 0; i < cols.length; i++) {
+          var px = priceAt(x, cols[i].market), py = priceAt(y, cols[i].market);
+          if (px !== py) return px < py ? -1 : 1;
+        }
+        return playerName(b, x).localeCompare(playerName(b, y));
+      });
+
+      var body = players.map(function (id) {
+        var mine = at[id];
+        /* The whole row period by period, which is this board's answer to the
+         * ladder's rung-by-rung panel. */
+        var i = pushDetail(playerName(b, id), null,
+          cols.filter(function (c) { return mine[c.market]; })
+            .map(function (c) {
+              return { label: c.label, quotes: mine[c.market].odds };
+            }));
+        return '<tr data-pd="' + i + '">' + playerCell(b, id) +
+          cols.map(function (c) {
+            return mine[c.market] ? consCell(mine[c.market].odds)
+              : '<td class="is-null">\u2014</td>';
+          }).join('') + '</tr>';
+      }).join('');
+
+      return '<div class="go-scroll"><table class="go-table go-props' +
+        ' go-pinned go-mile"><thead><tr>' + head + '</tr></thead>' +
+        '<tbody>' + body + '</tbody></table></div>';
+    }
+
+    /* Every market in the group at once, each its own board under its own
+     * heading. Short tables rather than one long one: they do not share a
+     * line, a price or even a unit — receptions and passing yards in one table
+     * would be a Line column meaning two different things — and stacked, a
+     * player's name appears once per market he is quoted in, which is the
+     * sweep the board is opened for.
+     *
+     * Both views are drawn this way now. The milestone one used to put its
+     * markets behind a picker, on the rule that one ladder is two dozen rungs
+     * wide and five of them would not fit on a page — but the group chips took
+     * that argument away: a phase holds a handful of markets, not seventeen,
+     * and each ladder scrolls sideways in its own box rather than widening the
+     * page. What the picker cost was that the reader could not see what a
+     * group held without opening a menu and stepping through it one market at
+     * a time, which is the opposite of what the strip above it promises.
+     *
+     * `keep` is the milestone board's player filter, applied here rather than
+     * to the rows on the way in so an unquoted market drops out of the stack
+     * with its heading instead of leaving one behind an empty table. */
+    function marketBoards(b, markets, shape, keep) {
+      var byMarket = {};
+      propRows(b).forEach(function (r) {
+        if (shapeOf(r) !== shape) return;
+        if (keep && !keep(r)) return;
+        (byMarket[r.prop_type] || (byMarket[r.prop_type] = [])).push(r);
+      });
+
+      /* A merged board is drawn once, where the first of its cuts fell in the
+       * running order, and the rest of them come out of the stack. Only the
+       * cuts this game actually quotes become columns: a book that never
+       * priced the fourth quarter leaves three, not one empty column and a
+       * board that disagrees with it. */
+      var drawn = {};
+      return markets.filter(function (m) {
+        if (!byMarket[m]) return false;
+        var g = MERGED_INTO[m];
+        if (!g || g.markets.indexOf(m) < 0) return true;
+        if (drawn[g.key]) return false;
+        drawn[g.key] = 1;
+        return true;
+      }).map(function (m) {
+        var g = MERGED_INTO[m];
+        var h = g ? heading(g.text, g.full) : marketHeading(m);
+        var body;
+        if (g) {
+          body = periodTable(b, g.markets
+            .filter(function (c) { return byMarket[c]; })
+            .map(function (c) {
+              return { market: c, label: periodLabelOf(c), rows: byMarket[c] };
+            }));
+        } else {
+          body = propsTable(b, byMarket[m]);
+        }
+        return '<div class="go-mkt"' +
+            (h.t ? ' title="' + esc(h.t) + '"' : '') + '>' + esc(h.s) +
+          '</div>' + body;
+      }).join('');
+    }
+
+    /* innerHTML wipes listeners, so the props controls are wired after every
+     * render rather than once at load. */
+    function wireProps(b) {
+      var viewsEl = document.getElementById('prop-views');
+      var groupsEl = document.getElementById('prop-groups');
+      var filtersEl = document.getElementById('prop-filters');
+      var tableEl = document.getElementById('prop-table');
+      if (!tableEl) return;
+
+      var mk = propMarkets(b);
+      if (propView === 'ou' && !mk.ou.length) propView = 'mile';
+      if (propView === 'mile' && !mk.mile.length) propView = 'ou';
+
+      var grp = {
+        ou: marketGroups(mk.ou, 'ou'),
+        mile: marketGroups(mk.mile, 'mile')
+      };
+      ouGroup = validGroup(grp.ou, ouGroup);
+      mileGroup = validGroup(grp.mile, mileGroup);
+
+      function mileMarkets() { return groupMarkets(grp.mile, mileGroup); }
+
+      var plBtn = document.getElementById('prop-player');
+      var plMenu = document.getElementById('prop-player-menu');
+      var plDd = registerDropdown(document.getElementById('dd-prop-player'));
+
+      /* Every milestone row the group holds, across all of its markets --
+       * which is what the board draws now that the markets are stacked rather
+       * than picked one at a time. Only the player menu reads this; the board
+       * itself goes through marketBoards, which does its own sorting into
+       * markets. */
+      function mileRows() {
+        var inGroup = {};
+        mileMarkets().forEach(function (m) { inGroup[m] = 1; });
+        return propRows(b).filter(function (r) {
+          return inGroup[r.prop_type] && shapeOf(r) === MILESTONE;
+        });
+      }
+
+      function syncViews() {
+        var btns = viewsEl.querySelectorAll('button[data-prop-view]');
+        for (var i = 0; i < btns.length; i++) {
+          btns[i].setAttribute('aria-pressed',
+            btns[i].getAttribute('data-prop-view') === propView ? 'true' : 'false');
+        }
+        filtersEl.hidden = propView !== 'mile';
+      }
+
+      function curGroups() { return propView === 'ou' ? grp.ou : grp.mile; }
+      function curGroup() { return propView === 'ou' ? ouGroup : mileGroup; }
+
+      function syncGroups() {
+        var cur = curGroup();
+        groupsEl.innerHTML = curGroups().map(function (g) {
+          return '<button type="button" data-prop-group="' + esc(g.key) + '"' +
+            ' aria-pressed="' + (g.key === cur ? 'true' : 'false') + '">' +
+            esc(g.text) + '</button>';
+        }).join('');
+      }
+
+      /* The player list is per group, not per game: a receiving stack has no
+       * quarterbacks on it, and offering every player quoted anywhere would
+       * fill the menu with names that empty the board. Named and ordered the
+       * way the first column is, so the menu and the rows read as the same
+       * list. A pick that survives a group change is kept — the same player
+       * under a different phase is a common next look. */
+      function syncPlayers() {
+        var seen = {}, opts = [];
+        mileRows().forEach(function (r) {
+          var id = String(r.player_id);
+          if (seen[id]) return;
+          seen[id] = 1;
+          var pl = playerOf(b, r.player_id);
+          opts.push({
+            value: id, label: playerName(b, id),
+            note: pl ? [pl.position, pl.team].filter(Boolean).join(' \u00b7 ') : ''
+          });
+        });
+        opts.sort(function (x, y) { return x.label.localeCompare(y.label); });
+        if (!seen[propPlayer]) propPlayer = '';
+        buildOptionMenu(plMenu,
+          [{ value: '', label: 'All players' }].concat(opts), 'pl');
+        syncOptionMenu(plBtn, plMenu, propPlayer,
+          propPlayer ? playerName(b, propPlayer) : 'All players', 'pl');
+      }
+
+      function draw() {
+        closePop();
+        /* Reset here rather than in propsTable: the over/under view draws ten
+         * of them and each one's cells carry an index into this, so a per-table
+         * reset would leave nine boards pointing into the tenth. */
+        priceDetail = [];
+        var html;
+        if (propView === 'ou') {
+          html = marketBoards(b, groupMarkets(grp.ou, ouGroup), 'over_under');
+        } else {
+          html = marketBoards(b, mileMarkets(), MILESTONE,
+            propPlayer ? function (r) {
+              return String(r.player_id) === propPlayer;
+            } : null);
+        }
+        /* Two empty states, because they are two different answers. A group
+         * with no markets at all is the board saying nobody has priced this
+         * phase of the game -- the state the strip is drawn in full for -- and
+         * it is named, so the reader knows which chip they are looking at. A
+         * group that has markets and still drew nothing is the player filter
+         * having cut the last row, which is the message that was here before. */
+        if (!html) {
+          var empty = groupMarkets(curGroups(), curGroup()).length
+            ? 'No quotes for that combination.'
+            : 'No ' + groupText(curGroups(), curGroup()).toLowerCase() +
+              ' props quoted for this game yet.';
+          html = '<div class="go-empty">' + esc(empty) + '</div>';
+        }
+        tableEl.innerHTML = html;
+      }
+
+      viewsEl.addEventListener('click', function (e) {
+        var btn = e.target.closest ? e.target.closest('button[data-prop-view]') : null;
+        if (!btn || btn.disabled || !viewsEl.contains(btn)) return;
+        propView = btn.getAttribute('data-prop-view');
+        syncViews();
+        syncGroups();
+        /* The player menu belongs to the milestone board and is hidden on the
+         * other one, but it is re-synced on both switches: the two boards do
+         * not share a chip, so arriving at the milestone board means arriving
+         * under whichever group it was left on, and the menu has to be that
+         * group's before the board is drawn beside it. */
+        syncPlayers();
+        draw();
+      });
+
+      groupsEl.addEventListener('click', function (e) {
+        var btn = e.target.closest
+          ? e.target.closest('button[data-prop-group]') : null;
+        if (!btn || !groupsEl.contains(btn)) return;
+        var key = btn.getAttribute('data-prop-group');
+        if (key === curGroup()) return;
+        if (propView === 'ou') ouGroup = key; else mileGroup = key;
+        syncGroups();
+        syncPlayers();
+        draw();
+      });
+
+      plMenu.addEventListener('click', function (e) {
+        var opt = e.target.closest ? e.target.closest('.dd-opt') : null;
+        if (!opt || !plMenu.contains(opt)) return;
+        propPlayer = opt.getAttribute('data-pl') || '';
+        closeDropdown(plDd, true);
+        syncPlayers();
+        draw();
+      });
+
+      /* Delegated, because the tables under it are replaced on every draw and
+       * a listener per price cell would be several hundred of them rebound
+       * each time a view or a market changes. */
+      tableEl.addEventListener('click', function (e) {
+        var row = e.target, anchor = null;
+        while (row && row !== tableEl &&
+               !(row.getAttribute && row.getAttribute('data-pd'))) {
+          /* The panel opens off the cell that was tapped rather than off the
+           * row, which on a two-sided board is the width of the card: anchored
+           * to the row it would open under the middle of the table however far
+           * to one side the finger actually was. */
+          if (row.nodeName === 'TD' || row.nodeName === 'TH') anchor = row;
+          row = row.parentNode;
+        }
+        if (row && row !== tableEl) openPricePop(row, anchor);
+      });
+
+      syncViews();
+      syncGroups();
+      syncPlayers();
+      draw();
+    }
+
+    /* ---------- injuries ----------
+     * /player_injuries returns no team of its own — the team hangs off the
+     * player — and embeds the full player record, so the generic table would
+     * spread height, weight, college and jersey number across fourteen columns.
+     * Five fields are worth reading and only two of them want a column.
+     *
+     * The club is a rowgroup heading rather than a column: the bundle already
+     * sorts the report into away, home and whatever it could not place, so as
+     * a column it was one of two values repeated down thirty rows, and finding
+     * one team's injuries meant finding the boundary between them. Position,
+     * designation and report time went the other way, down into the player
+     * cell -- see injuryRow. Both moves hand their width to the comment, which
+     * is the column that wanted it. */
+
+    /* The feed reports in full ISO UTC — 2026-08-11T23:27:00.000Z, twenty-four
+     * characters to say a Tuesday, sitting beside a designation badge on a
+     * caption line. Cut to the day, in Eastern so the date agrees with the one
+     * the club reported it on: a report is read for whether it is this week's
+     * word or last week's, and the minute it was filed never changed that
+     * reading. No year either -- nothing on this page is a season old. The
+     * full stamp stays on the span's title for anyone who wants the rest. */
+    function reportedET(iso) {
+      var t = stamp(iso);
+      if (t === null) return '';
+      try {
+        return new Date(t * 1000).toLocaleString('en-US', {
+          timeZone: 'America/New_York', month: 'short', day: 'numeric'
+        });
+      } catch (e) { return String(iso); }
+    }
+
+    var INJ_COLS = 2;
+
+    /* Two windows on the report date, both measured from now rather than from
+     * the capture: the section only renders for a game that has not been
+     * played (see injuriesApply), so the bundle behind it is one the refresh
+     * plan is still touching, and the reader's today is the today the question
+     * "is this still true?" is asked in.
+     *
+     * 18 days is a fortnight and change -- long enough that a designation
+     * filed before the previous game still reads as current, short enough that
+     * it lapses within a month. 27 stops a day short of four weeks, which is
+     * about the point at which a note stops describing the player and starts
+     * describing the roster: a man is a month into a season on IR, the comment
+     * still says what he did in August, and it is not what anyone opened an
+     * injury report for. Dropped rather than dimmed, because a stale row costs
+     * the same height as a live one and the table is read by scanning it.
+     *
+     * A row with no date at all is kept. The feed sends those for a live
+     * designation as readily as an old one -- that is the whole reason
+     * carry_injury_dates exists -- and a missing timestamp is not evidence of
+     * age. Better a stale row survives than a current one is hidden by
+     * something the feed simply did not say. */
+    var INJ_HOT_DAYS = 18;
+    var INJ_STALE_DAYS = 27;
+
+    /* -> days since the report, or null if it carries no date. */
+    function reportAge(iso) {
+      var t = stamp(iso);
+      return t === null ? null : (Date.now() / 1000 - t) / 86400;
+    }
+
+    function dropStale(rows) {
+      return rows.filter(function (r) {
+        var age = reportAge(r.date);
+        return age === null || age <= INJ_STALE_DAYS;
+      });
+    }
+
+    /* Position, designation and report date are each one or two characters
+     * wide, and as three columns of their own they were narrow strips holding
+     * the comment -- the column a report is actually read for -- off the right
+     * edge of the table. They sit in the player's cell instead, in two lines:
+     * the name with its position after it, which is how a player is said out
+     * loud, and under it the designation with the date it was given. The table
+     * drops to the two things it is really carrying: who, and what the club
+     * said about him.
+     *
+     * reportedCell went with them: the stamp is part of a caption now rather
+     * than a cell of its own, and there is no other table asking for it. */
+    function injuryRow(r) {
+      var pl = r.player || {};
+      var pos = String(pl.position_abbreviation || pl.position || '').trim();
+      var meta = [];
+      var age = reportAge(r.date);
+      var badge = statusBadge(r.status, age !== null && age <= INJ_HOT_DAYS);
+      if (badge) meta.push(badge);
+      var upd = reportedET(r.date);
+      if (upd) {
+        meta.push('<span class="go-iupd" title="' + esc(r.date) + '">' +
+          esc(upd) + '</span>');
+      }
+      return '<tr>' +
+        '<td>' +
+          '<span class="go-iname">' +
+            esc(initialName(pl.first_name, pl.last_name)) +
+            (pos ? '<span class="go-ipos">' + esc(pos) + '</span>' : '') +
+          '</span>' +
+          (meta.length ? '<span class="go-imeta">' + meta.join('') + '</span>'
+                       : '') +
+        '</td>' +
+        '<td class="go-note">' + esc(r.comment || '') + '</td>' +
+      '</tr>';
+    }
+
+    /* Copied before sorting: the rows belong to the bundle, which the rest of
+     * the page reads too, and a table is not the place to reorder them for
+     * everyone. Ties break on the name so a club's Out block is alphabetical
+     * rather than in whatever order the feed happened to list it. */
+    function sortByStatus(rows) {
+      return rows.slice().sort(function (a, b) {
+        var d = statusRank(a.status) - statusRank(b.status);
+        if (d) return d;
+        var an = String(((a.player || {}).last_name) || '');
+        var bn = String(((b.player || {}).last_name) || '');
+        return an.localeCompare(bn);
+      });
+    }
+
+    function injuryTable(groups) {
+      var body = groups.map(function (g) {
+        return '<tr class="go-igrp"><th scope="rowgroup" colspan="' + INJ_COLS + '">' +
+            '<span class="go-grp">' +
+              (g.abbr ? teamLogo(g.abbr, 'go-logo-sm') : '') + esc(g.name) +
+            '</span>' +
+          '</th></tr>' +
+          sortByStatus(g.rows).map(injuryRow).join('');
+      }).join('');
+      /* Comment is the one free-text column on the page, so it is the one
+       * column that wraps and is capped rather than run out to whatever the
+       * longest note happens to be. */
+      return '<div class="go-scroll"><table class="go-table go-pinned go-inj">' +
+        '<thead><tr>' +
+        thCell(heading('Player', 'Position, designation and last report')) +
+        thCell(heading('Comment', null), 'go-note') +
+        '</tr></thead><tbody>' + body + '</tbody></table></div>';
+    }
+
+    /* Whether the injury report still describes this game.
+     *
+     * /player_injuries has no as-of parameter and no history: it answers who is
+     * hurt right now, league-wide, and a capture stores whatever it said the
+     * day it ran. Backfilling 2025 therefore filed September 2026's injury list
+     * under last November's games, where it reads as the report the clubs
+     * actually published that week -- the caption line carries a day and a
+     * month and deliberately no year, because nothing on this page was supposed
+     * to be a season old.
+     *
+     * So the section is dropped once the game is behind us rather than shown
+     * with a disclaimer: a current report is worth reading about a game that
+     * has not happened, and about one in progress, and about a played one it is
+     * only a wrong answer dressed as a right one. The test is final, or a
+     * kickoff already gone by for a game the feed has not caught up with -- a
+     * live game is still ahead of the injuries in the sense that matters. */
+    function injuriesApply(b) {
+      if (b.phase === 'live') return true;
+      if (b.phase === 'final') return false;
+      var k = stamp(b.game.kickoff_raw || b.game.kickoff_utc);
+      return k === null || k >= Date.now() / 1000;
+    }
+
+    function injuriesSection(b) {
+      var inj = b.injuries || {};
+      var groups = [];
+      var held = ['away', 'home', 'unknown'].reduce(function (n, side) {
+        return n + (inj[side] || []).length;
+      }, 0);
+      /* Filtered here rather than in injuryTable so a club whose every row
+       * has gone stale drops its heading with them, and a report that is
+       * entirely stale falls through to the empty state below rather than
+       * rendering as two logos over nothing. */
+      ['away', 'home'].forEach(function (side) {
+        var rows = dropStale(inj[side] || []);
+        if (rows.length) {
+          groups.push({ abbr: b.game[side].abbr, name: b.game[side].name,
+            rows: rows });
+        }
+      });
+      /* A row the bundle could not place against either club still carries a
+       * team on the player, so it heads a block of its own rather than being
+       * tipped into one anonymous "other" pile. */
+      var byAbbr = {}, extra = [];
+      dropStale(inj.unknown || []).forEach(function (r) {
+        var t = (r.player || {}).team || {};
+        var k = t.abbreviation || '';
+        if (!byAbbr[k]) {
+          byAbbr[k] = { abbr: k, name: t.full_name || 'Unplaced', rows: [] };
+          extra.push(byAbbr[k]);
+        }
+        byAbbr[k].rows.push(r);
+      });
+      groups = groups.concat(extra);
+
+      if (!groups.length) {
+        /* Two different facts, and the fix for one is not the fix for the
+         * other: an endpoint that answered with nothing is a bundle to re-run,
+         * and a report whose every row has aged out is the filter working.
+         * Saying so is also the only place the reader is told the filter
+         * exists -- a row it drops from a report that still has rows left is
+         * not worth a footnote, but a whole section is. */
+        if (held) {
+          return card('Injury report',
+            '<div class="go-empty">Nothing reported in the last ' +
+            INJ_STALE_DAYS + ' days. ' + held +
+            (held === 1 ? ' older entry is' : ' older entries are') +
+            ' held back as stale.</div>', true);
+        }
+        return card('Injury report',
+          emptyState(b, ['/player_injuries'], 'injury data'), true);
+      }
+      return card('Injury report', injuryTable(groups));
+    }
+
+    function provenance(b) {
+      var n = (b.unavailable || []).length;
+      // Say so when the capture is not everything on offer. A prop board that
+      // silently omits six books looks like a thin market rather than a choice.
+      var filt = b.books_filter && b.books_filter.length
+        ? ' · books <code>' + esc(b.books_filter.join(', ')) + '</code>'
+        : '';
+      return '<p class="go-prov">' +
+        'Source <code>balldontlie</code> · game <code>' + esc(b.game.id) + '</code> · ' +
+        'captured <code>' + esc(b.fetched_at) + '</code>' + filt +
+        (n ? ' · <b>' + n + '</b> endpoint' + (n === 1 ? '' : 's') +
+             ' unavailable on the key that fetched this' : '') +
+        (b.refresh ? '<br>Refresh policy <code>' + esc(b.refresh.policy) +
+          '</code> — ' + esc(b.refresh.note || '') +
+          (b.refresh.frozen ? '' :
+            ', so this is re-captured every ' + esc(gap(b.refresh.interval_s)) +
+            ' by <code>scripts/bdl_refresh.py</code>') + '.' : '') +
+        '<br>Published to Supabase by <code>scripts/fetch_bdl_game.py --publish</code>, ' +
+        'swept by <code>scripts/bdl_refresh.py</code>. The page re-checks on the ' +
+        'same schedule, so it does not need reloading.</p>';
+    }
+
+    /* ---------- render ---------- */
+
+    /* ---------- nothing captured yet ----------
+     *
+     * The interesting half of this page. A bundle exists only once something
+     * has fetched it, and until this sweep existed that meant somebody typing a
+     * command, so 270-odd of the 272 rows on the schedule landed here. Now the
+     * honest answer is a time, not an instruction — so the empty state looks the
+     * game up in the committed schedule and says when it gets captured.
+     *
+     * Mirrors DISTANT_HORIZON in scripts/fetch_bdl_game.py, and is the only
+     * piece of the refresh policy this page has to know for itself: a captured
+     * game carries refresh_plan()'s real answer in its bundle, and a game that
+     * was never captured has no bundle to carry one. */
+    var CAPTURE_HORIZON_DAYS = 8;
+
+    /* The season is named for the year it starts in and runs into February, so
+     * through the winter both are live. Two files, ~40 KB each, served with an
+     * hour of cache — and only ever fetched on this path, where the page has
+     * nothing else to say. */
+    function likelySeasons() {
+      var d = new Date(), y = d.getFullYear();
+      var cur = d.getMonth() >= 2 ? y : y - 1;
+      return [cur, cur - 1];
+    }
+
+    var schedCache = null;
+
+    function scheduleLookup(id) {
+      if (!schedCache) {
+        schedCache = Promise.all(likelySeasons().map(function (yr) {
+          return fetch('/data/nfl_schedule_' + yr + '.json')
+            .then(function (r) { return r.ok ? r.json() : null; })
+            .catch(function () { return null; });
+        }));
+      }
+      return schedCache.then(function (docs) {
+        for (var i = 0; i < docs.length; i++) {
+          var doc = docs[i];
+          if (!doc) continue;
+          for (var w = 0; w < (doc.weeks || []).length; w++) {
+            var wk = doc.weeks[w];
+            for (var j = 0; j < (wk.games || []).length; j++) {
+              var g = wk.games[j];
+              if (String(g.id) === String(id)) {
+                return { id: String(g.id), away: g.away, home: g.home,
+                         kickoff: g.kickoff, venue: g.venue, neutral: !!g.neutral,
+                         week: wk.week, season: doc.season };
+              }
+            }
+          }
+        }
+        return null;
+      }).catch(function () { return null; });
+    }
+
+    function whenCaptured(row) {
+      if (!row) {
+        return 'This id is not on the 2026 or 2025 schedule, so nothing is ' +
+          'scheduled to capture it. Check the id, or fetch it directly:';
+      }
+      var k = stamp(row.kickoff);
+      if (k === null) return 'This game has no kickoff time yet, so there is ' +
+        'nothing to schedule a capture against.';
+      var now = Date.now() / 1000, out = k - now;
+      var horizon = CAPTURE_HORIZON_DAYS * 86400;
+      if (out > horizon) {
+        var opens = new Date((k - horizon) * 1000);
+        return 'Capture starts ' + CAPTURE_HORIZON_DAYS + ' days before kickoff — ' +
+          'around ' + opens.toLocaleDateString('en-US',
+            { weekday: 'short', month: 'short', day: 'numeric' }) +
+          ', in about ' + gap(out - horizon) + '. Before then there is nothing ' +
+          'to publish: the books have not posted a line.';
+      }
+      if (out > 0) {
+        return 'This game is inside the capture window and has not been swept ' +
+          'yet. The next sweep publishes it, and this page picks it up on its ' +
+          'own — no reload needed.';
+      }
+      return 'This game finished without ever being captured. Settled games ' +
+        'never change, so nothing re-checks them on a schedule; they get filled ' +
+        'in deliberately:';
+    }
+
+    function needsCommand(row) {
+      if (!row) return true;
+      var k = stamp(row.kickoff);
+      return k !== null && k < Date.now() / 1000;
+    }
+
+    function renderMissing(id, index, row) {
+      var games = (index && index.games) || {};
+      var known = Object.keys(games).length;
+      var head = 'No game selected', body;
+
+      if (!id) {
+        crumbEl.textContent = 'Game';
+        body = 'A game page is <code>/football/schedule/game/&lt;id&gt;</code>. ' +
+          'Pick one below, or start from <a href="/football/schedule">the schedule</a>.';
+      } else {
+        var tag = row ? row.away + ' @ ' + row.home : 'game ' + id;
+        crumbEl.textContent = tag;
+        head = 'Not captured yet — ' + tag;
+        body = (row
+          ? '<div class="go-miss-head">' +
+              '<span class="go-matchup go-matchup-sm">' +
+                '<span class="go-side">' + teamLogo(row.away, 'go-logo-sm') +
+                  esc(row.away) + '</span>' +
+                '<span class="go-at">' + (row.neutral ? 'vs' : '@') + '</span>' +
+                '<span class="go-side">' + teamLogo(row.home, 'go-logo-sm') +
+                  esc(row.home) + '</span>' +
+              '</span>' +
+              '<span class="go-miss-when">' + esc(kickoffET(row.kickoff)) +
+                (row.week ? ' \u00b7 week ' + esc(row.week) : '') + '</span>' +
+            '</div>'
+          : '') +
+          whenCaptured(row) +
+          (needsCommand(row)
+            ? '<br><br><code>python3 scripts/bdl_refresh.py --game-id ' + esc(id) +
+              ' --publish</code>'
+            : '');
+      }
+
+      pageEl.innerHTML = card(head, '<div class="go-empty">' + body + '</div>', true) +
+        '<p class="go-prov">Every row on <a href="/football/schedule">the schedule</a> ' +
+        'links here. ' + known + ' game' + (known === 1 ? '' : 's') +
+        ' published so far, swept by <code>scripts/bdl_refresh.py</code>.</p>';
+    }
+
+    function render(b) {
+      var g = b.game;
+      /* Before the first card is built, and only ever read for a card this
+       * page has not drawn yet: a reader who folded the props away pregame
+       * keeps them folded through kickoff, and one who left them open keeps
+       * them open. The default decides how a card opens, not how it stays. */
+      cardPhase = b.phase;
+      crumbEl.textContent = g.away.abbr + ' @ ' + g.home.abbr;
+      document.title = g.away.abbr + ' @ ' + g.home.abbr + ' | Dynast-Z';
+      /* Before kickoff the prop board is the page: there is no box score and
+       * no play log, and the lines are the only thing that has moved all week.
+       * Once the game is under way that inverts -- what happened outranks what
+       * it was priced at -- so the board drops below the box score rather than
+       * sitting between the odds and the game itself. Built once either way;
+       * only its position in the string changes.
+       *
+       * The play log is last whatever the phase: it is the longest thing on the
+       * page by an order of magnitude, and it folds away by default, so putting
+       * it anywhere else leaves a shut door in the middle of the boards that
+       * are open. Scoring plays is the part of it that does not belong down
+       * there — a dozen rows answering how the score got where the hero says it
+       * is — so it sits directly under the odds, and is empty before kickoff
+       * for the same reason the box score is. */
+      var props = propsSection(b);
+      var pregame = b.phase === 'pregame';
+      pageEl.innerHTML =
+        heroSection(b) +
+        oddsSection(b) +
+        scoringSection(b) +
+        (pregame ? props : '') +
+        playerStatsSection(b) +
+        teamStatsSection(b) +
+        (pregame ? '' : props) +
+        (injuriesApply(b) ? injuriesSection(b) : '') +
+        playsSection(b);
+      wireProps(b);
+      wireBoxscore(b);
+      wirePlays(b);
+    }
+
+    /* ---------- load, and keep loading ----------
+     *
+     * A game page left open across a kickoff should not have to be reloaded by
+     * hand, so it re-checks on the bundle's own schedule: `refresh.next_ts` is
+     * the moment the sweep intends to have replaced it. A settled game is never
+     * polled at all. Being wrong about it is cheap: an unchanged game answers
+     * `{unchanged: true}` in about sixty bytes and the endpoint reads only its
+     * etag column to say so (see fetchBundle), so the cost of a poll that finds
+     * nothing is a round trip and no more.
+     *
+     * Held to a 60-second floor whatever the plan says, paused while the tab is
+     * hidden, and resumed on the way back — a backgrounded tab polling a live
+     * game every two minutes for three hours is somebody's battery. */
+    var MIN_POLL = 30;
+    var MISSING_POLL = 180;     // not captured yet: the sweep decides, not us
+    var currentIndex = null;
+    var timer = null;
+    var frozen = false;         // settled: nothing upstream will change again
+    var nextPollAt = null;      // ms epoch the timer above will fire, for the line
+    var polling = false;        // a request is out right now
+
+    /* `cache: 'no-store'` is not belt-and-braces, it is the fix. The endpoint's
+     * own headers do not survive the hop: every /api/* response comes back
+     * re-encoded and stripped of its ETag, so a 404 arrives with nothing to
+     * revalidate against — exactly the response iOS Safari keeps on disk and
+     * replays, which is how a phone ends up pinned to "not captured yet" while
+     * a desktop shows the full board. Going around the HTTP cache is what makes
+     * the page correct.
+     *
+     * Going around it would also mean re-reading a megabyte on every poll, so
+     * revalidation moved into the request instead: `known` is the etag of the
+     * bundle already on the screen, and a game that has not moved answers with
+     * `{unchanged: true}` and about sixty bytes. The endpoint reads only its
+     * etag column to decide that, so an unchanged poll costs nothing at either
+     * end. Nothing between here and the function can strip a query parameter.
+     *
+     * Three sentinels, because "keep what is on the screen" and "the screen is
+     * wrong" are different answers:
+     *   null       no bundle stored yet — repaint as empty, this is real news
+     *   FAILED     the request fell over; a dropped connection on a phone is
+     *              not evidence the game is uncaptured, and treating it as such
+     *              wipes a board that was on the screen
+     *   UNCHANGED  the bundle we are holding is still current */
+    var FAILED = {};
+    var UNCHANGED = {};
+    var lastBundle = null;      // what is on the screen, for its etag and plan
+
+    function fetchBundle(id) {
+      var url = '/api/game-odds?game=' + encodeURIComponent(id);
+      if (lastBundle && lastBundle.etag) {
+        url += '&known=' + encodeURIComponent(lastBundle.etag);
+      }
+      // A 404 here is the ordinary "not captured yet" case, not an error.
+      return fetch(url, { cache: 'no-store' })
+        .then(function (r) {
+          if (!r.ok) return r.status === 404 ? null : FAILED;
+          return r.json().then(function (b) {
+            return (b && b.unchanged) ? UNCHANGED : b;
+          });
+        })
+        .catch(function () { return FAILED; });
+    }
+
+    function schedulePoll(id, b) {
+      if (timer) { clearTimeout(timer); timer = null; }
+      nextPollAt = null;
+      if (!id) return;
+      var wait;
+      if (!b) {
+        wait = MISSING_POLL;
+      } else if (b.refresh && b.refresh.frozen) {
+        frozen = true;          // settled: there is no next capture to wait for
+        stopTicker();
+        return freshTick();     // one last paint, to say so
+      } else if (b.refresh && b.refresh.next_ts) {
+        wait = b.refresh.next_ts - Date.now() / 1000;
+      } else {
+        wait = 300;             // a bundle from before refresh_plan existed
+      }
+      wait = Math.max(MIN_POLL, wait);
+      nextPollAt = Date.now() + wait * 1000;
+      timer = setTimeout(function () { poll(id); }, wait * 1000);
+      startTicker();
+    }
+
+    /* ---------- the freshness line, live ----------
+     *
+     * "updated 40s ago · next in 12s" is the whole refresh UI: it says the page
+     * is current, and it says when it will check again, and a second later both
+     * halves are still true. That is what removes the need for a gesture — there
+     * is nothing a pull could tell you that the line is not already saying, and
+     * nothing it could fetch that the timer is not already about to.
+     *
+     * Both halves come off the same state the poll loop runs on, so the line
+     * cannot drift from the behaviour: `lastBundle.fetched_at` is what is on
+     * the screen, `nextPollAt` is the timer that will replace it. */
+    function freshText() {
+      var b = lastBundle;
+      if (!b) return '';
+      var now = Date.now() / 1000;
+      var at = stamp(b.fetched_at);
+      var bits = [];
+      if (at !== null) bits.push('updated ' + gap(now - at) + ' ago');
+      if (frozen) bits.push('no longer updating');
+      else if (polling) bits.push('checking now');
+      else if (nextPollAt) bits.push('next in ' + untilText(nextPollAt / 1000 - now));
+      return bits.join(' \u00b7 ');
+    }
+
+    function freshTick() {
+      var el = pageEl.querySelector('.go-fresh');
+      if (!el) return;
+      var t = freshText();
+      if (el.textContent !== t) el.textContent = t;
+    }
+
+    /* Stopped while the tab is hidden and while a settled game is on the
+     * screen. Browsers throttle a background interval to about once a minute
+     * anyway, but a page that is not counting down to anything should not be
+     * holding a timer at all. */
+    var ticker = null;
+    function startTicker() {
+      // Not while hidden: schedulePoll re-arms from the hidden branch of poll()
+      // too, and there is nobody watching the line count down.
+      if (!ticker && !document.hidden) ticker = setInterval(freshTick, 1000);
+    }
+    function stopTicker() {
+      if (ticker) { clearInterval(ticker); ticker = null; }
+    }
+
+    function paint(id, b) {
+      polling = false;
+      if (b === FAILED) {
+        // Leave whatever is on the page alone and come back sooner than the
+        // sweep would have us: the request failed, the game did not change.
+        if (timer) { clearTimeout(timer); timer = null; }
+        nextPollAt = null;
+        if (id) {
+          nextPollAt = Date.now() + MIN_POLL * 1000;
+          timer = setTimeout(function () { poll(id); }, MIN_POLL * 1000);
+          startTicker();
+        }
+        freshTick();
+        return;
+      }
+      if (b === UNCHANGED) {
+        /* Confirmed current. The bundle did not move, but the line did: its
+         * "updated" is now a minute older and its "next in" is a fresh timer,
+         * so the line is repainted even though nothing else is. Re-armed on the
+         * plan the bundle we are already holding gave us — which, once its
+         * next_ts is behind us, is the MIN_POLL floor until the sweep lands. */
+        schedulePoll(id, lastBundle);
+        freshTick();
+        return;
+      }
+      lastBundle = b || null;
+      /* A repaint replaces the cell the panel is hanging off, and the panel is
+       * on the body rather than in the table, so it would be left pointing at
+       * a row that no longer exists. A poll that lands mid-read closes it. */
+      closePop();
+      if (b) render(b);
+      else if (!id) renderMissing('', currentIndex, null);
+      schedulePoll(id, b);
+      // After scheduling, not before: the line quotes the timer just armed.
+      freshTick();
+      if (!b && id) {
+        scheduleLookup(id).then(function (row) {
+          renderMissing(id, currentIndex, row);
+        });
+      }
+    }
+
+    function poll(id) {
+      /* Dropped first, so the pending timer cannot fire a second request while
+       * this one is still out — `resume()` below calls in off-schedule, and
+       * every path out of here re-arms. */
+      if (timer) { clearTimeout(timer); timer = null; }
+      if (document.hidden) {
+        /* Come back when the tab does, rather than burning the request now.
+         * Re-armed on the bundle we are holding rather than on `null`, so a tab
+         * that spends an hour in the background does not come back counting
+         * down to MISSING_POLL against a game that was captured all along. */
+        return schedulePoll(id, lastBundle);
+      }
+      polling = true;
+      freshTick();
+      fetchBundle(id).then(function (b) { paint(id, b); });
+    }
+
+    /* Coming back to the page is the moment its contents are most likely to be
+     * wrong, and the two ways back are different events. `visibilitychange`
+     * covers a tab switch; `pageshow` with `persisted` covers a bfcache
+     * restore, where iOS hands back the rendered DOM from hours ago and
+     * re-runs no script at all. Neither is gated on `timer` any more — a page
+     * restored with no pending timer is the case that most needs the poll. */
+    function resume() {
+      var id = gameParam();
+      if (id && !frozen && !polling) poll(id);
+    }
+
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) return stopTicker();
+      startTicker();
+      freshTick();              // the age is however long the tab was away
+      resume();
+    });
+
+    window.addEventListener('pageshow', function (e) {
+      if (!e.persisted) return;
+      // iOS hands back the DOM from hours ago and re-runs no script: the
+      // interval is gone with it, so the line has to be restarted, not just
+      // resumed.
+      if (!frozen) { startTicker(); freshTick(); }
+      resume();
+    });
+
+    function load() {
+      var id = gameParam();
+      // The index is fetched either way: it is what turns "nothing here" into
+      // "nothing here, but these exist".
+      var idxP = fetch(INDEX_URL, { cache: 'no-store' }).then(function (r) {
+        return r.ok ? r.json() : null;
+      }).catch(function () { return null; });
+
+      Promise.all([id ? fetchBundle(id) : Promise.resolve(null), idxP])
+        .then(function (res) {
+          currentIndex = res[1];
+          paint(id, res[0]);
+        });
+    }
+
+    load();
+  })();
+  </script>
+</body>
+</html>

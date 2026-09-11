@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/assets/icons/app-touch-180.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Dynast-Z">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <title>Pick 'Em Standings | Dynast-Z</title>
+  <script src="/scripts/base/theme.js"></script>
+  <link rel="stylesheet" href="/styles/base/theme.css">
+  <link rel="stylesheet" href="/styles/base/styles.css">
+  <link rel="stylesheet" href="/styles/base/hub.css">
+  <link rel="stylesheet" href="/styles/components/nfl-pickers.css">
+  <link rel="stylesheet" href="/styles/primary/pickem.css">
+  <script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
+  <script defer src="/_vercel/insights/script.js"></script>
+</head>
+<body class="masters-body">
+  <div id="header-mount"></div>
+  <div id="nav-drawer-mount"></div>
+  <script src="/scripts/base/auth.js"></script>
+  <script src="/scripts/base/standalone.js"></script>
+  <script src="/scripts/base/nav.js"></script>
+  <script src="/scripts/components/nfl-pickers.js"></script>
+  <script src="/scripts/components/sticky-headers.js"></script>
+  <script src="/scripts/primary/pickem-api.js"></script>
+  <script src="/scripts/primary/pickem.js"></script>
+  <script>initPage();</script>
+
+  <div class="masters-content">
+    <div class="masters-breadcrumbs">
+      <a href="/football">Football</a><span class="separator">/</span><a href="/football/pickem">Pick 'Em</a><span class="separator">/</span><span>Standings</span>
+    </div>
+
+    <h2>Pick 'Em standings</h2>
+    <p class="subtitle" id="subtitle">Loading…</p>
+
+    <div class="dd-row">
+      <div class="dd" id="dd-week">
+        <button type="button" class="dd-btn" id="f-week" aria-haspopup="true" aria-expanded="false">
+          <span class="dd-value">All weeks</span>
+        </button>
+        <div class="dd-pop dd-menu" id="week-menu" role="menu" aria-label="Week" hidden></div>
+      </div>
+      <a class="pk-cta is-secondary" href="/football/pickem/picks">Make picks</a>
+    </div>
+
+    <div id="table"><p class="pk-empty">Loading…</p></div>
+
+    <p class="pk-note" id="note"></p>
+  </div>
+
+  <script>
+  (function () {
+    'use strict';
+
+    /* The leaderboard. Only graded games count, so a slate in progress credits
+     * nobody early and the "open" column says how many picks are still waiting
+     * — which is what stops the table reshuffling every few minutes on numbers
+     * that are not final yet.
+     *
+     * The week filter offers only weeks that have a graded game in them. A week
+     * that has been picked but not played would otherwise render as a column of
+     * zeroes, which reads as sixteen wrong picks rather than as a week that has
+     * not happened. */
+
+    var state = { season: null, week: null };
+    var tableEl = document.getElementById('table');
+    var subtitleEl = document.getElementById('subtitle');
+    var noteEl = document.getElementById('note');
+    var weekBtn = document.getElementById('f-week');
+    var weekMenu = document.getElementById('week-menu');
+    var weekDd = null;
+
+    function readParams() {
+      var q = new URLSearchParams(location.search);
+      var season = Number(q.get('season'));
+      var week = Number(q.get('week'));
+      state.season = season >= 2000 && season <= 2100 ? season : null;
+      state.week = week >= 1 && week <= 18 ? week : null;
+    }
+
+    function writeParams() {
+      var q = new URLSearchParams();
+      if (state.season) q.set('season', state.season);
+      if (state.week) q.set('week', state.week);
+      var qs = q.toString();
+      history.replaceState(null, '', location.pathname + (qs ? '?' + qs : ''));
+    }
+
+    function weekLabel() {
+      return state.week ? 'Week ' + state.week : 'All weeks';
+    }
+
+    /* Rank and Player are held at the left edge while the week columns scroll
+     * under them, and Player has to be told Rank's real width. Measured rather
+     * than guessed -- see Sticky.pinColumns, and the note on the same call in
+     * survivor-standings.html. */
+    var PINNED = ['th.pk-rank, td.pk-rank', 'th.pk-who, td.pk-who'];
+
+    function pin() {
+      var table = tableEl.querySelector('.pk-table');
+      if (table && window.Sticky) Sticky.pinColumns(table, PINNED);
+    }
+
+    window.addEventListener('resize', pin);
+
+    function render(data) {
+      var me = getUser();
+      tableEl.innerHTML = pkStandingsTable(data, { me: me && me.user_id });
+      pin();
+
+      buildWeekMenu(weekMenu, [{ value: 'all', label: 'All weeks' }].concat(
+        (data.weeks || []).map(function (w) {
+          return { value: w, label: 'Week ' + w };
+        })));
+      syncWeekMenu(weekBtn, weekMenu, state.week || 'all', weekLabel());
+
+      var players = (data.rows || []).length;
+      subtitleEl.textContent = data.season + ' · ' + players +
+        (players === 1 ? ' player' : ' players') +
+        (data.weeks && data.weeks.length
+          ? ' · ' + data.weeks.length + ' week' +
+            (data.weeks.length === 1 ? '' : 's') + ' graded'
+          : ' · nothing graded yet');
+
+      noteEl.textContent = 'Picks are graded against the spread as it stood at '
+        + '3:00 AM ET on the Tuesday of that week. A correct pick scores its '
+        + 'confidence and a wrong one loses it, so totals can go negative; a '
+        + 'push pays a flat 2 to whoever picked it. Ties are broken by correct '
+        + 'picks. "Open" counts picks on games that have not been graded yet.';
+    }
+
+    function load() {
+      tableEl.innerHTML = '<p class="pk-empty">Loading…</p>';
+      pickemStandings(state.season, state.week).then(function (data) {
+        state.season = data.season;
+        writeParams();
+        render(data);
+      }).catch(function (err) {
+        tableEl.innerHTML = '<p class="pk-empty">' + pkEsc(err.message) + '</p>';
+      });
+    }
+
+    function wire() {
+      weekDd = registerDropdown(document.getElementById('dd-week'));
+      weekMenu.addEventListener('click', function (e) {
+        var opt = e.target.closest ? e.target.closest('.dd-opt') : null;
+        if (!opt || !weekMenu.contains(opt)) return;
+        var v = opt.getAttribute('data-week');
+        state.week = v === 'all' ? null : Number(v);
+        closeDropdown(weekDd, true);
+        load();
+      });
+
+      // The week numbers in the header row are links to the same filter, so a
+      // column that looks interesting can be opened without going back to the
+      // menu. Intercepted rather than followed, so the table swaps in place.
+      tableEl.addEventListener('click', function (e) {
+        var a = e.target.closest ? e.target.closest('th.pk-wk a') : null;
+        if (!a || !tableEl.contains(a)) return;
+        e.preventDefault();
+        state.week = Number(new URLSearchParams(a.search).get('week'));
+        load();
+      });
+    }
+
+    if (!isLoggedIn()) {
+      location.href = '/account';
+    } else {
+      readParams();
+      wire();
+      load();
+    }
+  })();
+  </script>
+</body>
+</html>

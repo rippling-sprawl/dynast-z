@@ -4,20 +4,42 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <link rel="icon" type="image/png" href="/favicon.png">
+  <!-- Home-screen install. The two *-capable tags are what make an iOS icon
+       launch the site standalone — its own window, no address bar — instead of
+       opening a Safari tab; the manifest says the same thing to everyone else,
+       and to iOS 16.4+. standalone.js keys the drawer's share row off exactly
+       that state, so dropping these tags silently removes the row too. -->
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/assets/icons/app-touch-180.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Dynast-Z">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <title>Track a Bet | Dynast-Z</title>
-  <link rel="stylesheet" href="/styles/base/styles.css?v=abec71e4">
-  <link rel="stylesheet" href="/styles/primary/bets.css?v=e5f8b2d3">
+  <!-- Theme first: theme.js sets <html data-theme> before the first paint,
+       theme.css holds every colour token the sheets below spend. -->
+  <script src="/scripts/base/theme.js"></script>
+  <link rel="stylesheet" href="/styles/base/theme.css">
+  <link rel="stylesheet" href="/styles/base/styles.css">
+  <link rel="stylesheet" href="/styles/primary/bets.css">
+  <link rel="stylesheet" href="/styles/base/lightbox.css">
+  <!-- Vercel Web Analytics. The /_vercel/insights/* routes are injected by
+       Vercel at deploy time, so this 404s harmlessly when serving locally. -->
+  <script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
+  <script defer src="/_vercel/insights/script.js"></script>
 </head>
 <body>
   <div id="header-mount"></div>
   <div id="nav-drawer-mount"></div>
-  <script src="/scripts/base/auth.js?v=e9f1a2b3"></script>
-  <script src="/scripts/base/nav.js?v=e5f6a7b8"></script>
+  <script src="/scripts/base/auth.js"></script>
+  <script src="/scripts/base/standalone.js"></script>
+  <script src="/scripts/base/nav.js"></script>
+  <script src="/scripts/base/lightbox.js"></script>
   <script>initPage();</script>
 
   <main class="bets-content">
     <div class="dupe-toast" id="dupe-toast" role="status">Dupe Created</div>
-    <div class="bets-breadcrumbs"><a href="/">Home</a><span class="sep">/</span><a href="/bets">Bets</a><span class="sep">/</span><span id="crumb-leaf">Track a Bet</span></div>
+    <div class="bets-breadcrumbs"><a href="/football">Football</a><span class="sep">/</span><a href="/bets">Bets</a><span class="sep">/</span><span id="crumb-leaf">Track a Bet</span></div>
 
     <h2 class="bets-h2" id="form-title">Track a Bet</h2>
     <p class="bets-sub">Enter your pick. Only league, your side, and stake are required.</p>
@@ -110,10 +132,10 @@
     </form>
   </main>
 
-  <script src="/scripts/primary/bets-api.js?v=c2e5f8b3"></script>
-  <script src="/scripts/primary/bets.js?v=b5e7d150"></script>
-  <script src="/scripts/primary/combobox.js?v=882d6542"></script>
-  <script src="/scripts/primary/bet-tile.js?v=3f21a640"></script>
+  <script src="/scripts/primary/bets-api.js"></script>
+  <script src="/scripts/primary/bets.js"></script>
+  <script src="/scripts/primary/combobox.js"></script>
+  <script src="/scripts/primary/bet-tile.js"></script>
   <script>
     (async function () {
       if (!isLoggedIn()) { location.href = '/account'; return; }

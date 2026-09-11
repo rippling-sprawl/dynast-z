@@ -1,0 +1,141 @@
+{
+  "slug": "the-odds-api",
+  "url": "https://the-odds-api.com/",
+  "assets": [
+    {
+      "file": "favicon.ico",
+      "src": "https://the-odds-api.com/assets/img/fav.ico",
+      "bytes": 1084,
+      "content_type": "image/x-icon"
+    },
+    {
+      "file": "og-image.jpg",
+      "src": "https://the-odds-api.com/assets/img/sports-odds-in-excel.jpg",
+      "bytes": 101072,
+      "content_type": "image/jpeg"
+    }
+  ],
+  "palette": [
+    {
+      "hex": "#3883fa",
+      "count": 39
+    },
+    {
+      "hex": "#cccccc",
+      "count": 16
+    },
+    {
+      "hex": "#ffffff",
+      "count": 16
+    },
+    {
+      "hex": "#000000",
+      "count": 13
+    },
+    {
+      "hex": "#2c3e50",
+      "count": 8
+    },
+    {
+      "hex": "#eaecef",
+      "count": 8
+    },
+    {
+      "hex": "#dddddd",
+      "count": 7
+    },
+    {
+      "hex": "#f4f7fd",
+      "count": 7
+    },
+    {
+      "hex": "#777777",
+      "count": 7
+    },
+    {
+      "hex": "#999999",
+      "count": 5
+    },
+    {
+      "hex": "#eeeeee",
+      "count": 5
+    },
+    {
+      "hex": "#4e6e8e",
+      "count": 5
+    },
+    {
+      "hex": "#282c34",
+      "count": 4
+    },
+    {
+      "hex": "#42b983",
+      "count": 4
+    }
+  ],
+  "meta": {
+    "og_image": "/assets/img/sports-odds-in-excel.jpg",
+    "site_name": "The Odds API",
+    "og_title": "The Odds API",
+    "og_description": "Get sports odds data for loads of sports from bookmakers around the world"
+  },
+  "errors": [
+    "asset favicon-ico: HTTP Error 404: Not Found"
+  ],
+  "final_url": "https://the-odds-api.com/",
+  "fonts_inline": [],
+  "fonts_google": [],
+  "css_files": [
+    "https://the-odds-api.com/assets/css/0.styles.698483c2.css"
+  ],
+  "image_palette": {
+    "og-image.jpg": [
+      {
+        "hex": "#fdfdfd",
+        "pct": 40.5
+      },
+      {
+        "hex": "#e7e7e7",
+        "pct": 8.3
+      },
+      {
+        "hex": "#d1d1d1",
+        "pct": 3.5
+      },
+      {
+        "hex": "#bbbbbb",
+        "pct": 2.4
+      },
+      {
+        "hex": "#a5a5a5",
+        "pct": 2.1
+      },
+      {
+        "hex": "#585858",
+        "pct": 1.1
+      },
+      {
+        "hex": "#84a5dc",
+        "pct": 0.6
+      },
+      {
+        "hex": "#4d79dc",
+        "pct": 0.4
+      }
+    ],
+    "favicon.ico": [
+      {
+        "hex": "#000000",
+        "pct": 100.0
+      }
+    ]
+  },
+  "fonts_resolved": [
+    "-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen,Ubuntu,Cantarell,Fira Sans,Droid Sans,Helvet",
+    "Consolas,Monaco,Andale Mono,Ubuntu Mono,monospace",
+    "Open Sans,sans-serif",
+    "Source Code Pro,monospace",
+    "inherit",
+    "source-code-pro,Menlo,Monaco,Consolas,Courier New,monospace"
+  ]
+}

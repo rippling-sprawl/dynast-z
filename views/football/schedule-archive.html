@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <!-- Home-screen install. The two *-capable tags are what make an iOS icon
+       launch the site standalone — its own window, no address bar — instead of
+       opening a Safari tab; the manifest says the same thing to everyone else,
+       and to iOS 16.4+. standalone.js keys the drawer's share row off exactly
+       that state, so dropping these tags silently removes the row too. -->
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/assets/icons/app-touch-180.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Dynast-Z">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <title>Capture Archive | Dynast-Z</title>
+  <!-- Theme first: theme.js sets <html data-theme> before the first paint,
+       theme.css holds every colour token below. -->
+  <script src="/scripts/base/theme.js"></script>
+  <link rel="stylesheet" href="/styles/base/theme.css">
+  <link rel="stylesheet" href="/styles/base/styles.css">
+  <link rel="stylesheet" href="/styles/base/hub.css">
+  <script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
+  <script defer src="/_vercel/insights/script.js"></script>
+</head>
+<body class="masters-body">
+  <div id="header-mount"></div>
+  <div id="nav-drawer-mount"></div>
+  <script src="/scripts/base/auth.js"></script>
+  <script src="/scripts/base/standalone.js"></script>
+  <script src="/scripts/base/nav.js"></script>
+  <script>initPage();</script>
+
+  <div class="masters-content ar-wrap">
+    <div class="masters-breadcrumbs">
+      <a href="/football">Football</a><span class="separator">/</span>
+      <a href="/football/schedule">Games</a><span class="separator">/</span>
+      <span>Archive</span>
+    </div>
+
+    <h2>Capture archive</h2>
+    <p class="ar-lede">Every game with a stored snapshot, newest first. Each row
+      opens that game's odds, box score and play log. Games with nothing captured
+      yet are not here &mdash; they are on
+      <a href="/football/schedule">the schedule</a>, which links to a page for
+      every game whether it has been captured or not.</p>
+
+    <div id="ar-seasons" class="ar-seasons" hidden></div>
+    <div id="ar-list"><p class="ar-note">Loading archive&hellip;</p></div>
+  </div>
+
+  <script>
+  (function () {
+    'use strict';
+
+    /* The full listing of captured games, from /api/game-odds with no `game`
+     * parameter — summary columns only, so this costs one small response
+     * however many ~900 KB bundles are behind it.
+     *
+     * This page exists because the game page could not carry the list. It began
+     * as a strip of sibling chips when four games were stored; backfilling 2025
+     * made that 278 chips at the bottom of every game page, and every attempt to
+     * cap it — nearest sixteen, rest of the week — was a list that had to
+     * apologise for itself. Browsing the whole archive is a different job from
+     * reading one game, so it got its own page and the game page got a link.
+     *
+     * ES5 globals, like the rest of scripts/ — no modules, no build step. */
+
+    var listEl = document.getElementById('ar-list');
+    var seasonsEl = document.getElementById('ar-seasons');
+    var LOGO_DIR = '/assets/icons/nfl/';
+
+    function esc(s) {
+      return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+      });
+    }
+
+    function stamp(iso) {
+      if (!iso) return null;
+      var t = Date.parse(String(iso).replace(/T(\d\d:\d\d)Z$/, 'T$1:00Z'));
+      return isFinite(t) ? t / 1000 : null;
+    }
+
+    function gap(secs) {
+      var s = Math.abs(Math.round(secs));
+      if (s < 60) return s + 's';
+      if (s < 5400) return Math.round(s / 60) + 'm';
+      if (s < 172800) return Math.round(s / 3600) + 'h';
+      return Math.round(s / 86400) + 'd';
+    }
+
+    function when(iso) {
+      var t = stamp(iso);
+      if (t === null) return '';
+      try {
+        return new Date(t * 1000).toLocaleString('en-US', {
+          timeZone: 'America/New_York', weekday: 'short', month: 'short',
+          day: 'numeric', hour: 'numeric', minute: '2-digit'
+        }) + ' ET';
+      } catch (e) { return String(iso); }
+    }
+
+    function row(g) {
+      var upd = stamp(g.updated_at);
+      return '<a class="ar-row" href="/football/schedule/game/' +
+          encodeURIComponent(g.id) + '">' +
+        '<span class="ar-teams">' +
+          '<img class="ar-logo" src="' + LOGO_DIR + esc(g.away) + '.svg" alt="" aria-hidden="true">' +
+          '<span class="ar-abbr">' + esc(g.away) + '</span>' +
+          '<span class="ar-at">@</span>' +
+          '<img class="ar-logo" src="' + LOGO_DIR + esc(g.home) + '.svg" alt="" aria-hidden="true">' +
+          '<span class="ar-abbr">' + esc(g.home) + '</span>' +
+        '</span>' +
+        '<span class="ar-kick">' + esc(when(g.kickoff)) + '</span>' +
+        '<span class="ar-phase ' + esc(g.phase) + '">' + esc(g.phase) + '</span>' +
+        '<span class="ar-age">' +
+          (upd === null ? '' : 'updated ' + esc(gap(Date.now() / 1000 - upd)) + ' ago') +
+        '</span>' +
+      '</a>';
+    }
+
+    /* Postseason, without a postseason flag. The listing carries `season` and
+     * `week` and nothing else, and balldontlie numbers the playoffs 1-5 all
+     * over again — so week 5 of the 2025 season is both an October Sunday and
+     * the Super Bowl, and grouping on the number alone files them together.
+     *
+     * Two facts separate them. A playoff game is played in the calendar year
+     * after its season, and it is numbered no higher than 5. Both are needed:
+     * the year alone also catches weeks 16-18, which are December and January
+     * regular-season football, and the number alone catches September. */
+    var POST_MAX_WEEK = 5;
+
+    function isPost(g) {
+      var t = stamp(g.kickoff);
+      if (t === null || !g.season || !g.week) return false;
+      return new Date(t * 1000).getUTCFullYear() > Number(g.season) &&
+             Number(g.week) <= POST_MAX_WEEK;
+    }
+
+    function groupLabel(g, post) {
+      if (post) {
+        return g.week ? 'Postseason \u00b7 week ' + g.week : 'Postseason';
+      }
+      return g.week ? 'Week ' + g.week : 'Unscheduled week';
+    }
+
+    /* One bucket per season/week, in the order they were played. Buckets are
+     * built off a sort rather than a nested map so the section order is the
+     * kickoff order and nothing has to re-sort keys that are numbers in one
+     * season and numbers again in the next. */
+    function bucket(games, ids) {
+      var out = [], seen = {};
+      ids.forEach(function (id) {
+        var g = games[id];
+        var post = isPost(g);
+        var key = g.season + '|' + (post ? 'p' : 'r') + '|' + (g.week || '?');
+        if (!seen[key]) {
+          seen[key] = { season: g.season, label: groupLabel(g, post), ids: [] };
+          out.push(seen[key]);
+        }
+        seen[key].ids.push(id);
+      });
+      return out;
+    }
+
+    function seasonId(season) {
+      return 'season-' + String(season == null ? 'unknown' : season);
+    }
+
+    function render(index) {
+      var games = (index && index.games) || {};
+      var ids = Object.keys(games);
+      if (!ids.length) {
+        listEl.innerHTML = '<p class="ar-note">No snapshots stored yet. Games ' +
+          'appear here as they come inside the capture window &mdash; about ' +
+          'eight days before kickoff.</p>';
+        return;
+      }
+
+      // Newest first, which for an archive is the useful end: the last slate
+      // played is what anyone arrives looking for.
+      ids.sort(function (a, b) {
+        return (stamp(games[b].kickoff) || 0) - (stamp(games[a].kickoff) || 0);
+      });
+
+      var groups = bucket(games, ids);
+      var html = '', season = null, seasons = [];
+      groups.forEach(function (grp) {
+        if (grp.season !== season) {
+          if (season !== null) html += '</section>';
+          season = grp.season;
+          seasons.push(season);
+          html += '<section class="ar-season" id="' + esc(seasonId(season)) + '">' +
+            '<h3 class="ar-season-h">' + esc(season || 'Unknown season') +
+            ' season</h3>';
+        }
+        html += '<div class="ar-group">' +
+          '<div class="ar-group-h">' + esc(grp.label) +
+            '<span class="ar-count">' + grp.ids.length + '</span></div>' +
+          '<div class="ar-board">' +
+            grp.ids.map(function (id) { return row(games[id]); }).join('') +
+          '</div></div>';
+      });
+      if (season !== null) html += '</section>';
+
+      listEl.innerHTML = html +
+        '<p class="ar-note">' + ids.length + ' game' +
+        (ids.length === 1 ? '' : 's') + ' captured across ' + seasons.length +
+        ' season' + (seasons.length === 1 ? '' : 's') + ', swept by ' +
+        '<code>scripts/bdl_refresh.py</code>. How the capture works is on ' +
+        '<a href="/football/live-stats">the live-stats page</a>.</p>';
+
+      // Jump links, but only once there is more than one season to jump
+      // between — a single chip that scrolls nowhere is furniture.
+      if (seasons.length > 1) {
+        seasonsEl.innerHTML = seasons.map(function (s) {
+          return '<a class="ar-jump" href="#' + esc(seasonId(s)) + '">' +
+            esc(s || 'Unknown') + '</a>';
+        }).join('');
+        seasonsEl.hidden = false;
+      }
+    }
+
+    fetch('/api/game-odds')
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(render)
+      .catch(function () {
+        listEl.innerHTML = '<p class="ar-note">The listing could not be loaded ' +
+          'just now. The game pages themselves are unaffected.</p>';
+      });
+  })();
+  </script>
+
+  <style>
+    /* Scoped to .ar-, and kept with the page: one layout, no parts anything
+     * else reuses. The rows are deliberately the same shape as the board on
+     * /football/live-stats — that page shows what is moving now, this one shows
+     * everything ever stored, and a reader crossing between them should not
+     * have to re-learn a row.
+     *
+     * The page wears the VegasInsider skin, imported below and shared with
+     * /football/schedule and the game page: the palette, the display face
+     * and the navy-and-gold bands all come from there, and only the .ar-
+     * rules that spend them are here. It is a repaint — no row moved, no
+     * column changed, the grids below are the ones this page has always had.
+     *
+     * The import has to be the first thing in the block: @import is only valid
+     * ahead of every other rule in a sheet, and a <style> element is a sheet. */
+    @import url('/styles/base/vegasinsider.css');
+
+    .ar-wrap { max-width: 900px; }
+    .ar-lede {
+      color: var(--text-3); font-size: 14px; line-height: 1.6;
+      margin: 0 0 20px; max-width: 68ch;
+    }
+    .ar-lede a { color: var(--accent); text-decoration: none; }
+    .ar-lede a:hover { text-decoration: underline; }
+
+    .ar-seasons { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 22px; }
+    /* Squared, in display caps like every other control on the three Games
+     * pages, and gold on hover rather than accent-blue. */
+    .ar-jump {
+      font-family: var(--vi-display); font-size: 15px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.7px; padding: 3px 14px;
+      border-radius: 2px; border: 1px solid var(--border);
+      background: var(--surface-2); color: var(--text-2); text-decoration: none;
+    }
+    .ar-jump:hover { border-color: var(--vi-gold); color: var(--text-hi); }
+
+    .ar-season { margin: 0 0 12px; }
+    .ar-season-h {
+      font-size: 22px; font-family: var(--vi-display); font-weight: 700;
+      text-transform: uppercase; letter-spacing: 1px; color: var(--text-hi);
+      margin: 26px 0 12px; padding-bottom: 6px;
+      border-bottom: 3px solid var(--vi-gold);
+    }
+    .ar-season:first-child .ar-season-h { margin-top: 0; }
+
+    .ar-group { margin: 0 0 18px; }
+
+    /* The week label is the band that heads its board — the same navy strip,
+     * gold-ruled, that the day headers on /football/schedule and the card
+     * heads on the game page are drawn as. It sits directly on the board
+     * rather than floating above it, so the two read as one table. */
+    .ar-group-h {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 15px; font-family: var(--vi-display); font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.9px;
+      color: var(--vi-band-ink); margin: 0;
+      padding: 6px 12px 5px;
+      background: var(--vi-navy);
+      border-bottom: 2px solid var(--vi-gold);
+      border-radius: 2px 2px 0 0;
+    }
+    .ar-count {
+      font-size: 13px; font-weight: 400; color: var(--vi-band-ink-2);
+      background: rgba(255, 255, 255, 0.12); border-radius: 2px; padding: 0 7px;
+    }
+
+    /* One grid per group so the columns line up down the page; it collapses to
+     * two rows per game on a phone rather than scrolling sideways. */
+    .ar-board {
+      border: 1px solid var(--border); border-top: 0;
+      border-radius: 0 0 2px 2px;
+      background: var(--panel); overflow: hidden;
+    }
+    .ar-row {
+      display: grid; align-items: center; gap: 4px 14px;
+      grid-template-columns: minmax(130px, max-content) 1fr auto auto;
+      padding: 8px 12px; border-top: 1px solid var(--hairline);
+      text-decoration: none; color: inherit;
+    }
+    /* Zebra, which the board did not have: on a page that is nothing but rows
+     * the stripe is what keeps a long week readable across four columns. */
+    .ar-row:nth-child(even) { background: var(--zebra); }
+    .ar-row:first-child { border-top: 0; }
+    .ar-row:hover { background: var(--surface-hover); }
+    /* Monospace stays: .ar-abbr is a 3ch cell, and a proportional face makes
+     * the column ragged and the kickoff beside it zigzag down the board. */
+    .ar-teams {
+      display: flex; align-items: center; gap: 5px;
+      font-family: monospace; font-weight: 700; color: var(--text-hi);
+    }
+    .ar-logo { width: 16px; height: 16px; }
+    .ar-abbr { display: inline-block; min-width: 3ch; }
+    .ar-at { color: var(--text-5); font-weight: 400; margin: 0 2px; }
+    .ar-kick { font-size: 12px; color: var(--text-3); font-family: monospace; }
+    .ar-phase {
+      font-size: 12px; font-weight: 700; font-family: var(--vi-display);
+      text-transform: uppercase;
+      letter-spacing: 0.8px; padding: 1px 8px; border-radius: 2px;
+      border: 1px solid transparent; white-space: nowrap;
+    }
+    .ar-phase.pregame { color: var(--warn); border-color: var(--warn-line); background: var(--warn-soft); }
+    .ar-phase.live    { color: var(--bad);  border-color: var(--bad-line);  background: var(--bad-soft); }
+    .ar-phase.final   { color: var(--text-3); border-color: var(--border); background: var(--surface-2); }
+    .ar-age {
+      font-size: 11px; color: var(--text-4); white-space: nowrap; min-width: 12ch;
+      text-align: right;
+    }
+    .ar-note {
+      font-size: 12px; color: var(--text-4); line-height: 1.7;
+      margin: 24px 0 40px;
+    }
+    .ar-note a { color: var(--accent); text-decoration: none; }
+    .ar-note a:hover { text-decoration: underline; }
+    .ar-note code { font-family: monospace; color: var(--text-3); }
+
+    @media (max-width: 640px) {
+      /* Kickoff drops to a second line under the matchup, leaving phase and
+       * freshness on the row with it. */
+      .ar-row { grid-template-columns: 1fr auto auto; }
+      .ar-teams { grid-column: 1; }
+      .ar-phase { grid-column: 2; }
+      .ar-age { grid-column: 3; min-width: 0; }
+      .ar-kick { grid-column: 1 / -1; }
+    }
+  </style>
+</body>
+</html>

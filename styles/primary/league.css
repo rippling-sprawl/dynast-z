@@ -9,7 +9,7 @@
   border-radius: 50%;
   margin-right: 12px;
   flex-shrink: 0;
-  background: #21262d;
+  background: var(--surface-2);
   object-fit: cover;
 }
 
@@ -25,8 +25,8 @@
   align-items: center;
   min-width: 0;
   padding: 12px 10px;
-  background: #161b22;
-  border: 1px solid #30363d;
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 8px;
   margin-bottom: 8px;
   text-decoration: none;
@@ -34,8 +34,8 @@
 }
 
 .team-card:hover {
-  background: #1c2128;
-  border-color: #58a6ff;
+  background: var(--surface-3);
+  border-color: var(--accent);
 }
 
 /* Team grid: tiles always 50% of the container (minmax(0,1fr) lets a long
@@ -62,7 +62,7 @@
 .team-name {
   font-size: 15px;
   font-weight: 500;
-  color: #f0f6fc;
+  color: var(--text-hi);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -70,7 +70,7 @@
 
 .team-owner {
   font-size: 12px;
-  color: #8b949e;
+  color: var(--text-3);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -80,7 +80,7 @@
   display: inline-block;
   margin-top: 8px;
   font-size: 12px;
-  color: #58a6ff;
+  color: var(--accent);
   text-decoration: none;
 }
 

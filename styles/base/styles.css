@@ -3,16 +3,29 @@
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: #0f1117;
-  color: #e1e4e8;
+  background: var(--bg);
+  color: var(--text);
   height: auto;
   overflow: auto;
   padding: 0;
 }
 
+/* The page while something modal is open over it. Pinned rather than merely
+ * `overflow: hidden`, since iOS keeps scrolling the body behind a fixed overlay
+ * otherwise; the offset it was pinned at is re-applied on release. Taken and
+ * released by scripts/base/scroll-lock.js, which is where the pairing rules
+ * are. */
+body.scroll-locked {
+  position: fixed;
+  left: 0;
+  right: 0;
+  width: 100%;
+  overflow: hidden;
+}
+
 header {
-  background: #161b22;
-  border-bottom: 1px solid #30363d;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
   padding: 12px 24px;
   display: flex;
   align-items: center;
@@ -25,21 +38,21 @@ header {
 header h1 {
   font-size: 18px;
   font-weight: 600;
-  color: #f0f6fc;
+  color: var(--text-hi);
 }
 
 header a {
-  color: #8b949e;
+  color: var(--text-3);
   text-decoration: none;
   font-size: 13px;
 }
 
-header a:hover { color: #58a6ff; }
+header a:hover { color: var(--accent); }
 
 #loading {
   text-align: center;
   padding: 48px 16px;
-  color: #8b949e;
+  color: var(--text-3);
   font-size: 14px;
 }
 
@@ -54,7 +67,7 @@ header a:hover { color: #58a6ff; }
   display: flex;
   text-align: center;
   gap: 0;
-  border-bottom: 1px solid #30363d;
+  border-bottom: 1px solid var(--border);
   margin-bottom: 16px;
 }
 
@@ -63,26 +76,26 @@ header a:hover { color: #58a6ff; }
   padding: 10px 20px;
   font-size: 14px;
   font-weight: 500;
-  color: #8b949e;
+  color: var(--text-3);
   text-decoration: none;
   border-bottom: 2px solid transparent;
   transition: color 0.15s, border-color 0.15s;
 }
 
-.tab:hover { color: #e1e4e8; }
+.tab:hover { color: var(--text); }
 
 .tab.active {
-  color: #f0f6fc;
-  border-bottom-color: #58a6ff;
+  color: var(--text-hi);
+  border-bottom-color: var(--accent);
 }
 
 .placeholder {
   padding: 24px 16px;
   text-align: center;
-  color: #484f58;
+  color: var(--text-5);
   font-size: 14px;
-  background: #161b22;
-  border: 1px solid #30363d;
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 8px;
 }
 
@@ -99,9 +112,9 @@ header a:hover { color: #58a6ff; }
   display: inline-block;
   font-size: 9px;
   font-weight: 700;
-  color: #8b949e;
-  background: #21262d;
-  border: 1px solid #30363d;
+  color: var(--text-3);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
   padding: 0 4px;
   border-radius: 3px;
   vertical-align: middle;
@@ -111,9 +124,9 @@ header a:hover { color: #58a6ff; }
 
 /* Share trade button */
 .share-btn {
-  background: #21262d;
-  border: 1px solid #30363d;
-  color: #8b949e;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text-3);
   font-size: 12px;
   font-weight: 600;
   font-family: inherit;
@@ -125,9 +138,9 @@ header a:hover { color: #58a6ff; }
 }
 
 .share-btn:hover {
-  background: #58a6ff;
-  color: #fff;
-  border-color: #58a6ff;
+  background: var(--accent);
+  color: var(--on-accent);
+  border-color: var(--accent);
 }
 
 .share-btn:disabled {
@@ -138,11 +151,13 @@ header a:hover { color: #58a6ff; }
 /* Share toast */
 .share-toast {
   position: fixed;
-  bottom: 24px;
+  /* Clears the fixed bottom bar on narrow screens; --bottom-nav-h is 0 above
+   * that breakpoint. */
+  bottom: calc(24px + var(--bottom-nav-h, 0px));
   left: 50%;
   transform: translateX(-50%) translateY(8px);
-  background: #f0f6fc;
-  color: #0d1117;
+  background: var(--text-hi);
+  color: var(--bg-alt);
   padding: 8px 16px;
   border-radius: 8px;
   font-size: 13px;
@@ -162,7 +177,7 @@ header a:hover { color: #58a6ff; }
 .hamburger {
   background: none;
   border: none;
-  color: #8b949e;
+  color: var(--text-3);
   font-size: 22px;
   cursor: pointer;
   padding: 4px;
@@ -171,14 +186,106 @@ header a:hover { color: #58a6ff; }
   align-items: center;
 }
 
-.hamburger:hover { color: #f0f6fc; }
+.hamburger:hover { color: var(--text-hi); }
+
+/* --- Site header ---
+ * One markup, two shapes. Wide: the menu button and the title, sticky at the
+ * top of the page, exactly as before. Narrow: the same controls as a fixed bar
+ * across the bottom of the viewport, iOS-style — icon over label, three equal
+ * columns — because that is where a thumb is. The switch is the media query at
+ * the end of this section; nothing about it is duplicated in the markup.
+ *
+ * DOM order is the mobile order (Home, Odds, Buns, Menu). Desktop pulls the
+ * menu button in front of the title with `order` instead of moving it, so
+ * reading order and tab order match what is on screen at both widths. */
+
+/* --- The bottom bar's own palette ---
+ * The bar is the one piece of chrome every route shares, so it does not take
+ * the route's colours: it is the same near-black band with the same gold rule
+ * on /football/schedule, on an Oven board and on a light-theme page. That is
+ * where these values are from — the VegasInsider skin's bar, which was already
+ * theme-independent (styles/base/vegasinsider.css), promoted here so it is the
+ * whole app's bar rather than three pages' bar.
+ *
+ * They are spent by redefining the house tokens *on the bar and the sheet*
+ * further down, so the tabs, the drawer rows and the theme circles pick the
+ * palette up through inheritance from their existing rules. Nothing about the
+ * bar's markup or layout knows about this. */
+:root {
+  --bottom-nav-h: 0px;
+  --nav-bar: #1d1d25;
+  --nav-rule: #f4c255;
+  --nav-line: #3a3a45;
+  --nav-hover: #2b2b35;
+  --nav-ink: #ffffff;
+  --nav-ink-2: #c9ccd6;
+  --nav-ink-3: #a9adba;
+  --nav-accent: #f4c255;
+  --nav-scrim: rgba(0, 0, 0, 0.62);
+}
+
+.site-header {
+  justify-content: flex-start;
+  gap: 12px;
+}
+
+.site-title { flex: 0 1 auto; }
+
+/* The title link opts out of the generic `header a` sizing above. */
+.site-title a,
+.site-title a:hover {
+  color: inherit;
+  text-decoration: none;
+  font-size: inherit;
+}
+
+.nav-tab {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 4px;
+  color: var(--text-3);
+  text-decoration: none;
+  background: none;
+  border: none;
+  font: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 0.12s;
+}
+
+.nav-tab:hover { color: var(--text-hi); }
+
+/* The page you are on, marked on the bar. Set from buildHeaderHTML(). */
+.nav-tab[aria-current="page"] { color: var(--accent); }
+
+.nav-tab-icon {
+  width: 22px;
+  height: 22px;
+  display: block;
+  flex: 0 0 auto;
+}
+
+.nav-tab-label {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.2px;
+  line-height: 1;
+}
+
+/* Wide screens: the title is the home link and Odds and Buns are drawer rows,
+ * so the bar is the menu button alone and it needs no label under it. */
+.site-header > a.nav-tab { display: none; }
+.site-header .hamburger { order: -1; }
+.site-header .hamburger .nav-tab-label { display: none; }
 
 .nav-overlay {
   display: none;
   position: fixed;
   inset: 0;
   z-index: 200;
-  background: rgba(0, 0, 0, 0.5);
+  background: var(--overlay);
 }
 
 .nav-overlay.open { display: block; }
@@ -190,8 +297,8 @@ header a:hover { color: #58a6ff; }
   width: 280px;
   max-width: 80vw;
   height: 100%;
-  background: #161b22;
-  border-right: 1px solid #30363d;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
   z-index: 201;
   padding: 16px 0;
   overflow-y: auto;
@@ -208,27 +315,27 @@ header a:hover { color: #58a6ff; }
   align-items: center;
   justify-content: space-between;
   padding: 0 16px 12px;
-  border-bottom: 1px solid #30363d;
+  border-bottom: 1px solid var(--border);
   margin-bottom: 8px;
 }
 
 .nav-drawer-header h2 {
   font-size: 16px;
   font-weight: 600;
-  color: #f0f6fc;
+  color: var(--text-hi);
 }
 
 .nav-close {
   background: none;
   border: none;
-  color: #8b949e;
+  color: var(--text-3);
   font-size: 20px;
   cursor: pointer;
   padding: 4px;
   line-height: 1;
 }
 
-.nav-close:hover { color: #f0f6fc; }
+.nav-close:hover { color: var(--text-hi); }
 
 .nav-drawer ul {
   list-style: none;
@@ -241,14 +348,14 @@ header a:hover { color: #58a6ff; }
 .nav-drawer a {
   display: block;
   padding: 10px 20px;
-  color: #58a6ff;
+  color: var(--accent);
   text-decoration: none;
   font-size: 14px;
   transition: background 0.1s;
 }
 
 .nav-drawer a:hover {
-  background: #1c2128;
+  background: var(--surface-3);
 }
 
 .nav-drawer .nav-section-label {
@@ -256,14 +363,174 @@ header a:hover { color: #58a6ff; }
   padding: 10px 20px 4px;
   font-size: 12px;
   font-weight: 600;
-  color: #484f58;
+  color: var(--text-5);
   text-transform: uppercase;
   letter-spacing: 0.5px;
+}
+
+/* A heading row that is also a link. No NAV_SECTIONS section carries an href
+   any more, so this is the account row alone -- it keeps the heading's look so
+   the list still reads as groups, and only picks up the hover of the rows
+   below it. */
+.nav-drawer a.nav-section-label:hover {
+  background: var(--surface-3);
+  color: var(--text-hi);
+}
+
+/* The account row leads the list (it used to sit in the header), so it gets a
+   rule under it to keep it apart from the first real section. It is also the
+   row the theme circles ride, hence the flex: the name takes the width it
+   needs and they sit in what is left. */
+.nav-drawer .nav-account {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 20px 4px 0;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 8px;
+}
+
+/* A long username ellipsises rather than pushing the circles off the row. */
+.nav-drawer .nav-account > a {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding-bottom: 10px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .nav-drawer .nav-sub a {
   padding-left: 36px;
   font-size: 13px;
+}
+
+/* A top-level link with no section heading over it (Appendix). The rule is what
+   stops it reading as one more row of the section above. */
+.nav-drawer .nav-standalone {
+  border-top: 1px solid var(--border);
+  margin-top: 8px;
+  padding-top: 8px;
+}
+
+/* --- Narrow screens: bottom bar + slide-up drawer ---
+ * The header leaves the top of the page and becomes the tab bar; the drawer
+ * follows the menu button down and comes up from the bottom edge rather than
+ * in from the left, so it opens where the button that opened it is. */
+@media (max-width: 640px) {
+  /* 58px of bar over 18px of nothing: on a phone with no home indicator to
+   * inset for, env(safe-area-inset-bottom) is 0 and the row of icons sat on
+   * the bottom edge of the glass. --bottom-nav-h is the whole band, padding
+   * and all, so everything keyed to it — the body's bottom padding below, the
+   * Buns tile button, the Oven's tools tab — clears the taller bar without
+   * being told about the change. */
+  :root { --bottom-nav-h: 76px; }
+
+  /* Full-viewport width by request: the bar is a surface, not a column. */
+  .site-header {
+    position: fixed;
+    top: auto;
+    bottom: 0;
+    left: 0;
+    width: 100vw;
+    height: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom));
+    padding: 0 0 calc(18px + env(safe-area-inset-bottom));
+    gap: 0;
+    border-bottom: none;
+    z-index: 150;
+  }
+
+  /* --- One bar and one sheet, whatever the route is painted like ---
+   * Every page sheet is free to repaint the page under it; none of them may
+   * repaint the nav. The tokens are redefined here rather than the rules
+   * restated, so .nav-tab, .nav-drawer a, .nav-section-label and the theme
+   * circles keep their single definitions above and simply resolve them
+   * against this palette.
+   *
+   * `html body header.site-header` outranks the two page sheets that reach the
+   * header by element — vegasinsider.css's `header` and bakers-oven.css's
+   * `body:has(.oven-content) header` — both of which load after this file. */
+  html body header.site-header,
+  html body .nav-overlay .nav-drawer {
+    background: var(--nav-bar);
+    border-top: 3px solid var(--nav-rule);
+    border-bottom: none;
+    --surface: var(--nav-bar);
+    --surface-2: var(--nav-hover);
+    --surface-3: var(--nav-hover);
+    --border: var(--nav-line);
+    --text-hi: var(--nav-ink);
+    --text: var(--nav-ink-2);
+    --text-2: var(--nav-ink-2);
+    --text-3: var(--nav-ink-2);
+    --text-4: var(--nav-ink-3);
+    --text-5: var(--nav-ink-3);
+    --accent: var(--nav-accent);
+    --accent-ink: var(--nav-bar);
+    --on-accent: var(--nav-bar);
+  }
+
+  /* The scrim is part of the component too — a 0.3-alpha light-theme overlay
+   * left the sheet reading as a card rather than as something over the page. */
+  html body .nav-overlay { background: var(--nav-scrim); }
+
+  /* The title is the home link on desktop; down here the four buttons need the
+   * whole width, and the Home tab is what replaces it. */
+  .site-title { display: none; }
+
+  .site-header > a.nav-tab { display: flex; }
+
+  .site-header .nav-tab {
+    flex: 1;
+    flex-direction: column;
+    justify-content: center;
+    gap: 3px;
+    height: 100%;
+    padding: 0;
+    order: 0;
+  }
+
+  .site-header .hamburger .nav-tab-label { display: block; }
+
+  .nav-tab:active { background: var(--surface-3); }
+
+  /* The bar is fixed, so the page needs its height back at the bottom or the
+   * last row of every page sits under it. Anything else pinned to the bottom
+   * edge should offset by --bottom-nav-h for the same reason. */
+  body {
+    padding-bottom: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom) + 8px);
+  }
+
+  .nav-drawer {
+    top: auto;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    max-height: 80vh;
+    border-right: none;
+    border-radius: 16px 16px 0 0;
+    padding: 10px 0 calc(18px + env(safe-area-inset-bottom));
+    transform: translateY(100%);
+  }
+
+  /* The sheet's grab handle, and the thing it says is true: the sheet drags
+   * down to dismiss (wireDrawerSwipe in scripts/base/nav.js). It also closes
+   * by its X, by the scrim, or by picking a row. */
+  .nav-drawer::before {
+    content: '';
+    flex: 0 0 auto;
+    width: 36px;
+    height: 4px;
+    margin: 0 auto 10px;
+    border-radius: 999px;
+    background: var(--border);
+  }
+
+  /* Beats `.nav-overlay.open .nav-drawer` above, which slides it in from the
+   * left; same specificity, and this rule comes later. */
+  .nav-overlay.open .nav-drawer { transform: translateY(0); }
 }
 
 @media (max-width: 500px) {
@@ -275,3 +542,93 @@ header a:hover { color: #58a6ff; }
     overflow-x: auto;
   }
 }
+
+/* --- Theme switch (nav drawer, account row) ---
+ * A moon and a sun, small and round, at the end of the account row. Two
+ * options rather than one toggle for the same reason as before — the lit one
+ * says which theme is on — but with no heading over them and no words in them:
+ * the pair reads as what it is, and the row it sits on is a better home than a
+ * footer of its own. Markup comes from Theme.controlHTML(). */
+.theme-toggle {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 6px;
+}
+
+.theme-opt {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  font-family: inherit;
+  color: var(--text-3);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.theme-opt:hover {
+  color: var(--text);
+  border-color: var(--text-5);
+}
+
+.theme-opt.is-active {
+  color: var(--accent-ink);
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.theme-opt.is-active:hover { color: var(--accent-ink); }
+
+.theme-opt-icon { font-size: 12px; line-height: 1; }
+
+/* --- Share this page (nav drawer, home-screen launches only) ---
+ * Only rendered when the site was opened from a home-screen icon, where there
+ * is no address bar to copy the URL out of — see scripts/base/standalone.js.
+ * It sits on the last row under the same rule .nav-standalone draws, because
+ * it acts on the page you are already on instead of leading somewhere.
+ *
+ * Shaped to match .nav-drawer a exactly, since it sits in the same column of
+ * rows and should not read as a control dropped into a list of links. The
+ * confirmation is the label swapping to "Link copied" for a moment, so the
+ * copied state only has to hold the row still: same padding, same size, only
+ * the colour moves. */
+.nav-share {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 20px;
+  font-family: inherit;
+  font-size: 14px;
+  text-align: left;
+  color: var(--accent);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: background 0.1s, color 0.15s;
+}
+
+.nav-share:hover { background: var(--surface-3); }
+
+.nav-share-icon {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+}
+
+.nav-share.is-copied { color: var(--good); }
+.nav-share.is-failed { color: var(--bad); }
+
+/* The drawer is a flex column, so a list shorter than the drawer still fills
+ * it and the rows stay against the top edge. */
+.nav-drawer {
+  display: flex;
+  flex-direction: column;
+}
+
+.nav-drawer ul { flex: 1 0 auto; }

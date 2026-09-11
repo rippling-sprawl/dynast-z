@@ -1,0 +1,1273 @@
+{
+  "source": "Google Sheets (hand-maintained), gid 676902847",
+  "url": "https://docs.google.com/spreadsheets/d/1l_yqv1_uK8yi3udtdBZipiSl2_kRM-u_zPocYim47S8/export?format=csv&gid=676902847",
+  "snapshot": "data/rz_input_2022_2025.csv",
+  "sleeper_players": "cache/sleeper_players.json",
+  "target_season": 2026,
+  "decay_weights": {
+    "2025": 0.5,
+    "2024": 0.3,
+    "2023": 0.15,
+    "2022": 0.05
+  },
+  "shrinkage_k": {
+    "i10": 2.0,
+    "i5": 1.0
+  },
+  "max_team_share": 1.0,
+  "roster_cap_scale": {
+    "ARI|i10": 0.7156,
+    "ARI|i5": 0.7084,
+    "BAL|i10": 0.9343,
+    "BAL|i5": 0.9149,
+    "CAR|i10": 0.9958,
+    "CHI|i10": 0.7125,
+    "CHI|i5": 0.6709,
+    "DAL|i10": 0.9607,
+    "DAL|i5": 0.9482,
+    "DEN|i10": 0.8311,
+    "DEN|i5": 0.8194,
+    "HOU|i10": 0.7952,
+    "HOU|i5": 0.8148,
+    "IND|i10": 0.8577,
+    "IND|i5": 0.8253,
+    "KC|i10": 0.9332,
+    "KC|i5": 0.8908,
+    "LAR|i10": 0.9727,
+    "LV|i10": 0.9468,
+    "LV|i5": 0.8148,
+    "MIA|i5": 0.977,
+    "MIN|i10": 0.8966,
+    "NE|i10": 0.9386,
+    "NO|i10": 0.6791,
+    "NO|i5": 0.671,
+    "NYG|i10": 0.7838,
+    "NYG|i5": 0.8426,
+    "NYJ|i10": 0.9454,
+    "NYJ|i5": 0.9816,
+    "PHI|i10": 0.5486,
+    "PHI|i5": 0.5089,
+    "PIT|i5": 0.9408,
+    "SF|i10": 0.8332,
+    "SF|i5": 0.8199,
+    "TB|i10": 0.9736,
+    "TEN|i10": 0.7373,
+    "TEN|i5": 0.7202,
+    "WAS|i10": 0.8332,
+    "WAS|i5": 0.8955
+  },
+  "td_rate_caps": {
+    "i10": 0.591,
+    "i5": 0.735
+  },
+  "positional_baselines": {
+    "i10": {
+      "RB": 0.2294410163339386,
+      "QB": 0.09357642725598571,
+      "TE": 0.05076097560975606,
+      "WR": 0.013637333333333376,
+      "FB": 0.04334375000000001,
+      "OL": 0.0
+    },
+    "i5": {
+      "RB": 0.23002223230490076,
+      "QB": 0.09276703499079222,
+      "TE": 0.049653658536585335,
+      "WR": 0.009302666666666693,
+      "FB": 0.07822916666666667,
+      "OL": 0.0
+    }
+  },
+  "player_count": 303,
+  "team_count": 32,
+  "td_rate_capped": [
+    "AJ Barner (i5)",
+    "Aidan O'Connell (i10)",
+    "Alec Ingold (i5)",
+    "Bhayshul Tuten (i10)",
+    "Bo Nix (i10)",
+    "Bo Nix (i5)",
+    "Brian Thomas (i10)",
+    "Brock Purdy (i10)",
+    "Brock Purdy (i5)",
+    "Calvin Austin (i10)",
+    "Calvin Ridley (i10)",
+    "CeeDee Lamb (i5)",
+    "Chris Brooks (i5)",
+    "D.K. Metcalf (i10)",
+    "Daniel Bellinger (i10)",
+    "Daniel Bellinger (i5)",
+    "Deshaun Watson (i5)",
+    "Devin Neal (i10)",
+    "Devin Neal (i5)",
+    "Drew Lock (i10)",
+    "Durham Smythe (i10)",
+    "Durham Smythe (i5)",
+    "Elijah Moore (i10)",
+    "Elijah Moore (i5)",
+    "Gary Brightwell (i5)",
+    "George Holani (i10)",
+    "George Pickens (i10)",
+    "George Pickens (i5)",
+    "Greg Dortch (i5)",
+    "Harold Fannin (i10)",
+    "Harold Fannin (i5)",
+    "Isaac Guerendo (i5)",
+    "J.J. McCarthy (i5)",
+    "Jake Bobo (i10)",
+    "Jake Bobo (i5)",
+    "Jake Browning (i10)",
+    "Jake Browning (i5)",
+    "Jameis Winston (i5)",
+    "Jameson Williams (i5)",
+    "Jordan Addison (i10)",
+    "Josh Johnson (i10)",
+    "Josh Johnson (i5)",
+    "Justin Jefferson (i5)",
+    "KaVontae Turpin (i10)",
+    "Kendre Miller (i5)",
+    "Malik Washington (i10)",
+    "Mecole Hardman (i10)",
+    "Mecole Hardman (i5)",
+    "Nico Collins (i10)",
+    "Noah Gray (i5)",
+    "Phil Mafah (i10)",
+    "Phil Mafah (i5)",
+    "Puka Nacua (i5)",
+    "Raheem Blackshear (i10)",
+    "Riley Leonard (i10)",
+    "Riley Leonard (i5)",
+    "Sam Howell (i10)",
+    "Sam Howell (i5)",
+    "Shedeur Sanders (i10)",
+    "Stefon Diggs (i10)",
+    "Tre Tucker (i10)",
+    "Tre Tucker (i5)",
+    "Trey McBride (i10)",
+    "Trey McBride (i5)",
+    "Tyrod Taylor (i10)",
+    "Tyson Bagent (i10)",
+    "Xavier Gipson (i10)",
+    "Xavier Worthy (i10)",
+    "Xavier Worthy (i5)"
+  ],
+  "dropped_players": [
+    {
+      "name": "Taysom Hill",
+      "position": "TE",
+      "last_season": "2025",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Russell Wilson",
+      "position": "QB",
+      "last_season": "2025",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Raheem Mostert",
+      "position": "RB",
+      "last_season": "2025",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Nick Chubb",
+      "position": "RB",
+      "last_season": "2025",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Najee Harris",
+      "position": "RB",
+      "last_season": "2025",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Miles Sanders",
+      "position": "RB",
+      "last_season": "2025",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Kareem Hunt",
+      "position": "RB",
+      "last_season": "2025",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Jonnu Smith",
+      "position": "TE",
+      "last_season": "2025",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Hassan Haskins",
+      "position": "RB",
+      "last_season": "2025",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "D'Ernest Johnson",
+      "position": "RB",
+      "last_season": "2025",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "C.J. Ham",
+      "position": "FB",
+      "last_season": "2025",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Austin Ekeler",
+      "position": "RB",
+      "last_season": "2025",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Antonio Gibson",
+      "position": "RB",
+      "last_season": "2025",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Zamir White",
+      "position": "RB",
+      "last_season": "2024",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Zack Moss",
+      "position": "RB",
+      "last_season": "2024",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Tyreik McAllister",
+      "position": "RB",
+      "last_season": "2024",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Trey Sermon",
+      "position": "RB",
+      "last_season": "2024",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Sterling Shepard",
+      "position": "WR",
+      "last_season": "2024",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Ray-Ray McCloud",
+      "position": "WR",
+      "last_season": "2024",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Myles Gaskin",
+      "position": "RB",
+      "last_season": "2024",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Mike Boone",
+      "position": "RB",
+      "last_season": "2024",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Kyle Trask",
+      "position": "QB",
+      "last_season": "2024",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Kenny McIntosh",
+      "position": "RB",
+      "last_season": "2024",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Joshua Dobbs",
+      "position": "QB",
+      "last_season": "2024",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Joe Mixon",
+      "position": "RB",
+      "last_season": "2024",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Jermar Jefferson",
+      "position": "RB",
+      "last_season": "2024",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Jeff Wilson",
+      "position": "RB",
+      "last_season": "2024",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Jamaal Williams",
+      "position": "RB",
+      "last_season": "2024",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Ja'Lynn Polk",
+      "position": "WR",
+      "last_season": "2024",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "J.J. Taylor",
+      "position": "RB",
+      "last_season": "2024",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Gus Edwards",
+      "position": "RB",
+      "last_season": "2024",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Ezekiel Elliott",
+      "position": "RB",
+      "last_season": "2024",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Dorian Thompson-Robinson",
+      "position": "QB",
+      "last_season": "2024",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Deuce Vaughn",
+      "position": "RB",
+      "last_season": "2024",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Desmond Ridder",
+      "position": "QB",
+      "last_season": "2024",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Derek Carr",
+      "position": "QB",
+      "last_season": "2024",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "D'Onta Foreman",
+      "position": "RB",
+      "last_season": "2024",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Curtis Samuel",
+      "position": "WR",
+      "last_season": "2024",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Cordarrelle Patterson",
+      "position": "RB",
+      "last_season": "2024",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Clayton Tune",
+      "position": "QB",
+      "last_season": "2024",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Cam Akers",
+      "position": "RB",
+      "last_season": "2024",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Brandin Cooks",
+      "position": "WR",
+      "last_season": "2024",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Alexander Mattison",
+      "position": "RB",
+      "last_season": "2024",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Aaron Shampklin",
+      "position": "RB",
+      "last_season": "2024",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Tyreek Hill",
+      "position": "WR",
+      "last_season": "2023",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Trayveon Williams",
+      "position": "RB",
+      "last_season": "2023",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Tony Jones",
+      "position": "RB",
+      "last_season": "2023",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Tim Boyle",
+      "position": "QB",
+      "last_season": "2023",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Taylor Heinicke",
+      "position": "QB",
+      "last_season": "2023",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Ryan Tannehill",
+      "position": "QB",
+      "last_season": "2023",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Royce Freeman",
+      "position": "RB",
+      "last_season": "2023",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Rondale Moore",
+      "position": "WR",
+      "last_season": "2023",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Peyton Hendershot",
+      "position": "TE",
+      "last_season": "2023",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Noah Brown",
+      "position": "WR",
+      "last_season": "2023",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Nick Bawden",
+      "position": "FB",
+      "last_season": "2023",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Melvin Gordon",
+      "position": "RB",
+      "last_season": "2023",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Matt Breida",
+      "position": "RB",
+      "last_season": "2023",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Leonard Fournette",
+      "position": "RB",
+      "last_season": "2023",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Laviska Shenault",
+      "position": "WR",
+      "last_season": "2023",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Latavius Murray",
+      "position": "RB",
+      "last_season": "2023",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "La'Mical Perine",
+      "position": "RB",
+      "last_season": "2023",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Kevin Harris",
+      "position": "RB",
+      "last_season": "2023",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Keenan Allen",
+      "position": "WR",
+      "last_season": "2023",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Keaontay Ingram",
+      "position": "RB",
+      "last_season": "2023",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Ke'Shawn Vaughn",
+      "position": "RB",
+      "last_season": "2023",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Kadarius Toney",
+      "position": "WR",
+      "last_season": "2023",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Joshua Kelley",
+      "position": "RB",
+      "last_season": "2023",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Jimmy Garoppolo",
+      "position": "QB",
+      "last_season": "2023",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Jerick McKinnon",
+      "position": "RB",
+      "last_season": "2023",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Jashaun Corbin",
+      "position": "RB",
+      "last_season": "2023",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Jaren Hall",
+      "position": "QB",
+      "last_season": "2023",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Jamal Agnew",
+      "position": "WR",
+      "last_season": "2023",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Isaiah Spiller",
+      "position": "RB",
+      "last_season": "2023",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Elijah Dotson",
+      "position": "RB",
+      "last_season": "2023",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Derrick Gore",
+      "position": "RB",
+      "last_season": "2023",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Deonte Harty",
+      "position": "WR",
+      "last_season": "2023",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Deon Jackson",
+      "position": "RB",
+      "last_season": "2023",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "DeAndre Hopkins",
+      "position": "WR",
+      "last_season": "2023",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "DeAndre Carter",
+      "position": "WR",
+      "last_season": "2023",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Darrynton Evans",
+      "position": "RB",
+      "last_season": "2023",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Darrell Henderson",
+      "position": "RB",
+      "last_season": "2023",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Damien Harris",
+      "position": "RB",
+      "last_season": "2023",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Dalvin Cook",
+      "position": "RB",
+      "last_season": "2023",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Craig Reynolds",
+      "position": "RB",
+      "last_season": "2023",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Clyde Edwards-Helaire",
+      "position": "RB",
+      "last_season": "2023",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Chase Edmonds",
+      "position": "RB",
+      "last_season": "2023",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Brandon Bolden",
+      "position": "RB",
+      "last_season": "2023",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Boston Scott",
+      "position": "RB",
+      "last_season": "2023",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Adam Thielen",
+      "position": "WR",
+      "last_season": "2023",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Zay Jones",
+      "position": "WR",
+      "last_season": "2022",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Zander Horvath",
+      "position": "RB",
+      "last_season": "2022",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Zach Pascal",
+      "position": "WR",
+      "last_season": "2022",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Tyrion Davis-Price",
+      "position": "RB",
+      "last_season": "2022",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Trestan Ebner",
+      "position": "RB",
+      "last_season": "2022",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Trent Taylor",
+      "position": "WR",
+      "last_season": "2022",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Trace McSorley",
+      "position": "QB",
+      "last_season": "2022",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Tom Brady",
+      "position": "QB",
+      "last_season": "2022",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Tevin Coleman",
+      "position": "RB",
+      "last_season": "2022",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Spencer Brown",
+      "position": "RB",
+      "last_season": "2022",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Sony Michel",
+      "position": "RB",
+      "last_season": "2022",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Snoop Conner",
+      "position": "RB",
+      "last_season": "2022",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Ronald Jones",
+      "position": "RB",
+      "last_season": "2022",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Rex Burkhead",
+      "position": "RB",
+      "last_season": "2022",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Rashaad Penny",
+      "position": "RB",
+      "last_season": "2022",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Parris Campbell",
+      "position": "WR",
+      "last_season": "2022",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Nyheim Hines",
+      "position": "RB",
+      "last_season": "2022",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Nick Foles",
+      "position": "QB",
+      "last_season": "2022",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Mike White",
+      "position": "QB",
+      "last_season": "2022",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Mike Davis",
+      "position": "RB",
+      "last_season": "2022",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Matt Ryan",
+      "position": "QB",
+      "last_season": "2022",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Marlon Mack",
+      "position": "RB",
+      "last_season": "2022",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Mark Ingram",
+      "position": "RB",
+      "last_season": "2022",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Malcolm Brown",
+      "position": "RB",
+      "last_season": "2022",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Kenyan Drake",
+      "position": "RB",
+      "last_season": "2022",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "KJ Hamler",
+      "position": "WR",
+      "last_season": "2022",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Justin Jackson",
+      "position": "RB",
+      "last_season": "2022",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Jordan Wilkins",
+      "position": "RB",
+      "last_season": "2022",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Jonathan Williams",
+      "position": "RB",
+      "last_season": "2022",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Jeff Driskel",
+      "position": "QB",
+      "last_season": "2022",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Jamycal Hasty",
+      "position": "RB",
+      "last_season": "2022",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "James Robinson",
+      "position": "RB",
+      "last_season": "2022",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "J.D. McKissic",
+      "position": "RB",
+      "last_season": "2022",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Isaiah McKenzie",
+      "position": "WR",
+      "last_season": "2022",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Giovani Bernard",
+      "position": "RB",
+      "last_season": "2022",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Eno Benjamin",
+      "position": "RB",
+      "last_season": "2022",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Dwayne Washington",
+      "position": "RB",
+      "last_season": "2022",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Duke Johnson",
+      "position": "RB",
+      "last_season": "2022",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Diontae Johnson",
+      "position": "WR",
+      "last_season": "2022",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Derek Watt",
+      "position": "FB",
+      "last_season": "2022",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Davis Webb",
+      "position": "QB",
+      "last_season": "2022",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "David Johnson",
+      "position": "RB",
+      "last_season": "2022",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Darrel Williams",
+      "position": "RB",
+      "last_season": "2022",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Corey Clement",
+      "position": "RB",
+      "last_season": "2022",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Colt McCoy",
+      "position": "QB",
+      "last_season": "2022",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Chase Claypool",
+      "position": "WR",
+      "last_season": "2022",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Chad Henne",
+      "position": "QB",
+      "last_season": "2022",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Caleb Huntley",
+      "position": "RB",
+      "last_season": "2022",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Bryce Perkins",
+      "position": "QB",
+      "last_season": "2022",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Brandon Powell",
+      "position": "WR",
+      "last_season": "2022",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Benny Snell",
+      "position": "RB",
+      "last_season": "2022",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Avery Williams",
+      "position": "RB",
+      "last_season": "2022",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Anthony McFarland",
+      "position": "RB",
+      "last_season": "2022",
+      "reason": "no 2026 NFL team in Sleeper"
+    },
+    {
+      "name": "Andy Isabella",
+      "position": "WR",
+      "last_season": "2022",
+      "reason": "no 2026 NFL team in Sleeper"
+    }
+  ],
+  "team_volume_implied_spread": {
+    "2022|ARI|i10": 0.58,
+    "2022|ARI|i5": 0.13,
+    "2022|ATL|i10": 0.4,
+    "2022|ATL|i5": 0.16,
+    "2022|BAL|i10": 0.0,
+    "2022|BAL|i5": 0.13,
+    "2022|BUF|i10": 0.53,
+    "2022|BUF|i5": 0.01,
+    "2022|CAR|i10": 0.55,
+    "2022|CAR|i5": 0.1,
+    "2022|CHI|i10": 0.03,
+    "2022|CHI|i5": 0.0,
+    "2022|CIN|i10": 0.0,
+    "2022|CIN|i5": 0.21,
+    "2022|CLE|i10": 0.58,
+    "2022|CLE|i5": 0.18,
+    "2022|DAL|i10": 0.34,
+    "2022|DAL|i5": 0.27,
+    "2022|DEN|i10": 0.39,
+    "2022|DEN|i5": 0.11,
+    "2022|DET|i10": 1.89,
+    "2022|DET|i5": 0.31,
+    "2022|GB|i10": 0.24,
+    "2022|GB|i5": 0.0,
+    "2022|HOU|i10": 0.22,
+    "2022|HOU|i5": 0.02,
+    "2022|IND|i10": 0.51,
+    "2022|IND|i5": 0.13,
+    "2022|JAX|i10": 0.57,
+    "2022|JAX|i5": 0.27,
+    "2022|KC|i10": 1.06,
+    "2022|KC|i5": 0.27,
+    "2022|LAC|i10": 0.73,
+    "2022|LAC|i5": 0.11,
+    "2022|LAR|i10": 0.29,
+    "2022|LAR|i5": 0.1,
+    "2022|LV|i10": 0.03,
+    "2022|LV|i5": 0.05,
+    "2022|MIA|i10": 0.22,
+    "2022|MIA|i5": 0.07,
+    "2022|MIN|i10": 0.51,
+    "2022|MIN|i5": 0.0,
+    "2022|NE|i10": 0.34,
+    "2022|NE|i5": 0.07,
+    "2022|NO|i10": 0.11,
+    "2022|NO|i5": 0.0,
+    "2022|NYG|i10": 0.68,
+    "2022|NYG|i5": 0.2,
+    "2022|NYJ|i10": 0.34,
+    "2022|NYJ|i5": 0.1,
+    "2022|PHI|i10": 1.04,
+    "2022|PHI|i5": 0.68,
+    "2022|PIT|i10": 0.85,
+    "2022|PIT|i5": 0.29,
+    "2022|SEA|i10": 0.22,
+    "2022|SEA|i5": 0.0,
+    "2022|SF|i10": 1.78,
+    "2022|SF|i5": 0.48,
+    "2022|TB|i10": 0.43,
+    "2022|TB|i5": 0.02,
+    "2022|TEN|i10": 0.2,
+    "2022|TEN|i5": 0.06,
+    "2022|WAS|i10": 0.62,
+    "2022|WAS|i5": 0.06,
+    "2023|ARI|i10": 0.37,
+    "2023|ARI|i5": 0.14,
+    "2023|ATL|i10": 0.37,
+    "2023|ATL|i5": 0.0,
+    "2023|BAL|i10": 0.6,
+    "2023|BAL|i5": 0.36,
+    "2023|BUF|i10": 2.02,
+    "2023|BUF|i5": 0.51,
+    "2023|CAR|i10": 0.43,
+    "2023|CAR|i5": 0.0,
+    "2023|CHI|i10": 0.75,
+    "2023|CHI|i5": 0.0,
+    "2023|CIN|i10": 0.65,
+    "2023|CIN|i5": 0.03,
+    "2023|CLE|i10": 0.48,
+    "2023|CLE|i5": 0.07,
+    "2023|DAL|i10": 0.0,
+    "2023|DAL|i5": 0.29,
+    "2023|DEN|i10": 0.37,
+    "2023|DEN|i5": 0.13,
+    "2023|DET|i10": 0.44,
+    "2023|DET|i5": 0.02,
+    "2023|GB|i10": 0.47,
+    "2023|GB|i5": 0.1,
+    "2023|HOU|i10": 0.62,
+    "2023|HOU|i5": 0.27,
+    "2023|IND|i10": 1.11,
+    "2023|IND|i5": 0.34,
+    "2023|JAX|i10": 0.09,
+    "2023|JAX|i5": 0.06,
+    "2023|KC|i10": 0.73,
+    "2023|KC|i5": 0.03,
+    "2023|LAC|i10": 0.58,
+    "2023|LAC|i5": 0.09,
+    "2023|LAR|i10": 1.28,
+    "2023|LAR|i5": 0.24,
+    "2023|LV|i10": 0.06,
+    "2023|LV|i5": 0.08,
+    "2023|MIA|i10": 1.13,
+    "2023|MIA|i5": 0.04,
+    "2023|MIN|i10": 0.26,
+    "2023|MIN|i5": 0.13,
+    "2023|NE|i10": 0.0,
+    "2023|NE|i5": 0.01,
+    "2023|NO|i10": 0.61,
+    "2023|NO|i5": 0.0,
+    "2023|NYG|i10": 0.24,
+    "2023|NYG|i5": 0.0,
+    "2023|NYJ|i10": 0.11,
+    "2023|NYJ|i5": 0.0,
+    "2023|PHI|i10": 0.45,
+    "2023|PHI|i5": 0.3,
+    "2023|PIT|i10": 0.75,
+    "2023|PIT|i5": 0.04,
+    "2023|SEA|i10": 0.07,
+    "2023|SEA|i5": 0.1,
+    "2023|SF|i10": 0.52,
+    "2023|SF|i5": 0.51,
+    "2023|TB|i10": 0.0,
+    "2023|TB|i5": 0.05,
+    "2023|TEN|i10": 0.51,
+    "2023|TEN|i5": 0.1,
+    "2023|WAS|i10": 0.34,
+    "2023|WAS|i5": 0.11,
+    "2024|ARI|i10": 0.43,
+    "2024|ARI|i5": 0.1,
+    "2024|ATL|i10": 0.91,
+    "2024|ATL|i5": 0.0,
+    "2024|BAL|i10": 0.64,
+    "2024|BAL|i5": 0.14,
+    "2024|BUF|i10": 1.22,
+    "2024|BUF|i5": 0.0,
+    "2024|CAR|i10": 0.85,
+    "2024|CAR|i5": 0.24,
+    "2024|CHI|i10": 0.33,
+    "2024|CHI|i5": 0.16,
+    "2024|CIN|i10": 0.64,
+    "2024|CIN|i5": 0.04,
+    "2024|CLE|i10": 0.51,
+    "2024|CLE|i5": 0.1,
+    "2024|DAL|i10": 0.34,
+    "2024|DAL|i5": 0.07,
+    "2024|DEN|i10": 0.09,
+    "2024|DEN|i5": 0.07,
+    "2024|DET|i10": 2.15,
+    "2024|DET|i5": 0.5,
+    "2024|GB|i10": 1.13,
+    "2024|GB|i5": 0.34,
+    "2024|HOU|i10": 0.75,
+    "2024|HOU|i5": 0.04,
+    "2024|IND|i10": 0.38,
+    "2024|IND|i5": 0.34,
+    "2024|JAX|i10": 0.0,
+    "2024|JAX|i5": 0.24,
+    "2024|KC|i10": 0.0,
+    "2024|KC|i5": 0.0,
+    "2024|LAC|i10": 0.57,
+    "2024|LAC|i5": 0.24,
+    "2024|LAR|i10": 0.32,
+    "2024|LAR|i5": 0.27,
+    "2024|LV|i10": 0.58,
+    "2024|LV|i5": 0.0,
+    "2024|MIA|i10": 0.75,
+    "2024|MIA|i5": 0.16,
+    "2024|MIN|i10": 0.32,
+    "2024|MIN|i5": 0.05,
+    "2024|NE|i10": 0.43,
+    "2024|NE|i5": 0.1,
+    "2024|NO|i10": 0.32,
+    "2024|NO|i5": 0.05,
+    "2024|NYG|i10": 0.55,
+    "2024|NYG|i5": 0.0,
+    "2024|NYJ|i10": 0.13,
+    "2024|NYJ|i5": 0.0,
+    "2024|PHI|i10": 0.63,
+    "2024|PHI|i5": 0.07,
+    "2024|PIT|i10": 0.47,
+    "2024|PIT|i5": 0.1,
+    "2024|SEA|i10": 0.1,
+    "2024|SEA|i5": 0.0,
+    "2024|SF|i10": 0.62,
+    "2024|SF|i5": 0.29,
+    "2024|TB|i10": 0.25,
+    "2024|TB|i5": 0.0,
+    "2024|TEN|i10": 0.0,
+    "2024|TEN|i5": 0.0,
+    "2024|WAS|i10": 1.17,
+    "2024|WAS|i5": 0.18,
+    "2025|ARI|i10": 0.6,
+    "2025|ARI|i5": 0.13,
+    "2025|ATL|i10": 0.0,
+    "2025|ATL|i5": 0.04,
+    "2025|BAL|i10": 0.91,
+    "2025|BAL|i5": 0.39,
+    "2025|BUF|i10": 1.54,
+    "2025|BUF|i5": 0.0,
+    "2025|CAR|i10": 0.1,
+    "2025|CAR|i5": 0.01,
+    "2025|CHI|i10": 0.78,
+    "2025|CHI|i5": 0.0,
+    "2025|CIN|i10": 0.29,
+    "2025|CIN|i5": 0.1,
+    "2025|CLE|i10": 0.44,
+    "2025|CLE|i5": 0.22,
+    "2025|DAL|i10": 1.22,
+    "2025|DAL|i5": 0.39,
+    "2025|DEN|i10": 0.6,
+    "2025|DEN|i5": 0.09,
+    "2025|DET|i10": 1.22,
+    "2025|DET|i5": 0.03,
+    "2025|GB|i10": 0.68,
+    "2025|GB|i5": 0.0,
+    "2025|HOU|i10": 0.6,
+    "2025|HOU|i5": 0.27,
+    "2025|IND|i10": 0.85,
+    "2025|IND|i5": 0.32,
+    "2025|JAX|i10": 0.4,
+    "2025|JAX|i5": 0.0,
+    "2025|KC|i10": 0.59,
+    "2025|KC|i5": 0.16,
+    "2025|LAC|i10": 0.19,
+    "2025|LAC|i5": 0.04,
+    "2025|LAR|i10": 0.7,
+    "2025|LAR|i5": 0.05,
+    "2025|LV|i10": 0.18,
+    "2025|LV|i5": 0.0,
+    "2025|MIA|i10": 0.34,
+    "2025|MIA|i5": 0.0,
+    "2025|MIN|i10": 0.29,
+    "2025|MIN|i5": 0.07,
+    "2025|NE|i10": 0.44,
+    "2025|NE|i5": 0.27,
+    "2025|NO|i10": 0.27,
+    "2025|NO|i5": 0.02,
+    "2025|NYG|i10": 1.06,
+    "2025|NYG|i5": 0.26,
+    "2025|NYJ|i10": 0.0,
+    "2025|NYJ|i5": 0.0,
+    "2025|PHI|i10": 0.08,
+    "2025|PHI|i5": 0.04,
+    "2025|PIT|i10": 1.06,
+    "2025|PIT|i5": 0.0,
+    "2025|SEA|i10": 0.57,
+    "2025|SEA|i5": 0.0,
+    "2025|SF|i10": 0.7,
+    "2025|SF|i5": 0.27,
+    "2025|TB|i10": 0.32,
+    "2025|TB|i5": 0.16,
+    "2025|TEN|i10": 0.08,
+    "2025|TEN|i5": 0.0,
+    "2025|WAS|i10": 0.42,
+    "2025|WAS|i5": 0.43
+  },
+  "generated_at": "2026-08-12T16:06:50+00:00"
+}

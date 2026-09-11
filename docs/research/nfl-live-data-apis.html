@@ -1,0 +1,1717 @@
+<title>NFL live data APIs &mdash; box scores &amp; odds, evaluated for DynastZ</title>
+<meta name="description" content="A sourced, adversarially verified comparison of 16 NFL data providers for an unattended Sunday polling pipeline under $100/month.">
+<style>
+/* ============================================================================
+   DynastZ — NFL live data API evaluation
+   Design: a telemetry readout. Monospace is the identity face because the whole
+   page is clocks, quotas and field names; the prose face steps back. Ground is a
+   cool slate (the colour of a stadium at 1pm in November), accent is a broadcast
+   amber. Status inks always ship with a glyph AND a word, never colour alone.
+   ========================================================================== */
+
+:root {
+  --bg:        #eceef2;
+  --surface:   #ffffff;
+  --surface-2: #f4f6f9;
+  --ink:       #141922;
+  --ink-2:     #3a4452;
+  --muted:     #5b6675;
+  --line:      #d3d8e0;
+  --line-soft: #e4e8ee;
+  --accent:    #a8541b;
+  --accent-bg: #a8541b14;
+  --ok:        #0a7a55;
+  --warn:      #9a6a00;
+  --bad:       #a02128;
+  --ok-bg:     #0a7a5514;
+  --warn-bg:   #9a6a0014;
+  --bad-bg:    #a0212814;
+
+  --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
+  --r: 3px;
+  --measure: 68ch;
+  --pad: clamp(16px, 4vw, 40px);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg:        #0f1319;
+    --surface:   #161b22;
+    --surface-2: #1c222b;
+    --ink:       #e0e5ed;
+    --ink-2:     #b6bfcc;
+    --muted:     #8794a6;
+    --line:      #262e3a;
+    --line-soft: #1f2630;
+    --accent:    #e0904d;
+    --accent-bg: #e0904d1f;
+    --ok:        #3fbb8a;
+    --warn:      #e0a83c;
+    --bad:       #ef6d72;
+    --ok-bg:     #3fbb8a1f;
+    --warn-bg:   #e0a83c1f;
+    --bad-bg:    #ef6d721f;
+  }
+}
+
+/* The viewer's toggle must win over the media query in both directions. */
+:root[data-theme="dark"] {
+  --bg:        #0f1319;
+  --surface:   #161b22;
+  --surface-2: #1c222b;
+  --ink:       #e0e5ed;
+  --ink-2:     #b6bfcc;
+  --muted:     #8794a6;
+  --line:      #262e3a;
+  --line-soft: #1f2630;
+  --accent:    #e0904d;
+  --accent-bg: #e0904d1f;
+  --ok:        #3fbb8a;
+  --warn:      #e0a83c;
+  --bad:       #ef6d72;
+  --ok-bg:     #3fbb8a1f;
+  --warn-bg:   #e0a83c1f;
+  --bad-bg:    #ef6d721f;
+}
+
+:root[data-theme="light"] {
+  --bg:        #eceef2;
+  --surface:   #ffffff;
+  --surface-2: #f4f6f9;
+  --ink:       #141922;
+  --ink-2:     #3a4452;
+  --muted:     #5b6675;
+  --line:      #d3d8e0;
+  --line-soft: #e4e8ee;
+  --accent:    #a8541b;
+  --accent-bg: #a8541b14;
+  --ok:        #0a7a55;
+  --warn:      #9a6a00;
+  --bad:       #a02128;
+  --ok-bg:     #0a7a5514;
+  --warn-bg:   #9a6a0014;
+  --bad-bg:    #a0212814;
+}
+
+/* ---------------------------------------------------------------- base ---- */
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+.wrap {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--pad) 96px;
+}
+
+a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+a:focus-visible,
+button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
+
+code, .num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+/* ------------------------------------------------------------- masthead ---- */
+
+.masthead {
+  padding: clamp(48px, 9vw, 96px) 0 clamp(28px, 4vw, 44px);
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.eyebrow {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+}
+.eyebrow b { color: var(--accent); font-weight: 600; }
+
+h1 {
+  font-family: var(--mono);
+  font-size: clamp(28px, 5.2vw, 52px);
+  line-height: 1.06;
+  letter-spacing: -0.035em;
+  font-weight: 600;
+  text-wrap: balance;
+  margin: 0;
+}
+h1 span { color: var(--muted); }
+
+.standfirst {
+  max-width: var(--measure);
+  font-size: clamp(16px, 1.9vw, 19px);
+  color: var(--ink-2);
+  margin: 0;
+}
+
+/* ------------------------------------------------------------- sections ---- */
+
+section { padding-top: clamp(44px, 7vw, 80px); }
+
+h2 {
+  font-family: var(--mono);
+  font-size: clamp(19px, 2.6vw, 26px);
+  letter-spacing: -0.02em;
+  font-weight: 600;
+  margin: 0 0 6px;
+  text-wrap: balance;
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+h2::before {
+  content: attr(data-n);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: var(--accent);
+  font-weight: 500;
+  flex: none;
+}
+
+h3 {
+  font-family: var(--mono);
+  font-size: 15px;
+  letter-spacing: -0.005em;
+  font-weight: 600;
+  margin: 32px 0 8px;
+}
+
+.lede { max-width: var(--measure); color: var(--ink-2); margin: 0 0 24px; }
+p { max-width: var(--measure); }
+
+/* ----------------------------------------------------------- stat tiles ---- */
+
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  overflow: hidden;
+  margin: 24px 0;
+}
+.tile { background: var(--surface); padding: 18px 20px; display: flex; flex-direction: column; gap: 4px; }
+.tile dt {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.tile dd {
+  margin: 0;
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-size: clamp(22px, 3.4vw, 30px);
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+.tile small { font-family: var(--sans); font-size: 12px; color: var(--muted); line-height: 1.45; }
+.tile.is-accent dd { color: var(--accent); }
+
+/* --------------------------------------------------------------- tables ---- */
+
+.scroller {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--surface);
+  margin: 20px 0;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Scoped to .cmp so none of this leaks into the design-vibe cards below, which
+   also use table and th[scope=row] markup but must keep their own service styling. */
+table.cmp { border-collapse: collapse; width: 100%; font-size: 13px; }
+
+.cmp thead th {
+  position: sticky;
+  top: 0;
+  background: var(--surface-2);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 500;
+  text-align: left;
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+  z-index: 2;
+}
+
+.cmp tbody td, .cmp tbody th {
+  padding: 13px 14px;
+  border-bottom: 1px solid var(--line-soft);
+  vertical-align: top;
+  text-align: left;
+  font-weight: 400;
+}
+.cmp tbody tr:last-child td, .cmp tbody tr:last-child th { border-bottom: 0; }
+.cmp tbody tr:hover td, .cmp tbody tr:hover th { background: var(--surface-2); }
+
+/* First column: the service, with a status stripe encoding the verdict. */
+.cmp th[scope="row"] {
+  white-space: nowrap;
+  border-left: 3px solid transparent;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  font-weight: 600;
+  position: sticky;
+  left: 0;
+  background: var(--surface);
+  z-index: 1;
+}
+.cmp tbody tr:hover th[scope="row"] { background: var(--surface-2); }
+.cmp tr[data-v="ok"]   th[scope="row"] { border-left-color: var(--ok); }
+.cmp tr[data-v="warn"] th[scope="row"] { border-left-color: var(--warn); }
+.cmp tr[data-v="bad"]  th[scope="row"] { border-left-color: var(--bad); }
+
+.cmp th[scope="row"] small {
+  display: block;
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--muted);
+  letter-spacing: 0;
+}
+
+.cmp td.n { font-family: var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.cmp td.wrap-cell { min-width: 210px; }
+
+/* Status glyph + word — colour is never the only channel. */
+.v { font-family: var(--mono); font-size: 11.5px; white-space: nowrap; font-weight: 500; }
+.v::before { font-weight: 700; margin-right: 5px; }
+.v-ok   { color: var(--ok); }   .v-ok::before   { content: "\2713"; }
+.v-warn { color: var(--warn); } .v-warn::before { content: "\26A0"; }
+.v-bad  { color: var(--bad); }  .v-bad::before  { content: "\2715"; }
+.v-na   { color: var(--muted); } .v-na::before  { content: "\2013"; }
+
+/* --------------------------------------------------------------- callout --- */
+
+.note {
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--accent);
+  background: var(--surface);
+  border-radius: var(--r);
+  padding: 16px 20px;
+  margin: 24px 0;
+  max-width: var(--measure);
+}
+.note h4 {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0 0 6px;
+}
+.note p { margin: 0 0 8px; font-size: 14.5px; color: var(--ink-2); }
+.note p:last-child { margin-bottom: 0; }
+
+/* ------------------------------------------------------------- timeline ---- */
+
+.timeline { margin: 24px 0; }
+.timeline svg { display: block; width: 100%; height: auto; }
+.tl-label { font-family: var(--mono); font-size: 9px; letter-spacing: 0.08em; fill: var(--muted); text-transform: uppercase; }
+.tl-tick  { font-family: var(--mono); font-size: 9px; fill: var(--muted); }
+.tl-grid  { stroke: var(--line); stroke-width: 1; }
+.tl-window{ fill: var(--accent); opacity: 0.14; }
+.tl-game  { fill: var(--accent); }
+.tl-rule  { stroke: var(--line); stroke-width: 1; }
+.tl-cap   { font-family: var(--mono); font-size: 10px; fill: var(--ink-2); }
+
+.legend { display: flex; flex-wrap: wrap; gap: 8px 20px; margin-top: 10px; font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 7px; }
+.key { width: 11px; height: 11px; border-radius: 2px; flex: none; }
+.key-window { background: var(--accent); opacity: 0.24; }
+.key-game { background: var(--accent); }
+
+/* ---------------------------------------------------------- vibe cards ----- */
+
+.vibes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
+  gap: 22px;
+  margin-top: 28px;
+}
+
+.vibe { overflow: hidden; display: flex; flex-direction: column; font-size: 14px; }
+.vibe-chrome { display: flex; align-items: center; gap: 9px; padding: 9px 14px; font-size: 11px; letter-spacing: 0.02em; }
+.vibe-mark { width: 20px; height: 20px; object-fit: contain; flex: none; border-radius: 2px; }
+.vibe-url { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vibe-body { display: flex; flex-direction: column; gap: 10px; flex: 1; }
+.vibe h4 { margin: 0; font-size: 17px; line-height: 1.2; }
+.vibe p { margin: 0; font-size: 13px; line-height: 1.55; max-width: none; }
+.vibe-link { align-self: flex-start; text-decoration: none; font-size: 11.5px; padding-bottom: 1px; }
+.vibe-table { border-collapse: collapse; width: 100%; font-size: 11.5px; }
+.vibe-table caption { text-align: left; font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; padding-bottom: 5px; }
+.vibe-table th, .vibe-table td { padding: 5px 8px; text-align: left; }
+.vibe-table th { font-weight: 400; width: 46%; }
+.vibe-table td { text-align: right; font-variant-numeric: tabular-nums; }
+.vibe-spec { font-size: 11px; padding: 12px 14px; }
+.vibe-spec dl { margin: 0; display: flex; flex-direction: column; gap: 5px; }
+.vibe-spec dl > div { display: flex; gap: 10px; align-items: baseline; }
+.vibe-spec dt { flex: 0 0 46px; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; }
+.vibe-spec dd { margin: 0; flex: 1; line-height: 1.45; word-break: break-word; }
+.vibe-spec .swatches { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+.sw { width: 13px; height: 13px; border-radius: 2px; flex: none; }
+.vibe-spec code { font-family: var(--mono); font-size: 10px; }
+
+/* ---------------------------------------------------------------- misc ----- */
+
+.sources { font-size: 13px; }
+.sources ol { padding-left: 1.4em; display: flex; flex-direction: column; gap: 7px; }
+.sources li { color: var(--muted); }
+.sources a { word-break: break-word; }
+
+footer {
+  margin-top: 72px;
+  padding-top: 24px;
+  border-top: 1px solid var(--line);
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 24px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+
+/* Table captions are for screen readers only — the <h2> above already names each table. */
+.visually-hidden {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+
+/* --- per-service design vibes (values pulled from each live site) --- */
+
+.vibe-espn{background:#ffffff;border:1px solid #d6d6d8;border-radius:2px;color:#1a1a1a;font-family:'Helvetica Neue', Helvetica, Arial, sans-serif;}
+.vibe-espn .vibe-chrome{background:#f7f7f8;border-bottom:1px solid #d6d6d8;color:#5c5c5c;font-family:ui-monospace, Menlo, monospace;}
+.vibe-espn .vibe-body{padding:18px 20px;}
+.vibe-espn h4{font-family:'Helvetica Neue', Helvetica, Arial, sans-serif;font-weight:800;letter-spacing:-0.01em;text-transform:uppercase;color:#1a1a1a;}
+.vibe-espn p{color:#5c5c5c;}
+.vibe-espn .vibe-link{color:#c6212c;border-bottom:1px solid #c6212c55;font-family:ui-monospace, Menlo, monospace;}
+.vibe-espn .vibe-link:hover{background:#c6212c1a;}
+.vibe-espn .vibe-table{font-family:ui-monospace, Menlo, monospace;border:1px solid #d6d6d8;}
+.vibe-espn .vibe-table caption{color:#5c5c5c;font-family:ui-monospace, Menlo, monospace;}
+.vibe-espn .vibe-table th{color:#5c5c5c;border-bottom:1px solid #d6d6d8;font-weight:400;}
+.vibe-espn .vibe-table td{color:#c6212c;border-bottom:1px solid #d6d6d8;}
+.vibe-espn .vibe-table tr:last-child th,.vibe-espn .vibe-table tr:last-child td{border-bottom:0;}
+.vibe-espn .vibe-spec{background:#f7f7f8;border-top:1px solid #d6d6d8;color:#5c5c5c;}
+.vibe-espn .vibe-spec dt{color:#1a1a1a;}
+.vibe-espn .vibe-spec code{color:#c6212c;}
+.vibe-espn .sw{outline:1px solid #d6d6d8;}
+
+.vibe-nflverse{background:#ffffff;border:1px solid #dee2e6;border-radius:4px;color:#373a3c;font-family:'IBM Plex Sans', 'Source Sans Pro', -apple-system, sans-serif;}
+.vibe-nflverse .vibe-chrome{background:#f8f9fa;border-bottom:1px solid #dee2e6;color:#6c757d;font-family:'Fira Code', ui-monospace, monospace;}
+.vibe-nflverse .vibe-body{padding:20px 22px;}
+.vibe-nflverse h4{font-family:'IBM Plex Sans', 'Source Sans Pro', -apple-system, sans-serif;font-weight:600;letter-spacing:0;text-transform:none;color:#373a3c;}
+.vibe-nflverse p{color:#6c757d;}
+.vibe-nflverse .vibe-link{color:#2780e3;border-bottom:1px solid #2780e355;font-family:'Fira Code', ui-monospace, monospace;}
+.vibe-nflverse .vibe-link:hover{background:#2780e31a;}
+.vibe-nflverse .vibe-table{font-family:'Fira Code', ui-monospace, monospace;border:1px solid #dee2e6;}
+.vibe-nflverse .vibe-table caption{color:#6c757d;font-family:'Fira Code', ui-monospace, monospace;}
+.vibe-nflverse .vibe-table th{color:#6c757d;border-bottom:1px solid #dee2e6;font-weight:400;}
+.vibe-nflverse .vibe-table td{color:#2780e3;border-bottom:1px solid #dee2e6;}
+.vibe-nflverse .vibe-table tr:last-child th,.vibe-nflverse .vibe-table tr:last-child td{border-bottom:0;}
+.vibe-nflverse .vibe-spec{background:#f8f9fa;border-top:1px solid #dee2e6;color:#6c757d;}
+.vibe-nflverse .vibe-spec dt{color:#373a3c;}
+.vibe-nflverse .vibe-spec code{color:#2780e3;}
+.vibe-nflverse .sw{outline:1px solid #dee2e6;}
+
+.vibe-sportsdataio{background:#ffffff;border:1px solid #dddddd;border-radius:4px;color:#333333;font-family:'Helvetica Neue', Helvetica, Arial, sans-serif;}
+.vibe-sportsdataio .vibe-chrome{background:#f5f5f5;border-bottom:1px solid #dddddd;color:#777777;font-family:Menlo, Monaco, Consolas, 'Courier New', monospace;}
+.vibe-sportsdataio .vibe-body{padding:15px;}
+.vibe-sportsdataio h4{font-family:'Helvetica Neue', Helvetica, Arial, sans-serif;font-weight:500;letter-spacing:0;text-transform:none;color:#333333;}
+.vibe-sportsdataio p{color:#777777;}
+.vibe-sportsdataio .vibe-link{color:#337ab7;border-bottom:1px solid #337ab755;font-family:Menlo, Monaco, Consolas, 'Courier New', monospace;}
+.vibe-sportsdataio .vibe-link:hover{background:#337ab71a;}
+.vibe-sportsdataio .vibe-table{font-family:Menlo, Monaco, Consolas, 'Courier New', monospace;border:1px solid #dddddd;}
+.vibe-sportsdataio .vibe-table caption{color:#777777;font-family:Menlo, Monaco, Consolas, 'Courier New', monospace;}
+.vibe-sportsdataio .vibe-table th{color:#777777;border-bottom:1px solid #dddddd;font-weight:400;}
+.vibe-sportsdataio .vibe-table td{color:#337ab7;border-bottom:1px solid #dddddd;}
+.vibe-sportsdataio .vibe-table tr:last-child th,.vibe-sportsdataio .vibe-table tr:last-child td{border-bottom:0;}
+.vibe-sportsdataio .vibe-spec{background:#f5f5f5;border-top:1px solid #dddddd;color:#777777;}
+.vibe-sportsdataio .vibe-spec dt{color:#333333;}
+.vibe-sportsdataio .vibe-spec code{color:#337ab7;}
+.vibe-sportsdataio .sw{outline:1px solid #dddddd;}
+
+.vibe-sportradar{background:#ffffff;border:1px solid #dee2e6;border-radius:6px;color:#212529;font-family:'Source Sans Pro', sans-serif;}
+.vibe-sportradar .vibe-chrome{background:#f4f5f8;border-bottom:1px solid #dee2e6;color:#6c757d;font-family:ui-monospace, SFMono-Regular, monospace;}
+.vibe-sportradar .vibe-body{padding:24px 26px;}
+.vibe-sportradar h4{font-family:'Source Sans Pro', sans-serif;font-weight:700;letter-spacing:0;text-transform:none;color:#00003c;}
+.vibe-sportradar p{color:#6c757d;}
+.vibe-sportradar .vibe-link{color:#e71621;border-bottom:1px solid #e7162155;font-family:ui-monospace, SFMono-Regular, monospace;}
+.vibe-sportradar .vibe-link:hover{background:#e716211a;}
+.vibe-sportradar .vibe-table{font-family:ui-monospace, SFMono-Regular, monospace;border:1px solid #dee2e6;}
+.vibe-sportradar .vibe-table caption{color:#6c757d;font-family:ui-monospace, SFMono-Regular, monospace;}
+.vibe-sportradar .vibe-table th{color:#6c757d;border-bottom:1px solid #dee2e6;font-weight:400;}
+.vibe-sportradar .vibe-table td{color:#e71621;border-bottom:1px solid #dee2e6;}
+.vibe-sportradar .vibe-table tr:last-child th,.vibe-sportradar .vibe-table tr:last-child td{border-bottom:0;}
+.vibe-sportradar .vibe-spec{background:#f4f5f8;border-top:1px solid #dee2e6;color:#6c757d;}
+.vibe-sportradar .vibe-spec dt{color:#212529;}
+.vibe-sportradar .vibe-spec code{color:#e71621;}
+.vibe-sportradar .sw{outline:1px solid #dee2e6;}
+
+.vibe-stats-perform{background:#ffffff;border:2px solid #e2ddec;border-radius:0;color:#210a36;font-family:'Resolve-Regular', 'Resolve-Semilight', sans-serif;}
+.vibe-stats-perform .vibe-chrome{background:#f4f4f4;border-bottom:1px solid #e2ddec;color:#6b5e7a;font-family:'DM Mono', monospace;}
+.vibe-stats-perform .vibe-body{padding:22px 24px;}
+.vibe-stats-perform h4{font-family:'Resolve-Regular', 'Resolve-Semilight', sans-serif;font-weight:600;letter-spacing:-0.005em;text-transform:none;color:#3f1567;}
+.vibe-stats-perform p{color:#6b5e7a;}
+.vibe-stats-perform .vibe-link{color:#8971e5;border-bottom:1px solid #8971e555;font-family:'DM Mono', monospace;}
+.vibe-stats-perform .vibe-link:hover{background:#8971e51a;}
+.vibe-stats-perform .vibe-table{font-family:'DM Mono', monospace;border:2px solid #e2ddec;}
+.vibe-stats-perform .vibe-table caption{color:#6b5e7a;font-family:'DM Mono', monospace;}
+.vibe-stats-perform .vibe-table th{color:#6b5e7a;border-bottom:1px solid #e2ddec;font-weight:400;}
+.vibe-stats-perform .vibe-table td{color:#8971e5;border-bottom:1px solid #e2ddec;}
+.vibe-stats-perform .vibe-table tr:last-child th,.vibe-stats-perform .vibe-table tr:last-child td{border-bottom:0;}
+.vibe-stats-perform .vibe-spec{background:#f4f4f4;border-top:1px solid #e2ddec;color:#6b5e7a;}
+.vibe-stats-perform .vibe-spec dt{color:#210a36;}
+.vibe-stats-perform .vibe-spec code{color:#8971e5;}
+.vibe-stats-perform .sw{outline:1px solid #e2ddec;}
+
+.vibe-pro-football-reference{background:#fffae5;border:1px solid #c8c2a8;border-radius:0;color:#043462;font-family:Georgia, 'Times New Roman', serif;}
+.vibe-pro-football-reference .vibe-chrome{background:#ffffff;border-bottom:1px solid #c8c2a8;color:#59595b;font-family:ui-monospace, Consolas, monospace;}
+.vibe-pro-football-reference .vibe-body{padding:10px 12px;}
+.vibe-pro-football-reference h4{font-family:Georgia, 'Times New Roman', serif;font-weight:700;letter-spacing:0;text-transform:none;color:#043462;}
+.vibe-pro-football-reference p{color:#59595b;}
+.vibe-pro-football-reference .vibe-link{color:#008345;border-bottom:1px solid #00834555;font-family:ui-monospace, Consolas, monospace;}
+.vibe-pro-football-reference .vibe-link:hover{background:#0083451a;}
+.vibe-pro-football-reference .vibe-table{font-family:ui-monospace, Consolas, monospace;border:1px solid #c8c2a8;}
+.vibe-pro-football-reference .vibe-table caption{color:#59595b;font-family:ui-monospace, Consolas, monospace;}
+.vibe-pro-football-reference .vibe-table th{color:#59595b;border-bottom:1px solid #c8c2a8;font-weight:400;}
+.vibe-pro-football-reference .vibe-table td{color:#008345;border-bottom:1px solid #c8c2a8;}
+.vibe-pro-football-reference .vibe-table tr:last-child th,.vibe-pro-football-reference .vibe-table tr:last-child td{border-bottom:0;}
+.vibe-pro-football-reference .vibe-spec{background:#ffffff;border-top:1px solid #c8c2a8;color:#59595b;}
+.vibe-pro-football-reference .vibe-spec dt{color:#043462;}
+.vibe-pro-football-reference .vibe-spec code{color:#008345;}
+.vibe-pro-football-reference .sw{outline:1px solid #c8c2a8;}
+
+.vibe-action-network{background:#000000;border:1px solid #2c2c36;border-radius:8px;color:#f7f8fd;font-family:-apple-system, 'Segoe UI', Roboto, Helvetica, sans-serif;}
+.vibe-action-network .vibe-chrome{background:#1d1d25;border-bottom:1px solid #2c2c36;color:#a4a4aa;font-family:ui-monospace, SFMono-Regular, monospace;}
+.vibe-action-network .vibe-body{padding:14px 16px;}
+.vibe-action-network h4{font-family:-apple-system, 'Segoe UI', Roboto, Helvetica, sans-serif;font-weight:700;letter-spacing:0;text-transform:none;color:#f7f8fd;}
+.vibe-action-network p{color:#a4a4aa;}
+.vibe-action-network .vibe-link{color:#00c358;border-bottom:1px solid #00c35855;font-family:ui-monospace, SFMono-Regular, monospace;}
+.vibe-action-network .vibe-link:hover{background:#00c3581a;}
+.vibe-action-network .vibe-table{font-family:ui-monospace, SFMono-Regular, monospace;border:1px solid #2c2c36;}
+.vibe-action-network .vibe-table caption{color:#a4a4aa;font-family:ui-monospace, SFMono-Regular, monospace;}
+.vibe-action-network .vibe-table th{color:#a4a4aa;border-bottom:1px solid #2c2c36;font-weight:400;}
+.vibe-action-network .vibe-table td{color:#00c358;border-bottom:1px solid #2c2c36;}
+.vibe-action-network .vibe-table tr:last-child th,.vibe-action-network .vibe-table tr:last-child td{border-bottom:0;}
+.vibe-action-network .vibe-spec{background:#1d1d25;border-top:1px solid #2c2c36;color:#a4a4aa;}
+.vibe-action-network .vibe-spec dt{color:#f7f8fd;}
+.vibe-action-network .vibe-spec code{color:#00c358;}
+.vibe-action-network .sw{outline:1px solid #2c2c36;}
+
+.vibe-the-odds-api{background:#ffffff;border:1px solid #eaecef;border-radius:3px;color:#2c3e50;font-family:'Open Sans', -apple-system, sans-serif;}
+.vibe-the-odds-api .vibe-chrome{background:#f6f8fa;border-bottom:1px solid #eaecef;color:#6a7785;font-family:'Source Code Pro', Consolas, Monaco, monospace;}
+.vibe-the-odds-api .vibe-body{padding:16px 18px;}
+.vibe-the-odds-api h4{font-family:'Open Sans', -apple-system, sans-serif;font-weight:600;letter-spacing:0;text-transform:none;color:#2c3e50;}
+.vibe-the-odds-api p{color:#6a7785;}
+.vibe-the-odds-api .vibe-link{color:#3883fa;border-bottom:1px solid #3883fa55;font-family:'Source Code Pro', Consolas, Monaco, monospace;}
+.vibe-the-odds-api .vibe-link:hover{background:#3883fa1a;}
+.vibe-the-odds-api .vibe-table{font-family:'Source Code Pro', Consolas, Monaco, monospace;border:1px solid #eaecef;}
+.vibe-the-odds-api .vibe-table caption{color:#6a7785;font-family:'Source Code Pro', Consolas, Monaco, monospace;}
+.vibe-the-odds-api .vibe-table th{color:#6a7785;border-bottom:1px solid #eaecef;font-weight:400;}
+.vibe-the-odds-api .vibe-table td{color:#3883fa;border-bottom:1px solid #eaecef;}
+.vibe-the-odds-api .vibe-table tr:last-child th,.vibe-the-odds-api .vibe-table tr:last-child td{border-bottom:0;}
+.vibe-the-odds-api .vibe-spec{background:#f6f8fa;border-top:1px solid #eaecef;color:#6a7785;}
+.vibe-the-odds-api .vibe-spec dt{color:#2c3e50;}
+.vibe-the-odds-api .vibe-spec code{color:#3883fa;}
+.vibe-the-odds-api .sw{outline:1px solid #eaecef;}
+
+.vibe-oddsjam{background:#ffffff;border:1px solid #c3d5e0;border-radius:6px;color:#00193e;font-family:'Helvetica Neue', Helvetica, Arial, sans-serif;}
+.vibe-oddsjam .vibe-chrome{background:#deeaf1;border-bottom:1px solid #c3d5e0;color:#6b8392;font-family:'SF Mono', SFMono-Regular, ui-monospace, Menlo, monospace;}
+.vibe-oddsjam .vibe-body{padding:18px 20px;}
+.vibe-oddsjam h4{font-family:'Helvetica Neue', Helvetica, Arial, sans-serif;font-weight:700;letter-spacing:0;text-transform:none;color:#00193e;}
+.vibe-oddsjam p{color:#6b8392;}
+.vibe-oddsjam .vibe-link{color:#00a5e7;border-bottom:1px solid #00a5e755;font-family:'SF Mono', SFMono-Regular, ui-monospace, Menlo, monospace;}
+.vibe-oddsjam .vibe-link:hover{background:#00a5e71a;}
+.vibe-oddsjam .vibe-table{font-family:'SF Mono', SFMono-Regular, ui-monospace, Menlo, monospace;border:1px solid #c3d5e0;}
+.vibe-oddsjam .vibe-table caption{color:#6b8392;font-family:'SF Mono', SFMono-Regular, ui-monospace, Menlo, monospace;}
+.vibe-oddsjam .vibe-table th{color:#6b8392;border-bottom:1px solid #c3d5e0;font-weight:400;}
+.vibe-oddsjam .vibe-table td{color:#00a5e7;border-bottom:1px solid #c3d5e0;}
+.vibe-oddsjam .vibe-table tr:last-child th,.vibe-oddsjam .vibe-table tr:last-child td{border-bottom:0;}
+.vibe-oddsjam .vibe-spec{background:#deeaf1;border-top:1px solid #c3d5e0;color:#6b8392;}
+.vibe-oddsjam .vibe-spec dt{color:#00193e;}
+.vibe-oddsjam .vibe-spec code{color:#00a5e7;}
+.vibe-oddsjam .sw{outline:1px solid #c3d5e0;}
+
+.vibe-vegasinsider{background:#fefefe;border:2px solid #e5e5e5;border-radius:2px;color:#333333;font-family:'Saira Condensed', 'Helvetica Neue', Helvetica, Arial, sans-serif;}
+.vibe-vegasinsider .vibe-chrome{background:#f2f2e7;border-bottom:1px solid #e5e5e5;color:#767676;font-family:ui-monospace, Menlo, monospace;}
+.vibe-vegasinsider .vibe-body{padding:14px 16px;}
+.vibe-vegasinsider h4{font-family:'Saira Condensed', 'Helvetica Neue', Helvetica, Arial, sans-serif;font-weight:700;letter-spacing:0.01em;text-transform:uppercase;color:#644800;}
+.vibe-vegasinsider p{color:#767676;}
+.vibe-vegasinsider .vibe-link{color:#bf8900;border-bottom:1px solid #bf890055;font-family:ui-monospace, Menlo, monospace;}
+.vibe-vegasinsider .vibe-link:hover{background:#bf89001a;}
+.vibe-vegasinsider .vibe-table{font-family:ui-monospace, Menlo, monospace;border:2px solid #e5e5e5;}
+.vibe-vegasinsider .vibe-table caption{color:#767676;font-family:ui-monospace, Menlo, monospace;}
+.vibe-vegasinsider .vibe-table th{color:#767676;border-bottom:1px solid #e5e5e5;font-weight:400;}
+.vibe-vegasinsider .vibe-table td{color:#bf8900;border-bottom:1px solid #e5e5e5;}
+.vibe-vegasinsider .vibe-table tr:last-child th,.vibe-vegasinsider .vibe-table tr:last-child td{border-bottom:0;}
+.vibe-vegasinsider .vibe-spec{background:#f2f2e7;border-top:1px solid #e5e5e5;color:#767676;}
+.vibe-vegasinsider .vibe-spec dt{color:#333333;}
+.vibe-vegasinsider .vibe-spec code{color:#bf8900;}
+.vibe-vegasinsider .sw{outline:1px solid #e5e5e5;}
+
+.vibe-pikkit{background:#11151b;border:1px solid #232a3d;border-radius:14px;color:#ffffff;font-family:Manrope, Inter, 'Helvetica Neue', sans-serif;}
+.vibe-pikkit .vibe-chrome{background:#13182b;border-bottom:1px solid #232a3d;color:#9aa4b8;font-family:ui-monospace, SFMono-Regular, monospace;}
+.vibe-pikkit .vibe-body{padding:20px 22px;}
+.vibe-pikkit h4{font-family:Manrope, Inter, 'Helvetica Neue', sans-serif;font-weight:800;letter-spacing:-0.01em;text-transform:none;color:#ffffff;}
+.vibe-pikkit p{color:#9aa4b8;}
+.vibe-pikkit .vibe-link{color:#8bb9fe;border-bottom:1px solid #8bb9fe55;font-family:ui-monospace, SFMono-Regular, monospace;}
+.vibe-pikkit .vibe-link:hover{background:#8bb9fe1a;}
+.vibe-pikkit .vibe-table{font-family:ui-monospace, SFMono-Regular, monospace;border:1px solid #232a3d;}
+.vibe-pikkit .vibe-table caption{color:#9aa4b8;font-family:ui-monospace, SFMono-Regular, monospace;}
+.vibe-pikkit .vibe-table th{color:#9aa4b8;border-bottom:1px solid #232a3d;font-weight:400;}
+.vibe-pikkit .vibe-table td{color:#8bb9fe;border-bottom:1px solid #232a3d;}
+.vibe-pikkit .vibe-table tr:last-child th,.vibe-pikkit .vibe-table tr:last-child td{border-bottom:0;}
+.vibe-pikkit .vibe-spec{background:#13182b;border-top:1px solid #232a3d;color:#9aa4b8;}
+.vibe-pikkit .vibe-spec dt{color:#ffffff;}
+.vibe-pikkit .vibe-spec code{color:#8bb9fe;}
+.vibe-pikkit .sw{outline:1px solid #232a3d;}
+
+.vibe-juicereel{background:#272b33;border:1px solid #3c4250;border-radius:12px;color:#f5f6f8;font-family:Inter, -apple-system, 'Segoe UI', sans-serif;}
+.vibe-juicereel .vibe-chrome{background:#31363f;border-bottom:1px solid #3c4250;color:#9ca3af;font-family:ui-monospace, SFMono-Regular, monospace;}
+.vibe-juicereel .vibe-body{padding:18px 20px;}
+.vibe-juicereel h4{font-family:Inter, -apple-system, 'Segoe UI', sans-serif;font-weight:700;letter-spacing:-0.005em;text-transform:none;color:#f5f6f8;}
+.vibe-juicereel p{color:#9ca3af;}
+.vibe-juicereel .vibe-link{color:#ff5100;border-bottom:1px solid #ff510055;font-family:ui-monospace, SFMono-Regular, monospace;}
+.vibe-juicereel .vibe-link:hover{background:#ff51001a;}
+.vibe-juicereel .vibe-table{font-family:ui-monospace, SFMono-Regular, monospace;border:1px solid #3c4250;}
+.vibe-juicereel .vibe-table caption{color:#9ca3af;font-family:ui-monospace, SFMono-Regular, monospace;}
+.vibe-juicereel .vibe-table th{color:#9ca3af;border-bottom:1px solid #3c4250;font-weight:400;}
+.vibe-juicereel .vibe-table td{color:#34d27b;border-bottom:1px solid #3c4250;}
+.vibe-juicereel .vibe-table tr:last-child th,.vibe-juicereel .vibe-table tr:last-child td{border-bottom:0;}
+.vibe-juicereel .vibe-spec{background:#31363f;border-top:1px solid #3c4250;color:#9ca3af;}
+.vibe-juicereel .vibe-spec dt{color:#f5f6f8;}
+.vibe-juicereel .vibe-spec code{color:#ff5100;}
+.vibe-juicereel .sw{outline:1px solid #3c4250;}
+
+.vibe-sportsgameodds{background:#0b1121;border:1px solid #26314d;border-radius:10px;color:#e8ecf4;font-family:Manrope, -apple-system, sans-serif;}
+.vibe-sportsgameodds .vibe-chrome{background:#1c2640;border-bottom:1px solid #26314d;color:#93a0ba;font-family:ui-monospace, SFMono-Regular, monospace;}
+.vibe-sportsgameodds .vibe-body{padding:18px 20px;}
+.vibe-sportsgameodds h4{font-family:'Source Serif 4', Georgia, serif;font-weight:600;letter-spacing:-0.01em;text-transform:none;color:#e8ecf4;}
+.vibe-sportsgameodds p{color:#93a0ba;}
+.vibe-sportsgameodds .vibe-link{color:#10b981;border-bottom:1px solid #10b98155;font-family:ui-monospace, SFMono-Regular, monospace;}
+.vibe-sportsgameodds .vibe-link:hover{background:#10b9811a;}
+.vibe-sportsgameodds .vibe-table{font-family:ui-monospace, SFMono-Regular, monospace;border:1px solid #26314d;}
+.vibe-sportsgameodds .vibe-table caption{color:#93a0ba;font-family:ui-monospace, SFMono-Regular, monospace;}
+.vibe-sportsgameodds .vibe-table th{color:#93a0ba;border-bottom:1px solid #26314d;font-weight:400;}
+.vibe-sportsgameodds .vibe-table td{color:#10b981;border-bottom:1px solid #26314d;}
+.vibe-sportsgameodds .vibe-table tr:last-child th,.vibe-sportsgameodds .vibe-table tr:last-child td{border-bottom:0;}
+.vibe-sportsgameodds .vibe-spec{background:#1c2640;border-top:1px solid #26314d;color:#93a0ba;}
+.vibe-sportsgameodds .vibe-spec dt{color:#e8ecf4;}
+.vibe-sportsgameodds .vibe-spec code{color:#10b981;}
+.vibe-sportsgameodds .sw{outline:1px solid #26314d;}
+
+.vibe-api-sports{background:#ffffff;border:1px solid #d8d8d8;border-radius:6px;color:#1d4371;font-family:Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;}
+.vibe-api-sports .vibe-chrome{background:#f5f7fa;border-bottom:1px solid #d8d8d8;color:#6b7c93;font-family:ui-monospace, Menlo, monospace;}
+.vibe-api-sports .vibe-body{padding:16px 18px;}
+.vibe-api-sports h4{font-family:Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;font-weight:600;letter-spacing:0;text-transform:none;color:#1d4371;}
+.vibe-api-sports p{color:#6b7c93;}
+.vibe-api-sports .vibe-link{color:#4a90e2;border-bottom:1px solid #4a90e255;font-family:ui-monospace, Menlo, monospace;}
+.vibe-api-sports .vibe-link:hover{background:#4a90e21a;}
+.vibe-api-sports .vibe-table{font-family:ui-monospace, Menlo, monospace;border:1px solid #d8d8d8;}
+.vibe-api-sports .vibe-table caption{color:#6b7c93;font-family:ui-monospace, Menlo, monospace;}
+.vibe-api-sports .vibe-table th{color:#6b7c93;border-bottom:1px solid #d8d8d8;font-weight:400;}
+.vibe-api-sports .vibe-table td{color:#f5a623;border-bottom:1px solid #d8d8d8;}
+.vibe-api-sports .vibe-table tr:last-child th,.vibe-api-sports .vibe-table tr:last-child td{border-bottom:0;}
+.vibe-api-sports .vibe-spec{background:#f5f7fa;border-top:1px solid #d8d8d8;color:#6b7c93;}
+.vibe-api-sports .vibe-spec dt{color:#1d4371;}
+.vibe-api-sports .vibe-spec code{color:#4a90e2;}
+.vibe-api-sports .sw{outline:1px solid #d8d8d8;}
+</style>
+<div class="wrap">
+
+<header class="masthead">
+  <div class="eyebrow">
+    <span>DynastZ &middot; research</span>
+    <span>6 September 2026</span>
+    <span><b>225 agents</b> &middot; 3 verification rounds</span>
+    <span>16 providers &middot; NFL only</span>
+  </div>
+  <h1>Live NFL box scores and odds,<br><span>priced against a Sunday.</span></h1>
+  <p class="standfirst">
+    Sixteen providers, evaluated against one workload: an unattended pipeline that polls from
+    8:00am to 11:55pm ET on Sundays, under $100 a month, with no human in the loop. Every price,
+    quota and limit below traces to a dated primary source; where a claim survived only one of
+    three adversarial checks it is marked as unresolved rather than stated flat.
+  </p>
+</header>
+
+<section id="verdict">
+  <h2 data-n="00">The short version</h2>
+  <p class="lede">
+    The field does not narrow on price. It narrows on two things almost nobody publishes on a
+    pricing page: whether the cheap tier is actually <em>live</em>, and whether the terms of service
+    let you store what you pull.
+  </p>
+
+  <div class="note">
+    <h4>Recommendation</h4>
+    <p>
+      <b>balldontlie GOAT, $39.99/month</b>, for both feeds on one bill. It is the only option
+      that clears every constraint on published terms: a static-key header over plain GET, 600
+      requests per minute with <b>no monthly cap</b>, live in-game data that is not tier-gated, and
+      a data licence that expressly permits caching, storing and building derivative databases for
+      &ldquo;lawful sportsbook and wagering products&rdquo;. At $9.99 the ALL-STAR tier already
+      covers score, team stats and player stats &mdash; step up to GOAT only if you need the game
+      clock, live possession, or odds.
+    </p>
+    <p>
+      <b>Pair it with ESPN for free opening and closing lines</b>, and with
+      <b>The&nbsp;Odds&nbsp;API at $59/month</b> if you need multi-book in-play prices at 40-second
+      resolution. Both carry caveats worth reading before you commit &mdash; ESPN's are legal, The
+      Odds API's are arithmetic.
+    </p>
+  </div>
+
+  <dl class="tiles">
+    <div class="tile is-accent">
+      <dt>Cheapest complete stack</dt>
+      <dd>$39.99</dd>
+      <small>balldontlie GOAT &mdash; box scores <i>and</i> odds, one subscription, 60% of budget unspent</small>
+    </div>
+    <div class="tile">
+      <dt>Providers evaluated</dt>
+      <dd>16</dd>
+      <small>9 disqualified on automation or coverage, not on price</small>
+    </div>
+    <div class="tile">
+      <dt>Under budget &amp; live</dt>
+      <dd>4</dd>
+      <small>balldontlie, The Odds API, TheRundown, ESPN &mdash; each with a caveat</small>
+    </div>
+    <div class="tile">
+      <dt>Quote-only vendors</dt>
+      <dd>4</dd>
+      <small>Sportradar, Stats Perform, OpticOdds, NFL &mdash; no price published anywhere</small>
+    </div>
+  </dl>
+
+  <h3>What actually eliminated services</h3>
+  <p>
+    Price was rarely the reason. <b>SportsDataIO</b> publishes a $99 NFL tier &mdash; inside the
+    ceiling &mdash; but caps it at 100 calls a day and ships every Discovery Lab feed next-day.
+    <b>API-SPORTS</b> has a free tier whose NFL odds are pre-match only, refreshed four times daily.
+    <b>MySportsFeeds</b> labels every published tier &ldquo;Non-Live access&rdquo;.
+    <b>nflverse</b> deliberately refuses to publish a season containing an unfinished game.
+    <b>Pro Football Reference</b> blocks at 20 requests a minute and has stated it will never offer
+    an API. Three of the named candidates &mdash; <b>Pikkit</b>, <b>VegasInsider</b> and
+    <b>Action Network</b> &mdash; have no programmatic access at all, and <b>JuiceReel</b>'s API,
+    which does exist, returns only the connected user's own bet slips.
+  </p>
+</section>
+
+<section id="window">
+  <h2 data-n="01">The Sunday shape</h2>
+  <p class="lede">
+    Every quota question depends on one fact: a Sunday is not a solid block of football. It is four
+    kickoff waves with dead air between them, and the number of games running at once swings from
+    one to ten. Polling flat across the stated window bills you for the gaps.
+  </p>
+
+  <div class="timeline">
+    <svg viewBox="0 0 1120 132" role="img" aria-label="NFL Sunday operating window: 8am to 11:55pm ET, with the four kickoff waves marked.">
+<g class="tl-tick">
+<line class="tl-grid" x1="92.0" y1="26" x2="92.0" y2="104" opacity="0.45"/>
+<text x="92.0" y="120" text-anchor="middle">8am</text>
+<line class="tl-grid" x1="218.4" y1="26" x2="218.4" y2="104" opacity="0.45"/>
+<text x="218.4" y="120" text-anchor="middle">10am</text>
+<line class="tl-grid" x1="344.8" y1="26" x2="344.8" y2="104" opacity="0.45"/>
+<text x="344.8" y="120" text-anchor="middle">12pm</text>
+<line class="tl-grid" x1="471.2" y1="26" x2="471.2" y2="104" opacity="0.45"/>
+<text x="471.2" y="120" text-anchor="middle">2pm</text>
+<line class="tl-grid" x1="597.6" y1="26" x2="597.6" y2="104" opacity="0.45"/>
+<text x="597.6" y="120" text-anchor="middle">4pm</text>
+<line class="tl-grid" x1="724.0" y1="26" x2="724.0" y2="104" opacity="0.45"/>
+<text x="724.0" y="120" text-anchor="middle">6pm</text>
+<line class="tl-grid" x1="850.5" y1="26" x2="850.5" y2="104" opacity="0.45"/>
+<text x="850.5" y="120" text-anchor="middle">8pm</text>
+<line class="tl-grid" x1="976.9" y1="26" x2="976.9" y2="104" opacity="0.45"/>
+<text x="976.9" y="120" text-anchor="middle">10pm</text>
+</g>
+<text class="tl-label" x="80" y="44" text-anchor="end">Window</text>
+<rect class="tl-window" x="92.0" y="30" width="1006.0" height="20" rx="2"/>
+<text class="tl-cap" x="100.0" y="44">15h55m &#183; 57,300s</text>
+<text class="tl-label" x="80" y="82" text-anchor="end">Live</text>
+<rect class="tl-game" x="186.8" y="62" width="205.4" height="24" rx="2"/>
+<text class="tl-cap" x="289.5" y="78" text-anchor="middle" fill="var(--surface)" font-weight="600">1×</text>
+<text class="tl-tick" x="186.8" y="98">9:30am</text>
+<rect class="tl-game" x="408.0" y="62" width="205.4" height="24" rx="2"/>
+<text class="tl-cap" x="510.7" y="78" text-anchor="middle" fill="var(--surface)" font-weight="600">10×</text>
+<text class="tl-tick" x="408.0" y="98">1pm</text>
+<rect class="tl-game" x="624.0" y="62" width="205.4" height="24" rx="2"/>
+<text class="tl-cap" x="726.7" y="78" text-anchor="middle" fill="var(--surface)" font-weight="600">4×</text>
+<text class="tl-tick" x="624.0" y="98">4:25pm</text>
+<rect class="tl-game" x="871.5" y="62" width="205.4" height="24" rx="2"/>
+<text class="tl-cap" x="974.2" y="78" text-anchor="middle" fill="var(--surface)" font-weight="600">1×</text>
+<text class="tl-tick" x="871.5" y="98">8:20pm</text>
+<line class="tl-rule" x1="92" y1="104" x2="1098" y2="104"/>
+</svg>
+    <div class="legend">
+      <span><i class="key key-window"></i> Stated polling window &mdash; 8:00am to 11:55pm ET</span>
+      <span><i class="key key-game"></i> Games in progress (<b>n&times;</b> = concurrent games)</span>
+    </div>
+  </div>
+
+  <dl class="tiles">
+    <div class="tile">
+      <dt>Window</dt><dd>57,300s</dd>
+      <small>15h55m &mdash; but only 82% of it has football in it</small>
+    </div>
+    <div class="tile">
+      <dt>Naive Sunday</dt><dd>8,984</dd>
+      <small>calls, polling flat: 2,292 scoreboard + 6,692 box score</small>
+    </div>
+    <div class="tile is-accent">
+      <dt>Gated to live games</dt><dd>3,440</dd>
+      <small>calls &mdash; 1,872 scoreboard + 1,568 box score. <b>2.6&times; cheaper</b></small>
+    </div>
+    <div class="tile">
+      <dt>Peak rate</dt><dd>9.4<small style="font-size:13px"> req/min</small></dd>
+      <small>with 14 concurrent games &mdash; the number every rate limit must clear</small>
+    </div>
+  </dl>
+
+  <h3>The arithmetic, shown</h3>
+  <p>
+    Score and period at 25s across the full window is <span class="num">57,300 &divide; 25 =
+    2,292</span> calls &mdash; one scoreboard call covers the whole slate, so games do not multiply
+    it. Player stats at 2 minutes is <span class="num">478</span> snapshots, but the box score is a
+    <em>per-game</em> endpoint, so with 14 concurrent games that is
+    <span class="num">478 &times; 14 = 6,692</span>. Team stats need no separate call on any provider
+    reviewed &mdash; they arrive in the same box-score response, so the tighter cadence binds.
+    Naive total: <span class="num">8,984</span> per Sunday, <span class="num">~38,600</span> per
+    month across 4.3 Sundays.
+  </p>
+  <p>
+    Gate the poller on games actually in progress and it falls to
+    <span class="num">3,440</span> per Sunday &mdash; <span class="num">~14,800</span> a month.
+    Both figures appear in the tables below, because the naive one is what a vendor quota has to
+    survive if the pipeline is written the obvious way.
+  </p>
+
+  <div class="note">
+    <h4>The number that does the filtering</h4>
+    <p>
+      <b>9.4 requests per minute</b> at peak. That is trivially inside balldontlie's 60/min,
+      Sportradar's 1 QPS, and OpticOdds' 2,500-per-15s. It is <em>outside</em> API-SPORTS' free
+      10/min once you account for retries, and it is more than 34&times; SportsDataIO's 100 calls
+      per <em>day</em>. Monthly totals matter less than this one figure.
+    </p>
+  </div>
+</section>
+
+<section id="boxscores">
+  <h2 data-n="02">Box scores</h2>
+  <p class="lede">
+    Coverage columns are graded against a real payload wherever the endpoint was reachable, not
+    against vendor marketing. &ldquo;Partial&rdquo; on score &amp; period means the score and
+    quarter are present but the game clock or possession is not.
+  </p>
+
+  <div class="scroller">
+    <table class="cmp">
+      <caption class="visually-hidden">NFL box score providers compared</caption>
+      <thead>
+        <tr>
+          <th scope="col">Service</th>
+          <th scope="col">Cost</th>
+          <th scope="col">Request limits</th>
+          <th scope="col">Headless automation</th>
+          <th scope="col">Team meta</th>
+          <th scope="col">Score &amp; period</th>
+          <th scope="col">Team stats</th>
+          <th scope="col">Player stats</th>
+          <th scope="col">Observed latency</th>
+          <th scope="col">The catch</th>
+        </tr>
+      </thead>
+      <tbody>
+<tr data-v="ok">
+  <th scope="row">balldontlie<small>NFL ALL-STAR / GOAT</small></th>
+  <td class="n"><b>$9.99</b>/mo ALL-STAR<br><b>$39.99</b>/mo GOAT</td>
+  <td class="wrap-cell">60 req/min (ALL-STAR)<br>600 req/min (GOAT)<br><b>no monthly cap</b></td>
+  <td class="wrap-cell">Static key, <code>Authorization</code> header</td>
+  <td><span class="v v-ok">yes</span></td>
+  <td><span class="v v-warn">partial</span></td>
+  <td><span class="v v-ok">yes</span></td>
+  <td><span class="v v-ok">yes</span></td>
+  <td class="wrap-cell">&ldquo;real-time for games currently in progress&rdquo; &mdash; no number published; <b>unmeasured</b></td>
+  <td class="wrap-cell">Score + quarter are in <code>/games</code>, but game <b>clock and live possession</b> are only in <code>/plays</code> at GOAT. ToS expressly grants cache / store / derivative-database rights for &ldquo;lawful sportsbook and wagering products&rdquo;.</td>
+</tr>
+<tr data-v="warn">
+  <th scope="row">ESPN<small>site.api + sports.core</small></th>
+  <td class="n"><b>$0</b></td>
+  <td class="wrap-cell">None found. <b>100 GETs at 67.8 req/s</b>, 100/100 &rarr; 200, zero 429 (measured)</td>
+  <td class="wrap-cell">None &mdash; keyless plain GET</td>
+  <td><span class="v v-ok">yes</span></td>
+  <td><span class="v v-ok">yes</span></td>
+  <td><span class="v v-ok">yes</span></td>
+  <td><span class="v v-ok">yes</span></td>
+  <td class="wrap-cell"><b>26&ndash;33s</b> measured, play timestamp &rarr; feed (2026-09-06, live game)</td>
+  <td class="wrap-cell">Technically the best feed here and it is free &mdash; boxscore confirmed populating <i>during</i> a live game. But the Disney ToS that governs ESPN bans automated access, database-building, <i>and</i> any business use &ldquo;whether or not for profit&rdquo;. The 26&ndash;33s lag also sits just outside the 25s target.</td>
+</tr>
+<tr data-v="warn">
+  <th scope="row">Sportradar<small>NFL API v7</small></th>
+  <td class="n"><b>Quote only.</b> No published price at any tier</td>
+  <td class="wrap-cell">Trial: <b>1,000 req / rolling 30 days</b>, 1 QPS, expires in 30 days</td>
+  <td class="wrap-cell">Static <code>x-api-key</code> header</td>
+  <td><span class="v v-ok">yes</span></td>
+  <td><span class="v v-ok">yes</span></td>
+  <td><span class="v v-ok">yes</span></td>
+  <td><span class="v v-ok">yes</span></td>
+  <td class="wrap-cell"><b>3s TTL</b> on live game feeds (60s when scheduled)</td>
+  <td class="wrap-cell">The best technical fit in the evaluation &mdash; one Game Boxscore call carries score, quarter, clock, down, distance, possession and ball location. Trial data is real live data, not simulated. But 1,000 requests per 30 days is <b>a third of a single Sunday</b>, and production pricing is sales-quoted.</td>
+</tr>
+<tr data-v="bad">
+  <th scope="row">SportsDataIO<small>Discovery Lab</small></th>
+  <td class="n"><b>$99</b>/mo NFL Odds<br><b>$99</b>/mo NFL Fantasy<br><b>$149</b>/mo both</td>
+  <td class="wrap-cell"><b>100 calls/day</b> at $99<br>1,000 calls/day at $149</td>
+  <td class="wrap-cell">Static <code>Ocp-Apim-Subscription-Key</code></td>
+  <td><span class="v v-ok">yes</span></td>
+  <td><span class="v v-ok">yes</span></td>
+  <td><span class="v v-ok">yes</span></td>
+  <td><span class="v v-ok">yes</span></td>
+  <td class="wrap-cell">20&ndash;30s behind broadcast &mdash; <b>enterprise tier only</b></td>
+  <td class="wrap-cell">The published price list is on <code>discoverylab.sportsdata.io</code>, not the main site. Two independent killers: every Discovery Lab feed is <b>next-day</b>, and 100 calls/day is ~34&times; short of a gated Sunday.</td>
+</tr>
+<tr data-v="bad">
+  <th scope="row">Stats Perform<small>ex-STATS Inc / Opta</small></th>
+  <td class="n"><b>Quote only.</b> <code>/pricing</code> returns 404</td>
+  <td class="wrap-cell">Not established &mdash; docs are behind the portal</td>
+  <td class="wrap-cell">Static key (REST), but <b>registration is switched off</b></td>
+  <td><span class="v v-ok">yes</span></td>
+  <td><span class="v v-ok">yes</span></td>
+  <td><span class="v v-ok">yes</span></td>
+  <td><span class="v v-ok">yes</span></td>
+  <td class="wrap-cell">Not established for NFL</td>
+  <td class="wrap-cell">Developer-portal self-registration is disabled; there is no self-serve path to a key at any price. Coverage is best-in-class and entirely out of reach.</td>
+</tr>
+<tr data-v="bad">
+  <th scope="row">OpticOdds<small>= the OddsJam API</small></th>
+  <td class="n"><b>Quote only.</b> Pricing page is a 3-step lead form</td>
+  <td class="wrap-cell">2,500 req / 15s standard<br>10 req / 15s historical</td>
+  <td class="wrap-cell">Static <code>X-Api-Key</code> or <code>?key=</code></td>
+  <td><span class="v v-ok">yes</span></td>
+  <td><span class="v v-ok">yes</span></td>
+  <td><span class="v v-ok">yes</span></td>
+  <td><span class="v v-ok">yes</span></td>
+  <td class="wrap-cell">SSE &ldquo;within milliseconds&rdquo;; no REST figure published</td>
+  <td class="wrap-cell"><code>developer.oddsjam.com</code> now 301s to <code>developer.opticodds.com</code> &mdash; the commercial &ldquo;OddsJam API&rdquo; <i>is</i> OpticOdds. Excellent limits and a real live box score, but no price is published anywhere, so it cannot be confirmed under the ceiling. Its public ToS also forbids &ldquo;any revenue-generating endeavor&rdquo;.</td>
+</tr>
+<tr data-v="bad">
+  <th scope="row">API-SPORTS<small>American Football v1</small></th>
+  <td class="n">$0 free tier; paid prices <b>not verifiable</b> from any primary page</td>
+  <td class="wrap-cell"><b>100 req/day + 10 req/min</b> (free) &mdash; ~1% of a Sunday</td>
+  <td class="wrap-cell">Static key (RapidAPI or direct)</td>
+  <td><span class="v v-ok">yes</span></td>
+  <td><span class="v v-ok">yes</span></td>
+  <td><span class="v v-ok">yes</span></td>
+  <td><span class="v v-warn">partial</span></td>
+  <td class="wrap-cell">Not established</td>
+  <td class="wrap-cell">Free tier is saturated by the 9.4 req/min peak before any headroom. Vendor and RapidAPI pricing pages both 403 or render prices client-side only, so the widely-repeated $19/$29/$39 tiers could <b>not</b> be verified &mdash; that claim was refuted 0&ndash;3.</td>
+</tr>
+<tr data-v="bad">
+  <th scope="row">MySportsFeeds</th>
+  <td class="n"><b>CAD $39</b>/mo NFL CORE (&asymp; USD $28) &mdash; box scores are a separately-priced add-on with <b>no published price</b></td>
+  <td class="wrap-cell">Not published for the live configuration</td>
+  <td class="wrap-cell">Static key</td>
+  <td><span class="v v-ok">yes</span></td>
+  <td><span class="v v-bad">no</span></td>
+  <td><span class="v v-bad">no</span></td>
+  <td><span class="v v-bad">no</span></td>
+  <td class="wrap-cell">Cheapest tier is explicitly <b>&ldquo;Non-Live access&rdquo;</b></td>
+  <td class="wrap-cell">Every published tier carries the &ldquo;Non-Live access&rdquo; qualifier, and box scores sit in a DETAILS add-on that is quote-only. A live NFL box score here is an unpriced configuration.</td>
+</tr>
+<tr data-v="bad">
+  <th scope="row">nflverse</th>
+  <td class="n"><b>$0</b></td>
+  <td class="wrap-cell">GitHub Releases &mdash; no API, no limit</td>
+  <td class="wrap-cell">None</td>
+  <td><span class="v v-ok">yes</span></td>
+  <td><span class="v v-bad">no</span></td>
+  <td><span class="v v-bad">no</span></td>
+  <td><span class="v v-bad">no</span></td>
+  <td class="wrap-cell"><b>Nightly batch.</b> Fastest sanctioned path is ~15 min <i>after a game ends</i></td>
+  <td class="wrap-cell">Not a live source and not intended as one &mdash; the release pipeline aborts rather than publish a season containing an unfinished game. Only the schedules file is near-live (5 min documented, 10&ndash;30 min observed) and it carries score but no box score.</td>
+</tr>
+<tr data-v="bad">
+  <th scope="row">Action Network</th>
+  <td class="n">No commercial product exists</td>
+  <td class="wrap-cell">No documented limit</td>
+  <td class="wrap-cell"><b>No keyed API.</b> No developer portal at any hostname</td>
+  <td><span class="v v-ok">yes</span></td>
+  <td><span class="v v-ok">yes</span></td>
+  <td><span class="v v-ok">yes</span></td>
+  <td><span class="v v-ok">yes</span></td>
+  <td class="wrap-cell">Not established</td>
+  <td class="wrap-cell">Now a Better Collective subsidiary. <code>developer.actionnetwork.com</code>, <code>developers.</code> and <code>docs.</code> do not resolve; no data-licensing product and no lead-capture form exists. The internal endpoint the repo already uses is an unsanctioned integration path, not a supported one.</td>
+</tr>
+<tr data-v="bad">
+  <th scope="row">NFL shield API<small>api.nfl.com</small></th>
+  <td class="n"><b>Partner-only.</b> No price published anywhere</td>
+  <td class="wrap-cell">Not established &mdash; docs are behind the portal</td>
+  <td class="wrap-cell">Partner <code>clientKey</code>/<code>clientSecret</code> &rarr; JWT. <b>No self-registration</b></td>
+  <td><span class="v v-ok">yes</span></td>
+  <td><span class="v v-warn">partial</span></td>
+  <td><span class="v v-na">not est.</span></td>
+  <td><span class="v v-na">not est.</span></td>
+  <td class="wrap-cell">Not established</td>
+  <td class="wrap-cell">Every path on <code>api.nfl.com</code> 401s at the edge; <code>developer.nfl.com</code> sits entirely behind Ping Identity OIDC with no sign-up link. NFL ToS &sect;1.3 bans &ldquo;systematic retrieval &hellip; to create or compile &hellip; a database&rdquo;.</td>
+</tr>
+<tr data-v="bad">
+  <th scope="row">Pro Football Reference</th>
+  <td class="n"><b>$0</b></td>
+  <td class="wrap-cell"><b>20 req/min</b> hard block, site-wide &mdash; below the 33.6 req/min floor</td>
+  <td class="wrap-cell"><b>Cloudflare challenge</b> on a plain GET</td>
+  <td><span class="v v-ok">yes</span></td>
+  <td><span class="v v-bad">no</span></td>
+  <td><span class="v v-bad">no</span></td>
+  <td><span class="v v-bad">no</span></td>
+  <td class="wrap-cell">Post-game only</td>
+  <td class="wrap-cell">Three independent disqualifiers: a published 20 req/min block, a ToS ban on automated access, and an explicit permanent refusal to ever offer an API. Even <code>robots.txt</code> is fronted by a JS challenge.</td>
+</tr>
+<tr data-v="bad">
+  <th scope="row">VegasInsider</th>
+  <td class="n"><b>$0</b></td>
+  <td class="wrap-cell">n/a</td>
+  <td class="wrap-cell"><b>No API.</b> Server-rendered HTML, no JSON layer</td>
+  <td><span class="v v-warn">partial</span></td>
+  <td><span class="v v-bad">no</span></td>
+  <td><span class="v v-bad">no</span></td>
+  <td><span class="v v-bad">no</span></td>
+  <td class="wrap-cell">Not established</td>
+  <td class="wrap-cell">Zero occurrences of <code>__NEXT_DATA__</code>, <code>/api/</code>, GraphQL or <code>fetch(</code> across 1.03&nbsp;MB of odds markup &mdash; everything is baked into the HTML. ToS bans scraping; <code>robots.txt</code> bans any query-string URL. Not technically blocked, but contractually closed.</td>
+</tr>
+<tr data-v="bad">
+  <th scope="row">Pikkit</th>
+  <td class="n">n/a</td>
+  <td class="wrap-cell">n/a</td>
+  <td class="wrap-cell"><b>No API.</b> <code>api.pikkit.com</code> does not resolve</td>
+  <td><span class="v v-bad">no</span></td>
+  <td><span class="v v-bad">no</span></td>
+  <td><span class="v v-bad">no</span></td>
+  <td><span class="v v-bad">no</span></td>
+  <td class="wrap-cell">n/a</td>
+  <td class="wrap-cell">A consumer bet tracker. No developer portal, no partner page, nothing in a ~210-URL sitemap. Confirmed by exhaustive enumeration, not by absence of search results.</td>
+</tr>
+<tr data-v="bad">
+  <th scope="row">JuiceReel</th>
+  <td class="n">Not published</td>
+  <td class="wrap-cell">Not documented</td>
+  <td class="wrap-cell">OAuth 2.0 requiring a <b>human browser sign-in</b></td>
+  <td><span class="v v-bad">no</span></td>
+  <td><span class="v v-bad">no</span></td>
+  <td><span class="v v-bad">no</span></td>
+  <td><span class="v v-bad">no</span></td>
+  <td class="wrap-cell">n/a</td>
+  <td class="wrap-cell">It <i>does</i> have a real documented API &mdash; but it returns only the connected user's own bet slips. Eight routes, zero scores, zero box scores. Bootstrapping needs a browser redirect and a pre-approved <code>client_id</code>.</td>
+</tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="note">
+    <h4>On ESPN, which is free and very good</h4>
+    <p>
+      Measured on this machine today: 100 concurrent GETs returned 100/100 at
+      <b>67.8 requests per second</b> with zero throttling &mdash; roughly 430&times; the peak this
+      workload needs. The <code>/summary</code> box score was confirmed populating <em>during</em> a
+      live game, with per-athlete stat lines across ten categories. Nothing else here is both that
+      complete and that free.
+    </p>
+    <p>
+      Two things stop it being the recommendation. Propagation measured <b>26&ndash;33 seconds</b>
+      from ESPN's own play timestamp to the feed &mdash; just outside the 25s target, and that is
+      measured against ESPN's clock, so true lag behind the broadcast is larger. And the Disney
+      Terms of Use that govern ESPN prohibit, in three separate clauses, automated access by
+      &ldquo;robot, spider, script&rdquo;, &ldquo;compiling, building, creating or contributing to
+      any collection of data, data set or database&rdquo;, and any &ldquo;commercial or
+      business-related use &hellip; whether or not for profit&rdquo;. There is no technical barrier
+      at all. The barrier is contractual, and it is the same class of objection that disqualified
+      Pro Football Reference &mdash; so it is flagged here rather than quietly discounted.
+    </p>
+  </div>
+</section>
+
+<section id="odds">
+  <h2 data-n="03">Odds</h2>
+  <p class="lede">
+    Same providers, same order of merit, so it is visible which do both, which do one, and which do
+    neither. The disqualifier in this table is almost always the same: the cheap tier is pregame-only,
+    or delayed by contract.
+  </p>
+
+  <div class="scroller">
+    <table class="cmp">
+      <caption class="visually-hidden">NFL odds providers compared</caption>
+      <thead>
+        <tr>
+          <th scope="col">Service</th>
+          <th scope="col">Cost</th>
+          <th scope="col">Request limits</th>
+          <th scope="col">Headless automation</th>
+          <th scope="col">Pregame</th>
+          <th scope="col">In-play</th>
+          <th scope="col">Books</th>
+          <th scope="col">Markets</th>
+          <th scope="col">Update latency</th>
+          <th scope="col">The catch</th>
+        </tr>
+      </thead>
+      <tbody>
+<tr data-v="ok">
+  <th scope="row">The Odds API</th>
+  <td class="n"><b>$59</b>/mo &mdash; 100,000 credits<br>$30/mo &mdash; 20,000<br>Free &mdash; 500</td>
+  <td class="wrap-cell">Credits, not calls. <b>cost = markets &times; regions</b>; 10 books = 1 region-equivalent</td>
+  <td class="wrap-cell">Static <code>apiKey</code> query param</td>
+  <td><span class="v v-ok">yes</span></td>
+  <td><span class="v v-ok">yes</span></td>
+  <td class="wrap-cell">DraftKings, FanDuel, BetMGM, BetRivers, Fanatics, Caesars (as <code>williamhill_us</code>) in <code>us</code>; theScore&nbsp;Bet, Hard&nbsp;Rock, Bally, betPARX, Fliff in <code>us2</code></td>
+  <td class="wrap-cell">ML / spread / total in bulk. <b>Props and alt lines are per-event only</b></td>
+  <td class="wrap-cell"><b>40s</b> in-play featured<br>60s props</td>
+  <td class="wrap-cell">Featured-market polling models at ~17&ndash;43k credits/month against the 100k tier. Props are the breaker: 14 games &times; 5 prop markets at 60s would burn ~67,200 credits in <b>one Sunday</b>. Adding <code>us2</code> doubles every call. Historical/closing lines carry a <b>10&times;</b> multiplier and are paid-only.</td>
+</tr>
+<tr data-v="ok">
+  <th scope="row">balldontlie<small>GOAT tier</small></th>
+  <td class="n"><b>$39.99</b>/mo GOAT (odds + props included)</td>
+  <td class="wrap-cell">600 req/min, <b>no monthly cap</b></td>
+  <td class="wrap-cell">Static key, <code>Authorization</code> header</td>
+  <td><span class="v v-ok">yes</span></td>
+  <td><span class="v v-ok">yes</span></td>
+  <td class="wrap-cell"><b>Not established</b> &mdash; the docs do not enumerate which sportsbooks are covered</td>
+  <td class="wrap-cell">Odds plus a large player-prop catalogue including quarter-scoped markets</td>
+  <td class="wrap-cell">&ldquo;updated live &hellip; real-time changes from sportsbooks&rdquo; &mdash; no number</td>
+  <td class="wrap-cell">The only option that covers <b>both</b> box scores and odds on one sub-$100 bill. Two real gaps: the book list is undocumented, and props carry an explicit <b>&ldquo;we do not store historical data&rdquo;</b> warning &mdash; snapshot line movement yourself or lose it.</td>
+</tr>
+<tr data-v="warn">
+  <th scope="row">TheRundown<small>Starter</small></th>
+  <td class="n"><b>$49</b>/mo Starter<br>$149 Pro &middot; $399 Ultra</td>
+  <td class="wrap-cell">5M <b>data points</b>/mo &mdash; one point = one returned price row (outcome &times; line &times; book)</td>
+  <td class="wrap-cell">Static key</td>
+  <td><span class="v v-ok">yes</span></td>
+  <td><span class="v v-ok">yes</span></td>
+  <td class="wrap-cell">3 books on free (BetMGM, DK, FD); more on paid</td>
+  <td class="wrap-cell">All markets and periods incl. props and alt lines at Starter</td>
+  <td class="wrap-cell"><b>60s delay</b> at $49<br>30s at $149 &middot; real-time at $399</td>
+  <td class="wrap-cell">Broadest markets under $100, but the <b>60-second delay is contractual</b>, not incidental &mdash; no sub-$100 tier delivers real-time. Row-based metering means a wide pull can cost hundreds of points; the vendor's own &ldquo;expanded snapshot&rdquo; example needs the $149 tier.</td>
+</tr>
+<tr data-v="warn">
+  <th scope="row">SportsGameOdds</th>
+  <td class="n">Free tier only verified. <b>Paid pricing unresolved</b> &mdash; the $99 Rookie claim was refuted 0&ndash;3</td>
+  <td class="wrap-cell">Free: <b>2,500 objects/mo</b>, 10 req/min, 10-min refresh</td>
+  <td class="wrap-cell">Static key</td>
+  <td><span class="v v-ok">yes</span></td>
+  <td><span class="v v-na">not est.</span></td>
+  <td class="wrap-cell">9 books on the free tier</td>
+  <td class="wrap-cell">Not established for paid tiers</td>
+  <td class="wrap-cell">10-min refresh (free)</td>
+  <td class="wrap-cell">2,500 objects buys roughly 190 slate-wide polls &mdash; one object per event returned. Treat as <b>unresolved</b>, not as a recommendation: three of four claims about its paid tiers failed verification.</td>
+</tr>
+<tr data-v="warn">
+  <th scope="row">ESPN<small>inline odds block</small></th>
+  <td class="n"><b>$0</b></td>
+  <td class="wrap-cell">None found</td>
+  <td class="wrap-cell">None &mdash; keyless</td>
+  <td><span class="v v-ok">yes</span></td>
+  <td><span class="v v-bad">no</span></td>
+  <td class="wrap-cell"><b>DraftKings only</b> (<code>count=1</code>)</td>
+  <td class="wrap-cell">Spread, ML, total &mdash; with open <i>and</i> close. No props, no alt lines</td>
+  <td class="wrap-cell"><b>Pregame-only.</b> Proved &ldquo;current&rdquo; == &ldquo;close&rdquo; mid-4th-quarter of a live game</td>
+  <td class="wrap-cell">Genuinely useful for opening and closing lines at zero cost &mdash; which is most of what CLV needs. It will never give an in-play price, and the same Disney ToS problem applies.</td>
+</tr>
+<tr data-v="bad">
+  <th scope="row">OpticOdds / OddsJam</th>
+  <td class="n"><b>Quote only</b> &mdash; no figure published anywhere</td>
+  <td class="wrap-cell">2,500 req / 15s &mdash; per-request, no credit metering</td>
+  <td class="wrap-cell">Static <code>X-Api-Key</code></td>
+  <td><span class="v v-ok">yes</span></td>
+  <td><span class="v v-ok">yes</span></td>
+  <td class="wrap-cell">~176 books + 18 exchanges listed. <b>FanDuel, bet365, Pinnacle and ESPN&nbsp;BET are absent</b> from the Aug&nbsp;2026 static list</td>
+  <td class="wrap-cell">Full, incl. first-class opening/closing-line fields</td>
+  <td class="wrap-cell">Sub-second marketed; SSE &ldquo;within milliseconds&rdquo;</td>
+  <td class="wrap-cell">Technically the strongest odds product reviewed and the quota model is far friendlier than credits. Sold to sportsbook operators through a lead form, so a sub-$100 tier can be neither confirmed nor denied.</td>
+</tr>
+<tr data-v="bad">
+  <th scope="row">Sportradar<small>Odds Comparison</small></th>
+  <td class="n"><b>Quote only</b></td>
+  <td class="wrap-cell">Trial: 1,000 req / 30 days, 1 QPS</td>
+  <td class="wrap-cell">Static <code>x-api-key</code></td>
+  <td><span class="v v-ok">yes</span></td>
+  <td><span class="v v-ok">yes</span></td>
+  <td class="wrap-cell">Not enumerated publicly</td>
+  <td class="wrap-cell">Prematch, Live Odds, Player Props, Futures &mdash; four separate products</td>
+  <td class="wrap-cell">1s TTL prematch; live odds refresh continuously</td>
+  <td class="wrap-cell">Odds are a separate purchase from the NFL stats API &mdash; two products, two bills, both quote-only.</td>
+</tr>
+<tr data-v="bad">
+  <th scope="row">SportsDataIO</th>
+  <td class="n"><b>$99</b>/mo NFL Odds API</td>
+  <td class="wrap-cell"><b>100 calls/day</b></td>
+  <td class="wrap-cell">Static key</td>
+  <td><span class="v v-ok">yes</span></td>
+  <td><span class="v v-ok">yes</span></td>
+  <td class="wrap-cell">Multiple US books</td>
+  <td class="wrap-cell">ML / spread / total / props</td>
+  <td class="wrap-cell">5&ndash;60s from book release (enterprise tier)</td>
+  <td class="wrap-cell">Sits exactly at the budget ceiling and still fails: 100 calls/day cannot cover a Sunday, and Discovery Lab feeds are next-day regardless.</td>
+</tr>
+<tr data-v="bad">
+  <th scope="row">API-SPORTS</th>
+  <td class="n">Free tier; paid unverifiable</td>
+  <td class="wrap-cell">100 req/day free</td>
+  <td class="wrap-cell">Static key</td>
+  <td><span class="v v-ok">yes</span></td>
+  <td><span class="v v-bad">no</span></td>
+  <td class="wrap-cell">Multiple</td>
+  <td class="wrap-cell">Pre-match only</td>
+  <td class="wrap-cell"><b>Updated 4&times; per day</b>, offered 1&ndash;7 days out</td>
+  <td class="wrap-cell">Definitively disqualified: the OpenAPI spec (v1.4.7) contains exactly three <code>/odds</code> routes and <b>no</b> <code>/odds/live</code> or <code>/odds/inplay</code> at any price.</td>
+</tr>
+<tr data-v="bad">
+  <th scope="row">Action Network</th>
+  <td class="n">No commercial product</td>
+  <td class="wrap-cell">&mdash;</td>
+  <td class="wrap-cell"><b>No keyed API</b></td>
+  <td><span class="v v-ok">yes</span></td>
+  <td><span class="v v-warn">partial</span></td>
+  <td class="wrap-cell">Many, via the consumer product</td>
+  <td class="wrap-cell">Full consumer coverage</td>
+  <td class="wrap-cell">Not established</td>
+  <td class="wrap-cell">Rich odds data with no sanctioned way to reach it. No developer portal, no licensing product, no price.</td>
+</tr>
+<tr data-v="bad">
+  <th scope="row">VegasInsider</th>
+  <td class="n"><b>$0</b></td>
+  <td class="wrap-cell">n/a</td>
+  <td class="wrap-cell"><b>No API</b> &mdash; HTML only</td>
+  <td><span class="v v-ok">yes</span></td>
+  <td><span class="v v-na">not est.</span></td>
+  <td class="wrap-cell">Las Vegas consensus + major books</td>
+  <td class="wrap-cell">ML / spread / total</td>
+  <td class="wrap-cell">No timestamp or cache header indicates freshness</td>
+  <td class="wrap-cell">Odds exist only as server-rendered HTML. ToS bans scraping and <code>robots.txt</code> bans every query-string URL, which is how its own week selector works.</td>
+</tr>
+<tr data-v="bad">
+  <th scope="row">Pikkit</th>
+  <td class="n">n/a</td>
+  <td class="wrap-cell">n/a</td>
+  <td class="wrap-cell"><b>No API</b></td>
+  <td><span class="v v-bad">no</span></td>
+  <td><span class="v v-bad">no</span></td>
+  <td class="wrap-cell">&mdash;</td>
+  <td class="wrap-cell">&mdash;</td>
+  <td class="wrap-cell">&mdash;</td>
+  <td class="wrap-cell">Consumer bet tracker. Nothing programmatic exists.</td>
+</tr>
+<tr data-v="bad">
+  <th scope="row">JuiceReel</th>
+  <td class="n">Not published</td>
+  <td class="wrap-cell">Not documented</td>
+  <td class="wrap-cell">OAuth, human sign-in</td>
+  <td><span class="v v-bad">no</span></td>
+  <td><span class="v v-bad">no</span></td>
+  <td class="wrap-cell">&mdash;</td>
+  <td class="wrap-cell">&mdash;</td>
+  <td class="wrap-cell">&mdash;</td>
+  <td class="wrap-cell">Its API returns the user's own bet slips only &mdash; no market prices of any kind.</td>
+</tr>
+<tr data-v="bad">
+  <th scope="row">nflverse</th>
+  <td class="n"><b>$0</b></td>
+  <td class="wrap-cell">&mdash;</td>
+  <td class="wrap-cell">None</td>
+  <td><span class="v v-bad">no</span></td>
+  <td><span class="v v-bad">no</span></td>
+  <td class="wrap-cell">&mdash;</td>
+  <td class="wrap-cell">&mdash;</td>
+  <td class="wrap-cell">&mdash;</td>
+  <td class="wrap-cell">Carries <code>spread_line</code> and <code>total_line</code> as historical game metadata sourced from Pro Football Reference. Not a market feed.</td>
+</tr>
+<tr data-v="bad">
+  <th scope="row">Stats Perform</th>
+  <td class="n"><b>Quote only</b></td>
+  <td class="wrap-cell">Not established</td>
+  <td class="wrap-cell">Registration disabled</td>
+  <td><span class="v v-warn">partial</span></td>
+  <td><span class="v v-bad">no</span></td>
+  <td class="wrap-cell">Not established</td>
+  <td class="wrap-cell">Not established</td>
+  <td class="wrap-cell">Not established</td>
+  <td class="wrap-cell">No update interval is documented for its odds endpoint, and there is no self-serve route to test one.</td>
+</tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="note">
+    <h4>The Odds API bills multiplicatively &mdash; model it before you subscribe</h4>
+    <p>
+      Cost is <b>markets &times; regions</b>, not calls. Moneyline + spread + total in the
+      <code>us</code> region is 3 credits per call, not 1. Books convert to region-equivalents at
+      10:1, and the US books are split across two billable keys &mdash; reaching both DraftKings and
+      theScore&nbsp;Bet needs <code>regions=us,us2</code>, which doubles every call to 6 credits.
+    </p>
+    <p>
+      Featured-market polling at 40s lands around <b>17,000&ndash;43,000 credits a month</b>, comfortably
+      inside the $59 / 100k tier. Player props do not fit: they are per-event only, so 14 games
+      &times; 5 prop markets at 60-second cadence is roughly <b>67,200 credits in a single Sunday</b>.
+      Poll props on a slow cadence or not at all.
+    </p>
+  </div>
+
+  <div class="note">
+    <h4>Closing line value is a storage problem, not a feed problem</h4>
+    <p>
+      The Odds API's historical endpoints carry a <b>10&times;</b> multiplier and are paid-only.
+      balldontlie states outright that it does <b>not</b> store historical prop data. ESPN gives you
+      opening <i>and</i> closing lines for free, from DraftKings, in the same scoreboard payload the
+      pipeline already fetches. If CLV is the goal, snapshot the line yourself on a schedule &mdash;
+      buying history back later is the expensive path on every provider here.
+    </p>
+  </div>
+</section>
+
+<section id="vibes">
+  <h2 data-n="04">Design vibes</h2>
+  <p class="lede">
+    One card per service, styled in that service's own visual language rather than this page's.
+    Every font stack and hex value was pulled off the live site during this research &mdash;
+    stylesheets, <code>@font-face</code> rules, and dominant colours sampled from the downloaded
+    brand marks. Provenance for each is in
+    <code>assets/research/&lt;service&gt;/palette.json</code>; where a host blocked us, the card
+    says which source it fell back to.
+  </p>
+
+  <div class="vibes">
+
+<figure class="vibe vibe-espn">
+  <div class="vibe-chrome">
+    <img class="vibe-mark" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAABX0lEQVR42u2awQ2CUBBER8IdO5ASOPwCLMUWrEDtxFLwzgE7oAOxAw9qYgj/rxcQd2YST5oY5r9dZhcAcq1SXzbAEcDB8fWfMuMHhXMAasuAynsJWAasPV98EAEJAhrnpw+gtkrA/elbBngn4CICDAMK9QD1AN8ZQATEDGDJACkCKE4/ZQBFBhABAHKrRpzqDEmSJGlkLd4AJZ4fr+oC0KVugzs4fxaA5/OOaBAqWOaAmAEVUw/IWPcAImDMAKY9QIwA76ffWwZ4J+AqAgwDvGeAVgQw94BATkCfzAEEGaCFsRStJvrT/ZIJyCeu/z4sfMOczUDA38wCU2SA+z8ZQE/Aeq7GIwKwsK3wKwPc5pi/f5UBQuR2nE+cALdLzgCfJUC3BxgaQDcFDg0oGOcAEcDSAwI5AckwlrHuAT4JoK3/twElawZgMcAkYMPeA0r1ANIMwGBA/827wjVr/UsAHvbjP1B5hHOKAAAAAElFTkSuQmCC" alt="" width="28" height="28" />
+    <span class="vibe-url">site.api.espn.com</span>
+  </div>
+  <div class="vibe-body">
+    <h4>ESPN</h4>
+    <p>Broadcast red on white, Helvetica-tight, built to be glanced at from a couch. The API returns no HTML at all — this palette comes off the logo bitmaps, because espn.com itself answers scrapers with a 202 stub.</p>
+    <a class="vibe-link" href="https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard">site.api.espn.com &rarr;</a>
+    <table class="vibe-table">
+      <caption>At a glance</caption>
+      <tbody><tr><th scope="row">Auth</th><td>none</td></tr><tr><th scope="row">Box scores</th><td>full</td></tr><tr><th scope="row">Odds</th><td>DraftKings only</td></tr><tr><th scope="row">Cost</th><td>$0</td></tr></tbody>
+    </table>
+  </div>
+  <figcaption class="vibe-spec">
+    <dl>
+      <div><dt>Type</dt><dd>&#x27;Helvetica Neue&#x27; / ui-monospace</dd></div>
+      <div><dt>Color</dt><dd class="swatches"><span class="sw" style="background:#ffffff" title="#ffffff"></span><span class="sw" style="background:#f7f7f8" title="#f7f7f8"></span><span class="sw" style="background:#1a1a1a" title="#1a1a1a"></span><span class="sw" style="background:#5c5c5c" title="#5c5c5c"></span><span class="sw" style="background:#c6212c" title="#c6212c"></span><span class="sw" style="background:#d6d6d8" title="#d6d6d8"></span><code>#c6212c</code></dd></div>
+      <div><dt>Box</dt><dd>18px 20px pad &middot; 2px radius &middot; 1px solid border</dd></div>
+      <div><dt>Source</dt><dd>logo bitmaps (a.espncdn.com) — site returns a bot stub</dd></div>
+    </dl>
+  </figcaption>
+</figure>
+
+<figure class="vibe vibe-nflverse">
+  <div class="vibe-chrome">
+    <img class="vibe-mark" src="data:image/png;base64,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" alt="" width="28" height="28" />
+    <span class="vibe-url">github.com</span>
+  </div>
+  <div class="vibe-body">
+    <h4>nflverse</h4>
+    <p>Quarto&#x27;s academic default, untouched: IBM Plex Sans over Fira Code, Bootstrap blue, generous line height. It looks like a stats paper because it basically is one.</p>
+    <a class="vibe-link" href="https://github.com/nflverse/nflverse-data/releases">github.com &rarr;</a>
+    <table class="vibe-table">
+      <caption>At a glance</caption>
+      <tbody><tr><th scope="row">Auth</th><td>none</td></tr><tr><th scope="row">Box scores</th><td>post-game</td></tr><tr><th scope="row">Odds</th><td>none</td></tr><tr><th scope="row">Cost</th><td>$0</td></tr></tbody>
+    </table>
+  </div>
+  <figcaption class="vibe-spec">
+    <dl>
+      <div><dt>Type</dt><dd>&#x27;IBM Plex Sans&#x27; / &#x27;Fira Code&#x27;</dd></div>
+      <div><dt>Color</dt><dd class="swatches"><span class="sw" style="background:#ffffff" title="#ffffff"></span><span class="sw" style="background:#f8f9fa" title="#f8f9fa"></span><span class="sw" style="background:#373a3c" title="#373a3c"></span><span class="sw" style="background:#6c757d" title="#6c757d"></span><span class="sw" style="background:#2780e3" title="#2780e3"></span><span class="sw" style="background:#dee2e6" title="#dee2e6"></span><code>#2780e3</code></dd></div>
+      <div><dt>Box</dt><dd>20px 22px pad &middot; 4px radius &middot; 1px solid border</dd></div>
+      <div><dt>Source</dt><dd>Quarto/Bootstrap stylesheet + og-image</dd></div>
+    </dl>
+  </figcaption>
+</figure>
+
+<figure class="vibe vibe-sportsdataio">
+  <div class="vibe-chrome">
+    <img class="vibe-mark" src="data:image/png;base64,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" alt="" width="28" height="28" />
+    <span class="vibe-url">sportsdata.io</span>
+  </div>
+  <div class="vibe-body">
+    <h4>SportsDataIO</h4>
+    <p>Bootstrap 3 that never got upgraded — Helvetica Neue, #337ab7 link blue, Glyphicons still loading. The electric #0b8ffd from the logo never makes it into the chrome.</p>
+    <a class="vibe-link" href="https://sportsdata.io/developers/api-documentation/nfl">sportsdata.io &rarr;</a>
+    <table class="vibe-table">
+      <caption>At a glance</caption>
+      <tbody><tr><th scope="row">Auth</th><td>API key</td></tr><tr><th scope="row">Box scores</th><td>full</td></tr><tr><th scope="row">Odds</th><td>add-on</td></tr><tr><th scope="row">Cost</th><td>tiered</td></tr></tbody>
+    </table>
+  </div>
+  <figcaption class="vibe-spec">
+    <dl>
+      <div><dt>Type</dt><dd>&#x27;Helvetica Neue&#x27; / Menlo</dd></div>
+      <div><dt>Color</dt><dd class="swatches"><span class="sw" style="background:#ffffff" title="#ffffff"></span><span class="sw" style="background:#f5f5f5" title="#f5f5f5"></span><span class="sw" style="background:#333333" title="#333333"></span><span class="sw" style="background:#777777" title="#777777"></span><span class="sw" style="background:#337ab7" title="#337ab7"></span><span class="sw" style="background:#dddddd" title="#dddddd"></span><code>#337ab7</code></dd></div>
+      <div><dt>Box</dt><dd>15px pad &middot; 4px radius &middot; 1px solid border</dd></div>
+      <div><dt>Source</dt><dd>Bootstrap 3 stylesheet + logo</dd></div>
+    </dl>
+  </figcaption>
+</figure>
+
+<figure class="vibe vibe-sportradar">
+  <div class="vibe-chrome">
+    <img class="vibe-mark" src="data:image/png;base64,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" alt="" width="28" height="28" />
+    <span class="vibe-url">developer.sportradar.com</span>
+  </div>
+  <div class="vibe-body">
+    <h4>Sportradar</h4>
+    <p>Enterprise navy with a single hot red. Source Sans Pro on a Bootstrap 5 grid, huge whitespace, no prices anywhere — the design&#x27;s whole job is to get you to a sales form.</p>
+    <a class="vibe-link" href="https://developer.sportradar.com/american-football/reference/nfl-overview">developer.sportradar.com &rarr;</a>
+    <table class="vibe-table">
+      <caption>At a glance</caption>
+      <tbody><tr><th scope="row">Auth</th><td>API key</td></tr><tr><th scope="row">Box scores</th><td>full</td></tr><tr><th scope="row">Odds</th><td>separate product</td></tr><tr><th scope="row">Cost</th><td>quote only</td></tr></tbody>
+    </table>
+  </div>
+  <figcaption class="vibe-spec">
+    <dl>
+      <div><dt>Type</dt><dd>&#x27;Source Sans Pro&#x27; / ui-monospace</dd></div>
+      <div><dt>Color</dt><dd class="swatches"><span class="sw" style="background:#ffffff" title="#ffffff"></span><span class="sw" style="background:#f4f5f8" title="#f4f5f8"></span><span class="sw" style="background:#212529" title="#212529"></span><span class="sw" style="background:#6c757d" title="#6c757d"></span><span class="sw" style="background:#e71621" title="#e71621"></span><span class="sw" style="background:#dee2e6" title="#dee2e6"></span><code>#e71621</code></dd></div>
+      <div><dt>Box</dt><dd>24px 26px pad &middot; 6px radius &middot; 1px solid border</dd></div>
+      <div><dt>Source</dt><dd>site stylesheet (--bs-*) + og-image</dd></div>
+    </dl>
+  </figcaption>
+</figure>
+
+<figure class="vibe vibe-stats-perform">
+  <div class="vibe-chrome">
+    <img class="vibe-mark" src="data:image/png;base64,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" alt="" width="28" height="28" />
+    <span class="vibe-url">www.statsperform.com</span>
+  </div>
+  <div class="vibe-body">
+    <h4>Stats Perform</h4>
+    <p>The only genuinely art-directed vendor here: deep aubergine, a custom face called Resolve, DM Mono for data, and a warm orange-to-red gradient lifted straight from their brand mark.</p>
+    <a class="vibe-link" href="https://www.statsperform.com/team-performance/football/">www.statsperform.com &rarr;</a>
+    <table class="vibe-table">
+      <caption>At a glance</caption>
+      <tbody><tr><th scope="row">Auth</th><td>contract</td></tr><tr><th scope="row">Box scores</th><td>full</td></tr><tr><th scope="row">Odds</th><td>separate product</td></tr><tr><th scope="row">Cost</th><td>quote only</td></tr></tbody>
+    </table>
+  </div>
+  <figcaption class="vibe-spec">
+    <dl>
+      <div><dt>Type</dt><dd>&#x27;Resolve-Regular&#x27; / &#x27;DM Mono&#x27;</dd></div>
+      <div><dt>Color</dt><dd class="swatches"><span class="sw" style="background:#ffffff" title="#ffffff"></span><span class="sw" style="background:#f4f4f4" title="#f4f4f4"></span><span class="sw" style="background:#210a36" title="#210a36"></span><span class="sw" style="background:#6b5e7a" title="#6b5e7a"></span><span class="sw" style="background:#8971e5" title="#8971e5"></span><span class="sw" style="background:#e2ddec" title="#e2ddec"></span><code>#8971e5</code></dd></div>
+      <div><dt>Box</dt><dd>22px 24px pad &middot; 0 radius &middot; 2px solid border</dd></div>
+      <div><dt>Source</dt><dd>site stylesheet (@font-face Resolve, DM Mono) + og-image</dd></div>
+    </dl>
+  </figcaption>
+</figure>
+
+<figure class="vibe vibe-pro-football-reference">
+  <div class="vibe-chrome">
+    <img class="vibe-mark" src="data:image/svg+xml;base64,PHN2ZyB2ZXJzaW9uPSIxLjEiIGlkPSJMYXllcl8xIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHg9IjAiIHk9IjAiIHZpZXdCb3g9IjAgMCA1MTMuOCA3MiIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI+PHN0eWxlPi5zdDB7ZmlsbDojNTk1OTVifTwvc3R5bGU+PHBhdGggY2xhc3M9InN0MCIgZD0iTTExMi44IDQ3LjZoMTIuOGM3LjEgMCAxMC42IDIuNCAxMC42IDcuMSAwIDMuMi0xLjggNS40LTUuNCA2LjRsNi45IDEwLjNoLTQuNGwtNi4zLTkuNmgtMTAuNHY5LjZoLTMuN2wtLjEtMjMuOHptMTIuNCAxMS4zYzQuNyAwIDctMS40IDctNC4yIDAtMS41LS41LTIuNS0xLjYtMy4ycy0yLjgtMS01LjMtMWgtOC44djguNGg4Ljd6TTE0MiA0Ny42aDIxLjh2Mi45aC0xOHY3LjJoMTcuMXYyLjloLTE3LjF2Ny45aDE4LjhsLS43IDIuOUgxNDJWNDcuNnpNMTY5LjcgNDcuNmgyMC43djIuOWgtMTYuOVY1OGgxNi4xdjIuOWgtMTYuMXYxMC41aC0zLjhWNDcuNnpNMTk1IDQ3LjZoMjEuOHYyLjloLTE4djcuMmgxNy4xdjIuOWgtMTcuMXY3LjloMTguOGwtLjcgMi45SDE5NVY0Ny42ek0yMjIuMyA0Ny42aDEyLjhjNy4xIDAgMTAuNiAyLjQgMTAuNiA3LjEgMCAzLjItMS44IDUuNC01LjQgNi40bDYuOSAxMC4zaC00LjRsLTYuMy05LjZoLTEwLjR2OS42aC0zLjdWNDcuNmgtLjF6bTEyLjUgMTEuM2M0LjcgMCA3LTEuNCA3LTQuMiAwLTEuNS0uNS0yLjUtMS42LTMuMnMtMi44LTEtNS4zLTFoLTguOHY4LjRoOC43ek0yNTEuMiA0Ny42aDIxLjd2Mi45aC0xOHY3LjJIMjcydjIuOWgtMTcuMXY3LjloMTguOGwtLjcgMi45aC0yMS45VjQ3LjZoLjF6TTI3OC41IDQ3LjZoMy43bDE4LjIgMTkuMVY0Ny42aDMuN3YyMy44aC0zLjdsLTE4LjItMTkuMXYxOS4xaC0zLjdWNDcuNnpNMzM2IDU0LjhsLTMuNy41Yy0uOC0xLjktMS45LTMuMy0zLjQtNC4xLTEuNS0uOC0zLjUtMS4zLTYuMi0xLjMtMi4yIDAtNC4xLjQtNS43IDEuMi0xLjYuOC0yLjggMS45LTMuNyAzLjMtLjkgMS40LTEuMyAzLjEtMS4zIDUuMXMuNCAzLjcgMS4zIDUuMSAyLjEgMi41IDMuNyAzLjMgMy41IDEuMSA1LjggMS4xYzIuOCAwIDUtLjQgNi42LTEuM3MyLjYtMi4zIDMuMS00LjJoMy45Yy0uNSAyLjctMiA0LjgtNC4zIDYuMy0yLjMgMS40LTUuNCAyLjItOS4zIDIuMi0zIDAtNS42LS41LTcuOC0xLjVzLTMuOS0yLjUtNS4xLTQuM2MtMS4yLTEuOS0xLjgtNC4xLTEuOC02LjZzLjYtNC43IDEuOC02LjZjMS4yLTEuOSAyLjktMy4zIDUuMS00LjQgMi4yLTEgNC44LTEuNiA3LjctMS42IDcuMiAwIDExLjYgMi42IDEzLjMgNy44ek0zNDAuNyA0Ny42aDIxLjh2Mi45aC0xOHY3LjJoMTcuMXYyLjloLTE3LjF2Ny45aDE4LjhsLS43IDIuOWgtMjEuOVY0Ny42eiIvPjxnPjxwYXRoIGNsYXNzPSJzdDAiIGQ9Ik0xMTIuOCAxaDE0LjRjMy44IDAgNi45LjUgOS4yIDEuNiAyLjMgMS4xIDMuOSAyLjYgNC45IDQuNXMxLjUgNC4yIDEuNSA2LjhjMCAyLjctLjUgNS0xLjUgN3MtMi43IDMuNS01IDQuNmMtMi4zIDEuMS01LjMgMS43LTkuMSAxLjdoLTUuOVY0MWgtOC41VjF6bTE0LjQgMTkuMmMyLjkgMCA0LjgtLjUgNS44LTEuNnMxLjUtMi42IDEuNS00LjZjMC0yLjEtLjUtMy42LTEuNi00LjUtMS0xLTMtMS40LTUuOC0xLjRoLTUuOXYxMi4xaDZ6TTE0Ni4xIDFoMTUuMWMzLjggMCA2LjguNSA5IDEuNiAyLjMgMSAzLjkgMi41IDQuOSA0LjMgMSAxLjggMS41IDMuOSAxLjUgNi4zIDAgMi41LS41IDQuNy0xLjYgNi42LTEgMS45LTIuNyAzLjQtNC44IDQuNWw4LjMgMTYuN2gtOS4ybC03LTE0LjhoLTcuOFY0MWgtOC40VjF6bTE0LjggMTguNWMyLjggMCA0LjYtLjUgNS43LTEuNSAxLTEgMS41LTIuNSAxLjUtNC41IDAtMS45LS41LTMuMy0xLjYtNC4yLTEuMS0xLTMtMS40LTUuOS0xLjRoLTYuMXYxMS43bDYuNC0uMXpNMTgyLjIgOS43YzEuNi0zLjIgMy44LTUuNiA2LjctNy4yUzE5NS4yIDAgMTk5LjIgMGMzLjkgMCA3LjMuOCAxMC4yIDIuNHM1LjEgNCA2LjYgNy4xIDIuMyA2LjkgMi4zIDExLjNjMCA0LjUtLjggOC4zLTIuNCAxMS41LTEuNiAzLjItMy44IDUuNi02LjcgNy4yLTIuOSAxLjctNi4zIDIuNS0xMC4zIDIuNS0zLjkgMC03LjMtLjgtMTAuMi0yLjQtMi45LTEuNi01LjEtNC02LjctNy4xLTEuNi0zLjEtMi40LTYuOS0yLjQtMTEuNHMxLjEtOC4zIDIuNi0xMS40em0xNi45LTIuMWMtMy40IDAtNS45IDEuMi03LjYgMy42UzE4OSAxNi44IDE4OSAyMXMuOCA3LjUgMi41IDkuOGMxLjcgMi40IDQuMiAzLjYgNy42IDMuNiAzLjMgMCA1LjgtMS4yIDcuNS0zLjYgMS43LTIuNCAyLjUtNS42IDIuNS05LjhzLS44LTcuNS0yLjUtOS44Yy0xLjYtMi40LTQuMS0zLjYtNy41LTMuNnpNMjMyLjEgMWgyNi41djcuMmgtMTcuOHY5LjloMTYuN3Y3LjJoLTE2LjdWNDFoLTguN1Yxek0yNjQuMSA5LjdjMS42LTMuMiAzLjgtNS42IDYuNy03LjJDMjczLjcuOSAyNzcuMSAwIDI4MS4xIDBzNy4zLjggMTAuMiAyLjRjMi45IDEuNiA1LjEgNCA2LjYgNy4xczIuMyA2LjkgMi4zIDExLjNjMCA0LjUtLjggOC4zLTIuNCAxMS41cy0zLjggNS42LTYuNyA3LjJjLTIuOCAxLjctNi4yIDIuNS0xMC4yIDIuNS0zLjkgMC03LjMtLjgtMTAuMi0yLjQtMi45LTEuNi01LjEtNC02LjctNy4xcy0yLjQtNi45LTIuNC0xMS40LjktOC4zIDIuNS0xMS40ek0yODEgNy42Yy0zLjQgMC01LjkgMS4yLTcuNiAzLjZzLTIuNSA1LjYtMi41IDkuOC44IDcuNSAyLjUgOS44YzEuNyAyLjQgNC4yIDMuNiA3LjYgMy42IDMuMyAwIDUuOC0xLjIgNy41LTMuNiAxLjctMi40IDIuNS01LjYgMi41LTkuOHMtLjgtNy41LTIuNS05LjhjLTEuNy0yLjQtNC4yLTMuNi03LjUtMy42ek0zMDUuNiA5LjdjMS42LTMuMiAzLjgtNS42IDYuNy03LjJDMzE1LjIuOSAzMTguNiAwIDMyMi42IDBzNy4zLjggMTAuMiAyLjRjMi45IDEuNiA1LjEgNCA2LjYgNy4xczIuMyA2LjkgMi4zIDExLjNjMCA0LjUtLjggOC4zLTIuNCAxMS41cy0zLjggNS42LTYuNyA3LjJjLTIuOSAxLjctNi4zIDIuNS0xMC4zIDIuNS0zLjkgMC03LjMtLjgtMTAuMi0yLjQtMi45LTEuNi01LjEtNC02LjctNy4xcy0yLjQtNi45LTIuNC0xMS40IDEtOC4zIDIuNi0xMS40em0xNi45LTIuMWMtMy40IDAtNS45IDEuMi03LjYgMy42cy0yLjUgNS42LTIuNSA5LjguOCA3LjUgMi41IDkuOGMxLjcgMi40IDQuMiAzLjYgNy42IDMuNiAzLjMgMCA1LjgtMS4yIDcuNS0zLjYgMS43LTIuNCAyLjUtNS42IDIuNS05LjhzLS44LTcuNS0yLjUtOS44Yy0xLjYtMi40LTQuMi0zLjYtNy41LTMuNnpNMzU1IDguN2gtMTIuMlYxaDMzLjN2Ny43aC0xMi4yVjQxaC04LjhWOC43aC0uMXpNMzc5LjcgMWgxNS45YzMuNCAwIDYuMi40IDguMiAxLjMgMi4xLjggMy41IDIgNC41IDMuNi45IDEuNSAxLjQgMy4zIDEuNCA1LjQgMCAxLjktLjQgMy41LTEuMyA1LS44IDEuNC0yLjIgMi42LTQuMSAzLjYgMi40IDEgNCAyLjMgNSAzLjlzMS41IDMuNSAxLjUgNS42YzAgMy41LTEuMiA2LjMtMy42IDguNS0yLjMgMi02LjEgMy4xLTExLjMgMy4xaC0xNi4yVjF6TTM5NSAxNy4xYzIuMiAwIDMuOC0uNCA0LjgtMS4yczEuNS0yIDEuNS0zLjYtLjUtMi44LTEuNS0zLjZjLTEtLjctMi44LTEuMS01LjItMS4xSDM4OHY5LjVoN3ptLjIgMTcuM2MyLjcgMCA0LjYtLjUgNS42LTEuNCAxLTEgMS41LTIuMyAxLjUtNC4xIDAtMS45LS41LTMuMy0xLjYtNC4ycy0yLjktMS40LTUuNC0xLjRoLTcuNHYxMWg3LjN2LjF6TTQyNS44IDFoMTAuNGwxNC4yIDQwaC05LjFsLTMtOC44aC0xNWwtMyA4LjhoLTguOGwxNC4zLTQwem0xMC4zIDI0bC01LjQtMTYuMy01LjMgMTYuM2gxMC43ek00NTQuMSAxaDguOHYzMi4zaDE4LjhsLTEgNy43SDQ1NFYxaC4xek00ODYuMiAxaDguOHYzMi4zaDE4LjhsLTEgNy43aC0yNi43VjFoLjF6Ii8+PC9nPjxnPjxwYXRoIGQ9Ik0xMDIuMyAwdjcycy0xNC45LTEwLTM3LTEwQzQ3LjUgNjIgMTAuMSA2NSAwIDE2LjFjMCAwIDYuOCA1LjkgMjAuNyA1LjkgMjIuNiAwIDI5LjktMjIgODEuNi0yMnoiIGZpbGw9IiNmZmYiLz48cGF0aCBkPSJNODUuNiAzM2wuNS0yLjRjLS45LS40LTEuOS0uNy0yLjgtMS4xbC0uNSAyLjVjLS43LS4yLTEuNC0uNS0yLjEtLjdsLjUtMi40Yy0uOS0uMy0xLjktLjYtMi45LS45bC0uNSAyLjVjLS43LS4yLTEuNC0uNC0yLjItLjZsLjUtMi41Yy0uOS0uMy0xLjktLjUtMi45LS43bC0uNSAyLjVjLS43LS4yLTEuNC0uMy0yLjItLjVsLjUtMi41LTEuNS0uMy0xLjUtLjMtLjUgMi41Yy0uNy0uMS0xLjUtLjMtMi4yLS40bC41LTIuNWMtMS0uMS0yLS4zLTIuOS0uNGwtLjUgMi41Yy0uNy0uMS0xLjUtLjItMi4yLS4zbC41LTIuNWMtMS0uMS0yLS4yLTMtLjJsLS41IDIuNGMtLjggMC0xLjUtLjEtMi4yLS4xbC41LTIuNGgtM2wtLjUgMi40aC0yLjNsLjQtMi4zYy0uNiAwLTEuMSAwLTEuNy4xLS43IDAtLjUtLjYtLjUtLjZsLjgtNC4ycy4yLS40LjUtLjRINTFsLjQtMi4zaDIuM2wtLjUgMi40YzEgMCAyIDAgMyAuMWwuNS0yLjRjLjcgMCAxLjUuMSAyLjIuMWwtLjUgMi40IDMgLjMuNS0yLjRjLjcuMSAxLjUuMSAyLjIuMmwtLjUgMi41YzEgLjEgMiAuMyAyLjkuNEw2NyAxOGMuNy4xIDEuNS4zIDIuMi40bC0uNSAyLjUgMS41LjMgMS41LjMuNS0yLjVjLjcuMiAxLjUuMyAyLjIuNWwtLjUgMi41YzEgLjIgMS45LjUgMi45LjdsLjUtMi41Yy43LjIgMS40LjQgMi4yLjZsLS4zIDIuMmMxIC4zIDEuOS42IDIuOS45bC41LTIuNGMuNy4yIDEuNC41IDIuMS43bC0uNSAyLjRjMSAuMyAxLjkuNyAyLjggMWwuNS0yLjQgMi4xLjktLjQgMi4zYy41LjIgMS4xLjUgMS42LjdzLjQuOC40LjhsLS44IDQuMXMtLjEuNC0uNi4zYy0uNS0uMi0xLS41LTEuNi0uN2wtLjQgMi4zYy0uNy0uMy0xLjQtLjYtMi4yLS45ek03Mi40IDExLjNjMTIuOSAyLjUgMjIuOCA4LjggMjkuOSAxNS44VjBDNzUuNyAwIDYwLjkgNS44IDQ5LjcgMTEuNWM2LjgtMS41IDE0LjUtMS44IDIyLjctLjJ6TTIxLjcgMzguNGM3LjYgNy40IDIzIDE3LjkgNDEuNCAyMS41IDE0LjUgMi44IDI4LjkuOCAzOS4yLTIuMlY1NWMtOS44IDIuOS0yNC4xIDUuMS0zOC43IDIuMy0yMS4zLTQuMS0zOC4zLTE3LjgtNDMuMS0yNC0uNS0uNi0uNy0xLjQtLjUtMi42LjItMS40LjctMi43IDEtMyAxLjYtMiAzLjktNC4yIDYuOC02LjQtMi4yLjUtNC41LjctNi45LjdDNi45IDIyIC4yIDE2LjEuMiAxNi4xIDcuNCA1MS4zIDI4LjkgNTkuNiA0NyA2MS41IDM0LjYgNTUgMjUuNiA0NC44IDIxLjcgMzguNHptNjUuOSAyN2M5LjIgMi45IDE0LjYgNi42IDE0LjYgNi42VjU5LjdjLTQgMi4xLTkgNC4yLTE0LjYgNS43eiIgZmlsbD0iIzAwODM0NSIvPjwvZz48L3N2Zz4=" alt="" width="28" height="28" />
+    <span class="vibe-url">www.pro-football-reference.com</span>
+  </div>
+  <div class="vibe-body">
+    <h4>Pro Football Reference</h4>
+    <p>Sports-Reference green-and-navy on cream, tables with hairline rules and no padding to spare. Maximum data per pixel — and, since it now sits behind a Cloudflare challenge, maximum friction per request.</p>
+    <a class="vibe-link" href="https://www.pro-football-reference.com/">www.pro-football-reference.com &rarr;</a>
+    <table class="vibe-table">
+      <caption>At a glance</caption>
+      <tbody><tr><th scope="row">Auth</th><td>Cloudflare</td></tr><tr><th scope="row">Box scores</th><td>post-game</td></tr><tr><th scope="row">Odds</th><td>none</td></tr><tr><th scope="row">Cost</th><td>$0</td></tr></tbody>
+    </table>
+  </div>
+  <figcaption class="vibe-spec">
+    <dl>
+      <div><dt>Type</dt><dd>Georgia / ui-monospace</dd></div>
+      <div><dt>Color</dt><dd class="swatches"><span class="sw" style="background:#fffae5" title="#fffae5"></span><span class="sw" style="background:#ffffff" title="#ffffff"></span><span class="sw" style="background:#043462" title="#043462"></span><span class="sw" style="background:#59595b" title="#59595b"></span><span class="sw" style="background:#008345" title="#008345"></span><span class="sw" style="background:#c8c2a8" title="#c8c2a8"></span><code>#008345</code></dd></div>
+      <div><dt>Box</dt><dd>10px 12px pad &middot; 0 radius &middot; 1px solid border</dd></div>
+      <div><dt>Source</dt><dd>sports-reference.com stylesheet + PFR logo SVG (PFR itself: HTTP 403)</dd></div>
+    </dl>
+  </figcaption>
+</figure>
+
+<figure class="vibe vibe-action-network">
+  <div class="vibe-chrome">
+    <img class="vibe-mark" src="data:image/png;base64,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" alt="" width="28" height="28" />
+    <span class="vibe-url">www.actionnetwork.com</span>
+  </div>
+  <div class="vibe-body">
+    <h4>Action Network</h4>
+    <p>Bet-slip green on near-black, system UI at small sizes, everything in dense rows. Reads like an app someone ported to the web — which is exactly what happened to their bet tracker.</p>
+    <a class="vibe-link" href="https://www.actionnetwork.com/nfl">www.actionnetwork.com &rarr;</a>
+    <table class="vibe-table">
+      <caption>At a glance</caption>
+      <tbody><tr><th scope="row">Auth</th><td>session cookie</td></tr><tr><th scope="row">Box scores</th><td>partial</td></tr><tr><th scope="row">Odds</th><td>yes, internal</td></tr><tr><th scope="row">Cost</th><td>n/a</td></tr></tbody>
+    </table>
+  </div>
+  <figcaption class="vibe-spec">
+    <dl>
+      <div><dt>Type</dt><dd>-apple-system / ui-monospace</dd></div>
+      <div><dt>Color</dt><dd class="swatches"><span class="sw" style="background:#000000" title="#000000"></span><span class="sw" style="background:#1d1d25" title="#1d1d25"></span><span class="sw" style="background:#f7f8fd" title="#f7f8fd"></span><span class="sw" style="background:#a4a4aa" title="#a4a4aa"></span><span class="sw" style="background:#00c358" title="#00c358"></span><span class="sw" style="background:#2c2c36" title="#2c2c36"></span><code>#00c358</code></dd></div>
+      <div><dt>Box</dt><dd>14px 16px pad &middot; 8px radius &middot; 1px solid border</dd></div>
+      <div><dt>Source</dt><dd>site stylesheet (--bam-*, --tan-font-base) + og-image</dd></div>
+    </dl>
+  </figcaption>
+</figure>
+
+<figure class="vibe vibe-the-odds-api">
+  <div class="vibe-chrome">
+    <img class="vibe-mark" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAA1CAYAAADxhu2sAAADJklEQVR42u2aS2gUQRCGv5msm4BoJOagJsY3IhFBQSQHbyKCIIKIePEiXsSzelFEPIqQm+DJqyCIeBUUEUU8KEQ9mUh8IbKoaB6bfbQHq6Eo9pHEzGZb+4dhZ3u6Zqeq/urqqlmIiIiIiIiIiIj4P5Es4u8m6vedOv5ppEBHg+sdTa4HywDv7ap87wIGgOUy/gv4DHyvMz94r3sMATeA18Ckov0MMAbcBg7VkQ1a+ZXATfGoq3HY8XvAutCN4B98AHgpilWMstPiff+9BJTlfBTYEqoREnnoZcBzpawDpoBrwD5gK7AdOArcMiHhgFdAt9wrCdH7w0b5d8DuBnLHgaKwpCgyV1WGCEr5QfFkWag/AeySa0tEoVSOnBwAJ0VxL/cztPXAe+q68f4VpXy9sPFGuC8yngXnQmGBj9Me4JNa4X8A/crj9eANcEStBVXgkVpXgvD+AbOY3Z3lxitRafOrWhQLwJoswiDNiAFD8lmRzwdyrRmFncwrACMyVhZGbcxi95oVpQYNI97ModhJlQxqO7wp623qQni/LOerVUzPAOPKw7Nl0Xsjs6rdDeCRlyLHKzMtlGaO5e43I9MTSgjkgU4T15V53GfSKJwPhQFJRvnahWKAstD+bw3SZRSfCMUAM4q+SDismEf89hqZQhZMSBeYoqnEe0HtAzpVVkjmQPUNRmY0BAb4+42rcADYbJqgjeDz/g6VSkvA2xAM4L33wozvUXVBs+dxwFpgmxobUwyohmCAp/KgvrjZDyxVW91mm6CD0kwpqq30lCymrt2rwURy9ogYwRdEJ0zFVy995qQT5FtkVWBviP2A86akHVMre16VxqlSHOCSqSQfzqKMbksW9AIfRfmSKPMY6Gsge1p1g0qSRYZCbIx6FhwzCjnJEGeBndIkWQ8cBu7UmHshtH5gLSNcVKVw0fT/dRvcmRb5sLpPQqAvXr0RTpkOT70XJE7mnVG0D1L5Wqm2D7gMPDOvxZzs858IW/paGfNJC8OhohTrl0Wymz9t7y/AB5XjO+ZZQrc9E3JN5uRavdoni5gm/bkzf5KIiIiIiIiIiIhoBX4Dkgbsx5xvbjkAAAAASUVORK5CYII=" alt="" width="28" height="28" />
+    <span class="vibe-url">the-odds-api.com</span>
+  </div>
+  <div class="vibe-body">
+    <h4>The Odds API</h4>
+    <p>A docs site and nothing more: Open Sans, one link blue, Source Code Pro for the sample payloads, white everywhere. The pricing table is the most designed thing on it.</p>
+    <a class="vibe-link" href="https://the-odds-api.com/liveapi/guides/v4/">the-odds-api.com &rarr;</a>
+    <table class="vibe-table">
+      <caption>At a glance</caption>
+      <tbody><tr><th scope="row">Auth</th><td>API key</td></tr><tr><th scope="row">Box scores</th><td>scores only</td></tr><tr><th scope="row">Odds</th><td>full</td></tr><tr><th scope="row">Cost</th><td>tiered</td></tr></tbody>
+    </table>
+  </div>
+  <figcaption class="vibe-spec">
+    <dl>
+      <div><dt>Type</dt><dd>&#x27;Open Sans&#x27; / &#x27;Source Code Pro&#x27;</dd></div>
+      <div><dt>Color</dt><dd class="swatches"><span class="sw" style="background:#ffffff" title="#ffffff"></span><span class="sw" style="background:#f6f8fa" title="#f6f8fa"></span><span class="sw" style="background:#2c3e50" title="#2c3e50"></span><span class="sw" style="background:#6a7785" title="#6a7785"></span><span class="sw" style="background:#3883fa" title="#3883fa"></span><span class="sw" style="background:#eaecef" title="#eaecef"></span><code>#3883fa</code></dd></div>
+      <div><dt>Box</dt><dd>16px 18px pad &middot; 3px radius &middot; 1px solid border</dd></div>
+      <div><dt>Source</dt><dd>site stylesheet + og-image</dd></div>
+    </dl>
+  </figcaption>
+</figure>
+
+<figure class="vibe vibe-oddsjam">
+  <div class="vibe-chrome">
+    <img class="vibe-mark" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAFf0lEQVR42tWaW2wUZRTHf+eb3Z12t+0CbSktpaxFAYEUbxhQMfHBawhe44MxYHxTY3zTYIxRE2NifNIHjbcHY2LQKFFjvIREE6M+SEREhEKhtF1oCy30zu7OzHd8WAOopTt0FmXP85n5vt85853/mTMj/NsSuE0tVcn4fSqyAeVKY6SO/8HU6oQKv4naz3PW38roYD+QO9tH/nbFnAWLXYk9ISIPikgjF5Gp6gnQj9TnlfxYtutfAInalqUSdz4UWCEicS5CU1Uf2GcL3v2FiYG9ZwCqWxe61fKFEVlNBZiqPZgLzC2M9h5yANetqXtKRDaKiENlWDompP1c9XbBbcpUpeI/iZgFVJCp6nCQ15tMVTJ+X6VtHkBE6h2Xu42KuZMKNVW53aDaUakAAitj5RIpBYi74MTBCVELTk0U/RLVEATg5SHw/iFMJQCM1MYib7wqhW3vwC5egc5vQ9MNaLIWxMyUe+IfvITNrCJYtwGZHEeO92EO7cL5/Qdkaiz0+pEAghXr8G7ehDa3QyoNxoSPXuBjl6xGFy0vZm/ZNQRrbsVff5D4tldxDv12YQAUoHYu3sZHCa6b5fmfGkdODqL1LWeXFahKoe0deA+9gLy9BdO7t+StzHkDNLdT2Pw8wdoNs86c6euEeAJtaJ1+jfoWCpufwzYsLC+ATTdSePhF7PJrwcxetCW7HzunCVK15w7UgkvwNj5WPgB1k3ibnkVblsx8QMNkILsfXbSs5H3s0quxrUujA6gYgjW3YtvL0Ov5HmagG5tZWdrXTWIzq8qQgWQt/toNxTof1cZPwNQ4tm15ad94HK1vjg4QZFahmVXFShFVPUeHAEUXtIfSWo3FywBwwz1l2TyAjBxDG1vDaYa1yNRENB3QWAK7fE34HU6M4PyyHRkbmlZEzOE96Py2kOelgJwciAjQfAkkqsK0hshAN4k3n8Qc653RtXDFTeEBho5Ee4Rs2+Whq4vz42fIsb6ZOY2DLrzsPwQoUYfPhDWHye5His3GuQFSabQmHe68TI79dehnCaAIduGlZYtWcXTTiCaqQwueqI2QgZo5UDM3XLSmxpCRYyUbQduUgeqacAA9f0RrJTTdEDpacqQLscHMAOlG/PX3hCsKgPTsidZO65xGcEOmu28ftnUZdulV02qGrWsguPYOqJsXvuXIHogIUFcfOlomewD/+rsIbry3LIJn9u9AvHzEbtRNghMLp5gD3WhDS9le2J2fvwoHOvPGAlAt/awe70MCv2TjFXJWggwcxnTtLAPA6BAUTpUG6OtEq1LovDIABB7Ojq+RkePRAcxAd6gJgcl2ok2ZsrTbcuQAzveflKxo4QAGezAHd5VMucl2YTMrIj86DPeTePtpzMTJ8Ie9ZJn67HXkaNe5HXKTyMl+7OIIANYi3btx33oKc6L//KpVSYcT/STeewEZ7DnHC8pxyOfCN33TrbHrWxLvPYf0dZ73tbGwIpV49xkKD2wpDrHi7mmxktEhSNUV247wH78gfwoZ7if25bvEdm6fNXws/CShE/e1xwlWXodt70DnL0Zr6pCDu1DjFKM301ub/vV2NT6MGezF9O7FdO9GJkejHfrq+jY978lcLFGcosUTSG4KCqeKql1qMd8rDnHzU4gq5TCpmrtoXIzUUIGmVieNivxKhZrCbiMafEHl2jcmZ/2tqjpUeZ+X7IhV+4lhdPCoWn1HVb0K+kIZoLLNG/G7DJDPq/cG0FlB8e+1nv8yDE4WZ+T5yRHjJL8TR24D6kQijp8vZOTRnkC50xs7+gfA6SF/UJgY8t3kpw5GgEtFJHUR/uzxvvo8UhjN7pv+bxUAmpPxlLPEcblbkVtE6RAjtf9XncewRy1fW7UfeyO5QzA8frbTn2BKOU3ZxdaTAAAAAElFTkSuQmCC" alt="" width="28" height="28" />
+    <span class="vibe-url">developer.oddsjam.com</span>
+  </div>
+  <div class="vibe-body">
+    <h4>OddsJam</h4>
+    <p>Deep navy #00193e with a cyan wash, Helvetica Neue, and Font Awesome Pro icons on every row. The docs are a polished SaaS product; the marketing site returns 403 to anything without a browser.</p>
+    <a class="vibe-link" href="https://developer.oddsjam.com/">developer.oddsjam.com &rarr;</a>
+    <table class="vibe-table">
+      <caption>At a glance</caption>
+      <tbody><tr><th scope="row">Auth</th><td>API key</td></tr><tr><th scope="row">Box scores</th><td>scores only</td></tr><tr><th scope="row">Odds</th><td>full</td></tr><tr><th scope="row">Cost</th><td>quote only</td></tr></tbody>
+    </table>
+  </div>
+  <figcaption class="vibe-spec">
+    <dl>
+      <div><dt>Type</dt><dd>&#x27;Helvetica Neue&#x27; / &#x27;SF Mono&#x27;</dd></div>
+      <div><dt>Color</dt><dd class="swatches"><span class="sw" style="background:#ffffff" title="#ffffff"></span><span class="sw" style="background:#deeaf1" title="#deeaf1"></span><span class="sw" style="background:#00193e" title="#00193e"></span><span class="sw" style="background:#6b8392" title="#6b8392"></span><span class="sw" style="background:#00a5e7" title="#00a5e7"></span><span class="sw" style="background:#c3d5e0" title="#c3d5e0"></span><code>#00a5e7</code></dd></div>
+      <div><dt>Box</dt><dd>18px 20px pad &middot; 6px radius &middot; 1px solid border</dd></div>
+      <div><dt>Source</dt><dd>developer.oddsjam.com stylesheet + favicon (oddsjam.com: HTTP 403)</dd></div>
+    </dl>
+  </figcaption>
+</figure>
+
+<figure class="vibe vibe-vegasinsider">
+  <div class="vibe-chrome">
+    <img class="vibe-mark" src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTc1IiBoZWlnaHQ9IjE1MSIgdmlld0JveD0iMCAwIDE3NSAxNTEiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxwYXRoIGZpbGwtcnVsZT0iZXZlbm9kZCIgY2xpcC1ydWxlPSJldmVub2RkIiBkPSJNMTI5LjAyNSA2LjkzNjY4TDEzMy4wMTUgMC4wMjQ0MTQxSDE3NC4xNDNMMTY5LjM5NiA4LjIzOTIxTDE1OC4xMjggMjcuNzUzNEgxMTcuMDAzTDEyMi42MzQgMTguMDAxOUMxMjIuODU1IDE3LjYyMjYgMTIzLjA5MSAxNy4yNTI4IDEyMy4zMjYgMTYuODg1MUMxMjMuMzkyIDE2Ljc4MTQgMTIzLjQ1OCAxNi42Nzc5IDEyMy41MjQgMTYuNTc0NVYxNi40NjQxTDEyNy4wMzMgMTAuMzgyN0wxMjkuMDI1IDYuOTM2NjhaTTk3LjgyNTcgNjAuOTY1N0wxMDIuNTY5IDUyLjc0ODZMMTExLjcxMiAzNi45MTIzSDE1Mi44MzFMMTMzLjU2IDcwLjI5MTZMODcuMDIyOCAxNTAuOTAyTDYxLjcyMjEgMTA3LjA3NUw2MS43MjY2IDEwNy4wNjdMNTkuMjY1NiAxMDIuODA0QzYwLjA3NjIgMTAyLjg5OSA2MC44OTAxIDEwMi45NSA2MS43MjMyIDEwMi45NUM2Mi41NTI5IDEwMi45NSA2My4zNzQ3IDEwMi45MDMgNjQuMTg0MSAxMDIuODEyQzY5LjY0MTkgMTAyLjE5MyA3NC41MzU3IDk5LjUxNjggNzcuOTk3NCA5NS4zMDUyTDgyLjAxMDggODguMzUxM0w4Mi4wMTg3IDg4LjM0NjhMODYuNzU4MiA4MC4xNDIxTDg2Ljg2MTggNzkuOTYzMUw5Ny44MjU3IDYwLjk2NTdaIiBmaWxsPSJ1cmwoI3BhaW50MF9saW5lYXJfMzAxXzc1NCkiLz4KPHBhdGggZD0iTTcyLjY4MzUgODguMTA4OUw3Ny4yOTI0IDgwLjEzODRMODkuNjAxNyA1OC44MTUxTDEwNC44NDQgMzIuNDE0NUwxMTcuNTU4IDEwLjM4NDJMMTE4LjEwMiA5LjQ1NTRMMTIzLjUzOSAwLjAyODE0NDRIMTIzLjU0N0wxMjMuNTU1IDBIMTAzLjY4MUg4OS43NDM1Qzg5LjQ2MjEgMCA4OS4xNzk1IDAuMDA3ODgwNDQgODguOTAyNiAwLjAyODE0NDRIODIuNDI0OUw3Ny42OTc3IDguMjE3MDRMNzEuNjI4NyAxOC43MzE4TDU5LjI4NjggNDAuMTE0OEw1My44NzI5IDQ5LjQ5NDhMNDUuOTMzOSA2My4yNDg0TDQ1LjkyNjEgNjMuMjQwNUw0My4xNTU1IDU4LjQzMDFMMzUuMTgwNSA0NC42MjAyTDI1LjI3NzEgMjcuNDZMNDEuMTIzNSAwLjAwNzg4MTI2SDkuNDE5MzdWMEg2LjAxMzlMNi4wMDYwMiAwLjAwNzg4MTI2SDBMMS41MDg1NCAyLjYwNzNMMS40NDg4OCAyLjYzNTQ0TDI0LjAwNzIgNDEuNzAyMkwyNS42NTg3IDQ0LjU2MDVMNDEuMTc4NyA3MS40NDk3TDQyLjMzMzcgNzMuNDUwMkw0NS45MTgyIDc5LjY1NDNMNDUuOTI2MSA3OS42ODI1TDQ4LjgyMzggODQuNjk1Nkw1MC44NjAzIDg4LjIyMDRDNTUuNzY5OCA5Ni41MzY1IDY3Ljg0NDkgOTYuNDkyNiA3Mi42ODM1IDg4LjEwODlaIiBmaWxsPSJ1cmwoI3BhaW50MV9saW5lYXJfMzAxXzc1NCkiLz4KPGRlZnM+CjxsaW5lYXJHcmFkaWVudCBpZD0icGFpbnQwX2xpbmVhcl8zMDFfNzU0IiB4MT0iMTA4LjQwNCIgeTE9IjQuNTQ1NDkiIHgyPSIxNDcuOTI0IiB5Mj0iMTM0Ljc4NiIgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2UiPgo8c3RvcCBvZmZzZXQ9IjAuMDAzNjg0MzQiIHN0b3AtY29sb3I9IiM2NDQ4MDAiLz4KPHN0b3Agb2Zmc2V0PSIwLjE0Njc2OSIgc3RvcC1jb2xvcj0iI0EzNzUwMCIvPgo8c3RvcCBvZmZzZXQ9IjAuNDI0MTc5IiBzdG9wLWNvbG9yPSIjRjNEODkxIi8+CjxzdG9wIG9mZnNldD0iMC43NDUzODkiIHN0b3AtY29sb3I9IiNCRjg5MDAiLz4KPHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjNjQ0ODAwIi8+CjwvbGluZWFyR3JhZGllbnQ+CjxsaW5lYXJHcmFkaWVudCBpZD0icGFpbnQxX2xpbmVhcl8zMDFfNzU0IiB4MT0iNTIuODQ5NiIgeTE9IjIuODI5NTMiIHgyPSI2OC4wOTI0IiB5Mj0iODkuMTU0OSIgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2UiPgo8c3RvcCBvZmZzZXQ9IjAuMDAzNjg0MzQiIHN0b3AtY29sb3I9IiM2NDQ4MDAiLz4KPHN0b3Agb2Zmc2V0PSIwLjE0Njc2OSIgc3RvcC1jb2xvcj0iI0EzNzUwMCIvPgo8c3RvcCBvZmZzZXQ9IjAuNDI0MTc5IiBzdG9wLWNvbG9yPSIjRjNEODkxIi8+CjxzdG9wIG9mZnNldD0iMC43NDUzODkiIHN0b3AtY29sb3I9IiNCRjg5MDAiLz4KPHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjNjQ0ODAwIi8+CjwvbGluZWFyR3JhZGllbnQ+CjwvZGVmcz4KPC9zdmc+" alt="" width="28" height="28" />
+    <span class="vibe-url">www.vegasinsider.com</span>
+  </div>
+  <div class="vibe-body">
+    <h4>VegasInsider</h4>
+    <p>Saira Condensed in casino gold on white — the one site here with an actual display face. Verdana fallbacks and #f4c255 highlight bars give it a print-tipsheet feel.</p>
+    <a class="vibe-link" href="https://www.vegasinsider.com/nfl/odds/">www.vegasinsider.com &rarr;</a>
+    <table class="vibe-table">
+      <caption>At a glance</caption>
+      <tbody><tr><th scope="row">Auth</th><td>none/scrape</td></tr><tr><th scope="row">Box scores</th><td>none</td></tr><tr><th scope="row">Odds</th><td>HTML only</td></tr><tr><th scope="row">Cost</th><td>$0</td></tr></tbody>
+    </table>
+  </div>
+  <figcaption class="vibe-spec">
+    <dl>
+      <div><dt>Type</dt><dd>&#x27;Saira Condensed&#x27; / ui-monospace</dd></div>
+      <div><dt>Color</dt><dd class="swatches"><span class="sw" style="background:#fefefe" title="#fefefe"></span><span class="sw" style="background:#f2f2e7" title="#f2f2e7"></span><span class="sw" style="background:#333333" title="#333333"></span><span class="sw" style="background:#767676" title="#767676"></span><span class="sw" style="background:#bf8900" title="#bf8900"></span><span class="sw" style="background:#e5e5e5" title="#e5e5e5"></span><code>#bf8900</code></dd></div>
+      <div><dt>Box</dt><dd>14px 16px pad &middot; 2px radius &middot; 2px solid border</dd></div>
+      <div><dt>Source</dt><dd>site stylesheet (@font-face Saira Condensed) + favicon SVG</dd></div>
+    </dl>
+  </figcaption>
+</figure>
+
+<figure class="vibe vibe-pikkit">
+  <div class="vibe-chrome">
+    <img class="vibe-mark" src="data:image/png;base64,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" alt="" width="28" height="28" />
+    <span class="vibe-url">pikkit.com</span>
+  </div>
+  <div class="vibe-body">
+    <h4>Pikkit</h4>
+    <p>Webflow-built midnight blue with a soft periwinkle accent and Manrope headings. Consumer-app polish, big rounded cards — and no developer surface anywhere on it.</p>
+    <a class="vibe-link" href="https://pikkit.com/">pikkit.com &rarr;</a>
+    <table class="vibe-table">
+      <caption>At a glance</caption>
+      <tbody><tr><th scope="row">Auth</th><td>app login</td></tr><tr><th scope="row">Box scores</th><td>none</td></tr><tr><th scope="row">Odds</th><td>none</td></tr><tr><th scope="row">Cost</th><td>n/a</td></tr></tbody>
+    </table>
+  </div>
+  <figcaption class="vibe-spec">
+    <dl>
+      <div><dt>Type</dt><dd>Manrope / ui-monospace</dd></div>
+      <div><dt>Color</dt><dd class="swatches"><span class="sw" style="background:#11151b" title="#11151b"></span><span class="sw" style="background:#13182b" title="#13182b"></span><span class="sw" style="background:#ffffff" title="#ffffff"></span><span class="sw" style="background:#9aa4b8" title="#9aa4b8"></span><span class="sw" style="background:#8bb9fe" title="#8bb9fe"></span><span class="sw" style="background:#232a3d" title="#232a3d"></span><code>#8bb9fe</code></dd></div>
+      <div><dt>Box</dt><dd>20px 22px pad &middot; 14px radius &middot; 1px solid border</dd></div>
+      <div><dt>Source</dt><dd>Webflow stylesheet (@font-face Manrope, Inter) + og-image</dd></div>
+    </dl>
+  </figcaption>
+</figure>
+
+<figure class="vibe vibe-juicereel">
+  <div class="vibe-chrome">
+    <img class="vibe-mark" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAPgElEQVR42u2beZAc1X3HP7/X3TM7o93V6haSWCEsgyTELU4JCXEoSRERbAuiGFewsUE2ZTu4XCkwtisyBHP8Yag4DpXESapcIVwGApjCGAOJFCMkBcxhhIUkMEayDnTtOTsz3e+XP17vXNtzrFbmH2dUre3ud/3e69/5/b0ne786RfkD/vn8QU8ffEEBqXhV+zz8rvInCV21Uqe2bqt1tEndSrp1VDTGHKDVY6Ej+9IGHUlC3yP6TFgfbYH9RKmisd64EtfR2nYN2qD4dRdIGyxcs4VtpaxV0Wu1bz2ycX23cAoi9VsoI8sr2zRsT+t1KutC6/UraaxHV+193L9femjGjknlle80lkGRmoGUlscYwatSPUFapHEEXXXmoBrrADkK6tT4EBWhkEdtsfROvAD8FCIGtVHjSYhx9dS6vmyEqiJiwA/AeK65RkfZCqgkWABN0Og6UqvFX1v79iOZTryZCzBdM0HA9u7DHtyJ7dmD2hBJd0CQBrWunY1cf8YDjdChPrSYBz+NtE/EZMaD8dHiINp/AB045BY10+naaZRgJbQxvTXz81vTeHXKRcC6r5X5oxvJrLgRM3FWdVMbEf7mVfKbHiS/6cfYQzuR9Dg0LCBtHe4r9x+CIENw/DmkTruMYP7FeDPmI6lMuZuDH1B8Zz35DQ9Q2PKCk7b0OIiisgU4Au0o+780UZtatHocK4It5Oi49p9Jn/dpilteIL/xQez+91FVzPhp+MeeSuqUP8abtRAt5Mj95E7yGx/CTJlD+M56CNpIn30lmUu+gjdzAQDRri2Ev30de+B9t1DZLvxZC/HnnoukshTfWc/A/V8j/OANJNsVc9KR/eRAzQLUX60ao2s8tP8A6eVraL/mHxh4+GZyT92FeB54nqtjQ9RaxE/hH3cGmT/5OqlFn0IHDyPZLvKbHsafdQrejHlEe7aRX/cvFF5/mmjfu1DIVbOw8ZDOqaTP/CTZq+4AP0XfvVdQfOs5ZNxEsGEDcUhyqtxfOfDFCUfmDIug+QG61m4ChMPfPt19DWOcjA8PKE6ba64HjM+E21/HTP0YRCF4PrZnDwP/uobCr1+EXB+ks0jQBmIqrEn8X1TADvTiTT2OzhufxJt1Ej1/u4Tw/deQVLZi3FHobmlghOo/O9mXVAbTdQzRrl9BFCF+yukEBYn/oQr5AcjnCU5c6iYfa3yiEKIimutBoiJm/HQkyLg2NorLQ7AhYiPE+Hhd09BDu+j7/iqiXVvwp8+DsJDoM0grhvbgmglan1UquqlyXQWMQQcP03nz85hpH6fnm6eivfuhLeOaWjc5jIc38yTaLrmB9PI12J49IILpnAZhEfyAcOs6em9fhnRMdkqtYbzgxIEw7xZRLXhBxRSSLJmMpH9YBA6u6ToyETAeOtRHcMISOm5+Hrt3O7knvku46y2ICpiOKXizTyd1xkr8E5YAkH/hPnJP3YXpmEzHt9Y7LR8VwfgM3n8jQ8/+HdI5xb1rQQRH51jV6aa0ADqyT5EKJ0xcfEHFOzEGzfURnLyC7GfuxUybO2KAaPdWChv+g8JL9xPt3YHJdKCFHOnla2hb+Q1M1/RYpIr03Xkp4faXkex4NApLY1a6KVU0iiAxMYk0SpLlr1mAQ9ePrxO2SR1W1JGckOtFUlm8OYvwZi5AvAB7+HdEO39FtG8H5IeQdBZSGceyxkMP7Sc4fQXtf/1TJ++ej927nd5bFzsL4PmxUpMWHbRmz8ntKxZgLHzkgYbo0KBTWsPsE6SdRo89PbRC3XgptP8A7X/1GMGZf+YUmZ+i8PKDDPzg00j7hDHZ99atgMZsE/89ostGiBpMphPTPgnTMQkzbgImyCCqSBQiVl3dOFSXKESMz9BP7nQy7/kQhaTOXU166eeg7yBi/KpxxkRjwoWCiaOLmEG0hk205qLmfU1dG4EtxoFMGPvqddxSjZC2dqJtL1Pc9KjT6CioJbP6bqdP8oNlRVRiYq1DVxJ9mkBv+VlQTLmu1vlbeWnNe615r8n0VZVV3FsLfsDQM99zImCc3EvHJDJXf88FRkidsWlAR1JZcrmRisj7I7/UYtrasTv+l+IrT5S8RmxEcMZKUuethv5DThTEDLtWR/UyI79evVXUOhxQ72pWHl/WOTaFn/19HCabktPSduXtSPskiApQGIzFqsV+W6ITTOOwVxuEx2MBCqvDZcmMI9z6C8K3XogNvfMkzZTjaFv1HfRgP96JS5HsBKdjWv41o1MrRKBSQzJGDcto6whiLcWf3xfTFbu3NiT85U/x5swne+OjeMcudD6FeGOnK74vi0DlammrGjbBWkgc6DTQvtUYn5a54I3nsDu3gBegQ30M3r6CaMdmsjc97dCm7tMgqgRXm9BS+15r76usQAVwmJQD0AbiUCoSCItof085NNWEtpoAVno+2t9HceMj2A/eZOBrC7GHP6T9js2YqXNAFdN9cqwfbE37RsAtyZarMhyuEgPqsDBNWEsMkh/Cm7GAzPU/dJrbKnVFrJYdrcV0dFJ85h4Gv7EIb8ES2u/YiEw8thTumgkzEc8r91tLWz26Ey3QsAg0cnRUW3COtBSlaLFIcOmXCJZ/HjNrIVoYTBAHrfbPjedAlKEBtL8XM7Gbtq8+QOYr98MwyOE56FKyE5xrrVGDPmtFuOaqKfMbprwq0ZhGml0E8jnM9Dn456xyMt0xGYmS8gEOSwCgmId8Hoxg5pxOcPEagqV/CUGbc5JEyjE/QKYD/BQUh1z8kWh1tHn2TmszQ2OOKDw0XyBYfp2DxQCJiiUcorRIxoOwgA70u1eTZuKdvRx/8Wr8k1c47D82jRhvRNQnQRrxfCjEBnyUYZwkp8eTgE9pkKWtuRcD+SHM1G6Ci68vfW0d6C1DYsaDYh7N9SPjJ+Cffzn+2Z/Em7cU6ZqeuKCJP89HxEMrlVpD/F9plqH1q6etaMWkq5tV64hSmTGQyxNccwvSMclNOCrCwKEyOtzXi0w8huBPv0Cw7LPItOPLPeX6EGOItm1ED+zEP/8q8NPJeUGtMWWVdCTg/5Vlycuj+KLV7CGjABbFD9C+HrwzLiW46PMl1tWhfhjqcWjOYC/BxV8gWPU3yKRZpYlo336KD32bcPMTiFjHHZ1T8RatRPx0cjI1BknF2ioRkBbZPmlufmMEpd6mB43zAj2YybNI3/AjF8lZB4Zo/0G09yD4GdI3/BP+4tXxBIpOZApD5O9ZRbhpHf6ixUjnFKJfPg2+D4M9MK4rAdwUFw+IQTqnov37Y0XYgMYWUj1GVEvgAKoMP4uWbS0lAMGVO2IKeLMW0nbrehCD7nvPLQJA74eghrabnnSTt2E5H2g8wg0PEW1eh3/ymbStXU/664/jnXQx9q3tRK89E4fAIzF+HexF/AzeGZdDIV+ODiuc0BKNVTQ3BERGJqOTNnlU/RUDQwX85dege3aQX3uhs/nDzXr24HUvwCy4MBYLPzZnsRdXGEIC0EO/Q3ducfpt3jLM5E7MsQtHMuywYh3scYjz/AsQL1Xl1UnFxpZGIl3LKwmxQM1zbQiJOjnMtlF8ZC35tZeg/fswk46t+FI9kGmvADXL7i5i8M79FGZGN7p3N4X7PgdD/fifuJm2e1/BnHB+fUvQ9yEignf8WZAdXx0Z1tKoCfNgZHnTaJAkF7J0HyFpH5PuqFZYhSHEj9NbsV4If/6P5G9Zhr7/OjJ+GsFnv4/pGId9ezPhf//Iseq0ufVNIKB73kUyXcjU2ZhsFxKGJVPb1KUn4S/DItAgbG7oKKmL3bWYi+GrYZDYK018eGHsq09hf7EO++6rjuXPuhxz4nmQB937nqsXFRpiC7r7HWTyLBcqD6fQmtLYuMw0ZPdWkB5jYKAXevaVO852QT5XtYSm+1QY7xO98hS6622il3+M3boR6UjjDVsJ8evuHAHQnW8jM+aXwNMRrK91RLYeLlkFiLR8afW98SGXQ/fsKNPbNR36D8cJD8fS3pKrMRMy2BcfJ//lBRRvuxIphgRf/iHmY2fGCRNTZ3OVM526extm7lkuoZHrQ0TK1mo0NFeUHYWdooKEYN/ZgFm00n3tmfOhMIge2IlMme3msX0z5Cz+tbfF6S4f77xPIDNOLGOBDXaX6QdvQq4XM+8C9NButG9/jCKPdavsWHuwEaRA3/gZrL7NTaRjMoyfjm59CZncDWoxF15Dat5i5JiP10ywweTdAIAQvfYs0jUDmTIbu/Ex6B+A9syYs0dmzBkWa5FUGt3xGnbbpnLcsmgldvOT5cSGiJu8WqcgbdTC5OO0G4JueBRz5mVuSTY9XsYSx0i/OSoJNjFQjLDP/iBGdS3eJdehe99FD+6K3WRbnrDxnblrNnnrFJ3+9k30vdfwVnwR+vZjNz8Fbf5R2S5nxoTpl7D9CLIp7P88gm7b6CbWPhHvipuJHrg1Hsk0n3CSnRIh+s+7ke6FyOxTiB5eC4d7HHZg7ejoTLAaUlgdHJ0N8+JBPo/MPhn/9vWQ6XQfcd0DMHAYc9E1Lj3e8nZZFzvo7u2E152Af/d/QZAhvOl8aPOOyuaImAOaw311YcHKextBWxrd8Qbh3atgqM8NsPQvkAWLnbNTu3223iRUS250dM9nkPMuQ6bPJfzuFbHQypHRmPBs6oGFdcHEinrOBlfUiUJoT6OvPkf4rYvQX7/kmGP2KUj3SRX7iGv2FNeyvQ3B+NiHv4Pufg9v6dWE31wGh3dDyo81/xHSWJPzkOKf+9r0DMJozzl4HuTyEATIOaswS66COaci46c6UDMKof8QGuadmRz2/0tbZw32hX/D3nMtsuAsxz2H90M2BZFtfL5jlOcspHiV//s5NGOMU1KDoWPbY2Yj4yY5XZGZgHSfgFywGpl7llOOXtkNto/eif33WyAdxDkB3MJZy9E/M5SAlyWtrCRhkI0gyOGv2d7m9hB2HoMsWY3MPx+Zc4rD/WrgLn3zRexjd6GvPg/jfOcE+c5XExu1TGOz7b5SgRpKeKX3ERybEghDSGWR406F409DJnVD2zjn4+/Zjm7dAL950zl+2dRHsj8I+KgWgJKDRN5CMeGTBEA6Ro4+osmX8gKj0SHNzmZpg9McAmibj2TMSCjTWtQqQlh3q3YzGhtlBepJji+jgJFbwdqa7s+1FrAN+2YUY8gY2///wUlhdG6AHGUCRttnM5q0Ccu3dnRWymcPR8PeTTOT2oTt6+VitKa+VJ+rpEWxreMHjOFQ42g/9ZHU0d8vfWURaHbkVlo8tluTzdLaLT2tuKnaJMMlR3hcOaEP/0iPnNYtr9loIo0Obo3myK0eRRor7v8PGTdRqSLXWKcAAAAASUVORK5CYII=" alt="" width="28" height="28" />
+    <span class="vibe-url">www.juicereel.com</span>
+  </div>
+  <div class="vibe-body">
+    <h4>JuiceReel</h4>
+    <p>Hot orange #ff5100 on charcoal, Inter throughout, a green win-state as the only second colour. Social-first betting app design — screenshots of phones, not tables of fields.</p>
+    <a class="vibe-link" href="https://www.juicereel.com/">www.juicereel.com &rarr;</a>
+    <table class="vibe-table">
+      <caption>At a glance</caption>
+      <tbody><tr><th scope="row">Auth</th><td>app login</td></tr><tr><th scope="row">Box scores</th><td>none</td></tr><tr><th scope="row">Odds</th><td>none</td></tr><tr><th scope="row">Cost</th><td>n/a</td></tr></tbody>
+    </table>
+  </div>
+  <figcaption class="vibe-spec">
+    <dl>
+      <div><dt>Type</dt><dd>Inter / ui-monospace</dd></div>
+      <div><dt>Color</dt><dd class="swatches"><span class="sw" style="background:#272b33" title="#272b33"></span><span class="sw" style="background:#31363f" title="#31363f"></span><span class="sw" style="background:#f5f6f8" title="#f5f6f8"></span><span class="sw" style="background:#9ca3af" title="#9ca3af"></span><span class="sw" style="background:#ff5100" title="#ff5100"></span><span class="sw" style="background:#3c4250" title="#3c4250"></span><code>#ff5100</code></dd></div>
+      <div><dt>Box</dt><dd>18px 20px pad &middot; 12px radius &middot; 1px solid border</dd></div>
+      <div><dt>Source</dt><dd>site stylesheet (@font-face Inter) + og-image</dd></div>
+    </dl>
+  </figcaption>
+</figure>
+
+<figure class="vibe vibe-sportsgameodds">
+  <div class="vibe-chrome">
+    <img class="vibe-mark" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAADvElEQVR42gXBfUzUZQAH8O/z8rv7wcHxcneBKAfEi4KRaIaUBmhDqMZYs4lbVI5A2/yn3BCruf5iK5xtjExbM2OWA5PirSgLMxXanDOWIhAvJ5xggGjHce+/53n6fEjUsxsQjtcBSoBYncqFR4psXc+JTg4gzlIpORNMyf7oIM6sHPs2YKrdReXSiiRSIfpxEDSkM6iQAaJARcsulXxtnpOQvwMW02fSzMsIlxVKo62rHL2WjKTo4q8uS6pxqgJh+E0EjDgdMDNOw71xsqTonnlkh7VLOeMrYY83CFHgnEMRLqhrKYtY9EK7I6PD9fOg+PPvW+TIvlpwZuY08NuwzM7INf+R5Ou2ZOeXU2dKZDUY0BgnCHu9wPgig8cXMaJZ2VDMajshZA8zvsYvW98lTLoW1I6rN/RhNtdz8M2D5acPNEY8Po82/HAMWjRHc1EN6jeUYk9xOduWujFy/9HSxtam5rXf5VT3IF1SOqcUvx4Y6Tz0ev3uV17eHSm9cEz7xn0dLDEK7RWHEZ5ZQsPIBXziHcBsntTuft4ZcS8v1uGlnPcx65cEtcV7Y6TW0dvYbFQPtfBFuQpzbDR+KG3AYP9VNN0+D1aQBhrH0JL/Fqz3IiroD5C63lZPbFXBFgpu5GUnr8OyWCWLocewxFvRu/Mofu8bQNPddsQUroeeEIXu5xvw75V/UNP+IUlKTxGb1mTGeUfHXuAwaytenw860WBOsKJ/51F0d/bhxHQPojZnQeoKnUXv4fLFX3F8vAt4Jgs+FYYOBhghRROczkuT7qnAgmuOjVefVCfbzuLESBuQnQiqA98/dxj97T/i+OhFICcJ6bZkmSxj2O3ZCQ+efOIaXzvhv0Nsjo/s1sRmNrMi8gs3s9SyAiI0oCrxabSf78Rp10+wbMmF05Gszm6vV60ft8A/NXYE+664CNIYw4wQexsP1fbfHDpTvaNC2HQL1TQTufFwCpeCo0CmHa+mblMfpJfLprZTrKvv3DuY8H+BkhxGbA2VWJ50c/gCBrNa60TA/yUMIWCPIcSZSNkaGyQhks/7If6apsI9vR8mvY2kr+Ms0zCYf3Acb1fXSE9EaLf+u3/TkuSYJ7lpVSwrhRCrLoVQEobGBJWE2aLekGmOczDHarFZCUbwgRdEq9gEUzgA8VQ6IhHJabbDUIK8pjR1SgF2KTQQqGVKVa0gtAd33Dw2xWQYk3MILwkQAND2l4BTBUIJQlFmxvLsQgUjDqn0FxWhlHIMKM4W1MQDlvNpv1jMAFaKt8NoG8T/tdqh+zKw/+UAAAAASUVORK5CYII=" alt="" width="28" height="28" />
+    <span class="vibe-url">sportsgameodds.com</span>
+  </div>
+  <div class="vibe-body">
+    <h4>SportsGameOdds</h4>
+    <p>Emerald on ink-navy with Source Serif 4 headings over Manrope — the only vendor pairing a serif with a grotesque, and it makes the docs read like documentation rather than a pitch.</p>
+    <a class="vibe-link" href="https://sportsgameodds.com/docs/">sportsgameodds.com &rarr;</a>
+    <table class="vibe-table">
+      <caption>At a glance</caption>
+      <tbody><tr><th scope="row">Auth</th><td>API key</td></tr><tr><th scope="row">Box scores</th><td>scores only</td></tr><tr><th scope="row">Odds</th><td>full</td></tr><tr><th scope="row">Cost</th><td>tiered</td></tr></tbody>
+    </table>
+  </div>
+  <figcaption class="vibe-spec">
+    <dl>
+      <div><dt>Type</dt><dd>Manrope + &#x27;Source Serif 4&#x27; / ui-monospace</dd></div>
+      <div><dt>Color</dt><dd class="swatches"><span class="sw" style="background:#0b1121" title="#0b1121"></span><span class="sw" style="background:#1c2640" title="#1c2640"></span><span class="sw" style="background:#e8ecf4" title="#e8ecf4"></span><span class="sw" style="background:#93a0ba" title="#93a0ba"></span><span class="sw" style="background:#10b981" title="#10b981"></span><span class="sw" style="background:#26314d" title="#26314d"></span><code>#10b981</code></dd></div>
+      <div><dt>Box</dt><dd>18px 20px pad &middot; 10px radius &middot; 1px solid border</dd></div>
+      <div><dt>Source</dt><dd>site stylesheet (theme-color #0B1121, Source Serif 4 + Manrope) + og-image</dd></div>
+    </dl>
+  </figcaption>
+</figure>
+
+<figure class="vibe vibe-api-sports">
+  <div class="vibe-chrome">
+    <img class="vibe-mark" src="data:image/png;base64,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" alt="" width="28" height="28" />
+    <span class="vibe-url">api-sports.io</span>
+  </div>
+  <div class="vibe-body">
+    <h4>API-SPORTS</h4>
+    <p>Bootstrap defaults with a #4a90e2 blue and an amber call-to-action, Inter self-hosted. Functional, unremarkable, and behind a 403 for anything that isn&#x27;t a browser — the docs are the product.</p>
+    <a class="vibe-link" href="https://api-sports.io/documentation/american-football/v1">api-sports.io &rarr;</a>
+    <table class="vibe-table">
+      <caption>At a glance</caption>
+      <tbody><tr><th scope="row">Auth</th><td>API key</td></tr><tr><th scope="row">Box scores</th><td>full</td></tr><tr><th scope="row">Odds</th><td>pregame</td></tr><tr><th scope="row">Cost</th><td>tiered</td></tr></tbody>
+    </table>
+  </div>
+  <figcaption class="vibe-spec">
+    <dl>
+      <div><dt>Type</dt><dd>Inter / ui-monospace</dd></div>
+      <div><dt>Color</dt><dd class="swatches"><span class="sw" style="background:#ffffff" title="#ffffff"></span><span class="sw" style="background:#f5f7fa" title="#f5f7fa"></span><span class="sw" style="background:#1d4371" title="#1d4371"></span><span class="sw" style="background:#6b7c93" title="#6b7c93"></span><span class="sw" style="background:#4a90e2" title="#4a90e2"></span><span class="sw" style="background:#d8d8d8" title="#d8d8d8"></span><code>#4a90e2</code></dd></div>
+      <div><dt>Box</dt><dd>16px 18px pad &middot; 6px radius &middot; 1px solid border</dd></div>
+      <div><dt>Source</dt><dd>RapidAPI listing stylesheet + favicon (api-sports.io: HTTP 403)</dd></div>
+    </dl>
+  </figcaption>
+</figure>
+  </div>
+</section>
+
+<section id="method" class="sources">
+  <h2 data-n="05">Method &amp; sources</h2>
+  <p class="lede">
+    Two parallel deep-research runs (203 agents) established the vendor landscape; a third round
+    (18 agents) closed the gaps the first two flagged as unevidenced. Load-bearing price and quota
+    claims were re-fetched by independent adversarial verifiers instructed to refute them.
+  </p>
+
+  <h3>What was measured here, not read</h3>
+  <p>
+    ESPN's rate ceiling, keylessness, and live box-score population; the 26&ndash;33s propagation
+    figure; Pro Football Reference's Cloudflare challenge; the 401/403 auth probes on The Odds API,
+    SportsDataIO, Sportradar, API-SPORTS, balldontlie, SportsGameOdds and api.nfl.com; nflverse's
+    release timestamps; and every colour and font in the vibe cards.
+  </p>
+
+  <h3>Known limits of this report</h3>
+  <p>
+    Four vendors publish no price at all &mdash; Sportradar, Stats Perform, OpticOdds and the NFL
+    &mdash; and no figure has been invented for them. balldontlie's <b>actual</b> latency was not
+    measured, because it needs a key; its 48-hour GOAT trial would settle it against a live slate,
+    and that is the one test worth running before committing. SportsGameOdds' paid pricing remains
+    unresolved: three of four claims about it failed verification. Design vibes are reconstructed
+    from stylesheets and brand assets rather than screenshots, since no headless browser was
+    available; cards for login-gated products are built from the public marketing site and labelled.
+  </p>
+
+  <h3>Primary sources</h3>
+  <ol>
+<li>balldontlie NFL API &mdash; account tiers, endpoints, ToS &sect;6 data licence &mdash; <a href="https://nfl.balldontlie.io">https://nfl.balldontlie.io</a></li>
+<li>balldontlie pricing (per-sport tiers) &mdash; <a href="https://www.balldontlie.io/">https://www.balldontlie.io/</a></li>
+<li>Disney Terms of Use &mdash; governs ESPN; &sect;2.A, 2.B.viii, 2.B.x (Last Updated May 24, 2024) &mdash; <a href="https://disneytermsofuse.com/english/">https://disneytermsofuse.com/english/</a></li>
+<li>The Odds API &mdash; plans and credit costs &mdash; <a href="https://the-odds-api.com/#get-access">https://the-odds-api.com/#get-access</a></li>
+<li>The Odds API v4 guide &mdash; &ldquo;usage quota cost is 1 per region per market&rdquo; &mdash; <a href="https://the-odds-api.com/liveapi/guides/v4/">https://the-odds-api.com/liveapi/guides/v4/</a></li>
+<li>The Odds API &mdash; in-play update intervals (40s featured / 60s additional) &mdash; <a href="https://the-odds-api.com/sports-odds-data/update-intervals.html">https://the-odds-api.com/sports-odds-data/update-intervals.html</a></li>
+<li>The Odds API &mdash; bookmaker &amp; region keys, incl. <code>us2</code> &mdash; <a href="https://the-odds-api.com/sports-odds-data/bookmaker-apis.html">https://the-odds-api.com/sports-odds-data/bookmaker-apis.html</a></li>
+<li>The Odds API &mdash; historical odds, 10&times; multiplier, paid-only &mdash; <a href="https://the-odds-api.com/historical-odds-data/">https://the-odds-api.com/historical-odds-data/</a></li>
+<li>TheRundown &mdash; API pricing, delay tiers, data-point definition &mdash; <a href="https://therundown.io/pricing/api">https://therundown.io/pricing/api</a></li>
+<li>TheRundown &mdash; rate limits and free-tier caps &mdash; <a href="https://docs.therundown.io/rate-limits.md">https://docs.therundown.io/rate-limits.md</a></li>
+<li>Sportradar &mdash; trial terms: 1,000 req / rolling 30 days, 1 QPS, 30 days &mdash; <a href="https://developer.sportradar.com/getting-started/docs/your-account.md">https://developer.sportradar.com/getting-started/docs/your-account.md</a></li>
+<li>SportsDataIO Discovery Lab &mdash; the published NFL price list ($99 / $99 / $149, 100 calls/day) &mdash; <a href="https://discoverylab.sportsdata.io/personal-use-apis/nfl">https://discoverylab.sportsdata.io/personal-use-apis/nfl</a></li>
+<li>nflverse &mdash; documented update cadence (nightly after game day) &mdash; <a href="https://nflreadr.nflverse.com/articles/nflverse_data_schedule.html">https://nflreadr.nflverse.com/articles/nflverse_data_schedule.html</a></li>
+<li>nflfastR &mdash; <code>fast_scraper</code>, raw per-game JSON ~15 min after a game ends &mdash; <a href="https://nflfastr.com/reference/fast_scraper.html">https://nflfastr.com/reference/fast_scraper.html</a></li>
+<li>Sports Reference &mdash; bot traffic policy, 20 req/min block, &ldquo;Why Not Provide an API?&rdquo; &mdash; <a href="https://www.sports-reference.com/bot-traffic.html">https://www.sports-reference.com/bot-traffic.html</a></li>
+<li>MySportsFeeds &mdash; feed pricing, CAD, &ldquo;Non-Live access&rdquo;, CORE vs DETAILS &mdash; <a href="https://www.mysportsfeeds.com/feed-pricing/">https://www.mysportsfeeds.com/feed-pricing/</a></li>
+<li>API-SPORTS &mdash; American Football OpenAPI spec v1.4.7 (pre-match odds only, 4&times;/day) &mdash; <a href="https://api-sports.io/public/documentations/nfl-v1.yaml">https://api-sports.io/public/documentations/nfl-v1.yaml</a></li>
+<li>OpticOdds &mdash; authentication, rate limits, sportsbook list (the OddsJam API) &mdash; <a href="https://developer.opticodds.com/">https://developer.opticodds.com/</a></li>
+<li>SportsGameOdds &mdash; pricing and free-tier object cap &mdash; <a href="https://sportsgameodds.com/pricing">https://sportsgameodds.com/pricing</a></li>
+<li>Stats Perform &mdash; developer portal (self-registration disabled) &mdash; <a href="https://developer.stats.com/">https://developer.stats.com/</a></li>
+<li>JuiceReel &mdash; OAuth 2.0 API docs (own bet slips only) &mdash; <a href="https://www.juicereel.com/api-docs">https://www.juicereel.com/api-docs</a></li>
+  </ol>
+</section>
+
+<footer>
+  <span>DynastZ &mdash; research</span>
+  <span>Accessed 6 September 2026</span>
+  <span>NFL only; other sports out of scope by design</span>
+  <span>Prices change &mdash; re-verify before purchase</span>
+</footer>
+
+</div>
+

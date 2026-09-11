@@ -1,0 +1,84 @@
+# Keep the published game bundles current without anyone typing a command.
+#
+# Every fifteen minutes this sweeps data/nfl_schedule_*.json, asks Supabase what
+# is already stored and how stale it is, and re-captures whatever is due. The
+# cadence itself is not here -- it lives in refresh_plan() in
+# scripts/fetch_bdl_game.py, which is also what stamps each bundle with when it
+# will next change, so the page and the sweep can never disagree.
+#
+# NOTHING IS COMMITTED. Bundles go to Supabase `game_odds` and the page is
+# current on the next request, the same no-deploy path the Action Network book
+# takes. That is why this workflow needs no write permission and never pushes.
+#
+# WHAT THIS CADENCE CANNOT DO
+#
+# GitHub's scheduled runners are best-effort: under load they fire five to
+# fifteen minutes late, and a */15 cron can miss slots entirely. That is fine
+# for a Tuesday and useless for a live game, whose policy asks for two minutes.
+# For a live slate, run the loop on a machine that is actually awake:
+#
+#     python3 scripts/bdl_refresh.py --loop --publish
+#
+# The two compose -- the loop and this workflow read the same state out of
+# Supabase, so whichever ran last simply moves the next-due time.
+#
+# ALSO WORTH KNOWING
+#
+# - Scheduled workflows are disabled automatically after 60 days with no commits
+#   to the repo. In the offseason that is a feature; in season, notice it.
+# - Secrets needed (Settings > Secrets and variables > Actions):
+#     BALLDONTLIE_API_KEY  SUPABASE_URL  SUPABASE_KEY
+#   Without a key on the tier that /odds and /plays require, a sweep still runs
+#   and still produces valid bundles -- just thinner ones. publish() reads the
+#   stored row first and refuses to replace a rich bundle with a thin one, so an
+#   expired subscription degrades to "stops updating" rather than "erases".
+
+name: Refresh NFL game bundles
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: 'Most games to capture in one sweep'
+        default: '12'
+      backfill:
+        description: 'Also capture finished games never captured'
+        type: boolean
+        default: false
+
+# A sweep that overlaps itself would double every request and race on the same
+# rows. Skip the new run rather than queue it: the next slot is 15 minutes away
+# and the cadence is not that tight.
+concurrency:
+  group: bdl-refresh
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      # No install step on purpose. Everything under scripts/ is stdlib-only and
+      # shells out to curl, which the runner already has -- see pyproject.toml,
+      # where dependencies is deliberately empty.
+      - name: Sweep
+        env:
+          BALLDONTLIE_API_KEY: ${{ secrets.BALLDONTLIE_API_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        run: |
+          python3 scripts/bdl_refresh.py \
+            --once --publish \
+            --limit "${{ github.event.inputs.limit || 12 }}" \
+            ${{ github.event.inputs.backfill == 'true' && '--backfill' || '' }}

@@ -1,0 +1,1018 @@
+{
+  "espn": {
+    "slug": "espn",
+    "url": "https://www.espn.com/",
+    "assets": [],
+    "palette": [],
+    "meta": {},
+    "errors": [],
+    "final_url": "https://www.espn.com/",
+    "fonts_inline": [],
+    "fonts_google": []
+  },
+  "nflverse": {
+    "slug": "nflverse",
+    "url": "https://nflverse.nflverse.com/",
+    "assets": [
+      {
+        "file": "favicon.png",
+        "src": "https://nflverse.nflverse.com/apple-touch-icon.png",
+        "bytes": 25410,
+        "content_type": "image/png"
+      },
+      {
+        "file": "og-image.png",
+        "src": "https://nflverse.nflverse.com/reference/figures/social_preview.png",
+        "bytes": 217411,
+        "content_type": "image/png"
+      },
+      {
+        "file": "favicon-ico.ico",
+        "src": "https://nflverse.nflverse.com/favicon.ico",
+        "bytes": 15086,
+        "content_type": "image/vnd.microsoft.icon"
+      }
+    ],
+    "palette": [
+      {
+        "hex": "#ffffff",
+        "count": 278
+      },
+      {
+        "hex": "#000000",
+        "count": 113
+      },
+      {
+        "hex": "#2780e3",
+        "count": 61
+      },
+      {
+        "hex": "#373a3c",
+        "count": 56
+      },
+      {
+        "hex": "#ff0039",
+        "count": 38
+      },
+      {
+        "hex": "#3fb618",
+        "count": 38
+      },
+      {
+        "hex": "#ff7518",
+        "count": 36
+      },
+      {
+        "hex": "#9954bb",
+        "count": 36
+      },
+      {
+        "hex": "#6610f2",
+        "count": 21
+      },
+      {
+        "hex": "#613d7c",
+        "count": 21
+      },
+      {
+        "hex": "#e83e8c",
+        "count": 21
+      },
+      {
+        "hex": "#f0ad4e",
+        "count": 21
+      },
+      {
+        "hex": "#20c997",
+        "count": 21
+      },
+      {
+        "hex": "#f8f9fa",
+        "count": 19
+      }
+    ],
+    "meta": {
+      "og_image": "https://nflverse.nflverse.com/reference/figures/social_preview.png",
+      "og_title": "nflverse \u2022 Data and Tools for NFL Analytics",
+      "og_description": "A collection of data and R packages designed for NFL analytics!\n"
+    },
+    "errors": [
+      "asset favicon: HTTP Error 404: Not Found",
+      "asset favicon: HTTP Error 404: Not Found"
+    ],
+    "final_url": "https://nflverse.nflverse.com/",
+    "fonts_inline": [],
+    "fonts_google": [],
+    "css_files": [
+      "https://nflverse.nflverse.com/deps/bootstrap-5.3.1/bootstrap.min.css",
+      "https://nflverse.nflverse.com/deps/IBM_Plex_Sans-0.4.10/font.css",
+      "https://nflverse.nflverse.com/deps/Fira_Code-0.4.10/font.css",
+      "https://nflverse.nflverse.com/deps/Kanit-0.4.10/font.css"
+    ]
+  },
+  "sportsdataio": {
+    "slug": "sportsdataio",
+    "url": "https://sportsdata.io/",
+    "assets": [
+      {
+        "file": "favicon.ico",
+        "src": "https://sportsdata.io/assets/images/favicon.ico",
+        "bytes": 5430,
+        "content_type": "image/x-icon"
+      },
+      {
+        "file": "favicon.png",
+        "src": "https://sportsdata.io/assets/images/favicon.png",
+        "bytes": 8054,
+        "content_type": "image/png"
+      },
+      {
+        "file": "og-image.png",
+        "src": "https://sportsdata.io/assets/images/og_image.png",
+        "bytes": 31860,
+        "content_type": "image/png"
+      }
+    ],
+    "palette": [
+      {
+        "hex": "#ffffff",
+        "count": 170
+      },
+      {
+        "hex": "#000000",
+        "count": 109
+      },
+      {
+        "hex": "#dddddd",
+        "count": 32
+      },
+      {
+        "hex": "#337ab7",
+        "count": 24
+      },
+      {
+        "hex": "#333333",
+        "count": 23
+      },
+      {
+        "hex": "#777777",
+        "count": 23
+      },
+      {
+        "hex": "#eeeeee",
+        "count": 16
+      },
+      {
+        "hex": "#3c763d",
+        "count": 14
+      },
+      {
+        "hex": "#8a6d3b",
+        "count": 14
+      },
+      {
+        "hex": "#a94442",
+        "count": 14
+      },
+      {
+        "hex": "#999999",
+        "count": 13
+      },
+      {
+        "hex": "#cccccc",
+        "count": 13
+      },
+      {
+        "hex": "#f5f5f5",
+        "count": 11
+      },
+      {
+        "hex": "#31708f",
+        "count": 9
+      }
+    ],
+    "meta": {
+      "og_image": "https://sportsdata.io/assets/images/og_image.png",
+      "site_name": "SportsDataIO",
+      "og_title": "SportsDataIO - Live Sports Data Provider, API Solutions, NFL, NBA, MLB Data",
+      "og_description": "Live sports data provider with scores, odds, projections, stats, news, and images for NFL football, MLB Baseball, NBA Basketball, NHL Hockey, PGA Golf, NASCAR, Tennis Data, Soccer, and ESports. SportsDataIO provides sports API feeds and database downloads to power your website and mobile applications"
+    },
+    "errors": [
+      "asset favicon-ico: HTTP Error 404: Not Found"
+    ],
+    "final_url": "https://sportsdata.io/",
+    "fonts_inline": [
+      "var(--font-bold)",
+      "var(--font-medium)"
+    ],
+    "fonts_google": [],
+    "css_files": [
+      "https://sportsdata.io/assets/css/bootstrap.css?v=2",
+      "https://sportsdata.io/assets/css/bootstrap-xxs.css",
+      "https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.min.css",
+      "https://kendo.cdn.telerik.com/2019.2.514/styles/kendo.common-material.min.css"
+    ]
+  },
+  "sportradar": {
+    "slug": "sportradar",
+    "url": "https://sportradar.com/",
+    "assets": [
+      {
+        "file": "favicon.png",
+        "src": "https://cdn-ileimjk.nitrocdn.com/sKgCfsiSczlMciqAtVqCggydSDKvnOYp/assets/images/optimized/rev-a924758/sportradar.com/wp-content/uploads/2021/05/favicon-1-150x150.png",
+        "bytes": 1281,
+        "content_type": "image/png"
+      },
+      {
+        "file": "og-image.jpg",
+        "src": "https://sportradar.com/wp-content/uploads/2021/05/Basketball-1.2.jpg",
+        "bytes": 383189,
+        "content_type": "image/jpeg"
+      }
+    ],
+    "palette": [
+      {
+        "hex": "#ffffff",
+        "count": 236
+      },
+      {
+        "hex": "#000000",
+        "count": 209
+      },
+      {
+        "hex": "#00003c",
+        "count": 77
+      },
+      {
+        "hex": "#ff0000",
+        "count": 50
+      },
+      {
+        "hex": "#0d6efd",
+        "count": 44
+      },
+      {
+        "hex": "#212529",
+        "count": 27
+      },
+      {
+        "hex": "#6c757d",
+        "count": 22
+      },
+      {
+        "hex": "#dc3545",
+        "count": 20
+      },
+      {
+        "hex": "#198754",
+        "count": 20
+      },
+      {
+        "hex": "#f8f9fa",
+        "count": 20
+      },
+      {
+        "hex": "#ea3323",
+        "count": 20
+      },
+      {
+        "hex": "#ffc107",
+        "count": 16
+      },
+      {
+        "hex": "#0dcaf0",
+        "count": 16
+      },
+      {
+        "hex": "#f6f6f6",
+        "count": 13
+      }
+    ],
+    "meta": {
+      "og_image": "https://sportradar.com/wp-content/uploads/2021/05/Basketball-1.2.jpg",
+      "site_name": "Sportradar",
+      "og_title": "Home - sportradar website",
+      "og_description": "Sportradar is the world\u2019s leading sports technology company, at the intersection between sports, media and betting."
+    },
+    "errors": [],
+    "final_url": "https://sportradar.com/",
+    "fonts_inline": [
+      "inherit",
+      "sans-serif",
+      "var(--bs-body-font-family)",
+      "var(--bs-font-sans-serif)"
+    ],
+    "fonts_google": [],
+    "css_files": [
+      "https://cdn-ileimjk.nitrocdn.com/sKgCfsiSczlMciqAtVqCggydSDKvnOYp/assets/static/optimized/rev-b62e992/sportradar.com/combinedCss/nitro-min-noimport-99062da463ccbc0d16a7e894fb5641e5-stylesheet.css",
+      "https://cdn-ileimjk.nitrocdn.com/sKgCfsiSczlMciqAtVqCggydSDKvnOYp/assets/static/optimized/rev-b62e992/sportradar.com/externalFontFace/nitro-min-noimport-bd7d37044a952f2ee3cc3ea62a1680fc-stylesheet.css"
+    ]
+  },
+  "stats-perform": {
+    "slug": "stats-perform",
+    "url": "https://www.statsperform.com/",
+    "assets": [
+      {
+        "file": "favicon.png",
+        "src": "https://www.statsperform.com/site/assets/files/1022/favicon.png",
+        "bytes": 20420,
+        "content_type": "image/png"
+      },
+      {
+        "file": "og-image.png",
+        "src": "https://www.statsperform.com/site/assets/files/1/stats-perform-sharing.1200x628.png",
+        "bytes": 176388,
+        "content_type": "image/png"
+      }
+    ],
+    "palette": [
+      {
+        "hex": "#ffffff",
+        "count": 240
+      },
+      {
+        "hex": "#000000",
+        "count": 187
+      },
+      {
+        "hex": "#210a36",
+        "count": 94
+      },
+      {
+        "hex": "#8971e5",
+        "count": 49
+      },
+      {
+        "hex": "#f4f4f4",
+        "count": 29
+      },
+      {
+        "hex": "#3f1567",
+        "count": 26
+      },
+      {
+        "hex": "#faa51a",
+        "count": 17
+      },
+      {
+        "hex": "#f3f0fc",
+        "count": 14
+      },
+      {
+        "hex": "#1f337c",
+        "count": 12
+      },
+      {
+        "hex": "#3f1568",
+        "count": 11
+      },
+      {
+        "hex": "#200a35",
+        "count": 8
+      },
+      {
+        "hex": "#30104f",
+        "count": 8
+      },
+      {
+        "hex": "#6c757d",
+        "count": 7
+      },
+      {
+        "hex": "#212529",
+        "count": 7
+      }
+    ],
+    "meta": {
+      "og_image": "https://www.statsperform.com/site/assets/files/1/stats-perform-sharing.1200x628.png",
+      "site_name": "Stats Perform",
+      "og_title": "Trusted Live Opta Sports Data, Sports AI, Technology, API, Feeds",
+      "og_description": " Top pro teams and media choose Stats Perform&#039;s trusted Opta sports data and AI to build magic from the detail of sport for billions of fans."
+    },
+    "errors": [
+      "asset favicon-ico: HTTP Error 404: Not Found"
+    ],
+    "final_url": "https://www.statsperform.com/",
+    "fonts_inline": [],
+    "fonts_google": [
+      "DM Mono"
+    ],
+    "css_files": [
+      "https://fonts.googleapis.com/css2?family=DM+Mono&display=swap",
+      "https://www.statsperform.com/site/templates/assets/css/main.css?tkf8dr",
+      "https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css"
+    ]
+  },
+  "pro-football-reference": {
+    "slug": "pro-football-reference",
+    "url": "https://www.pro-football-reference.com/",
+    "assets": [],
+    "palette": [],
+    "meta": {},
+    "errors": [
+      "page: HTTP Error 403: Forbidden"
+    ]
+  },
+  "action-network": {
+    "slug": "action-network",
+    "url": "https://www.actionnetwork.com/",
+    "assets": [
+      {
+        "file": "favicon.png",
+        "src": "https://assets.actionnetwork.com/252389_action-logo-check.png",
+        "bytes": 2449,
+        "content_type": "image/png"
+      },
+      {
+        "file": "og-image.png",
+        "src": "https://assets.actionnetwork.com/214091_action_social_38cb3c4385.png",
+        "bytes": 21646,
+        "content_type": "image/png"
+      },
+      {
+        "file": "favicon-ico.ico",
+        "src": "https://www.actionnetwork.com/favicon.ico",
+        "bytes": 12014,
+        "content_type": "image/x-icon"
+      }
+    ],
+    "palette": [
+      {
+        "hex": "#00c358",
+        "count": 35
+      },
+      {
+        "hex": "#00a767",
+        "count": 17
+      },
+      {
+        "hex": "#000000",
+        "count": 9
+      },
+      {
+        "hex": "#1d1d25",
+        "count": 6
+      },
+      {
+        "hex": "#a4a4aa",
+        "count": 6
+      },
+      {
+        "hex": "#f7f8fd",
+        "count": 6
+      },
+      {
+        "hex": "#dedfe4",
+        "count": 4
+      },
+      {
+        "hex": "#818188",
+        "count": 3
+      },
+      {
+        "hex": "#0079f0",
+        "count": 3
+      },
+      {
+        "hex": "#ebecf5",
+        "count": 3
+      },
+      {
+        "hex": "#ffffff",
+        "count": 3
+      },
+      {
+        "hex": "#f32535",
+        "count": 2
+      },
+      {
+        "hex": "#ffe500",
+        "count": 2
+      },
+      {
+        "hex": "#00acee",
+        "count": 1
+      }
+    ],
+    "meta": {
+      "og_image": "https://assets.actionnetwork.com/214091_action_social_38cb3c4385.png",
+      "site_name": "Action Network",
+      "og_title": "Action Network: Sports Betting Odds, Insights, &amp; Analysis",
+      "og_description": "Reporting on sportsbooks, prediction markets and online casinos."
+    },
+    "errors": [],
+    "final_url": "https://www.actionnetwork.com/",
+    "fonts_inline": [
+      "inherit",
+      "monospace,monospace",
+      "var(--tan-font-base)",
+      "var(--tan-font-header)",
+      "var(--tan-font-mona)"
+    ],
+    "fonts_google": [],
+    "css_files": [
+      "https://bam-static.actionnetwork.com/0.0.2/bam-scripts/bam-scripts.css"
+    ]
+  },
+  "the-odds-api": {
+    "slug": "the-odds-api",
+    "url": "https://the-odds-api.com/",
+    "assets": [
+      {
+        "file": "favicon.ico",
+        "src": "https://the-odds-api.com/assets/img/fav.ico",
+        "bytes": 1084,
+        "content_type": "image/x-icon"
+      },
+      {
+        "file": "og-image.jpg",
+        "src": "https://the-odds-api.com/assets/img/sports-odds-in-excel.jpg",
+        "bytes": 101072,
+        "content_type": "image/jpeg"
+      }
+    ],
+    "palette": [
+      {
+        "hex": "#3883fa",
+        "count": 39
+      },
+      {
+        "hex": "#cccccc",
+        "count": 16
+      },
+      {
+        "hex": "#ffffff",
+        "count": 16
+      },
+      {
+        "hex": "#000000",
+        "count": 13
+      },
+      {
+        "hex": "#2c3e50",
+        "count": 8
+      },
+      {
+        "hex": "#eaecef",
+        "count": 8
+      },
+      {
+        "hex": "#dddddd",
+        "count": 7
+      },
+      {
+        "hex": "#f4f7fd",
+        "count": 7
+      },
+      {
+        "hex": "#777777",
+        "count": 7
+      },
+      {
+        "hex": "#999999",
+        "count": 5
+      },
+      {
+        "hex": "#eeeeee",
+        "count": 5
+      },
+      {
+        "hex": "#4e6e8e",
+        "count": 5
+      },
+      {
+        "hex": "#282c34",
+        "count": 4
+      },
+      {
+        "hex": "#42b983",
+        "count": 4
+      }
+    ],
+    "meta": {
+      "og_image": "/assets/img/sports-odds-in-excel.jpg",
+      "site_name": "The Odds API",
+      "og_title": "The Odds API",
+      "og_description": "Get sports odds data for loads of sports from bookmakers around the world"
+    },
+    "errors": [
+      "asset favicon-ico: HTTP Error 404: Not Found"
+    ],
+    "final_url": "https://the-odds-api.com/",
+    "fonts_inline": [],
+    "fonts_google": [],
+    "css_files": [
+      "https://the-odds-api.com/assets/css/0.styles.698483c2.css"
+    ]
+  },
+  "oddsjam": {
+    "slug": "oddsjam",
+    "url": "https://oddsjam.com/",
+    "assets": [],
+    "palette": [],
+    "meta": {},
+    "errors": [
+      "page: HTTP Error 403: Forbidden"
+    ]
+  },
+  "vegasinsider": {
+    "slug": "vegasinsider",
+    "url": "https://www.vegasinsider.com/",
+    "assets": [
+      {
+        "file": "favicon.svg",
+        "src": "https://bctn-vi.s3.amazonaws.com/img/favicon.svg?v=f4182f2",
+        "bytes": 2208,
+        "content_type": "image/svg+xml"
+      },
+      {
+        "file": "og-image.svg",
+        "src": "https://bctn-vi.s3.amazonaws.com/img/logo-dark.svg?v=f4182f2",
+        "bytes": 9011,
+        "content_type": "image/svg+xml"
+      },
+      {
+        "file": "favicon-ico.ico",
+        "src": "https://www.vegasinsider.com/favicon.ico",
+        "bytes": 3758,
+        "content_type": "image/vnd.microsoft.icon"
+      }
+    ],
+    "palette": [
+      {
+        "hex": "#fefefe",
+        "count": 145
+      },
+      {
+        "hex": "#e5e5e5",
+        "count": 71
+      },
+      {
+        "hex": "#333333",
+        "count": 70
+      },
+      {
+        "hex": "#f4c255",
+        "count": 63
+      },
+      {
+        "hex": "#000000",
+        "count": 55
+      },
+      {
+        "hex": "#aeaeae",
+        "count": 26
+      },
+      {
+        "hex": "#002c5f",
+        "count": 23
+      },
+      {
+        "hex": "#fcc138",
+        "count": 20
+      },
+      {
+        "hex": "#0065cc",
+        "count": 19
+      },
+      {
+        "hex": "#646877",
+        "count": 19
+      },
+      {
+        "hex": "#1d1d25",
+        "count": 17
+      },
+      {
+        "hex": "#ffffff",
+        "count": 15
+      },
+      {
+        "hex": "#f4f4f4",
+        "count": 15
+      },
+      {
+        "hex": "#555555",
+        "count": 15
+      }
+    ],
+    "meta": {
+      "og_image": "https://bctn-vi.s3.amazonaws.com/img/logo-dark.svg?v=f4182f2",
+      "site_name": "VegasInsider",
+      "og_title": "Vegas Odds, Sports Betting News &amp; Prediction Markets for 2026",
+      "og_description": "Compare live Vegas odds across every major sportsbook, plus sports betting picks, prediction market news and online casino reviews. Start playing today!"
+    },
+    "errors": [],
+    "final_url": "https://www.vegasinsider.com/",
+    "fonts_inline": [
+      "-apple-system,",
+      "Helvetica,Arial,sans-serif",
+      "Verdana,Geneva,sans-serif",
+      "monospace"
+    ],
+    "fonts_google": [
+      "Saira Condensed:400,700"
+    ],
+    "css_files": [
+      "https://fonts.googleapis.com/css?family=Saira+Condensed:400,700&display=swap"
+    ]
+  },
+  "pikkit": {
+    "slug": "pikkit",
+    "url": "https://pikkit.com/",
+    "assets": [
+      {
+        "file": "og-image.png",
+        "src": "https://cdn.prod.website-files.com/64da07a5bc219a0c49e31e1c/69d5604abbb81be02ce35d8e_Home_OG%20Image.png",
+        "bytes": 345617,
+        "content_type": "image/png"
+      }
+    ],
+    "palette": [
+      {
+        "hex": "#ffffff",
+        "count": 107
+      },
+      {
+        "hex": "#11151b",
+        "count": 37
+      },
+      {
+        "hex": "#13182b",
+        "count": 37
+      },
+      {
+        "hex": "#8bb9fe",
+        "count": 33
+      },
+      {
+        "hex": "#030303",
+        "count": 25
+      },
+      {
+        "hex": "#dddddd",
+        "count": 24
+      },
+      {
+        "hex": "#fafafa",
+        "count": 23
+      },
+      {
+        "hex": "#3898ec",
+        "count": 21
+      },
+      {
+        "hex": "#999999",
+        "count": 20
+      },
+      {
+        "hex": "#e6e6e6",
+        "count": 11
+      },
+      {
+        "hex": "#051131",
+        "count": 11
+      },
+      {
+        "hex": "#0050bd",
+        "count": 10
+      },
+      {
+        "hex": "#aeb4c0",
+        "count": 9
+      },
+      {
+        "hex": "#000000",
+        "count": 7
+      }
+    ],
+    "meta": {
+      "og_image": "https://cdn.prod.website-files.com/64da07a5bc219a0c49e31e1c/69d5604abbb81be02ce35d8e_Home_OG%20Image.png",
+      "og_title": "Pikkit | All Your Friends and Bets in One Place",
+      "og_description": "All your friends and bets in one place. Follow, copy, bet."
+    },
+    "errors": [
+      "asset favicon-ico: HTTP Error 404: Not Found"
+    ],
+    "final_url": "https://pikkit.com/",
+    "fonts_inline": [],
+    "fonts_google": [],
+    "css_files": [
+      "https://cdn.prod.website-files.com/64da07a5bc219a0c49e31e1c/css/pikkit.webflow.shared.3f6651257.css"
+    ]
+  },
+  "juicereel": {
+    "slug": "juicereel",
+    "url": "https://www.juicereel.com/",
+    "assets": [
+      {
+        "file": "favicon.png",
+        "src": "https://www.juicereel.com/icon.png",
+        "bytes": 21272,
+        "content_type": "image/png"
+      },
+      {
+        "file": "favicon.ico",
+        "src": "https://www.juicereel.com/favicon.ico",
+        "bytes": 62270,
+        "content_type": "image/x-icon"
+      },
+      {
+        "file": "og-image.webp",
+        "src": "https://images.juiceintegration.com/marketing/onelinkThumbnail.webp",
+        "bytes": 82880,
+        "content_type": "image/webp"
+      },
+      {
+        "file": "favicon-ico.ico",
+        "src": "https://www.juicereel.com/favicon.ico",
+        "bytes": 62270,
+        "content_type": "image/x-icon"
+      }
+    ],
+    "palette": [
+      {
+        "hex": "#ff5100",
+        "count": 157
+      },
+      {
+        "hex": "#9ca3af",
+        "count": 106
+      },
+      {
+        "hex": "#272b33",
+        "count": 89
+      },
+      {
+        "hex": "#ff7a33",
+        "count": 70
+      },
+      {
+        "hex": "#34d27b",
+        "count": 59
+      },
+      {
+        "hex": "#6b7280",
+        "count": 58
+      },
+      {
+        "hex": "#101216",
+        "count": 47
+      },
+      {
+        "hex": "#1a1d24",
+        "count": 46
+      },
+      {
+        "hex": "#333843",
+        "count": 44
+      },
+      {
+        "hex": "#000000",
+        "count": 30
+      },
+      {
+        "hex": "#20242c",
+        "count": 21
+      },
+      {
+        "hex": "#e5564b",
+        "count": 16
+      },
+      {
+        "hex": "#0b0c0f",
+        "count": 15
+      },
+      {
+        "hex": "#c23d00",
+        "count": 14
+      }
+    ],
+    "meta": {
+      "og_image": "https://images.juiceintegration.com/marketing/onelinkThumbnail.webp",
+      "og_title": "Juice Reel | Bet Tracker and Picks Marketplace",
+      "og_description": "Track your bets, shop the best lines, get AI-powered picks, and access the only verified sports picks marketplace."
+    },
+    "errors": [],
+    "final_url": "https://www.juicereel.com/",
+    "fonts_inline": [],
+    "fonts_google": [],
+    "css_files": [
+      "https://www.juicereel.com/_next/static/css/d046ebedb4bc95a0.css",
+      "https://www.juicereel.com/_next/static/css/7e7d96b1e6991756.css"
+    ]
+  },
+  "api-sports": {
+    "slug": "api-sports",
+    "url": "https://api-sports.io/",
+    "assets": [],
+    "palette": [],
+    "meta": {},
+    "errors": [
+      "page: HTTP Error 403: Forbidden"
+    ]
+  },
+  "sportsgameodds": {
+    "slug": "sportsgameodds",
+    "url": "https://sportsgameodds.com/",
+    "assets": [
+      {
+        "file": "favicon.png",
+        "src": "https://sportsgameodds.com/favicon-16x16.png",
+        "bytes": 1648,
+        "content_type": "image/png"
+      },
+      {
+        "file": "favicon.ico",
+        "src": "https://sportsgameodds.com/favicon.ico",
+        "bytes": 15086,
+        "content_type": "image/x-icon"
+      },
+      {
+        "file": "og-image.png",
+        "src": "https://sportsgameodds.com/images/og-default.png",
+        "bytes": 158002,
+        "content_type": "image/png"
+      },
+      {
+        "file": "favicon-ico.ico",
+        "src": "https://sportsgameodds.com/favicon.ico",
+        "bytes": 15086,
+        "content_type": "image/x-icon"
+      }
+    ],
+    "palette": [
+      {
+        "hex": "#10b981",
+        "count": 76
+      },
+      {
+        "hex": "#000000",
+        "count": 27
+      },
+      {
+        "hex": "#0b1121",
+        "count": 24
+      },
+      {
+        "hex": "#e8ecf4",
+        "count": 17
+      },
+      {
+        "hex": "#ffffff",
+        "count": 12
+      },
+      {
+        "hex": "#1c2640",
+        "count": 12
+      },
+      {
+        "hex": "#34d399",
+        "count": 10
+      },
+      {
+        "hex": "#151d2e",
+        "count": 10
+      },
+      {
+        "hex": "#243049",
+        "count": 10
+      },
+      {
+        "hex": "#ef4444",
+        "count": 9
+      },
+      {
+        "hex": "#059669",
+        "count": 9
+      },
+      {
+        "hex": "#22d3ee",
+        "count": 9
+      },
+      {
+        "hex": "#074f5d",
+        "count": 8
+      },
+      {
+        "hex": "#055f70",
+        "count": 8
+      }
+    ],
+    "meta": {
+      "og_image": "https://sportsgameodds.com/images/og-default.png",
+      "site_name": "Sports Game Odds - API Data",
+      "theme_color": "#0B1121",
+      "og_title": "Odds API | Sports Betting Odds API with Results",
+      "og_description": "Real-time in-play and pre-match odds, player props, scores and settlement in one Odds API. Pay per event, not per market. Free tier, no credit card."
+    },
+    "errors": [],
+    "final_url": "https://sportsgameodds.com/",
+    "fonts_inline": [],
+    "fonts_google": [],
+    "css_files": [
+      "https://sportsgameodds.com/_next/static/chunks/90b34067e4e34cbe.css",
+      "https://sportsgameodds.com/_next/static/chunks/1971759bd1d2c197.css"
+    ]
+  }
+}

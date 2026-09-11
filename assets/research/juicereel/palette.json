@@ -1,0 +1,204 @@
+{
+  "slug": "juicereel",
+  "url": "https://www.juicereel.com/",
+  "assets": [
+    {
+      "file": "favicon.png",
+      "src": "https://www.juicereel.com/icon.png",
+      "bytes": 21272,
+      "content_type": "image/png"
+    },
+    {
+      "file": "favicon.ico",
+      "src": "https://www.juicereel.com/favicon.ico",
+      "bytes": 62270,
+      "content_type": "image/x-icon"
+    },
+    {
+      "file": "og-image.webp",
+      "src": "https://images.juiceintegration.com/marketing/onelinkThumbnail.webp",
+      "bytes": 82880,
+      "content_type": "image/webp"
+    },
+    {
+      "file": "favicon-ico.ico",
+      "src": "https://www.juicereel.com/favicon.ico",
+      "bytes": 62270,
+      "content_type": "image/x-icon"
+    }
+  ],
+  "palette": [
+    {
+      "hex": "#ff5100",
+      "count": 157
+    },
+    {
+      "hex": "#9ca3af",
+      "count": 106
+    },
+    {
+      "hex": "#272b33",
+      "count": 89
+    },
+    {
+      "hex": "#ff7a33",
+      "count": 70
+    },
+    {
+      "hex": "#34d27b",
+      "count": 59
+    },
+    {
+      "hex": "#6b7280",
+      "count": 58
+    },
+    {
+      "hex": "#101216",
+      "count": 47
+    },
+    {
+      "hex": "#1a1d24",
+      "count": 46
+    },
+    {
+      "hex": "#333843",
+      "count": 44
+    },
+    {
+      "hex": "#000000",
+      "count": 30
+    },
+    {
+      "hex": "#20242c",
+      "count": 21
+    },
+    {
+      "hex": "#e5564b",
+      "count": 16
+    },
+    {
+      "hex": "#0b0c0f",
+      "count": 15
+    },
+    {
+      "hex": "#c23d00",
+      "count": 14
+    }
+  ],
+  "meta": {
+    "og_image": "https://images.juiceintegration.com/marketing/onelinkThumbnail.webp",
+    "og_title": "Juice Reel | Bet Tracker and Picks Marketplace",
+    "og_description": "Track your bets, shop the best lines, get AI-powered picks, and access the only verified sports picks marketplace."
+  },
+  "errors": [],
+  "final_url": "https://www.juicereel.com/",
+  "fonts_inline": [],
+  "fonts_google": [],
+  "css_files": [
+    "https://www.juicereel.com/_next/static/css/d046ebedb4bc95a0.css",
+    "https://www.juicereel.com/_next/static/css/7e7d96b1e6991756.css"
+  ],
+  "image_palette": {
+    "favicon.png": [
+      {
+        "hex": "#e7630b",
+        "pct": 32.2
+      },
+      {
+        "hex": "#fdfdfd",
+        "pct": 12.2
+      },
+      {
+        "hex": "#fd4d00",
+        "pct": 11.6
+      },
+      {
+        "hex": "#fde7dc",
+        "pct": 0.2
+      },
+      {
+        "hex": "#f28f58",
+        "pct": 0.2
+      },
+      {
+        "hex": "#f2c6a5",
+        "pct": 0.2
+      },
+      {
+        "hex": "#f27937",
+        "pct": 0.2
+      },
+      {
+        "hex": "#f2a579",
+        "pct": 0.1
+      }
+    ],
+    "og-image.webp": [
+      {
+        "hex": "#000000",
+        "pct": 57.6
+      },
+      {
+        "hex": "#fdfdfd",
+        "pct": 1.6
+      },
+      {
+        "hex": "#210b00",
+        "pct": 0.8
+      },
+      {
+        "hex": "#161616",
+        "pct": 0.7
+      },
+      {
+        "hex": "#373737",
+        "pct": 0.6
+      },
+      {
+        "hex": "#42210b",
+        "pct": 0.4
+      },
+      {
+        "hex": "#4d4d4d",
+        "pct": 0.3
+      },
+      {
+        "hex": "#6e4d42",
+        "pct": 0.3
+      }
+    ],
+    "favicon.ico": [
+      {
+        "hex": "#e7630b",
+        "pct": 32.3
+      },
+      {
+        "hex": "#fdfdfd",
+        "pct": 12.6
+      },
+      {
+        "hex": "#fd4d00",
+        "pct": 11.7
+      },
+      {
+        "hex": "#fde7dc",
+        "pct": 0.2
+      },
+      {
+        "hex": "#f2bb9a",
+        "pct": 0.2
+      },
+      {
+        "hex": "#f28f58",
+        "pct": 0.1
+      }
+    ]
+  },
+  "fonts_resolved": [
+    "@font-face:Inter",
+    "@font-face:Inter Fallback",
+    "Inter",
+    "Inter Fallback",
+    "Inter,Inter Fallback"
+  ]
+}

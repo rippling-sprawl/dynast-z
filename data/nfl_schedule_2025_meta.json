@@ -1,0 +1,16 @@
+{
+  "source": "balldontlie",
+  "url": "https://api.balldontlie.io/nfl/v1/games?seasons[]=2025&season_types[]=2&per_page=100",
+  "season": 2025,
+  "weeks": 18,
+  "game_count": 272,
+  "team_count": 32,
+  "scored_count": 272,
+  "slots": {
+    "odd": 74,
+    "regular": 198
+  },
+  "size_bytes": 39119,
+  "fetched_at": "2026-09-07T00:29:45+00:00",
+  "fetched_ts": 1788740985
+}

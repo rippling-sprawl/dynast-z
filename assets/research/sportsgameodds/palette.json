@@ -1,0 +1,213 @@
+{
+  "slug": "sportsgameodds",
+  "url": "https://sportsgameodds.com/",
+  "assets": [
+    {
+      "file": "favicon.png",
+      "src": "https://sportsgameodds.com/favicon-16x16.png",
+      "bytes": 1648,
+      "content_type": "image/png"
+    },
+    {
+      "file": "favicon.ico",
+      "src": "https://sportsgameodds.com/favicon.ico",
+      "bytes": 15086,
+      "content_type": "image/x-icon"
+    },
+    {
+      "file": "og-image.png",
+      "src": "https://sportsgameodds.com/images/og-default.png",
+      "bytes": 158002,
+      "content_type": "image/png"
+    },
+    {
+      "file": "favicon-ico.ico",
+      "src": "https://sportsgameodds.com/favicon.ico",
+      "bytes": 15086,
+      "content_type": "image/x-icon"
+    }
+  ],
+  "palette": [
+    {
+      "hex": "#10b981",
+      "count": 76
+    },
+    {
+      "hex": "#000000",
+      "count": 27
+    },
+    {
+      "hex": "#0b1121",
+      "count": 24
+    },
+    {
+      "hex": "#e8ecf4",
+      "count": 17
+    },
+    {
+      "hex": "#ffffff",
+      "count": 12
+    },
+    {
+      "hex": "#1c2640",
+      "count": 12
+    },
+    {
+      "hex": "#34d399",
+      "count": 10
+    },
+    {
+      "hex": "#151d2e",
+      "count": 10
+    },
+    {
+      "hex": "#243049",
+      "count": 10
+    },
+    {
+      "hex": "#ef4444",
+      "count": 9
+    },
+    {
+      "hex": "#059669",
+      "count": 9
+    },
+    {
+      "hex": "#22d3ee",
+      "count": 9
+    },
+    {
+      "hex": "#074f5d",
+      "count": 8
+    },
+    {
+      "hex": "#055f70",
+      "count": 8
+    }
+  ],
+  "meta": {
+    "og_image": "https://sportsgameodds.com/images/og-default.png",
+    "site_name": "Sports Game Odds - API Data",
+    "theme_color": "#0B1121",
+    "og_title": "Odds API | Sports Betting Odds API with Results",
+    "og_description": "Real-time in-play and pre-match odds, player props, scores and settlement in one Odds API. Pay per event, not per market. Free tier, no credit card."
+  },
+  "errors": [],
+  "final_url": "https://sportsgameodds.com/",
+  "fonts_inline": [],
+  "fonts_google": [],
+  "css_files": [
+    "https://sportsgameodds.com/_next/static/chunks/90b34067e4e34cbe.css",
+    "https://sportsgameodds.com/_next/static/chunks/1971759bd1d2c197.css"
+  ],
+  "image_palette": {
+    "favicon.png": [
+      {
+        "hex": "#008f58",
+        "pct": 11.8
+      },
+      {
+        "hex": "#006e37",
+        "pct": 5.1
+      },
+      {
+        "hex": "#b0e7d1",
+        "pct": 2.9
+      },
+      {
+        "hex": "#84a59a",
+        "pct": 2.2
+      },
+      {
+        "hex": "#6e8f84",
+        "pct": 2.2
+      },
+      {
+        "hex": "#004d2c",
+        "pct": 1.5
+      },
+      {
+        "hex": "#21634d",
+        "pct": 1.5
+      },
+      {
+        "hex": "#bbd1c6",
+        "pct": 1.5
+      }
+    ],
+    "og-image.png": [
+      {
+        "hex": "#0b0b0b",
+        "pct": 8.6
+      },
+      {
+        "hex": "#16212c",
+        "pct": 6.0
+      },
+      {
+        "hex": "#212c42",
+        "pct": 2.8
+      },
+      {
+        "hex": "#4d6384",
+        "pct": 1.0
+      },
+      {
+        "hex": "#374258",
+        "pct": 0.8
+      },
+      {
+        "hex": "#211616",
+        "pct": 0.8
+      },
+      {
+        "hex": "#636e79",
+        "pct": 0.6
+      },
+      {
+        "hex": "#4d5863",
+        "pct": 0.6
+      }
+    ],
+    "favicon.ico": [
+      {
+        "hex": "#fdfdfd",
+        "pct": 8.7
+      },
+      {
+        "hex": "#008f58",
+        "pct": 8.6
+      },
+      {
+        "hex": "#006e42",
+        "pct": 3.4
+      },
+      {
+        "hex": "#00422c",
+        "pct": 2.9
+      },
+      {
+        "hex": "#0bb063",
+        "pct": 1.2
+      },
+      {
+        "hex": "#002c16",
+        "pct": 1.1
+      }
+    ]
+  },
+  "fonts_resolved": [
+    "\"Source Serif 4 Fallback\"",
+    "\"Source Serif 4\"",
+    "\"Source Serif 4\",\"Source Serif 4 Fallback\"",
+    "@font-face:Manrope",
+    "@font-face:Manrope Fallback",
+    "@font-face:Source Serif 4",
+    "@font-face:Source Serif 4 Fallback",
+    "Manrope",
+    "Manrope Fallback",
+    "Manrope,Manrope Fallback",
+    "inherit",
+    "ui-monospace,monospace"
+  ]
+}

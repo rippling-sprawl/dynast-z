@@ -1,0 +1,145 @@
+{
+  "slug": "sportradar",
+  "url": "https://sportradar.com/",
+  "assets": [
+    {
+      "file": "favicon.png",
+      "src": "https://cdn-ileimjk.nitrocdn.com/sKgCfsiSczlMciqAtVqCggydSDKvnOYp/assets/images/optimized/rev-a924758/sportradar.com/wp-content/uploads/2021/05/favicon-1-150x150.png",
+      "bytes": 1281,
+      "content_type": "image/png"
+    },
+    {
+      "file": "og-image.jpg",
+      "src": "https://sportradar.com/wp-content/uploads/2021/05/Basketball-1.2.jpg",
+      "bytes": 383189,
+      "content_type": "image/jpeg"
+    }
+  ],
+  "palette": [
+    {
+      "hex": "#ffffff",
+      "count": 236
+    },
+    {
+      "hex": "#000000",
+      "count": 209
+    },
+    {
+      "hex": "#00003c",
+      "count": 77
+    },
+    {
+      "hex": "#ff0000",
+      "count": 50
+    },
+    {
+      "hex": "#0d6efd",
+      "count": 44
+    },
+    {
+      "hex": "#212529",
+      "count": 27
+    },
+    {
+      "hex": "#6c757d",
+      "count": 22
+    },
+    {
+      "hex": "#dc3545",
+      "count": 20
+    },
+    {
+      "hex": "#198754",
+      "count": 20
+    },
+    {
+      "hex": "#f8f9fa",
+      "count": 20
+    },
+    {
+      "hex": "#ea3323",
+      "count": 20
+    },
+    {
+      "hex": "#ffc107",
+      "count": 16
+    },
+    {
+      "hex": "#0dcaf0",
+      "count": 16
+    },
+    {
+      "hex": "#f6f6f6",
+      "count": 13
+    }
+  ],
+  "meta": {
+    "og_image": "https://sportradar.com/wp-content/uploads/2021/05/Basketball-1.2.jpg",
+    "site_name": "Sportradar",
+    "og_title": "Home - sportradar website",
+    "og_description": "Sportradar is the world\u2019s leading sports technology company, at the intersection between sports, media and betting."
+  },
+  "errors": [],
+  "final_url": "https://sportradar.com/",
+  "fonts_inline": [
+    "inherit",
+    "sans-serif",
+    "var(--bs-body-font-family)",
+    "var(--bs-font-sans-serif)"
+  ],
+  "fonts_google": [],
+  "css_files": [
+    "https://cdn-ileimjk.nitrocdn.com/sKgCfsiSczlMciqAtVqCggydSDKvnOYp/assets/static/optimized/rev-b62e992/sportradar.com/combinedCss/nitro-min-noimport-99062da463ccbc0d16a7e894fb5641e5-stylesheet.css",
+    "https://cdn-ileimjk.nitrocdn.com/sKgCfsiSczlMciqAtVqCggydSDKvnOYp/assets/static/optimized/rev-b62e992/sportradar.com/externalFontFace/nitro-min-noimport-bd7d37044a952f2ee3cc3ea62a1680fc-stylesheet.css"
+  ],
+  "image_palette": {
+    "favicon.png": [
+      {
+        "hex": "#e71621",
+        "pct": 100.0
+      }
+    ],
+    "og-image.jpg": [
+      {
+        "hex": "#0b0b21",
+        "pct": 14.5
+      },
+      {
+        "hex": "#161637",
+        "pct": 13.1
+      },
+      {
+        "hex": "#2c2c63",
+        "pct": 5.5
+      },
+      {
+        "hex": "#000000",
+        "pct": 3.8
+      },
+      {
+        "hex": "#21214d",
+        "pct": 3.0
+      },
+      {
+        "hex": "#370b21",
+        "pct": 0.4
+      },
+      {
+        "hex": "#4d162c",
+        "pct": 0.3
+      }
+    ]
+  },
+  "fonts_resolved": [
+    "\"Source Sans Pro\",sans-serif",
+    "@font-face:Font Awesome\\ 5 Brands",
+    "@font-face:Font Awesome\\ 5 Free",
+    "@font-face:swiper-icons",
+    "Font Awesome\\ 5 Brands",
+    "Font Awesome\\ 5 Free",
+    "inherit",
+    "monospace,monospace",
+    "sans-serif",
+    "swiper-icons"
+  ]
+}

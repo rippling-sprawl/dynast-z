@@ -4,17 +4,39 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <link rel="icon" type="image/png" href="/favicon.png">
+  <!-- Home-screen install. The two *-capable tags are what make an iOS icon
+       launch the site standalone — its own window, no address bar — instead of
+       opening a Safari tab; the manifest says the same thing to everyone else,
+       and to iOS 16.4+. standalone.js keys the drawer's share row off exactly
+       that state, so dropping these tags silently removes the row too. -->
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/assets/icons/app-touch-180.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Dynast-Z">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <title>3-Ball Lookup | Dynast-Z</title>
-  <link rel="stylesheet" href="/styles/base/styles.css?v=abec71e4">
-  <link rel="stylesheet" href="/styles/base/hub.css?v=2b363e8e">
-  <link rel="stylesheet" href="/styles/primary/golf.css?v=5644a76c">
-  <link rel="stylesheet" href="/styles/style/score-colors.css?v=98513287">
+  <!-- Theme first: theme.js sets <html data-theme> before the first paint,
+       theme.css holds every colour token the sheets below spend. -->
+  <script src="/scripts/base/theme.js"></script>
+  <link rel="stylesheet" href="/styles/base/theme.css">
+  <link rel="stylesheet" href="/styles/base/styles.css">
+  <link rel="stylesheet" href="/styles/base/hub.css">
+  <link rel="stylesheet" href="/styles/primary/golf.css">
+  <link rel="stylesheet" href="/styles/style/score-colors.css">
+  <link rel="stylesheet" href="/styles/base/lightbox.css">
+  <!-- Vercel Web Analytics. The /_vercel/insights/* routes are injected by
+       Vercel at deploy time, so this 404s harmlessly when serving locally. -->
+  <script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
+  <script defer src="/_vercel/insights/script.js"></script>
 </head>
 <body class="masters-body">
   <div id="header-mount"></div>
   <div id="nav-drawer-mount"></div>
-  <script src="/scripts/base/auth.js?v=a1b2c3d4"></script>
-  <script src="/scripts/base/nav.js?v=e5f6a7b8"></script>
+  <script src="/scripts/base/auth.js"></script>
+  <script src="/scripts/base/standalone.js"></script>
+  <script src="/scripts/base/nav.js"></script>
+  <script src="/scripts/base/lightbox.js"></script>
   <script>initPage();</script>
 
   <div class="masters-content">
@@ -29,7 +51,7 @@
 
     <div id="error" class="masters-empty" style="display:none"></div>
     <div id="user-results" style="display:none">
-      <h3 id="user-label" style="margin:16px 0 8px;color:#ccc"></h3>
+      <h3 id="user-label" style="margin:16px 0 8px;color:var(--text-2)"></h3>
       <div class="round-selector" id="round-sel"></div>
       <div id="loading" class="masters-loading" style="display:none">Loading scores...</div>
       <div id="results"></div>
@@ -46,20 +68,20 @@
       flex: 1;
       padding: 10px 12px;
       border-radius: 6px;
-      border: 1px solid #444;
-      background: #1a1a1a;
-      color: #f0f0f0;
+      border: 1px solid var(--hairline-hi);
+      background: var(--panel-hi);
+      color: var(--text-bright);
       font-size: 14px;
       font-family: inherit;
     }
     .lookup-search input:focus {
       outline: none;
-      border-color: #60a5fa;
+      border-color: var(--accent-2);
     }
   </style>
 
-  <script src="/scripts/base/sync.js?v=f19ba045"></script>
-  <script src="/scripts/primary/golf-utils.js?v=9ca7c49f"></script>
+  <script src="/scripts/base/sync.js"></script>
+  <script src="/scripts/primary/golf-utils.js"></script>
   <script>
     const info = getTournamentInfo();
     const basePath = '/golf/' + TOURNAMENT_CONTEXT.year + '/' + TOURNAMENT_CONTEXT.tournament;
@@ -188,7 +210,7 @@
         const opponents = (group.opponents || []).filter(Boolean).map(findPlayer).filter(Boolean);
 
         if (!myPlayer) {
-          html += `<div class="three-ball-group"><div class="group-row"><span class="golfer-name" style="color:#f87171">${group.myGolfer} \u2014 not found</span></div></div>`;
+          html += `<div class="three-ball-group"><div class="group-row"><span class="golfer-name" style="color:var(--bad-soft)">${group.myGolfer} \u2014 not found</span></div></div>`;
           return;
         }
 
@@ -219,7 +241,7 @@
 
         oppResults.forEach(opp => {
           html += '<div class="group-row">';
-          html += `<span class="golfer-name" style="font-weight:400;color:#aaa">${opp.player.full_name}</span>`;
+          html += `<span class="golfer-name" style="font-weight:400;color:var(--text-2)">${opp.player.full_name}</span>`;
           html += `<span class="round-score ${scoreClass(opp.score)}">${formatScore(opp.score)}</span>`;
           html += `<span class="thru-col">${opp.thru || ''}</span>`;
           html += '</div>';

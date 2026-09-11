@@ -1,0 +1,2649 @@
+{
+  "title": "2026 Projections Weighted by the Best Sources",
+  "note": "Each team has a 25% chance to win their Division. They have a 100% chance of making the Playoffs, if they win that. Conference champs and Super Bowl should be an after thought after betting \"to make the playoffs\"",
+  "eyeTestLegend": "1: Let\u2019s Run It Back, Shall We? \u00b7 9: No Ceiling in Sight",
+  "source": "Google Sheet \u2014 Projections tab",
+  "weights": {
+    "eyeTest": 0.2,
+    "oLine": 0.25,
+    "sos": 0.15,
+    "rest": 0.1,
+    "havoc": 0.15,
+    "coaches": 0.1,
+    "luck": 0.05
+  },
+  "stats": {
+    "eyeTest": {
+      "avg": 5.19,
+      "std": 2.35
+    },
+    "oLineRank": {
+      "avg": 16.5,
+      "std": 9.38
+    },
+    "sos": {
+      "avg": 4.48,
+      "std": 2.17
+    },
+    "rest": {
+      "avg": 0.0,
+      "std": 8.67
+    },
+    "havoc": {
+      "avg": 14.82,
+      "std": 2.35
+    },
+    "coachTier": {
+      "avg": 4.62,
+      "std": 2.2
+    },
+    "winsAbovePythag": {
+      "avg": 0.03,
+      "std": 1.47
+    }
+  },
+  "teams": [
+    {
+      "team": "Chicago Bears",
+      "conf": "NFC",
+      "div": "North",
+      "score": 0.69,
+      "z": {
+        "eyeTest": 1.4,
+        "oLine": 1.2,
+        "sos": -0.7,
+        "rest": 1.7,
+        "havoc": -0.1,
+        "coaches": 1.2,
+        "luck": -1.3
+      },
+      "raw": {
+        "eyeTest": 2.0,
+        "oLineRank": 5.0,
+        "sos": 3.0,
+        "sosRank": 26.0,
+        "rest": 15.0,
+        "havoc": 14.5,
+        "coachTier": 2,
+        "winsAbovePythag": 1.9
+      },
+      "odds": {
+        "make": 114.0,
+        "miss": -134.0,
+        "division": 340.0,
+        "winTotal": 9.5,
+        "over": 110,
+        "under": -130,
+        "winBooks": [
+          "dk",
+          "fd",
+          "score"
+        ]
+      },
+      "oline": {
+        "verdict": "Center retirement is the swing factor.",
+        "injuries": [
+          "Ozzy Trapilo missed time as a rookie"
+        ],
+        "pros": [
+          "Trapilo flashed before the injury"
+        ],
+        "cons": [
+          "Drew Dalman's retirement is a significant blow"
+        ],
+        "action": {
+          "rank": 7,
+          "prevRank": 4,
+          "tier": "The Ol' Stalwarts",
+          "verdict": "Last year's sleeper delivered; the center's retirement is the tax.",
+          "notes": [
+            "Finished third in PFF's rank by the end of last season",
+            "C Drew Dalman's unexpected retirement is the setback",
+            "LG Joe Thuney is a stud and RT Darnell Wright anchors the league's best run-blocking right side",
+            "Caleb Williams' improved pocket management is partly a line story"
+          ]
+        }
+      },
+      "pythag": {
+        "w": 11,
+        "l": 6,
+        "t": 0,
+        "pf": 441,
+        "pa": 415,
+        "actualWinPct": 0.647,
+        "pythagWinPct": 0.536,
+        "pythagW": 9.1,
+        "winsAbovePythag": 1.9
+      },
+      "abbr": "CHI",
+      "short": "Bears",
+      "notes": {
+        "notes": [
+          "Year 2 in the Johnson system"
+        ],
+        "schedule": null
+      }
+    },
+    {
+      "team": "Detroit Lions",
+      "conf": "NFC",
+      "div": "North",
+      "score": 0.49,
+      "z": {
+        "eyeTest": 0.1,
+        "oLine": -0.3,
+        "sos": 2.5,
+        "rest": 0.1,
+        "havoc": 0.5,
+        "coaches": 0.3,
+        "luck": 0.7
+      },
+      "raw": {
+        "eyeTest": 5.0,
+        "oLineRank": 19.0,
+        "sos": 10.0,
+        "sosRank": 1.0,
+        "rest": 1.0,
+        "havoc": 15.9,
+        "coachTier": 4,
+        "winsAbovePythag": -1.0
+      },
+      "odds": {
+        "make": -210.0,
+        "miss": 176.0,
+        "division": 150.0,
+        "winTotal": 10.5,
+        "over": -120,
+        "under": -100,
+        "winBooks": [
+          "dk",
+          "fd",
+          "score"
+        ]
+      },
+      "oline": {
+        "verdict": "An injury knocked them out of the top tier.",
+        "injuries": [
+          "Cade Mays injured"
+        ],
+        "pros": [
+          "Sewell posted a career-high 95.1 before sliding to left tackle"
+        ],
+        "cons": [
+          "Mays' injury is the main reason for the drop",
+          "Rookie Blake Miller thrown in"
+        ],
+        "action": {
+          "rank": 17,
+          "prevRank": 8,
+          "tier": "Wild Cards I'm Skeptical Of",
+          "verdict": "A real fall from grace after three straight years in the top three.",
+          "notes": [
+            "Penei Sewell moves back to left tackle, one of three starters in new spots",
+            "First-rounder Blake Miller starts at right tackle",
+            "C Cade Mays misses the first half of the season, and the interior looks particularly shaky",
+            "Jared Goff is great in a clean pocket and struggles badly with quick pressure"
+          ]
+        }
+      },
+      "pythag": {
+        "w": 9,
+        "l": 8,
+        "t": 0,
+        "pf": 481,
+        "pa": 413,
+        "actualWinPct": 0.529,
+        "pythagWinPct": 0.589,
+        "pythagW": 10.0,
+        "winsAbovePythag": -1.0
+      },
+      "abbr": "DET",
+      "short": "Lions",
+      "notes": {
+        "notes": [
+          "Nobody believes in us",
+          "Obvious first choice for the worst-to-first trend",
+          "1st easiest SoS",
+          "Terrion Arnold arrest"
+        ],
+        "schedule": null
+      }
+    },
+    {
+      "team": "Minnesota Vikings",
+      "conf": "NFC",
+      "div": "North",
+      "score": 0.51,
+      "z": {
+        "eyeTest": 0.5,
+        "oLine": 0.5,
+        "sos": -0.2,
+        "rest": 0.5,
+        "havoc": 1.4,
+        "coaches": 0.7,
+        "luck": -0.1
+      },
+      "raw": {
+        "eyeTest": 4.0,
+        "oLineRank": 12.0,
+        "sos": 4.0,
+        "sosRank": 15.0,
+        "rest": 4.0,
+        "havoc": 18.1,
+        "coachTier": 3,
+        "winsAbovePythag": 0.2
+      },
+      "odds": {
+        "make": 148.0,
+        "miss": -176.0,
+        "division": 450.0,
+        "winTotal": 8.5,
+        "over": -108,
+        "under": -111,
+        "winBooks": [
+          "dk",
+          "fd",
+          "score"
+        ]
+      },
+      "oline": {
+        "verdict": "Elite when healthy is the whole story.",
+        "injuries": [
+          "Darrisaw has a long injury history"
+        ],
+        "pros": [
+          "Darrisaw is elite when available",
+          "Donovan Jackson promising in year two"
+        ],
+        "cons": [
+          "Darrisaw availability"
+        ],
+        "action": {
+          "rank": 13,
+          "prevRank": 3,
+          "tier": "Wild Cards I Believe In",
+          "verdict": "Huge investment, never healthy enough to show it.",
+          "notes": [
+            "C Ryan Kelly retired",
+            "LT Christian Darrisaw is a top-10 lineman when healthy but has played only 17 games in two years",
+            "Darrisaw and Brian O'Neill are an excellent run-blocking tackle duo",
+            "Frank Smith's zone background should suit them"
+          ]
+        }
+      },
+      "pythag": {
+        "w": 9,
+        "l": 8,
+        "t": 0,
+        "pf": 344,
+        "pa": 333,
+        "actualWinPct": 0.529,
+        "pythagWinPct": 0.519,
+        "pythagW": 8.8,
+        "winsAbovePythag": 0.2
+      },
+      "abbr": "MIN",
+      "short": "Vikings",
+      "notes": {
+        "notes": [
+          "Kyler is better than what they had last year",
+          "Strong defense (Flores)"
+        ],
+        "schedule": null
+      }
+    },
+    {
+      "team": "Green Bay Packers",
+      "conf": "NFC",
+      "div": "North",
+      "score": -0.19,
+      "z": {
+        "eyeTest": 0.5,
+        "oLine": -1.2,
+        "sos": -0.5,
+        "rest": -0.2,
+        "havoc": 0.3,
+        "coaches": 0.7,
+        "luck": -0.1
+      },
+      "raw": {
+        "eyeTest": 4.0,
+        "oLineRank": 28.0,
+        "sos": 3.5,
+        "sosRank": 24.0,
+        "rest": -2.0,
+        "havoc": 15.6,
+        "coachTier": 3,
+        "winsAbovePythag": 0.2
+      },
+      "odds": {
+        "make": -116.0,
+        "miss": -102.0,
+        "division": 260.0,
+        "winTotal": 9.5,
+        "over": -122,
+        "under": 102,
+        "winBooks": [
+          "dk",
+          "fd"
+        ]
+      },
+      "oline": {
+        "verdict": "One trustworthy starter out of five.",
+        "injuries": [],
+        "pros": [
+          "Bako-Bewele is solid at right tackle"
+        ],
+        "cons": [
+          "The other four starters have one combined season above a 65.0 grade"
+        ],
+        "action": {
+          "rank": 28,
+          "prevRank": 10,
+          "tier": "All Downside",
+          "verdict": "A gigantic drop off from what Green Bay usually works with.",
+          "notes": [
+            "The line ranked 7th to 13th reliably for half a decade before cratering last season",
+            "RT Zach Bako-Bewele is the real strength but is coming off a late-season patella tear",
+            "Everything else is near the bottom of the league, including a disappointing Jordan Morgan at left tackle"
+          ]
+        }
+      },
+      "pythag": {
+        "w": 9,
+        "l": 7,
+        "t": 1,
+        "pf": 391,
+        "pa": 360,
+        "actualWinPct": 0.559,
+        "pythagWinPct": 0.549,
+        "pythagW": 9.3,
+        "winsAbovePythag": 0.2
+      },
+      "abbr": "GB",
+      "short": "Packers",
+      "notes": {
+        "notes": [
+          "Injury and attrition pile-up: Kraft, Parsons, Watson always hurt",
+          "WR turnover \u2014 Doubs and Wicks",
+          "Jacobs isn't getting younger",
+          "Relying on Golden"
+        ],
+        "schedule": null
+      }
+    },
+    {
+      "team": "Tampa Bay Buccaneers",
+      "conf": "NFC",
+      "div": "South",
+      "score": 0.22,
+      "z": {
+        "eyeTest": 0.5,
+        "oLine": 1.4,
+        "sos": -0.7,
+        "rest": -0.2,
+        "havoc": -0.3,
+        "coaches": -0.6,
+        "luck": -0.2
+      },
+      "raw": {
+        "eyeTest": 4.0,
+        "oLineRank": 3.0,
+        "sos": 3.0,
+        "sosRank": 25.0,
+        "rest": -2.0,
+        "havoc": 14.0,
+        "coachTier": 6,
+        "winsAbovePythag": 0.3
+      },
+      "odds": {
+        "make": 142.0,
+        "miss": -168.0,
+        "division": 200.0,
+        "winTotal": 8.5,
+        "over": 113,
+        "under": -134,
+        "winBooks": [
+          "dk",
+          "fd",
+          "score"
+        ]
+      },
+      "oline": {
+        "verdict": "Elite tackle duo carries the unit.",
+        "injuries": [],
+        "pros": [
+          "Wirfs career-high 92.7",
+          "Goedeke allowed no sack or hit on 416 pass-block snaps"
+        ],
+        "cons": [],
+        "action": {
+          "rank": 2,
+          "prevRank": 5,
+          "tier": "Could End the Year No. 1",
+          "verdict": "Healthy again after 27 games lost at right tackle and both guards.",
+          "notes": [
+            "Tristan Wirfs is arguably the best tackle in football and especially elite in pass protection",
+            "Luke Goedeke is back healthy at right tackle and Cody Mauch is a rising star at right guard",
+            "Better at pass blocking than run blocking"
+          ]
+        }
+      },
+      "pythag": {
+        "w": 8,
+        "l": 9,
+        "t": 0,
+        "pf": 380,
+        "pa": 411,
+        "actualWinPct": 0.471,
+        "pythagWinPct": 0.454,
+        "pythagW": 7.7,
+        "winsAbovePythag": 0.3
+      },
+      "abbr": "TB",
+      "short": "Buccaneers",
+      "notes": {
+        "notes": [],
+        "schedule": null
+      }
+    },
+    {
+      "team": "New Orleans Saints",
+      "conf": "NFC",
+      "div": "South",
+      "score": 0.09,
+      "z": {
+        "eyeTest": -0.3,
+        "oLine": 0.1,
+        "sos": 2.1,
+        "rest": -0.8,
+        "havoc": -0.4,
+        "coaches": -0.2,
+        "luck": 0.2
+      },
+      "raw": {
+        "eyeTest": 6.0,
+        "oLineRank": 16.0,
+        "sos": 9.0,
+        "sosRank": 3.0,
+        "rest": -7.0,
+        "havoc": 13.9,
+        "coachTier": 5,
+        "winsAbovePythag": -0.3
+      },
+      "odds": {
+        "make": 180.0,
+        "miss": -215.0,
+        "division": 240.0,
+        "winTotal": 7.5,
+        "over": -117,
+        "under": -103,
+        "winBooks": [
+          "dk",
+          "fd",
+          "score"
+        ]
+      },
+      "oline": {
+        "verdict": "Young tackle plus a stable center.",
+        "injuries": [],
+        "pros": [
+          "Kelvin Banks Jr. led all rookies at 73.5",
+          "Erik McCoy returns at center"
+        ],
+        "cons": [],
+        "action": {
+          "rank": 14,
+          "prevRank": 25,
+          "tier": "Wild Cards I Believe In",
+          "verdict": "On the rise off a heavy investment.",
+          "notes": [
+            "Four starters return, with new LG David Edwards the only change",
+            "Both tackles were the last two first-round picks",
+            "Balanced with no stars and no glaring weakness beyond health"
+          ]
+        }
+      },
+      "pythag": {
+        "w": 6,
+        "l": 11,
+        "t": 0,
+        "pf": 306,
+        "pa": 383,
+        "actualWinPct": 0.353,
+        "pythagWinPct": 0.37,
+        "pythagW": 6.3,
+        "winsAbovePythag": -0.3
+      },
+      "abbr": "NO",
+      "short": "Saints",
+      "notes": {
+        "notes": [
+          "2nd easiest SoS",
+          "Shough was clearly competent",
+          "Seemingly good coach",
+          "Added rookie weapons"
+        ],
+        "schedule": null
+      }
+    },
+    {
+      "team": "Atlanta Falcons",
+      "conf": "NFC",
+      "div": "South",
+      "score": -0.18,
+      "z": {
+        "eyeTest": -1.2,
+        "oLine": 0.8,
+        "sos": -0.2,
+        "rest": 0.8,
+        "havoc": -0.4,
+        "coaches": -1.1,
+        "luck": -0.5
+      },
+      "raw": {
+        "eyeTest": 8.0,
+        "oLineRank": 9.0,
+        "sos": 4.0,
+        "sosRank": 19.0,
+        "rest": 7.0,
+        "havoc": 13.8,
+        "coachTier": 7,
+        "winsAbovePythag": 0.8
+      },
+      "odds": {
+        "make": 220.0,
+        "miss": -270.0,
+        "division": 310.0,
+        "winTotal": 7.5,
+        "over": 111,
+        "under": -132,
+        "winBooks": [
+          "dk",
+          "fd",
+          "score"
+        ]
+      },
+      "oline": {
+        "verdict": "Elite guard play, coaching turnover.",
+        "injuries": [],
+        "pros": [
+          "Chris Lindstrom is an elite run blocker"
+        ],
+        "cons": [
+          "OL coach Dwayne Ledford left for Baltimore"
+        ],
+        "action": {
+          "rank": 11,
+          "prevRank": 9,
+          "tier": "Good Not Great",
+          "verdict": "Four straight seasons parked in the 7-to-11 range.",
+          "notes": [
+            "LT Jake Matthews is dependable and RG Chris Lindstrom is strong",
+            "Much better at run blocking, especially inside",
+            "New OL coach Bill Callahan replaces Dwayne Ledford, and Jawaan Taylor is the new starting RT"
+          ]
+        }
+      },
+      "pythag": {
+        "w": 8,
+        "l": 9,
+        "t": 0,
+        "pf": 353,
+        "pa": 401,
+        "actualWinPct": 0.471,
+        "pythagWinPct": 0.425,
+        "pythagW": 7.2,
+        "winsAbovePythag": 0.8
+      },
+      "abbr": "ATL",
+      "short": "Falcons",
+      "notes": {
+        "notes": [
+          "James Pearce arrest \u2014 not a great start to the offseason"
+        ],
+        "schedule": null
+      }
+    },
+    {
+      "team": "Carolina Panthers",
+      "conf": "NFC",
+      "div": "South",
+      "score": -0.97,
+      "z": {
+        "eyeTest": -1.2,
+        "oLine": -1.0,
+        "sos": -0.9,
+        "rest": 0.9,
+        "havoc": -2.1,
+        "coaches": -0.6,
+        "luck": -1.0
+      },
+      "raw": {
+        "eyeTest": 8.0,
+        "oLineRank": 26.0,
+        "sos": 2.5,
+        "sosRank": 30.0,
+        "rest": 8.0,
+        "havoc": 9.8,
+        "coachTier": 6,
+        "winsAbovePythag": 1.5
+      },
+      "odds": {
+        "make": 235.0,
+        "miss": -290.0,
+        "division": 320.0,
+        "winTotal": 7.5,
+        "over": 112,
+        "under": -132,
+        "winBooks": [
+          "dk",
+          "fd",
+          "score"
+        ]
+      },
+      "oline": {
+        "verdict": "Both starting tackles unavailable.",
+        "injuries": [
+          "Ekwonu and Moton both out"
+        ],
+        "pros": [],
+        "cons": [
+          "Walker and Freeling stepping into both tackle spots"
+        ],
+        "action": {
+          "rank": 27,
+          "prevRank": 13,
+          "tier": "All Downside",
+          "verdict": "Heavily invested and injured at four of five spots.",
+          "notes": [
+            "LT Ikem Ekwonu is back from a torn Achilles and RT Taylor Moton is out indefinitely with blood clots",
+            "Guards Damien Lewis and Robert Hunt are both nursing injuries",
+            "Rasheed Walker is a forced short-term start and raw first-rounder Monroe Freeling has to play",
+            "If it does not get healthy, this could end the Bryce Young era"
+          ]
+        }
+      },
+      "pythag": {
+        "w": 8,
+        "l": 9,
+        "t": 0,
+        "pf": 311,
+        "pa": 380,
+        "actualWinPct": 0.471,
+        "pythagWinPct": 0.383,
+        "pythagW": 6.5,
+        "winsAbovePythag": 1.5
+      },
+      "abbr": "CAR",
+      "short": "Panthers",
+      "notes": {
+        "notes": [
+          "Top 5 hardest schedule"
+        ],
+        "schedule": null
+      }
+    },
+    {
+      "team": "Philadelphia Eagles",
+      "conf": "NFC",
+      "div": "East",
+      "score": 0.35,
+      "z": {
+        "eyeTest": 0.1,
+        "oLine": 1.5,
+        "sos": 0.5,
+        "rest": -1.7,
+        "havoc": 0.4,
+        "coaches": 0.3,
+        "luck": -0.7
+      },
+      "raw": {
+        "eyeTest": 5.0,
+        "oLineRank": 2.0,
+        "sos": 5.5,
+        "sosRank": 8.0,
+        "rest": -15.0,
+        "havoc": 15.7,
+        "coachTier": 4,
+        "winsAbovePythag": 1.0
+      },
+      "odds": {
+        "make": -168.0,
+        "miss": 142.0,
+        "division": 125.0,
+        "winTotal": 10.5,
+        "over": 116,
+        "under": -138,
+        "winBooks": [
+          "dk",
+          "fd",
+          "score"
+        ]
+      },
+      "oline": {
+        "verdict": "Same five starters, but the O-line coach left.",
+        "injuries": [],
+        "pros": [
+          "Lane Johnson has graded 80+ in pass pro six straight seasons",
+          "Lineup continuity"
+        ],
+        "cons": [
+          "Loss of OL coach Jeff Stoutland"
+        ],
+        "action": {
+          "rank": 5,
+          "prevRank": 1,
+          "tier": "The Ol' Stalwarts",
+          "verdict": "Still loaded, but written up as a step back from No. 1.",
+          "notes": [
+            "LT Jordan Mailata is an elite run blocker and RT Lane Johnson an excellent pass blocker",
+            "Legendary OL coach Jeff Stoutland retired",
+            "RG Tyler Steen is the weak link, and depth plus injury concerns are mounting",
+            "Sean Mannion's zone-run and play-action system should help"
+          ]
+        }
+      },
+      "pythag": {
+        "w": 11,
+        "l": 6,
+        "t": 0,
+        "pf": 379,
+        "pa": 325,
+        "actualWinPct": 0.647,
+        "pythagWinPct": 0.59,
+        "pythagW": 10.0,
+        "winsAbovePythag": 1.0
+      },
+      "abbr": "PHI",
+      "short": "Eagles",
+      "notes": {
+        "notes": [
+          "New OC",
+          "New weapons",
+          "Addition by subtraction (AJ Brown)",
+          "Easiest schedule within division"
+        ],
+        "schedule": null
+      }
+    },
+    {
+      "team": "Dallas Cowboys",
+      "conf": "NFC",
+      "div": "East",
+      "score": 0.45,
+      "z": {
+        "eyeTest": 1.4,
+        "oLine": -0.1,
+        "sos": -0.7,
+        "rest": 1.4,
+        "havoc": 1.0,
+        "coaches": -0.2,
+        "luck": 0.2
+      },
+      "raw": {
+        "eyeTest": 2.0,
+        "oLineRank": 17.0,
+        "sos": 3.0,
+        "sosRank": 28.0,
+        "rest": 12.0,
+        "havoc": 17.2,
+        "coachTier": 5,
+        "winsAbovePythag": -0.2
+      },
+      "odds": {
+        "make": -108.0,
+        "miss": -108.0,
+        "division": 190.0,
+        "winTotal": 9.5,
+        "over": 107,
+        "under": -130,
+        "winBooks": [
+          "dk",
+          "fd"
+        ]
+      },
+      "oline": {
+        "verdict": "Interior could be the league's best; tackles are not.",
+        "injuries": [],
+        "pros": [
+          "Interior has a case as the best in football"
+        ],
+        "cons": [
+          "Tackle play, Tyler Guyton in particular"
+        ],
+        "action": {
+          "rank": 12,
+          "prevRank": 20,
+          "tier": "Good Not Great",
+          "verdict": "A unit the scheme is doing a lot for.",
+          "notes": [
+            "Klayton Adams' system helps, and Dak Prescott handles pressure well",
+            "Tyler Smith and Tyler Booker are one of the league's better guard duos",
+            "Tackles Tyler Guyton and Terence Steele are the weak point on pass plays"
+          ]
+        }
+      },
+      "pythag": {
+        "w": 7,
+        "l": 9,
+        "t": 1,
+        "pf": 471,
+        "pa": 511,
+        "actualWinPct": 0.441,
+        "pythagWinPct": 0.452,
+        "pythagW": 7.7,
+        "winsAbovePythag": -0.2
+      },
+      "abbr": "DAL",
+      "short": "Cowboys",
+      "notes": {
+        "notes": [
+          "Defense can't get worse than last year"
+        ],
+        "schedule": null
+      }
+    },
+    {
+      "team": "New York Giants",
+      "conf": "NFC",
+      "div": "East",
+      "score": -0.26,
+      "z": {
+        "eyeTest": -1.2,
+        "oLine": -0.7,
+        "sos": -0.5,
+        "rest": 0.3,
+        "havoc": 0.3,
+        "coaches": 0.3,
+        "luck": 2.1
+      },
+      "raw": {
+        "eyeTest": 8.0,
+        "oLineRank": 23.0,
+        "sos": 3.5,
+        "sosRank": 21.0,
+        "rest": 3.0,
+        "havoc": 15.4,
+        "coachTier": 4,
+        "winsAbovePythag": -3.1
+      },
+      "odds": {
+        "make": 260.0,
+        "miss": -320.0,
+        "division": 550.0,
+        "winTotal": 7.5,
+        "over": -105,
+        "under": -115,
+        "winBooks": [
+          "dk",
+          "fd",
+          "score"
+        ]
+      },
+      "oline": {
+        "verdict": "One elite player who cannot stay on the field.",
+        "injuries": [
+          "Andrew Thomas has a concerning injury history"
+        ],
+        "pros": [
+          "Thomas is elite when available",
+          "Mauigoa drafted to fix right guard"
+        ],
+        "cons": [
+          "Thomas availability"
+        ],
+        "action": {
+          "rank": 19,
+          "prevRank": 29,
+          "tier": "Much Improved",
+          "verdict": "Can be decent, but only with Andrew Thomas on the field.",
+          "notes": [
+            "Thomas is a top-five superstar when healthy and has played 29 games in three years",
+            "No. 10 pick RG Francis Mauigoa should help",
+            "Still projects as a poor run-blocking unit",
+            "New OC Matt Nagy did not help the Chiefs' line in recent years"
+          ]
+        }
+      },
+      "pythag": {
+        "w": 4,
+        "l": 13,
+        "t": 0,
+        "pf": 381,
+        "pa": 439,
+        "actualWinPct": 0.235,
+        "pythagWinPct": 0.417,
+        "pythagW": 7.1,
+        "winsAbovePythag": -3.1
+      },
+      "abbr": "NYG",
+      "short": "Giants",
+      "notes": {
+        "notes": [
+          "New, much better coach",
+          "Strong defense",
+          "Health regression?"
+        ],
+        "schedule": null
+      }
+    },
+    {
+      "team": "Washington Commanders",
+      "conf": "NFC",
+      "div": "East",
+      "score": -0.53,
+      "z": {
+        "eyeTest": -0.3,
+        "oLine": -1.7,
+        "sos": -0.9,
+        "rest": 1.0,
+        "havoc": -0.1,
+        "coaches": -0.6,
+        "luck": 0.8
+      },
+      "raw": {
+        "eyeTest": 6.0,
+        "oLineRank": 32.0,
+        "sos": 2.5,
+        "sosRank": 29.0,
+        "rest": 9.0,
+        "havoc": 14.6,
+        "coachTier": 6,
+        "winsAbovePythag": -1.2
+      },
+      "odds": {
+        "make": 275.0,
+        "miss": -340.0,
+        "division": 600.0,
+        "winTotal": 7.5,
+        "over": -118,
+        "under": -101,
+        "winBooks": [
+          "dk",
+          "fd",
+          "score"
+        ]
+      },
+      "oline": {
+        "verdict": "A single injury sank the unit.",
+        "injuries": [
+          "Laremy Tunsil's injury is significant"
+        ],
+        "pros": [],
+        "cons": [
+          "Tunsil's loss is catastrophic for the group",
+          "Conerly Jr. unproven at right tackle"
+        ],
+        "action": {
+          "rank": 29,
+          "prevRank": 17,
+          "tier": "All Downside",
+          "verdict": "Losing Laremy Tunsil may be the biggest O-line loss of the season.",
+          "notes": [
+            "Tunsil is one of the best pass blockers in the league",
+            "Brandon Thorn dropped them 11th to 22nd; PFF dropped them from inside the top 20 to dead last",
+            "Young tackles Brandon Coleman and Josh Conerly have upside but are huge variables",
+            "A real chance the loss has doomed the season before it started"
+          ]
+        }
+      },
+      "pythag": {
+        "w": 5,
+        "l": 12,
+        "t": 0,
+        "pf": 356,
+        "pa": 451,
+        "actualWinPct": 0.294,
+        "pythagWinPct": 0.363,
+        "pythagW": 6.2,
+        "winsAbovePythag": -1.2
+      },
+      "abbr": "WSH",
+      "short": "Commanders",
+      "notes": {
+        "notes": [
+          "Still old",
+          "Daniels is brittle"
+        ],
+        "schedule": null
+      }
+    },
+    {
+      "team": "San Francisco 49ers",
+      "conf": "NFC",
+      "div": "West",
+      "score": 0.35,
+      "z": {
+        "eyeTest": 1.4,
+        "oLine": 0.7,
+        "sos": 0.5,
+        "rest": 0.0,
+        "havoc": -1.8,
+        "coaches": 1.7,
+        "luck": -1.3
+      },
+      "raw": {
+        "eyeTest": 2.0,
+        "oLineRank": 10.0,
+        "sos": 5.5,
+        "sosRank": 7.0,
+        "rest": 0.0,
+        "havoc": 10.5,
+        "coachTier": 1,
+        "winsAbovePythag": 1.9
+      },
+      "odds": {
+        "make": -136.0,
+        "miss": 116.0,
+        "division": 340.0,
+        "winTotal": 9.5,
+        "over": -143,
+        "under": 120,
+        "winBooks": [
+          "dk",
+          "fd"
+        ]
+      },
+      "oline": {
+        "verdict": "Leaning hard on a 37-year-old.",
+        "injuries": [],
+        "pros": [
+          "Trent Williams still dominant at 37"
+        ],
+        "cons": [
+          "Unit falls off sharply without him",
+          "Interior unsettled"
+        ],
+        "action": {
+          "rank": 9,
+          "prevRank": 15,
+          "tier": "Good Not Great",
+          "verdict": "Give them the benefit of the doubt until Trent Williams retires or Shanahan leaves.",
+          "notes": [
+            "Williams is 38 with injury history but has played 14-plus games in five of the last six seasons, and is still an elite run blocker",
+            "Brock Purdy is 44-10 with Williams in the lineup and 2-7 without him",
+            "Shanahan's efficient, run-first offense does real work for the unit"
+          ]
+        }
+      },
+      "pythag": {
+        "w": 12,
+        "l": 5,
+        "t": 0,
+        "pf": 437,
+        "pa": 371,
+        "actualWinPct": 0.706,
+        "pythagWinPct": 0.596,
+        "pythagW": 10.1,
+        "winsAbovePythag": 1.9
+      },
+      "abbr": "SF",
+      "short": "49ers",
+      "notes": {
+        "notes": [],
+        "schedule": null
+      }
+    },
+    {
+      "team": "Los Angeles Rams",
+      "conf": "NFC",
+      "div": "West",
+      "score": 0.61,
+      "z": {
+        "eyeTest": 1.8,
+        "oLine": 0.6,
+        "sos": -0.7,
+        "rest": -0.7,
+        "havoc": 0.6,
+        "coaches": 1.7,
+        "luck": 0.2
+      },
+      "raw": {
+        "eyeTest": 1.0,
+        "oLineRank": 11.0,
+        "sos": 3.0,
+        "sosRank": 27.0,
+        "rest": -6.0,
+        "havoc": 16.3,
+        "coachTier": 1,
+        "winsAbovePythag": -0.3
+      },
+      "odds": {
+        "make": -550.0,
+        "miss": 410.0,
+        "division": -115.0,
+        "winTotal": 11.5,
+        "over": -128,
+        "under": 108,
+        "winBooks": [
+          "dk",
+          "fd",
+          "score"
+        ]
+      },
+      "oline": {
+        "verdict": "Solid guards, availability risk at tackle.",
+        "injuries": [],
+        "pros": [
+          "Avila and Dotson both graded above 75.0"
+        ],
+        "cons": [
+          "Alaric Jackson faces a potential suspension"
+        ],
+        "action": {
+          "rank": 10,
+          "prevRank": 18,
+          "tier": "Good Not Great",
+          "verdict": "Every starter returns off a top-10 PFF grade at his position.",
+          "notes": [
+            "Sean McVay runs one of the most line-friendly systems in the league",
+            "RG Kevin Dotson excels at run blocking",
+            "Tackle is the weak spot, especially LT Alaric Jackson on health and off-field concerns, and depth is thin"
+          ]
+        }
+      },
+      "pythag": {
+        "w": 12,
+        "l": 5,
+        "t": 0,
+        "pf": 518,
+        "pa": 346,
+        "actualWinPct": 0.706,
+        "pythagWinPct": 0.722,
+        "pythagW": 12.3,
+        "winsAbovePythag": -0.3
+      },
+      "abbr": "LAR",
+      "short": "Rams",
+      "notes": {
+        "notes": [
+          "McVay continues to be overrated \u2014 didn't go for 2 down 5 with 2 minutes left"
+        ],
+        "schedule": null
+      }
+    },
+    {
+      "team": "Seattle Seahawks",
+      "conf": "NFC",
+      "div": "West",
+      "score": 0.2,
+      "z": {
+        "eyeTest": -0.3,
+        "oLine": 0.2,
+        "sos": -0.5,
+        "rest": 1.0,
+        "havoc": 0.7,
+        "coaches": 1.2,
+        "luck": -0.7
+      },
+      "raw": {
+        "eyeTest": 6.0,
+        "oLineRank": 15.0,
+        "sos": 3.5,
+        "sosRank": 23.0,
+        "rest": 9.0,
+        "havoc": 16.4,
+        "coachTier": 2,
+        "winsAbovePythag": 1.0
+      },
+      "odds": {
+        "make": -220.0,
+        "miss": 184.0,
+        "division": 210.0,
+        "winTotal": 10.5,
+        "over": -123,
+        "under": 103,
+        "winBooks": [
+          "dk",
+          "fd",
+          "score"
+        ]
+      },
+      "oline": {
+        "verdict": "Trending up with one hole.",
+        "injuries": [],
+        "pros": [
+          "Grey Zabel improved through the back half of 2025"
+        ],
+        "cons": [
+          "Anthony Bradford remains the weak link"
+        ],
+        "action": {
+          "rank": 16,
+          "prevRank": 31,
+          "tier": "Wild Cards I'm Skeptical Of",
+          "verdict": "A big jump in the rankings, written up as a candidate to fall back.",
+          "notes": [
+            "Klint Kubiak's system lifted this line and he is gone, though all five starters return",
+            "LG Grey Zabel should improve in year two",
+            "Right guard is one of the more glaring weak spots in the league",
+            "If they trail and have to throw, the line could look significantly worse"
+          ]
+        }
+      },
+      "pythag": {
+        "w": 14,
+        "l": 3,
+        "t": 0,
+        "pf": 483,
+        "pa": 292,
+        "actualWinPct": 0.824,
+        "pythagWinPct": 0.767,
+        "pythagW": 13.0,
+        "winsAbovePythag": 1.0
+      },
+      "abbr": "SEA",
+      "short": "Seahawks",
+      "notes": {
+        "notes": [],
+        "schedule": null
+      }
+    },
+    {
+      "team": "Arizona Cardinals",
+      "conf": "NFC",
+      "div": "West",
+      "score": -0.82,
+      "z": {
+        "eyeTest": -0.8,
+        "oLine": -0.6,
+        "sos": -2.1,
+        "rest": 0.1,
+        "havoc": -1.3,
+        "coaches": -1.1,
+        "luck": 1.7
+      },
+      "raw": {
+        "eyeTest": 7.0,
+        "oLineRank": 22.0,
+        "sos": 0.0,
+        "sosRank": 32.0,
+        "rest": 1.0,
+        "havoc": 11.8,
+        "coachTier": 7,
+        "winsAbovePythag": -2.4
+      },
+      "odds": {
+        "make": 2000.0,
+        "miss": -7000.0,
+        "division": 10000.0,
+        "winTotal": 4.5,
+        "over": 128,
+        "under": -152,
+        "winBooks": [
+          "dk",
+          "fd",
+          "score"
+        ]
+      },
+      "oline": {
+        "verdict": "Good left side, bad right side.",
+        "injuries": [],
+        "pros": [
+          "Paris Johnson Jr. and Seumalo anchor the left"
+        ],
+        "cons": [
+          "Isaiah Adams graded below 60 on the right"
+        ],
+        "action": {
+          "rank": 24,
+          "prevRank": 22,
+          "tier": "League Average Would Be a Surprise",
+          "verdict": "Five straight seasons opening 22nd or worse.",
+          "notes": [
+            "Lost OL coach Klayton Adams",
+            "LT Paris Johnson has become a real strength and the left side is pretty good",
+            "The right side is just as bad, with No. 34 pick RG Chase Bisontis out for the season",
+            "Mike LaFleur comes from the Shanahan tree, which typically helps a line"
+          ]
+        }
+      },
+      "pythag": {
+        "w": 3,
+        "l": 14,
+        "t": 0,
+        "pf": 355,
+        "pa": 488,
+        "actualWinPct": 0.176,
+        "pythagWinPct": 0.32,
+        "pythagW": 5.4,
+        "winsAbovePythag": -2.4
+      },
+      "abbr": "ARI",
+      "short": "Cardinals",
+      "notes": {
+        "notes": [
+          "Simply too tough of a division",
+          "Reaching for RB Love doesn't move the needle"
+        ],
+        "schedule": null
+      }
+    },
+    {
+      "team": "Cincinnati Bengals",
+      "conf": "AFC",
+      "div": "North",
+      "score": 0.21,
+      "z": {
+        "eyeTest": 0.9,
+        "oLine": -0.4,
+        "sos": 2.3,
+        "rest": -0.5,
+        "havoc": -0.5,
+        "coaches": -1.5,
+        "luck": 0.6
+      },
+      "raw": {
+        "eyeTest": 3.0,
+        "oLineRank": 20.0,
+        "sos": 9.5,
+        "sosRank": 2.0,
+        "rest": -4.0,
+        "havoc": 13.7,
+        "coachTier": 8,
+        "winsAbovePythag": -0.8
+      },
+      "odds": {
+        "make": -194.0,
+        "miss": 162.0,
+        "division": 170.0,
+        "winTotal": 10.5,
+        "over": 117,
+        "under": -140,
+        "winBooks": [
+          "dk",
+          "fd"
+        ]
+      },
+      "oline": {
+        "verdict": "Young pieces improving.",
+        "injuries": [],
+        "pros": [
+          "Fairchild and Mims both improved late in 2025"
+        ],
+        "cons": [
+          "Still largely unproven"
+        ],
+        "action": {
+          "rank": 20,
+          "prevRank": 30,
+          "tier": "Much Improved",
+          "verdict": "All five starters return for the first time in Burrow's career.",
+          "notes": [
+            "The unit found success late last season, especially in the run game",
+            "Playing Burrow under center more often should help",
+            "No real strength yet, but finally maybe no glaring weakness"
+          ]
+        }
+      },
+      "pythag": {
+        "w": 6,
+        "l": 11,
+        "t": 0,
+        "pf": 414,
+        "pa": 492,
+        "actualWinPct": 0.353,
+        "pythagWinPct": 0.399,
+        "pythagW": 6.8,
+        "winsAbovePythag": -0.8
+      },
+      "abbr": "CIN",
+      "short": "Bengals",
+      "notes": {
+        "notes": [
+          "Can't get much worse than last year"
+        ],
+        "schedule": "#13 toughest in 2025 \u2192 #3 easiest in 2026"
+      }
+    },
+    {
+      "team": "Baltimore Ravens",
+      "conf": "AFC",
+      "div": "North",
+      "score": 0.09,
+      "z": {
+        "eyeTest": 0.9,
+        "oLine": -0.8,
+        "sos": 0.7,
+        "rest": -0.3,
+        "havoc": -0.0,
+        "coaches": -0.2,
+        "luck": 0.8
+      },
+      "raw": {
+        "eyeTest": 3.0,
+        "oLineRank": 24.0,
+        "sos": 6.0,
+        "sosRank": 5.0,
+        "rest": -3.0,
+        "havoc": 14.8,
+        "coachTier": 5,
+        "winsAbovePythag": -1.1
+      },
+      "odds": {
+        "make": -300.0,
+        "miss": 245.0,
+        "division": 100.0,
+        "winTotal": 11.5,
+        "over": 117,
+        "under": -138,
+        "winBooks": [
+          "dk",
+          "fd",
+          "score"
+        ]
+      },
+      "oline": {
+        "verdict": "Rebuilt both guard spots out of necessity.",
+        "injuries": [],
+        "pros": [
+          "Simpson and Ioane are upgrades on paper"
+        ],
+        "cons": [
+          "2025 guard play graded 55.2 combined, sixth worst",
+          "Both replacements unproven"
+        ],
+        "action": {
+          "rank": 15,
+          "prevRank": 7,
+          "tier": "Wild Cards I Believe In",
+          "verdict": "Hard to pin down; the ranking has swung from 6th to 27th in recent years.",
+          "notes": [
+            "Entirely new interior, with C Ethan Pocic a worthy replacement for Tyler Linderbaum",
+            "Rookie LG Vega Ioane is a tone setter and a fit to bring attitude back",
+            "New OL coach Dwayne Ledford and Declan Doyle's run-friendly scheme should help"
+          ]
+        }
+      },
+      "pythag": {
+        "w": 8,
+        "l": 9,
+        "t": 0,
+        "pf": 424,
+        "pa": 398,
+        "actualWinPct": 0.471,
+        "pythagWinPct": 0.537,
+        "pythagW": 9.1,
+        "winsAbovePythag": -1.1
+      },
+      "abbr": "BAL",
+      "short": "Ravens",
+      "notes": {
+        "notes": [
+          "New coach"
+        ],
+        "schedule": "#12 toughest in 2025 \u2192 #6 easiest in 2026"
+      }
+    },
+    {
+      "team": "Pittsburgh Steelers",
+      "conf": "AFC",
+      "div": "North",
+      "score": -0.26,
+      "z": {
+        "eyeTest": -0.8,
+        "oLine": 0.3,
+        "sos": -0.2,
+        "rest": -0.7,
+        "havoc": 0.6,
+        "coaches": -1.1,
+        "luck": -0.8
+      },
+      "raw": {
+        "eyeTest": 7.0,
+        "oLineRank": 14.0,
+        "sos": 4.0,
+        "sosRank": 17.0,
+        "rest": -6.0,
+        "havoc": 16.2,
+        "coachTier": 7,
+        "winsAbovePythag": 1.2
+      },
+      "odds": {
+        "make": 166.0,
+        "miss": -198.0,
+        "division": 550.0,
+        "winTotal": 8.5,
+        "over": 117,
+        "under": -140,
+        "winBooks": [
+          "dk",
+          "fd"
+        ]
+      },
+      "oline": {
+        "verdict": "Good center, two players switching sides.",
+        "injuries": [],
+        "pros": [
+          "Zach Frazier is an elite center"
+        ],
+        "cons": [
+          "Fautanu and McCormick both moving from the right side to the left"
+        ],
+        "action": {
+          "rank": 18,
+          "prevRank": 19,
+          "tier": "Wild Cards I'm Skeptical Of",
+          "verdict": "Bullish on the direction, but it will take time.",
+          "notes": [
+            "Four of five starters are in new positions",
+            "Raw first-rounder Max Iheanachor is fighting for playing time at right tackle",
+            "C Zach Frazier has a mean streak in the middle and should anchor it",
+            "Aaron Rodgers no longer lifts the line with his play"
+          ]
+        }
+      },
+      "pythag": {
+        "w": 10,
+        "l": 7,
+        "t": 0,
+        "pf": 397,
+        "pa": 387,
+        "actualWinPct": 0.588,
+        "pythagWinPct": 0.515,
+        "pythagW": 8.8,
+        "winsAbovePythag": 1.2
+      },
+      "abbr": "PIT",
+      "short": "Steelers",
+      "notes": {
+        "notes": [
+          "New coach",
+          "Who's the QB?"
+        ],
+        "schedule": null
+      }
+    },
+    {
+      "team": "Cleveland Browns",
+      "conf": "AFC",
+      "div": "North",
+      "score": -0.46,
+      "z": {
+        "eyeTest": -1.6,
+        "oLine": -1.5,
+        "sos": 0.7,
+        "rest": 0.0,
+        "havoc": 1.6,
+        "coaches": -1.1,
+        "luck": 0.4
+      },
+      "raw": {
+        "eyeTest": 9.0,
+        "oLineRank": 31.0,
+        "sos": 6.0,
+        "sosRank": 6.0,
+        "rest": 0.0,
+        "havoc": 18.5,
+        "coachTier": 7,
+        "winsAbovePythag": -0.5
+      },
+      "odds": {
+        "make": 640.0,
+        "miss": -950.0,
+        "division": 2000.0,
+        "winTotal": 5.5,
+        "over": -114,
+        "under": -105,
+        "winBooks": [
+          "dk",
+          "fd",
+          "score"
+        ]
+      },
+      "oline": {
+        "verdict": "Four new starters, rookie at left tackle.",
+        "injuries": [],
+        "pros": [],
+        "cons": [
+          "Four new starters in 2026",
+          "Spencer Fano needs development time at LT"
+        ],
+        "action": {
+          "rank": 32,
+          "prevRank": 23,
+          "tier": "Dregs of the League",
+          "verdict": "Returns zero starters, and that is the best thing you can say.",
+          "notes": [
+            "Last year's unit was a disaster, so a fresh start makes sense",
+            "Most of the new names are past-prime veterans with injury issues fighting for spots",
+            "No. 9 pick Spencer Fano is super athletic but could take time to develop",
+            "It is hard to have continuity when you return nothing"
+          ]
+        }
+      },
+      "pythag": {
+        "w": 5,
+        "l": 12,
+        "t": 0,
+        "pf": 279,
+        "pa": 379,
+        "actualWinPct": 0.294,
+        "pythagWinPct": 0.326,
+        "pythagW": 5.5,
+        "winsAbovePythag": -0.5
+      },
+      "abbr": "CLE",
+      "short": "Browns",
+      "notes": {
+        "notes": [
+          "New coach",
+          "There's no way DeShaun returns to Pro Bowl caliber, right?"
+        ],
+        "schedule": null
+      }
+    },
+    {
+      "team": "Indianapolis Colts",
+      "conf": "AFC",
+      "div": "South",
+      "score": 0.39,
+      "z": {
+        "eyeTest": 0.1,
+        "oLine": 1.3,
+        "sos": 0.5,
+        "rest": -0.7,
+        "havoc": -0.6,
+        "coaches": 0.7,
+        "luck": 1.2
+      },
+      "raw": {
+        "eyeTest": 5.0,
+        "oLineRank": 4.0,
+        "sos": 5.5,
+        "sosRank": 9.0,
+        "rest": -6.0,
+        "havoc": 13.5,
+        "coachTier": 3,
+        "winsAbovePythag": -1.7
+      },
+      "odds": {
+        "make": 158.0,
+        "miss": -188.0,
+        "division": 360.0,
+        "winTotal": 7.5,
+        "over": -132,
+        "under": 110,
+        "winBooks": [
+          "dk",
+          "fd"
+        ]
+      },
+      "oline": {
+        "verdict": "Strong interior, unproven right tackle.",
+        "injuries": [],
+        "pros": [
+          "Nelson 84.7, his best since 2020"
+        ],
+        "cons": [
+          "Rookie RT Jalen Travis took the job late in 2025"
+        ],
+        "action": {
+          "rank": 3,
+          "prevRank": 16,
+          "tier": "Could End the Year No. 1",
+          "verdict": "Projected as the league's best run-blocking line.",
+          "notes": [
+            "Four of five starters return, and Quenton Nelson is a future Hall of Famer at left guard",
+            "Tony Sparano's coaching has elevated the unit, and the scheme fits it",
+            "The right side is not the left's equal and depth is limited"
+          ]
+        }
+      },
+      "pythag": {
+        "w": 8,
+        "l": 9,
+        "t": 0,
+        "pf": 466,
+        "pa": 412,
+        "actualWinPct": 0.471,
+        "pythagWinPct": 0.572,
+        "pythagW": 9.7,
+        "winsAbovePythag": -1.7
+      },
+      "abbr": "IND",
+      "short": "Colts",
+      "notes": {
+        "notes": [],
+        "schedule": "#5 toughest in 2025 \u2192 #9 easiest in 2026"
+      }
+    },
+    {
+      "team": "Houston Texans",
+      "conf": "AFC",
+      "div": "South",
+      "score": -0.34,
+      "z": {
+        "eyeTest": -0.8,
+        "oLine": -1.1,
+        "sos": -0.5,
+        "rest": 0.9,
+        "havoc": 0.1,
+        "coaches": 0.7,
+        "luck": -0.3
+      },
+      "raw": {
+        "eyeTest": 7.0,
+        "oLineRank": 27.0,
+        "sos": 3.5,
+        "sosRank": 22.0,
+        "rest": 8.0,
+        "havoc": 15.1,
+        "coachTier": 3,
+        "winsAbovePythag": 0.5
+      },
+      "odds": {
+        "make": -190.0,
+        "miss": 158.0,
+        "division": 115.0,
+        "winTotal": 9.5,
+        "over": -132,
+        "under": 111,
+        "winBooks": [
+          "dk",
+          "fd",
+          "score"
+        ]
+      },
+      "oline": {
+        "verdict": "Rookie tackle with an unfinished interior.",
+        "injuries": [],
+        "pros": [
+          "Ersery shows real potential at left tackle"
+        ],
+        "cons": [
+          "Interior needs development"
+        ],
+        "action": {
+          "rank": 25,
+          "prevRank": 32,
+          "tier": "League Average Would Be a Surprise",
+          "verdict": "Reaching 25th would honestly be an accomplishment.",
+          "notes": [
+            "Rookie C Keylan Rutledge has culture-changing potential",
+            "RT Braden Smith can be top 10 at the position if he plays more than the 35 games he managed in three years",
+            "Guards Ed Ingram and Wyatt Teller have had peak moments",
+            "A piecemeal unit that will take time to find itself"
+          ]
+        }
+      },
+      "pythag": {
+        "w": 12,
+        "l": 5,
+        "t": 0,
+        "pf": 404,
+        "pa": 295,
+        "actualWinPct": 0.706,
+        "pythagWinPct": 0.678,
+        "pythagW": 11.5,
+        "winsAbovePythag": 0.5
+      },
+      "abbr": "HOU",
+      "short": "Texans",
+      "notes": {
+        "notes": [],
+        "schedule": null
+      }
+    },
+    {
+      "team": "Jacksonville Jaguars",
+      "conf": "AFC",
+      "div": "South",
+      "score": -0.49,
+      "z": {
+        "eyeTest": 0.1,
+        "oLine": -1.4,
+        "sos": -0.2,
+        "rest": -0.3,
+        "havoc": -1.0,
+        "coaches": 1.2,
+        "luck": -0.8
+      },
+      "raw": {
+        "eyeTest": 5.0,
+        "oLineRank": 30.0,
+        "sos": 4.0,
+        "sosRank": 18.0,
+        "rest": -3.0,
+        "havoc": 12.5,
+        "coachTier": 2,
+        "winsAbovePythag": 1.2
+      },
+      "odds": {
+        "make": -102.0,
+        "miss": -116.0,
+        "division": 220.0,
+        "winTotal": 9.5,
+        "over": 117,
+        "under": -138,
+        "winBooks": [
+          "dk",
+          "fd",
+          "score"
+        ]
+      },
+      "oline": {
+        "verdict": "Declining and banged up.",
+        "injuries": [
+          "Cole Van Lanen injured"
+        ],
+        "pros": [],
+        "cons": [
+          "Mekari declining",
+          "Hainsey unreliable at center"
+        ],
+        "action": {
+          "rank": 30,
+          "prevRank": 27,
+          "tier": "Dregs of the League",
+          "verdict": "The whole is far less than the sum of its parts.",
+          "notes": [
+            "Plenty of known names, none of it adding up",
+            "T Cole Van Lanen is the relative strength but opens on PUP returning from a late-season injury",
+            "Liam Coen's scheme and Trevor Lawrence's quick release help",
+            "The offense has to succeed in spite of its line, not because of it"
+          ]
+        }
+      },
+      "pythag": {
+        "w": 13,
+        "l": 4,
+        "t": 0,
+        "pf": 474,
+        "pa": 336,
+        "actualWinPct": 0.765,
+        "pythagWinPct": 0.693,
+        "pythagW": 11.8,
+        "winsAbovePythag": 1.2
+      },
+      "abbr": "JAX",
+      "short": "Jaguars",
+      "notes": {
+        "notes": [],
+        "schedule": null
+      }
+    },
+    {
+      "team": "Tennessee Titans",
+      "conf": "AFC",
+      "div": "South",
+      "score": -0.69,
+      "z": {
+        "eyeTest": -1.6,
+        "oLine": -1.3,
+        "sos": -0.2,
+        "rest": 0.7,
+        "havoc": 0.1,
+        "coaches": -1.1,
+        "luck": 0.6
+      },
+      "raw": {
+        "eyeTest": 9.0,
+        "oLineRank": 29.0,
+        "sos": 4.0,
+        "sosRank": 16.0,
+        "rest": 6.0,
+        "havoc": 15.1,
+        "coachTier": 7,
+        "winsAbovePythag": -0.8
+      },
+      "odds": {
+        "make": 430.0,
+        "miss": -590.0,
+        "division": 950.0,
+        "winTotal": 6.5,
+        "over": -100,
+        "under": -120,
+        "winBooks": [
+          "dk",
+          "fd",
+          "score"
+        ]
+      },
+      "oline": {
+        "verdict": "One good player, four question marks.",
+        "injuries": [],
+        "pros": [
+          "Skoronski posted a career-high 79.0"
+        ],
+        "cons": [
+          "Every other spot is questionable"
+        ],
+        "action": {
+          "rank": 31,
+          "prevRank": 12,
+          "tier": "Dregs of the League",
+          "verdict": "One genuine strength and then the list of positives ends.",
+          "notes": [
+            "LG Peter Skoronski is a real strength, especially in pass protection",
+            "Kevin Zeitler's departure leaves a hole at guard",
+            "LT Dan Moore has not paid off the investment and RT J.C. Latham has not progressed",
+            "OL coach Bill Callahan departed, and Cam Ward is not getting much help"
+          ]
+        }
+      },
+      "pythag": {
+        "w": 3,
+        "l": 14,
+        "t": 0,
+        "pf": 284,
+        "pa": 478,
+        "actualWinPct": 0.176,
+        "pythagWinPct": 0.225,
+        "pythagW": 3.8,
+        "winsAbovePythag": -0.8
+      },
+      "abbr": "TEN",
+      "short": "Titans",
+      "notes": {
+        "notes": [
+          "New coach",
+          "Added a WR #1 (Tate)",
+          "Year 2 for Ward",
+          "Always a dumb division",
+          "10 wins would be a 7 win jump \u2014 the absolute cap YoY"
+        ],
+        "schedule": "#1 toughest in 2025 \u2192 #13 easiest in 2026"
+      }
+    },
+    {
+      "team": "Buffalo Bills",
+      "conf": "AFC",
+      "div": "East",
+      "score": 0.65,
+      "z": {
+        "eyeTest": 1.4,
+        "oLine": 1.1,
+        "sos": -0.2,
+        "rest": 1.6,
+        "havoc": 0.7,
+        "coaches": -1.1,
+        "luck": -0.5
+      },
+      "raw": {
+        "eyeTest": 2.0,
+        "oLineRank": 6.0,
+        "sos": 4.0,
+        "sosRank": 14.0,
+        "rest": 14.0,
+        "havoc": 16.4,
+        "coachTier": 7,
+        "winsAbovePythag": 0.8
+      },
+      "odds": {
+        "make": -320.0,
+        "miss": 260.0,
+        "division": -130.0,
+        "winTotal": 10.5,
+        "over": -122,
+        "under": 102,
+        "winBooks": [
+          "dk",
+          "fd",
+          "score"
+        ]
+      },
+      "oline": {
+        "verdict": "Tackles elite, guards thin.",
+        "injuries": [],
+        "pros": [
+          "Dawkins and Spencer Brown are an elite tackle pairing"
+        ],
+        "cons": [
+          "Minimal experience at both guard spots"
+        ],
+        "action": {
+          "rank": 6,
+          "prevRank": 6,
+          "tier": "The Ol' Stalwarts",
+          "verdict": "Continuity was the edge, and some of it just walked out.",
+          "notes": [
+            "Lost OL coach Aaron Kromer and one starting guard",
+            "Joe Brady's run-heavy attack suits them",
+            "Good blocking receivers and tight ends give the line plenty of help"
+          ]
+        }
+      },
+      "pythag": {
+        "w": 12,
+        "l": 5,
+        "t": 0,
+        "pf": 481,
+        "pa": 365,
+        "actualWinPct": 0.706,
+        "pythagWinPct": 0.658,
+        "pythagW": 11.2,
+        "winsAbovePythag": 0.8
+      },
+      "abbr": "BUF",
+      "short": "Bills",
+      "notes": {
+        "notes": [],
+        "schedule": null
+      }
+    },
+    {
+      "team": "New England Patriots",
+      "conf": "AFC",
+      "div": "East",
+      "score": 0.24,
+      "z": {
+        "eyeTest": 0.5,
+        "oLine": 0.4,
+        "sos": 0.2,
+        "rest": 0.9,
+        "havoc": -0.4,
+        "coaches": 0.3,
+        "luck": -1.0
+      },
+      "raw": {
+        "eyeTest": 4.0,
+        "oLineRank": 13.0,
+        "sos": 5.0,
+        "sosRank": 10.0,
+        "rest": 8.0,
+        "havoc": 13.9,
+        "coachTier": 4,
+        "winsAbovePythag": 1.5
+      },
+      "odds": {
+        "make": -210.0,
+        "miss": 176.0,
+        "division": 130.0,
+        "winTotal": 10.5,
+        "over": 115,
+        "under": -137,
+        "winBooks": [
+          "dk",
+          "fd"
+        ]
+      },
+      "oline": {
+        "verdict": "Rookie tackle needs a step forward.",
+        "injuries": [
+          "Vera-Tucker's health is a question"
+        ],
+        "pros": [
+          "Vera-Tucker is real veteran support if healthy"
+        ],
+        "cons": [
+          "Will Campbell faded badly late in his rookie year"
+        ],
+        "action": {
+          "rank": 21,
+          "prevRank": 24,
+          "tier": "Much Improved",
+          "verdict": "No line made a bigger leap last season.",
+          "notes": [
+            "Jumped from dead last in PFF's rankings to 11th",
+            "Rookie LT Will Campbell was up and down all year and dreadful in the playoffs",
+            "New LG Alijah Vera-Tucker is a top-10 guard when healthy but has played 29 games in four years",
+            "Better at run than pass blocking, so Drake Maye has to keep playing at an MVP level"
+          ]
+        }
+      },
+      "pythag": {
+        "w": 14,
+        "l": 3,
+        "t": 0,
+        "pf": 490,
+        "pa": 320,
+        "actualWinPct": 0.824,
+        "pythagWinPct": 0.733,
+        "pythagW": 12.5,
+        "winsAbovePythag": 1.5
+      },
+      "abbr": "NE",
+      "short": "Patriots",
+      "notes": {
+        "notes": [
+          "Could be this year's Commanders \u2014 luck, injuries and schedule all point the same way",
+          "Super Bowl hangover",
+          "Prime miss-playoffs pick"
+        ],
+        "schedule": null
+      }
+    },
+    {
+      "team": "New York Jets",
+      "conf": "AFC",
+      "div": "East",
+      "score": -0.62,
+      "z": {
+        "eyeTest": -1.2,
+        "oLine": -0.5,
+        "sos": 1.4,
+        "rest": -1.0,
+        "havoc": -1.6,
+        "coaches": -1.5,
+        "luck": 0.6
+      },
+      "raw": {
+        "eyeTest": 8.0,
+        "oLineRank": 21.0,
+        "sos": 7.5,
+        "sosRank": 4.0,
+        "rest": -9.0,
+        "havoc": 11.0,
+        "coachTier": 8,
+        "winsAbovePythag": -0.9
+      },
+      "odds": {
+        "make": 750.0,
+        "miss": -1200.0,
+        "division": 1800.0,
+        "winTotal": 5.5,
+        "over": -103,
+        "under": -116,
+        "winBooks": [
+          "dk",
+          "fd",
+          "score"
+        ]
+      },
+      "oline": {
+        "verdict": "Promising bookends, hollow middle.",
+        "injuries": [],
+        "pros": [
+          "Fashanu and Membou are a promising young tackle duo"
+        ],
+        "cons": [
+          "Interior depth is questionable"
+        ],
+        "action": {
+          "rank": 23,
+          "prevRank": 11,
+          "tier": "League Average Would Be a Surprise",
+          "verdict": "Two first-round tackles and not much behind them.",
+          "notes": [
+            "Olu Fashanu and Armand Membou are a young duo with upside, still improving",
+            "The interior is weaker, C Josh Myers especially",
+            "New OC Frank Reich's lines were terrible at his last two stops and jumped right after he left"
+          ]
+        }
+      },
+      "pythag": {
+        "w": 3,
+        "l": 14,
+        "t": 0,
+        "pf": 300,
+        "pa": 503,
+        "actualWinPct": 0.176,
+        "pythagWinPct": 0.227,
+        "pythagW": 3.9,
+        "winsAbovePythag": -0.9
+      },
+      "abbr": "NYJ",
+      "short": "Jets",
+      "notes": {
+        "notes": [
+          "No"
+        ],
+        "schedule": null
+      }
+    },
+    {
+      "team": "Miami Dolphins",
+      "conf": "AFC",
+      "div": "East",
+      "score": -1.08,
+      "z": {
+        "eyeTest": -1.6,
+        "oLine": -0.9,
+        "sos": -1.4,
+        "rest": -0.7,
+        "havoc": -0.8,
+        "coaches": -1.1,
+        "luck": -0.3
+      },
+      "raw": {
+        "eyeTest": 9.0,
+        "oLineRank": 25.0,
+        "sos": 1.5,
+        "sosRank": 31.0,
+        "rest": -6.0,
+        "havoc": 12.9,
+        "coachTier": 7,
+        "winsAbovePythag": 0.5
+      },
+      "odds": {
+        "make": 1500.0,
+        "miss": -4000.0,
+        "division": 4000.0,
+        "winTotal": 4.5,
+        "over": 116,
+        "under": -136,
+        "winBooks": [
+          "dk",
+          "fd",
+          "score"
+        ]
+      },
+      "oline": {
+        "verdict": "Elite center, unplayable guards.",
+        "injuries": [],
+        "pros": [
+          "Aaron Brewer emerged as an elite center"
+        ],
+        "cons": [
+          "Savaiinaea graded 28.4, the worst of any starting lineman"
+        ],
+        "action": {
+          "rank": 26,
+          "prevRank": 28,
+          "tier": "All Downside",
+          "verdict": "Has to prove it was not just system and scheme.",
+          "notes": [
+            "First-round G Kadyn Proctor could build a serious strength on the left with Patrick Paul and C Aaron Brewer",
+            "The right side is in rough shape, RG Jonah Savaiinaea especially",
+            "Loses both McDaniel's system and Tua Tagovailoa's hyper-quick release"
+          ]
+        }
+      },
+      "pythag": {
+        "w": 7,
+        "l": 10,
+        "t": 0,
+        "pf": 347,
+        "pa": 424,
+        "actualWinPct": 0.412,
+        "pythagWinPct": 0.383,
+        "pythagW": 6.5,
+        "winsAbovePythag": 0.5
+      },
+      "abbr": "MIA",
+      "short": "Dolphins",
+      "notes": {
+        "notes": [],
+        "schedule": null
+      }
+    },
+    {
+      "team": "Denver Broncos",
+      "conf": "AFC",
+      "div": "West",
+      "score": 0.86,
+      "z": {
+        "eyeTest": 0.1,
+        "oLine": 1.7,
+        "sos": 0.2,
+        "rest": 0.3,
+        "havoc": 2.6,
+        "coaches": 0.7,
+        "luck": -2.0
+      },
+      "raw": {
+        "eyeTest": 5.0,
+        "oLineRank": 1.0,
+        "sos": 5.0,
+        "sosRank": 11.0,
+        "rest": 3.0,
+        "havoc": 21.0,
+        "coachTier": 3,
+        "winsAbovePythag": 3.0
+      },
+      "odds": {
+        "make": -146.0,
+        "miss": 124.0,
+        "division": 220.0,
+        "winTotal": 9.5,
+        "over": -113,
+        "under": -107,
+        "winBooks": [
+          "dk",
+          "fd",
+          "score"
+        ]
+      },
+      "oline": {
+        "verdict": "All five 2025 starters return.",
+        "injuries": [],
+        "pros": [
+          "Bolles led all tackles in pass blocking (91.0), no sacks on 802 snaps",
+          "Meinerz 91.0 run blocking",
+          "Total continuity"
+        ],
+        "cons": [],
+        "action": {
+          "rank": 1,
+          "prevRank": 2,
+          "tier": "Consensus No. 1",
+          "verdict": "The one line every board agrees on.",
+          "notes": [
+            "All five starters return for a third straight season",
+            "LT Garett Bolles and RG Quinn Meinerz are the standouts",
+            "A quick-game scheme helps, and the unit pass blocks better than it run blocks"
+          ]
+        }
+      },
+      "pythag": {
+        "w": 14,
+        "l": 3,
+        "t": 0,
+        "pf": 401,
+        "pa": 311,
+        "actualWinPct": 0.824,
+        "pythagWinPct": 0.646,
+        "pythagW": 11.0,
+        "winsAbovePythag": 3.0
+      },
+      "abbr": "DEN",
+      "short": "Broncos",
+      "notes": {
+        "notes": [
+          "Payton continues to be overrated \u2014 went for it on 4th down in FG range up 7-0 in a game that finished 10-7"
+        ],
+        "schedule": null
+      }
+    },
+    {
+      "team": "Kansas City Chiefs",
+      "conf": "AFC",
+      "div": "West",
+      "score": 0.81,
+      "z": {
+        "eyeTest": 0.9,
+        "oLine": 0.9,
+        "sos": 0.2,
+        "rest": -0.2,
+        "havoc": 1.0,
+        "coaches": 1.2,
+        "luck": 2.4
+      },
+      "raw": {
+        "eyeTest": 3.0,
+        "oLineRank": 8.0,
+        "sos": 5.0,
+        "sosRank": 12.0,
+        "rest": -2.0,
+        "havoc": 17.2,
+        "coachTier": 2,
+        "winsAbovePythag": -3.5
+      },
+      "odds": {
+        "make": -184.0,
+        "miss": 154.0,
+        "division": 175.0,
+        "winTotal": 9.5,
+        "over": -144,
+        "under": 121,
+        "winBooks": [
+          "dk",
+          "fd"
+        ]
+      },
+      "oline": {
+        "verdict": "Best center in football, shuffling around him.",
+        "injuries": [],
+        "pros": [
+          "Creed Humphrey is the league's best center"
+        ],
+        "cons": [
+          "Josh Simmons adjusting to left tackle",
+          "Suamataia moved inside"
+        ],
+        "action": {
+          "rank": 8,
+          "prevRank": 14,
+          "tier": "Good Not Great",
+          "verdict": "Losing the right tackle counts as addition by subtraction.",
+          "notes": [
+            "Jawaan Taylor's departure removes his mistakes from the equation",
+            "C Creed Humphrey is the league's best center",
+            "LT Josh Simmons settled in as a rookie and RG Trey Smith should benefit with Taylor gone"
+          ]
+        }
+      },
+      "pythag": {
+        "w": 6,
+        "l": 11,
+        "t": 0,
+        "pf": 362,
+        "pa": 328,
+        "actualWinPct": 0.353,
+        "pythagWinPct": 0.558,
+        "pythagW": 9.5,
+        "winsAbovePythag": -3.5
+      },
+      "abbr": "KC",
+      "short": "Chiefs",
+      "notes": {
+        "notes": [],
+        "schedule": "#7 toughest in 2025 \u2192 #10 easiest in 2026"
+      }
+    },
+    {
+      "team": "Los Angeles Chargers",
+      "conf": "AFC",
+      "div": "West",
+      "score": 0.18,
+      "z": {
+        "eyeTest": 0.9,
+        "oLine": 1.0,
+        "sos": -0.5,
+        "rest": -2.8,
+        "havoc": 0.1,
+        "coaches": 1.2,
+        "luck": -1.1
+      },
+      "raw": {
+        "eyeTest": 3.0,
+        "oLineRank": 7.0,
+        "sos": 3.5,
+        "sosRank": 20.0,
+        "rest": -24.0,
+        "havoc": 15.0,
+        "coachTier": 2,
+        "winsAbovePythag": 1.7
+      },
+      "odds": {
+        "make": -166.0,
+        "miss": 140.0,
+        "division": 190.0,
+        "winTotal": 9.5,
+        "over": -135,
+        "under": 113,
+        "winBooks": [
+          "dk",
+          "fd",
+          "score"
+        ]
+      },
+      "oline": {
+        "verdict": "Ceiling is high but entirely health-dependent.",
+        "injuries": [
+          "Slater and Alt both carry injury concerns"
+        ],
+        "pros": [
+          "Slater and Alt are a top-tier tackle duo when healthy"
+        ],
+        "cons": [
+          "No margin if either tackle misses time"
+        ],
+        "action": {
+          "rank": 4,
+          "prevRank": 26,
+          "tier": "Could End the Year No. 1",
+          "verdict": "Potentially the biggest single-unit improvement in the NFL, if it holds together.",
+          "notes": [
+            "Rashawn Slater missed all of last season and Joe Alt missed half; healthy, they could be the best tackle duo in the league",
+            "C Tyler Biadasz is out indefinitely with a knee injury, leaving rookie Jake Slaughter to snap",
+            "The Biadasz news is flagged in-article as reason enough to drop them toward the back of the top 10",
+            "New OC Mike McDaniel lifted under-talented lines in Miami"
+          ]
+        }
+      },
+      "pythag": {
+        "w": 11,
+        "l": 6,
+        "t": 0,
+        "pf": 368,
+        "pa": 340,
+        "actualWinPct": 0.647,
+        "pythagWinPct": 0.547,
+        "pythagW": 9.3,
+        "winsAbovePythag": 1.7
+      },
+      "abbr": "LAC",
+      "short": "Chargers",
+      "notes": {
+        "notes": [],
+        "schedule": null
+      }
+    },
+    {
+      "team": "Las Vegas Raiders",
+      "conf": "AFC",
+      "div": "West",
+      "score": -0.44,
+      "z": {
+        "eyeTest": -0.3,
+        "oLine": -0.2,
+        "sos": -0.2,
+        "rest": -1.5,
+        "havoc": -0.5,
+        "coaches": -1.1,
+        "luck": 0.3
+      },
+      "raw": {
+        "eyeTest": 6.0,
+        "oLineRank": 18.0,
+        "sos": 4.0,
+        "sosRank": 13.0,
+        "rest": -13.0,
+        "havoc": 13.8,
+        "coachTier": 7,
+        "winsAbovePythag": -0.4
+      },
+      "odds": {
+        "make": 530.0,
+        "miss": -750.0,
+        "division": 1500.0,
+        "winTotal": 5.5,
+        "over": -138,
+        "under": 117,
+        "winBooks": [
+          "dk",
+          "fd",
+          "score"
+        ]
+      },
+      "oline": {
+        "verdict": "Paid the center, lost the tackle.",
+        "injuries": [
+          "Kolton Miller's season ended after four games"
+        ],
+        "pros": [
+          "Linderbaum is the highest-paid center in the NFL"
+        ],
+        "cons": [
+          "No proven replacement for Miller"
+        ],
+        "action": {
+          "rank": 22,
+          "prevRank": 21,
+          "tier": "League Average Would Be a Surprise",
+          "verdict": "Escaping the 20s by season's end would be a win.",
+          "notes": [
+            "Invested in C Tyler Linderbaum, a good run grader",
+            "LT Kolton Miller can be a top-10 tackle and is especially good in pass protection, but played four games last season",
+            "The other three starters are subpar, RT DJ Glaze especially",
+            "Rick Dennison and Klint Kubiak should help"
+          ]
+        }
+      },
+      "pythag": {
+        "w": 3,
+        "l": 14,
+        "t": 0,
+        "pf": 241,
+        "pa": 432,
+        "actualWinPct": 0.176,
+        "pythagWinPct": 0.2,
+        "pythagW": 3.4,
+        "winsAbovePythag": -0.4
+      },
+      "abbr": "LV",
+      "short": "Raiders",
+      "notes": {
+        "notes": [
+          "Any history of rookie QBs winning the division?",
+          "Solid coaching upgrade (Kubiak from SEA)"
+        ],
+        "schedule": null
+      }
+    }
+  ],
+  "olineSource": {
+    "name": "PFF \u2014 2026 NFL offensive line rankings",
+    "url": "https://www.pff.com/news/nfl-offensive-line-rankings-2026",
+    "summary": "PFF grades all 32 lines off individual player grades weighted toward pass protection, using three years of performance history. Rankings move weekly with injuries and lineup changes; in-season results start feeding in after Week 4.",
+    "themes": [
+      {
+        "title": "Injuries reshaped the board",
+        "body": "Tunsil, Cade Mays, Ekwonu, Moton and Dalman's retirement are the single biggest movers in the rankings."
+      },
+      {
+        "title": "Heavy rookie dependence",
+        "body": "Conerly, Fano, Ersery, Proctor and Freeling are all being asked to start and adjust immediately."
+      },
+      {
+        "title": "Coaching churn",
+        "body": "Jeff Stoutland leaving Philadelphia and Dwayne Ledford leaving Atlanta for Baltimore are flagged as real disruptors."
+      }
+    ],
+    "secondOpinion": {
+      "name": "Action Network \u2014 2026 NFL offensive line rankings",
+      "url": "https://www.actionnetwork.com/nfl/2026-nfl-offensive-line-rankings-for-every-team",
+      "author": "Brandon Anderson",
+      "published": "2026-08-20",
+      "summary": "Ranks all 32 lines into named tiers on four criteria: the unit over its best individual, continuity, depth and versatility, and scheme fit. Qualitative only \u2014 the O-Line input on this page stays PFF's rank."
+    }
+  },
+  "pythagSource": {
+    "name": "2025 Pythagorean wins",
+    "summary": "Pythagorean expectation converts points scored and allowed into the record a team 'should' have had. Wins Above Pythag is actual wins minus that expectation: positive means they won more than their scoring justified (a regression candidate), negative means they were better than their record (a bounce-back candidate)."
+  },
+  "winTotalSource": "Consensus regular-season win total: the line whose de-vigged Over price sits closest to even across DraftKings, FanDuel and theScore, priced at the average of those books' implied probabilities at that line.",
+  "havocInput": {
+    "seasons": [
+      2025,
+      2024
+    ],
+    "blend": [
+      0.75,
+      0.25
+    ],
+    "weight": 0.15,
+    "takenFrom": {
+      "oLine": 0.1,
+      "sos": 0.05
+    },
+    "source": "data/nfl_regression_2026.json",
+    "note": "Pressure rate blended 75% 2025 / 25% 2024, z-scored against the field. Rank 1 is the highest rate. Its weight was taken 10 points from oLine and 5 points from sos."
+  },
+  "coachInput": {
+    "tiers": 8,
+    "weight": 0.1,
+    "takenFrom": {
+      "oLine": 0.05,
+      "rest": 0.05
+    },
+    "source": "https://www.actionnetwork.com/nfl/2026-nfl-coaching-staff-rankings-for-all-32-teams",
+    "file": "data/nfl_coaches_2026.json",
+    "note": "Action Network's 2026 coaching-staff tier, z-scored against the field. Tier 1 is the best staff, so the z is inverted. The tier is scored rather than the 1-32 rank because the tier is the grouping the source stands behind. Its weight was taken from O-Line and Rest, 5 points each."
+  },
+  "luckInput": {
+    "season": 2025,
+    "weight": 0.05,
+    "takenFrom": {
+      "sos": 0.05
+    },
+    "source": {
+      "name": "2025 Pythagorean wins",
+      "summary": "Pythagorean expectation converts points scored and allowed into the record a team 'should' have had. Wins Above Pythag is actual wins minus that expectation: positive means they won more than their scoring justified (a regression candidate), negative means they were better than their record (a bounce-back candidate)."
+    },
+    "note": "2025 wins above Pythagorean expectation, z-scored against the field and inverted: a team that won more than its points implied is the one due to regress, so it scores as a negative. It is the lightest input in the blend because it is one season of one team's point differential. Its weight was taken from SoS, which drops to 15%."
+  }
+}

@@ -1,13 +1,13 @@
 /* === Trade card display === */
 .trade-count {
   font-size: 12px;
-  color: #484f58;
+  color: var(--text-5);
   margin-bottom: 12px;
 }
 
 .trade-card {
-  background: #161b22;
-  border: 1px solid #30363d;
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 8px;
   margin-bottom: 12px;
   overflow: hidden;
@@ -16,8 +16,8 @@
 .trade-date {
   padding: 8px 16px;
   font-size: 12px;
-  color: #8b949e;
-  border-bottom: 1px solid #21262d;
+  color: var(--text-3);
+  border-bottom: 1px solid var(--surface-2);
 }
 
 .trade-sides {
@@ -30,25 +30,25 @@
 }
 
 .trade-side + .trade-side {
-  border-left: 1px solid #21262d;
+  border-left: 1px solid var(--surface-2);
 }
 
 .trade-side-header {
   font-size: 14px;
   font-weight: 600;
-  color: #e1e4e8;
+  color: var(--text);
   margin-bottom: 6px;
 }
 
 .trade-side-header .receives-label {
   font-weight: 400;
-  color: #8b949e;
+  color: var(--text-3);
   font-size: 12px;
 }
 
 .trade-team-owner {
   font-size: 12px;
-  color: #8b949e;
+  color: var(--text-3);
   font-weight: 400;
 }
 
@@ -69,12 +69,12 @@
   flex-shrink: 0;
 }
 
-.pos-PICK { background: #21262d; color: #8b949e; }
-.pos-OTHER { background: #21262d; color: #8b949e; }
+.pos-PICK { background: var(--surface-2); color: var(--text-3); }
+.pos-OTHER { background: var(--surface-2); color: var(--text-3); }
 
 .trade-item-name {
   font-size: 13px;
-  color: #f0f6fc;
+  color: var(--text-hi);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -87,6 +87,6 @@
 
   .trade-side + .trade-side {
     border-left: none;
-    border-top: 1px solid #21262d;
+    border-top: 1px solid var(--surface-2);
   }
 }

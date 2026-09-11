@@ -4,17 +4,40 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <link rel="icon" type="image/png" href="/favicon.png">
+  <!-- Home-screen install. The two *-capable tags are what make an iOS icon
+       launch the site standalone — its own window, no address bar — instead of
+       opening a Safari tab; the manifest says the same thing to everyone else,
+       and to iOS 16.4+. standalone.js keys the drawer's share row off exactly
+       that state, so dropping these tags silently removes the row too. -->
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/assets/icons/app-touch-180.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Dynast-Z">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <title>Select Golfers | Dynast-Z</title>
-  <link rel="stylesheet" href="/styles/base/styles.css?v=abec71e4">
-  <link rel="stylesheet" href="/styles/base/hub.css?v=2b363e8e">
-  <link rel="stylesheet" href="/styles/primary/golf.css?v=5644a76c">
-  <link rel="stylesheet" href="/styles/style/score-colors.css?v=98513287">
+  <!-- Theme first: theme.js sets <html data-theme> before the first paint,
+       theme.css holds every colour token the sheets below spend. -->
+  <script src="/scripts/base/theme.js"></script>
+  <link rel="stylesheet" href="/styles/base/theme.css">
+  <link rel="stylesheet" href="/styles/base/styles.css">
+  <link rel="stylesheet" href="/styles/base/hub.css">
+  <link rel="stylesheet" href="/styles/primary/golf.css">
+  <link rel="stylesheet" href="/styles/style/score-colors.css">
+  <link rel="stylesheet" href="/styles/base/lightbox.css">
+  <!-- Vercel Web Analytics. The /_vercel/insights/* routes are injected by
+       Vercel at deploy time, so this 404s harmlessly when serving locally. -->
+  <script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
+  <script defer src="/_vercel/insights/script.js"></script>
 </head>
 <body class="masters-body">
   <div id="header-mount"></div>
   <div id="nav-drawer-mount"></div>
-  <script src="/scripts/base/auth.js?v=a1b2c3d4"></script>
-  <script src="/scripts/base/nav.js?v=e5f6a7b8"></script>
+  <script src="/scripts/base/auth.js"></script>
+  <script src="/scripts/base/standalone.js"></script>
+  <script src="/scripts/base/nav.js"></script>
+  <script src="/scripts/components/sticky-headers.js"></script>
+  <script src="/scripts/base/lightbox.js"></script>
   <script>initPage();</script>
 
   <div class="masters-content" style="padding-top:0;padding-bottom:0">
@@ -41,9 +64,9 @@
     </div>
   </div>
 
-  <script src="/scripts/base/auth.js?v=a1b2c3d4"></script>
-  <script src="/scripts/base/sync.js?v=f19ba045"></script>
-  <script src="/scripts/primary/golf-utils.js?v=9ca7c49f"></script>
+  <script src="/scripts/base/auth.js"></script>
+  <script src="/scripts/base/sync.js"></script>
+  <script src="/scripts/primary/golf-utils.js"></script>
   <script>
     const info = getTournamentInfo();
     const basePath = '/golf/' + TOURNAMENT_CONTEXT.year + '/' + TOURNAMENT_CONTEXT.tournament;
@@ -55,10 +78,12 @@
     let allPlayers = [];
     let sel = getSelections();
 
+    // headerH via Sticky.spanAtTop, not offsetHeight: on narrow screens the site
+    // header is the tab bar fixed to the bottom edge, and a bar's height of
+    // offset up here pushes the sticky rows away from the top of the viewport.
     function setStickyPositions() {
-      const siteHeader = document.querySelector('header');
       const stickyHeader = document.getElementById('sticky-header');
-      const headerH = siteHeader ? siteHeader.offsetHeight : 0;
+      const headerH = Sticky.spanAtTop(document.querySelector('header'));
       stickyHeader.style.top = headerH + 'px';
       const thTop = headerH + stickyHeader.offsetHeight;
       document.querySelectorAll('.masters-table th').forEach(th => {
@@ -131,6 +156,10 @@
     });
 
     setStickyPositions();
+    // Crossing 640px moves the site header from the top of the viewport to the
+    // bottom, so the offsets these rows pin at are width-dependent, not just
+    // height-dependent.
+    window.addEventListener('resize', setStickyPositions);
     init();
 
     initTournamentSync().then(result => {

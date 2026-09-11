@@ -1,0 +1,1267 @@
+/* /football/schedule/game/<id> — one NFL game: odds, props, box score, plays.
+ *
+ * The page has an unusual constraint for a data page: most of the time, most of
+ * it is empty. The bundle behind it comes from balldontlie, where the box score
+ * is ALL-STAR and odds, props and plays are GOAT, so a free or lapsed key
+ * renders a page whose sections are all placeholders. That state has to look
+ * deliberate rather than broken, which is what .go-empty is for — it is a real
+ * component with a real message, not a hidden section or a spinner that never
+ * resolves.
+ *
+ * The page wears the VegasInsider skin. Everything colour, type and edge on it
+ * comes from styles/base/vegasinsider.css, imported below and loaded by this
+ * page alone (and by the two other Games routes); the rules in this file spend
+ * that skin on the hero, the cards and the boards. Nothing here moved when the
+ * skin arrived — the cards are the same cards, in the same order, at the same
+ * widths. What changed is that the card heads are navy bands, the column heads
+ * are display caps on navy, the badges are squared rather than pilled, and
+ * the gold is the accent the page is read by.
+ *
+ * The numbers stay monospace. An odds table is read down its columns, and the
+ * prices in it are the one thing on the page that has to line up.
+ */
+
+@import url('/styles/base/vegasinsider.css');
+
+/* No pull-to-refresh on this page. The gesture reloads the whole document —
+ * a megabyte of bundle, the nav, the skin — to reproduce a poll the page makes
+ * on its own every minute, and it fires by accident on the way to the top of a
+ * long props board. The freshness line in the hero's bottom-right corner is
+ * the refresh UI instead: it counts down to the next check, so there is nothing
+ * left for a pull to tell you. Set on <html> because that is the scroller the browser
+ * takes the overscroll from; this sheet loads on the Games routes only. */
+html {
+  overscroll-behavior-y: contain;
+}
+
+.go-wrap { max-width: 1000px; }
+
+/* --- Hero ---------------------------------------------------------------- */
+
+.go-hero {
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--vi-gold);
+  border-radius: 2px;
+  background: var(--surface);
+  padding: 18px 20px;
+  margin-bottom: 18px;
+}
+
+/* The hero is a three-column row: away crest, home crest, and between them
+ * the column that says where the game is -- neutral-site marker, status chip,
+ * and while a game is live the down, distance and spot. The crests are big
+ * enough to name the teams on their own, which is why no abbreviation rides
+ * beside them here. */
+.go-hero-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+/* Positioned so the possession marker has something to hang off. */
+.go-team { flex: 0 0 auto; line-height: 0; position: relative; }
+
+.go-crest {
+  width: 92px;
+  height: 92px;
+  display: block;
+}
+
+/* No abbreviation left to colour, so the losing side dims instead: the winner
+ * keeps its crest at full strength and the row still reads at a glance. On a
+ * scheduled game neither class is set and both stay lit.
+ *
+ * Set on the crest rather than on the wrapper, because opacity and grayscale
+ * on the wrapper take the possession marker down with it -- and which team has
+ * the ball is not dimmer news for being six points behind. */
+.go-team.is-loss .go-crest { opacity: 0.42; filter: grayscale(0.5); }
+
+/* Possession: a football on the crest of the side holding it, half off the
+ * bottom edge so it reads as a marker placed on the logo rather than part of
+ * it. Gold because gold is this page's "look here", and outlined in the hero's
+ * own background so the shape survives whatever colour it lands on. Positioned
+ * out of flow: the marker comes and goes every few plays and must not move the
+ * crest a pixel when it does. */
+.go-ball {
+  position: absolute;
+  left: 50%;
+  bottom: -4px;
+  transform: translateX(-50%);
+  width: 24px;
+  line-height: 0;
+}
+
+.go-ball svg { width: 100%; height: auto; display: block; overflow: visible; }
+
+/* Stroke under fill, so the outline sits outside the silhouette instead of
+ * eating into it. */
+.go-ball-skin {
+  fill: var(--vi-gold);
+  stroke: var(--surface);
+  stroke-width: 2.4;
+  paint-order: stroke fill;
+}
+
+.go-ball-lace {
+  stroke: var(--vi-navy, #10203a);
+  stroke-width: 1.1;
+  stroke-linecap: round;
+  fill: none;
+}
+
+.go-hero-mid {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  text-align: center;
+}
+
+.go-hero-mid .go-at {
+  font-family: var(--vi-display);
+  font-size: 15px;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-4);
+}
+
+/* Down, distance and spot, under the chip. One line rather than two fields
+ * with labels: "3RD & 3 · NE 32" is how the same fact is read on a broadcast,
+ * and either half can be missing -- a kickoff has a spot and no down -- so the
+ * separator is emitted between the halves that are there instead of being hung
+ * off one of them. The down-and-distance takes the display face because it is
+ * the half that is read first; the spot stays quiet behind it. */
+.go-sit {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.go-sit .go-dd {
+  font-family: var(--vi-display);
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--text-hi);
+}
+
+.go-sit .go-spot { color: var(--text-3); }
+.go-sit .go-sep { color: var(--text-4); }
+
+/* The one place the display face replaces the monospace rather than joining
+ * it: the matchup is a headline, not a column, and nothing is measuring
+ * itself against it. */
+.go-matchup {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-family: var(--vi-display);
+  font-size: 36px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--text-hi);
+  min-width: 0;
+}
+
+.go-matchup .go-at {
+  font-size: 17px;
+  font-weight: 400;
+  color: var(--text-4);
+}
+
+.go-phase {
+  font-size: 12px;
+  font-weight: 700;
+  font-family: var(--vi-display);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  padding: 2px 9px;
+  border-radius: 2px;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.go-phase.pregame { color: var(--warn); border-color: var(--warn-line); background: var(--warn-soft); }
+
+/* A live chip reads a clock now -- "Q2 15:00" -- not a word, so it drops the
+ * display face and its tracking for the page's body face and tabular figures:
+ * the digits then hold their columns as the clock ticks instead of shifting the
+ * chip a pixel at a time. The red it used to wear said "alert" about a game
+ * that is merely being played, so it takes the neutral surface the other two
+ * phases use and is set apart by text weight and brightness instead. */
+.go-phase.live {
+  color: var(--text);
+  border-color: var(--border);
+  background: var(--surface-2);
+  font-family: var(--vi-body);
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  font-variant-numeric: tabular-nums;
+}
+.go-phase.final   { color: var(--text-3); border-color: var(--border); background: var(--surface-2); }
+
+/* The chip and the situation under it read as one fact — "Q3 8:42, 3rd & 3 on
+ * the NE 32" — so they sit in one column rather than competing for the same
+ * row. Freshness used to sit here too and has moved to .go-hero-foot: it is
+ * the only line in the column that is not about the game. */
+.go-status {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+/* The bottom-right corner of the hero, under the quarter table. A footnote
+ * about the page — when it last read the feed, when it will read it again —
+ * so it sits where a footnote sits and stays out of the column the game is
+ * read down. Hidden outright when the line has nothing to say, so an empty
+ * span does not spend the margin above it. */
+.go-hero-foot {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+
+.go-hero-foot:has(.go-fresh:empty) { display: none; }
+
+.go-fresh {
+  font-size: 11px;
+  color: var(--text-4);
+  white-space: nowrap;
+  cursor: help;
+}
+
+/* The span is emitted empty and filled by the ticker. A bundle with no
+ * fetched_at and nothing scheduled leaves it empty for good, and an empty span
+ * should not spend the column's 3px gap. */
+.go-fresh:empty { display: none; }
+
+/* The empty state's own header. Smaller than the hero on purpose: there is no
+ * game here yet, and a full-size matchup would promise one. */
+.go-miss-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin-bottom: 12px;
+}
+
+.go-matchup-sm { font-size: 17px; }
+.go-matchup-sm .go-at { font-size: 12px; }
+
+.go-miss-when {
+  font-size: 12px;
+  color: var(--text-3);
+  font-family: monospace;
+}
+
+/* Quarter-by-quarter. Only drawn once a game has started — a line of five
+ * zeroes for a fixture would read as a 0-0 result. */
+.go-line {
+  margin: 14px auto 0;
+  border-collapse: collapse;
+  font-family: monospace;
+  font-size: 12px;
+}
+
+.go-line th, .go-line td {
+  padding: 3px 10px;
+  text-align: right;
+  border-bottom: 1px solid var(--hairline);
+}
+
+.go-line th {
+  color: var(--text-3);
+  font-family: var(--vi-display);
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+  border-bottom-color: var(--vi-gold-line);
+}
+.go-line td:first-child, .go-line th:first-child { text-align: left; color: var(--text-2); }
+.go-line td.go-total { font-weight: 700; color: var(--text); }
+
+/* --- Cards --------------------------------------------------------------- */
+
+.go-card {
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  background: var(--surface);
+  margin-bottom: 14px;
+  /* The card is the edge a wide board stops at: .go-scroll inside it carries
+   * the columns that do not fit, so nothing needs to escape the card, and the
+   * clip keeps the navy head inside the 2px radius. */
+  overflow: hidden;
+}
+
+/* The band. Every board on VegasInsider is headed by one: navy, ruled in gold
+ * along the bottom, its title in display caps. It is the motif the whole
+ * skin hangs off, and it is repeated on the column heads below. */
+.go-card-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 14px 8px;
+  border-bottom: 2px solid var(--vi-gold);
+  background: var(--vi-navy);
+}
+
+.go-card-head h3 {
+  margin: 0;
+  font-family: var(--vi-display);
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: 0.9px;
+  text-transform: uppercase;
+  color: var(--vi-band-ink);
+}
+
+/* The box score's two levels of heading. Both were smaller than the rows they
+ * introduced, which read as a caption under the table above rather than a
+ * label over the one below. They step down instead: the card head names the
+ * board, the stat group is the next thing down from it, the team the next, and
+ * the column heads -- 12px -- the floor.
+ *
+ * The group takes the outer level and the team the inner because that is the
+ * order the tables are nested in: one Passing heading over both sides' passers
+ * rather than one heading per team over all eight of its groups. */
+.go-bs-body { padding-bottom: 14px; }
+
+/* One right edge down every column, the same as the prop board. genericTable
+ * hands `.is-num` only to what parses as a number, so "18/27" aside, anything
+ * the feed sent as text -- and every "—" for a stat it did not send -- landed on
+ * the table's default left and stepped out of the column. A box score is read by
+ * running an eye down a column of figures, which needs the figures to line up
+ * more than it needs to know which of them the parser recognised.
+ *
+ * Scoped to .go-bs-body rather than .go-table: genericTable draws the team
+ * comparison and the injury report too, and neither is read this way. First
+ * column excluded -- it is the player's name. */
+.go-bs-body .go-table tbody td:not(:first-child) { text-align: right; }
+
+.go-bs-grp {
+  margin: 18px 14px 6px;
+  font-family: var(--vi-display);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--text);
+}
+
+.go-bs-grp:first-child { margin-top: 12px; }
+
+/* The crest carries the team, so the name beside it can drop to the weight of
+ * a caption without becoming hard to place -- and at this level it is read as
+ * "whose rows are these", not as a heading in its own right. */
+.go-bs-team {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 12px 14px 4px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-3);
+}
+
+.go-bs-logo { width: 16px; height: 16px; flex: none; }
+
+/* Everything the head carries besides the title, pushed to the far end by the
+ * head's own space-between. The collapse control is always the last child, so
+ * it lands in the same place on a card with controls of its own (the prop
+ * board's two view buttons) as on one without. Centred rather than baseline-
+ * aligned for the same reason .go-seg-head is: these are buttons, and a button
+ * with an icon in it has no useful baseline. */
+.go-card-tools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  align-self: center;
+  flex: none;
+}
+
+/* Outlined against the navy, like the icon buttons that sit beside it, and
+ * lettered in the display face so it reads as part of the band rather than as
+ * a widget dropped on top of one. */
+.go-card-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  border-radius: 2px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: transparent;
+  color: var(--vi-band-ink-2);
+  font-family: var(--vi-display);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+.go-card-toggle:hover {
+  border-color: var(--vi-gold);
+  color: var(--vi-band-ink);
+}
+
+/* A chevron drawn from two borders rather than an SVG: it is the only glyph
+ * here, it inherits the button's colour for free, and it turns with a
+ * transform when the card shuts. It points the way the card is about to move:
+ * up on an open card, which is where the body goes when it folds, and down on
+ * a shut one. The translate on each is the optical nudge a rotated square
+ * needs -- its ink sits high in its own box one way round and low the other. */
+.go-card-caret {
+  width: 6px;
+  height: 6px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: translateY(1px) rotate(-135deg);
+  transition: transform 0.15s ease;
+}
+
+.go-card.is-collapsed .go-card-caret { transform: translateY(-2px) rotate(45deg); }
+
+/* A shut card keeps only its own control. The prop board's view switches ride
+ * in the same band, and left showing they are two buttons that change a table
+ * nobody can see. */
+.go-card.is-collapsed .go-card-tools > :not(.go-card-toggle) { display: none; }
+
+.go-card-body { padding: 14px 0px; }
+.go-card-body.is-flush { padding: 0; }
+
+/* Shut, not merely short: the body is removed from layout so a folded card is
+ * its band and nothing else, and so nothing inside it -- a wide prop table's
+ * scroller, a focusable button -- is reachable while it is closed. */
+.go-card.is-collapsed .go-card-body { display: none; }
+
+/* The band is the whole card when it is folded, so it keeps no rule under it. */
+.go-card.is-collapsed .go-card-head { border-bottom-width: 0; }
+
+/* --- The empty state ----------------------------------------------------- */
+
+.go-empty {
+  padding: 18px 16px;
+  font-size: 12px;
+  color: var(--text-3);
+  line-height: 1.6;
+}
+
+.go-empty code {
+  font-family: monospace;
+  font-size: 11px;
+  color: var(--text-2);
+  background: var(--surface-2);
+  border: 1px solid var(--hairline);
+  border-radius: 2px;
+  padding: 1px 5px;
+}
+
+.go-tier {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: var(--vi-display);
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  padding: 0 6px;
+  border-radius: 2px;
+  color: var(--warn);
+  border: 1px solid var(--warn-line);
+  background: var(--warn-soft);
+}
+
+/* --- Generic table ------------------------------------------------------- */
+
+/* The odds and prop payload shapes are undocumented and, until a paid key runs
+ * against a live game, unobserved. Rather than guess a schema and render a
+ * confidently wrong table, these draw whatever keys actually arrive — the union
+ * of keys across the rows, in a scrolling table. It is plain, it cannot be
+ * wrong, and it is the fastest way to see what the shape really is. */
+
+/* Sideways in its own box, downwards with the page. The two axes want opposite
+ * things: a milestone ladder is two dozen columns and a phone is four of them
+ * wide, so the columns have to scroll inside the card or the whole document
+ * ends up dragging sideways under a nav that stays put — but the rows are the
+ * board itself, and capping their height puts them behind an inner edge that
+ * reads like the end of the table.
+ *
+ * So: a horizontal scrollport, and no height cap at all. Note that overflow-y
+ * computes to `auto` here whatever is written, because a box cannot clip one
+ * axis and overflow the other — `visible` states the intent, and it costs
+ * nothing, since a box with no cap is always exactly as tall as its table and
+ * has nothing to scroll. */
+.go-scroll {
+  overflow-x: auto;
+  overflow-y: visible;
+  max-height: none;
+}
+
+.go-table {
+  width: 100%;
+  /* Separate, with no spacing, so it still draws as one ruled grid. Collapsed
+   * borders are painted by the *table*, not by the cells they sit between, so
+   * the 1px line between the two header rows scrolled away with the body while
+   * the head stayed pinned — and the body showed through the band it left. A
+   * separate border belongs to its own cell and travels with it. */
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 13px;
+  font-family: monospace;
+  white-space: nowrap;
+}
+
+.go-table th, .go-table td {
+  padding: 6px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--hairline);
+}
+
+/* The head rides down with its table rather than sticking. It has no scrollport
+ * to stick to that would do anything: sticky resolves against the nearest one,
+ * which is .go-scroll, and .go-scroll has no height cap, so a head pinned to it
+ * would never come off the top of an unscrollable box. The viewport is not
+ * available to it either — .go-scroll clips the vertical axis by virtue of
+ * scrolling the horizontal one — and a head pinned to the viewport would sit
+ * under the page's own sticky header, which is opaque.
+ *
+ * Backed all the same. Cell boxes on the two-row head meet on a half pixel,
+ * and the hairline of tbody that shows through that seam is a row of clipped
+ * digits sitting inside the header. The thead's own background is one unbroken
+ * box behind all of them. */
+.go-table thead {
+  position: static;
+  background: var(--vi-navy);
+}
+
+/* The column heads are the card head's band continued: same navy, same
+ * display caps, same gold rule closing it. The cells' own background has to
+ * be set as well as the thead's — see the note above about the seam. */
+.go-table th {
+  background: var(--vi-navy);
+  color: var(--vi-band-ink);
+  font-family: var(--vi-display);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+}
+
+/* Rows pass behind the header, so the head needs a hard bottom edge of its
+ * own rather than the hairline that separates two body rows. */
+.go-table thead tr:last-child th { border-bottom: 2px solid var(--vi-gold); }
+
+.go-table tbody tr:nth-child(even) { background: var(--zebra); }
+.go-table td.is-num { text-align: right; }
+.go-table td.is-null { color: var(--text-5); }
+
+/* --- Pinned first column -------------------------------------------------
+ * The injury report and the props ladder both go sideways inside .go-scroll,
+ * and both are read by finding a row and then tracking across it. Scroll the
+ * name off the left edge and the row loses the only thing that identifies it,
+ * so the first column stays put. This is the column the arrangement is for on
+ * a phone, where three or four cells of a two-dozen-column board are on screen
+ * at once.
+ *
+ * The cells need their own opaque backgrounds: sticky cells paint over the row
+ * they are scrolling past, and a transparent one would drag the zebra stripe
+ * of whatever is underneath along with it. */
+
+.go-pinned tbody td:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+}
+
+.go-pinned tbody tr:nth-child(even) td:first-child { background: var(--zebra); }
+
+/* First row only, so a two-row head can never pin its second row's leading
+ * cell to the left edge on top of the heading above it. The head does not
+ * stick downwards any more, so this cell outranks only its own row. */
+.go-pinned thead tr:first-child th:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  border-right: 1px solid var(--border);
+}
+
+/* Free text, unlike every other cell on the page. It is the only column
+ * allowed to wrap — capped so a long note stacks into a paragraph inside the
+ * row instead of running out to a single line.
+ *
+ * The floor is what makes it a paragraph. Every other column is monospace and
+ * set not to wrap, so they take their content width and this one takes what is
+ * left; on a phone what is left is a few characters a line. The table is
+ * allowed to outgrow the card and .go-scroll carries the overflow, which is
+ * the arrangement the pinned first column is built for — the player's name
+ * stays put while the note scrolls past it. Held under two thirds of the
+ * viewport so the note itself is always most of what is on screen. */
+.go-table th.go-note, .go-table td.go-note {
+  min-width: min(62vw, 560px);
+  max-width: 820px;
+  white-space: normal;
+}
+
+.go-inj .go-note {
+  font-size: 11px;
+}
+
+/* --- Injury report: grouped by club --------------------------------------
+ * Same shape as the prop board below: the thing every row in the block shares
+ * is a heading spanning the table rather than a column repeating it. Styled
+ * separately because the two want opposite things from the zebra — a prop line
+ * is one short row and reads fine unstriped, an injury row is a wrapped
+ * paragraph and needs the stripe to keep its own cells together. */
+
+/* A th inside tbody otherwise inherits the uppercased 10px treatment meant for
+ * column headings, which is the opposite of what this row is. */
+.go-inj tbody th {
+  background: var(--surface-2);
+  color: var(--text-hi);
+  font-family: var(--vi-display);
+  font-size: 15px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  border-bottom: 2px solid var(--vi-gold-line);
+  padding-top: 9px;
+  padding-bottom: 7px;
+}
+
+/* First club only: a rule above the top row would sit against the head. */
+.go-inj tbody tr:first-child th { padding-top: 6px; }
+
+/* The heading spans a table that scrolls sideways, so the label rides a sticky
+ * span inside the cell: the cell scrolls, the club name stays at the left edge
+ * with the pinned Player column it is heading. Without it, a reader who has
+ * scrolled out to the Updated column is looking at rows under a blank band. */
+.go-inj .go-grp {
+  position: sticky;
+  left: 0;
+  display: inline-block;
+}
+
+/* A comment wraps to three or four lines and the cells beside it hold two
+ * words, so centring them puts the player's name level with the middle of
+ * somebody's paragraph. Everything hangs from the first line instead. */
+.go-inj tbody td { vertical-align: top; }
+
+/* --- Injury report: the player cell --------------------------------------
+ * Pos, Status and Updated were three columns holding two characters each and
+ * between them they took as much width as the comment. They live in the
+ * player's cell now, in two lines: name and position on the first, then the
+ * designation and the date it was given on a caption line beneath. The name
+ * keeps the weight, everything under it steps back a shade, and the pinned
+ * column carries the whole fact about the player while the comment scrolls
+ * beside it. */
+.go-inj .go-iname {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-hi);
+}
+
+/* Trails the surname on the same line, the way a player is said out loud. It
+ * keeps the display caps of the badge below it and steps back two shades in
+ * colour, which is enough to read as a tag on the name rather than as part of
+ * it — the eye scans this column for who, and the position answers a question
+ * asked after that one. */
+.go-inj .go-ipos {
+  margin-left: 4px;
+  font-family: var(--vi-display);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.7px;
+  color: var(--text-4);
+}
+
+.go-inj .go-imeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+  margin-top: 4px;
+  line-height: 1;
+}
+
+.go-inj .go-iupd {
+  font-size: 10.5px;
+  color: var(--text-4);
+}
+
+/* The designation is the one thing on the row that is worth spotting without
+ * reading, so it is a pill rather than a word — same shape as the phase chip
+ * in the page head. Neutral by default: the tint is spent on the two statuses
+ * that decide whether a player is in the game. */
+.go-ibadge {
+  font-family: var(--vi-display);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  padding: 2px 6px;
+  border-radius: 2px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text-3);
+}
+
+.go-ibadge.is-q {
+  color: var(--warn-ink);
+  border-color: var(--warn-line-2);
+  background: var(--warn-tint);
+}
+
+/* is-hot is a reserve designation filed in the last few weeks -- see
+ * STATUS_RESERVE. Deliberately the same red rather than a third tint: both say
+ * "this one is why you opened the report", and a distinct colour for each
+ * would be inventing a difference the reader has no key for. */
+.go-ibadge.is-out,
+.go-ibadge.is-hot {
+  color: var(--bad);
+  border-color: var(--bad-line);
+  background: var(--bad-tint);
+}
+
+/* --- Props: a player per row ---------------------------------------------
+ * The board carried a column group per book — Line, Odds, Over, Under, once
+ * each — which is nine columns before a third book turns up, and on a phone
+ * that put the price off the right edge. It is one consensus price now, with
+ * the books folded into the hover on it.
+ *
+ * The player was a header row spanning the table, because a milestone market
+ * quoted him at fifteen lines and a Player column would have repeated a name
+ * down all fifteen. The ladder is the columns now, so those fifteen rows are
+ * one row, and there is nothing left for a group header to group: it is the
+ * first column, pinned, in the arrangement below. */
+
+.go-props th.is-num { text-align: right; }
+
+/* Every value on the board sits on one right edge. `.is-num` already put the
+ * numbers there and the exceptions were the problem: a "—" for a market nobody
+ * quoted, or a line the feed sent as a string, fell back to the table's default
+ * left and broke the edge the column is scanned down. The rule is the column
+ * rather than the value, so a cell cannot opt out of it by not parsing.
+ *
+ * The first column is excluded, not overridden -- it is the pinned name, a label
+ * and not a value, and it reads from the left like the label it is. */
+.go-props tbody td:not(:first-child) { text-align: right; }
+
+/* Name and club, in the cell the pinned-column rules hold at the left edge.
+ * Display face rather than the table's monospace: it is the label on the row,
+ * not one of the numbers in it. */
+.go-props td.go-plc {
+  font-family: var(--vi-display);
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-hi);
+}
+
+/* Muted and small so the name still reads as the label and these as an aside
+ * on it. Inline: a milestone board is already scrolling sideways and a second
+ * line here would spend height on every row to save a few pixels of the one
+ * column that is never scrolled past. */
+.go-props .go-plmeta {
+  margin-left: 9px;
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.6px;
+  color: var(--text-4);
+}
+
+/* --- Price detail overlay ------------------------------------------------
+ * The books behind a consensus price. A title attribute said it first, and a
+ * title is a hover, which a phone does not have — so a tap opens this, and
+ * the hover stays for a mouse.
+ *
+ * Fixed rather than absolute: the board it hangs off scrolls sideways inside
+ * .go-scroll, and a panel positioned inside a scrollport is clipped by it, so
+ * the last column of a milestone ladder would open a panel cut down the
+ * middle. Above everything else on the board. */
+.go-pop {
+  position: fixed;
+  z-index: 60;
+  min-width: 172px;
+  /* A milestone row is up to two dozen rungs, so the panel is capped and
+   * scrolls rather than running off the screen. */
+  max-height: min(58vh, 420px);
+  overflow-y: auto;
+  padding: 9px 0 7px;
+  background: var(--surface-2);
+  border: 1px solid var(--vi-gold-line);
+  border-radius: 2px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
+  font-family: var(--vi-display);
+  font-size: 13px;
+  color: var(--text);
+}
+
+.go-pop-h {
+  padding: 0 13px 7px;
+  margin-bottom: 5px;
+  border-bottom: 1px solid var(--hairline);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  color: var(--text-hi);
+  white-space: nowrap;
+}
+
+/* One column per book, one row per side or rung — the shape the board's own
+ * per-book columns had before they were folded into a consensus. */
+.go-pop-t {
+  border-collapse: collapse;
+  font-family: monospace;
+  font-size: 12.5px;
+}
+
+.go-pop-t th, .go-pop-t td {
+  padding: 3px 13px 3px 0;
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* The label column — Over and Under, or the rungs of a ladder — reads down
+ * the left, so it is the one column that is not a number. */
+.go-pop-t th:first-child, .go-pop-t td:first-child {
+  padding-left: 13px;
+  text-align: left;
+}
+
+.go-pop-t thead th,
+.go-pop-t tbody th {
+  font-family: var(--vi-display);
+  font-size: 11.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-3);
+}
+
+/* The head sticks: a ladder panel scrolls, and a column of numbers with the
+ * book names scrolled off it is a column of numbers. */
+.go-pop-t thead th {
+  position: sticky;
+  top: 0;
+  background: var(--surface-2);
+  color: var(--text-4);
+  padding-bottom: 5px;
+}
+
+.go-pop-t tbody td {
+  color: var(--text-hi);
+  font-weight: 700;
+}
+
+/* The mean, set back from the books it was taken from — it is the number in
+ * the cell behind the panel, not another book's price. */
+.go-pop-t .go-pop-avg { color: var(--text-4); font-weight: 400; }
+
+/* The whole row is the target — the name is the widest, most obvious thing in
+ * it, and on a phone a price cell is a 40px one. */
+.go-props tbody tr { cursor: pointer; }
+
+/* The row the open panel belongs to, marked so a tap has an answer on the
+ * board as well as over it. A background rather than an outline: the row runs
+ * the width of the card and a border on it would move every cell. */
+.go-props tbody tr.is-open td { background: var(--accent-soft); }
+
+/* The pinned name cell paints its own background, so it has to be told too —
+ * and after the zebra rule it would otherwise keep. */
+.go-props.go-pinned tbody tr.is-open td:first-child {
+  background: var(--accent-soft);
+}
+
+/* --- Odds: one table per book --------------------------------------------
+ * The odds card is the one place a book is a whole table rather than a column
+ * group. Flat, it ran to eight columns and scrolled sideways on anything
+ * narrower than a laptop, which put the price the reader came for off-screen.
+ * Pivoted — markets across, the two teams down — a book is four columns, so
+ * the books tile into whatever width the card has and none of them scroll. */
+
+/* Flex rather than a grid of fixed tracks: the numbers are monospace and set
+ * not to wrap, so a track narrower than the widest row would clip a price. A
+ * flex item floors at its own content width, so a book that does not fit the
+ * row wraps to the next one instead of losing a digit.
+ *
+ * Centred because the books stop growing at 420px: two of them on a wide card
+ * leave slack, and left-packed that slack all lands on one side and hangs the
+ * pair off the edge of a card whose every other row is full width. */
+.go-books {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 14px 18px;
+  padding: 0;
+}
+
+.go-book {
+  flex: 1 1 260px;
+  min-width: min-content;
+  max-width: 420px;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+/* Below this there is one book to a row whatever its floor says -- two of them
+ * want 538px of row before the gap is paid for, and the widest card here is
+ * under 500 -- so the floor has nothing left to decide, and holding it costs
+ * the reader a column: four monospace columns want a little over 380px, a
+ * 320px phone leaves a card about 295px wide, and a box that stands at its
+ * content width inside a row narrower than that is clipped by the card with no
+ * way to reach what was cut. So it gives up the floor and scrolls instead.
+ * Above the breakpoint the floor is what wraps a book onto a row of its own
+ * rather than letting two of them squeeze and scroll side by side, and it
+ * stays. */
+@media (max-width: 520px) {
+  .go-book {
+    min-width: 0;
+    overflow-x: auto;
+  }
+}
+
+.go-odds th, .go-odds td { padding: 6px 10px; }
+.go-odds th.is-num { text-align: right; }
+
+/* Nothing below the last row to separate it from, and the box already draws
+ * the edge the hairline would double. */
+.go-odds tbody tr:last-child th,
+.go-odds tbody tr:last-child td { border-bottom: 0; }
+
+/* The book ticker heads the column the team abbreviations run down, so it is
+ * read as the label of the table rather than of the column. */
+.go-odds thead th.go-tm { color: var(--vi-gold); letter-spacing: 1px; }
+
+/* A team cell labels its row, so it is a th — which otherwise inherits the
+ * sticky, uppercased treatment meant for column headings, and would lift out
+ * of the table and paint over the zebra as the page scrolls under it. */
+.go-odds tbody th.go-tm {
+  position: static;
+  background: none;
+  color: var(--text);
+  font-family: monospace;
+  font-size: 11.5px;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
+  white-space: nowrap;
+}
+
+/* A three-figure moneyline next to a hung total is the widest a row gets. On
+ * the narrowest phones that is a few pixels more than the column has, and the
+ * padding is the cheapest thing to take it out of. */
+@media (max-width: 400px) {
+  .go-odds { font-size: 11px; }
+  .go-odds th, .go-odds td { padding: 6px 7px; }
+  .go-odds tbody th.go-tm { font-size: 11px; }
+  .go-books { padding: 0 4px; gap: 12px; }
+  /* Same trade on the props board. A two-sided market is four columns at most
+   * and a dozen pixels over 320px; a milestone ladder is two dozen and scrolls
+   * whatever the padding is, so the tighter cells buy it fewer rungs off the
+   * edge before the first drag. */
+  .go-props th, .go-props td { padding: 6px 7px; }
+}
+
+/* --- Team stat comparison ------------------------------------------------ */
+
+.go-vs { width: 100%; border-collapse: collapse; font-size: 12px; }
+
+.go-vs th, .go-vs td { padding: 5px 12px; border-bottom: 1px solid var(--hairline); }
+.go-vs thead th {
+  color: var(--text-3);
+  font-family: var(--vi-display);
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  border-bottom: 2px solid var(--vi-gold-line);
+}
+.go-vs td.go-stat {
+  color: var(--text-3);
+  font-family: var(--vi-display);
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  text-align: center;
+}
+.go-vs td.go-val { font-family: monospace; text-align: center; width: 22%; color: var(--text); }
+.go-vs tbody tr:nth-child(even) { background: var(--zebra); }
+/* The leader is marked by the cell it sits in, not by recolouring the number:
+ * green digits on one side and plain digits on the other read as two kinds of
+ * value rather than one comparison, and the number itself should look the same
+ * on both sides of the row. Translucent, so it layers over the zebra rows
+ * without a second rule for them. */
+.go-vs td.is-better { background: rgba(var(--good-vivid-rgb), 0.18); }
+
+/* --- Play log ------------------------------------------------------------ */
+
+/* All / Q1-Q4 / Scoring. Six mutually exclusive views of rows already on the
+ * page, every label one short word, so a segmented row rather than a select:
+ * they all fit, and which one is active is readable without opening anything.
+ * It sits inside the card body because that body is flush -- the strip is the
+ * card's own header rule, continued. */
+.go-seg {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--hairline);
+  background: var(--surface-2);
+}
+
+.go-seg button {
+  font-family: var(--vi-display);
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  padding: 3px 12px;
+  border-radius: 2px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-3);
+  cursor: pointer;
+}
+
+.go-seg button:hover { border-color: var(--vi-gold); color: var(--text); }
+
+/* The chosen view is the one thing on the strip that is gold-filled, which is
+ * how VegasInsider marks a selected tab. Dark ink on it in both themes: the
+ * fill is the same gold either way. */
+.go-seg button[aria-pressed="true"] {
+  border-color: var(--vi-gold);
+  background: var(--vi-gold);
+  color: var(--vi-bar);
+}
+
+.go-seg button:focus-visible {
+  outline: 2px solid var(--accent-ring);
+  outline-offset: 1px;
+}
+
+/* The props switch rides in the card head rather than on a strip of its own,
+ * so it drops the strip's padding, rule and fill and sits against the gold
+ * band. Centred rather than baseline-aligned with the title: a button holding
+ * only an icon has no text baseline, and left to the head's own alignment it
+ * would hang off the bottom of the band. */
+.go-seg-head {
+  padding: 0;
+  border-bottom: 0;
+  background: none;
+  align-self: center;
+  gap: 4px;
+}
+
+/* Square, so the two read as a pair of marks rather than two short bars, and
+ * outlined against the navy band the way the strip's buttons are against the
+ * page. Every rule here is scoped to the head to outrank `.go-seg button`,
+ * which is written for a strip of words and would otherwise put its own
+ * padding and surface fill back on. */
+.go-seg-head .go-icobtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 26px;
+  padding: 0;
+  border-radius: 2px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: transparent;
+  color: var(--vi-band-ink-2);
+  cursor: pointer;
+}
+
+.go-seg-head .go-icobtn svg { display: block; pointer-events: none; }
+
+.go-seg-head .go-icobtn:hover:not(:disabled) {
+  border-color: var(--vi-gold);
+  color: var(--vi-band-ink);
+}
+
+/* Inverted, not tinted: the glyph is drawn in strokes of currentColor, so
+ * filling the button gold and flipping the ink to the bar's dark turns the
+ * mark over with the button. */
+.go-seg-head .go-icobtn[aria-pressed="true"] {
+  border-color: var(--vi-gold);
+  background: var(--vi-gold);
+  color: var(--vi-bar);
+}
+
+.go-seg-head .go-icobtn:disabled { opacity: 0.35; cursor: default; }
+
+/* The play log is a table in everything but its markup — a header row of
+ * filters over rows of fixed columns — so it is laid out whole like the rest
+ * of them. A box 520px tall showed about a dozen plays of a couple of hundred
+ * and put the rest behind an inner scrollbar; the drive filters above are the
+ * way to cut it down, not a window onto it. */
+.go-plays { max-height: none; overflow: visible; }
+
+.go-play {
+  display: grid;
+  grid-template-columns: 52px 46px minmax(0, 1fr) 62px;
+  gap: 10px;
+  padding: 5px 16px;
+  font-size: 11.5px;
+  align-items: baseline;
+  border-bottom: 1px solid var(--hairline);
+}
+
+.go-play .go-clock { font-family: monospace; font-size: 10px; color: var(--text-4); }
+.go-play .go-pteam { font-family: monospace; font-weight: 600; color: var(--text-2); }
+.go-play .go-ptext { color: var(--text-2); min-width: 0; }
+.go-play .go-pscore { font-family: monospace; font-size: 10px; color: var(--text-4); text-align: right; }
+.go-play.is-scoring { background: var(--good-tint); }
+.go-play.is-scoring .go-ptext { color: var(--text); font-weight: 600; }
+
+/* The Scoring plays card is the same rows with the tint dropped (see playRow)
+ * and the emphasis moved to the score, which is what the card is read for:
+ * the running total after each play is the column your eye goes down. The
+ * text stays at log weight — it is the explanation of the number, not the
+ * headline. */
+.go-scoring .go-play { padding-top: 6px; padding-bottom: 6px; }
+.go-scoring .go-ptext { color: var(--text-2); }
+
+.go-scoring .go-pscore {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.go-scoring .go-play:last-child { border-bottom-width: 0; }
+
+/* --- Empty states -------------------------------------------------------- */
+
+/* Links inside an empty-state body: the schedule link the not-captured-yet
+ * card carries. The chip grid that used to live here went with the wall of
+ * sibling games it styled, and the one-line door that replaced it has gone
+ * too — the whole set is at /football/schedule/archive now. */
+.go-empty a { color: var(--accent); text-decoration: none; font-weight: 600; }
+.go-empty a:hover { text-decoration: underline; }
+
+.go-prov {
+  font-size: 11px;
+  color: var(--text-4);
+  line-height: 1.7;
+  margin: 18px 0 40px;
+}
+
+.go-prov code { font-family: monospace; color: var(--text-3); }
+
+@media (max-width: 640px) {
+  .go-matchup { font-size: 22px; }
+  .go-hero-top { gap: 12px; }
+  .go-crest { width: 58px; height: 58px; }
+  /* Scaled with the crest it marks: 24px on a 58px logo is a ball the size of
+   * the team. */
+  .go-ball { width: 18px; bottom: -3px; }
+  .go-sit { font-size: 11px; gap: 6px; }
+  .go-sit .go-dd { font-size: 12px; }
+  .go-play { grid-template-columns: 46px 40px minmax(0, 1fr); }
+  .go-play .go-pscore { display: none; }
+  .go-scoring .go-play { grid-template-columns: 44px 34px minmax(0, 1fr) 46px; gap: 8px; }
+  .go-scoring .go-pscore { display: block; }
+}
+
+/* --- Props: the two views ------------------------------------------------
+ * Over/under and milestones are separate boards behind a two-button switch
+ * that rides in the card head, so the body below it carries its own padding
+ * rather than inheriting a card body's. */
+
+.go-pbody { padding: 14px 0px; }
+
+/* The player picker, on the milestone board only. Indented so its own label
+ * starts where the market heading under it does rather than where the card
+ * edge is -- the menu's button carries 10px of padding of its own, so the box
+ * sits left of the caption in order for the two words to line up. The menu and
+ * the stack it filters read as one block that way. */
+.go-pbody .dd-row { margin: 0 0 10px 3px; }
+
+/* The market a stack of over/under boards is under. A heading above the board
+ * rather than a table caption inside it: it names a market that a run of
+ * boards belongs to, and it is indented to the controls above it. */
+.go-mkt {
+  margin: 22px 0 5px;
+  padding: 0 0 0 13px;
+  font-family: var(--vi-display);
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text-hi);
+}
+
+/* First board only: a heading against the caption above it needs no gap. */
+.go-mkt:first-child { margin-top: 2px; }
+
+/* Every price column the same width, so Over and Under land in the same place
+ * on all ten stacked boards — including the ones with no Line column, where
+ * the name column absorbs the difference instead of shifting the prices. Held
+ * to the two-sided board: a milestone ladder is up to forty columns and a
+ * floor under each of them would be three screens of enforced width.
+ *
+ * Above phone width only, and stated here rather than in the sheet's mobile
+ * block at the top: that block is source-ordered before this rule and an
+ * override of equal weight sitting above what it overrides does nothing. The
+ * floor costs about 85px on a market with a Line column, which at 360px is
+ * the difference between a board that fits and a board that scrolls sideways,
+ * and a phone reader would rather have every price on screen than have the
+ * columns agree with the board above. */
+@media (min-width: 641px) {
+  .go-props.go-ou th.is-num,
+  .go-props.go-ou td.is-num { min-width: 88px; }
+}
+
+/* And the name column takes every pixel of the slack, which is what holds the
+ * price columns at that width rather than letting the table share the leftover
+ * space out between them — the share differs per board, because a board with
+ * no Line column has one fewer to share it with. */
+.go-props.go-ou th.go-plc,
+.go-props.go-ou td.go-plc { width: 100%; }
+
+/* --- Team logos ---
+ * The 32 crests under /assets/icons/nfl, the same ones /football/schedule and
+ * the team picker use. The inline size is nudged below the box bottom rather
+ * than centred: it sits beside type, and aligning a square to the text box
+ * makes it read as floating above the baseline the letters sit on. The hero's
+ * .go-crest is laid out as a block instead and lives with the hero. */
+
+/* The crest is the whole column head here, so it is centred over the numbers
+ * it labels and sized to stand on its own rather than to sit beside type. */
+.go-vs-team {
+  text-align: center;
+  white-space: nowrap;
+}
+
+.go-vs-logo {
+  width: 32px;
+  height: 32px;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.go-logo-sm {
+  width: 15px;
+  height: 15px;
+  vertical-align: -3px;
+  margin-right: 5px;
+}
+

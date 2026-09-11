@@ -26,7 +26,7 @@ graph TD
 
         subgraph STATIC["Static CDN assets"]
             VIEWS["/views/*.html<br/>(page templates)"]
-            STYLES["/styles/*.css"]
+            STYLES["/styles/*.css<br/>(theme.css = color tokens)"]
             SCRIPTS["/scripts/*.js"]
             DATAJSON["/data/*.json<br/>(odds + fantasy snapshots)"]
         end
@@ -112,6 +112,19 @@ graph TD
 - **Vercel** serves two things behind `vercel.json`: a **static CDN** (HTML pages, CSS, JS, and pre-baked `/data/*.json` snapshots) and a handful of **Python serverless functions** under `/api` (accounts, cross-device sync, public pick lookup, golf scores).
 - **Supabase** is the only stateful backend the live site touches — a Postgres `users` + `user_data` pair, reached over its REST API by the `/api` functions. It powers the lightweight account system (display name + claim code) and cross-device sync of a user's picks.
 - **`server.py` (middleware proxy)** is the fantasy-data brain. It fetches from **Sleeper / KeepTradeCut / FantasyCalc**, normalizes and merges player values, computes z-scores, caches everything in `/cache`, and exposes the league / trade-calculator endpoints (`/api/players`, `/api/league/*`, `/api/trades`).
+- **Caching / cache busting.** Vercel's static hosting sends no `ETag` and the *same* constant `Last-Modified` (`Sat, 20 Oct 2018 01:46:40 GMT`) on every file in every deploy. A conditional request against it therefore always answers `304`, whatever the file now contains — verified with `curl -H 'If-Modified-Since: ...'` against both `/data/*.json` and `/styles/*.css`. So a browser that revalidates keeps the body it already had **and resets its own freshness window**: the staleness is permanent, not bounded by the `max-age`, and only a hard reload clears it. That leaves exactly two safe states for a static file here — `no-store`, or a URL that changes with the content plus `immutable`. `max-age=<n>` and `must-revalidate` are both the broken middle, and `/data` (`max-age=3600`) and `/assets` (`max-age=86400`) sat in it until they were moved out.
+
+  Where the second option applies, `build.py` is what supplies it: it appends a content hash (`?v=<hash8>`) to every local `/styles/*` and `/scripts/*` reference at **deploy time**, so the URL changes exactly when the bytes do. Vercel runs it via `buildCommand`. Those hashes are **never committed** — source HTML references assets unversioned, `build.py --check` fails if one sneaks in, and `--strip` undoes a stray local run. Never hand-edit a `?v=` value. This is safe only because every asset reference in the tree is a literal `href`/`src` in HTML: there are no ES module imports, no CSS `@import`, no `importScripts`, and no runtime-constructed script or stylesheet URLs. Introducing one would put an asset outside the hash and, with `immutable` on, stale forever.
+
+  Everything else is `no-store`: `/views/*` (so one refresh always lands on the current build, and therefore on the current asset URLs), `/data/*` (the odds snapshots — these move, and a pinned browser showing month-old numbers is the failure this whole note exists to prevent), and all of `/api/*`. The exceptions are the two families whose URL already encodes their content — `/assets/action/<sha8>.png` — plus `/assets/icons/*`, which is team logos and source badges: a stable path holding bytes that do not change, ~530 KB of it on a single schedule render, and the escape hatch if one ever must change is to rename the file.
+
+  **Functions cannot opt out of this.** `/api/*` responses come back re-encoded and stripped of any `ETag` the function set, so the `max-age=0, must-revalidate` + strong-`ETag` design that `api/action.py` and `api/game-odds.py` were written around never reaches a browser. `api/game-odds.py` therefore does its revalidation in the request instead: the page sends `?known=<etag>`, and an unchanged game answers `{"unchanged": true}` in ~95 bytes. Nothing between the function and the browser can strip a query parameter. `vercel.json` — whose header rules *do* override whatever a function sends — puts every `/api/*` route on `no-store` so nothing is left half-cached against a validator that will not survive.
+- **Action Network picks** are pulled by `scripts/fetch_action_network.py` from `api.actionnetwork.com/web/v1/me/picks` — the same undocumented backend the Action app uses, which their own website's JS bundle also talks to. Auth is the `AN_SESSION_TOKEN_V1` browser cookie, copied once into `.env` as `ACTION_NETWORK_TOKEN` (a JWT, ~1 year expiry; a browser `User-Agent` is mandatory or CloudFront 403s the request). This exists because there is no web UI for My Action and the app's CSV export omits *pending* futures. Two quirks drive the script's shape: the response is four separate arrays (`picks` / `groupPicks` / `competitionPicks` / `custom_picks`), and a date window returns a pick only when it **contains that pick's whole `[starts_at, ends_at]` span** — so long-dated futures are invisible to narrow windows, and the script runs a chunked crawl for settled history plus a separate forward-looking sweep for futures. **Output goes to `/cache`, never `/data`** — `/data` is committed and CDN-public, and this is personal betting history.
+
+- **The Action Network book** (`/football/action`) is the one page family that is neither a static file nor a client-side `fetch`. `scripts/build_action.py` reads the 28 MB export, shapes it into a small JSON **page model** per slate (the index, the futures board, one per week of the schedule), and `PUT`s the set to `/api/action-ingest`, which stores it in Supabase `action_pages`. `api/action.py` then renders a page per request from that model, three board builders and one shell template in `api/_action/`. This replaced twenty committed HTML files totalling 2.9 MB, each with its artwork base64-inlined and served `no-store`, so every load re-downloaded the whole board — the futures page alone was 1.5 MB and is now 82 KB. **Two cadences:** bet data is live on a push, in seconds, with no deploy; artwork is committed, content-addressed files under `assets/action/<sha8>.png` served immutable, so a brand-new headshot needs a deploy and renders as a placeholder until it gets one. The builder prints the list. **The render library lives under `api/`, not `scripts/`**, because Vercel does not bundle `scripts/**` with a function — that is why `/api/odds-ingest` is dead in production, and `docs/prompts/odds-supabase-migration.md` prescribes the same fix.
+
+- **NFL game bundles** (`/football/schedule/game/<id>`) follow the same push-not-deploy split as the Action book. `scripts/fetch_bdl_game.py` pulls one game from **balldontlie** — odds across eight sportsbooks, the player-prop board, box score, team stats and the full play log — and `--publish` upserts it into Supabase `game_odds`, which `api/game-odds.py` serves under an ETag. It is not a committed file under `/data` for a reason worth stating: one game is ~900 KB, nearly all of it props (34 players × 25 markets × 6 books, both sides of every over/under), so a full slate would add ~15 MB a week to the repo forever for numbers that go stale in minutes. Every row on `/football/schedule` links to it, because the schedule's game ids **are** balldontlie's — `scripts/fetch_nfl_schedule.py` sources that file from balldontlie now rather than ESPN, so no mapping table sits between the two. The client is `scripts/bdl_common.py`, whose record/replay cassettes under `cache/bdl/` make every capture reproducible offline after a subscription lapses. **`scripts/bdl_refresh.py` is what makes this happen without anyone typing a command**: it reads the committed schedule, asks Supabase what is stored and how stale it is, and re-captures whatever is due. "Due" comes from `refresh_plan()` in `fetch_bdl_game.py` — six hours out from kickoff, hourly on game day, ten minutes inside the last three hours, two minutes live, then thirty minutes for six hours of stat corrections and frozen after that — and the same function stamps its answer into every bundle, so the "next in 6h" the page prints is the cadence a sweep will actually run rather than a second guess at it. `.github/workflows/bdl-refresh.yml` runs `--once` every fifteen minutes; a live slate wants `--loop` on a machine that is awake, because GitHub's scheduled runners drift five to fifteen minutes and a two-minute policy cannot be served that way. One guard matters here: `publish()` reads the stored row's `has` before writing and refuses a capture that would drop a section the stored bundle already had, so an expired GOAT trial degrades an unattended sweep to "stops updating" instead of "overwrites every bundle with a free-tier shell".
+
 - **Sportsbook odds** never come from a server call. The **Odds Recorder bookmarklet** runs inside *your own logged-in* DK / FD / theScore tab, captures the JSON the page already loaded, and copies it to the clipboard. That bundle is pasted into `/data/imports/`, parsed offline by `scripts/parse_*`, and written out as the `/data/*.json` snapshots the Odds page reads. This sidesteps every bot-detection / CSP barrier because it's a real session writing to your own clipboard.
 
 ---
@@ -141,7 +154,7 @@ flowchart TD
 
     subgraph LANE_RUNTIME["② Runtime page load — every visit"]
         B0 --> B1["vercel.json rewrites clean URL<br/>→ /views/<page>.html"]
-        B1 --> B2["Browser loads shared JS:<br/>nav.js · auth.js · sync.js<br/>+ page-specific bundle"]
+        B1 --> B2["theme.js sets data-theme (pre-paint),<br/>then nav.js · auth.js · sync.js<br/>+ page-specific bundle"]
         B2 --> B3{Page type?}
 
         B3 -->|Odds| C1["fetch /data/{dk,fd,score,outrights}.json<br/>→ build merged book columns"]
@@ -168,7 +181,7 @@ flowchart TD
 
 ### Reading the activity flow
 
-- **Lane ①** is the human-driven pipeline that refreshes betting markets. It runs occasionally (when lines move), entirely offline, and its only output is a set of committed `/data/*.json` files. A normal Vercel deploy publishes them.
+- **Lane ①** is the human-driven pipeline that refreshes betting markets. It runs occasionally (when lines move), entirely offline, and its only output is a set of committed `/data/*.json` files. A normal Vercel deploy publishes them. The Action Network book is the one pipeline that has escaped the commit-and-deploy step: `scripts/build_action.py --push` writes its page models straight to Supabase, and the page is current on the next request.
 - **Lane ②** is what happens on every visit. The page template is static; the *data* arrives via `fetch` — from CDN JSON (odds), from the `server.py` proxy (league/trades/players, with a cache layer in front of the third-party fantasy APIs), or from the golf function (live or archived leaderboards).
 - **Account sync** is the only write path from the browser: `sync.js` mirrors `localStorage` to Supabase via `/api/sync`, and other devices or public `/api/lookup` reads pull it back.
 
@@ -193,6 +206,7 @@ Pages split into a few **correlated families** plus standalone pages. Families s
 
 | File | Role | Used by |
 |---|---|---|
+| `theme.js` | Dark (default) / light, remembered in `localStorage`; renders the drawer's theme switch and fires `themechange` | **every** page, from `<head>` |
 | `nav.js` | Shared nav + hamburger drawer | **every** page |
 | `auth.js` | Account (display name + claim code) on top of `localStorage` | most pages |
 | `sync.js` | Bridges `localStorage` ⇄ Supabase via `/api/sync` | pages with savable picks |
@@ -202,6 +216,30 @@ Pages split into a few **correlated families** plus standalone pages. Families s
 | `odds-recorder.js` | **Bookmarklet source** — fetch/XHR hooks that capture sportsbook JSON (compiled to `odds-recorder.bookmarklet.txt`, installed via `odds-recorder.install.html`) | runs in the sportsbook tab, not on DynastZ |
 
 ### Styles (`/styles`)
+
+`theme.css` is the color layer: every surface, rule, text tone and accent in the
+app is a custom property declared there once for dark (on `:root`) and once for
+light (on `:root[data-theme="light"]`). No other stylesheet writes a raw hex for
+a theme-able color — the exceptions are position badges and white-on-fill
+foregrounds, which are the same in both themes. Two neutral families are kept
+apart on purpose (`--bg`/`--surface`/`--border` for the blue-grey chrome,
+`--panel`/`--hairline` for the flat-grey card surfaces) so introducing the token
+layer shifted no dark surface; in the light they collapse onto near-identical
+whites. `bakers-oven.css` keeps its own `--oven-*` kiln palette and declares its
+own light block, because that page is a deliberate exception to the site
+palette.
+
+**Heat maps** are the one place color carries data, so they get their own
+tokens rather than reusing the semantic ones: `--heat-*` for the Buns table,
+`--heat-seq-*` for the schedule gradient, `--heat-z-*` for the scout/calculator
+z-wash, `--hole-*` for the golf leaderboard. Light mode does not simply darken
+them — a cell's *text* darkens to stay legible on white while its *wash* stays
+bright, since a 24% mix of a dark green over white reads grey. Where a scale can
+be driven from CSS it is: the view hands over a bare number (`--heat`, `--z`,
+`--hue`) and the color is mixed in the stylesheet, so a scale re-colors on a
+theme change without its table being rebuilt. Charts that build SVG or canvas
+cannot do that — they read tokens through `Theme.color()` and redraw on
+`themechange`.
 
 `styles.css` is the global base loaded everywhere. The rest are scoped: `index.css` (landing), `masters.css` (all golf/masters), `league.css` + `league-schedule.css` + `scout.css` (league family), `trades.css` + `filters.css` (trade browsing), `calculator.css` (trade calculator), `team.css` (roster view).
 
@@ -214,6 +252,11 @@ Pages split into a few **correlated families** plus standalone pages. Families s
 | `api/lookup.py` | Vercel function | Public read of another user's 3-ball picks by username |
 | `api/golf/scores.py`, `api/golf/[year].py` | Vercel function | Live (`curl` masters.com) + archived golf leaderboards; serve season page |
 | `server.py` | Middleware proxy | Fetches/normalizes/merges Sleeper · KTC · FantasyCalc, computes z-scores, caches in `/cache`, serves `/api/players`, `/api/league/*`, `/api/trades` |
+| `api/action.py` | Vercel function | Renders one page of the Action Network book per request from Supabase `action_pages`, with a strong `ETag` and a warm-instance memo |
+| `api/action-ingest.py` | Vercel function | Admin `PUT` that replaces the book's page models; deletes slugs the push omits (the old `sweep()`) |
+| `api/_action/` | Library | `render.py` (board builders, team tables, attribution) + `page.html` / `standalone.html`. Under `api/` because `scripts/**` is not bundled with functions |
+| `scripts/fetch_action_network.py` | Local CLI | Exports your Action Network picks (incl. pending futures) to `/cache/an_picks.json`; never writes to `/data` |
+| `scripts/build_action.py` | Local CLI | Turns that export into page models + committed artwork; `--push` / `--seed` / `--standalone` / `--out` |
 
 ### Data (`/data`)
 

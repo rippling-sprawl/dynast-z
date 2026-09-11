@@ -1,0 +1,317 @@
+/* === VegasInsider skin ===
+ * The look of vegasinsider.com, applied to the three Games pages —
+ * /football/schedule, /football/schedule/game/<id> and
+ * /football/schedule/archive — and to the three hub pages that lead to them:
+ * the home page, /football and /account.
+ *
+ * It is a *skin*, not a layout: every rule here repaints something that was
+ * already on the page. No element moved, no grid changed, no markup was
+ * touched. What it changes is the palette, the type and the edges.
+ *
+ * Where the palette came from: assets/research/vegasinsider/palette.json, the
+ * scrape of the live site. Its top colours are a near-white page (#fefefe /
+ * #f4f4f4), #333 ink, the brand gold (#f4c255 / #fcc138), a deep navy (#002c5f)
+ * on the header bands, a link blue (#0065cc), and the near-black chrome bar
+ * (#1d1d25). The palette is still VegasInsider's; the type is not. These three
+ * pages set their headings in Inter and their running text in Helvetica Neue —
+ * see the type block below.
+ *
+ * Two themes, one identity. VegasInsider is a light site, so light mode is the
+ * faithful reading — white board, navy header bands, gold rules. Dark mode
+ * keeps the same bands and the same gold and swaps the neutrals for the site's
+ * own near-black family, because a reader who has chosen dark should not be
+ * handed a white page for these routes.
+ *
+ * Scope: this file is pulled in by @import from the sheets those pages own —
+ * styles/primary/nfl-schedule.css, styles/primary/game-odds.css,
+ * styles/primary/hub.css, and the inline block at the foot of
+ * views/football/schedule-archive.html. Nothing else imports it, which is what
+ * keeps the rest of the site on the house palette. The :root blocks below are
+ * therefore page-scoped in practice even though they are written against the
+ * document root: a page that never loads this file never sees them. */
+
+/* Inter, for the display face below. Only the three weights the skin actually
+ * sets — 400 on the one lowercase note, 700 on everything else, 600 for the
+ * rules that inherit it — so the request stays small. The body face needs no
+ * import: it is Helvetica Neue, which is already on the machine. */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+/* --- Brand constants ------------------------------------------------------
+ * Theme-independent, unlike everything in the block below: the gold is the gold
+ * and the navy is the navy in both themes, because they are the brand rather
+ * than the surface. White is the ink on both, so it is named once here. */
+
+:root {
+  --vi-gold: #f4c255;
+  --vi-gold-soft: rgba(244, 194, 85, 0.14);
+  --vi-gold-line: rgba(244, 194, 85, 0.5);
+  --vi-navy: #002c5f;
+  --vi-bar: #1d1d25;
+  --vi-band-ink: #ffffff;
+  --vi-band-ink-2: rgba(255, 255, 255, 0.66);
+
+  /* Inter on the headings, bands, column heads and chips; Helvetica Neue on
+   * the running text. Inter is the grotesque the odds-screen genre has settled
+   * on — it was drawn for small dense UI, and its tall x-height and open
+   * apertures are what keep a 10px uppercase column head legible.
+   *
+   * The ladder falls to Helvetica Neue and then to Arial, so a blocked or slow
+   * webfont lands on the body face rather than on the browser default, and the
+   * page degrades to the one-family setting it had before rather than to
+   * something unrelated.
+   *
+   * Note neither face is condensed, where Saira Condensed was. The uppercase
+   * headings and column heads below therefore set wider than they used to at
+   * the same size and tracking. */
+  --vi-display: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --vi-body: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+/* --- Dark ---------------------------------------------------------------- */
+
+:root {
+  --bg: #16161c;
+  --bg-alt: #1d1d25;
+  --surface: #22222b;
+  --surface-2: #2b2b35;
+  --surface-3: #262630;
+  --border: #3a3a45;
+  --border-soft: #2b2b35;
+
+  --panel: #1d1d25;
+  --panel-lo: #131318;
+  --panel-hi: #22222b;
+  --panel-hi2: #2a2a34;
+  --hairline: #32323c;
+  --hairline-hi: #474753;
+
+  --text-hi: #ffffff;
+  --text-bright: #f2f2f5;
+  --text: #e3e3e8;
+  --text-2: #c8cad3;
+  --text-3: #a2a5b0;
+  --text-4: #9599a4;
+  --text-5: #7c8090;
+
+  /* Gold is the accent in the dark, where it clears 10:1 on the page and is
+   * the single colour the brand is recognised by. Anything filled with it
+   * carries dark ink, hence --on-accent / --accent-ink below. */
+  --accent: #f4c255;
+  --accent-2: #f4c255;
+  --accent-hover: #ffd87f;
+  --accent-strong: #fcc138;
+  --accent-soft: rgba(244, 194, 85, 0.13);
+  --accent-soft-2: rgba(244, 194, 85, 0.13);
+  --accent-faint: rgba(244, 194, 85, 0.07);
+  --accent-line: rgba(244, 194, 85, 0.45);
+  --accent-line-soft: #4a4129;
+  --accent-ring: rgba(244, 194, 85, 0.4);
+  --on-accent: #1d1d25;
+  --accent-ink: #1d1d25;
+
+  /* Warn is the odds board's own gold — the pregame chip and the odd-slot
+   * badge — so it is pulled onto the brand colour rather than left on the
+   * house amber a shade away from it. */
+  --warn: #f4c255;
+  --warn-deep: #d9a531;
+  --warn-soft: rgba(244, 194, 85, 0.12);
+  --warn-line: rgba(244, 194, 85, 0.45);
+  --warn-tint: #2b2412;
+  --warn-line-2: #6b5622;
+  --warn-ink: #f6d693;
+
+  --zebra: #1a1a21;
+  --surface-hover: #2a2a35;
+  --info-tint: #12233c;
+  --info-line: #1e3d68;
+  --info-ink: #58a6ff;
+
+  --scrim: rgba(13, 13, 17, 0.94);
+  --overlay: rgba(0, 0, 0, 0.62);
+  --overlay-strong: rgba(0, 0, 0, 0.78);
+}
+
+/* --- Light: the site as VegasInsider actually renders it ------------------ */
+
+:root[data-theme="light"] {
+  /* White boards on a light grey page, which is the arrangement every listing
+   * on VegasInsider is drawn in: --panel-lo is the page, --surface and --panel
+   * are the cards standing on it. */
+  --bg: #ffffff;
+  --bg-alt: #f4f4f4;
+  --surface: #ffffff;
+  --surface-2: #e7e9ec;
+  --surface-3: #eeeff2;
+  --border: #d6d8dd;
+  --border-soft: #e5e5e5;
+
+  --panel: #ffffff;
+  --panel-lo: #f0f1f4;
+  --panel-hi: #ffffff;
+  --panel-hi2: #f4f4f4;
+  --hairline: #e5e5e5;
+  --hairline-hi: #cfd2d8;
+
+  --text-hi: #111318;
+  --text-bright: #1a1c22;
+  --text: #333333;
+  --text-2: #40434c;
+  --text-3: #555555;
+  --text-4: #575b68;
+  --text-5: #5b5f6d;
+
+  /* The gold cannot carry text on a white board — it lands near 1.8:1 — so in
+   * the light the accent is VegasInsider's link blue and the gold moves to the
+   * rules, bands and fills below, where it is a background rather than ink. */
+  --accent: #0065cc;
+  --accent-2: #0065cc;
+  --accent-hover: #004e9e;
+  --accent-strong: #002c5f;
+  --accent-soft: rgba(0, 101, 204, 0.1);
+  --accent-soft-2: rgba(0, 101, 204, 0.1);
+  --accent-faint: rgba(0, 101, 204, 0.06);
+  --accent-line: rgba(0, 101, 204, 0.35);
+  --accent-line-soft: #c3d7ef;
+  --accent-ring: rgba(0, 101, 204, 0.35);
+  --on-accent: #ffffff;
+  --accent-ink: #ffffff;
+
+  --warn: #8a6100;
+  --warn-deep: #7a5200;
+  --warn-soft: rgba(244, 194, 85, 0.26);
+  --warn-line: rgba(196, 148, 38, 0.55);
+  --warn-tint: #fbf1d8;
+  --warn-line-2: #e2c886;
+  --warn-ink: #6f4d00;
+
+  --zebra: #f4f4f4;
+  --surface-hover: #ebedf0;
+  --info-tint: #e8f1fc;
+  --info-line: #bcd6f2;
+  --info-ink: #0065cc;
+
+  --scrim: rgba(255, 255, 255, 0.94);
+  --overlay: rgba(29, 29, 37, 0.3);
+  --overlay-strong: rgba(29, 29, 37, 0.5);
+}
+
+/* --- Body face ------------------------------------------------------------
+ * The running text is Helvetica Neue and stays off the webfont; Inter is spent
+ * only where --vi-display is asked for, which is headings, bands, column heads
+ * and chips. So the heading/text split the skin has always had is still a split
+ * in the face, not only in weight and case. */
+
+body {
+  font-family: var(--vi-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* --- Chrome ---------------------------------------------------------------
+ * The near-black bar with the gold rule under it is the first thing the site
+ * is recognised by, so the shared header takes it on these three routes.
+ *
+ * The header's contents are written by scripts/base/nav.js and styled from
+ * styles/base/styles.css, so the skin is applied by redefining the custom
+ * properties *on the header* rather than by restating those rules: the h1, the
+ * menu button and the two bar tabs read --text-hi, --text-3 and --accent from
+ * their own rules and pick the skin up through inheritance. That is also what
+ * puts gold on the tab for the page you are on. */
+
+header {
+  background: var(--vi-bar);
+  border-bottom: 3px solid var(--vi-gold);
+  --text-hi: #ffffff;
+  --text-3: #c9ccd6;
+  --text-4: #a9adba;
+  --accent: var(--vi-gold);
+  --accent-2: var(--vi-gold);
+}
+
+header h1 {
+  font-family: var(--vi-display);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+}
+
+header a:hover { color: var(--vi-gold); }
+
+/* Narrow screens: the header is the app's bottom bar, and the bar is no longer
+ * any page's to paint — styles/base/styles.css carries this same near-black
+ * band and gold rule on every route now, so the override that used to live
+ * here is gone rather than duplicated. See the --nav-* tokens there. */
+
+/* --- Page furniture ------------------------------------------------------- */
+
+/* The page title, in the display caps every heading on these pages is set in,
+ * over the gold rule that separates it from the board below. */
+.masters-content h2 {
+  font-family: var(--vi-display);
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  line-height: 1.1;
+  color: var(--text-hi);
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 3px solid var(--vi-gold);
+}
+
+.masters-content .subtitle {
+  font-family: var(--vi-display);
+  font-size: 13px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--text-4);
+}
+
+.masters-breadcrumbs {
+  font-family: var(--vi-display);
+  font-size: 13px;
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+  color: var(--text-4);
+}
+
+.masters-breadcrumbs a { color: var(--accent); font-weight: 700; }
+.masters-breadcrumbs .separator { color: var(--vi-gold); }
+
+/* --- Shared idioms --------------------------------------------------------
+ * Three patterns carry the skin across all three pages, and each page's own
+ * sheet spends them on its own components:
+ *
+ *   .vi-band  — a navy header strip with white display caps on it, the
+ *               treatment VegasInsider gives every table head and card head.
+ *   .vi-label — display caps on the page's own surface, for the smaller
+ *               headings that are not strong enough to earn a band.
+ *   .vi-chip  — a squared-off badge. The house pill is 999px; nothing on
+ *               VegasInsider is, so every badge on these pages loses its
+ *               radius and gains the display caps.
+ *
+ * They are written as classes so the intent has a name, and applied by the
+ * page sheets with @extend-by-hand — i.e. the page sheet repeats the two or
+ * three declarations on its own selector. There is no markup to hang a class
+ * on: not one of these pages was allowed to change an element. */
+
+.vi-band {
+  background: var(--vi-navy);
+  border-bottom: 2px solid var(--vi-gold);
+  color: var(--vi-band-ink);
+}
+
+.vi-label {
+  font-family: var(--vi-display);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.vi-chip {
+  font-family: var(--vi-display);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  border-radius: 2px;
+}
