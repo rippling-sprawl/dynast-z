@@ -1536,8 +1536,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         elif self.path.split("?")[0] == "/api/survivor-standings":
             api = survivor_standings_api()
             store = api.store
-            user_id, err = store.resolve_actor(self.headers.get("X-User-Id"),
-                                               require_active=False)
+            user_id, err = store.resolve_reader(self.headers.get("X-User-Id"))
             if err:
                 self._json_response(*err)
                 return
@@ -1553,14 +1552,15 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 self._json_response(400, {"error": "season is out of range"})
                 return
             try:
-                self._json_response(200, api.build_standings(user_id, season, now))
+                payload = api.build_standings(user_id, season, now)
+                self._json_response(
+                    200, payload if user_id else store.anonymise(payload))
             except Exception as e:  # noqa: BLE001
                 self._json_response(500, {"error": str(e)})
         elif self.path.split("?")[0] == "/api/survivor":
             api = survivor_api()
             store = api.store
-            user_id, err = store.resolve_actor(self.headers.get("X-User-Id"),
-                                               require_active=False)
+            user_id, err = store.resolve_reader(self.headers.get("X-User-Id"))
             if err:
                 self._json_response(*err)
                 return
@@ -1577,8 +1577,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 season = season or store.current_season(now)
                 games = store.load_season_games(season, now)
                 week, _ = api.resolve_week(season, week, now, games)
+                payload = api.build_week(user_id, season, week, now, games)
                 self._json_response(
-                    200, api.build_week(user_id, season, week, now, games))
+                    200, payload if user_id else store.anonymise(payload))
             except Exception as e:  # noqa: BLE001
                 self._json_response(500, {"error": str(e)})
         # Exact-path, not startswith: "/api/pickem-standings" starts with
@@ -1588,8 +1589,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         elif self.path.split("?")[0] == "/api/pickem-standings":
             api = pickem_standings_api()
             store = api.store
-            user_id, err = store.resolve_actor(self.headers.get("X-User-Id"),
-                                               require_active=False)
+            user_id, err = store.resolve_reader(self.headers.get("X-User-Id"))
             if err:
                 self._json_response(*err)
                 return
@@ -1607,14 +1607,15 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 self._json_response(400, {"error": "week is out of range"})
                 return
             try:
-                self._json_response(200, api.build_standings(season, week, now))
+                payload = api.build_standings(season, week, now)
+                self._json_response(
+                    200, payload if user_id else store.anonymise(payload))
             except Exception as e:  # noqa: BLE001
                 self._json_response(500, {"error": str(e)})
         elif self.path.split("?")[0] == "/api/pickem":
             api = pickem_api()
             store = api.store
-            user_id, err = store.resolve_actor(self.headers.get("X-User-Id"),
-                                               require_active=False)
+            user_id, err = store.resolve_reader(self.headers.get("X-User-Id"))
             if err:
                 self._json_response(*err)
                 return
@@ -1632,7 +1633,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 season, week, weeks = api.resolve_week(season, week, now)
                 payload = api.build_week(user_id, season, week, now)
                 payload["weeks"] = weeks
-                self._json_response(200, payload)
+                self._json_response(
+                    200, payload if user_id else store.anonymise(payload))
             except Exception as e:  # noqa: BLE001
                 self._json_response(500, {"error": str(e)})
         elif self.path.startswith("/api/bets"):

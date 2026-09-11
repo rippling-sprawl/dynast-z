@@ -173,6 +173,21 @@ Identical to the Pick 'Em's, including the `X-User-Id` tradeoff and the
 [pickem.md § Security model](pickem.md#security-model-accepted-tradeoff-app-wide).
 Forging the header is competitively valuable here too, and no more so.
 
+`/football/survivor` and `/football/survivor/standings` are readable signed out
+on the same terms, through the same `store.resolve_reader` /
+`store.anonymise()` pair (both re-exported from `api/_pickem/store.py`). See
+[pickem.md § The public read](pickem.md#the-public-read) — the reasoning is
+entirely shared and is not repeated here.
+
+What is worth stating is what the public read does **not** change: the reveal
+rule. A pick is hidden until its game kicks off, and that has always been a
+question about kickoff rather than about who is asking, so an anonymous reader
+sees exactly the cells a signed-in one sees — minus the `hidden` flag, which
+marks the reader's own live pick and belongs to a reader who has one. The
+`masked` lock cell is unaffected: the field is not a secret, the pick is.
+
+`/football/survivor/pick` stays gated and bounces to `/account?next=…`.
+
 ## Verification checklist
 
 1. **Schema** — run the SQL file; confirm the table, the PK, **both** indexes

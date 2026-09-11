@@ -47,7 +47,24 @@
         </button>
         <div class="dd-pop dd-menu" id="week-menu" role="menu" aria-label="Week" hidden></div>
       </div>
-      <a class="pk-cta is-secondary" href="/football/pickem/picks">Make picks</a>
+      <a class="pk-cta is-secondary" id="picks-cta" href="/football/pickem/picks">Make picks</a>
+    </div>
+
+    <!-- Signed-out pitch. The table above is public; being in it is not. Ships
+         hidden so a signed-in visitor never sees it paint. -->
+    <div class="pk-card" id="signed-out" hidden>
+      <h3>Join the pool</h3>
+      <div class="pk-signin">
+        <p>
+          The leaderboard is open to everyone — the names are not. Sign in to see
+          who is who and to get a row of your own; creating an account takes a
+          username and a password.
+        </p>
+        <div class="pk-btn-row">
+          <a class="pk-cta" href="/account?next=/football/pickem/standings">Sign in</a>
+          <a class="pk-cta is-secondary" href="/account?next=/football/pickem/standings">Create account</a>
+        </div>
+      </div>
     </div>
 
     <div id="table"><p class="pk-empty">Loading…</p></div>
@@ -170,13 +187,22 @@
       });
     }
 
+    // Signed out is a state of this page, not a redirect off it. The table is the
+    // same table; the names in it were replaced by the endpoint before it was
+    // sent (store.anonymise), and .pk-blur-names is what shows that they were.
     if (!isLoggedIn()) {
-      location.href = '/account';
-    } else {
-      readParams();
-      wire();
-      load();
+      document.getElementById('signed-out').hidden = false;
+      tableEl.classList.add('pk-blur-names');
+      // The pick page is the one thing here that is not public, so the button
+      // into it comes off rather than becoming a bounce to /account. Through
+      // `style`: .pk-cta sets `display: inline-block`, which outranks the UA
+      // rule behind the `hidden` attribute.
+      document.getElementById('picks-cta').style.display = 'none';
     }
+
+    readParams();
+    wire();
+    load();
   })();
   </script>
 </body>

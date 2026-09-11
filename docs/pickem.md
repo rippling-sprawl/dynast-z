@@ -70,7 +70,9 @@ Same posture as [bets-persistence-supabase.md](bets-persistence-supabase.md):
 - **Identity = `X-User-Id`.** The client sends `dz_user_id`; every pick row is
   written under that id.
 - **"Active" = `users.status is True`, gated on writes only.** Reads are not
-  status-gated — a deactivated account can still see where it finished.
+  status-gated — a deactivated account can still see where it finished — and
+  since the hub and the standings went public they are not auth-gated either;
+  see § The public read.
 - **Two runtimes kept in parity.** `api/pickem.py` + `api/pickem-standings.py`
   in production, mirrored in `server.py`. The mirror **delegates** to the same
   module rather than re-implementing it (`pickem_api()` / `pickem_standings_api()`,
@@ -156,6 +158,37 @@ out of scope: hardening to real session tokens is an app-wide change.
 One new exposure that is not a tradeoff but a decision: `/api/pickem-standings`
 returns the usernames of every active account, because a leaderboard names the
 people on it. `api/users.py` stays admin-only.
+
+### The public read
+
+`/football/pickem` and `/football/pickem/standings` are readable signed out, the
+arrangement `/football/bakers-oven` already has: the pool can be seen before it
+is joined. The GET gate is `store.resolve_reader`, which turns a missing
+`X-User-Id` into an anonymous reader rather than a 401. The PUT still takes
+`resolve_actor(require_active=True)` and is unchanged.
+
+**An anonymous payload is put through `store.anonymise()` before it is written,
+and that is load-bearing, not cosmetic.** The two facts above are exactly what
+makes it so: these reads carry every active account's username — which on this
+site are often email addresses — and they carry `user_id`, which *is* the whole
+of `X-User-Id`. Publishing an id would hand the open internet the credential,
+turning an accepted in-pool tradeoff into an unauthenticated one. So each
+distinct id becomes `anon-<n>` and the username beside it becomes `Player <n>`,
+numbered per response and meaningless outside it.
+
+`anonymise()` is a walk of the payload rather than a list of fields to strip, for
+the same reason the reveal filter is a WHERE clause rather than a post-filter: a
+field added to one of these responses later should inherit "masked" without
+anybody having to notice. It runs in two passes because `user_id` is a dict *key*
+as well as a value (`totals.byUser`).
+
+The page then blurs the names it was given (`.pk-blur-names`). That is the part
+that *says* the names are withheld — without it the table reads as a pool of
+people genuinely called Player 1 through 7. It is not the part that enforces it;
+the endpoint already did that.
+
+`/football/pickem/picks` stays gated and bounces to `/account?next=…`. It is the
+control, not the view.
 
 ## Verification checklist
 

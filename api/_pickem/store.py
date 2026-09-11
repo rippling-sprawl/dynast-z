@@ -70,6 +70,102 @@ def resolve_actor(user_id, require_active):
     return user_id, None
 
 
+def resolve_reader(user_id):
+    """-> (user_id or None, error). The read gate for the pages that are public.
+
+    resolve_actor() above answers "who is this, and may they act". This answers
+    "who is this, if anybody" -- the Pick 'Em and Survivor hubs and standings
+    are readable signed out, the arrangement /football/bakers-oven already has,
+    where the thing can be seen before it is used. A missing X-User-Id is
+    therefore an anonymous reader rather than a 401.
+
+    The error half of the tuple is always None. It stays in the signature so a
+    handler reads the same whichever gate it calls, and so closing one of these
+    reads again is a one-word edit rather than a reshaped branch.
+
+    EVERY ANONYMOUS PAYLOAD GOES THROUGH anonymise() BEFORE IT IS WRITTEN
+
+    That is not a nicety. Both games' reads carry other accounts' usernames --
+    which on this site are often email addresses -- and they carry `user_id`,
+    which IS the whole of X-User-Id: an id is a credential here, not a label, so
+    handing one to the open internet hands over the account. A handler that
+    calls this and skips anonymise() is a much worse leak than the 401 it
+    replaced.
+    """
+    return (user_id or None), None
+
+
+# ---- anonymising a public read -----------------------------------------------
+
+def anonymise(payload):
+    """-> a copy of `payload` with every account identity replaced.
+
+    Each distinct user_id becomes "anon-<n>" and the username beside it becomes
+    "Player <n>", numbered in the order the ids are first met. The numbering is
+    per response and means nothing outside it, which is the point: it is enough
+    for a table to keep one player's cells together and not enough to be a
+    handle on anybody.
+
+    WHY THIS IS A WALK AND NOT A LIST OF FIELDS
+
+    Naming the places a user_id appears would be correct today and wrong the
+    first time somebody adds a field to one of these four responses. This
+    codebase's rule for the Survivor reveal is that a secret is kept by never
+    selecting it rather than by remembering to strip it; the same instinct
+    applies here, so the default is "masked" and a new field inherits it without
+    anyone having to notice.
+
+    Two passes, because user_id is a dict KEY as well as a value --
+    api/pickem.py keys totals.byUser by it -- and a single walk would reach some
+    of those keys before the object that named the account, filing one player's
+    data under two labels.
+    """
+    order = []
+    _scan_ids(payload, order)
+    names = {uid: {"user_id": f"anon-{i}", "username": f"Player {i}"}
+             for i, uid in enumerate(order, start=1)}
+    return _mask_ids(payload, names)
+
+
+def _scan_ids(node, order):
+    """Pass one: every user_id in the payload, in first-seen order."""
+    if isinstance(node, dict):
+        uid = node.get("user_id")
+        if isinstance(uid, str) and uid not in order:
+            order.append(uid)
+        for value in node.values():
+            _scan_ids(value, order)
+    elif isinstance(node, list):
+        for value in node:
+            _scan_ids(value, order)
+
+
+def _mask_ids(node, names):
+    """Pass two: rewrite the identities, keys included.
+
+    An id or a username that pass one did not account for is blanked rather than
+    passed through. There should be no such value -- a username always travels
+    beside the id it belongs to in these payloads -- and if one ever does, the
+    failure this chooses is a missing name, not a published one.
+    """
+    if isinstance(node, dict):
+        out = {}
+        for key, value in node.items():
+            # A mapping keyed BY account: totals.byUser is the one today.
+            masked_key = names[key]["user_id"] if key in names else key
+            if key == "user_id":
+                out[masked_key] = names[value]["user_id"] if value in names else None
+            elif key == "username":
+                owner = names.get(node.get("user_id"))
+                out[masked_key] = owner["username"] if owner else ""
+            else:
+                out[masked_key] = _mask_ids(value, names)
+        return out
+    if isinstance(node, list):
+        return [_mask_ids(value, names) for value in node]
+    return node
+
+
 # ---- time and season ---------------------------------------------------------
 
 def now_utc():
@@ -168,7 +264,14 @@ def load_season_games(season, now):
 
 def load_my_picks(user_id, season, week=None):
     """The requester's own picks. Never filtered by kickoff -- you can always
-    see what you picked."""
+    see what you picked.
+
+    A signed-out reader has none, which is answered here rather than left to the
+    filter: `user_id=eq.None` is a string comparison that matches nothing by
+    luck, and luck is not a rule.
+    """
+    if not user_id:
+        return {}
     query = (f"pickem_picks?user_id=eq.{q(user_id)}&season=eq.{int(season)}"
              f"&select=game_id,week,data")
     if week is not None:
@@ -193,10 +296,14 @@ def load_visible_others(season, week, games, me):
         # than reading as the empty set.
         return []
     ids = ",".join(str(i) for i in unlocked)
-    return supabase_request(
-        f"pickem_picks?season=eq.{int(season)}&week=eq.{int(week)}"
-        f"&game_id=in.({ids})&user_id=neq.{q(me)}"
-        f"&select=user_id,game_id,data") or []
+    query = (f"pickem_picks?season=eq.{int(season)}&week=eq.{int(week)}"
+             f"&game_id=in.({ids})&select=user_id,game_id,data")
+    # "Everyone else" is everyone when there is no caller to exclude. Spelled as
+    # an absent clause rather than `neq.None`, which would filter against the
+    # literal string 'None' and quietly keep working for the wrong reason.
+    if me:
+        query += f"&user_id=neq.{q(me)}"
+    return supabase_request(query) or []
 
 
 def load_all_picks(season, week=None):

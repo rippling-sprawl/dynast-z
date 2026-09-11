@@ -2,8 +2,9 @@
 
 GET /api/pickem-standings?season=2026[&week=3]
     Every player's season total with a per-week breakdown, ranked. With ?week=
-    it collapses to that single week's leaderboard. Any signed-in account; not
-    status-gated, the same as the week board's read.
+    it collapses to that single week's leaderboard. Readable signed out, on the
+    same terms as the week board's read: an anonymous request gets the table
+    with every name and id replaced (store.anonymise).
 
 WHY THIS CARRIES POINTS AND NEVER A PICK
 
@@ -91,8 +92,7 @@ def build_standings(season, week, now):
 
 class handler(BaseHTTPRequestHandler):
     def do_GET(self):
-        user_id, err = store.resolve_actor(self.headers.get("X-User-Id"),
-                                           require_active=False)
+        user_id, err = store.resolve_reader(self.headers.get("X-User-Id"))
         if err:
             self._json(*err)
             return
@@ -117,7 +117,8 @@ class handler(BaseHTTPRequestHandler):
             return
 
         try:
-            self._json(200, build_standings(season, week, now))
+            payload = build_standings(season, week, now)
+            self._json(200, payload if user_id else store.anonymise(payload))
         except Exception as e:  # noqa: BLE001
             self._json(500, {"error": str(e)})
 

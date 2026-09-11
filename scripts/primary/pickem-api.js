@@ -11,11 +11,19 @@
 // the page is responsible for showing it.
 
 // Every response is JSON, including the errors, so one reader handles both.
+//
+// A read goes out without the header when there is no session, because the hub
+// and the standings are public — /api/pickem and /api/pickem-standings answer an
+// anonymous GET with the same board and a field whose names and ids have been
+// replaced server-side (api/_pickem/store.py, anonymise). A write still needs
+// one, and is refused here rather than at the server so the message is the one
+// the page wants to print.
 async function pickemFetch(url, options) {
   const user = typeof getUser === 'function' ? getUser() : null;
-  if (!user) throw new Error('Sign in to make picks.');
+  const method = ((options || {}).method || 'GET').toUpperCase();
+  if (!user && method !== 'GET') throw new Error('Sign in to make picks.');
   const resp = await fetch(url, Object.assign({}, options, {
-    headers: Object.assign({ 'X-User-Id': user.user_id },
+    headers: Object.assign(user ? { 'X-User-Id': user.user_id } : {},
                            (options || {}).headers || {}),
   }));
   let body = null;

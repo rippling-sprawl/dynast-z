@@ -37,6 +37,25 @@
     <h2>Pick 'Em</h2>
     <p class="subtitle">Confidence pool · every game against the spread</p>
 
+    <!-- Signed-out pitch. The page is public; playing is not. Ships hidden so a
+         signed-in visitor never sees it paint before the script runs, the same
+         arrangement /football/bakers-oven and the home page's sign-in card use. -->
+    <div class="pk-card" id="signed-out" hidden>
+      <h3>Join the pool</h3>
+      <div class="pk-signin">
+        <p>
+          The week, the frozen lines and the standings are open to everyone —
+          reading them needs nothing. Making picks needs an account, because a
+          pick has to belong to somebody. Creating one takes a username and a
+          password.
+        </p>
+        <div class="pk-btn-row">
+          <a class="pk-cta" href="/account?next=/football/pickem">Sign in</a>
+          <a class="pk-cta is-secondary" href="/account?next=/football/pickem">Create account</a>
+        </div>
+      </div>
+    </div>
+
     <div class="pk-card" id="week-card">
       <h3>This week</h3>
       <p class="pk-week-line" id="week-line">Loading…</p>
@@ -92,6 +111,12 @@
     var ctaEl = document.getElementById('week-cta');
     var miniEl = document.getElementById('mini');
 
+    // Signed out is a state of this page, not a redirect off it. Everything the
+    // two cards below print comes from the public read; what a guest does not
+    // have is an entry, so the lines that count *their* picks are the only ones
+    // that come off.
+    var guest = !isLoggedIn();
+
     function firstUnlocked(games) {
       for (var i = 0; i < games.length; i++) {
         if (!games[i].locked && games[i].spread_home !== null) return games[i];
@@ -111,7 +136,11 @@
         ctaEl.textContent = 'See the week';
         return;
       }
-      var bits = [data.n + ' games', picked + ' picked'];
+      // A guest has no picks and no points, so the two bits that report on them
+      // are dropped rather than printed as zeroes — "0 picked" beside a sign-in
+      // card reads as a save that failed.
+      var bits = [data.n + ' games'];
+      if (!guest) bits.push(picked + ' picked');
       if (next) {
         bits.push('first lock ' + pkKickoffLabel(next.kickoff) + ' ET');
       } else {
@@ -119,7 +148,7 @@
         // card becomes a scoreboard rather than a prompt.
         bits.push('all games locked');
       }
-      if (data.totals.mine.points || !next) {
+      if (!guest && (data.totals.mine.points || !next)) {
         bits.push(data.totals.mine.points + ' points');
       }
       subEl.textContent = bits.join(' · ');
@@ -128,20 +157,30 @@
         : 'See the week';
     }
 
-    if (!isLoggedIn()) {
-      location.href = '/account';
-    } else {
-      pickemLoadWeek().then(renderWeek).catch(function (err) {
-        lineEl.textContent = 'Week unavailable';
-        subEl.textContent = err.message;
-      });
-
-      pickemStandings().then(function (data) {
-        miniEl.innerHTML = pkMiniStandings(data, 5);
-      }).catch(function (err) {
-        miniEl.innerHTML = '<p class="pk-empty">' + pkEsc(err.message) + '</p>';
-      });
+    if (guest) {
+      document.getElementById('signed-out').hidden = false;
+      // The pick page is the one thing here that is not public, so the button
+      // into it comes off rather than becoming a bounce to /account — the card
+      // above is the way in. Hidden through `style`, not the `hidden` attribute:
+      // .pk-cta sets `display: inline-block`, which outranks the UA rule that
+      // makes `hidden` mean anything. Left in the DOM so renderWeek can go on
+      // writing to it unconditionally.
+      ctaEl.style.display = 'none';
+      // Server-side the names are already replaced; this is what shows they are
+      // being withheld. See .pk-blur-names in styles/primary/pickem.css.
+      miniEl.classList.add('pk-blur-names');
     }
+
+    pickemLoadWeek().then(renderWeek).catch(function (err) {
+      lineEl.textContent = 'Week unavailable';
+      subEl.textContent = err.message;
+    });
+
+    pickemStandings().then(function (data) {
+      miniEl.innerHTML = pkMiniStandings(data, 5);
+    }).catch(function (err) {
+      miniEl.innerHTML = '<p class="pk-empty">' + pkEsc(err.message) + '</p>';
+    });
   })();
   </script>
 </body>

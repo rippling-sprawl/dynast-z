@@ -14,11 +14,17 @@
 // than inventing their own copy.
 
 // Every response is JSON, including the errors, so one reader handles both.
+//
+// A read goes out without the header when there is no session, for the reason
+// pickem-api.js gives: the hub and the standings are public, and an anonymous
+// GET gets the same board with the field's names and ids replaced server-side.
+// A write still needs one and is refused here, so the message is ours.
 async function survivorFetch(url, options) {
   const user = typeof getUser === 'function' ? getUser() : null;
-  if (!user) throw new Error('Sign in to make a pick.');
+  const method = ((options || {}).method || 'GET').toUpperCase();
+  if (!user && method !== 'GET') throw new Error('Sign in to make a pick.');
   const resp = await fetch(url, Object.assign({}, options, {
-    headers: Object.assign({ 'X-User-Id': user.user_id },
+    headers: Object.assign(user ? { 'X-User-Id': user.user_id } : {},
                            (options || {}).headers || {}),
   }));
   let body = null;

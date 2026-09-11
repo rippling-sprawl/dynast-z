@@ -46,12 +46,36 @@
     <h2>Survivor</h2>
     <p class="subtitle">One team a week <b>straight up</b> · Pick a team only once</p>
 
-    <div class="pk-card">
+    <!-- Signed-out pitch, standing in for the entry card below rather than
+         sitting above it: "Your entry" has nothing to say to a visitor who does
+         not have one, and the pool strip is the part of it that is everybody's.
+         Ships hidden so a signed-in visitor never sees it paint — same
+         arrangement as /football/bakers-oven and the home page's sign-in card.
+         `data-pool` is how the script finds every pool strip on the page,
+         whichever of the two cards is showing. -->
+    <div class="pk-card" id="signed-out" hidden>
+      <h3>Join the pool</h3>
+      <div class="pk-signin">
+        <p>
+          The week, the board and the standings are open to everyone — reading
+          them needs nothing. Riding a team needs an account, because an entry
+          has to belong to somebody, and there is one entry per account.
+          Creating one takes a username and a password.
+        </p>
+        <div class="pk-btn-row">
+          <a class="pk-cta" href="/account?next=/football/survivor">Sign in</a>
+          <a class="pk-cta is-secondary" href="/account?next=/football/survivor">Create account</a>
+        </div>
+      </div>
+      <div class="sv-pool" data-pool></div>
+    </div>
+
+    <div class="pk-card" id="entry-card">
       <h3>Your entry</h3>
       <p class="sv-hero-word" id="hero-word">Loading…</p>
       <p class="sv-hero-line" id="hero-line"></p>
       <a class="pk-cta" id="hero-cta" href="/football/survivor/pick">Make your pick</a>
-      <div class="sv-pool" id="pool"></div>
+      <div class="sv-pool" data-pool></div>
     </div>
 
     <div class="pk-card">
@@ -61,7 +85,7 @@
       <div id="current"></div>
     </div>
 
-    <div class="pk-card">
+    <div class="pk-card" id="spent-card">
       <h3>Teams spent</h3>
       <div id="spent"><p class="pk-empty">Loading…</p></div>
     </div>
@@ -124,12 +148,21 @@
     var wordEl = document.getElementById('hero-word');
     var lineEl = document.getElementById('hero-line');
     var ctaEl = document.getElementById('hero-cta');
-    var poolEl = document.getElementById('pool');
     var weekLineEl = document.getElementById('week-line');
     var weekSubEl = document.getElementById('week-sub');
     var currentEl = document.getElementById('current');
     var spentEl = document.getElementById('spent');
     var miniEl = document.getElementById('mini');
+
+    // Whichever pool strips are on the page: one in the entry card when there is
+    // an entry, one in the sign-in card when there is not. Written to as a list
+    // so neither state needs its own render path.
+    var poolEls = document.querySelectorAll('[data-pool]');
+
+    // Signed out is a state of this page, not a redirect off it. The week, the
+    // board and the field all come from the public read; what a guest does not
+    // have is an entry, so the two cards that are only about one come off.
+    var guest = !isLoggedIn();
 
     function firstUnlocked(games) {
       for (var i = 0; i < games.length; i++) {
@@ -147,13 +180,17 @@
       }).join('');
     }
 
+    function paintPool(html) {
+      for (var i = 0; i < poolEls.length; i++) poolEls[i].innerHTML = html;
+    }
+
     function renderWeek(data) {
       var entry = data.entry;
       var kind = !entry.entered ? 'idle' : (entry.status === 'out' ? 'out' : 'alive');
       wordEl.textContent = svEntryWord(entry);
       wordEl.className = 'sv-hero-word is-' + kind;
       lineEl.textContent = svEntryLine(entry);
-      poolEl.innerHTML = poolHTML(data.pool);
+      paintPool(poolHTML(data.pool));
       spentEl.innerHTML = svSpentStrip(entry);
 
       weekLineEl.textContent = 'Week ' + data.week;
@@ -166,8 +203,12 @@
       weekSubEl.textContent = bits.join(' · ');
 
       // The pick itself, as a crest. "Who do I have this week" is the question
-      // this card exists to answer and it should not need a second click.
-      if (data.pick) {
+      // this card exists to answer and it should not need a second click. A
+      // guest is not asking it — they have no pick, and "No pick in for this
+      // week yet" would read as a prompt to a page that is not offering one.
+      if (guest) {
+        currentEl.innerHTML = '';
+      } else if (data.pick) {
         currentEl.innerHTML = '<span class="sv-current">Riding ' +
           '<img src="/assets/icons/nfl/' + pkEsc(data.pick.team) + '.svg" alt="" ' +
           'aria-hidden="true">' + pkEsc(data.pick.team) + '</span>';
@@ -188,23 +229,35 @@
       }
     }
 
-    if (!isLoggedIn()) {
-      location.href = '/account';
-    } else {
-      survivorLoadWeek().then(renderWeek).catch(function (err) {
-        wordEl.textContent = 'Unavailable';
-        wordEl.className = 'sv-hero-word is-idle';
-        lineEl.textContent = err.message;
-        weekLineEl.textContent = 'Week unavailable';
-        spentEl.innerHTML = '<p class="pk-empty">' + pkEsc(err.message) + '</p>';
-      });
-
-      survivorStandings().then(function (data) {
-        miniEl.innerHTML = svMiniStandings(data, 8);
-      }).catch(function (err) {
-        miniEl.innerHTML = '<p class="pk-empty">' + pkEsc(err.message) + '</p>';
-      });
+    if (guest) {
+      document.getElementById('signed-out').hidden = false;
+      // Both cards are about an entry and nothing else, so they come off whole
+      // rather than being filled with an empty state. The pool strip they were
+      // carrying is in the sign-in card above, which is why paintPool writes to
+      // a list and not to one element.
+      document.getElementById('entry-card').hidden = true;
+      document.getElementById('spent-card').hidden = true;
+      // Server-side the names are already replaced; this is what shows they are
+      // being withheld. See .pk-blur-names in styles/primary/pickem.css.
+      miniEl.classList.add('pk-blur-names');
     }
+
+    survivorLoadWeek().then(renderWeek).catch(function (err) {
+      wordEl.textContent = 'Unavailable';
+      wordEl.className = 'sv-hero-word is-idle';
+      lineEl.textContent = err.message;
+      weekLineEl.textContent = 'Week unavailable';
+      spentEl.innerHTML = '<p class="pk-empty">' + pkEsc(err.message) + '</p>';
+      // The pool strip is the one thing the sign-in card is showing that comes
+      // from the request, so a failed read has to say so there too.
+      paintPool('<span class="sv-pool-stat">' + pkEsc(err.message) + '</span>');
+    });
+
+    survivorStandings().then(function (data) {
+      miniEl.innerHTML = svMiniStandings(data, 8);
+    }).catch(function (err) {
+      miniEl.innerHTML = '<p class="pk-empty">' + pkEsc(err.message) + '</p>';
+    });
   })();
   </script>
 </body>

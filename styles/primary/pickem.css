@@ -825,6 +825,46 @@
 
 .pk-rules b { color: var(--text-bright); }
 
+/* --- Signed out ---
+ * Both pools are readable without an account -- the week, the lines, the locks
+ * and the standings -- so what a signed-out visitor is missing is an entry, not
+ * the page. The pitch says that and then offers the two ways out of it, the same
+ * shape /football/bakers-oven uses for the same problem.
+ *
+ * No accent of its own: this sits inside a .pk-card, whose navy head and gold
+ * rule already mark it, and the Oven's ember edge is that page's card doing this
+ * card's job. What is left is the copy and the two buttons. */
+.pk-signin p {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-3);
+  margin-bottom: 12px;
+}
+
+.pk-btn-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* The names, hidden. They are already gone by the time they reach the page --
+ * an anonymous read is answered with "Player 3" and a throwaway id, see
+ * store.anonymise() in api/_pickem/store.py -- so this is the part that SAYS so,
+ * not the part that enforces it. Without it the table reads as a pool of people
+ * who are genuinely called Player 1 through 7, which is worse than a blur: it
+ * looks like data rather than like something withheld.
+ *
+ * On the inner span, never on .pk-who: that cell is pinned to the left edge and
+ * paints the row's background, and a filter there would blur the background and
+ * the pinned seam along with the text. */
+.pk-blur-names .pk-who-name,
+.pk-blur-names .pk-mini-who {
+  filter: blur(4.5px);
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: default;
+}
+
 /* --- Narrow screens ---
  * The shape holds: confidence, matchup, anchor. Only the gutters, the crest
  * and the type give ground, so a phone shows the same row rather than a

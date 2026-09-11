@@ -2,8 +2,10 @@
 
 GET /api/survivor-standings?season=2026
     Every entry, ranked, with one cell per week naming the team it rode --
-    for the weeks whose games have already kicked off. Any signed-in account;
-    not status-gated, the same as the week board's read.
+    for the weeks whose games have already kicked off. Readable signed out, on
+    the same terms as the week board's read: an anonymous request has no row of
+    its own, so no cell is flagged `hidden` for it, and every name and id in the
+    table is replaced (store.anonymise).
 
 UNLIKE THE PICK 'EM STANDINGS, THIS DOES CARRY PICKS
 
@@ -153,8 +155,7 @@ def build_standings(user_id, season, now):
 
 class handler(BaseHTTPRequestHandler):
     def do_GET(self):
-        user_id, err = store.resolve_actor(self.headers.get("X-User-Id"),
-                                           require_active=False)
+        user_id, err = store.resolve_reader(self.headers.get("X-User-Id"))
         if err:
             self._json(*err)
             return
@@ -173,7 +174,8 @@ class handler(BaseHTTPRequestHandler):
             return
 
         try:
-            self._json(200, build_standings(user_id, season, now))
+            payload = build_standings(user_id, season, now)
+            self._json(200, payload if user_id else store.anonymise(payload))
         except Exception as e:  # noqa: BLE001
             self._json(500, {"error": str(e)})
 

@@ -42,6 +42,12 @@ current_week = board.current_week
 group_by_week = board.group_by_week
 load_usernames = board.load_usernames
 resolve_actor = board.resolve_actor
+# The public-read pair. /football/survivor and its standings are readable signed
+# out, so the GET gate is resolve_reader and what it returns must be put through
+# anonymise() before it is written -- see those two in api/_pickem/store.py for
+# why an id is a credential here and not a label.
+resolve_reader = board.resolve_reader
+anonymise = board.anonymise
 # Deliberately NOT re-exported: board.load_games, the Pick 'Em's wide per-week
 # read. Survivor needs none of the jsonb it carries and does need the rest of
 # the season anyway, so the season read below serves the whole page. Making the
@@ -108,8 +114,13 @@ def load_my_picks(user_id, season):
     kickoff -- you can always see what you picked, and the used-team rule is
     unusable if you cannot.
 
+    A signed-out reader has none, answered here rather than left to the filter,
+    for the reason board.load_my_picks() gives.
+
     -> {week: {week, game_id, team}}
     """
+    if not user_id:
+        return {}
     rows = board.supabase_request(
         f"survivor_picks?user_id=eq.{q(user_id)}&season=eq.{int(season)}"
         f"&select=week,game_id,team&order=week.asc") or []

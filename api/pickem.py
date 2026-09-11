@@ -3,8 +3,10 @@
 GET /api/pickem?season=2026&week=3
     The week's games with their frozen spreads and lock state, your picks, and
     every other player's picks *for the games that have already kicked off*.
-    Any signed-in account; not status-gated, because a deactivated account can
-    still see where it finished.
+    Readable signed out, and not status-gated when signed in -- a deactivated
+    account can still see where it finished. A request with no X-User-Id has no
+    picks of its own and gets the field with every name and id replaced; see
+    store.resolve_reader and store.anonymise.
 
 PUT /api/pickem
     Replace your picks for one week. The body is the complete intended set:
@@ -188,8 +190,7 @@ def apply_week_picks(user_id, season, week, picks, now):
 class handler(BaseHTTPRequestHandler):
     def do_GET(self):
         params = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
-        user_id, err = store.resolve_actor(self.headers.get("X-User-Id"),
-                                           require_active=False)
+        user_id, err = store.resolve_reader(self.headers.get("X-User-Id"))
         if err:
             self._json(*err)
             return
@@ -209,7 +210,9 @@ class handler(BaseHTTPRequestHandler):
             season, week, weeks = resolve_week(season, week, now)
             payload = build_week(user_id, season, week, now)
             payload["weeks"] = weeks
-            self._json(200, payload)
+            # Signed out, the board is the week and not the field: same games,
+            # same lines, same locks, with every name and id replaced.
+            self._json(200, payload if user_id else store.anonymise(payload))
         except Exception as e:  # noqa: BLE001
             self._json(500, {"error": str(e)})
 

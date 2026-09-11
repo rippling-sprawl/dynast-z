@@ -41,7 +41,24 @@
     <h2>Survivor standings</h2>
     <p class="subtitle" id="subtitle">Loading…</p>
 
-    <p><a class="pk-cta" href="/football/survivor/pick">Make your pick</a></p>
+    <p id="pick-cta-row"><a class="pk-cta" href="/football/survivor/pick">Make your pick</a></p>
+
+    <!-- Signed-out pitch. The board above is public; being on it is not. Ships
+         hidden so a signed-in visitor never sees it paint. -->
+    <div class="pk-card" id="signed-out" hidden>
+      <h3>Join the pool</h3>
+      <div class="pk-signin">
+        <p>
+          The board is open to everyone — the names are not. Sign in to see who
+          is riding what and to get a row of your own; creating an account takes
+          a username and a password.
+        </p>
+        <div class="pk-btn-row">
+          <a class="pk-cta" href="/account?next=/football/survivor/standings">Sign in</a>
+          <a class="pk-cta is-secondary" href="/account?next=/football/survivor/standings">Create account</a>
+        </div>
+      </div>
+    </div>
 
     <div class="sv-pool" id="pool"></div>
 
@@ -135,12 +152,21 @@
       });
     }
 
+    // Signed out is a state of this page, not a redirect off it. The board is the
+    // same board -- the reveal rule has always been about kickoff and not about
+    // who is asking -- and the names in it were replaced by the endpoint before
+    // it was sent (store.anonymise). .pk-blur-names is what shows that they were.
     if (!isLoggedIn()) {
-      location.href = '/account';
-    } else {
-      season = seasonFromQuery();
-      load();
+      document.getElementById('signed-out').hidden = false;
+      tableEl.classList.add('pk-blur-names');
+      // The pick page is the one thing here that is not public, so the button
+      // into it comes off rather than becoming a bounce to /account. The whole
+      // row goes, since the link is all it holds.
+      document.getElementById('pick-cta-row').hidden = true;
     }
+
+    season = seasonFromQuery();
+    load();
   })();
   </script>
 </body>

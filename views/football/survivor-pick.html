@@ -326,8 +326,11 @@
       if (!busy && data && data.pick) clear();
     });
 
+    // Still gated, unlike the hub and the standings either side of it: this page
+    // is the control, not the view, and there is nothing on it a visitor without
+    // an entry could do. ?next= is what brings them back here once they have one.
     if (!isLoggedIn()) {
-      location.href = '/account';
+      location.href = '/account?next=' + encodeURIComponent(location.pathname);
     } else {
       wireBoard();
       wireWeeks();

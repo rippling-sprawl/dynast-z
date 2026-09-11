@@ -688,12 +688,17 @@
    * week's maximum: a week nobody did well in should still show who did best.
    */
   /* The Player cell. `title` only when the name was actually shortened -- a
-   * tooltip repeating the text under the cursor is noise. */
+   * tooltip repeating the text under the cursor is noise.
+   *
+   * The name is wrapped rather than dropped straight into the cell so the
+   * signed-out blur has something to blur: .pk-who is pinned to the left edge
+   * and carries the row's opaque background, and a filter on the cell itself
+   * would smear that background and the seam beside it as well as the text. */
   function whoCell(username) {
     var shown = pkDisplayName(username);
     return '<td class="pk-who"' +
       (shown === username ? '' : ' title="' + esc(username) + '"') +
-      '>' + esc(shown) + '</td>';
+      '><span class="pk-who-name">' + esc(shown) + '</span></td>';
   }
 
   function pkStandingsTable(data, options) {
