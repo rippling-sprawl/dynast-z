@@ -4,3 +4,9 @@ __pycache__/
 .vercel
 .env
 .DS_Store
+
+# Local living docs (maintained by /change-log, not versioned)
+CHANGE_LOG.md
+HANDOFF.md
+HISTORICAL_DECISIONS_LOG.md
+Old Documentation/
