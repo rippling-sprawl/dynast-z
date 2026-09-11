@@ -2,13 +2,15 @@
 //
 // Layers a small dialog above the page with:
 //   - a quick event-status selector (updates bet.status only, in place)
+//   - a quick wager-status selector (updates bet.wager_status only, in place)
 //   - icon actions: edit (-> /place form), duplicate + delete (same on-click
 //     behavior as /place), and a dismiss "x"
 //
 // Self-initializing: injects its DOM once and delegates clicks off document, so
 // it works for tiles rendered asynchronously on /bets, /bets/history and the
 // admin audit view. Depends on globals from bets.js (getBet, upsertBet,
-// deleteBet, EVENT_STATUSES, fmtDateShort) and bet-tile.js (renderBetTile).
+// deleteBet, EVENT_STATUSES, WAGER_STATUSES, fmtDateShort) and bet-tile.js
+// (renderBetTile).
 
 (function () {
   if (typeof EVENT_STATUSES === 'undefined') return; // bets.js not loaded
@@ -38,7 +40,7 @@
       '<path d="M18 6 6 18"></path><path d="m6 6 12 12"></path>' +
     '</svg>';
 
-  let overlay, titleEl, subEl, statusWrap, currentId = null;
+  let overlay, titleEl, subEl, statusWrap, wagerWrap, currentId = null;
 
   function tileFor(id) {
     return document.querySelector('.bet-tile[data-bet-id="' + (window.CSS && CSS.escape ? CSS.escape(id) : id) + '"]');
@@ -55,6 +57,8 @@
         '<div class="bet-modal-sub"></div>' +
         '<div class="bet-modal-label">Event Status</div>' +
         '<div class="bet-modal-status"></div>' +
+        '<div class="bet-modal-label">Wager Status</div>' +
+        '<div class="bet-modal-wager"></div>' +
         '<div class="bet-modal-label">Actions</div>' +
         '<div class="bet-modal-actions">' +
           '<button type="button" class="bet-modal-icon-btn" data-action="edit" title="Edit details">' + ICON_EDIT + '<span>Edit</span></button>' +
@@ -67,12 +71,17 @@
     titleEl = overlay.querySelector('.bet-modal-title');
     subEl = overlay.querySelector('.bet-modal-sub');
     statusWrap = overlay.querySelector('.bet-modal-status');
+    wagerWrap = overlay.querySelector('.bet-modal-wager');
 
     // Backdrop click (outside the dialog) and the close button both dismiss.
     overlay.addEventListener('click', (e) => {
       if (e.target === overlay || e.target.closest('[data-close]')) { close(); return; }
       const chip = e.target.closest('.bet-modal-chip');
-      if (chip) { setStatus(chip.dataset.status); return; }
+      if (chip) {
+        if (chip.dataset.wager) setWagerStatus(chip.dataset.wager);
+        else setStatus(chip.dataset.status);
+        return;
+      }
       const act = e.target.closest('[data-action]');
       if (act) doAction(act.dataset.action);
     });
@@ -88,6 +97,15 @@
     ).join('');
   }
 
+  // No default selection: a bet with no stored wager status shows no active chip
+  // (preselecting Unpaid would imply a value that was never saved).
+  function renderWagerChips(active) {
+    wagerWrap.innerHTML = WAGER_STATUSES.map(s =>
+      '<button type="button" class="bet-modal-chip wager-' + s + (s === active ? ' active' : '') +
+        '" data-wager="' + s + '">' + s + '</button>'
+    ).join('');
+  }
+
   function open(id) {
     const bet = getBet(id);
     if (!bet) return;
@@ -99,6 +117,7 @@
     if (bet.event_date) parts.push(fmtDateShort(bet.event_date));
     subEl.textContent = parts.join('  ·  ');
     renderChips(bet.status || 'pending');
+    renderWagerChips(bet.wager_status);
     overlay.hidden = false;
   }
 
@@ -115,6 +134,17 @@
     bet.status = status;
     upsertBet(bet);
     renderChips(status);
+    const tile = tileFor(currentId);
+    if (tile) tile.outerHTML = renderBetTile(getBet(currentId));
+  }
+
+  // Quick wager-status change: same flow as setStatus, for bet.wager_status.
+  function setWagerStatus(wagerStatus) {
+    const bet = getBet(currentId);
+    if (!bet || bet.wager_status === wagerStatus) return;
+    bet.wager_status = wagerStatus;
+    upsertBet(bet);
+    renderWagerChips(wagerStatus);
     const tile = tileFor(currentId);
     if (tile) tile.outerHTML = renderBetTile(getBet(currentId));
   }
