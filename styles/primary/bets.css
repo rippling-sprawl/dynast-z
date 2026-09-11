@@ -514,7 +514,8 @@
   color: var(--text-3); font-weight: 600; margin: 18px 0 8px;
 }
 
-.bet-modal-status { display: flex; flex-wrap: wrap; gap: 6px; }
+.bet-modal-status,
+.bet-modal-wager { display: flex; flex-wrap: wrap; gap: 6px; }
 .bet-modal-chip {
   background: var(--surface-2);
   border: 1px solid var(--border);
@@ -533,6 +534,9 @@
 .bet-modal-chip.active.status-loss { color: var(--bad); border-color: var(--bad-line); background: var(--bad-tint); }
 .bet-modal-chip.active.status-push,
 .bet-modal-chip.active.status-void { color: var(--text-2); border-color: var(--text-5); background: var(--surface-2); }
+.bet-modal-chip.active.wager-unpaid { color: var(--warn); border-color: var(--warn-line-2); background: var(--warn-tint); }
+.bet-modal-chip.active.wager-paid { color: var(--good-strong); border-color: var(--good-line); background: var(--good-tint); }
+.bet-modal-chip.active.wager-settled { color: var(--accent); border-color: var(--info-line-2); background: var(--info-tint); }
 
 .bet-modal-actions { display: flex; gap: 10px; }
 .bet-modal-icon-btn {
