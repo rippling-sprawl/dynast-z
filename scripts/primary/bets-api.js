@@ -42,6 +42,27 @@ function betsApiUpsert(bet) {
   }).catch(() => {});
 }
 
+// Create or update one bet and report whether the server accepted it. Used by
+// workflows that must not update the UI until persistence is confirmed.
+async function betsApiUpsertAwaited(bet) {
+  const user = getUser();
+  if (!user) throw new Error('You must be signed in to settle bets.');
+  const resp = await fetch('/api/bets', {
+    method: 'PUT',
+    headers: betsApiHeaders(user, { 'Content-Type': 'application/json' }),
+    body: JSON.stringify(bet),
+  });
+  if (!resp.ok) {
+    let message = 'The server rejected the update.';
+    try {
+      const body = await resp.json();
+      if (body && body.error) message = body.error;
+    } catch (_) {}
+    throw new Error(message);
+  }
+  return bet;
+}
+
 // Delete one bet by id. Fire-and-forget.
 function betsApiDelete(id) {
   const user = getUser();

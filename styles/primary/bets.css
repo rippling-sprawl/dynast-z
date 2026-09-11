@@ -84,6 +84,7 @@
 .bet-wager-status.wager-unpaid { color: var(--warn); border-color: var(--warn-line-2); }
 .bet-wager-status.wager-paid { color: var(--good-strong); border-color: var(--good-line); }
 .bet-wager-status.wager-settled { color: var(--accent); border-color: var(--info-line-2); }
+.bet-wager-status.wager-assumed-unpaid { color: var(--warn); border-color: var(--warn-line-2); border-style: dashed; }
 
 .bet-status-group { display: inline-flex; align-items: center; gap: 6px; flex: 0 0 auto; }
 .bet-test-badge {
@@ -180,6 +181,13 @@
   cursor: pointer;
 }
 .bet-btn:hover { background: var(--good-strong); }
+.bet-btn:disabled {
+  background: var(--surface-2);
+  border-color: var(--border);
+  color: var(--text-4);
+  cursor: not-allowed;
+}
+.bet-btn:disabled:hover { background: var(--surface-2); }
 .bet-btn.secondary { background: var(--surface-2); border-color: var(--border); color: var(--text-2); }
 .bet-btn.secondary:hover { background: var(--border); }
 .bet-btn.danger { background: var(--surface-2); border-color: var(--bad-line); color: var(--bad); }
@@ -252,7 +260,105 @@
 .perf-table .perf-pl.pos, .perf-table .perf-roi.pos { color: var(--good-strong); }
 .perf-table .perf-pl.neg, .perf-table .perf-roi.neg { color: var(--bad); }
 
-/* Settle Up totals row */
+/* Settle Up */
+.settle-card-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.settle-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+}
+.settle-card-label {
+  font-size: 11px;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--text-3);
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.settle-card-value {
+  color: var(--text-hi);
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1.1;
+}
+.settle-card-value.pos { color: var(--good-strong); }
+.settle-card-value.neg { color: var(--bad); }
+.settle-history-link {
+  margin: 18px 0 24px;
+  font-size: 13px;
+}
+.settle-history-link a {
+  color: var(--accent);
+  text-decoration: none;
+}
+.settle-history-link a:hover { text-decoration: underline; }
+.settle-footer {
+  border-top: 1px solid var(--border);
+  margin-top: 28px;
+  padding-top: 16px;
+}
+.settle-footer .bet-btn { width: 100%; }
+.settle-note {
+  color: var(--text-3);
+  font-size: 12px;
+  margin: 10px 0 0;
+  text-align: center;
+}
+.settle-feedback {
+  padding: 10px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  margin: 12px 0 0;
+  text-align: center;
+}
+.settle-feedback.success { color: var(--good); background: var(--good-tint); border: 1px solid var(--good-line); }
+.settle-feedback.error { color: var(--bad-bright); background: var(--bad-tint); border: 1px solid var(--bad-line); }
+.settle-confirm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: var(--overlay-strong);
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+}
+.settle-confirm-card {
+  width: min(100%, 420px);
+  box-sizing: border-box;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 16px 48px var(--shadow-color);
+  padding: 24px;
+  text-align: center;
+}
+.settle-confirm-icon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  margin: 0 auto 14px;
+  border: 1px solid var(--good-strong);
+  border-radius: 50%;
+  color: var(--good);
+  background: var(--good-tint);
+  font-size: 20px;
+  font-weight: 800;
+}
+.settle-confirm-card h3 { margin: 0 0 8px; color: var(--text-hi); font-size: 18px; }
+.settle-confirm-card p { margin: 0; color: var(--text-3); font-size: 13px; line-height: 1.5; }
+.settle-confirm-actions { display: flex; gap: 10px; margin-top: 20px; }
+.settle-confirm-actions .bet-btn { flex: 1; }
+.settle-bet-list { margin-bottom: 0; }
 .settle-table tfoot th, .settle-table tfoot td {
   border-top: 1px solid var(--border); padding: 9px 10px; color: var(--text-hi);
 }
@@ -449,3 +555,7 @@
 .bet-modal-icon-btn:hover { background: var(--border); border-color: var(--accent); }
 .bet-modal-icon-btn.danger { color: var(--bad); border-color: var(--bad-line); }
 .bet-modal-icon-btn.danger:hover { background: var(--bad-tint-hi); border-color: var(--bad-line-hi); }
+
+@media (max-width: 520px) {
+  .settle-card-grid { grid-template-columns: 1fr; }
+}
