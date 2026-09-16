@@ -265,8 +265,24 @@ def main():
             rate[str(wk)] = {'spend': spend, 'vor_per_game': round(delivered, 2),
                              'dollars_per_point': round(spend / delivered, 1)}
 
+    # --- Per-game value above replacement, every player, whole season --------
+    # This is the PRIOR the live-season tool regresses toward. With one game
+    # played, an elite receiver having a quiet week and a fringe one having a
+    # loud week look identical on the current season alone; last season is the
+    # only thing that tells them apart.
+    prior_value = {}
+    for pid in pts:
+        if pos_of(pid) not in POS:
+            continue
+        games = [vor(pid, w) for w in WEEKS if pts[pid].get(w, 0) != 0]
+        if len(games) >= 4:
+            v = round(sum(games) / len(games), 2)
+            if v > 0:
+                prior_value[pid] = v
+
     out = {
         'league': league['name'], 'season': args.season,
+        'prior_value': prior_value,
         'total_bid': total_bid, 'claims': claims, 'survival': survival,
         'price_rate': rate,
         'lineup': {str(w): dict(LINEUP[w], starters=sum(LINEUP[w][k] for k in ('QB', 'RB', 'WR', 'TE', 'SF', 'FLEX')))

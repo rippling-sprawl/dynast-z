@@ -46,8 +46,8 @@
       <div class="tg-table-wrap">
         <table class="tg-table">
           <thead><tr>
-            <th class="l">Bid</th><th class="l">Player</th><th>Seen</th><th>Projected</th>
-            <th>Upgrade</th><th>Opp/gm</th><th class="l">Drop</th>
+            <th class="l">Bid</th><th class="l">Player</th><th>Seen</th><th>Last yr</th>
+            <th>Projected</th><th>Upgrade</th><th>Opp/gm</th><th class="l">Drop</th>
           </tr></thead>
           <tbody id="tg-rows"></tbody>
         </table>
@@ -350,13 +350,26 @@
        Budget for this week <b>$${b.cap}</b> (${b.cap_pct}% of what's left)${
          b.capped ? ', which binds &mdash; bids below are scaled to fit' : ''}.`;
 
-    document.getElementById('tg-rows').innerHTML = t.picks.map(p => {
+    // Grouped by price tier, because the first decision is how much of the
+    // budget this week is worth — not which name is marginally better.
+    const TIERS = [
+      ['high', 'High', 'a commitment — 10%+ of what is left, and the room will contest it'],
+      ['mid', 'Mid', 'a rotational upgrade — 5 to 10%'],
+      ['low', 'Low', 'cheap fliers — under 5%'],
+    ];
+    const rowFor = p => {
       const watch = !p.recommended;
-      const bid = p.suggested_bid ? `<span class="tg-bid">$${p.suggested_bid}</span>`
-                                  : `<span class="tg-watch">watch</span>`;
+      // Every target carries a price, in the slate or not. What changes off the
+      // slate is emphasis, not information: the number is still the answer to
+      // "what should I bid", it just is not part of this week's committed spend.
+      const bid = `<span class="tg-bid${watch ? ' is-board' : ''}">$${p.suggested_bid}</span>`
+        + (watch ? '' : '<span class="tg-slate">slate</span>');
       const flags = [
+        p.newly_free ? '<span class="tg-flag free">freed by chop</span>' : '',
         p.thin_usage ? '<span class="tg-flag warn">TD-inflated</span>' : '',
-        p.blocked ? `<span class="tg-flag warn">${esc(p.blocked)}</span>` : '',
+        p.no_role ? `<span class="tg-flag warn">no role · ${p.snaps} snaps/gm</span>` : '',
+        p.cap_limited ? `<span class="tg-flag warn">cap-limited · worth $${p.value_price}</span>` : '',
+        p.drop_costly ? '<span class="tg-flag warn">no clean cut</span>' : '',
         p.injury ? `<span class="tg-flag inj">${esc(p.injury)}</span>` : '',
       ].join('');
       return `<tr class="${watch ? 'is-watch' : ''}">
@@ -364,24 +377,45 @@
         <td class="l"><span class="tg-name">${esc(p.player)}</span>
           <span class="tg-pos">${esc(p.pos)} · ${esc(p.nfl)}</span>${flags}</td>
         <td>+${p.observed.toFixed(1)}</td>
+        <td>${p.prior ? '+' + p.prior.toFixed(2) : '<span class="tg-none">—</span>'}</td>
         <td>+${p.value.toFixed(2)}</td>
         <td>+${p.upgrade.toFixed(2)}</td>
         <td>${p.opportunity}</td>
-        <td class="l">${p.drop ? esc(p.drop.player) : '<span class="tg-none">no clean drop</span>'}</td>
+        <td class="l">${p.drop
+          ? esc(p.drop.player) + (p.drop_indicative ? '<span class="tg-alone">if claimed alone</span>' : '')
+          : '<span class="tg-none">roster has room</span>'}</td>
       </tr>`;
+    };
+    document.getElementById('tg-rows').innerHTML = TIERS.map(([key, label, blurb]) => {
+      const rows = t.picks.filter(p => p.tier === key);
+      if (!rows.length) return '';
+      return `<tr class="tg-tier-head tier-${key}"><td colspan="8">
+          <span class="tg-tier-name">${label}</span>
+          <span class="tg-tier-blurb">${blurb}</span>
+          <span class="tg-tier-count">${rows.length}</span>
+        </td></tr>` + rows.map(rowFor).join('');
     }).join('');
 
     const keep = t.picks.length ? Math.round(t.picks[0].keep * 100) : 34;
+    const freed = t.picks.filter(p => p.newly_free).length;
     document.getElementById('tg-method').innerHTML =
       `<b>Seen</b> is points per game above the last player actually started at that position.
-       <b>Projected</b> regresses it, because a hot week is mostly noise: fitting last season's
-       short samples against the rest of those players' seasons says keep <b>${keep}%</b> of an edge
-       seen in ${t.picks.length && t.picks[0].games === 1 ? 'one game' : t.picks[0]?.games + ' games'}.
+       <b>Last yr</b> is the same figure across all of last season. <b>Projected</b> blends them
+       &mdash; ${keep}% this year, ${100 - keep}% last &mdash; because a short sample is mostly
+       noise: regressing last season's short samples against the rest of those players' seasons
+       says an edge seen this early is worth about ${keep}% of itself. That blend is what separates
+       a proven player having a quiet week from a fringe one having a loud week.
        <b>Upgrade</b> subtracts whoever this roster would otherwise start &mdash; a good player who is
        your sixth receiver upgrades nothing. Dollars come from this room's own market: last season's
        week ${t.week} spend per point of value its claims actually delivered,
-       <b>$${b.dollars_per_point}/pt</b>. Rows marked TD-inflated scored without the touches to
-       repeat it.`;
+       <b>$${b.dollars_per_point}/pt</b>.
+       ${freed ? `<b>${freed}</b> of these came loose when a team was chopped. ` : ''}
+       Every row is priced whether or not it is in the slate &mdash; the slate is the set worth
+       chasing <em>together</em>, and its drops are distinct because it is executed at once.
+       Board rows show the cut they would cost on their own.
+       A player with no prior is treated as replacement level, so a genuine rookie breakout will be
+       understated here until he has a few games of his own &mdash; check Seen against Projected
+       before dismissing one.`;
     document.getElementById('targets').hidden = false;
   }
 

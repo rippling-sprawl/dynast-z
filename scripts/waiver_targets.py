@@ -123,6 +123,26 @@ def prior_week_prices(path, week):
     }
 
 
+def tier_of(price, faab):
+    """High / mid / low, as a share of the budget still in hand.
+
+    Bands rather than raw dollars because $100 means something different with
+    $1000 left than with $150 left, and this league's prices collapse through
+    the season — a week 2 high bid and a week 12 high bid are not the same
+    number.
+
+        high  >= 10% of remaining   a commitment; expect the room to contest it
+        mid    5-10%                a rotational upgrade
+        low   <  5%                 a cheap flier
+
+    The 10/5 split breaks this board into a pyramid rather than a lump: on a
+    flat 2% floor almost everything lands in 'mid', which says nothing."""
+    if faab <= 0:
+        return 'low'
+    share = price / faab
+    return 'high' if share >= 0.10 else ('mid' if share >= 0.05 else 'low')
+
+
 def week_cap_pct(week):
     """Tighter early, where a claim rests on one game and the budget is whole."""
     return 6.0 if week <= 4 else (10.0 if week <= 12 else 15.0)
@@ -135,6 +155,10 @@ def main():
     ap.add_argument('--week', type=int, default=None, help='defaults to the live NFL week')
     ap.add_argument('--cap-pct', type=float, default=None,
                     help='max %% of remaining FAAB to commit (default: 6 early, 10 mid, 15 late)')
+    ap.add_argument('--targets', type=int, default=15,
+                    help='how many ranked targets to publish (default 15)')
+    ap.add_argument('--top', type=int, default=None,
+                    help='pursue only the N best targets — concentrate rather than spray')
     ap.add_argument('--out', default=OUT)
     args = ap.parse_args()
 
@@ -163,6 +187,13 @@ def main():
         p = players.get(pid) or {}
         return p.get('full_name') or f"{p.get('first_name','')} {p.get('last_name','')}".strip() or pid
 
+    # Last season's per-game value above replacement, by player. Used as the
+    # prior that this season's short sample is blended into.
+    prior_value = {}
+    if os.path.exists(PRIOR_RATES):
+        with open(PRIOR_RATES) as fh:
+            prior_value = json.load(fh).get('prior_value') or {}
+
     stats = {w: get(f'stats/nfl/regular/{season}/{w}', f'stats_{w}.json') for w in played}
     matchups = {w: get(f'league/{args.league}/matchups/{w}', f'mu_{w}.json') for w in played}
 
@@ -186,23 +217,50 @@ def main():
             repl[w][p] = s[n - 1] if 0 < n <= len(s) else 0.0
 
     def value(pid):
-        """Per-game points above replacement: observed, and regressed.
+        """Per-game points above replacement: observed, and projected.
 
-        The regressed figure is the one to price off. An edge seen once is
-        mostly noise — see KEEP, measured on last season rather than assumed."""
+        The projection blends this season's short sample with last season's
+        per-game figure, in the proportion KEEP says the short sample is worth:
+
+            projected = observed x keep + prior x (1 - keep)
+
+        With one game played that is 34% this year and 66% last year, which is
+        what separates a proven player having a quiet week from a fringe one
+        having a loud week. They are indistinguishable on this season alone.
+
+        A player with no prior — a rookie, or anyone under four games last
+        season — is treated as replacement level, since replacement IS zero VOR
+        by construction. That is the right neutral assumption and it is also
+        this tool's sharpest edge: a genuine rookie breakout will be understated
+        until he has a few games of his own. Check `observed` against
+        `projected` before dismissing one."""
         p = pos_of(pid)
         if p not in POS:
-            return 0.0, 0.0, 0
+            return 0.0, 0.0, 0, 0.0
         vals = [max(0.0, pts[pid][w] - repl[w][p]) for w in played if w in pts.get(pid, {})]
         games = sum(1 for w in played if pts.get(pid, {}).get(w, 0) != 0)
         obs = round(statistics.mean(vals), 2) if vals else 0.0
-        return obs, round(obs * keep_share(games), 2), games
+        prior = float(prior_value.get(pid, 0.0))
+        k = keep_share(games)
+        proj = obs * k + prior * (1 - k)
+        return obs, round(proj, 2), games, prior
 
     def opportunity(pid):
         tot = 0
         for w in played:
             st = stats[w].get(pid) or {}
-            tot += st.get('rec_tgt', 0) + st.get('rush_att', 0)
+            tot += st.get('rec_tgt', 0) + st.get('rush_att', 0) + st.get('pass_att', 0)
+        return round(tot / len(played), 1)
+
+    def snaps(pid):
+        """Offensive snaps per week played. The prior speaks to a player's
+        ability; this speaks to whether he still has a job. Justin Fields
+        averaged 4.7 above replacement last season and took ONE snap in week 1
+        after moving to Kansas City — without this check his prior alone carries
+        him onto the list as a live target."""
+        tot = 0
+        for w in played:
+            tot += (stats[w].get(pid) or {}).get('off_snp', 0)
         return round(tot / len(played), 1)
 
     # --- locate the team ---
@@ -224,13 +282,16 @@ def main():
     tname, tmgr = label(target)
 
     last = matchups[played[-1]]
-    mine = next(e for e in last if e['roster_id'] == rid)
+    mine_snapshot = next(e for e in last if e['roster_id'] == rid)
     scores = sorted(((e.get('points') or 0), e['roster_id']) for e in last if (e.get('players') or []))
-    my_pts = mine.get('points') or 0
+    my_pts = mine_snapshot.get('points') or 0
     my_rank = [r for _, r in scores][::-1].index(rid) + 1
 
-    roster_ids = list(mine.get('players') or [])
-    starters = [x for x in (mine.get('starters') or []) if x and x != '0']
+    # Ownership NOW, not as of the last snapshot — a chopped team's whole roster
+    # hits the pool the moment it is eliminated, and that is usually the single
+    # biggest event of the waiver week.
+    roster_ids = list(target.get('players') or mine_snapshot.get('players') or [])
+    starters = [x for x in (mine_snapshot.get('starters') or []) if x and x != '0']
     bench = [p for p in roster_ids if p not in starters]
     slots = league['roster_positions']
     cap_size = len(slots)
@@ -253,16 +314,23 @@ def main():
 
     # --- free agents ---
     rostered = set()
+    for r in rosters:
+        rostered |= set(r.get('players') or [])
+    freed = set()
     for e in last:
-        rostered |= set(e.get('players') or [])
+        freed |= set(e.get('players') or [])
+    freed -= rostered          # loose since the last snapshot, chop included
     fas = []
     for pid in pts:
         p = players.get(pid) or {}
         if pos_of(pid) not in POS or pid in rostered or not p.get('team'):
             continue
-        obs, proj, games = value(pid)
+        obs, proj, games, prior = value(pid)
         if proj <= 0:
             continue
+        # A proven player whose short sample looks quiet still belongs in the
+        # list; the prior is doing the work there, which the output shows.
+
         bar = min(weakest.get(pos_of(pid), 0.0), flex_bar) if pos_of(pid) in FLEX_OK else weakest.get(pos_of(pid), 0.0)
         upgrade = round(proj - bar, 2)
         if upgrade <= 0:
@@ -271,14 +339,24 @@ def main():
             'pid': pid, 'player': name_of(pid), 'pos': pos_of(pid), 'nfl': p.get('team'),
             'injury': p.get('injury_status'),
             'observed': obs, 'value': proj, 'games': games, 'keep': keep_share(games),
-            'opportunity': opportunity(pid),
+            'prior': round(prior, 2),
+            'opportunity': opportunity(pid), 'snaps': snaps(pid),
             'upgrade': upgrade, 'replaces_bar': round(bar, 2),
+            # No snaps, no role — whatever last season says about him.
+            'no_role': snaps(pid) < 12,
+            # Cannot help this week, but the prior says he is worth holding.
+            'stash': snaps(pid) < 12 and float(prior_value.get(pid, 0.0)) >= 2.0,
             'confidence': 'low' if games < 3 else ('medium' if games < 6 else 'high'),
             # Points without touches are touchdowns, and touchdowns do not
             # repeat. Under ~4 touches a game the line is an event, not a role.
             'thin_usage': opportunity(pid) < 4 and obs > 4,
+            'newly_free': pid in freed,
         })
-    fas.sort(key=lambda f: -f['upgrade'])
+    # Players with a current role sort above those without one. A hurt star
+    # with a big prior is a real stash, but he cannot help you THIS week, and in
+    # a chop league the week is what you are trying to survive. He keeps his
+    # place on the board, just below the players who can actually play.
+    fas.sort(key=lambda f: (f['no_role'], -f['upgrade']))
 
     # --- drops: bench first, worst value first; injured-out players lead ---
     drops = sorted(
@@ -300,42 +378,66 @@ def main():
     cap = max(1, int(faab_left * cap_pct / 100))
 
     picks = []
-    available_drops = list(drops)
-    for f in fas[:max(0, room)]:
+    for f in fas[:max(0, args.targets)]:
         pick = dict(f)
         pick['value_price'] = max(1, int(round(f['upgrade'] * dollars_per_point)))
         pick['suggested_bid'] = pick['value_price']
+        pick['tier'] = tier_of(pick['value_price'], faab_left)
         pick['drop'] = None
-        if roster_full:
-            # Only a player worth LESS than the incoming one is a real drop.
-            # Without this the list happily trades away a useful bench piece to
-            # make room for a marginal one.
-            cand = next((d for d in available_drops if d['value'] < f['value']), None)
-            if cand:
-                available_drops.remove(cand)
-                pick['drop'] = cand
-            else:
-                pick['blocked'] = 'no drop worth making'
+        pick['drop_indicative'] = False
+        pick['drop_costly'] = False
         picks.append(pick)
 
     # A pick you cannot make room for is not a recommendation.
     for p in picks:
-        p['recommended'] = not p.get('blocked') and not p['thin_usage']
+        # Quality, not roster space, decides whether to chase a player. Space is
+        # a cost the drop column already prices.
+        p['recommended'] = not p['thin_usage'] and not p['no_role']
+    # --top concentrates the budget. Spreading a capped slate across six
+    # marginal adds funds none of them well enough to win; when one target is
+    # worth several of the others, chasing only him is the better shape.
+    if args.top:
+        for p in [x for x in picks if x['recommended']][args.top:]:
+            p['recommended'] = False
+            p['blocked'] = f'outside top {args.top}'
 
     # When the cap binds, scale the whole slate rather than starving the tail:
     # the ranking is the useful part of the output and it should survive.
-    for p in picks:
-        if not p['recommended']:
-            p['suggested_bid'] = None
+    # --- roster space, priced after the slate is settled ---------------------
+    # The slate is executed together, so its members need DISTINCT drops and
+    # those are consumed. Everything below it is a board, not a basket: each
+    # entry shows the drop it would cost on its own, without pretending the
+    # bench can absorb all fifteen.
+    if roster_full and drops:
+        available = list(drops)
+        for p in picks:
+            if not p['recommended']:
+                continue
+            cand = next((d for d in available if d['value'] < p['value']), None)
+            if cand:
+                available.remove(cand)
+                p['drop'] = cand
+            else:
+                p['drop'] = min(available or drops, key=lambda d: d['value'])
+                p['drop_indicative'] = True
+                p['drop_costly'] = p['drop']['value'] >= p['value']
+        for p in picks:
+            if p['recommended']:
+                continue
+            clean = [d for d in drops if d['value'] < p['value']]
+            p['drop'] = min(clean or drops, key=lambda d: d['value'])
+            p['drop_indicative'] = True
+            p['drop_costly'] = not clean
+
     live = [p for p in picks if p['recommended']]
+    # The bid shown is what the player is WORTH — scaling it to fit a budget
+    # produces a number that loses the claim and buys nothing. The cap is
+    # reported against the slate instead, as the allocation decision it is.
     total = sum(p['suggested_bid'] for p in live)
-    if total > cap and total:
-        for p in live:
-            p['suggested_bid'] = max(1, int(round(p['suggested_bid'] * cap / total)))
-        while sum(p['suggested_bid'] for p in live) > cap and any(p['suggested_bid'] > 1 for p in live):
-            biggest = max(live, key=lambda p: p['suggested_bid'])
-            biggest['suggested_bid'] -= 1
     capped = total > cap
+    # A bid scaled far below what a player is worth will simply lose. Saying so
+    # is more useful than quietly recommending a number that cannot win.
+    unconstrained = total
 
     out = {
         'league': league['name'], 'season': season, 'week': week,
@@ -349,6 +451,7 @@ def main():
         },
         'budget': {'cap': cap, 'cap_pct': cap_pct, 'capped': capped,
                    'committed': sum(p['suggested_bid'] for p in picks if p['recommended']),
+                   'unconstrained': unconstrained,
                    'dollars_per_point': dollars_per_point},
         'anchor': anchor,
         'picks': picks,
@@ -365,17 +468,24 @@ def main():
     if anchor:
         print(f"  prior season wk{week}: median winning bid ${anchor['median']:.0f}, p75 ${anchor['p75']}, "
               f"max ${anchor['max']} | ${dollars_per_point}/pt of delivered VOR")
-    print(f"  cap ${cap} ({cap_pct}% of remaining){' — BINDING, slate scaled down' if capped else ''}; "
-          f"committing ${out['budget']['committed']}")
+    print(f"  cap ${cap} ({cap_pct}% of remaining){' — BINDING' if capped else ''}; "
+          f"committing ${out['budget']['committed']} of ${unconstrained} unconstrained value")
+    if capped:
+        print(f"  NOTE: chasing every recommended target costs ${unconstrained}, over the ${cap} "
+              f"cap. Prices below are what each player is worth — cut the LIST, not the bids.")
     for p in picks:
         d = f" | drop {p['drop']['player']}" if p['drop'] else f" | {p.get('blocked','')}"
         if p['thin_usage']:
             d += ' | THIN USAGE - td-inflated'
+        if p['no_role']:
+            d += f" | NO ROLE - {p['snaps']} snaps/gm"
+        if p['drop_indicative']:
+            d += ' (if claimed alone)' + (' — NO CLEAN CUT' if p['drop_costly'] else '')
         if not p['recommended']:
-            d += '  [watch only]'
-        amt = f"${p['suggested_bid']}" if p['suggested_bid'] else '  --'
-        print(f"  {amt:>5}  {p['player']:<22}{p['pos']:<4}{p['nfl']:<5} "
-              f"obs +{p['observed']:<5.1f} -> proj +{p['value']:<5.2f} (keep {p['keep']:.0%}) "
+            d += '  [board]'
+        amt = f"${p['suggested_bid']}"
+        print(f"  {p['tier'].upper():<5}{amt:>6}  {p['player']:<22}{p['pos']:<4}{p['nfl']:<5} "
+              f"obs +{p['observed']:<5.1f} prior +{p['prior']:<5.2f} -> proj +{p['value']:<5.2f} "
               f"upg +{p['upgrade']:<5.2f} opp={p['opportunity']:<5}{d}")
     return 0
 
