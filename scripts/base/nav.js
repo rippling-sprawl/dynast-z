@@ -56,6 +56,10 @@ const NAV_SECTIONS = [
       // listed for everyone.
       { label: "Baker's Oven", href: '/football/bakers-oven', emoji: '🔥' },
       { label: 'Trade Calculator', href: '/football/trade-calculator', emoji: '⚖️' },
+      // A finished season's waiver market, not a live board: the Cut Throat 2025
+      // FAAB log, frozen. Filed under Fantasy because it reads as league
+      // history rather than anything to act on this week.
+      { label: 'Waiver Board', href: '/football/waivers', emoji: '💸', admin: true },
     ],
   },
   {

@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/assets/icons/app-touch-180.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Dynast-Z">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <title>Waiver Board | Dynast-Z</title>
+  <script src="/scripts/base/theme.js"></script>
+  <link rel="stylesheet" href="/styles/base/theme.css">
+  <link rel="stylesheet" href="/styles/base/styles.css">
+  <link rel="stylesheet" href="/styles/primary/waivers.css">
+  <script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
+  <script defer src="/_vercel/insights/script.js"></script>
+</head>
+<body>
+  <div id="header-mount"></div>
+  <div id="nav-drawer-mount"></div>
+  <script src="/scripts/base/auth.js"></script>
+  <script src="/scripts/base/standalone.js"></script>
+  <script src="/scripts/base/nav.js"></script>
+  <script>
+    // Admin-only route. UI-level gating, same caveat auth.js documents: the
+    // page and its data files are still served to anyone who requests the URL
+    // directly, so this hides the board rather than protecting it.
+    if (requireAdmin('/football')) initPage();
+  </script>
+
+  <div class="waiver-wrap">
+    <div class="waiver-head">
+      <h1 id="waiver-title">Waiver Board — Cut Throat</h1>
+      <p class="sub">Every player won on waivers, with the bids that chased him.
+        18 teams, $1000 FAAB. Pulled from the Sleeper transaction log.</p>
+    </div>
+
+    <div class="season-bar" id="season-bar"></div>
+
+    <section class="targets" id="targets" hidden>
+      <h2 id="tg-title">This Week's Targets</h2>
+      <p class="lede" id="tg-state"></p>
+      <div class="tg-table-wrap">
+        <table class="tg-table">
+          <thead><tr>
+            <th class="l">Bid</th><th class="l">Player</th><th>Seen</th><th>Projected</th>
+            <th>Upgrade</th><th>Opp/gm</th><th class="l">Drop</th>
+          </tr></thead>
+          <tbody id="tg-rows"></tbody>
+        </table>
+      </div>
+      <p class="an-legend" id="tg-method"></p>
+    </section>
+
+    <h2 class="board-head">The Board</h2>
+    <div class="waiver-stats" id="waiver-stats"></div>
+
+    <div class="waiver-controls">
+      <div class="wk-toggle" id="wk-toggle">
+        <button data-wk="1">Week 1</button>
+        <button data-wk="2">Week 2</button>
+        <button data-wk="0" class="active">Both</button>
+      </div>
+      <input type="text" id="waiver-search" placeholder="Player or manager…" autocomplete="off">
+      <a class="csv-link" href="/data/waiver-bids-2025.csv" download>↓ Full season CSV</a>
+    </div>
+
+    <div id="waiver-list"></div>
+    <div id="waiver-empty" style="display:none">No players match that search.</div>
+
+    <div class="waiver-note">
+      <p><b>Reading a block.</b> Bars are scaled against the top bid for that player,
+        so the winning margin is visible even on the $1 claims. The green
+        <span class="tag got">got him</span> row is the claim that processed.</p>
+      <p><b>The high bid did not always win.</b> Six claims were voided by Sleeper before
+        price mattered — the manager was over budget or had no roster room. Those
+        are hatched and tagged <span class="tag void">over budget</span> / <span class="tag void">roster full</span>, and did not beat
+        the winner on money. Two more were true ties broken by waiver priority.</p>
+      <p><b>Bidders are counted per manager.</b> Several managers stacked the same
+        player across multiple claim slots; each is shown once, at their best claim.
+        The raw per-claim rows are all in the CSV.</p>
+      <p><b>The team beside a player is his team today</b>, not the one he was on when the
+        bid was placed &mdash; Sleeper's player list only describes the present. It is a label
+        on this page and nothing more; every number here keys on player id.</p>
+    </div>
+
+    <div class="analysis" id="analysis" style="display:none">
+      <h2>What Week 1 Should Have Cost &mdash; 2025</h2>
+      <p class="lede">Thirteen claims, <b>$1,643</b> of week 1 money. Below is what each player went
+        on to score from week 2 on, what that says the bid should have been, and — the part that
+        decides it in a chop league — whether the manager who won him was still alive to use him.
+        One team is eliminated every week, 18 down to 2.</p>
+      <div class="an-scroll">
+        <table class="an-table">
+          <thead><tr>
+            <th class="l">Player</th><th>Bid</th><th>Fair (pts)</th><th>Fair (VOR)</th>
+            <th>Over / under</th><th>ROS pts</th><th class="l">Delivered</th>
+            <th class="l">Manager</th><th>Chopped</th>
+          </tr></thead>
+          <tbody id="an-rows"></tbody>
+        </table>
+      </div>
+      <p class="an-legend">
+        <code>Fair (pts)</code> splits the $1,643 in proportion to raw rest-of-season points — the
+        literal reading, and it badly flatters quarterbacks.
+        <code>Fair (VOR)</code> splits it by points <em>above replacement</em>, where replacement is
+        the score of the last player at that position actually started league-wide that week. That is
+        the honest column: week 1 started <b>eight</b> players and exactly <b>one</b> quarterback, so a
+        QB's raw total was nearly worthless at the margin. The superflex arrives in week 5, the second
+        QB slot in week 13.
+        <code>Delivered</code> is the rest-of-season total, with the green portion showing what the
+        buyer was still alive to <em>start</em> &mdash; the gold remainder scored for someone who had
+        already been chopped, or sat on a bench.
+      </p>
+
+      <div class="surv-grid" id="surv-grid"></div>
+      <p class="an-legend" id="surv-note"></p>
+    </div>
+  </div>
+
+  <script>
+  // --- CSV parse. The file is machine-written by scripts/fetch_waiver_bids.py
+  // and has no embedded newlines, but team names carry commas ("Get To The
+  // Choppa!" does not, "I hardly know her, Mayfield" could), so quoted fields
+  // still have to be honoured.
+  function parseCSV(text) {
+    const rows = [];
+    for (const line of text.trim().split('\n')) {
+      const out = []; let cur = '', q = false;
+      for (let i = 0; i < line.length; i++) {
+        const c = line[i];
+        if (q) {
+          if (c === '"' && line[i + 1] === '"') { cur += '"'; i++; }
+          else if (c === '"') q = false;
+          else cur += c;
+        } else if (c === '"') q = true;
+        else if (c === ',') { out.push(cur); cur = ''; }
+        else cur += c;
+      }
+      out.push(cur);
+      rows.push(out);
+    }
+    const head = rows.shift();
+    return rows.map(r => Object.fromEntries(head.map((h, i) => [h, r[i] ?? ''])));
+  }
+
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+  const VOID_LABEL = { over_budget: 'over budget', roster_full: 'roster full' };
+
+  // The league continues season to season under a new id — 2026 carries
+  // previous_league_id pointing at 2025 — so the board is keyed by season
+  // rather than by a single hardcoded league.
+  const SEASONS = {
+    2025: { league: '1264056168385355776', csv: '/data/waiver-bids-2025.csv', complete: true },
+    2026: { league: '1340070186379673600', csv: '/data/waiver-bids-2026.csv', complete: false },
+  };
+  const DEFAULT_SEASON = '2026';
+
+  let BLOCKS = [];      // every acquired player, both weeks
+  let weekFilter = 0;   // 0 = both
+  let query = '';
+  let season = DEFAULT_SEASON;
+
+  // One entry per manager per player: their winning claim if they have one,
+  // else their highest bid. A manager who queued the same player in four claim
+  // slots is one bidder, not four.
+  function dedupeByManager(bids) {
+    const best = new Map();
+    for (const b of bids) {
+      const cur = best.get(b.manager);
+      if (!cur
+        || (b.won && !cur.won)
+        || (b.won === cur.won && b.bid > cur.bid)) best.set(b.manager, b);
+    }
+    return [...best.values()].sort((a, b) => b.bid - a.bid || a.manager.localeCompare(b.manager));
+  }
+
+  function build(rows) {
+    const byPlayer = new Map();
+    for (const r of rows) {
+      if (+r.week > 2) continue;
+      const key = r.player + '|' + r.position + '|' + r.nfl_team;
+      if (!byPlayer.has(key)) byPlayer.set(key, []);
+      byPlayer.get(key).push({
+        week: +r.week, manager: r.manager, team: r.team, bid: +r.bid,
+        won: r.result === 'won', reason: r.fail_reason, dropped: r.dropped,
+      });
+    }
+
+    const blocks = [];
+    for (const [key, bids] of byPlayer) {
+      const wins = bids.filter(b => b.won);
+      if (!wins.length) continue;                      // never acquired in wks 1-2
+      const [player, position, nfl] = key.split('|');
+      const win = wins.reduce((a, b) => (b.bid > a.bid ? b : a));
+      const bidders = dedupeByManager(bids);
+      // The margin only means something against a bid that actually competed on
+      // price, so voided claims are skipped when finding the runner-up.
+      const rival = bidders.find(b => !b.won && !b.reason.match(/over_budget|roster_full/));
+      // Three players went twice inside this window — dropped by the first
+      // claimant and won again days later. `win` is the headline claim, `wins`
+      // is all of them: the spend tile and the week filter both need the rest.
+      blocks.push({
+        player, position, nfl, win, wins, bidders,
+        weeks: [...new Set(wins.map(w => w.week))].sort(),
+        rawClaims: bids.length,
+        margin: rival ? win.bid - rival.bid : null,
+        tie: rival ? rival.bid === win.bid : false,
+      });
+    }
+    blocks.sort((a, b) => b.win.bid - a.win.bid || a.player.localeCompare(b.player));
+    return blocks;
+  }
+
+  function renderStats(blocks) {
+    const spend = blocks.reduce((s, b) => s + b.wins.reduce((t, w) => t + w.bid, 0), 0);
+    const claims = blocks.reduce((s, b) => s + b.rawClaims, 0);
+    const tiles = [
+      [blocks.length, 'Players won'],
+      [claims, 'Bids on them'],
+      ['$' + spend.toLocaleString(), 'FAAB spent'],
+      ['$' + Math.max(...blocks.map(b => b.win.bid)).toLocaleString(), 'Top claim'],
+    ];
+    document.getElementById('waiver-stats').innerHTML = tiles
+      .map(([n, l]) => `<div class="wstat"><div class="n">${esc(n)}</div><div class="l">${esc(l)}</div></div>`)
+      .join('');
+  }
+
+  function renderBlock(b) {
+    const top = b.bidders[0].bid;
+    const shown = b.bidders.slice(0, 3);
+    const rows = shown.map(x => {
+      const voided = !x.won && VOID_LABEL[x.reason];
+      const pct = Math.max(2, (x.bid / top) * 100);
+      const tag = x.won ? '<span class="tag got">got him</span>'
+        : voided ? `<span class="tag void">${esc(voided)}</span>` : '';
+      return `<div class="bid-row ${x.won ? 'won' : ''} ${voided ? 'void' : ''}">
+          <div class="bid-amt">$${x.bid}</div>
+          <div class="bid-track">
+            <div class="bid-fill" style="width:${pct.toFixed(1)}%"></div>
+            <div class="bid-label">${tag}<span>${esc(x.manager)}</span></div>
+          </div>
+        </div>`;
+    }).join('');
+
+    const rest = b.bidders.length - shown.length;
+    const more = rest > 0
+      ? `<div class="more-bids">+ ${rest} more bidder${rest > 1 ? 's' : ''}, high $${b.bidders[3].bid}</div>` : '';
+
+    const marginTxt = b.margin === null ? 'Unopposed on price'
+      : b.tie ? 'Tied on price — broken by waiver priority'
+      : `Won by $${b.margin} over the next live bid`;
+    const dropped = b.win.dropped ? ` · dropped ${esc(b.win.dropped)}` : '';
+    const others = b.wins.filter(w => w !== b.win)
+      .map(w => `${esc(w.manager)} $${w.bid} in wk ${w.week}`).join(', ');
+    const again = others ? `<br>Won twice in this window — also ${others}.` : '';
+
+    return `<div class="player-block">
+        <div class="pb-head">
+          <span class="pb-name">${esc(b.player)}</span>
+          <span class="pb-pos">${esc(b.position)} · ${esc(b.nfl)}</span>
+          <span class="pb-meta">${b.weeks.length > 1 ? 'Weeks ' + b.weeks.join(' &amp; ') : 'Week ' + b.weeks[0]} · ${b.bidders.length} bidder${b.bidders.length > 1 ? 's' : ''}</span>
+        </div>
+        <div class="pb-body">${rows}${more}
+        <div class="pb-foot">${esc(b.win.manager)} — ${marginTxt}${dropped}${again}</div></div>
+      </div>`;
+  }
+
+  function render() {
+    const q = query.toLowerCase();
+    const list = BLOCKS.filter(b =>
+      (weekFilter === 0 || b.weeks.includes(weekFilter)) &&
+      (!q || b.player.toLowerCase().includes(q) || b.bidders.some(x => x.manager.toLowerCase().includes(q))));
+    document.getElementById('waiver-list').innerHTML = list.map(renderBlock).join('');
+    document.getElementById('waiver-empty').style.display = list.length ? 'none' : '';
+  }
+
+  // --- Week 1 post-mortem -------------------------------------------------
+  // Everything here is precomputed by scripts/analyze_waiver_week1.py; the page
+  // only lays it out. The scoring behind it is the league's own scoring_settings
+  // replayed over Sleeper's weekly stats, checked against Sleeper's matchup
+  // numbers on 2,567 player-weeks.
+  function renderAnalysis(a) {
+    const maxRos = Math.max(...a.claims.map(c => c.ros_pts));
+    document.getElementById('an-rows').innerHTML = a.claims.map(c => {
+      const d = c.bid - c.fair_vor;
+      const delta = d === 0 ? '<span>even</span>'
+        : d > 0 ? `<span class="an-over">+$${d}</span>`
+                : `<span class="an-under">-$${Math.abs(d)}</span>`;
+      // Track = this player's ROS total against the biggest one on the board, so
+      // the bars compare across rows; the gold inset is what the buyer started.
+      const w = (c.ros_pts / maxRos) * 100;
+      const got = c.ros_pts ? (c.started_pts / c.ros_pts) * w : 0;
+      const chopCls = c.chop_week === null ? 'champ' : c.chop_week <= 6 ? 'early' : '';
+      const chopTxt = c.chop_week === null ? 'champion' : 'wk ' + c.chop_week;
+      return `<tr>
+        <td class="l"><span class="an-player">${esc(c.player)}</span><span class="an-fin">${esc(c.pos_rank)}</span></td>
+        <td>$${c.bid}</td><td>$${c.fair_pts}</td><td>$${c.fair_vor}</td><td>${delta}</td>
+        <td>${c.ros_pts.toFixed(1)}</td>
+        <td class="l"><div class="an-deliver" title="${c.started_pts.toFixed(1)} of ${c.ros_pts.toFixed(1)} points started">
+          <span class="track"><i style="width:${w.toFixed(1)}%"></i><b style="width:${got.toFixed(1)}%"></b></span>
+          <span class="lbl">${c.started_pts.toFixed(0)} / ${c.ros_pts.toFixed(0)}</span></div></td>
+        <td class="l">${esc(c.manager)}</td>
+        <td><span class="an-chop ${chopCls}">${esc(chopTxt)}</span></td>
+      </tr>`;
+    }).join('');
+
+    const byChop = [...a.survival].sort((x, y) => (y.chop_week ?? 99) - (x.chop_week ?? 99));
+    const row = s => `<div class="surv-row"><span class="m">${esc(s.manager)}</span>
+        <span class="v">$${s.early_spend} early · $${s.season_spend} all yr</span></div>`;
+    document.getElementById('surv-grid').innerHTML = `
+      <div class="surv-card"><h3>Last six standing</h3>${byChop.slice(0, 6).map(row).join('')}</div>
+      <div class="surv-card"><h3>First six chopped</h3>${byChop.slice(-6).reverse().map(row).join('')}</div>`;
+
+    const started = a.claims.reduce((t, c) => t + c.started_pts, 0);
+    const ros = a.claims.reduce((t, c) => t + c.ros_pts, 0);
+    document.getElementById('surv-note').innerHTML =
+      `Of the <b>${ros.toFixed(0)}</b> rest-of-season points bought in week 1, only
+       <b>${started.toFixed(0)} (${Math.round(100 * started / ros)}%)</b> were ever put in the buyer's
+       lineup — the rest were still scoring for someone who had already been chopped, or sitting on a
+       bench behind a lineup that only started eight. Five of the last six teams standing spent under
+       $61 of their $1,000 in weeks 1&ndash;2. That is a pattern across seventeen active managers, not
+       a proven rule: the rank correlation between early spend and chop week is only &minus;0.37,
+       which at this sample size is suggestive and nothing more.`;
+    if (SEASONS[season] && SEASONS[season].complete) {
+      document.getElementById('analysis').style.display = '';
+    }
+  }
+
+  fetch('/data/waiver-week1-analysis.json')
+    .then(r => r.ok ? r.json() : Promise.reject(new Error(`analysis ${r.status}`)))
+    .then(renderAnalysis)
+    .catch(e => console.warn('analysis unavailable:', e.message));
+
+  // --- This week's targets -----------------------------------------------
+  // Rebuilt weekly by scripts/waiver_targets.py; the page only lays it out.
+  function renderTargets(t) {
+    const st = t.team_state, b = t.budget;
+    document.getElementById('tg-title').textContent =
+      `Week ${t.week} Targets — ${t.generated_for.team}`;
+    document.getElementById('tg-state').innerHTML =
+      `<b>${st.last_week_points}</b> last week, <b>${ordinal(st.last_week_rank)}</b> of
+       ${st.teams_alive}. The low score of ${st.lowest_score_last_week} was chopped.
+       <b>$${st.faab_left}</b> FAAB left, roster ${st.roster_size}/${st.roster_cap}${
+         st.roster_full ? ' <b>(full &mdash; every claim needs a drop)</b>' : ''}.
+       Budget for this week <b>$${b.cap}</b> (${b.cap_pct}% of what's left)${
+         b.capped ? ', which binds &mdash; bids below are scaled to fit' : ''}.`;
+
+    document.getElementById('tg-rows').innerHTML = t.picks.map(p => {
+      const watch = !p.recommended;
+      const bid = p.suggested_bid ? `<span class="tg-bid">$${p.suggested_bid}</span>`
+                                  : `<span class="tg-watch">watch</span>`;
+      const flags = [
+        p.thin_usage ? '<span class="tg-flag warn">TD-inflated</span>' : '',
+        p.blocked ? `<span class="tg-flag warn">${esc(p.blocked)}</span>` : '',
+        p.injury ? `<span class="tg-flag inj">${esc(p.injury)}</span>` : '',
+      ].join('');
+      return `<tr class="${watch ? 'is-watch' : ''}">
+        <td class="l">${bid}</td>
+        <td class="l"><span class="tg-name">${esc(p.player)}</span>
+          <span class="tg-pos">${esc(p.pos)} · ${esc(p.nfl)}</span>${flags}</td>
+        <td>+${p.observed.toFixed(1)}</td>
+        <td>+${p.value.toFixed(2)}</td>
+        <td>+${p.upgrade.toFixed(2)}</td>
+        <td>${p.opportunity}</td>
+        <td class="l">${p.drop ? esc(p.drop.player) : '<span class="tg-none">no clean drop</span>'}</td>
+      </tr>`;
+    }).join('');
+
+    const keep = t.picks.length ? Math.round(t.picks[0].keep * 100) : 34;
+    document.getElementById('tg-method').innerHTML =
+      `<b>Seen</b> is points per game above the last player actually started at that position.
+       <b>Projected</b> regresses it, because a hot week is mostly noise: fitting last season's
+       short samples against the rest of those players' seasons says keep <b>${keep}%</b> of an edge
+       seen in ${t.picks.length && t.picks[0].games === 1 ? 'one game' : t.picks[0]?.games + ' games'}.
+       <b>Upgrade</b> subtracts whoever this roster would otherwise start &mdash; a good player who is
+       your sixth receiver upgrades nothing. Dollars come from this room's own market: last season's
+       week ${t.week} spend per point of value its claims actually delivered,
+       <b>$${b.dollars_per_point}/pt</b>. Rows marked TD-inflated scored without the touches to
+       repeat it.`;
+    document.getElementById('targets').hidden = false;
+  }
+
+  function ordinal(n) {
+    const s = ['th', 'st', 'nd', 'rd'], v = n % 100;
+    return n + (s[(v - 20) % 10] || s[v] || s[0]);
+  }
+
+  fetch('/data/waiver-targets.json')
+    .then(r => r.ok ? r.json() : Promise.reject(new Error(String(r.status))))
+    .then(renderTargets)
+    .catch(e => console.warn('targets unavailable:', e.message));
+
+  function loadSeason(yr) {
+    season = yr;
+    const cfg = SEASONS[yr];
+    document.getElementById('waiver-title').textContent = `Waiver Board — Cut Throat ${yr}`;
+    document.querySelector('.csv-link').href = cfg.csv;
+    document.getElementById('season-bar').innerHTML = Object.keys(SEASONS).sort().reverse()
+      .map(y => `<button data-season="${y}"${y === yr ? ' class="active"' : ''}>${y}${SEASONS[y].complete ? '' : ' · live'}</button>`)
+      .join('') + `<span class="season-note">${cfg.complete
+        ? 'Final — 17 weeks, champion decided.'
+        : 'In progress. Week 2 waivers have not run yet.'}</span>`;
+    // The post-mortem needs a finished season to price anything against.
+    document.getElementById('analysis').style.display = cfg.complete ? '' : 'none';
+
+    fetch(cfg.csv)
+      .then(r => { if (!r.ok) throw new Error(`CSV ${r.status}`); return r.text(); })
+      .then(text => {
+        BLOCKS = build(parseCSV(text));
+        renderStats(BLOCKS);
+        render();
+      })
+      .catch(e => {
+        document.getElementById('waiver-list').innerHTML =
+          `<div id="waiver-empty">Could not load waiver data — ${esc(e.message)}</div>`;
+      });
+  }
+
+  document.getElementById('season-bar').addEventListener('click', e => {
+    const b = e.target.closest('button[data-season]');
+    if (b && b.dataset.season !== season) loadSeason(b.dataset.season);
+  });
+
+  loadSeason(DEFAULT_SEASON);
+
+  document.getElementById('wk-toggle').addEventListener('click', e => {
+    const btn = e.target.closest('button');
+    if (!btn) return;
+    weekFilter = +btn.dataset.wk;
+    [...e.currentTarget.children].forEach(b => b.classList.toggle('active', b === btn));
+    render();
+  });
+
+  document.getElementById('waiver-search').addEventListener('input', e => {
+    query = e.target.value.trim();
+    render();
+  });
+  </script>
+</body>
+</html>

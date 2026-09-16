@@ -1,0 +1,310 @@
+{
+ "league": "Cut Throat",
+ "season": "2026",
+ "week": 2,
+ "generated_for": {
+  "team": "Jed York",
+  "manager": "baker28",
+  "roster_id": 1
+ },
+ "team_state": {
+  "last_week_points": 157.04,
+  "last_week_rank": 1,
+  "teams_alive": 18,
+  "faab_left": 1000,
+  "roster_size": 14,
+  "roster_cap": 14,
+  "roster_full": true,
+  "starters": 8,
+  "lowest_score_last_week": 63.12
+ },
+ "budget": {
+  "cap": 60,
+  "cap_pct": 6.0,
+  "capped": true,
+  "committed": 60,
+  "dollars_per_point": 31.2
+ },
+ "anchor": {
+  "n": 33,
+  "median": 18,
+  "p75": 56,
+  "max": 501,
+  "total": 2184
+ },
+ "picks": [
+  {
+   "pid": "3634",
+   "player": "Kalif Raymond",
+   "pos": "WR",
+   "nfl": "CHI",
+   "injury": null,
+   "observed": 9.8,
+   "value": 3.33,
+   "games": 1,
+   "keep": 0.34,
+   "opportunity": 9.0,
+   "upgrade": 2.68,
+   "replaces_bar": 0.65,
+   "confidence": "low",
+   "thin_usage": false,
+   "value_price": 84,
+   "suggested_bid": 18,
+   "drop": {
+    "pid": "7528",
+    "player": "Najee Harris",
+    "pos": "RB",
+    "value": 0.0,
+    "injury": "Out"
+   },
+   "recommended": true
+  },
+  {
+   "pid": "6130",
+   "player": "Devin Singletary",
+   "pos": "RB",
+   "nfl": "NYG",
+   "injury": null,
+   "observed": 9.1,
+   "value": 3.09,
+   "games": 1,
+   "keep": 0.34,
+   "opportunity": 10.0,
+   "upgrade": 2.44,
+   "replaces_bar": 0.65,
+   "confidence": "low",
+   "thin_usage": false,
+   "value_price": 76,
+   "suggested_bid": 16,
+   "drop": {
+    "pid": "11783",
+    "player": "Ryan Flournoy",
+    "pos": "WR",
+    "value": 0.0,
+    "injury": null
+   },
+   "recommended": true
+  },
+  {
+   "pid": "4454",
+   "player": "Kendrick Bourne",
+   "pos": "WR",
+   "nfl": "ARI",
+   "injury": null,
+   "observed": 8.9,
+   "value": 3.03,
+   "games": 1,
+   "keep": 0.34,
+   "opportunity": 8.0,
+   "upgrade": 2.38,
+   "replaces_bar": 0.65,
+   "confidence": "low",
+   "thin_usage": false,
+   "value_price": 74,
+   "suggested_bid": 16,
+   "drop": {
+    "pid": "12487",
+    "player": "Terrance Ferguson",
+    "pos": "TE",
+    "value": 0.0,
+    "injury": null
+   },
+   "recommended": true
+  },
+  {
+   "pid": "5857",
+   "player": "Noah Fant",
+   "pos": "TE",
+   "nfl": "NO",
+   "injury": null,
+   "observed": 6.5,
+   "value": 2.21,
+   "games": 1,
+   "keep": 0.34,
+   "opportunity": 8.0,
+   "upgrade": 1.56,
+   "replaces_bar": 0.65,
+   "confidence": "low",
+   "thin_usage": false,
+   "value_price": 49,
+   "suggested_bid": 10,
+   "drop": {
+    "pid": "6865",
+    "player": "Colby Parkinson",
+    "pos": "TE",
+    "value": 0.0,
+    "injury": null
+   },
+   "recommended": true
+  },
+  {
+   "pid": "3286",
+   "player": "Demarcus Robinson",
+   "pos": "WR",
+   "nfl": "SF",
+   "injury": null,
+   "observed": 6.4,
+   "value": 2.18,
+   "games": 1,
+   "keep": 0.34,
+   "opportunity": 3.0,
+   "upgrade": 1.53,
+   "replaces_bar": 0.65,
+   "confidence": "low",
+   "thin_usage": true,
+   "value_price": 48,
+   "suggested_bid": null,
+   "drop": {
+    "pid": "9501",
+    "player": "DeMario Douglas",
+    "pos": "WR",
+    "value": 0.14,
+    "injury": null
+   },
+   "recommended": false
+  },
+  {
+   "pid": "6826",
+   "player": "Cole Kmet",
+   "pos": "TE",
+   "nfl": "CHI",
+   "injury": null,
+   "observed": 4.7,
+   "value": 1.6,
+   "games": 1,
+   "keep": 0.34,
+   "opportunity": 3.0,
+   "upgrade": 0.95,
+   "replaces_bar": 0.65,
+   "confidence": "low",
+   "thin_usage": true,
+   "value_price": 30,
+   "suggested_bid": null,
+   "drop": {
+    "pid": "9758",
+    "player": "C.J. Stroud",
+    "pos": "QB",
+    "value": 0.22,
+    "injury": null
+   },
+   "recommended": false
+  }
+ ],
+ "drops": [
+  {
+   "pid": "7528",
+   "player": "Najee Harris",
+   "pos": "RB",
+   "value": 0.0,
+   "injury": "Out"
+  },
+  {
+   "pid": "11783",
+   "player": "Ryan Flournoy",
+   "pos": "WR",
+   "value": 0.0,
+   "injury": null
+  },
+  {
+   "pid": "12487",
+   "player": "Terrance Ferguson",
+   "pos": "TE",
+   "value": 0.0,
+   "injury": null
+  },
+  {
+   "pid": "6865",
+   "player": "Colby Parkinson",
+   "pos": "TE",
+   "value": 0.0,
+   "injury": null
+  },
+  {
+   "pid": "9501",
+   "player": "DeMario Douglas",
+   "pos": "WR",
+   "value": 0.14,
+   "injury": null
+  },
+  {
+   "pid": "9758",
+   "player": "C.J. Stroud",
+   "pos": "QB",
+   "value": 0.22,
+   "injury": null
+  }
+ ],
+ "avoid": [
+  {
+   "pid": "3161",
+   "player": "Carson Wentz",
+   "pos": "QB",
+   "nfl": "MIN",
+   "injury": null,
+   "observed": 3.42,
+   "value": 1.16,
+   "games": 1,
+   "keep": 0.34,
+   "opportunity": 5.0,
+   "upgrade": 0.94,
+   "replaces_bar": 0.22,
+   "confidence": "low",
+   "thin_usage": false
+  },
+  {
+   "pid": "7670",
+   "player": "Joshua Palmer",
+   "pos": "WR",
+   "nfl": "BUF",
+   "injury": null,
+   "observed": 3.8,
+   "value": 1.29,
+   "games": 1,
+   "keep": 0.34,
+   "opportunity": 2.0,
+   "upgrade": 0.64,
+   "replaces_bar": 0.65,
+   "confidence": "low",
+   "thin_usage": false
+  },
+  {
+   "pid": "13394",
+   "player": "Josh Cameron",
+   "pos": "WR",
+   "nfl": "JAX",
+   "injury": null,
+   "observed": 3.4,
+   "value": 1.16,
+   "games": 1,
+   "keep": 0.34,
+   "opportunity": 2.0,
+   "upgrade": 0.51,
+   "replaces_bar": 0.65,
+   "confidence": "low",
+   "thin_usage": false
+  },
+  {
+   "pid": "4177",
+   "player": "Mack Hollins",
+   "pos": "WR",
+   "nfl": "NE",
+   "injury": null,
+   "observed": 2.5,
+   "value": 0.85,
+   "games": 1,
+   "keep": 0.34,
+   "opportunity": 5.0,
+   "upgrade": 0.2,
+   "replaces_bar": 0.65,
+   "confidence": "low",
+   "thin_usage": false
+  }
+ ],
+ "weakest_startable": {
+  "QB": 0.22,
+  "RB": 9.04,
+  "WR": 0.75,
+  "TE": 3.81,
+  "FLEX": 0.65
+ }
+}

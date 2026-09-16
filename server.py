@@ -1969,6 +1969,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         elif re.match(r"/golf/\d{4}/[^/]+/ev-model", self.path):
             self.path = "/views/golf/ev-model.html"
             super().do_GET()
+        elif self.path.rstrip("/") == "/football/waivers":
+            self.path = "/views/football/waivers.html"
+            super().do_GET()
         elif re.match(r"/league/[^/]+/team/", self.path):
             self.path = "/views/league/team.html"
             super().do_GET()

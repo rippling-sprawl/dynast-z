@@ -1,0 +1,1211 @@
+week,date,manager,team,player,position,nfl_team,bid,result,fail_reason,dropped,roster_id,transaction_id
+1,2025-09-09 00:19,jakwok21,Get To The Choppa!,Kendrick Bourne,WR,ARI,1,won,,Greg Dortch,14,1270995903154495488
+1,2025-09-09 08:35,baker28,Krumm,James Cook,RB,BUF,290,won,,Spencer Rattler,1,1271120840401907712
+1,2025-09-09 08:37,baker28,Krumm,DeVonta Smith,WR,PHI,117,lost,outbid,,1,1271121318351237120
+1,2025-09-09 09:14,colinjhannah,lake minnetonka water,Ja'Marr Chase,WR,CIN,276,lost,outbid,,15,1271130720462467072
+1,2025-09-09 09:45,BobbyStabs,Dayden Janiels,Ja'Marr Chase,WR,CIN,211,lost,outbid,,12,1271138365328076800
+1,2025-09-09 09:46,BobbyStabs,Dayden Janiels,DeVonta Smith,WR,PHI,21,lost,outbid,,12,1271138598145515520
+1,2025-09-09 09:46,BobbyStabs,Dayden Janiels,David Montgomery,RB,HOU,2,lost,outbid,,12,1271138691724615680
+1,2025-09-09 09:46,BobbyStabs,Dayden Janiels,James Cook,RB,BUF,41,lost,outbid,,12,1271138771055689728
+1,2025-09-09 09:47,BobbyStabs,Dayden Janiels,Casey Washington,WR,CAR,1,won,,Malik Washington,12,1271138889423163392
+1,2025-09-09 10:18,BobbyStabs,Dayden Janiels,JuJu Smith-Schuster,WR,FA,1,lost,roster_full,,12,1271146776857952256
+1,2025-09-09 10:30,Hockeystar90,Hockeystar90,Ja'Marr Chase,WR,CIN,900,won,,Isaac Guerendo,18,1271149771284840448
+1,2025-09-09 10:31,Hockeystar90,Hockeystar90,James Cook,RB,BUF,375,lost,over_budget,,18,1271149890856046592
+1,2025-09-09 10:31,Hockeystar90,Hockeystar90,David Montgomery,RB,HOU,150,lost,over_budget,,18,1271149959671984128
+1,2025-09-09 10:31,Hockeystar90,Hockeystar90,DeVonta Smith,WR,PHI,200,lost,outbid,,18,1271150099308748800
+1,2025-09-09 10:32,Hockeystar90,Hockeystar90,David Njoku,TE,LAC,80,won,,Elijah Mitchell,18,1271150165901729792
+1,2025-09-09 10:33,jakwok21,Get To The Choppa!,Ja'Marr Chase,WR,CIN,202,lost,outbid,,14,1271150423784321024
+1,2025-09-09 10:36,jakwok21,Get To The Choppa!,James Cook,RB,BUF,33,lost,outbid,,14,1271151379963994112
+1,2025-09-09 10:37,jakwok21,Get To The Choppa!,David Montgomery,RB,HOU,22,lost,outbid,,14,1271151474075787264
+1,2025-09-09 10:37,jakwok21,Get To The Choppa!,DeVonta Smith,WR,PHI,16,lost,outbid,,14,1271151573262684160
+1,2025-09-09 10:46,baker28,Krumm,Jared Goff,QB,DET,45,lost,roster_full,,1,1271153765436637184
+1,2025-09-09 10:47,baker28,Krumm,David Njoku,TE,LAC,68,lost,outbid,,1,1271153949235220480
+1,2025-09-09 10:48,baker28,Krumm,Ja'Marr Chase,WR,CIN,489,lost,outbid,,1,1271154202923532288
+1,2025-09-09 11:11,clikes,clikes,James Cook,RB,BUF,77,lost,outbid,,2,1271160051800735744
+1,2025-09-09 11:13,clikes,clikes,David Njoku,TE,LAC,13,lost,outbid,,2,1271160614735085568
+1,2025-09-09 11:14,clikes,clikes,David Montgomery,RB,HOU,21,lost,outbid,,2,1271160781643218944
+1,2025-09-09 11:41,clikes,clikes,Ja'Marr Chase,WR,CIN,161,lost,outbid,,2,1271167750848385024
+1,2025-09-09 12:06,TheCommish1,Whopper Jr Value Meal,James Cook,RB,BUF,175,lost,outbid,,4,1271173802100801536
+1,2025-09-09 12:06,celticsraider,Rasheevil Motherfuckers,James Cook,RB,BUF,175,lost,outbid,,16,1271173851358711808
+1,2025-09-09 12:07,TheCommish1,Whopper Jr Value Meal,David Montgomery,RB,HOU,100,won,,DJ Giddens,4,1271174203961282560
+1,2025-09-09 12:14,dylan1990692,The Ghost of Martellus,DeVonta Smith,WR,PHI,76,lost,outbid,,8,1271175918353649664
+1,2025-09-09 12:14,clevelandb0b,I hardly know herMayfield,Najee Harris,RB,NYG,35,lost,roster_full,,7,1271175922518589440
+1,2025-09-09 12:15,clevelandb0b,I hardly know herMayfield,James Cook,RB,BUF,200,lost,outbid,,7,1271176089477079040
+1,2025-09-09 12:15,clevelandb0b,I hardly know herMayfield,DeVonta Smith,WR,PHI,200,won,,Pat Bryant,7,1271176169017847808
+1,2025-09-09 12:15,clevelandb0b,I hardly know herMayfield,DeVonta Smith,WR,PHI,200,lost,outbid,,7,1271176206879825920
+1,2025-09-09 12:16,clevelandb0b,I hardly know herMayfield,Ja'Marr Chase,WR,CIN,375,lost,outbid,,7,1271176401948540928
+1,2025-09-09 14:34,BobbyStabs,Dayden Janiels,Jared Goff,QB,DET,19,won,,Bryce Young,12,1271211067892056064
+1,2025-09-09 14:36,BobbyStabs,Dayden Janiels,Ray-Ray McCloud,WR,FA,1,lost,outbid,,12,1271211670403821568
+1,2025-09-09 15:58,colinjhannah,lake minnetonka water,James Cook,RB,BUF,120,lost,outbid,,15,1271232236561117184
+1,2025-09-09 16:48,baker28,Krumm,David Montgomery,RB,HOU,58,lost,outbid,,1,1271244790549184512
+1,2025-09-09 16:50,dylan1990692,The Ghost of Martellus,Ja'Marr Chase,WR,CIN,334,lost,outbid,,8,1271245319153160192
+1,2025-09-09 16:51,dylan1990692,The Ghost of Martellus,James Cook,RB,BUF,89,lost,outbid,,8,1271245574984724480
+1,2025-09-09 16:54,baker28,Krumm,David Njoku,TE,LAC,68,lost,outbid,,1,1271246305175310336
+1,2025-09-09 17:09,slikyjohnson,Brom Bones,Jared Goff,QB,DET,9,lost,outbid,,11,1271250052416819200
+1,2025-09-09 17:09,slikyjohnson,Brom Bones,Ja'Marr Chase,WR,CIN,250,lost,outbid,,11,1271250112093380608
+1,2025-09-09 17:09,slikyjohnson,Brom Bones,C.J. Stroud,QB,HOU,1,lost,outbid,,11,1271250168292851712
+1,2025-09-09 17:31,jodangles,jodangles,Ja'Marr Chase,WR,CIN,90,lost,outbid,,3,1271255717491249152
+1,2025-09-09 17:43,celticsraider,Rasheevil Motherfuckers,LeQuint Allen,RB,JAX,10,won,,Josh Reynolds,16,1271258847092170752
+1,2025-09-09 17:44,celticsraider,Rasheevil Motherfuckers,Ja'Marr Chase,WR,CIN,100,lost,outbid,,16,1271258935587790848
+1,2025-09-09 21:17,d3childs,GregswillDaBOLL,Ja'Marr Chase,WR,CIN,250,lost,outbid,,6,1271312490579390464
+1,2025-09-09 21:17,d3childs,GregswillDaBOLL,James Cook,RB,BUF,35,lost,outbid,,6,1271312551031873536
+1,2025-09-09 21:17,d3childs,GregswillDaBOLL,C.J. Stroud,QB,HOU,15,won,,Trevor Etienne,6,1271312594614890496
+1,2025-09-09 21:17,d3childs,GregswillDaBOLL,David Montgomery,RB,HOU,7,lost,outbid,,6,1271312639686897664
+1,2025-09-09 21:44,FlashUrTDs,Gutta’s Goon Squad,James Cook,RB,BUF,14,lost,outbid,,5,1271319374833139712
+1,2025-09-09 21:44,FlashUrTDs,Gutta’s Goon Squad,Jared Goff,QB,DET,12,lost,outbid,,5,1271319486644879362
+1,2025-09-09 21:47,FlashUrTDs,Gutta’s Goon Squad,DeVonta Smith,WR,PHI,19,lost,outbid,,5,1271320017064988672
+1,2025-09-09 21:47,FlashUrTDs,Gutta’s Goon Squad,David Montgomery,RB,HOU,10,lost,outbid,,5,1271320140750819328
+1,2025-09-09 21:54,jcmandel,jcmandel,Ja'Marr Chase,WR,CIN,301,lost,outbid,,13,1271322012538638336
+1,2025-09-09 21:55,jcmandel,jcmandel,James Cook,RB,BUF,161,lost,outbid,,13,1271322133082943488
+1,2025-09-09 21:55,jcmandel,jcmandel,David Montgomery,RB,HOU,81,lost,outbid,,13,1271322235486883841
+1,2025-09-09 21:56,jcmandel,jcmandel,David Njoku,TE,LAC,56,lost,outbid,,13,1271322399853268992
+1,2025-09-09 21:57,jcmandel,jcmandel,Jake Tonges,TE,SF,7,won,,Jaxson Dart,13,1271322725293518848
+1,2025-09-09 22:12,clevelandb0b,I hardly know herMayfield,David Montgomery,RB,HOU,100,lost,outbid,,7,1271326396278394881
+1,2025-09-09 22:16,baker28,Krumm,Ray-Ray McCloud,WR,FA,12,won,,Jalen McMillan,1,1271327484545077248
+1,2025-09-09 22:17,baker28,Krumm,Noah Fant,TE,NO,8,won,,Will Shipley,1,1271327706776109056
+1,2025-09-09 22:18,baker28,Krumm,Ray-Ray McCloud,WR,FA,12,lost,outbid,,1,1271328014860288000
+1,2025-09-09 23:29,jodangles,jodangles,James Cook,RB,BUF,40,lost,outbid,,3,1271345701665656832
+1,2025-09-09 23:29,jodangles,jodangles,DeVonta Smith,WR,PHI,20,lost,outbid,,3,1271345792199688192
+1,2025-09-09 23:46,greggy2ships,Heads Will DaBOLL,Ja'Marr Chase,WR,CIN,600,lost,outbid,,9,1271350136018075648
+1,2025-09-09 23:49,greggy2ships,Heads Will DaBOLL,DeVonta Smith,WR,PHI,31,lost,outbid,,9,1271350725204545536
+1,2025-09-09 23:50,greggy2ships,Heads Will DaBOLL,David Njoku,TE,LAC,23,lost,outbid,,9,1271351086619324416
+1,2025-09-09 23:56,greggy2ships,Heads Will DaBOLL,James Cook,RB,BUF,265,lost,outbid,,9,1271352521125810176
+2,2025-09-10 09:21,clevelandb0b,I hardly know herMayfield,Najee Harris,RB,NYG,2,lost,outbid,,7,1271494758165925888
+2,2025-09-10 09:30,baker28,Krumm,JuJu Smith-Schuster,WR,FA,4,won,,Terrance Ferguson,1,1271497005176209408
+2,2025-09-10 12:55,BobbyStabs,Dayden Janiels,Jaxson Dart,QB,NYG,2,lost,outbid,,12,1271548553549873152
+2,2025-09-10 12:56,BobbyStabs,Dayden Janiels,Bryce Young,QB,CAR,1,won,,Ja'Tavion Sanders,12,1271548833112821760
+2,2025-09-10 16:20,d3childs,GregswillDaBOLL,Mac Jones,QB,SF,1,won,,Jermaine Burton,6,1271600200397361152
+2,2025-09-10 16:33,BobbyStabs,Dayden Janiels,JuJu Smith-Schuster,WR,FA,2,lost,outbid,,12,1271603610458800128
+2,2025-09-10 18:21,Hockeystar90,Hockeystar90,DJ Giddens,RB,IND,1,won,,Adonai Mitchell,18,1271630646124503040
+2,2025-09-10 23:21,jcmandel,jcmandel,Kenny Gainwell,RB,TB,2,won,,Emanuel Wilson,13,1271706152878505984
+2,2025-09-10 23:29,slikyjohnson,Brom Bones,JuJu Smith-Schuster,WR,FA,3,lost,outbid,,11,1271708122255233024
+2,2025-09-10 23:29,slikyjohnson,Brom Bones,Malik Washington,WR,MIA,1,won,,Efton Chism,11,1271708153578258432
+2,2025-09-10 23:29,slikyjohnson,Brom Bones,Najee Harris,RB,NYG,4,lost,outbid,,11,1271708239414702080
+2,2025-09-11 00:12,greggy2ships,Heads Will DaBOLL,Najee Harris,RB,NYG,18,won,,Dalton Schultz,9,1271719015630254080
+2,2025-09-11 12:24,baker28,Krumm,Malik Washington,WR,MIA,1,lost,outbid,,1,1271903294821793792
+2,2025-09-11 18:45,slikyjohnson,Brom Bones,Michael Mayer,TE,LV,1,won,,,11,1271999007656267776
+2,2025-09-11 19:38,clikes,clikes,Adam Thielen,WR,FA,2,won,,Xavier Hutchinson,2,1272012371098886144
+2,2025-09-11 19:51,greggy2ships,Heads Will DaBOLL,Jaxson Dart,QB,NYG,5,won,,Jalen Milroe,9,1272015649090056192
+2,2025-09-12 13:31,baker28,Krumm,Chris Rodriguez,RB,JAX,6,lost,roster_full,,1,1272282561153863680
+2,2025-09-12 14:27,BobbyStabs,Dayden Janiels,Marvin Mims,WR,DEN,1,won,,Casey Washington,12,1272296685879431168
+2,2025-09-12 16:04,colinjhannah,lake minnetonka water,Dalton Schultz,TE,HOU,1,won,,Jalen Nailor,15,1272321104295256065
+2,2025-09-12 21:09,colinjhannah,lake minnetonka water,Jahan Dotson,WR,ATL,1,won,,,15,1272397613718597632
+2,2025-09-13 08:14,Hockeystar90,Hockeystar90,Dontayvion Wicks,WR,PHI,1,lost,outbid,,18,1272565121075380224
+2,2025-09-15 20:03,Hockeystar90,Hockeystar90,Blake Corum,RB,LAR,1,won,,,18,1273468338651025408
+2,2025-09-16 04:15,TheCommish1,Whopper Jr Value Meal,Jacory Croskey-Merritt,RB,WAS,51,lost,outbid,,4,1273592165758418944
+2,2025-09-16 04:16,TheCommish1,Whopper Jr Value Meal,Christian McCaffrey,RB,SF,330,lost,outbid,,4,1273592387322544128
+2,2025-09-16 04:18,TheCommish1,Whopper Jr Value Meal,J.K. Dobbins,RB,DEN,80,lost,outbid,,4,1273592946377113600
+2,2025-09-16 04:19,TheCommish1,Whopper Jr Value Meal,Troy Franklin,WR,DEN,30,won,,KeAndre Lambert-Smith,4,1273593093077090304
+2,2025-09-16 04:19,TheCommish1,Whopper Jr Value Meal,Xavier Worthy,WR,KC,50,lost,outbid,,4,1273593194545713152
+2,2025-09-16 07:29,Hockeystar90,Hockeystar90,Christian McCaffrey,RB,SF,19,lost,outbid,,18,1273640827901464576
+2,2025-09-16 07:29,Hockeystar90,Hockeystar90,J.K. Dobbins,RB,DEN,15,lost,outbid,,18,1273640885216624640
+2,2025-09-16 07:29,Hockeystar90,Hockeystar90,Jacory Croskey-Merritt,RB,WAS,18,lost,outbid,,18,1273640944247271424
+2,2025-09-16 07:29,Hockeystar90,Hockeystar90,TreVeyon Henderson,RB,NE,19,lost,outbid,,18,1273640994188820480
+2,2025-09-16 07:43,celticsraider,Rasheevil Motherfuckers,Christian McCaffrey,RB,SF,251,lost,outbid,,16,1273644339435700224
+2,2025-09-16 07:43,celticsraider,Rasheevil Motherfuckers,Jayden Daniels,QB,WAS,176,lost,outbid,,16,1273644407068831744
+2,2025-09-16 07:43,celticsraider,Rasheevil Motherfuckers,Jared Goff,QB,DET,127,lost,outbid,,16,1273644465562599424
+2,2025-09-16 07:43,celticsraider,Rasheevil Motherfuckers,Bryce Young,QB,CAR,99,won,,LeQuint Allen,16,1273644528410054656
+2,2025-09-16 07:44,celticsraider,Rasheevil Motherfuckers,J.K. Dobbins,RB,DEN,76,lost,outbid,,16,1273644595770560512
+2,2025-09-16 08:23,baker28,Krumm,Jacory Croskey-Merritt,RB,WAS,39,lost,outbid,,1,1273654417308024832
+2,2025-09-16 08:23,baker28,Krumm,Darnell Mooney,WR,NYG,23,lost,outbid,,1,1273654513437245440
+2,2025-09-16 08:24,baker28,Krumm,TreVeyon Henderson,RB,NE,36,lost,outbid,,1,1273654655557054464
+2,2025-09-16 08:24,baker28,Krumm,Dontayvion Wicks,WR,PHI,23,won,,Ray-Ray McCloud,1,1273654724129730560
+2,2025-09-16 08:25,baker28,Krumm,Xavier Worthy,WR,KC,22,lost,outbid,,1,1273654946113261568
+2,2025-09-16 08:25,baker28,Krumm,Christian McCaffrey,RB,SF,115,lost,outbid,,1,1273655030460735488
+2,2025-09-16 08:30,FlashUrTDs,Gutta’s Goon Squad,Christian McCaffrey,RB,SF,364,lost,outbid,,5,1273656213380292608
+2,2025-09-16 08:34,colinjhannah,lake minnetonka water,Xavier Worthy,WR,KC,10,lost,outbid,,15,1273657188237205504
+2,2025-09-16 08:34,colinjhannah,lake minnetonka water,Jacory Croskey-Merritt,RB,WAS,65,lost,outbid,,15,1273657259297116160
+2,2025-09-16 08:34,colinjhannah,lake minnetonka water,TreVeyon Henderson,RB,NE,78,won,,Jahan Dotson,15,1273657342591762432
+2,2025-09-16 08:35,colinjhannah,lake minnetonka water,Xavier Worthy,WR,KC,26,lost,outbid,,15,1273657435285893120
+2,2025-09-16 08:35,colinjhannah,lake minnetonka water,Christian McCaffrey,RB,SF,339,lost,outbid,,15,1273657492806590464
+2,2025-09-16 08:35,colinjhannah,lake minnetonka water,Darnell Mooney,WR,NYG,47,lost,outbid,,15,1273657568299868160
+2,2025-09-16 08:55,d3childs,GregswillDaBOLL,Christian McCaffrey,RB,SF,454,lost,outbid,,6,1273662605751259136
+2,2025-09-16 08:56,d3childs,GregswillDaBOLL,TreVeyon Henderson,RB,NE,53,lost,outbid,,6,1273662773892505600
+2,2025-09-16 08:58,dylan1990692,The Ghost of Martellus,Jayden Daniels,QB,WAS,146,lost,outbid,,8,1273663395614195712
+2,2025-09-16 08:58,dylan1990692,The Ghost of Martellus,Christian McCaffrey,RB,SF,186,lost,outbid,,8,1273663448617582592
+2,2025-09-16 08:59,dylan1990692,The Ghost of Martellus,Jacory Croskey-Merritt,RB,WAS,104,lost,outbid,,8,1273663585339334656
+2,2025-09-16 08:59,dylan1990692,The Ghost of Martellus,J.K. Dobbins,RB,DEN,78,lost,outbid,,8,1273663649784807424
+2,2025-09-16 09:26,celticsraider,Rasheevil Motherfuckers,Darnell Mooney,WR,NYG,56,won,,,16,1273670478472441856
+2,2025-09-16 09:46,clikes,clikes,Christian McCaffrey,RB,SF,254,lost,outbid,,2,1273675315201187840
+2,2025-09-16 09:46,clikes,clikes,Jayden Daniels,QB,WAS,111,lost,outbid,,2,1273675437758742528
+2,2025-09-16 09:48,celticsraider,Rasheevil Motherfuckers,Jacory Croskey-Merritt,RB,WAS,99,lost,outbid,,16,1273675784212467712
+2,2025-09-16 09:49,clikes,clikes,Jared Goff,QB,DET,131,lost,outbid,,2,1273676104539848704
+2,2025-09-16 09:49,clikes,clikes,J.K. Dobbins,RB,DEN,82,lost,outbid,,2,1273676269879296000
+2,2025-09-16 11:18,clevelandb0b,I hardly know herMayfield,Jared Goff,QB,DET,69,lost,outbid,,7,1273698618129281024
+2,2025-09-16 11:19,clevelandb0b,I hardly know herMayfield,J.K. Dobbins,RB,DEN,69,lost,outbid,,7,1273698725973217280
+2,2025-09-16 11:19,clevelandb0b,I hardly know herMayfield,Harold Fannin,TE,CLE,6,lost,outbid,,7,1273698811033706496
+2,2025-09-16 11:20,clevelandb0b,I hardly know herMayfield,Christian McCaffrey,RB,SF,501,won,,Isaac TeSlaa,7,1273699050759151616
+2,2025-09-16 11:24,dylan1990692,The Ghost of Martellus,Xavier Worthy,WR,KC,83,lost,outbid,,8,1273700088199258112
+2,2025-09-16 11:25,clevelandb0b,I hardly know herMayfield,Xavier Worthy,WR,KC,55,lost,outbid,,7,1273700304491126784
+2,2025-09-16 11:27,clevelandb0b,I hardly know herMayfield,Troy Franklin,WR,DEN,1,lost,outbid,,7,1273700824953921536
+2,2025-09-16 14:48,clikes,clikes,Jacory Croskey-Merritt,RB,WAS,89,lost,outbid,,2,1273751363901198336
+2,2025-09-16 16:59,jakwok21,Get To The Choppa!,Christian McCaffrey,RB,SF,207,lost,outbid,,14,1273784445404454912
+2,2025-09-16 17:00,jakwok21,Get To The Choppa!,Jayden Daniels,QB,WAS,11,lost,outbid,,14,1273784526790737920
+2,2025-09-16 17:00,jakwok21,Get To The Choppa!,Jared Goff,QB,DET,7,lost,outbid,,14,1273784567899131904
+2,2025-09-16 17:00,jakwok21,Get To The Choppa!,Jake Browning,QB,FA,1,lost,outbid,,14,1273784638132748288
+2,2025-09-16 17:00,jakwok21,Get To The Choppa!,J.K. Dobbins,RB,DEN,38,lost,outbid,,14,1273784692063080448
+2,2025-09-16 17:01,jakwok21,Get To The Choppa!,Xavier Worthy,WR,KC,21,lost,outbid,,14,1273784772534992896
+2,2025-09-16 17:01,jakwok21,Get To The Choppa!,Jacory Croskey-Merritt,RB,WAS,36,lost,outbid,,14,1273784831406256128
+2,2025-09-16 17:01,jakwok21,Get To The Choppa!,Darnell Mooney,WR,NYG,2,lost,outbid,,14,1273784867699568640
+2,2025-09-16 17:02,jakwok21,Get To The Choppa!,Jalen Nailor,WR,LV,2,lost,outbid,,14,1273785057307271168
+2,2025-09-16 17:24,jakwok21,Get To The Choppa!,TreVeyon Henderson,RB,NE,12,lost,outbid,,14,1273790716866232320
+2,2025-09-16 17:24,jakwok21,Get To The Choppa!,Troy Franklin,WR,DEN,1,lost,outbid,,14,1273790750710067200
+2,2025-09-16 17:26,jakwok21,Get To The Choppa!,Marvin Mims,WR,DEN,3,won,,Kendre Miller,14,1273791218580471808
+2,2025-09-16 17:26,jakwok21,Get To The Choppa!,DeMario Douglas,WR,NE,1,lost,roster_full,,14,1273791256933187584
+2,2025-09-16 17:27,jakwok21,Get To The Choppa!,Olamide Zaccheaus,WR,ATL,1,lost,roster_full,,14,1273791382737145856
+2,2025-09-16 17:33,jakwok21,Get To The Choppa!,Bryce Young,QB,CAR,1,lost,outbid,,14,1273793045715779584
+2,2025-09-16 17:36,jakwok21,Get To The Choppa!,Mark Andrews,TE,BAL,1,lost,outbid,,14,1273793793224613888
+2,2025-09-16 18:47,clikes,clikes,Xavier Worthy,WR,KC,31,lost,outbid,,2,1273811645692391424
+2,2025-09-16 18:50,clikes,clikes,Jalen Nailor,WR,LV,18,won,,Jaylen Wright,2,1273812197272739840
+2,2025-09-16 20:02,slikyjohnson,Brom Bones,Christian McCaffrey,RB,SF,200,lost,outbid,,11,1273830461319163905
+2,2025-09-16 20:03,slikyjohnson,Brom Bones,Jayden Daniels,QB,WAS,225,won,,Malik Washington,11,1273830559121956865
+2,2025-09-16 20:03,slikyjohnson,Brom Bones,Jared Goff,QB,DET,75,lost,outbid,,11,1273830682660995073
+2,2025-09-16 20:04,slikyjohnson,Brom Bones,J.K. Dobbins,RB,DEN,30,lost,outbid,,11,1273831023557222400
+2,2025-09-16 20:05,slikyjohnson,Brom Bones,Xavier Worthy,WR,KC,5,lost,outbid,,11,1273831196991684608
+2,2025-09-16 20:05,slikyjohnson,Brom Bones,Carson Wentz,QB,MIN,1,lost,outbid,,11,1273831274057846784
+2,2025-09-16 20:06,slikyjohnson,Brom Bones,Jacory Croskey-Merritt,RB,WAS,25,lost,outbid,,11,1273831325794574336
+2,2025-09-16 20:06,slikyjohnson,Brom Bones,Spencer Rattler,QB,NO,25,won,,Cade Otton,11,1273831382539337728
+2,2025-09-16 20:06,slikyjohnson,Brom Bones,TreVeyon Henderson,RB,NE,50,lost,outbid,,11,1273831494325899264
+2,2025-09-16 20:07,slikyjohnson,Brom Bones,Harold Fannin,TE,CLE,35,lost,outbid,,11,1273831601645551616
+2,2025-09-16 20:08,slikyjohnson,Brom Bones,Jake Browning,QB,FA,28,won,,,11,1273832019486347264
+2,2025-09-16 20:09,slikyjohnson,Brom Bones,Bryce Young,QB,CAR,15,lost,outbid,,11,1273832139367944192
+2,2025-09-16 20:11,jcmandel,jcmandel,Christian McCaffrey,RB,SF,421,lost,outbid,,13,1273832783088730112
+2,2025-09-16 20:13,jcmandel,jcmandel,J.K. Dobbins,RB,DEN,103,lost,outbid,,13,1273833137389989888
+2,2025-09-16 20:13,jcmandel,jcmandel,Jacory Croskey-Merritt,RB,WAS,104,lost,outbid,,13,1273833290431762432
+2,2025-09-16 20:15,jcmandel,jcmandel,Harold Fannin,TE,CLE,32,lost,outbid,,13,1273833689230356480
+2,2025-09-16 20:15,d3childs,GregswillDaBOLL,Jayden Daniels,QB,WAS,56,lost,outbid,,6,1273833806691835904
+2,2025-09-16 20:16,jcmandel,jcmandel,Harold Fannin,TE,CLE,32,lost,outbid,,13,1273833852502024192
+2,2025-09-16 20:16,jcmandel,jcmandel,Mark Andrews,TE,BAL,21,won,,,13,1273833915836035072
+2,2025-09-16 20:16,jcmandel,jcmandel,Mark Andrews,TE,BAL,21,lost,outbid,,13,1273833961897861120
+2,2025-09-16 20:27,emloose,TravFulgham ComebackSzn,J.K. Dobbins,RB,DEN,105,lost,outbid,,10,1273836838674501632
+2,2025-09-16 20:28,emloose,TravFulgham ComebackSzn,Jacory Croskey-Merritt,RB,WAS,76,lost,outbid,,10,1273836883897483264
+2,2025-09-16 20:28,emloose,TravFulgham ComebackSzn,Christian McCaffrey,RB,SF,451,lost,outbid,,10,1273836912804626433
+2,2025-09-16 21:15,d3childs,GregswillDaBOLL,Jacory Croskey-Merritt,RB,WAS,253,lost,outbid,,6,1273848725176864768
+2,2025-09-16 22:36,FlashUrTDs,Gutta’s Goon Squad,Jacory Croskey-Merritt,RB,WAS,333,won,,,5,1273869073482027008
+2,2025-09-16 22:36,FlashUrTDs,Gutta’s Goon Squad,J.K. Dobbins,RB,DEN,211,lost,roster_full,,5,1273869123385831425
+2,2025-09-16 22:37,FlashUrTDs,Gutta’s Goon Squad,Jared Goff,QB,DET,222,won,,Dameon Pierce,5,1273869403892502528
+2,2025-09-16 22:37,FlashUrTDs,Gutta’s Goon Squad,Jacory Croskey-Merritt,RB,WAS,333,lost,outbid,,5,1273869535153262592
+2,2025-09-16 22:38,FlashUrTDs,Gutta’s Goon Squad,J.K. Dobbins,RB,DEN,211,won,,Sean Tucker,5,1273869653705240576
+2,2025-09-16 22:39,FlashUrTDs,Gutta’s Goon Squad,Xavier Worthy,WR,KC,231,won,,Rashod Bateman,5,1273869973948747776
+2,2025-09-16 22:40,FlashUrTDs,Gutta’s Goon Squad,Troy Franklin,WR,DEN,111,lost,roster_full,,5,1273870098305667072
+2,2025-09-16 22:59,jodangles,jodangles,Jayden Daniels,QB,WAS,71,lost,outbid,,3,1273875011974754304
+2,2025-09-16 23:01,jodangles,jodangles,J.K. Dobbins,RB,DEN,71,lost,outbid,,3,1273875589056442368
+2,2025-09-16 23:02,jodangles,jodangles,Xavier Worthy,WR,KC,60,lost,outbid,,3,1273875627589529600
+2,2025-09-16 23:02,jodangles,jodangles,Jacory Croskey-Merritt,RB,WAS,60,lost,outbid,,3,1273875677656936448
+2,2025-09-16 23:02,jodangles,jodangles,Darnell Mooney,WR,NYG,1,lost,outbid,,3,1273875796129218560
+2,2025-09-16 23:03,jodangles,jodangles,TreVeyon Henderson,RB,NE,60,lost,outbid,,3,1273875864018243584
+2,2025-09-16 23:03,jodangles,jodangles,Troy Franklin,WR,DEN,20,lost,outbid,,3,1273875977084080128
+2,2025-09-16 23:03,jodangles,jodangles,Chris Rodriguez,RB,JAX,2,won,,Jarquez Hunter,3,1273876080029093888
+2,2025-09-16 23:05,jodangles,jodangles,Christian McCaffrey,RB,SF,100,lost,outbid,,3,1273876480178266112
+2,2025-09-16 23:06,jodangles,jodangles,Xavier Worthy,WR,KC,60,lost,outbid,,3,1273876691042705408
+2,2025-09-16 23:07,jodangles,jodangles,TreVeyon Henderson,RB,NE,60,lost,outbid,,3,1273876874090524673
+2,2025-09-16 23:07,jodangles,jodangles,Jacory Croskey-Merritt,RB,WAS,60,lost,outbid,,3,1273876951639011328
+2,2025-09-16 23:07,jodangles,jodangles,Chris Rodriguez,RB,JAX,2,lost,outbid,,3,1273877082358681600
+2,2025-09-16 23:08,jodangles,jodangles,Darnell Mooney,WR,NYG,1,lost,outbid,,3,1273877150943973376
+2,2025-09-16 23:10,jodangles,jodangles,J.K. Dobbins,RB,DEN,60,lost,outbid,,3,1273877749714423808
+2,2025-09-16 23:13,jodangles,jodangles,Troy Franklin,WR,DEN,15,lost,outbid,,3,1273878466097344512
+2,2025-09-16 23:13,jodangles,jodangles,Chris Rodriguez,RB,JAX,2,lost,outbid,,3,1273878516915519488
+2,2025-09-16 23:13,jodangles,jodangles,Chris Rodriguez,RB,JAX,2,lost,outbid,,3,1273878578299150336
+2,2025-09-16 23:14,jodangles,jodangles,Darnell Mooney,WR,NYG,1,lost,outbid,,3,1273878646016196608
+2,2025-09-16 23:14,jodangles,jodangles,Jalen Nailor,WR,LV,5,lost,outbid,,3,1273878713175388160
+2,2025-09-16 23:14,jodangles,jodangles,Jalen Nailor,WR,LV,5,lost,outbid,,3,1273878743235985408
+2,2025-09-16 23:14,jodangles,jodangles,Jalen Nailor,WR,LV,5,lost,outbid,,3,1273878774219300864
+2,2025-09-16 23:14,jodangles,jodangles,Dontayvion Wicks,WR,PHI,20,lost,outbid,,3,1273878825037479936
+2,2025-09-16 23:14,jodangles,jodangles,Dontayvion Wicks,WR,PHI,20,lost,outbid,,3,1273878867961995264
+2,2025-09-16 23:15,jodangles,jodangles,Dontayvion Wicks,WR,PHI,20,lost,outbid,,3,1273878898400059392
+2,2025-09-16 23:17,jodangles,jodangles,Troy Franklin,WR,DEN,20,lost,outbid,,3,1273879431294758912
+2,2025-09-16 23:17,jodangles,jodangles,Troy Franklin,WR,DEN,20,lost,outbid,,3,1273879514610409472
+2,2025-09-16 23:35,clevelandb0b,I hardly know herMayfield,Jacory Croskey-Merritt,RB,WAS,31,lost,outbid,,7,1273884031603179520
+2,2025-09-17 00:08,greggy2ships,Heads Will DaBOLL,Harold Fannin,TE,CLE,35,won,,Jaylin Noel,9,1273892433616179200
+2,2025-09-17 00:09,greggy2ships,Heads Will DaBOLL,Ja'Tavion Sanders,TE,CAR,2,lost,roster_full,,9,1273892580718841856
+2,2025-09-17 00:10,greggy2ships,Heads Will DaBOLL,Xavier Worthy,WR,KC,105,lost,outbid,,9,1273892835392782336
+2,2025-09-17 00:11,greggy2ships,Heads Will DaBOLL,Troy Franklin,WR,DEN,29,lost,outbid,,9,1273893034899021824
+2,2025-09-17 00:11,greggy2ships,Heads Will DaBOLL,Jacory Croskey-Merritt,RB,WAS,148,lost,outbid,,9,1273893188582518784
+2,2025-09-17 00:12,greggy2ships,Heads Will DaBOLL,TreVeyon Henderson,RB,NE,65,lost,outbid,,9,1273893246258388992
+2,2025-09-17 00:12,greggy2ships,Heads Will DaBOLL,Jayden Daniels,QB,WAS,180,lost,outbid,,9,1273893303758127104
+2,2025-09-17 00:16,greggy2ships,Heads Will DaBOLL,Jared Goff,QB,DET,42,lost,outbid,,9,1273894301826289664
+2,2025-09-17 00:16,greggy2ships,Heads Will DaBOLL,Carson Wentz,QB,MIN,3,won,,,9,1273894425759617024
+3,2025-09-17 05:52,dylan1990692,The Ghost of Martellus,Jeremy McNichols,RB,WAS,7,won,,,8,1273978967686156288
+3,2025-09-17 05:53,dylan1990692,The Ghost of Martellus,Rashod Bateman,WR,BAL,3,won,,,8,1273979205167640576
+3,2025-09-17 07:15,jodangles,jodangles,Ja'Tavion Sanders,TE,CAR,2,lost,outbid,,3,1273999743327932416
+3,2025-09-17 07:15,jodangles,jodangles,Rashod Bateman,WR,BAL,2,lost,outbid,,3,1273999832331096064
+3,2025-09-17 07:25,baker28,Krumm,Cade Otton,TE,TB,1,lost,outbid,,1,1274002355892809728
+3,2025-09-17 07:25,baker28,Krumm,Elijah Arroyo,TE,SEA,1,lost,roster_full,,1,1274002414088757248
+3,2025-09-17 07:26,baker28,Krumm,Terrance Ferguson,TE,LAR,1,lost,roster_full,,1,1274002576588685313
+3,2025-09-17 07:51,baker28,Krumm,Ja'Tavion Sanders,TE,CAR,2,won,,,1,1274008846540496896
+3,2025-09-17 08:04,colinjhannah,lake minnetonka water,Isaac TeSlaa,WR,DET,1,won,,Jaleel McLaughlin,15,1274012070097997824
+3,2025-09-17 08:12,clikes,clikes,Marcus Mariota,QB,WAS,54,won,,,2,1274014142369394688
+3,2025-09-17 08:30,d3childs,GregswillDaBOLL,Jeremy McNichols,RB,WAS,1,lost,outbid,,6,1274018760830758912
+3,2025-09-17 09:14,clikes,clikes,Tyrod Taylor,QB,GB,69,won,,,2,1274029652574228480
+3,2025-09-17 11:56,dylan1990692,The Ghost of Martellus,Tyrod Taylor,QB,GB,39,lost,outbid,,8,1274070481774837760
+3,2025-09-17 12:58,jakwok21,Get To The Choppa!,Isaac TeSlaa,WR,DET,1,lost,outbid,,14,1274086234259492864
+3,2025-09-17 22:30,jcmandel,jcmandel,Tyrod Taylor,QB,GB,5,lost,outbid,,13,1274230081765511168
+3,2025-09-17 22:31,jcmandel,jcmandel,Sterling Shepard,WR,NYJ,1,won,,Jake Tonges,13,1274230191148781568
+3,2025-09-18 09:03,baker28,Krumm,Malik Washington,WR,MIA,8,won,,Noah Fant,1,1274389313261428736
+3,2025-09-18 09:44,clevelandb0b,I hardly know herMayfield,Chimere Dike,WR,TEN,1,won,,,7,1274399672605081600
+3,2025-09-18 11:35,jcmandel,jcmandel,Cade Otton,TE,TB,2,won,,Theo Johnson,13,1274427517058428928
+3,2025-09-18 14:34,d3childs,GregswillDaBOLL,Rashod Bateman,WR,BAL,1,lost,outbid,,6,1274472763813285888
+3,2025-09-18 14:35,d3childs,GregswillDaBOLL,Chris Brooks,RB,GB,3,won,,,6,1274472852812222464
+3,2025-09-18 14:57,colinjhannah,lake minnetonka water,Parker Washington,WR,JAX,1,won,,,15,1274478556864344064
+3,2025-09-18 16:13,celticsraider,Rasheevil Motherfuckers,Tyler Higbee,TE,LAR,1,won,,Darren Waller,16,1274497651286474752
+3,2025-09-18 18:53,clikes,clikes,Luke Musgrave,TE,GB,2,won,,Jack Bech,2,1274537863223971840
+3,2025-09-19 12:11,jodangles,jodangles,Jake Tonges,TE,SF,1,won,,,3,1274799160314306560
+3,2025-09-19 12:12,jodangles,jodangles,Theo Johnson,TE,NYG,1,lost,roster_full,,3,1274799209798717440
+3,2025-09-19 23:58,celticsraider,Rasheevil Motherfuckers,KaVontae Turpin,WR,DAL,1,won,,Brandin Cooks,16,1274977060846063616
+3,2025-09-21 10:43,jodangles,jodangles,Cam Akers,RB,FA,1,won,,,3,1275501616287469568
+3,2025-09-21 10:43,jodangles,jodangles,Kendre Miller,RB,NO,1,lost,roster_full,,3,1275501638068473856
+3,2025-09-21 22:47,Hockeystar90,Hockeystar90,Kalif Raymond,WR,CHI,1,won,,DJ Giddens,18,1275684000542752768
+3,2025-09-23 09:17,TheCommish1,Whopper Jr Value Meal,Jayden Daniels,QB,WAS,215,lost,outbid,,4,1276204921141616640
+3,2025-09-23 09:18,TheCommish1,Whopper Jr Value Meal,Breece Hall,RB,NYJ,100,lost,outbid,,4,1276204989311643648
+3,2025-09-23 09:18,TheCommish1,Whopper Jr Value Meal,Ladd McConkey,WR,LAC,251,won,,,4,1276205030411603968
+3,2025-09-23 11:01,baker28,Krumm,Justin Herbert,QB,LAC,55,lost,outbid,,1,1276230929102147584
+3,2025-09-23 11:04,baker28,Krumm,Brock Bowers,TE,LV,168,lost,outbid,,1,1276231630347829248
+3,2025-09-23 11:10,baker28,Krumm,Breece Hall,RB,NYJ,86,lost,outbid,,1,1276233179463700480
+3,2025-09-23 11:10,baker28,Krumm,Ladd McConkey,WR,LAC,78,lost,outbid,,1,1276233218755940352
+3,2025-09-23 11:10,baker28,Krumm,Jerry Jeudy,WR,CLE,40,lost,outbid,,1,1276233285780910080
+3,2025-09-23 12:04,colinjhannah,lake minnetonka water,Justin Herbert,QB,LAC,80,lost,outbid,,15,1276246862151573504
+3,2025-09-23 12:04,colinjhannah,lake minnetonka water,Breece Hall,RB,NYJ,100,lost,outbid,,15,1276246916111306752
+3,2025-09-23 12:04,colinjhannah,lake minnetonka water,Brock Bowers,TE,LV,155,lost,outbid,,15,1276246958578597888
+3,2025-09-23 12:05,colinjhannah,lake minnetonka water,Ladd McConkey,WR,LAC,120,lost,outbid,,15,1276247009157742592
+3,2025-09-23 12:05,colinjhannah,lake minnetonka water,Marquise Brown,WR,PHI,15,lost,outbid,,15,1276247050194788352
+3,2025-09-23 12:28,TheCommish1,Whopper Jr Value Meal,Justin Herbert,QB,LAC,100,lost,outbid,,4,1276252984887513088
+3,2025-09-23 12:30,TheCommish1,Whopper Jr Value Meal,Brock Bowers,TE,LV,100,lost,outbid,,4,1276253280825008128
+3,2025-09-23 13:20,clevelandb0b,I hardly know herMayfield,Ladd McConkey,WR,LAC,75,lost,outbid,,7,1276266047577530368
+3,2025-09-23 13:21,clevelandb0b,I hardly know herMayfield,Marquise Brown,WR,PHI,31,won,,Noah Gray,7,1276266236086341632
+3,2025-09-23 13:21,clevelandb0b,I hardly know herMayfield,Jerry Jeudy,WR,CLE,4,lost,outbid,,7,1276266331280277504
+3,2025-09-23 13:22,clevelandb0b,I hardly know herMayfield,Justin Herbert,QB,LAC,75,lost,outbid,,7,1276266482677866496
+3,2025-09-23 14:28,Hockeystar90,Hockeystar90,Breece Hall,RB,NYJ,12,lost,outbid,,18,1276283183955976192
+3,2025-09-23 14:29,Hockeystar90,Hockeystar90,Ladd McConkey,WR,LAC,10,lost,outbid,,18,1276283271113605120
+3,2025-09-23 15:27,emloose,TravFulgham ComebackSzn,Breece Hall,RB,NYJ,25,lost,outbid,,10,1276297864158392320
+3,2025-09-23 15:27,emloose,TravFulgham ComebackSzn,Ladd McConkey,WR,LAC,25,lost,outbid,,10,1276297931384721408
+3,2025-09-23 15:27,emloose,TravFulgham ComebackSzn,Kareem Hunt,RB,FA,22,lost,outbid,,10,1276297986699194368
+3,2025-09-23 15:35,emloose,TravFulgham ComebackSzn,Brock Bowers,TE,LV,25,lost,outbid,,10,1276299889768144896
+3,2025-09-23 15:35,emloose,TravFulgham ComebackSzn,Jerry Jeudy,WR,CLE,10,lost,outbid,,10,1276299936513671168
+3,2025-09-23 15:35,emloose,TravFulgham ComebackSzn,Jalen Tolbert,WR,MIA,10,won,,,10,1276300009729433600
+3,2025-09-23 15:57,dylan1990692,The Ghost of Martellus,Ladd McConkey,WR,LAC,103,lost,outbid,,8,1276305591878291456
+3,2025-09-23 15:58,dylan1990692,The Ghost of Martellus,Josh Downs,WR,IND,46,won,,Jalen Royals,8,1276305649042464768
+3,2025-09-23 15:58,dylan1990692,The Ghost of Martellus,Justin Herbert,QB,LAC,207,lost,outbid,,8,1276305752872468480
+3,2025-09-23 15:58,dylan1990692,The Ghost of Martellus,Tua Tagovailoa,QB,ATL,61,won,,,8,1276305825488465920
+3,2025-09-23 15:59,dylan1990692,The Ghost of Martellus,Spencer Rattler,QB,NO,31,lost,roster_full,,8,1276305978597314560
+3,2025-09-23 20:01,dylan1990692,The Ghost of Martellus,Brock Bowers,TE,LV,119,lost,outbid,,8,1276366941379907584
+3,2025-09-23 20:44,greggy2ships,Heads Will DaBOLL,Jayden Daniels,QB,WAS,150,lost,outbid,,9,1276377679121100801
+3,2025-09-23 20:44,greggy2ships,Heads Will DaBOLL,Justin Herbert,QB,LAC,165,lost,outbid,,9,1276377750743031808
+3,2025-09-23 20:45,greggy2ships,Heads Will DaBOLL,Breece Hall,RB,NYJ,45,lost,outbid,,9,1276377892816695296
+3,2025-09-23 20:45,greggy2ships,Heads Will DaBOLL,Ladd McConkey,WR,LAC,80,lost,outbid,,9,1276378081900105728
+3,2025-09-23 20:46,clikes,clikes,Jayden Daniels,QB,WAS,333,won,,Luke Musgrave,2,1276378125927727104
+3,2025-09-23 20:46,clikes,clikes,Brock Bowers,TE,LV,175,lost,outbid,,2,1276378257742127104
+3,2025-09-23 20:46,clikes,clikes,Breece Hall,RB,NYJ,176,won,,,2,1276378341749854208
+3,2025-09-23 20:47,clikes,clikes,Ladd McConkey,WR,LAC,182,lost,outbid,,2,1276378411853422592
+3,2025-09-23 20:48,clikes,clikes,Justin Herbert,QB,LAC,252,won,,Tyrod Taylor,2,1276378770906836992
+3,2025-09-23 21:08,d3childs,GregswillDaBOLL,Jayden Daniels,QB,WAS,125,lost,outbid,,6,1276383837563142144
+3,2025-09-23 21:08,d3childs,GregswillDaBOLL,Justin Herbert,QB,LAC,100,lost,outbid,,6,1276383876792471552
+3,2025-09-23 21:09,d3childs,GregswillDaBOLL,Breece Hall,RB,NYJ,50,lost,outbid,,6,1276383924615925760
+3,2025-09-23 21:09,d3childs,GregswillDaBOLL,Ladd McConkey,WR,LAC,100,lost,outbid,,6,1276383995222839296
+3,2025-09-23 21:09,d3childs,GregswillDaBOLL,Kareem Hunt,RB,FA,25,lost,outbid,,6,1276384103989522432
+3,2025-09-23 21:17,celticsraider,Rasheevil Motherfuckers,Breece Hall,RB,NYJ,145,lost,outbid,,16,1276386105792405504
+3,2025-09-23 21:18,celticsraider,Rasheevil Motherfuckers,Justin Herbert,QB,LAC,245,lost,outbid,,16,1276386296381607936
+3,2025-09-23 21:18,celticsraider,Rasheevil Motherfuckers,Brock Bowers,TE,LV,145,lost,outbid,,16,1276386349036863488
+3,2025-09-23 21:19,celticsraider,Rasheevil Motherfuckers,Jayden Daniels,QB,WAS,245,lost,outbid,,16,1276386613319958528
+3,2025-09-23 21:21,jcmandel,jcmandel,Jayden Daniels,QB,WAS,176,lost,outbid,,13,1276386954266562560
+3,2025-09-23 21:21,jcmandel,jcmandel,Justin Herbert,QB,LAC,154,lost,outbid,,13,1276387029524938752
+3,2025-09-23 21:21,jcmandel,jcmandel,Brock Bowers,TE,LV,126,lost,outbid,,13,1276387108008783872
+3,2025-09-23 21:22,jcmandel,jcmandel,Ladd McConkey,WR,LAC,183,lost,outbid,,13,1276387386707693568
+3,2025-09-23 21:24,jcmandel,jcmandel,Breece Hall,RB,NYJ,166,lost,outbid,,13,1276387660377649154
+3,2025-09-23 21:25,jcmandel,jcmandel,Kareem Hunt,RB,FA,43,won,,Cade Otton,13,1276387922831998976
+3,2025-09-23 21:26,jcmandel,jcmandel,Jerry Jeudy,WR,CLE,53,won,,Sterling Shepard,13,1276388180722995200
+3,2025-09-23 22:16,baker28,Krumm,Kareem Hunt,RB,FA,7,lost,outbid,,1,1276400806643404800
+3,2025-09-23 22:17,baker28,Krumm,Breece Hall,RB,NYJ,86,lost,outbid,,1,1276401159388557312
+3,2025-09-23 22:18,baker28,Krumm,Ladd McConkey,WR,LAC,78,lost,outbid,,1,1276401275520421888
+3,2025-09-23 22:19,baker28,Krumm,Jalen Tolbert,WR,MIA,8,lost,outbid,,1,1276401607247921152
+3,2025-09-23 22:19,baker28,Krumm,Jalen Tolbert,WR,MIA,8,lost,outbid,,1,1276401635622395904
+3,2025-09-23 22:24,d3childs,GregswillDaBOLL,Emari Demercado,RB,DAL,25,won,,Chris Brooks,6,1276402903946399744
+3,2025-09-23 22:25,d3childs,GregswillDaBOLL,Marquise Brown,WR,PHI,10,lost,outbid,,6,1276403073475952640
+3,2025-09-23 22:32,jodangles,jodangles,Breece Hall,RB,NYJ,96,lost,outbid,,3,1276404828393709568
+3,2025-09-23 22:32,jodangles,jodangles,Ladd McConkey,WR,LAC,96,lost,outbid,,3,1276404885104902145
+3,2025-09-23 22:33,jodangles,jodangles,Jayden Daniels,QB,WAS,100,lost,outbid,,3,1276405020421550080
+3,2025-09-23 22:33,jodangles,jodangles,Justin Herbert,QB,LAC,100,lost,outbid,,3,1276405074070888448
+3,2025-09-23 22:33,jodangles,jodangles,Brock Bowers,TE,LV,82,lost,outbid,,3,1276405147131482112
+3,2025-09-23 22:33,jodangles,jodangles,Jerry Jeudy,WR,CLE,51,lost,outbid,,3,1276405259584933888
+3,2025-09-23 22:34,jodangles,jodangles,Kareem Hunt,RB,FA,11,lost,outbid,,3,1276405332985266176
+3,2025-09-23 22:34,jodangles,jodangles,Josh Downs,WR,IND,31,lost,outbid,,3,1276405409279676416
+3,2025-09-23 22:34,jodangles,jodangles,Jalen Tolbert,WR,MIA,2,lost,outbid,,3,1276405460391464960
+3,2025-09-23 22:45,greggy2ships,Heads Will DaBOLL,Brock Bowers,TE,LV,180,won,,J.J. McCarthy,9,1276408114819653632
+3,2025-09-23 22:47,jodangles,jodangles,Jerry Jeudy,WR,CLE,51,lost,outbid,,3,1276408730736414720
+3,2025-09-23 22:48,jodangles,jodangles,Josh Downs,WR,IND,31,lost,outbid,,3,1276408800101826560
+3,2025-09-23 22:48,jodangles,jodangles,Kareem Hunt,RB,FA,11,lost,outbid,,3,1276408876543008769
+3,2025-09-23 22:48,jodangles,jodangles,Jalen Tolbert,WR,MIA,2,lost,outbid,,3,1276408976765878272
+3,2025-09-23 23:30,jakwok21,Get To The Choppa!,Jayden Daniels,QB,WAS,137,lost,outbid,,14,1276419553173188608
+3,2025-09-23 23:31,jakwok21,Get To The Choppa!,Justin Herbert,QB,LAC,83,lost,outbid,,14,1276419727584956416
+3,2025-09-23 23:31,jakwok21,Get To The Choppa!,Tua Tagovailoa,QB,ATL,6,lost,outbid,,14,1276419772644356096
+3,2025-09-23 23:31,jakwok21,Get To The Choppa!,Brock Bowers,TE,LV,147,lost,outbid,,14,1276419838398443520
+3,2025-09-23 23:32,jakwok21,Get To The Choppa!,Jake Browning,QB,FA,1,won,,Keaton Mitchell,14,1276419879053824000
+3,2025-09-23 23:32,jakwok21,Get To The Choppa!,Breece Hall,RB,NYJ,18,lost,outbid,,14,1276419923698003968
+3,2025-09-23 23:32,jakwok21,Get To The Choppa!,Ladd McConkey,WR,LAC,186,lost,outbid,,14,1276419995328348160
+3,2025-09-23 23:32,jakwok21,Get To The Choppa!,Jerry Jeudy,WR,CLE,8,lost,outbid,,14,1276420042120003584
+3,2025-09-23 23:32,jakwok21,Get To The Choppa!,Kareem Hunt,RB,FA,2,lost,outbid,,14,1276420090681651200
+3,2025-09-23 23:33,jakwok21,Get To The Choppa!,Marquise Brown,WR,PHI,6,lost,outbid,,14,1276420155206799360
+4,2025-09-24 04:42,celticsraider,Rasheevil Motherfuckers,Sterling Shepard,WR,NYJ,10,lost,outbid,,16,1276497988553814016
+4,2025-09-24 07:11,d3childs,GregswillDaBOLL,Sterling Shepard,WR,NYJ,1,lost,outbid,,6,1276535548739084288
+4,2025-09-24 07:31,TheCommish1,Whopper Jr Value Meal,Sterling Shepard,WR,NYJ,1,lost,outbid,,4,1276540484369551360
+4,2025-09-24 07:35,dylan1990692,The Ghost of Martellus,Spencer Rattler,QB,NO,13,won,,Michael Wilson,8,1276541533117501440
+4,2025-09-25 11:18,baker28,Krumm,Tyrone Tracy,RB,NYG,1,lost,roster_full,,1,1276960086970867712
+4,2025-09-25 11:19,baker28,Krumm,Oronde Gadsden,TE,LAC,1,won,,Ja'Tavion Sanders,1,1276960353355304960
+4,2025-09-26 01:19,greggy2ships,Heads Will DaBOLL,Sterling Shepard,WR,NYJ,13,won,,,9,1277171723162124288
+4,2025-09-27 08:15,d3childs,GregswillDaBOLL,Zavier Scott,RB,CHI,1,won,,,6,1277638807688056832
+4,2025-09-30 07:12,baker28,Krumm,Matthew Golden,WR,GB,66,lost,outbid,,1,1278710051871141888
+4,2025-09-30 07:36,baker28,Krumm,David Montgomery,RB,HOU,45,lost,outbid,,1,1278716044944363520
+4,2025-09-30 07:36,baker28,Krumm,Tony Pollard,RB,TEN,40,lost,outbid,,1,1278716069304889344
+4,2025-09-30 07:36,baker28,Krumm,Chris Godwin,WR,TB,43,lost,outbid,,1,1278716104918728704
+4,2025-09-30 07:36,baker28,Krumm,Troy Franklin,WR,DEN,33,lost,outbid,,1,1278716167229284352
+4,2025-09-30 07:36,baker28,Krumm,Ladd McConkey,WR,LAC,33,lost,outbid,,1,1278716207863693312
+4,2025-09-30 07:37,baker28,Krumm,Brenton Strange,TE,JAX,53,won,,Oronde Gadsden,1,1278716278785216512
+4,2025-09-30 08:39,jcmandel,jcmandel,Dak Prescott,QB,DAL,134,lost,outbid,,13,1278731886117539840
+4,2025-09-30 08:40,jcmandel,jcmandel,Daniel Jones,QB,IND,69,lost,outbid,,13,1278732238434897920
+4,2025-09-30 09:24,celticsraider,Rasheevil Motherfuckers,Chris Godwin,WR,TB,115,won,,Dylan Sampson,16,1278743279524933632
+4,2025-09-30 09:24,celticsraider,Rasheevil Motherfuckers,Darren Waller,TE,CAR,10,lost,outbid,,16,1278743358000332800
+4,2025-09-30 10:06,colinjhannah,lake minnetonka water,Dak Prescott,QB,DAL,140,won,,,15,1278753956801028096
+4,2025-09-30 10:07,colinjhannah,lake minnetonka water,Ladd McConkey,WR,LAC,60,lost,outbid,,15,1278754048333316096
+4,2025-09-30 10:07,colinjhannah,lake minnetonka water,CeeDee Lamb,WR,DAL,100,lost,outbid,,15,1278754111608623104
+4,2025-09-30 10:14,colinjhannah,lake minnetonka water,Chris Godwin,WR,TB,30,lost,outbid,,15,1278755837057200128
+4,2025-09-30 10:14,colinjhannah,lake minnetonka water,Tee Higgins,WR,CIN,35,lost,outbid,,15,1278755900361818112
+4,2025-09-30 10:47,dylan1990692,The Ghost of Martellus,Troy Franklin,WR,DEN,5,lost,outbid,,8,1278764183994789888
+4,2025-09-30 11:58,Hockeystar90,Hockeystar90,David Montgomery,RB,HOU,15,lost,outbid,,18,1278782134537973760
+4,2025-09-30 11:59,Hockeystar90,Hockeystar90,Tony Pollard,RB,TEN,5,lost,outbid,,18,1278782427124240384
+4,2025-09-30 12:00,Hockeystar90,Hockeystar90,Isiah Pacheco,RB,DET,7,lost,outbid,,18,1278782536545239040
+4,2025-09-30 12:36,emloose,TravFulgham ComebackSzn,Ladd McConkey,WR,LAC,77,lost,outbid,,10,1278791594979368960
+4,2025-09-30 12:36,emloose,TravFulgham ComebackSzn,Chris Godwin,WR,TB,25,lost,outbid,,10,1278791689531592704
+4,2025-09-30 12:36,emloose,TravFulgham ComebackSzn,Tee Higgins,WR,CIN,83,won,,,10,1278791737770262528
+4,2025-09-30 12:37,emloose,TravFulgham ComebackSzn,Matthew Golden,WR,GB,45,lost,outbid,,10,1278791840090324992
+4,2025-09-30 12:37,emloose,TravFulgham ComebackSzn,David Montgomery,RB,HOU,67,lost,outbid,,10,1278791939256229888
+4,2025-09-30 12:37,emloose,TravFulgham ComebackSzn,Tony Pollard,RB,TEN,111,won,,,10,1278791985586515968
+4,2025-09-30 13:11,colinjhannah,lake minnetonka water,Daniel Jones,QB,IND,45,lost,outbid,,15,1278800390992699392
+4,2025-09-30 14:19,clevelandb0b,I hardly know herMayfield,Daniel Jones,QB,IND,45,lost,outbid,,7,1278817627237527552
+4,2025-09-30 14:20,clevelandb0b,I hardly know herMayfield,Troy Franklin,WR,DEN,37,won,,,7,1278817903625392128
+4,2025-09-30 14:21,clevelandb0b,I hardly know herMayfield,Dyami Brown,WR,WAS,1,lost,roster_full,,7,1278818034756096000
+4,2025-09-30 14:22,clevelandb0b,I hardly know herMayfield,Dak Prescott,QB,DAL,45,lost,outbid,,7,1278818242743263232
+4,2025-09-30 14:23,clevelandb0b,I hardly know herMayfield,Tee Higgins,WR,CIN,21,lost,outbid,,7,1278818591524798464
+4,2025-09-30 16:29,clikes,clikes,Dalton Kincaid,TE,BUF,34,lost,outbid,,2,1278850131877179392
+4,2025-09-30 16:32,clikes,clikes,Isaiah Davis,RB,NYJ,3,won,,Tre' Harris,2,1278850957840486400
+4,2025-09-30 17:21,d3childs,GregswillDaBOLL,Ladd McConkey,WR,LAC,25,lost,outbid,,6,1278863354294730752
+4,2025-09-30 17:21,d3childs,GregswillDaBOLL,David Montgomery,RB,HOU,53,lost,outbid,,6,1278863404357943296
+4,2025-09-30 17:22,d3childs,GregswillDaBOLL,Dalton Kincaid,TE,BUF,33,lost,outbid,,6,1278863509332987904
+4,2025-09-30 18:38,clikes,clikes,Isiah Pacheco,RB,DET,18,lost,outbid,,2,1278882734747451392
+4,2025-09-30 20:41,colinjhannah,lake minnetonka water,Dillon Gabriel,QB,CLE,1,lost,roster_full,,15,1278913788292104192
+4,2025-09-30 21:20,celticsraider,Rasheevil Motherfuckers,Daniel Jones,QB,IND,201,won,,Kyle Monangai,16,1278923429088628736
+4,2025-09-30 21:20,celticsraider,Rasheevil Motherfuckers,Tony Pollard,RB,TEN,57,lost,outbid,,16,1278923556977139712
+4,2025-09-30 21:21,celticsraider,Rasheevil Motherfuckers,Dalton Kincaid,TE,BUF,69,won,,Tyler Higbee,16,1278923658001121280
+4,2025-09-30 21:21,celticsraider,Rasheevil Motherfuckers,Brenton Strange,TE,JAX,12,lost,outbid,,16,1278923719548370944
+4,2025-09-30 21:21,celticsraider,Rasheevil Motherfuckers,Darren Waller,TE,CAR,11,lost,outbid,,16,1278923751802544128
+4,2025-09-30 21:27,jcmandel,jcmandel,Ladd McConkey,WR,LAC,91,lost,outbid,,13,1278925185910595585
+4,2025-09-30 21:27,d3childs,GregswillDaBOLL,Dak Prescott,QB,DAL,75,lost,outbid,,6,1278925333965320192
+4,2025-09-30 21:28,jcmandel,jcmandel,David Montgomery,RB,HOU,76,lost,outbid,,13,1278925385844690944
+4,2025-09-30 21:28,d3childs,GregswillDaBOLL,Tony Pollard,RB,TEN,26,lost,outbid,,6,1278925411991982080
+4,2025-09-30 21:29,jcmandel,jcmandel,Chris Godwin,WR,TB,43,lost,outbid,,13,1278925800082534400
+4,2025-09-30 21:30,jcmandel,jcmandel,Tee Higgins,WR,CIN,51,lost,outbid,,13,1278925880579624960
+4,2025-09-30 21:30,jcmandel,jcmandel,Darius Slayton,WR,FA,33,won,,,13,1278925919150419968
+4,2025-09-30 21:30,jcmandel,jcmandel,Isaiah Bond,WR,CLE,18,won,,,13,1278925955250819073
+4,2025-09-30 21:31,jcmandel,jcmandel,Tony Pollard,RB,TEN,91,lost,outbid,,13,1278926216149110784
+4,2025-09-30 21:36,jcmandel,jcmandel,Brenton Strange,TE,JAX,21,lost,outbid,,13,1278927437740142592
+4,2025-09-30 21:41,jodangles,jodangles,David Montgomery,RB,HOU,91,won,,Cam Akers,3,1278928843620487168
+4,2025-09-30 21:44,jodangles,jodangles,Ladd McConkey,WR,LAC,91,lost,outbid,,3,1278929501903912960
+4,2025-09-30 21:45,jodangles,jodangles,Tony Pollard,RB,TEN,66,lost,outbid,,3,1278929697656299520
+4,2025-09-30 21:45,jodangles,jodangles,Tony Pollard,RB,TEN,66,lost,outbid,,3,1278929849737564160
+4,2025-09-30 21:47,jodangles,jodangles,Dalton Kincaid,TE,BUF,36,lost,outbid,,3,1278930302030327808
+4,2025-09-30 21:48,jodangles,jodangles,Brenton Strange,TE,JAX,36,lost,outbid,,3,1278930463909482496
+4,2025-09-30 21:49,jodangles,jodangles,Chris Godwin,WR,TB,66,lost,outbid,,3,1278930758039252992
+4,2025-09-30 21:51,jodangles,jodangles,Chris Godwin,WR,TB,66,lost,outbid,,3,1278931193886154752
+4,2025-09-30 21:53,jodangles,jodangles,Isiah Pacheco,RB,DET,46,lost,roster_full,,3,1278931695185178624
+4,2025-09-30 21:53,jodangles,jodangles,Isiah Pacheco,RB,DET,46,won,,Kyle Williams,3,1278931829558112256
+4,2025-09-30 21:55,jodangles,jodangles,Darren Waller,TE,CAR,33,won,,Jake Tonges,3,1278932320086134784
+4,2025-09-30 21:57,jodangles,jodangles,Troy Franklin,WR,DEN,31,lost,outbid,,3,1278932718809276416
+4,2025-09-30 21:57,jodangles,jodangles,Troy Franklin,WR,DEN,31,lost,outbid,,3,1278932829333393408
+4,2025-09-30 21:58,jodangles,jodangles,Troy Franklin,WR,DEN,31,lost,outbid,,3,1278932964989751296
+4,2025-09-30 21:59,jodangles,jodangles,Darius Slayton,WR,FA,31,lost,outbid,,3,1278933211933601792
+4,2025-09-30 21:59,jodangles,jodangles,Darius Slayton,WR,FA,31,lost,outbid,,3,1278933320977088512
+4,2025-09-30 21:59,jodangles,jodangles,Darius Slayton,WR,FA,31,lost,outbid,,3,1278933426228961280
+4,2025-09-30 22:00,jodangles,jodangles,Dak Prescott,QB,DAL,85,lost,outbid,,3,1278933558949322752
+4,2025-09-30 22:00,jodangles,jodangles,Daniel Jones,QB,IND,65,lost,outbid,,3,1278933659893661696
+4,2025-09-30 22:07,FlashUrTDs,Gutta’s Goon Squad,Dak Prescott,QB,DAL,1,lost,outbid,,5,1278935419236397056
+4,2025-09-30 22:08,FlashUrTDs,Gutta’s Goon Squad,Daniel Jones,QB,IND,1,lost,outbid,,5,1278935453587763200
+4,2025-09-30 22:08,FlashUrTDs,Gutta’s Goon Squad,Ladd McConkey,WR,LAC,1,lost,outbid,,5,1278935503218954240
+4,2025-09-30 22:08,FlashUrTDs,Gutta’s Goon Squad,David Montgomery,RB,HOU,1,lost,outbid,,5,1278935570126503936
+4,2025-09-30 22:08,FlashUrTDs,Gutta’s Goon Squad,Tony Pollard,RB,TEN,1,lost,outbid,,5,1278935602330341377
+4,2025-09-30 22:08,FlashUrTDs,Gutta’s Goon Squad,Chris Godwin,WR,TB,1,lost,outbid,,5,1278935649881198592
+4,2025-09-30 22:09,FlashUrTDs,Gutta’s Goon Squad,Cooper Rush,QB,ATL,1,won,,Tyquan Thornton,5,1278935711013167104
+4,2025-09-30 22:09,d3childs,GregswillDaBOLL,Sean Tucker,RB,TB,5,won,,Zavier Scott,6,1278935882878980096
+4,2025-09-30 22:09,FlashUrTDs,Gutta’s Goon Squad,Darius Slayton,WR,FA,1,lost,outbid,,5,1278935920174714880
+4,2025-09-30 22:41,clevelandb0b,I hardly know herMayfield,Dillon Gabriel,QB,CLE,11,lost,roster_full,,7,1278943836659273728
+4,2025-09-30 22:42,clevelandb0b,I hardly know herMayfield,Chris Godwin,WR,TB,45,lost,outbid,,7,1278944004011995136
+4,2025-09-30 23:15,greggy2ships,Heads Will DaBOLL,Dak Prescott,QB,DAL,62,lost,outbid,,9,1278952438962884608
+4,2025-09-30 23:16,greggy2ships,Heads Will DaBOLL,David Montgomery,RB,HOU,76,lost,outbid,,9,1278952633582780416
+4,2025-09-30 23:18,greggy2ships,Heads Will DaBOLL,Darius Slayton,WR,FA,11,lost,outbid,,9,1278953206226890752
+4,2025-09-30 23:21,greggy2ships,Heads Will DaBOLL,CeeDee Lamb,WR,DAL,173,won,,Sterling Shepard,9,1278953827696934912
+4,2025-09-30 23:21,greggy2ships,Heads Will DaBOLL,Matthew Golden,WR,GB,22,lost,outbid,,9,1278953938640445440
+4,2025-09-30 23:22,greggy2ships,Heads Will DaBOLL,Tony Pollard,RB,TEN,22,lost,outbid,,9,1278954071595712512
+4,2025-09-30 23:23,greggy2ships,Heads Will DaBOLL,Chris Godwin,WR,TB,23,lost,outbid,,9,1278954377171734528
+4,2025-09-30 23:25,greggy2ships,Heads Will DaBOLL,Ladd McConkey,WR,LAC,36,lost,outbid,,9,1278954824045432832
+4,2025-09-30 23:26,dylan1990692,The Ghost of Martellus,Dalton Kincaid,TE,BUF,25,lost,outbid,,8,1278955191609065472
+4,2025-09-30 23:28,dylan1990692,The Ghost of Martellus,Ladd McConkey,WR,LAC,25,lost,outbid,,8,1278955576591663104
+4,2025-09-30 23:28,dylan1990692,The Ghost of Martellus,David Montgomery,RB,HOU,25,lost,outbid,,8,1278955618350141440
+4,2025-09-30 23:28,dylan1990692,The Ghost of Martellus,Tony Pollard,RB,TEN,25,lost,outbid,,8,1278955655503290368
+4,2025-09-30 23:28,dylan1990692,The Ghost of Martellus,Chris Godwin,WR,TB,25,lost,outbid,,8,1278955694262845440
+4,2025-09-30 23:28,dylan1990692,The Ghost of Martellus,Tee Higgins,WR,CIN,25,lost,outbid,,8,1278955726500302848
+4,2025-09-30 23:28,dylan1990692,The Ghost of Martellus,Isiah Pacheco,RB,DET,25,lost,outbid,,8,1278955812173131776
+4,2025-09-30 23:29,dylan1990692,The Ghost of Martellus,Darren Waller,TE,CAR,1,lost,outbid,,8,1278955855349309440
+4,2025-09-30 23:29,dylan1990692,The Ghost of Martellus,Dont'e Thornton,WR,LV,1,won,,,8,1278955954070638592
+4,2025-09-30 23:34,baker28,Krumm,Dak Prescott,QB,DAL,50,lost,outbid,,1,1278957214442205184
+4,2025-09-30 23:37,baker28,Krumm,Matthew Golden,WR,GB,66,won,,,1,1278957874835394560
+4,2025-09-30 23:39,baker28,Krumm,Dalton Kincaid,TE,BUF,68,lost,outbid,,1,1278958434493952000
+4,2025-09-30 23:39,baker28,Krumm,Brenton Strange,TE,JAX,53,lost,roster_full,,1,1278958582427058176
+4,2025-10-01 00:40,jakwok21,Get To The Choppa!,Dak Prescott,QB,DAL,96,lost,outbid,,14,1278973807192739840
+4,2025-10-01 00:40,jakwok21,Get To The Choppa!,Daniel Jones,QB,IND,11,lost,outbid,,14,1278973870765805568
+4,2025-10-01 00:40,jakwok21,Get To The Choppa!,Ladd McConkey,WR,LAC,93,won,,,14,1278973904324407296
+4,2025-10-01 00:40,jakwok21,Get To The Choppa!,David Montgomery,RB,HOU,78,lost,outbid,,14,1278973928974319616
+4,2025-10-01 00:41,jakwok21,Get To The Choppa!,Tony Pollard,RB,TEN,66,lost,outbid,,14,1278973959383023616
+4,2025-10-01 00:41,jakwok21,Get To The Choppa!,Chris Godwin,WR,TB,36,lost,outbid,,14,1278974125229998080
+4,2025-10-01 00:41,jakwok21,Get To The Choppa!,Isiah Pacheco,RB,DET,9,lost,outbid,,14,1278974185636401152
+4,2025-10-01 00:42,jakwok21,Get To The Choppa!,Brenton Strange,TE,JAX,5,lost,outbid,,14,1278974215378186240
+4,2025-10-01 00:42,jakwok21,Get To The Choppa!,Tee Higgins,WR,CIN,4,lost,outbid,,14,1278974257027633152
+4,2025-10-01 00:42,jakwok21,Get To The Choppa!,Troy Franklin,WR,DEN,3,lost,outbid,,14,1278974278154354688
+4,2025-10-01 00:43,jakwok21,Get To The Choppa!,Darius Slayton,WR,FA,1,lost,outbid,,14,1278974664831418368
+4,2025-10-01 00:53,jakwok21,Get To The Choppa!,Darren Waller,TE,CAR,1,lost,outbid,,14,1278977038530654208
+4,2025-10-01 01:05,jakwok21,Get To The Choppa!,Kendre Miller,RB,NO,7,won,,,14,1278980185495998464
+4,2025-10-01 01:10,jakwok21,Get To The Choppa!,Dalton Kincaid,TE,BUF,1,lost,outbid,,14,1278981335075028992
+5,2025-10-01 07:12,Hockeystar90,Hockeystar90,Zavier Scott,RB,CHI,1,lost,outbid,,18,1279072488340340736
+5,2025-10-01 07:14,Hockeystar90,Hockeystar90,Sterling Shepard,WR,NYJ,1,won,,Tyler Lockett,18,1279072914217398272
+5,2025-10-01 07:15,celticsraider,Rasheevil Motherfuckers,Zavier Scott,RB,CHI,1,lost,outbid,,16,1279073327779954688
+5,2025-10-01 07:35,clevelandb0b,I hardly know herMayfield,Dillon Gabriel,QB,CLE,5,lost,outbid,,7,1279078306842427392
+5,2025-10-01 08:36,baker28,Krumm,J.J. McCarthy,QB,MIN,1,lost,outbid,,1,1279093709400457216
+5,2025-10-01 08:38,baker28,Krumm,Dillon Gabriel,QB,CLE,1,lost,outbid,,1,1279094033821487104
+5,2025-10-01 08:40,baker28,Krumm,J.J. McCarthy,QB,MIN,1,lost,outbid,,1,1279094585770938368
+5,2025-10-01 10:28,jcmandel,jcmandel,Zavier Scott,RB,CHI,2,lost,outbid,,13,1279121783445811200
+5,2025-10-01 11:43,clikes,clikes,Zavier Scott,RB,CHI,3,lost,outbid,,2,1279140794443239424
+5,2025-10-01 13:11,jcmandel,jcmandel,Michael Carter,RB,TEN,9,lost,outbid,,13,1279162926975967232
+5,2025-10-01 13:19,celticsraider,Rasheevil Motherfuckers,J.J. McCarthy,QB,MIN,15,won,,,16,1279164804400951296
+5,2025-10-01 13:36,jakwok21,Get To The Choppa!,Dillon Gabriel,QB,CLE,2,lost,outbid,,14,1279169133526663168
+5,2025-10-01 13:43,d3childs,GregswillDaBOLL,Michael Carter,RB,TEN,10,lost,outbid,,6,1279170816755396608
+5,2025-10-01 16:18,colinjhannah,lake minnetonka water,J.J. McCarthy,QB,MIN,1,lost,outbid,,15,1279209889935163392
+5,2025-10-01 16:58,jcmandel,jcmandel,Dillon Gabriel,QB,CLE,21,won,,Colston Loveland,13,1279219897099878400
+5,2025-10-01 23:27,greggy2ships,Heads Will DaBOLL,Michael Carter,RB,TEN,11,won,,,9,1279317929673904128
+5,2025-10-02 23:43,d3childs,GregswillDaBOLL,Zavier Scott,RB,CHI,1,lost,outbid,,6,1279684250135703552
+5,2025-10-02 23:45,d3childs,GregswillDaBOLL,Ty Johnson,RB,BUF,1,won,,,6,1279684652088451072
+5,2025-10-03 00:32,greggy2ships,Heads Will DaBOLL,Zavier Scott,RB,CHI,9,won,,Joshua Palmer,9,1279696576951894016
+5,2025-10-03 14:58,clevelandb0b,I hardly know herMayfield,Chris Moore,WR,BAL,1,won,,Joe Flacco,7,1279914540930207744
+5,2025-10-03 14:59,clevelandb0b,I hardly know herMayfield,Trevor Etienne,RB,CAR,1,lost,roster_full,,7,1279914664989294592
+5,2025-10-03 14:59,clevelandb0b,I hardly know herMayfield,Luke McCaffrey,WR,WAS,1,lost,roster_full,,7,1279914816634376192
+5,2025-10-04 21:52,d3childs,GregswillDaBOLL,Raheem Mostert,RB,FA,1,won,,,6,1280380992799907840
+5,2025-10-04 22:30,FlashUrTDs,Gutta’s Goon Squad,Taysom Hill,TE,FA,1,won,,,5,1280390595759607808
+5,2025-10-07 07:00,celticsraider,Rasheevil Motherfuckers,De'Von Achane,RB,MIA,115,lost,outbid,,16,1281243844964278272
+5,2025-10-07 07:01,celticsraider,Rasheevil Motherfuckers,Rome Odunze,WR,CHI,125,lost,outbid,,16,1281243983271428096
+5,2025-10-07 07:48,dylan1990692,The Ghost of Martellus,Matthew Golden,WR,GB,13,won,,Dont'e Thornton,8,1281255791491317760
+5,2025-10-07 08:14,Hockeystar90,Hockeystar90,De'Von Achane,RB,MIA,16,lost,outbid,,18,1281262369330167808
+5,2025-10-07 08:14,Hockeystar90,Hockeystar90,James Cook,RB,BUF,16,lost,outbid,,18,1281262400305119232
+5,2025-10-07 08:14,Hockeystar90,Hockeystar90,Brian Thomas,WR,JAX,5,lost,outbid,,18,1281262483457212416
+5,2025-10-07 08:15,Hockeystar90,Hockeystar90,Rhamondre Stevenson,RB,NE,10,lost,outbid,,18,1281262552235388928
+5,2025-10-07 08:15,Hockeystar90,Hockeystar90,Matthew Golden,WR,GB,3,lost,outbid,,18,1281262767784878080
+5,2025-10-07 08:16,Hockeystar90,Hockeystar90,Theo Johnson,TE,NYG,1,won,,Ray Davis,18,1281262825972445184
+5,2025-10-07 10:05,clevelandb0b,I hardly know herMayfield,Jordan Love,QB,GB,99,lost,outbid,,7,1281290216753094657
+5,2025-10-07 10:05,clevelandb0b,I hardly know herMayfield,Bo Nix,QB,DEN,99,won,,Chris Moore,7,1281290435091795968
+5,2025-10-07 10:07,clevelandb0b,I hardly know herMayfield,Rome Odunze,WR,CHI,51,lost,outbid,,7,1281290918275584000
+5,2025-10-07 10:27,colinjhannah,lake minnetonka water,James Cook,RB,BUF,145,lost,outbid,,15,1281295828106891264
+5,2025-10-07 10:27,colinjhannah,lake minnetonka water,George Kittle,TE,SF,15,lost,outbid,,15,1281295916489261056
+5,2025-10-07 10:28,colinjhannah,lake minnetonka water,Rome Odunze,WR,CHI,89,lost,outbid,,15,1281296027218894848
+5,2025-10-07 10:28,colinjhannah,lake minnetonka water,De'Von Achane,RB,MIA,125,lost,outbid,,15,1281296117580988416
+5,2025-10-07 13:45,clikes,clikes,Brian Thomas,WR,JAX,80,lost,outbid,,2,1281345798390431744
+5,2025-10-07 13:46,clikes,clikes,Kimani Vidal,RB,LAC,11,lost,outbid,,2,1281345959699161088
+5,2025-10-07 13:47,clikes,clikes,Rome Odunze,WR,CHI,91,lost,outbid,,2,1281346271898009600
+5,2025-10-07 13:51,clevelandb0b,I hardly know herMayfield,De'Von Achane,RB,MIA,29,lost,outbid,,7,1281347221698134016
+5,2025-10-07 15:44,d3childs,GregswillDaBOLL,De'Von Achane,RB,MIA,303,won,,Raheem Mostert,6,1281375621980626944
+5,2025-10-07 15:44,d3childs,GregswillDaBOLL,James Cook,RB,BUF,353,won,,Ty Johnson,6,1281375693283823616
+5,2025-10-07 15:44,d3childs,GregswillDaBOLL,Rome Odunze,WR,CHI,177,lost,outbid,,6,1281375763005706240
+5,2025-10-07 16:35,d3childs,GregswillDaBOLL,Brian Thomas,WR,JAX,176,won,,Sean Tucker,6,1281388553695133696
+5,2025-10-07 20:00,jcmandel,jcmandel,De'Von Achane,RB,MIA,254,lost,outbid,,13,1281440002760273920
+5,2025-10-07 20:01,jcmandel,jcmandel,Jordan Love,QB,GB,163,won,,Darius Slayton,13,1281440202983755776
+5,2025-10-07 20:02,jcmandel,jcmandel,Bo Nix,QB,DEN,161,lost,roster_full,,13,1281440464142098432
+5,2025-10-07 20:02,dylan1990692,The Ghost of Martellus,Rhamondre Stevenson,RB,NE,31,won,,Roschon Johnson,8,1281440486145421312
+5,2025-10-07 20:02,jcmandel,jcmandel,James Cook,RB,BUF,193,lost,outbid,,13,1281440553220710400
+5,2025-10-07 20:03,jcmandel,jcmandel,Brian Thomas,WR,JAX,167,lost,outbid,,13,1281440819072487424
+5,2025-10-07 20:05,jcmandel,jcmandel,Matthew Golden,WR,GB,43,lost,roster_full,,13,1281441313765482496
+5,2025-10-07 20:06,jcmandel,jcmandel,Rome Odunze,WR,CHI,163,lost,outbid,,13,1281441670973366272
+5,2025-10-07 20:08,jcmandel,jcmandel,George Kittle,TE,SF,37,lost,outbid,,13,1281442090865131520
+5,2025-10-07 20:09,jcmandel,jcmandel,Mason Taylor,TE,NYJ,36,won,,Ollie Gordon,13,1281442420768129024
+5,2025-10-07 20:12,jcmandel,jcmandel,Tre Tucker,WR,LV,36,won,,,13,1281443115219042304
+5,2025-10-07 20:12,jcmandel,jcmandel,Tre Tucker,WR,LV,21,lost,outbid,,13,1281443187231043584
+5,2025-10-07 20:13,jcmandel,jcmandel,James Cook,RB,BUF,194,lost,outbid,,13,1281443410489663488
+5,2025-10-07 20:16,celticsraider,Rasheevil Motherfuckers,James Cook,RB,BUF,175,lost,outbid,,16,1281443984224288769
+5,2025-10-07 20:16,celticsraider,Rasheevil Motherfuckers,Jake Tonges,TE,SF,55,won,,KaVontae Turpin,16,1281444119947788288
+5,2025-10-07 21:13,FlashUrTDs,Gutta’s Goon Squad,De'Von Achane,RB,MIA,1,lost,outbid,,5,1281458525393932288
+5,2025-10-07 21:14,FlashUrTDs,Gutta’s Goon Squad,Mason Taylor,TE,NYJ,1,lost,outbid,,5,1281458673826144256
+5,2025-10-07 23:40,jodangles,jodangles,De'Von Achane,RB,MIA,76,lost,outbid,,3,1281495410405285888
+5,2025-10-07 23:40,jodangles,jodangles,James Cook,RB,BUF,76,lost,outbid,,3,1281495473781219328
+5,2025-10-07 23:40,jodangles,jodangles,Rome Odunze,WR,CHI,76,lost,outbid,,3,1281495537274597376
+5,2025-10-07 23:41,jodangles,jodangles,Brian Thomas,WR,JAX,60,lost,outbid,,3,1281495622368632832
+5,2025-10-07 23:41,jodangles,jodangles,Kimani Vidal,RB,LAC,11,won,,,3,1281495762261282816
+5,2025-10-07 23:41,jodangles,jodangles,Hassan Haskins,RB,FA,11,lost,roster_full,,3,1281495788941221888
+5,2025-10-07 23:42,jodangles,jodangles,Rhamondre Stevenson,RB,NE,26,lost,outbid,,3,1281496057448001536
+5,2025-10-07 23:43,jodangles,jodangles,Rhamondre Stevenson,RB,NE,26,lost,outbid,,3,1281496117158105088
+5,2025-10-07 23:43,jodangles,jodangles,Wan'Dale Robinson,WR,TEN,2,lost,roster_full,,3,1281496155196264448
+5,2025-10-07 23:43,jodangles,jodangles,Wan'Dale Robinson,WR,TEN,2,won,,Tahj Brooks,3,1281496200960299008
+5,2025-10-07 23:43,jodangles,jodangles,Tre Tucker,WR,LV,2,lost,outbid,,3,1281496234653138944
+5,2025-10-07 23:43,jodangles,jodangles,Tre Tucker,WR,LV,2,lost,outbid,,3,1281496279066640384
+5,2025-10-07 23:44,jodangles,jodangles,Matthew Golden,WR,GB,2,lost,outbid,,3,1281496439016411136
+5,2025-10-07 23:44,jodangles,jodangles,Matthew Golden,WR,GB,2,lost,outbid,,3,1281496485678030848
+5,2025-10-07 23:45,jodangles,jodangles,Tyquan Thornton,WR,KC,1,lost,roster_full,,3,1281496661826244608
+5,2025-10-07 23:45,jodangles,jodangles,Tyquan Thornton,WR,KC,1,lost,roster_full,,3,1281496681233276928
+5,2025-10-07 23:46,jodangles,jodangles,Mason Taylor,TE,NYJ,6,lost,outbid,,3,1281497020208541696
+5,2025-10-07 23:46,jodangles,jodangles,Mason Taylor,TE,NYJ,6,lost,outbid,,3,1281497069877493760
+5,2025-10-07 23:47,jodangles,jodangles,Theo Johnson,TE,NYG,1,lost,outbid,,3,1281497282549665792
+5,2025-10-07 23:47,jodangles,jodangles,Theo Johnson,TE,NYG,1,lost,outbid,,3,1281497316972314624
+5,2025-10-08 00:22,greggy2ships,Heads Will DaBOLL,Bo Nix,QB,DEN,72,lost,outbid,,9,1281506088788709376
+5,2025-10-08 00:23,greggy2ships,Heads Will DaBOLL,Jordan Love,QB,GB,52,lost,outbid,,9,1281506209047810048
+5,2025-10-08 00:24,greggy2ships,Heads Will DaBOLL,De'Von Achane,RB,MIA,160,lost,outbid,,9,1281506516955836416
+5,2025-10-08 00:24,greggy2ships,Heads Will DaBOLL,James Cook,RB,BUF,190,lost,outbid,,9,1281506612757946368
+5,2025-10-08 00:27,greggy2ships,Heads Will DaBOLL,Rome Odunze,WR,CHI,179,lost,outbid,,9,1281507168314458113
+5,2025-10-08 00:28,greggy2ships,Heads Will DaBOLL,George Kittle,TE,SF,90,won,,Juwan Johnson,9,1281507391770198016
+5,2025-10-08 00:28,greggy2ships,Heads Will DaBOLL,Mason Taylor,TE,NYJ,27,lost,outbid,,9,1281507505993707520
+5,2025-10-08 02:42,jakwok21,Get To The Choppa!,De'Von Achane,RB,MIA,193,lost,outbid,,14,1281541335978889216
+5,2025-10-08 02:43,jakwok21,Get To The Choppa!,James Cook,RB,BUF,187,lost,outbid,,14,1281541405633691648
+5,2025-10-08 02:45,jakwok21,Get To The Choppa!,Jordan Love,QB,GB,21,lost,outbid,,14,1281542010376851456
+5,2025-10-08 02:46,jakwok21,Get To The Choppa!,Bo Nix,QB,DEN,18,lost,outbid,,14,1281542194905251840
+5,2025-10-08 02:47,jakwok21,Get To The Choppa!,Rome Odunze,WR,CHI,187,won,,Marvin Mims,14,1281542455577030656
+5,2025-10-08 02:47,jakwok21,Get To The Choppa!,Brian Thomas,WR,JAX,16,lost,outbid,,14,1281542560564658176
+5,2025-10-08 02:47,jakwok21,Get To The Choppa!,Joe Flacco,QB,CIN,1,won,,Jake Browning,14,1281542589777981440
+5,2025-10-08 02:48,jakwok21,Get To The Choppa!,Rhamondre Stevenson,RB,NE,4,lost,outbid,,14,1281542633092583424
+5,2025-10-08 02:48,jakwok21,Get To The Choppa!,Hassan Haskins,RB,FA,1,won,,Tank Bigsby,14,1281542676381995008
+5,2025-10-08 02:48,jakwok21,Get To The Choppa!,Kimani Vidal,RB,LAC,1,lost,outbid,,14,1281542697806471168
+5,2025-10-08 02:48,jakwok21,Get To The Choppa!,Matthew Golden,WR,GB,3,lost,outbid,,14,1281542741683085312
+5,2025-10-08 02:48,jakwok21,Get To The Choppa!,Tre Tucker,WR,LV,2,lost,outbid,,14,1281542790664167424
+5,2025-10-08 02:48,jakwok21,Get To The Choppa!,Mason Taylor,TE,NYJ,1,lost,outbid,,14,1281542868585971712
+5,2025-10-08 02:49,jakwok21,Get To The Choppa!,Malik Washington,WR,MIA,1,lost,roster_full,,14,1281542949280190464
+5,2025-10-08 02:50,jakwok21,Get To The Choppa!,George Kittle,TE,SF,6,lost,outbid,,14,1281543143665176576
+6,2025-10-08 04:03,jakwok21,Get To The Choppa!,Colston Loveland,TE,CHI,1,won,,Cole Kmet,14,1281561711656067072
+6,2025-10-08 07:46,greggy2ships,Heads Will DaBOLL,Mac Jones,QB,SF,15,won,,,9,1281617727357730816
+6,2025-10-08 07:57,Hockeystar90,Hockeystar90,Juwan Johnson,TE,NO,1,won,,Kalif Raymond,18,1281620611910606848
+6,2025-10-08 07:58,Hockeystar90,Hockeystar90,Juwan Johnson,TE,NO,1,lost,outbid,,18,1281620798636855296
+6,2025-10-08 07:58,Hockeystar90,Hockeystar90,Darius Slayton,WR,FA,1,won,,,18,1281620813727928320
+6,2025-10-08 07:59,Hockeystar90,Hockeystar90,Tyrone Tracy,RB,NYG,1,lost,outbid,,18,1281620956300709888
+6,2025-10-08 09:10,clikes,clikes,AJ Barner,TE,SEA,11,won,,,2,1281639003656851456
+6,2025-10-08 09:17,celticsraider,Rasheevil Motherfuckers,AJ Barner,TE,SEA,10,lost,outbid,,16,1281640649338142720
+6,2025-10-08 09:18,celticsraider,Rasheevil Motherfuckers,Tyquan Thornton,WR,KC,1,won,,Hunter Renfrow,16,1281640771694379008
+6,2025-10-08 09:38,jcmandel,jcmandel,Ray Davis,RB,BUF,1,won,,Dillon Gabriel,13,1281645869501808640
+6,2025-10-08 12:16,d3childs,GregswillDaBOLL,Tyrone Tracy,RB,NYG,1,won,,Emari Demercado,6,1281685734209642496
+6,2025-10-08 12:17,d3childs,GregswillDaBOLL,Ray Davis,RB,BUF,6,lost,roster_full,,6,1281685828304670720
+6,2025-10-08 17:04,greggy2ships,Heads Will DaBOLL,AJ Barner,TE,SEA,4,lost,outbid,,9,1281758112755257344
+6,2025-10-09 19:50,clikes,clikes,JuJu Smith-Schuster,WR,FA,2,won,,,2,1282162446680752128
+6,2025-10-09 19:51,clikes,clikes,Malik Washington,WR,MIA,2,won,,,2,1282162556558913537
+6,2025-10-09 20:36,Hockeystar90,Hockeystar90,Emari Demercado,RB,DAL,1,lost,roster_full,,18,1282173828084015104
+6,2025-10-10 03:13,jakwok21,Get To The Choppa!,Dillon Gabriel,QB,CLE,1,lost,outbid,,14,1282273766562353152
+6,2025-10-10 07:35,clevelandb0b,I hardly know herMayfield,Dillon Gabriel,QB,CLE,1,lost,outbid,,7,1282339679269584896
+6,2025-10-10 12:41,colinjhannah,lake minnetonka water,Dillon Gabriel,QB,CLE,1,lost,outbid,,15,1282416699882115072
+6,2025-10-10 15:39,d3childs,GregswillDaBOLL,Kyle Monangai,RB,CHI,1,won,,Calvin Austin,6,1282461563529220096
+6,2025-10-11 03:19,celticsraider,Rasheevil Motherfuckers,Tez Johnson,WR,TB,1,won,,,16,1282637774754689024
+6,2025-10-11 03:20,celticsraider,Rasheevil Motherfuckers,Ryan Flournoy,WR,DAL,1,lost,roster_full,,16,1282637936872923136
+6,2025-10-11 17:51,Hockeystar90,Hockeystar90,Emari Demercado,RB,DAL,1,won,,,18,1282857126175215616
+6,2025-10-11 17:51,Hockeystar90,Hockeystar90,Sean Tucker,RB,TB,1,won,,,18,1282857243066261504
+6,2025-10-11 17:52,Hockeystar90,Hockeystar90,Marvin Mims,WR,DEN,1,won,,,18,1282857306014384128
+6,2025-10-11 17:52,Hockeystar90,Hockeystar90,Ryan Flournoy,WR,DAL,1,lost,roster_full,,18,1282857363581186048
+6,2025-10-11 22:21,clikes,clikes,Dillon Gabriel,QB,CLE,2,won,,JuJu Smith-Schuster,2,1282924983248510976
+6,2025-10-12 12:49,emloose,TravFulgham ComebackSzn,Zonovan Knight,RB,ARI,1,lost,outbid,,10,1283143421703229440
+6,2025-10-14 09:23,colinjhannah,lake minnetonka water,Lamar Jackson,QB,BAL,155,lost,outbid,,15,1283816365890736128
+6,2025-10-14 09:23,colinjhannah,lake minnetonka water,Terry McLaurin,WR,WAS,100,lost,outbid,,15,1283816441270792192
+6,2025-10-14 09:25,colinjhannah,lake minnetonka water,Joe Mixon,RB,FA,10,won,,Isaiah Likely,15,1283817082835730433
+6,2025-10-14 11:09,celticsraider,Rasheevil Motherfuckers,Ja'Marr Chase,WR,CIN,215,lost,outbid,,16,1283843125139210240
+6,2025-10-14 11:09,celticsraider,Rasheevil Motherfuckers,Michael Mayer,TE,LV,10,won,,Tyquan Thornton,16,1283843234585395200
+6,2025-10-14 11:24,clevelandb0b,I hardly know herMayfield,Brandon Aiyuk,WR,SF,1,won,,,7,1283847030145302528
+6,2025-10-14 11:25,clevelandb0b,I hardly know herMayfield,Travis Kelce,TE,KC,35,lost,outbid,,7,1283847223334961152
+6,2025-10-14 11:26,clevelandb0b,I hardly know herMayfield,Nick Chubb,RB,FA,1,lost,outbid,,7,1283847353928814592
+6,2025-10-14 11:26,clevelandb0b,I hardly know herMayfield,Ja'Marr Chase,WR,CIN,35,lost,outbid,,7,1283847411118125056
+6,2025-10-14 11:26,clevelandb0b,I hardly know herMayfield,Albert Okwuegbunam,TE,FA,1,lost,roster_full,,7,1283847512934846464
+6,2025-10-14 11:27,clevelandb0b,I hardly know herMayfield,Aaron Rodgers,QB,PIT,31,won,,Mike Gesicki,7,1283847652932325376
+6,2025-10-14 11:27,clevelandb0b,I hardly know herMayfield,Lamar Jackson,QB,BAL,31,lost,outbid,,7,1283847691872276480
+6,2025-10-14 11:53,emloose,TravFulgham ComebackSzn,Ja'Marr Chase,WR,CIN,202,lost,outbid,,10,1283854159744897024
+6,2025-10-14 11:53,emloose,TravFulgham ComebackSzn,Travis Kelce,TE,KC,61,lost,outbid,,10,1283854342197112832
+6,2025-10-14 12:25,dylan1990692,The Ghost of Martellus,Ja'Marr Chase,WR,CIN,220,won,,,8,1283862395512438784
+6,2025-10-14 17:28,d3childs,GregswillDaBOLL,Terry McLaurin,WR,WAS,14,lost,outbid,,6,1283938462361202688
+6,2025-10-14 17:28,d3childs,GregswillDaBOLL,Tutu Atwell,WR,LAR,4,lost,roster_full,,6,1283938542514372608
+6,2025-10-14 19:57,jcmandel,jcmandel,Ja'Marr Chase,WR,CIN,173,lost,outbid,,13,1283975980624392192
+6,2025-10-14 19:57,jcmandel,jcmandel,Terry McLaurin,WR,WAS,123,won,,Isaiah Bond,13,1283976118642159616
+6,2025-10-14 19:59,jcmandel,jcmandel,Travis Kelce,TE,KC,63,won,,Ray Davis,13,1283976436683661312
+6,2025-10-14 19:59,jcmandel,jcmandel,Nick Chubb,RB,FA,47,won,,,13,1283976572402950144
+6,2025-10-14 20:00,jcmandel,jcmandel,Christian Kirk,WR,SF,16,lost,outbid,,13,1283976749851353088
+6,2025-10-14 20:32,d3childs,GregswillDaBOLL,Zonovan Knight,RB,ARI,10,won,,,6,1283984788511784960
+6,2025-10-14 20:32,clikes,clikes,Ja'Marr Chase,WR,CIN,74,lost,outbid,,2,1283984934716854272
+6,2025-10-14 20:32,d3childs,GregswillDaBOLL,Jordan Whittington,WR,LAR,6,lost,roster_full,,6,1283984950164488192
+6,2025-10-14 20:34,clikes,clikes,Terry McLaurin,WR,WAS,74,lost,outbid,,2,1283985325105872896
+6,2025-10-14 20:34,clikes,clikes,Christian Kirk,WR,SF,50,won,,,2,1283985368617598976
+6,2025-10-14 21:03,dylan1990692,The Ghost of Martellus,Sterling Shepard,WR,NYJ,15,won,,Rashod Bateman,8,1283992728673198080
+6,2025-10-14 21:23,celticsraider,Rasheevil Motherfuckers,Terry McLaurin,WR,WAS,30,lost,outbid,,16,1283997680762109952
+6,2025-10-14 21:24,celticsraider,Rasheevil Motherfuckers,Tutu Atwell,WR,LAR,1,won,,,16,1283997967262429184
+6,2025-10-14 21:28,jodangles,jodangles,Nick Chubb,RB,FA,31,lost,outbid,,3,1283998862775717889
+6,2025-10-14 21:29,FlashUrTDs,Gutta’s Goon Squad,Terry McLaurin,WR,WAS,1,lost,outbid,,5,1283999117227356160
+6,2025-10-14 21:29,FlashUrTDs,Gutta’s Goon Squad,Travis Kelce,TE,KC,1,lost,outbid,,5,1283999285628669952
+6,2025-10-14 21:55,jodangles,jodangles,Aaron Rodgers,QB,PIT,26,lost,outbid,,3,1284005675390763008
+6,2025-10-14 21:56,jodangles,jodangles,Ja'Marr Chase,WR,CIN,76,lost,outbid,,3,1284005867963813888
+6,2025-10-14 22:26,greggy2ships,Heads Will DaBOLL,Ja'Marr Chase,WR,CIN,176,lost,outbid,,9,1284013621973614592
+6,2025-10-14 22:27,greggy2ships,Heads Will DaBOLL,Terry McLaurin,WR,WAS,41,lost,outbid,,9,1284013675870445569
+6,2025-10-14 22:28,greggy2ships,Heads Will DaBOLL,Aaron Rodgers,QB,PIT,11,lost,outbid,,9,1284014020801626112
+6,2025-10-14 22:29,greggy2ships,Heads Will DaBOLL,Zonovan Knight,RB,ARI,3,lost,outbid,,9,1284014289656512512
+6,2025-10-14 22:30,greggy2ships,Heads Will DaBOLL,Travis Kelce,TE,KC,35,lost,outbid,,9,1284014428676689920
+6,2025-10-14 22:59,greggy2ships,Heads Will DaBOLL,Lamar Jackson,QB,BAL,105,lost,outbid,,9,1284021867509710848
+6,2025-10-14 23:23,jodangles,jodangles,Zonovan Knight,RB,ARI,2,lost,outbid,,3,1284027803536228352
+6,2025-10-14 23:23,jodangles,jodangles,Zonovan Knight,RB,ARI,2,lost,outbid,,3,1284027845894471680
+6,2025-10-14 23:24,jodangles,jodangles,Nick Chubb,RB,FA,26,lost,outbid,,3,1284028190536269824
+6,2025-10-15 01:24,jakwok21,Get To The Choppa!,Lamar Jackson,QB,BAL,208,won,,,14,1284058357358956544
+6,2025-10-15 01:38,jakwok21,Get To The Choppa!,Ja'Marr Chase,WR,CIN,192,lost,outbid,,14,1284061936262062080
+6,2025-10-15 01:38,jakwok21,Get To The Choppa!,Aaron Rodgers,QB,PIT,1,lost,outbid,,14,1284061965307645952
+6,2025-10-15 01:39,jakwok21,Get To The Choppa!,Terry McLaurin,WR,WAS,1,lost,outbid,,14,1284061988506304512
+6,2025-10-15 01:39,jakwok21,Get To The Choppa!,Travis Kelce,TE,KC,6,lost,outbid,,14,1284062016868204544
+6,2025-10-15 01:39,jakwok21,Get To The Choppa!,Nick Chubb,RB,FA,2,lost,outbid,,14,1284062052532355072
+6,2025-10-15 01:39,jakwok21,Get To The Choppa!,Brandon Aiyuk,WR,SF,1,lost,roster_full,,14,1284062142219194368
+6,2025-10-15 01:40,jakwok21,Get To The Choppa!,Khalil Shakir,WR,BUF,1,lost,roster_full,,14,1284062286721347584
+6,2025-10-15 01:41,jakwok21,Get To The Choppa!,Ja'Marr Chase,WR,CIN,174,lost,outbid,,14,1284062585905238016
+6,2025-10-15 01:41,jakwok21,Get To The Choppa!,Travis Kelce,TE,KC,4,lost,outbid,,14,1284062642473811969
+6,2025-10-15 02:06,jakwok21,Get To The Choppa!,Kameron Johnson,WR,TB,1,lost,roster_full,,14,1284068927617404928
+7,2025-10-15 05:47,emloose,TravFulgham ComebackSzn,Josh Reynolds,WR,FA,1,won,,Devin Neal,10,1284124554381238272
+7,2025-10-15 10:04,clevelandb0b,I hardly know herMayfield,Darius Slayton,WR,FA,1,lost,outbid,,7,1284189266175348736
+7,2025-10-15 20:14,colinjhannah,lake minnetonka water,Darius Slayton,WR,FA,1,won,,,15,1284342705752662016
+7,2025-10-15 21:41,greggy2ships,Heads Will DaBOLL,Kameron Johnson,WR,TB,2,lost,roster_full,,9,1284364524484304896
+7,2025-10-15 21:49,greggy2ships,Heads Will DaBOLL,Khalil Shakir,WR,BUF,5,won,,,9,1284366565919191040
+7,2025-10-16 11:38,clevelandb0b,I hardly know herMayfield,Marvin Mims,WR,DEN,1,won,,,7,1284575333093216256
+7,2025-10-16 13:49,celticsraider,Rasheevil Motherfuckers,Kameron Johnson,WR,TB,1,won,,Darnell Mooney,16,1284608134253404160
+7,2025-10-16 13:49,celticsraider,Rasheevil Motherfuckers,Lil'Jordan Humphrey,WR,FA,1,won,,Tutu Atwell,16,1284608173705035776
+7,2025-10-16 13:49,celticsraider,Rasheevil Motherfuckers,Tyler Higbee,TE,LAR,1,won,,Jake Tonges,16,1284608264050311168
+7,2025-10-16 18:03,clikes,clikes,Sean Tucker,RB,TB,1,won,,Jalen Nailor,2,1284672039889690624
+7,2025-10-16 18:04,clikes,clikes,Christian Watson,WR,GB,2,won,,Marcus Mariota,2,1284672287890501632
+7,2025-10-17 09:02,colinjhannah,lake minnetonka water,Blake Corum,RB,LAR,1,won,,,15,1284898430241480704
+7,2025-10-17 09:03,colinjhannah,lake minnetonka water,Darnell Mooney,WR,NYG,1,won,,Miles Sanders,15,1284898555781193728
+7,2025-10-17 12:33,jcmandel,jcmandel,Chris Moore,WR,BAL,3,won,,Mark Andrews,13,1284951472378753024
+7,2025-10-17 17:14,jcmandel,jcmandel,Tutu Atwell,WR,LAR,1,lost,roster_full,,13,1285022166919712768
+7,2025-10-18 21:19,jcmandel,jcmandel,Emanuel Wilson,RB,SEA,3,won,,Tory Horton,13,1285446284819320832
+7,2025-10-21 08:22,colinjhannah,lake minnetonka water,Jordan Love,QB,GB,97,lost,outbid,,15,1286337752245235712
+7,2025-10-21 08:22,colinjhannah,lake minnetonka water,Emeka Egbuka,WR,TB,148,lost,outbid,,15,1286337840875081728
+7,2025-10-21 08:22,colinjhannah,lake minnetonka water,Terry McLaurin,WR,WAS,67,won,,Kaleb Johnson,15,1286337946907070464
+7,2025-10-21 09:53,emloose,TravFulgham ComebackSzn,Emeka Egbuka,WR,TB,50,lost,outbid,,10,1286360830090170368
+7,2025-10-21 09:54,emloose,TravFulgham ComebackSzn,Jordan Love,QB,GB,27,lost,outbid,,10,1286360915171606528
+7,2025-10-21 09:54,emloose,TravFulgham ComebackSzn,A.J. Brown,WR,NE,51,lost,outbid,,10,1286360994922119168
+7,2025-10-21 09:54,emloose,TravFulgham ComebackSzn,Nick Chubb,RB,FA,12,won,,,10,1286361061376671744
+7,2025-10-21 09:55,emloose,TravFulgham ComebackSzn,Mark Andrews,TE,BAL,6,lost,roster_full,,10,1286361208575754240
+7,2025-10-21 15:03,dylan1990692,The Ghost of Martellus,Emeka Egbuka,WR,TB,111,lost,outbid,,8,1286438729652637696
+7,2025-10-21 15:04,dylan1990692,The Ghost of Martellus,Travis Kelce,TE,KC,49,lost,outbid,,8,1286438905540788224
+7,2025-10-21 17:22,celticsraider,Rasheevil Motherfuckers,Emeka Egbuka,WR,TB,126,lost,outbid,,16,1286473722147930112
+7,2025-10-21 17:22,celticsraider,Rasheevil Motherfuckers,A.J. Brown,WR,NE,76,won,,Michael Mayer,16,1286473781878988800
+7,2025-10-21 17:24,celticsraider,Rasheevil Motherfuckers,Oronde Gadsden,TE,LAC,20,won,,Kameron Johnson,16,1286474237481062400
+7,2025-10-21 18:43,clikes,clikes,Emeka Egbuka,WR,TB,21,lost,outbid,,2,1286494146990723072
+7,2025-10-21 18:43,clikes,clikes,A.J. Brown,WR,NE,19,lost,outbid,,2,1286494191500677120
+7,2025-10-21 18:44,clikes,clikes,Rashod Bateman,WR,BAL,1,won,,Christian Watson,2,1286494311134818304
+7,2025-10-21 18:48,clikes,clikes,Marcus Mariota,QB,WAS,1,lost,roster_full,,2,1286495430267404288
+7,2025-10-21 20:54,jodangles,jodangles,Jordan Love,QB,GB,105,won,,Chris Rodriguez,3,1286527113490350080
+7,2025-10-21 20:54,jodangles,jodangles,Tyrod Taylor,QB,GB,72,lost,roster_full,,3,1286527157509566464
+7,2025-10-21 20:54,jodangles,jodangles,Andy Dalton,QB,PHI,45,lost,roster_full,,3,1286527199087714305
+7,2025-10-21 20:55,jodangles,jodangles,Emeka Egbuka,WR,TB,91,lost,outbid,,3,1286527267811364864
+7,2025-10-21 20:55,jodangles,jodangles,Bucky Irving,RB,TB,25,lost,outbid,,3,1286527407842414592
+7,2025-10-21 21:41,jakwok21,Get To The Choppa!,Bucky Irving,RB,TB,7,lost,outbid,,14,1286539029340225536
+7,2025-10-21 21:42,jakwok21,Get To The Choppa!,Jordan Love,QB,GB,1,lost,outbid,,14,1286539069374857216
+7,2025-10-21 21:42,jakwok21,Get To The Choppa!,Emeka Egbuka,WR,TB,101,lost,outbid,,14,1286539138325049344
+7,2025-10-21 21:42,jakwok21,Get To The Choppa!,A.J. Brown,WR,NE,34,lost,outbid,,14,1286539224241172480
+7,2025-10-21 21:43,jakwok21,Get To The Choppa!,Travis Kelce,TE,KC,6,lost,outbid,,14,1286539310274719744
+7,2025-10-21 21:43,jakwok21,Get To The Choppa!,Nick Chubb,RB,FA,1,lost,outbid,,14,1286539360153399297
+7,2025-10-21 21:43,jakwok21,Get To The Choppa!,Trevor Lawrence,QB,JAX,1,won,,Kendre Miller,14,1286539406118756352
+7,2025-10-21 21:43,jakwok21,Get To The Choppa!,Tre Tucker,WR,LV,1,lost,roster_full,,14,1286539439438319616
+7,2025-10-21 21:43,jakwok21,Get To The Choppa!,Oronde Gadsden,TE,LAC,6,lost,outbid,,14,1286539525304107008
+7,2025-10-21 21:45,jakwok21,Get To The Choppa!,Theo Johnson,TE,NYG,1,lost,roster_full,,14,1286539894105055232
+7,2025-10-21 22:12,celticsraider,Rasheevil Motherfuckers,Joe Burrow,QB,CIN,10,won,,Bryce Young,16,1286546655528632320
+7,2025-10-21 22:14,celticsraider,Rasheevil Motherfuckers,Jaylin Noel,WR,HOU,1,lost,outbid,,16,1286547342538866688
+7,2025-10-21 22:15,jakwok21,Get To The Choppa!,Devin Neal,RB,FA,1,lost,outbid,,14,1286547543815131136
+7,2025-10-21 22:45,FlashUrTDs,Gutta’s Goon Squad,Jordan Love,QB,GB,1,lost,outbid,,5,1286554964671369216
+7,2025-10-21 22:45,FlashUrTDs,Gutta’s Goon Squad,Bucky Irving,RB,TB,1,lost,outbid,,5,1286555049031401472
+7,2025-10-21 22:45,FlashUrTDs,Gutta’s Goon Squad,Emeka Egbuka,WR,TB,1,lost,outbid,,5,1286555093029634048
+7,2025-10-21 22:45,FlashUrTDs,Gutta’s Goon Squad,A.J. Brown,WR,NE,1,lost,outbid,,5,1286555114047275008
+7,2025-10-21 22:46,FlashUrTDs,Gutta’s Goon Squad,Jaylin Noel,WR,HOU,1,lost,outbid,,5,1286555178933190656
+7,2025-10-21 22:46,FlashUrTDs,Gutta’s Goon Squad,Jerry Jeudy,WR,CLE,1,won,,,5,1286555230997073920
+7,2025-10-21 22:46,FlashUrTDs,Gutta’s Goon Squad,Travis Kelce,TE,KC,1,lost,outbid,,5,1286555273070145536
+7,2025-10-21 22:46,FlashUrTDs,Gutta’s Goon Squad,Oronde Gadsden,TE,LAC,1,lost,outbid,,5,1286555290916913152
+7,2025-10-21 23:03,jodangles,jodangles,A.J. Brown,WR,NE,76,lost,outbid,,3,1286559501624819712
+7,2025-10-21 23:09,jodangles,jodangles,Travis Kelce,TE,KC,51,won,,,3,1286560985464725504
+7,2025-10-21 23:09,jodangles,jodangles,Oronde Gadsden,TE,LAC,41,lost,roster_full,,3,1286561014329929728
+7,2025-10-21 23:11,jodangles,jodangles,Oronde Gadsden,TE,LAC,51,lost,roster_full,,3,1286561506950934529
+7,2025-10-21 23:12,jodangles,jodangles,Mason Taylor,TE,NYJ,36,lost,roster_full,,3,1286561737251758080
+7,2025-10-21 23:12,jodangles,jodangles,Juwan Johnson,TE,NO,27,lost,roster_full,,3,1286561848035934208
+7,2025-10-21 23:16,greggy2ships,Heads Will DaBOLL,Bucky Irving,RB,TB,90,won,,Michael Carter,9,1286562794967166976
+7,2025-10-21 23:19,greggy2ships,Heads Will DaBOLL,Devin Neal,RB,FA,2,lost,outbid,,9,1286563565196550144
+7,2025-10-21 23:22,greggy2ships,Heads Will DaBOLL,Emeka Egbuka,WR,TB,215,won,,Jaydon Blue,9,1286564257143488512
+7,2025-10-21 23:23,greggy2ships,Heads Will DaBOLL,Oronde Gadsden,TE,LAC,15,lost,outbid,,9,1286564588631916544
+7,2025-10-22 00:53,celticsraider,Rasheevil Motherfuckers,Devin Neal,RB,FA,45,won,,Tyler Higbee,16,1286587213676564480
+7,2025-10-22 02:54,d3childs,GregswillDaBOLL,Andy Dalton,QB,PHI,10,won,,Justin Fields,6,1286617628298731520
+7,2025-10-22 02:55,d3childs,GregswillDaBOLL,Jaylin Noel,WR,HOU,10,won,,Tyrone Tracy,6,1286618008608854016
+7,2025-10-22 02:56,d3childs,GregswillDaBOLL,Calvin Austin,WR,NYG,4,lost,roster_full,,6,1286618064296636416
+7,2025-10-22 02:56,d3childs,GregswillDaBOLL,Cam Ward,QB,TEN,4,lost,roster_full,,6,1286618163441565696
+8,2025-10-22 07:06,jakwok21,Get To The Choppa!,Mark Andrews,TE,BAL,1,won,,Geno Smith,14,1286681013920997376
+8,2025-10-22 07:07,jakwok21,Get To The Choppa!,Theo Johnson,TE,NYG,1,lost,roster_full,,14,1286681269157003264
+8,2025-10-22 07:07,jakwok21,Get To The Choppa!,Isaiah Likely,TE,NYG,1,lost,roster_full,,14,1286681374148825089
+8,2025-10-22 07:16,jakwok21,Get To The Choppa!,Calvin Ridley,WR,TEN,1,lost,outbid,,14,1286683496160456704
+8,2025-10-22 08:46,jodangles,jodangles,Mark Andrews,TE,BAL,1,lost,outbid,,3,1286706265237495808
+8,2025-10-22 08:46,jodangles,jodangles,Mason Taylor,TE,NYJ,1,won,,Bhayshul Tuten,3,1286706314004660224
+8,2025-10-22 08:46,jodangles,jodangles,Juwan Johnson,TE,NO,1,lost,roster_full,,3,1286706381331632128
+8,2025-10-22 08:47,jodangles,jodangles,Calvin Ridley,WR,TEN,1,lost,outbid,,3,1286706556636786688
+8,2025-10-22 10:45,emloose,TravFulgham ComebackSzn,Tyrod Taylor,QB,GB,2,won,,Jalen Tolbert,10,1286736223217414144
+8,2025-10-22 11:52,clikes,clikes,Calvin Ridley,WR,TEN,4,won,,Sean Tucker,2,1286752956217032704
+8,2025-10-22 11:52,clikes,clikes,Kenny Gainwell,RB,TB,3,won,,Jayden Higgins,2,1286753021908221952
+8,2025-10-22 12:56,clikes,clikes,Marcus Mariota,QB,WAS,3,won,,Dillon Gabriel,2,1286769117491138560
+8,2025-10-22 13:17,celticsraider,Rasheevil Motherfuckers,Cam Ward,QB,TEN,5,won,,Lil'Jordan Humphrey,16,1286774481511014400
+8,2025-10-22 13:18,celticsraider,Rasheevil Motherfuckers,Cade Otton,TE,TB,5,won,,Kyler Murray,16,1286774823627804672
+8,2025-10-22 20:15,jakwok21,Get To The Choppa!,Xavier Hutchinson,WR,HOU,1,won,,Hassan Haskins,14,1286879676949602304
+8,2025-10-22 20:16,jakwok21,Get To The Choppa!,Jaylin Lane,WR,WAS,1,lost,roster_full,,14,1286879798001418240
+8,2025-10-22 20:16,jakwok21,Get To The Choppa!,Calvin Ridley,WR,TEN,1,lost,outbid,,14,1286880032945352704
+8,2025-10-23 06:44,emloose,TravFulgham ComebackSzn,Dillon Gabriel,QB,CLE,3,won,,Brian Robinson,10,1287037864416145408
+8,2025-10-25 13:04,emloose,TravFulgham ComebackSzn,Kirk Cousins,QB,LV,4,won,,Tyrod Taylor,10,1287858238418620416
+8,2025-10-25 13:28,d3childs,GregswillDaBOLL,Justin Fields,QB,KC,4,won,,Justice Hill,6,1287864356704374784
+8,2025-10-28 04:27,emloose,TravFulgham ComebackSzn,Bryce Young,QB,CAR,3,won,,Kirk Cousins,10,1288815513421479936
+8,2025-10-28 04:32,emloose,TravFulgham ComebackSzn,Josh Jacobs,RB,GB,122,lost,outbid,,10,1288816762011287552
+8,2025-10-28 04:33,emloose,TravFulgham ComebackSzn,Javonte Williams,RB,DAL,109,won,,Dillon Gabriel,10,1288816970719825920
+8,2025-10-28 04:34,emloose,TravFulgham ComebackSzn,Ja'Marr Chase,WR,CIN,199,won,,,10,1288817127372914688
+8,2025-10-28 04:35,emloose,TravFulgham ComebackSzn,Drake London,WR,ATL,56,lost,outbid,,10,1288817333313241088
+8,2025-10-28 04:35,emloose,TravFulgham ComebackSzn,Chris Olave,WR,NO,55,won,,,10,1288817461126262784
+8,2025-10-28 07:22,clevelandb0b,I hardly know herMayfield,Javonte Williams,RB,DAL,60,lost,outbid,,7,1288859581082013696
+8,2025-10-28 07:23,clevelandb0b,I hardly know herMayfield,Josh Jacobs,RB,GB,60,lost,outbid,,7,1288859615634653184
+8,2025-10-28 07:23,clevelandb0b,I hardly know herMayfield,Ja'Marr Chase,WR,CIN,30,lost,outbid,,7,1288859696106598400
+8,2025-10-28 07:23,clevelandb0b,I hardly know herMayfield,Chris Olave,WR,NO,30,lost,outbid,,7,1288859767506219008
+8,2025-10-28 07:24,clevelandb0b,I hardly know herMayfield,Rhamondre Stevenson,RB,NE,15,won,,,7,1288859893310173184
+8,2025-10-28 08:55,emloose,TravFulgham ComebackSzn,Caleb Williams,QB,CHI,21,lost,roster_full,,10,1288882738350268416
+8,2025-10-28 09:29,colinjhannah,lake minnetonka water,Josh Jacobs,RB,GB,152,won,,,15,1288891345796104192
+8,2025-10-28 09:29,colinjhannah,lake minnetonka water,Ja'Marr Chase,WR,CIN,131,lost,outbid,,15,1288891377135923200
+8,2025-10-28 09:29,colinjhannah,lake minnetonka water,Jake Ferguson,TE,DAL,75,won,,Parker Washington,15,1288891485525151744
+8,2025-10-28 09:30,colinjhannah,lake minnetonka water,Kenneth Walker,RB,KC,51,won,,Blake Corum,15,1288891549844783104
+8,2025-10-28 09:46,celticsraider,Rasheevil Motherfuckers,Josh Jacobs,RB,GB,99,lost,outbid,,16,1288895676414976000
+8,2025-10-28 09:46,colinjhannah,lake minnetonka water,Drake London,WR,ATL,101,won,,Jalen Coker,15,1288895686858792960
+8,2025-10-28 09:46,celticsraider,Rasheevil Motherfuckers,Ja'Marr Chase,WR,CIN,160,lost,outbid,,16,1288895770438692864
+8,2025-10-28 09:47,celticsraider,Rasheevil Motherfuckers,Javonte Williams,RB,DAL,101,lost,outbid,,16,1288895825971261440
+8,2025-10-28 09:47,celticsraider,Rasheevil Motherfuckers,Chris Olave,WR,NO,49,lost,outbid,,16,1288895937023836160
+8,2025-10-28 09:47,celticsraider,Rasheevil Motherfuckers,Tyrone Tracy,RB,NYG,30,lost,outbid,,16,1288895993697296384
+8,2025-10-28 09:48,celticsraider,Rasheevil Motherfuckers,Christian Watson,WR,GB,15,won,,Tez Johnson,16,1288896084701097984
+8,2025-10-28 09:48,celticsraider,Rasheevil Motherfuckers,Kareem Hunt,RB,FA,10,won,,Devin Neal,16,1288896185691557888
+8,2025-10-28 12:56,d3childs,GregswillDaBOLL,Kyler Murray,QB,MIN,5,lost,outbid,,6,1288943576679464960
+8,2025-10-28 12:56,d3childs,GregswillDaBOLL,Caleb Williams,QB,CHI,5,won,,,6,1288943612133904384
+8,2025-10-28 12:57,d3childs,GregswillDaBOLL,Tyrone Tracy,RB,NYG,15,lost,outbid,,6,1288943730371342336
+8,2025-10-28 14:37,jakwok21,Get To The Choppa!,Ja'Marr Chase,WR,CIN,106,lost,outbid,,14,1288968852549439488
+8,2025-10-28 14:37,jakwok21,Get To The Choppa!,Josh Jacobs,RB,GB,88,lost,outbid,,14,1288968894320504832
+8,2025-10-28 14:37,jakwok21,Get To The Choppa!,Javonte Williams,RB,DAL,83,lost,outbid,,14,1288968922858520576
+8,2025-10-28 14:37,jakwok21,Get To The Choppa!,Drake London,WR,ATL,53,lost,outbid,,14,1288968961391595520
+8,2025-10-28 14:37,jakwok21,Get To The Choppa!,Chris Olave,WR,NO,52,lost,outbid,,14,1288968994103005184
+8,2025-10-28 14:37,jakwok21,Get To The Choppa!,Tyrone Tracy,RB,NYG,7,lost,outbid,,14,1288969033416187904
+8,2025-10-28 14:38,jakwok21,Get To The Choppa!,Kenneth Walker,RB,KC,11,lost,outbid,,14,1288969068803547136
+8,2025-10-28 14:38,jakwok21,Get To The Choppa!,Deebo Samuel,WR,SF,8,won,,,14,1288969102638985216
+8,2025-10-28 14:38,jakwok21,Get To The Choppa!,Samaje Perine,RB,CIN,1,lost,roster_full,,14,1288969164517560320
+8,2025-10-28 14:38,jakwok21,Get To The Choppa!,Christian Watson,WR,GB,1,lost,outbid,,14,1288969200173326336
+8,2025-10-28 14:40,jakwok21,Get To The Choppa!,Zonovan Knight,RB,ARI,1,lost,outbid,,14,1288969566038274048
+8,2025-10-28 14:40,jakwok21,Get To The Choppa!,Jake Ferguson,TE,DAL,14,lost,outbid,,14,1288969730626981888
+8,2025-10-28 14:46,jakwok21,Get To The Choppa!,Rhamondre Stevenson,RB,NE,1,lost,outbid,,14,1288971206392844288
+8,2025-10-28 14:46,jakwok21,Get To The Choppa!,Bhayshul Tuten,RB,JAX,1,lost,roster_full,,14,1288971256426672128
+8,2025-10-28 14:46,jakwok21,Get To The Choppa!,Kareem Hunt,RB,FA,1,lost,outbid,,14,1288971295660212224
+8,2025-10-28 15:52,clikes,clikes,Drake London,WR,ATL,10,lost,outbid,,2,1288987681698635776
+8,2025-10-28 15:52,clikes,clikes,Tyrone Tracy,RB,NYG,10,lost,outbid,,2,1288987739080884224
+8,2025-10-28 15:52,clikes,clikes,Kenneth Walker,RB,KC,10,lost,outbid,,2,1288987771825840128
+8,2025-10-28 18:19,d3childs,GregswillDaBOLL,Jake Ferguson,TE,DAL,20,lost,outbid,,6,1289024779482828800
+8,2025-10-28 18:19,d3childs,GregswillDaBOLL,Christian Watson,WR,GB,4,lost,outbid,,6,1289024914879160320
+8,2025-10-28 18:20,d3childs,GregswillDaBOLL,Bhayshul Tuten,RB,JAX,2,lost,roster_full,,6,1289024969619017728
+8,2025-10-28 20:43,greggy2ships,Heads Will DaBOLL,Caleb Williams,QB,CHI,5,lost,outbid,,9,1289061005652934656
+8,2025-10-28 20:43,greggy2ships,Heads Will DaBOLL,Kyler Murray,QB,MIN,5,won,,,9,1289061139392532480
+8,2025-10-28 20:44,greggy2ships,Heads Will DaBOLL,Dylan Sampson,RB,CLE,2,lost,roster_full,,9,1289061329969098752
+8,2025-10-28 20:45,greggy2ships,Heads Will DaBOLL,Tank Bigsby,RB,PHI,2,lost,roster_full,,9,1289061420234702848
+8,2025-10-28 20:46,greggy2ships,Heads Will DaBOLL,Tyrone Tracy,RB,NYG,5,lost,outbid,,9,1289061782291251200
+8,2025-10-28 20:46,greggy2ships,Heads Will DaBOLL,Chris Olave,WR,NO,6,lost,outbid,,9,1289061908082593793
+8,2025-10-28 20:50,greggy2ships,Heads Will DaBOLL,Tua Tagovailoa,QB,ATL,2,lost,roster_full,,9,1289062881106628608
+8,2025-10-28 20:53,greggy2ships,Heads Will DaBOLL,Zonovan Knight,RB,ARI,3,won,,,9,1289063498025828352
+8,2025-10-28 20:53,greggy2ships,Heads Will DaBOLL,Kareem Hunt,RB,FA,2,lost,outbid,,9,1289063547673784320
+8,2025-10-28 22:30,jodangles,jodangles,Ja'Marr Chase,WR,CIN,100,lost,outbid,,3,1289087871893934080
+8,2025-10-28 22:30,jodangles,jodangles,Josh Jacobs,RB,GB,85,lost,outbid,,3,1289087923467071488
+8,2025-10-28 22:30,jodangles,jodangles,Drake London,WR,ATL,65,lost,outbid,,3,1289087984695517184
+8,2025-10-28 22:31,jodangles,jodangles,Tyrone Tracy,RB,NYG,40,won,,,3,1289088118359625728
+8,2025-10-28 22:49,jodangles,jodangles,Javonte Williams,RB,DAL,70,lost,outbid,,3,1289092829057945600
+8,2025-10-28 22:50,jodangles,jodangles,Chris Olave,WR,NO,25,lost,outbid,,3,1289092872519323648
+8,2025-10-28 22:50,jodangles,jodangles,Jake Ferguson,TE,DAL,5,lost,outbid,,3,1289092990295375872
+8,2025-10-28 22:50,jodangles,jodangles,Zonovan Knight,RB,ARI,5,lost,roster_full,,3,1289093027507220480
+9,2025-10-29 04:59,celticsraider,Rasheevil Motherfuckers,Josh Downs,WR,IND,5,lost,outbid,,16,1289185784263356416
+9,2025-10-29 08:17,colinjhannah,lake minnetonka water,Tua Tagovailoa,QB,ATL,1,won,,Darius Slayton,15,1289235713472077824
+9,2025-10-29 10:19,clevelandb0b,I hardly know herMayfield,Josh Downs,WR,IND,5,won,,Mike Evans,7,1289266412300308480
+9,2025-10-29 15:06,clevelandb0b,I hardly know herMayfield,Jeremy McNichols,RB,WAS,1,won,,Cam Skattebo,7,1289338722680061952
+9,2025-10-30 07:10,celticsraider,Rasheevil Motherfuckers,Jalen Coker,WR,CAR,1,won,,,16,1289581099906781184
+9,2025-10-30 19:55,d3childs,GregswillDaBOLL,Jalen Coker,WR,CAR,1,lost,outbid,,6,1289773711150305280
+9,2025-10-30 19:57,clikes,clikes,Geno Smith,QB,NYJ,1,won,,,2,1289774353226960896
+9,2025-10-30 19:58,clikes,clikes,Tre Tucker,WR,LV,1,won,,Marcus Mariota,2,1289774428657315840
+9,2025-11-01 18:47,jakwok21,Get To The Choppa!,Bhayshul Tuten,RB,JAX,1,won,,Joe Flacco,14,1290481366558871552
+9,2025-11-02 23:36,greggy2ships,Heads Will DaBOLL,Jacoby Brissett,QB,ARI,1,won,,Brashard Smith,9,1290931721369296896
+9,2025-11-04 07:44,clevelandb0b,I hardly know herMayfield,Quinshon Judkins,RB,CLE,9,lost,outbid,,7,1291416869776932864
+9,2025-11-04 07:45,clevelandb0b,I hardly know herMayfield,Kareem Hunt,RB,FA,4,lost,roster_full,,7,1291416967160279040
+9,2025-11-04 07:45,clevelandb0b,I hardly know herMayfield,Jahmyr Gibbs,RB,DET,9,lost,outbid,,7,1291417039130357760
+9,2025-11-04 08:11,colinjhannah,lake minnetonka water,Daniel Jones,QB,IND,38,won,,Darnell Mooney,15,1291423729695326208
+9,2025-11-04 08:12,colinjhannah,lake minnetonka water,Jahmyr Gibbs,RB,DET,130,lost,outbid,,15,1291423832854261760
+9,2025-11-04 08:14,d3childs,GregswillDaBOLL,Ray Davis,RB,BUF,1,won,,,6,1291424291878883328
+9,2025-11-04 09:33,emloose,TravFulgham ComebackSzn,Jahmyr Gibbs,RB,DET,166,won,,Luther Burden,10,1291444234586439680
+9,2025-11-04 09:42,emloose,TravFulgham ComebackSzn,Quinshon Judkins,RB,CLE,11,lost,outbid,,10,1291446622072373248
+9,2025-11-04 09:43,emloose,TravFulgham ComebackSzn,Rashee Rice,WR,KC,24,lost,outbid,,10,1291446772756910080
+9,2025-11-04 09:43,emloose,TravFulgham ComebackSzn,A.J. Brown,WR,NE,21,lost,outbid,,10,1291446813215191040
+9,2025-11-04 16:08,clevelandb0b,I hardly know herMayfield,Zay Flowers,WR,BAL,5,lost,outbid,,7,1291543707505410048
+9,2025-11-04 16:09,clevelandb0b,I hardly know herMayfield,Christian Watson,WR,GB,5,won,,DeAndre Hopkins,7,1291543815286448128
+9,2025-11-04 16:09,clevelandb0b,I hardly know herMayfield,Zach Charbonnet,RB,SEA,2,lost,roster_full,,7,1291543948380090368
+9,2025-11-04 19:28,colinjhannah,lake minnetonka water,Jahmyr Gibbs,RB,DET,89,lost,outbid,,15,1291594065686564864
+9,2025-11-04 20:23,jodangles,jodangles,Rashee Rice,WR,KC,75,lost,outbid,,3,1291607857816412160
+9,2025-11-04 20:26,jodangles,jodangles,Oronde Gadsden,TE,LAC,65,won,,Tucker Kraft,3,1291608556520378368
+9,2025-11-04 20:26,jodangles,jodangles,Dalton Kincaid,TE,BUF,45,lost,roster_full,,3,1291608624640036864
+9,2025-11-04 20:27,jodangles,jodangles,Juwan Johnson,TE,NO,20,lost,roster_full,,3,1291608727102701568
+9,2025-11-04 20:29,jodangles,jodangles,Jahmyr Gibbs,RB,DET,120,lost,outbid,,3,1291609312031952896
+9,2025-11-04 21:13,jakwok21,Get To The Choppa!,Jahmyr Gibbs,RB,DET,123,lost,outbid,,14,1291620387196510208
+9,2025-11-04 21:13,jakwok21,Get To The Choppa!,Quinshon Judkins,RB,CLE,92,lost,roster_full,,14,1291620460089339904
+9,2025-11-04 21:30,jakwok21,Get To The Choppa!,A.J. Brown,WR,NE,22,lost,outbid,,14,1291624715584032769
+9,2025-11-04 21:30,jakwok21,Get To The Choppa!,Zay Flowers,WR,BAL,1,lost,outbid,,14,1291624753571852288
+9,2025-11-04 21:30,jakwok21,Get To The Choppa!,Christian Watson,WR,GB,1,lost,outbid,,14,1291624800745164800
+9,2025-11-04 21:31,jakwok21,Get To The Choppa!,Rashee Rice,WR,KC,102,won,,Xavier Legette,14,1291624899323904000
+9,2025-11-04 21:31,jakwok21,Get To The Choppa!,Omarion Hampton,RB,LAC,1,lost,outbid,,14,1291624935558512640
+9,2025-11-04 21:43,d3childs,GregswillDaBOLL,Jahmyr Gibbs,RB,DET,50,lost,outbid,,6,1291627852860522496
+9,2025-11-04 21:43,d3childs,GregswillDaBOLL,Oronde Gadsden,TE,LAC,25,lost,outbid,,6,1291628071664762880
+9,2025-11-04 21:44,d3childs,GregswillDaBOLL,Dalton Kincaid,TE,BUF,15,won,,Jaylin Noel,6,1291628154674233344
+9,2025-11-04 21:45,d3childs,GregswillDaBOLL,Ollie Gordon,RB,MIA,1,lost,roster_full,,6,1291628557587460096
+9,2025-11-04 22:04,clikes,clikes,Jahmyr Gibbs,RB,DET,8,lost,outbid,,2,1291633178305384448
+9,2025-11-04 22:04,clikes,clikes,A.J. Brown,WR,NE,8,lost,outbid,,2,1291633270659743744
+9,2025-11-04 22:04,clikes,clikes,Daniel Jones,QB,IND,8,lost,outbid,,2,1291633351794397184
+9,2025-11-04 22:05,clikes,clikes,Zay Flowers,WR,BAL,8,lost,outbid,,2,1291633433881083904
+9,2025-11-04 23:08,jodangles,jodangles,Rashee Rice,WR,KC,75,lost,outbid,,3,1291649464087363584
+9,2025-11-04 23:51,jodangles,jodangles,Zay Flowers,WR,BAL,70,won,,Darren Waller,3,1291660244727894017
+9,2025-11-04 23:52,jodangles,jodangles,Zay Flowers,WR,BAL,70,lost,outbid,,3,1291660326676230144
+9,2025-11-04 23:52,jodangles,jodangles,A.J. Brown,WR,NE,70,won,,Travis Hunter,3,1291660366085902336
+9,2025-11-04 23:53,jodangles,jodangles,A.J. Brown,WR,NE,70,lost,outbid,,3,1291660589361291264
+9,2025-11-04 23:53,jodangles,jodangles,A.J. Brown,WR,NE,70,lost,outbid,,3,1291660628708048896
+9,2025-11-04 23:53,jodangles,jodangles,A.J. Brown,WR,NE,70,lost,outbid,,3,1291660672483995648
+9,2025-11-04 23:54,jodangles,jodangles,Quinshon Judkins,RB,CLE,25,lost,outbid,,3,1291660834392510464
+9,2025-11-04 23:54,jodangles,jodangles,Quinshon Judkins,RB,CLE,25,lost,outbid,,3,1291660891254706176
+9,2025-11-04 23:54,jodangles,jodangles,Quinshon Judkins,RB,CLE,25,lost,outbid,,3,1291660933361307648
+9,2025-11-04 23:55,jodangles,jodangles,Darius Slayton,WR,FA,26,lost,roster_full,,3,1291661132431372288
+9,2025-11-04 23:55,jodangles,jodangles,Darius Slayton,WR,FA,26,won,,Isiah Pacheco,3,1291661173640396800
+9,2025-11-04 23:55,jodangles,jodangles,Darius Slayton,WR,FA,26,lost,outbid,,3,1291661220188794880
+9,2025-11-04 23:55,jodangles,jodangles,Christian Watson,WR,GB,26,lost,roster_full,,3,1291661259585884160
+9,2025-11-04 23:56,jodangles,jodangles,Christian Watson,WR,GB,26,lost,roster_full,,3,1291661317177901056
+9,2025-11-04 23:56,jodangles,jodangles,Christian Watson,WR,GB,26,lost,roster_full,,3,1291661353223725056
+9,2025-11-04 23:56,jodangles,jodangles,Parker Washington,WR,JAX,26,lost,roster_full,,3,1291661401508552704
+9,2025-11-04 23:56,jodangles,jodangles,Parker Washington,WR,JAX,26,lost,roster_full,,3,1291661451441741824
+9,2025-11-04 23:56,jodangles,jodangles,Parker Washington,WR,JAX,26,lost,roster_full,,3,1291661508681437184
+9,2025-11-05 00:26,jakwok21,Get To The Choppa!,Zach Charbonnet,RB,SEA,8,lost,roster_full,,14,1291669089210626048
+9,2025-11-05 00:27,jakwok21,Get To The Choppa!,Oronde Gadsden,TE,LAC,1,lost,outbid,,14,1291669231355596800
+9,2025-11-05 00:27,jakwok21,Get To The Choppa!,Dalton Kincaid,TE,BUF,1,lost,outbid,,14,1291669301601800192
+9,2025-11-05 00:28,jakwok21,Get To The Choppa!,Kareem Hunt,RB,FA,1,lost,roster_full,,14,1291669380559564800
+9,2025-11-05 00:28,jakwok21,Get To The Choppa!,A.J. Brown,WR,NE,16,lost,outbid,,14,1291669546096148480
+9,2025-11-05 00:28,jakwok21,Get To The Choppa!,Zay Flowers,WR,BAL,1,lost,outbid,,14,1291669580493643776
+9,2025-11-05 00:30,jakwok21,Get To The Choppa!,Quinshon Judkins,RB,CLE,71,won,,Xavier Hutchinson,14,1291669907800354816
+9,2025-11-05 00:30,jakwok21,Get To The Choppa!,Oronde Gadsden,TE,LAC,1,lost,outbid,,14,1291669958404640768
+9,2025-11-05 00:31,jakwok21,Get To The Choppa!,Christian Watson,WR,GB,1,lost,outbid,,14,1291670304191418368
+9,2025-11-05 00:32,jakwok21,Get To The Choppa!,Rashee Rice,WR,KC,78,lost,outbid,,14,1291670420331728896
+9,2025-11-05 00:32,jakwok21,Get To The Choppa!,Tank Bigsby,RB,PHI,1,lost,roster_full,,14,1291670497674670080
+9,2025-11-05 00:32,jakwok21,Get To The Choppa!,Tank Bigsby,RB,PHI,1,lost,roster_full,,14,1291670557053456384
+9,2025-11-05 00:33,jakwok21,Get To The Choppa!,Blake Corum,RB,LAR,1,lost,roster_full,,14,1291670672002531328
+9,2025-11-05 00:33,jakwok21,Get To The Choppa!,Blake Corum,RB,LAR,1,lost,roster_full,,14,1291670698409877504
+9,2025-11-05 00:34,jakwok21,Get To The Choppa!,Kareem Hunt,RB,FA,1,lost,roster_full,,14,1291670966908235776
+9,2025-11-05 00:35,jakwok21,Get To The Choppa!,Devin Singletary,RB,NYG,1,lost,roster_full,,14,1291671207669678080
+9,2025-11-05 00:35,jakwok21,Get To The Choppa!,Devin Singletary,RB,NYG,1,lost,roster_full,,14,1291671231271014400
+9,2025-11-05 01:55,greggy2ships,Heads Will DaBOLL,Jahmyr Gibbs,RB,DET,51,lost,outbid,,9,1291691356263047168
+9,2025-11-05 01:58,greggy2ships,Heads Will DaBOLL,Joe Burrow,QB,CIN,1,lost,roster_full,,9,1291692035480231936
+9,2025-11-05 01:58,greggy2ships,Heads Will DaBOLL,Joe Flacco,QB,CIN,8,won,,Kyler Murray,9,1291692165231046656
+9,2025-11-05 01:59,greggy2ships,Heads Will DaBOLL,Omarion Hampton,RB,LAC,8,won,,Zonovan Knight,9,1291692305924775936
+9,2025-11-05 02:00,greggy2ships,Heads Will DaBOLL,Quinshon Judkins,RB,CLE,15,lost,outbid,,9,1291692552264630272
+9,2025-11-05 02:00,greggy2ships,Heads Will DaBOLL,Tank Bigsby,RB,PHI,1,lost,roster_full,,9,1291692675560398848
+9,2025-11-05 02:05,greggy2ships,Heads Will DaBOLL,Dylan Sampson,RB,CLE,2,lost,roster_full,,9,1291693780734345216
+9,2025-11-05 02:08,greggy2ships,Heads Will DaBOLL,Rashee Rice,WR,KC,45,lost,outbid,,9,1291694523574939648
+9,2025-11-05 02:14,greggy2ships,Heads Will DaBOLL,Emari Demercado,RB,DAL,1,lost,roster_full,,9,1291696025559367680
+9,2025-11-05 02:18,greggy2ships,Heads Will DaBOLL,A.J. Brown,WR,NE,5,lost,outbid,,9,1291697171405508608
+9,2025-11-05 02:18,greggy2ships,Heads Will DaBOLL,Zay Flowers,WR,BAL,5,lost,outbid,,9,1291697249100795904
+10,2025-11-05 05:40,clikes,clikes,Zach Charbonnet,RB,SEA,2,won,,Jayden Daniels,2,1291748096048386048
+10,2025-11-05 05:41,clikes,clikes,Marcus Mariota,QB,WAS,1,won,,Isaiah Davis,2,1291748332384841728
+10,2025-11-05 05:50,jakwok21,Get To The Choppa!,Zach Charbonnet,RB,SEA,1,lost,outbid,,14,1291750418421911552
+10,2025-11-05 05:50,jakwok21,Get To The Choppa!,Blake Corum,RB,LAR,1,won,,Kendrick Bourne,14,1291750526580428800
+10,2025-11-05 10:08,emloose,TravFulgham ComebackSzn,Zach Charbonnet,RB,SEA,1,lost,outbid,,10,1291815547662512128
+10,2025-11-05 12:52,greggy2ships,Heads Will DaBOLL,Parker Washington,WR,JAX,1,won,,,9,1291856588910366720
+10,2025-11-05 21:50,emloose,TravFulgham ComebackSzn,Juwan Johnson,TE,NO,1,won,,Nick Chubb,10,1291992167497080832
+10,2025-11-06 13:24,clevelandb0b,I hardly know herMayfield,Tank Bigsby,RB,PHI,1,won,,Marvin Mims,7,1292227160001507328
+10,2025-11-07 13:34,clevelandb0b,I hardly know herMayfield,Emari Demercado,RB,DAL,1,won,,Tank Bigsby,7,1292592068492804096
+10,2025-11-08 23:05,greggy2ships,Heads Will DaBOLL,J.J. McCarthy,QB,MIN,1,won,,Jacoby Brissett,9,1293098068308144128
+10,2025-11-11 09:03,colinjhannah,lake minnetonka water,Justin Jefferson,WR,MIN,56,lost,outbid,,15,1293973528000876544
+10,2025-11-11 10:28,clevelandb0b,I hardly know herMayfield,Breece Hall,RB,NYJ,9,lost,outbid,,7,1293994916594094080
+10,2025-11-11 10:29,clevelandb0b,I hardly know herMayfield,Travis Etienne,RB,NO,9,lost,outbid,,7,1293994954187608064
+10,2025-11-11 10:29,clevelandb0b,I hardly know herMayfield,Zach Charbonnet,RB,SEA,2,won,,,7,1293995002761863168
+10,2025-11-11 10:31,clevelandb0b,I hardly know herMayfield,Justin Jefferson,WR,MIN,45,lost,outbid,,7,1293995585371635713
+10,2025-11-11 10:31,clevelandb0b,I hardly know herMayfield,Jaylen Waddle,WR,DEN,40,won,,Chuba Hubbard,7,1293995641076211712
+10,2025-11-11 10:43,emloose,TravFulgham ComebackSzn,Travis Etienne,RB,NO,11,lost,outbid,,10,1293998483988025344
+10,2025-11-11 10:43,emloose,TravFulgham ComebackSzn,Breece Hall,RB,NYJ,29,lost,roster_full,,10,1293998664062078976
+10,2025-11-11 10:44,emloose,TravFulgham ComebackSzn,Cade Otton,TE,TB,5,lost,roster_full,,10,1293998769158762496
+10,2025-11-11 10:44,emloose,TravFulgham ComebackSzn,Justin Jefferson,WR,MIN,59,won,,Rashid Shaheed,10,1293998897147940864
+10,2025-11-11 12:21,jakwok21,Get To The Choppa!,Trey Benson,RB,ARI,6,won,,Bhayshul Tuten,14,1294023279471771649
+10,2025-11-11 12:21,jakwok21,Get To The Choppa!,Justin Jefferson,WR,MIN,21,lost,outbid,,14,1294023359146754048
+10,2025-11-11 12:22,jakwok21,Get To The Choppa!,Jaylen Waddle,WR,DEN,1,lost,outbid,,14,1294023447176818688
+10,2025-11-11 12:22,jakwok21,Get To The Choppa!,Travis Etienne,RB,NO,8,lost,outbid,,14,1294023528068161536
+10,2025-11-11 12:23,jakwok21,Get To The Choppa!,Zach Charbonnet,RB,SEA,3,lost,roster_full,,14,1294023667637833729
+10,2025-11-11 12:23,jakwok21,Get To The Choppa!,Justin Herbert,QB,LAC,3,lost,outbid,,14,1294023721534640128
+10,2025-11-11 12:27,jakwok21,Get To The Choppa!,Kareem Hunt,RB,FA,1,lost,roster_full,,14,1294024728486379520
+10,2025-11-11 12:31,emloose,TravFulgham ComebackSzn,Justin Herbert,QB,LAC,29,won,,Bryce Young,10,1294025814123220992
+10,2025-11-11 14:53,jakwok21,Get To The Choppa!,Justin Jefferson,WR,MIN,21,lost,outbid,,14,1294061427539050496
+10,2025-11-11 14:53,jakwok21,Get To The Choppa!,Jaylen Waddle,WR,DEN,1,lost,outbid,,14,1294061441921343488
+10,2025-11-11 14:53,jakwok21,Get To The Choppa!,Travis Etienne,RB,NO,8,lost,outbid,,14,1294061454516846592
+10,2025-11-11 14:53,jakwok21,Get To The Choppa!,Breece Hall,RB,NYJ,22,won,,,14,1294061476616638464
+10,2025-11-11 14:53,jakwok21,Get To The Choppa!,Zach Charbonnet,RB,SEA,3,lost,roster_full,,14,1294061508212297728
+10,2025-11-11 14:53,jakwok21,Get To The Choppa!,Trey Benson,RB,ARI,6,lost,roster_full,,14,1294061529506803712
+10,2025-11-11 14:53,jakwok21,Get To The Choppa!,Kareem Hunt,RB,FA,1,lost,roster_full,,14,1294061566265659392
+10,2025-11-11 14:54,jakwok21,Get To The Choppa!,Tez Johnson,WR,TB,1,lost,roster_full,,14,1294061685778157568
+10,2025-11-11 18:37,d3childs,GregswillDaBOLL,Trey Benson,RB,ARI,5,lost,outbid,,6,1294117740965015552
+10,2025-11-11 22:33,jodangles,jodangles,Jaylen Waddle,WR,DEN,25,lost,outbid,,3,1294177141939802112
+10,2025-11-11 22:33,jodangles,jodangles,Travis Etienne,RB,NO,15,lost,outbid,,3,1294177204384595968
+10,2025-11-11 22:33,jodangles,jodangles,Travis Etienne,RB,NO,15,lost,outbid,,3,1294177295761707008
+10,2025-11-11 22:34,jodangles,jodangles,Breece Hall,RB,NYJ,20,lost,outbid,,3,1294177418419920896
+10,2025-11-11 22:34,jodangles,jodangles,Breece Hall,RB,NYJ,20,lost,outbid,,3,1294177455929556992
+10,2025-11-12 00:19,greggy2ships,Heads Will DaBOLL,Tez Johnson,WR,TB,1,lost,roster_full,,9,1294203987297325057
+10,2025-11-12 00:21,greggy2ships,Heads Will DaBOLL,Travis Etienne,RB,NO,18,won,,,9,1294204319947571200
+10,2025-11-12 00:21,greggy2ships,Heads Will DaBOLL,Breece Hall,RB,NYJ,14,lost,outbid,,9,1294204378831405056
+10,2025-11-12 00:21,greggy2ships,Heads Will DaBOLL,Trey Benson,RB,ARI,2,lost,outbid,,9,1294204492551589888
+10,2025-11-12 00:21,greggy2ships,Heads Will DaBOLL,Zach Charbonnet,RB,SEA,1,lost,outbid,,9,1294204533483778048
+10,2025-11-12 00:22,greggy2ships,Heads Will DaBOLL,Kareem Hunt,RB,FA,1,lost,roster_full,,9,1294204630430916608
+10,2025-11-12 00:27,greggy2ships,Heads Will DaBOLL,Justin Herbert,QB,LAC,11,lost,outbid,,9,1294205924780548096
+10,2025-11-12 00:30,greggy2ships,Heads Will DaBOLL,Justin Jefferson,WR,MIN,25,lost,outbid,,9,1294206694552780800
+10,2025-11-12 00:30,greggy2ships,Heads Will DaBOLL,Jaylen Waddle,WR,DEN,20,lost,outbid,,9,1294206755235979264
+10,2025-11-12 00:32,greggy2ships,Heads Will DaBOLL,Joe Burrow,QB,CIN,1,lost,roster_full,,9,1294207216013832192
+11,2025-11-12 04:27,jakwok21,Get To The Choppa!,Tez Johnson,WR,TB,1,lost,roster_full,,14,1294266229434880000
+11,2025-11-12 04:27,jakwok21,Get To The Choppa!,Kareem Hunt,RB,FA,1,won,,,14,1294266283432366080
+11,2025-11-12 09:28,jakwok21,Get To The Choppa!,Tre Tucker,WR,LV,1,lost,outbid,,14,1294341967018217472
+11,2025-11-12 09:49,emloose,TravFulgham ComebackSzn,Pat Freiermuth,TE,PIT,1,won,,,10,1294347251459575808
+11,2025-11-12 10:43,clevelandb0b,I hardly know herMayfield,Tre Tucker,WR,LV,2,won,,Marquise Brown,7,1294360916837552128
+11,2025-11-12 10:43,clevelandb0b,I hardly know herMayfield,Quentin Johnston,WR,LAC,2,lost,outbid,,7,1294361039424483328
+11,2025-11-12 12:13,jodangles,jodangles,Quentin Johnston,WR,LAC,1,lost,outbid,,3,1294383700791824384
+11,2025-11-12 12:13,jodangles,jodangles,Tre Tucker,WR,LV,1,lost,outbid,,3,1294383713555070976
+11,2025-11-12 12:50,clevelandb0b,I hardly know herMayfield,Michael Wilson,WR,ARI,2,lost,roster_full,,7,1294392877224308736
+11,2025-11-12 16:30,clevelandb0b,I hardly know herMayfield,Kenny Gainwell,RB,TB,1,won,,Rhamondre Stevenson,7,1294448316372754432
+11,2025-11-12 19:46,greggy2ships,Heads Will DaBOLL,Quentin Johnston,WR,LAC,3,won,,Jordan Mason,9,1294497493953810432
+11,2025-11-12 22:16,d3childs,GregswillDaBOLL,Quentin Johnston,WR,LAC,1,lost,outbid,,6,1294535394871742464
+11,2025-11-14 22:38,greggy2ships,Heads Will DaBOLL,Joe Burrow,QB,CIN,1,won,,Tyjae Spears,9,1295265740647075840
+11,2025-11-18 06:47,clevelandb0b,I hardly know herMayfield,Jonathan Taylor,RB,IND,19,lost,outbid,,7,1296475853386960896
+11,2025-11-18 06:48,clevelandb0b,I hardly know herMayfield,Jared Goff,QB,DET,4,won,,Jeremy McNichols,7,1296476087898882048
+11,2025-11-18 07:50,emloose,TravFulgham ComebackSzn,Jonathan Taylor,RB,IND,131,lost,outbid,,10,1296491732245975040
+11,2025-11-18 07:51,emloose,TravFulgham ComebackSzn,Jameson Williams,WR,DET,14,won,,Pat Freiermuth,10,1296491895706353664
+11,2025-11-18 07:51,emloose,TravFulgham ComebackSzn,Nico Collins,WR,HOU,21,lost,outbid,,10,1296491981639282688
+11,2025-11-18 10:36,jakwok21,Get To The Choppa!,Brock Purdy,QB,SF,1,lost,outbid,,14,1296533487620227072
+11,2025-11-18 10:36,jakwok21,Get To The Choppa!,Jared Goff,QB,DET,3,lost,outbid,,14,1296533511137681408
+11,2025-11-18 10:39,jakwok21,Get To The Choppa!,Jameson Williams,WR,DET,3,lost,outbid,,14,1296534372807114752
+11,2025-11-18 10:40,jakwok21,Get To The Choppa!,Nico Collins,WR,HOU,3,lost,outbid,,14,1296534435058966528
+11,2025-11-18 10:40,jakwok21,Get To The Choppa!,Jonathan Taylor,RB,IND,141,lost,outbid,,14,1296534504076242944
+11,2025-11-18 10:42,jakwok21,Get To The Choppa!,RJ Harvey,RB,DEN,1,won,,Kareem Hunt,14,1296535042582921216
+11,2025-11-18 10:43,jakwok21,Get To The Choppa!,RJ Harvey,RB,DEN,1,lost,outbid,,14,1296535280970375168
+11,2025-11-18 10:46,jakwok21,Get To The Choppa!,Bhayshul Tuten,RB,JAX,2,lost,outbid,,14,1296535965606637568
+11,2025-11-18 21:30,jodangles,jodangles,Jonathan Taylor,RB,IND,185,won,,,3,1296698051523530752
+11,2025-11-18 21:34,jodangles,jodangles,Bhayshul Tuten,RB,JAX,3,lost,roster_full,,3,1296699159486664704
+11,2025-11-18 21:49,jodangles,jodangles,Nico Collins,WR,HOU,55,lost,roster_full,,3,1296702791003160576
+11,2025-11-18 21:49,jodangles,jodangles,Jameson Williams,WR,DET,48,lost,roster_full,,3,1296702845050957824
+11,2025-11-18 21:49,jodangles,jodangles,Michael Wilson,WR,ARI,1,lost,roster_full,,3,1296702874985730048
+11,2025-11-18 21:49,jodangles,jodangles,Jauan Jennings,WR,MIN,5,lost,roster_full,,3,1296702897811099648
+11,2025-11-18 21:49,jodangles,jodangles,Romeo Doubs,WR,NE,1,lost,roster_full,,3,1296702923736125440
+11,2025-11-18 22:22,d3childs,GregswillDaBOLL,Nico Collins,WR,HOU,15,lost,outbid,,6,1296711279141990400
+11,2025-11-18 22:22,d3childs,GregswillDaBOLL,Darnell Mooney,WR,NYG,1,won,,,6,1296711319860281344
+11,2025-11-18 22:23,d3childs,GregswillDaBOLL,Emanuel Wilson,RB,SEA,5,won,,Justin Fields,6,1296711381155848192
+11,2025-11-18 22:23,d3childs,GregswillDaBOLL,Cade Otton,TE,TB,1,won,,,6,1296711481571676160
+11,2025-11-18 22:23,d3childs,GregswillDaBOLL,Jacoby Brissett,QB,ARI,7,won,,Ray Davis,6,1296711567076765696
+11,2025-11-18 22:49,clevelandb0b,I hardly know herMayfield,Nico Collins,WR,HOU,1,lost,outbid,,7,1296718015529754624
+11,2025-11-18 22:49,clevelandb0b,I hardly know herMayfield,Jameson Williams,WR,DET,1,lost,outbid,,7,1296718043744862208
+11,2025-11-18 22:49,clevelandb0b,I hardly know herMayfield,Jauan Jennings,WR,MIN,1,won,,Chimere Dike,7,1296718076577857536
+11,2025-11-18 22:49,clevelandb0b,I hardly know herMayfield,Romeo Doubs,WR,NE,1,lost,roster_full,,7,1296718109826088960
+11,2025-11-18 22:50,clevelandb0b,I hardly know herMayfield,Xavier Worthy,WR,KC,1,lost,roster_full,,7,1296718136359260160
+11,2025-11-18 22:50,clevelandb0b,I hardly know herMayfield,Elic Ayomanor,WR,TEN,1,lost,roster_full,,7,1296718193775120384
+11,2025-11-18 22:51,clevelandb0b,I hardly know herMayfield,T.J. Hockenson,TE,MIN,1,lost,roster_full,,7,1296718555554787328
+11,2025-11-18 22:56,greggy2ships,Heads Will DaBOLL,Nico Collins,WR,HOU,31,won,,Quentin Johnston,9,1296719788562718720
+11,2025-11-18 22:56,greggy2ships,Heads Will DaBOLL,Jameson Williams,WR,DET,13,lost,outbid,,9,1296719844686696448
+11,2025-11-18 22:57,greggy2ships,Heads Will DaBOLL,Jonathan Taylor,RB,IND,62,lost,outbid,,9,1296720116280471552
+11,2025-11-19 00:06,jodangles,jodangles,Bhayshul Tuten,RB,JAX,3,won,,Darius Slayton,3,1296737272456019968
+11,2025-11-19 02:03,greggy2ships,Heads Will DaBOLL,Brock Purdy,QB,SF,3,won,,Parker Washington,9,1296766916316110848
+11,2025-11-19 02:04,greggy2ships,Heads Will DaBOLL,Jacoby Brissett,QB,ARI,1,lost,outbid,,9,1296767017159786496
+11,2025-11-19 02:08,greggy2ships,Heads Will DaBOLL,Emanuel Wilson,RB,SEA,1,lost,outbid,,9,1296768130097352704
+12,2025-11-19 06:11,clevelandb0b,I hardly know herMayfield,Pat Freiermuth,TE,PIT,1,won,,Aaron Rodgers,7,1296829313726828544
+12,2025-11-19 07:24,colinjhannah,lake minnetonka water,Romeo Doubs,WR,NE,1,won,,Tua Tagovailoa,15,1296847506650439680
+12,2025-11-19 09:07,colinjhannah,lake minnetonka water,Xavier Worthy,WR,KC,1,won,,,15,1296873630948413440
+12,2025-11-19 09:08,colinjhannah,lake minnetonka water,Michael Wilson,WR,ARI,1,lost,outbid,,15,1296873824750428160
+12,2025-11-19 10:03,d3childs,GregswillDaBOLL,AJ Barner,TE,SEA,1,won,,Zach Ertz,6,1296887677546684416
+12,2025-11-20 01:04,greggy2ships,Heads Will DaBOLL,Michael Wilson,WR,ARI,1,won,,Joe Flacco,9,1297114323813961728
+12,2025-11-21 21:37,greggy2ships,Heads Will DaBOLL,Kareem Hunt,RB,FA,2,won,,J.J. McCarthy,9,1297787095133196288
+12,2025-11-21 21:41,greggy2ships,Heads Will DaBOLL,Sean Tucker,RB,TB,1,lost,roster_full,,9,1297788097160839168
+12,2025-11-23 01:23,greggy2ships,Heads Will DaBOLL,Sean Tucker,RB,TB,1,won,,Kareem Hunt,9,1298206315843178496
+12,2025-11-23 20:34,greggy2ships,Heads Will DaBOLL,Bryce Young,QB,CAR,3,won,,Harold Fannin,9,1298496007859863552
+12,2025-11-23 20:36,greggy2ships,Heads Will DaBOLL,Xavier Legette,WR,CAR,1,lost,roster_full,,9,1298496470621634560
+12,2025-11-24 00:03,greggy2ships,Heads Will DaBOLL,Jalen Coker,WR,CAR,1,lost,roster_full,,9,1298548484865015808
+12,2025-11-24 00:04,greggy2ships,Heads Will DaBOLL,Brian Robinson,RB,ATL,1,lost,roster_full,,9,1298548683343683584
+12,2025-11-25 07:28,emloose,TravFulgham ComebackSzn,Patrick Mahomes,QB,KC,7,lost,outbid,,10,1299022837134159872
+12,2025-11-25 07:29,emloose,TravFulgham ComebackSzn,TreVeyon Henderson,RB,NE,23,won,,Juwan Johnson,10,1299023126419488768
+12,2025-11-25 07:29,emloose,TravFulgham ComebackSzn,Kyren Williams,RB,LAR,31,won,,Tony Pollard,10,1299023187987677184
+12,2025-11-25 07:29,emloose,TravFulgham ComebackSzn,Josh Jacobs,RB,GB,13,lost,outbid,,10,1299023289917661184
+12,2025-11-25 11:14,jakwok21,Get To The Choppa!,Dak Prescott,QB,DAL,3,lost,outbid,,14,1299079773342937088
+12,2025-11-25 11:14,jakwok21,Get To The Choppa!,Patrick Mahomes,QB,KC,2,lost,outbid,,14,1299079803101540352
+12,2025-11-25 11:15,jakwok21,Get To The Choppa!,Derrick Henry,RB,BAL,27,lost,outbid,,14,1299080008165265408
+12,2025-11-25 11:15,jakwok21,Get To The Choppa!,TreVeyon Henderson,RB,NE,14,lost,outbid,,14,1299080039672852480
+12,2025-11-25 11:16,jakwok21,Get To The Choppa!,Josh Jacobs,RB,GB,7,lost,outbid,,14,1299080268832837632
+12,2025-11-25 11:16,jakwok21,Get To The Choppa!,Kyren Williams,RB,LAR,9,lost,outbid,,14,1299080313124712448
+12,2025-11-25 11:17,jakwok21,Get To The Choppa!,Kenneth Walker,RB,KC,4,lost,roster_full,,14,1299080562257989632
+12,2025-11-25 14:12,emloose,TravFulgham ComebackSzn,Derrick Henry,RB,BAL,29,lost,outbid,,10,1299124667486851072
+12,2025-11-25 15:52,jakwok21,Get To The Choppa!,Josh Jacobs,RB,GB,16,won,,,14,1299149653274562560
+12,2025-11-25 15:52,jakwok21,Get To The Choppa!,TreVeyon Henderson,RB,NE,6,lost,outbid,,14,1299149780936564736
+12,2025-11-25 15:53,jakwok21,Get To The Choppa!,Kyren Williams,RB,LAR,3,lost,outbid,,14,1299149902399434752
+12,2025-11-25 15:53,jakwok21,Get To The Choppa!,Kenneth Walker,RB,KC,2,won,,Alvin Kamara,14,1299149988516872192
+12,2025-11-25 17:15,clevelandb0b,I hardly know herMayfield,Patrick Mahomes,QB,KC,1,lost,outbid,,7,1299170748044156928
+12,2025-11-25 17:16,clevelandb0b,I hardly know herMayfield,Kyren Williams,RB,LAR,13,lost,outbid,,7,1299170921315069952
+12,2025-11-25 17:16,clevelandb0b,I hardly know herMayfield,Courtland Sutton,WR,DEN,13,won,,,7,1299171012281139200
+12,2025-11-25 17:17,clevelandb0b,I hardly know herMayfield,Dallas Goedert,TE,PHI,1,won,,Jonnu Smith,7,1299171060674985984
+12,2025-11-25 17:17,clevelandb0b,I hardly know herMayfield,Jake Ferguson,TE,DAL,1,lost,outbid,,7,1299171099770097664
+12,2025-11-25 17:17,clevelandb0b,I hardly know herMayfield,Cooper Kupp,WR,SEA,5,lost,roster_full,,7,1299171246373617664
+12,2025-11-25 17:17,clevelandb0b,I hardly know herMayfield,Xavier Worthy,WR,KC,5,lost,roster_full,,7,1299171277755392000
+12,2025-11-25 17:18,clevelandb0b,I hardly know herMayfield,Kenneth Walker,RB,KC,13,lost,roster_full,,7,1299171295862214656
+12,2025-11-25 17:18,clevelandb0b,I hardly know herMayfield,TreVeyon Henderson,RB,NE,13,lost,outbid,,7,1299171339684302848
+12,2025-11-25 17:18,clevelandb0b,I hardly know herMayfield,Derrick Henry,RB,BAL,18,lost,outbid,,7,1299171364371992576
+12,2025-11-25 17:18,clevelandb0b,I hardly know herMayfield,Daniel Jones,QB,IND,1,won,,Emari Demercado,7,1299171417228603392
+12,2025-11-25 17:18,clevelandb0b,I hardly know herMayfield,Dak Prescott,QB,DAL,1,lost,outbid,,7,1299171474292109312
+12,2025-11-25 17:21,clevelandb0b,I hardly know herMayfield,Courtland Sutton,WR,DEN,1,lost,outbid,,7,1299172172819857408
+12,2025-11-25 21:00,jodangles,jodangles,Drake London,WR,ATL,5,lost,roster_full,,3,1299227275480272896
+12,2025-11-25 21:02,jodangles,jodangles,Derrick Henry,RB,BAL,44,won,,,3,1299227795804688384
+12,2025-11-25 21:02,jodangles,jodangles,TreVeyon Henderson,RB,NE,29,lost,roster_full,,3,1299227837986770944
+12,2025-11-25 21:10,jodangles,jodangles,Josh Jacobs,RB,GB,15,lost,outbid,,3,1299229690753478656
+12,2025-11-25 21:10,jodangles,jodangles,Kyren Williams,RB,LAR,21,lost,outbid,,3,1299229738631442432
+12,2025-11-25 21:16,d3childs,GregswillDaBOLL,Patrick Mahomes,QB,KC,20,won,,,6,1299231360807874560
+12,2025-11-25 21:18,d3childs,GregswillDaBOLL,Xavier Worthy,WR,KC,2,lost,roster_full,,6,1299231791818739712
+12,2025-11-25 21:19,jodangles,jodangles,Dak Prescott,QB,DAL,10,won,,Mason Taylor,3,1299232073529163776
+12,2025-11-25 21:19,d3childs,GregswillDaBOLL,Jake Ferguson,TE,DAL,2,lost,outbid,,6,1299232101626834944
+12,2025-11-25 21:19,d3childs,GregswillDaBOLL,Brenton Strange,TE,JAX,2,won,,AJ Barner,6,1299232147533500416
+12,2025-11-25 21:21,d3childs,GregswillDaBOLL,Josh Jacobs,RB,GB,6,lost,outbid,,6,1299232499620122624
+12,2025-11-25 21:21,d3childs,GregswillDaBOLL,Devin Neal,RB,FA,5,lost,roster_full,,6,1299232624694296576
+12,2025-11-26 00:07,jodangles,jodangles,Drake London,WR,ATL,5,won,,Bhayshul Tuten,3,1299274284648112128
+12,2025-11-26 00:33,greggy2ships,Heads Will DaBOLL,Derrick Henry,RB,BAL,15,lost,outbid,,9,1299281000274104320
+12,2025-11-26 00:34,greggy2ships,Heads Will DaBOLL,TreVeyon Henderson,RB,NE,7,lost,outbid,,9,1299281172437671936
+12,2025-11-26 00:34,greggy2ships,Heads Will DaBOLL,Kyren Williams,RB,LAR,11,lost,outbid,,9,1299281223721447425
+12,2025-11-26 00:40,greggy2ships,Heads Will DaBOLL,Jake Ferguson,TE,DAL,7,won,,,9,1299282609553014784
+12,2025-11-26 00:40,greggy2ships,Heads Will DaBOLL,Brenton Strange,TE,JAX,1,lost,outbid,,9,1299282711109726208
+12,2025-11-26 00:42,greggy2ships,Heads Will DaBOLL,Kenneth Walker,RB,KC,2,lost,outbid,,9,1299283207149092864
+12,2025-11-26 00:43,greggy2ships,Heads Will DaBOLL,Josh Jacobs,RB,GB,7,lost,outbid,,9,1299283345737269248
+12,2025-11-26 00:43,greggy2ships,Heads Will DaBOLL,Dak Prescott,QB,DAL,5,lost,outbid,,9,1299283402540728320
+12,2025-11-26 00:43,greggy2ships,Heads Will DaBOLL,Patrick Mahomes,QB,KC,11,lost,outbid,,9,1299283466306719744
+12,2025-11-26 00:45,greggy2ships,Heads Will DaBOLL,John Metchie,WR,CAR,1,won,,,9,1299283799418376192
+13,2025-11-26 06:08,emloose,TravFulgham ComebackSzn,Jayden Daniels,QB,WAS,1,won,,,10,1299365125962084352
+13,2025-11-26 23:30,greggy2ships,Heads Will DaBOLL,Cam Ward,QB,TEN,1,won,,,9,1299627505463865344
+13,2025-11-28 16:59,greggy2ships,Heads Will DaBOLL,Terry McLaurin,WR,WAS,1,won,,John Metchie,9,1300253752258732032
+13,2025-11-30 17:56,d3childs,GregswillDaBOLL,Theo Johnson,TE,NYG,2,won,,Emanuel Wilson,6,1300992809276280832
+13,2025-12-02 01:33,jakwok21,Get To The Choppa!,D'Andre Swift,RB,CHI,1,lost,roster_full,,14,1301470344976007168
+13,2025-12-02 01:34,jakwok21,Get To The Choppa!,Christian McCaffrey,RB,SF,122,won,,Tyler Allgeier,14,1301470575616626688
+13,2025-12-02 01:36,jakwok21,Get To The Choppa!,Amon-Ra St. Brown,WR,DET,42,lost,roster_full,,14,1301471135057051648
+13,2025-12-02 01:37,jakwok21,Get To The Choppa!,Amon-Ra St. Brown,WR,DET,42,won,,Colston Loveland,14,1301471337818132480
+13,2025-12-02 01:39,jakwok21,Get To The Choppa!,Jared Goff,QB,DET,1,lost,outbid,,14,1301471878728151040
+13,2025-12-02 01:40,jakwok21,Get To The Choppa!,DeVonta Smith,WR,PHI,2,lost,roster_full,,14,1301472060005978112
+13,2025-12-02 01:41,jakwok21,Get To The Choppa!,Christian Watson,WR,GB,3,lost,roster_full,,14,1301472303372058624
+13,2025-12-02 09:14,emloose,TravFulgham ComebackSzn,Christian McCaffrey,RB,SF,44,lost,outbid,,10,1301586439426826240
+13,2025-12-02 09:15,emloose,TravFulgham ComebackSzn,Jared Goff,QB,DET,3,lost,outbid,,10,1301586570930814976
+13,2025-12-02 09:16,emloose,TravFulgham ComebackSzn,Baker Mayfield,QB,TB,1,won,,Sam Darnold,10,1301586760513363968
+13,2025-12-02 09:18,emloose,TravFulgham ComebackSzn,Kyle Pitts,TE,ATL,2,lost,outbid,,10,1301587242627657728
+13,2025-12-02 09:18,emloose,TravFulgham ComebackSzn,Harold Fannin,TE,CLE,1,won,,Hunter Henry,10,1301587325595156480
+13,2025-12-02 09:18,emloose,TravFulgham ComebackSzn,Dallas Goedert,TE,PHI,1,lost,roster_full,,10,1301587358428196864
+13,2025-12-02 16:05,jakwok21,Get To The Choppa!,Adonai Mitchell,WR,NYJ,1,lost,roster_full,,14,1301689830178054144
+13,2025-12-02 19:52,jodangles,jodangles,Christian McCaffrey,RB,SF,77,lost,outbid,,3,1301746949824737280
+13,2025-12-02 19:53,jodangles,jodangles,Amon-Ra St. Brown,WR,DET,25,lost,outbid,,3,1301747091265052672
+13,2025-12-02 22:31,d3childs,GregswillDaBOLL,Christian McCaffrey,RB,SF,5,lost,outbid,,6,1301787005042036736
+13,2025-12-02 22:33,d3childs,GregswillDaBOLL,Courtland Sutton,WR,DEN,3,won,,Darnell Mooney,6,1301787435092414464
+13,2025-12-02 22:33,d3childs,GregswillDaBOLL,Jaylen Waddle,WR,DEN,5,lost,outbid,,6,1301787507481939968
+13,2025-12-02 22:34,d3childs,GregswillDaBOLL,Kyle Pitts,TE,ATL,3,won,,Cade Otton,6,1301787633449472000
+13,2025-12-02 23:44,jodangles,jodangles,Jaylen Waddle,WR,DEN,10,won,,Tyrone Tracy,3,1301805330241429504
+13,2025-12-02 23:44,jodangles,jodangles,Jaylen Waddle,WR,DEN,10,lost,outbid,,3,1301805383911739392
+13,2025-12-03 00:18,jodangles,jodangles,Christian Watson,WR,GB,3,won,,Kayshon Boutte,3,1301813934788980736
+13,2025-12-03 00:24,jodangles,jodangles,Courtland Sutton,WR,DEN,2,lost,outbid,,3,1301815408734519296
+13,2025-12-03 01:13,greggy2ships,Heads Will DaBOLL,Jared Goff,QB,DET,7,won,,Cam Ward,9,1301827575810625536
+13,2025-12-03 01:13,greggy2ships,Heads Will DaBOLL,Baker Mayfield,QB,TB,2,lost,roster_full,,9,1301827613722943488
+13,2025-12-03 01:13,greggy2ships,Heads Will DaBOLL,Daniel Jones,QB,IND,2,won,,DJ Moore,9,1301827781029535744
+13,2025-12-03 01:15,greggy2ships,Heads Will DaBOLL,Jaylen Waddle,WR,DEN,6,lost,outbid,,9,1301828070801432576
+13,2025-12-03 01:15,greggy2ships,Heads Will DaBOLL,Christian Watson,WR,GB,2,lost,outbid,,9,1301828158735015936
+13,2025-12-03 01:17,greggy2ships,Heads Will DaBOLL,Christian McCaffrey,RB,SF,7,lost,outbid,,9,1301828789659000832
+13,2025-12-03 01:20,greggy2ships,Heads Will DaBOLL,Amon-Ra St. Brown,WR,DET,6,lost,outbid,,9,1301829495887523840
+13,2025-12-03 01:32,greggy2ships,Heads Will DaBOLL,Bo Nix,QB,DEN,2,lost,roster_full,,9,1301832372655771648
+14,2025-12-03 03:21,jakwok21,Get To The Choppa!,Bo Nix,QB,DEN,1,won,,Ricky Pearsall,14,1301859858097647616
+14,2025-12-07 20:04,greggy2ships,Heads Will DaBOLL,DeVonta Smith,WR,PHI,1,won,,Khalil Shakir,9,1303561792387059712
+14,2025-12-09 10:25,jakwok21,Get To The Choppa!,Ja'Marr Chase,WR,CIN,51,lost,roster_full,,14,1304140874791288832
+14,2025-12-09 10:25,jakwok21,Get To The Choppa!,Jahmyr Gibbs,RB,DET,72,won,,,14,1304141024167211008
+14,2025-12-09 10:29,jakwok21,Get To The Choppa!,Jalen Hurts,QB,PHI,2,lost,roster_full,,14,1304142006766833664
+14,2025-12-09 10:30,jakwok21,Get To The Choppa!,Jalen Hurts,QB,PHI,1,won,,Bo Nix,14,1304142037506850816
+14,2025-12-09 10:30,jakwok21,Get To The Choppa!,Javonte Williams,RB,DAL,2,lost,outbid,,14,1304142104712216576
+14,2025-12-09 10:30,jakwok21,Get To The Choppa!,Davante Adams,WR,LAR,1,lost,outbid,,14,1304142130070966272
+14,2025-12-09 10:30,jakwok21,Get To The Choppa!,TreVeyon Henderson,RB,NE,2,lost,outbid,,14,1304142164124532736
+14,2025-12-09 10:30,jakwok21,Get To The Choppa!,Justin Jefferson,WR,MIN,1,lost,roster_full,,14,1304142199071477760
+14,2025-12-09 10:30,jakwok21,Get To The Choppa!,Saquon Barkley,RB,PHI,1,lost,outbid,,14,1304142219065688064
+14,2025-12-09 10:30,jakwok21,Get To The Choppa!,Tee Higgins,WR,CIN,1,lost,roster_full,,14,1304142246408372224
+14,2025-12-09 10:30,jakwok21,Get To The Choppa!,Jameson Williams,WR,DET,1,lost,roster_full,,14,1304142265748320256
+14,2025-12-09 10:30,jakwok21,Get To The Choppa!,Kyren Williams,RB,LAR,1,lost,roster_full,,14,1304142284438134784
+14,2025-12-09 10:31,jakwok21,Get To The Choppa!,Harold Fannin,TE,CLE,1,lost,outbid,,14,1304142301659926528
+14,2025-12-09 10:31,jakwok21,Get To The Choppa!,TreVeyon Henderson,RB,NE,1,lost,outbid,,14,1304142352239067136
+14,2025-12-09 10:31,jakwok21,Get To The Choppa!,Javonte Williams,RB,DAL,1,lost,outbid,,14,1304142385793466368
+14,2025-12-09 12:43,jakwok21,Get To The Choppa!,Ja'Marr Chase,WR,CIN,17,lost,outbid,,14,1304175537589080064
+14,2025-12-09 14:41,d3childs,GregswillDaBOLL,Mike Evans,WR,SF,3,won,,Theo Johnson,6,1304205288282288128
+14,2025-12-09 14:41,d3childs,GregswillDaBOLL,DK Metcalf,WR,PIT,3,won,,,6,1304205349082910720
+14,2025-12-09 14:41,d3childs,GregswillDaBOLL,Davante Adams,WR,LAR,5,lost,outbid,,6,1304205413700345856
+14,2025-12-09 14:42,d3childs,GregswillDaBOLL,TreVeyon Henderson,RB,NE,7,won,,Keenan Allen,6,1304205468809310208
+14,2025-12-09 20:59,jodangles,jodangles,Jahmyr Gibbs,RB,DET,50,lost,outbid,,3,1304300393496317952
+14,2025-12-09 20:59,jodangles,jodangles,Ja'Marr Chase,WR,CIN,50,won,,Jordan Love,3,1304300429982564352
+14,2025-12-09 21:22,jodangles,jodangles,Ja'Marr Chase,WR,CIN,31,lost,outbid,,3,1304306255447232512
+14,2025-12-09 21:24,jodangles,jodangles,Javonte Williams,RB,DAL,15,lost,roster_full,,3,1304306867303899136
+14,2025-12-09 21:25,jodangles,jodangles,Davante Adams,WR,LAR,15,lost,roster_full,,3,1304306934563737600
+14,2025-12-09 21:25,jodangles,jodangles,Chris Olave,WR,NO,1,lost,outbid,,3,1304306995167232000
+14,2025-12-09 21:25,jodangles,jodangles,TreVeyon Henderson,RB,NE,15,lost,roster_full,,3,1304307092177313792
+14,2025-12-09 21:26,jodangles,jodangles,Woody Marks,RB,HOU,1,lost,roster_full,,3,1304307204366561280
+14,2025-12-09 21:28,jodangles,jodangles,Saquon Barkley,RB,PHI,17,won,,David Montgomery,3,1304307675160387584
+14,2025-12-09 22:13,jodangles,jodangles,Saquon Barkley,RB,PHI,10,lost,outbid,,3,1304319026087854080
+14,2025-12-09 22:13,jodangles,jodangles,Javonte Williams,RB,DAL,5,won,,Kimani Vidal,3,1304319143842942976
+14,2025-12-09 22:13,jodangles,jodangles,Davante Adams,WR,LAR,5,lost,outbid,,3,1304319195042824192
+14,2025-12-09 22:14,jodangles,jodangles,TreVeyon Henderson,RB,NE,5,lost,outbid,,3,1304319255130427392
+14,2025-12-09 22:48,greggy2ships,Heads Will DaBOLL,Jahmyr Gibbs,RB,DET,4,lost,outbid,,9,1304327851423588352
+14,2025-12-09 22:48,greggy2ships,Heads Will DaBOLL,Jalen Hurts,QB,PHI,1,lost,outbid,,9,1304327899024740352
+14,2025-12-09 22:48,greggy2ships,Heads Will DaBOLL,Ja'Marr Chase,WR,CIN,3,lost,outbid,,9,1304327967035396096
+14,2025-12-09 22:49,greggy2ships,Heads Will DaBOLL,Javonte Williams,RB,DAL,1,lost,outbid,,9,1304328024862253056
+14,2025-12-09 22:49,greggy2ships,Heads Will DaBOLL,Davante Adams,WR,LAR,5,won,,,9,1304328069883887616
+14,2025-12-09 22:49,greggy2ships,Heads Will DaBOLL,Chris Olave,WR,NO,1,won,,,9,1304328107032838144
+14,2025-12-09 22:49,greggy2ships,Heads Will DaBOLL,Saquon Barkley,RB,PHI,3,lost,outbid,,9,1304328174192058368
+14,2025-12-09 22:49,greggy2ships,Heads Will DaBOLL,Justin Jefferson,WR,MIN,1,lost,roster_full,,9,1304328233847623680
+14,2025-12-09 22:50,greggy2ships,Heads Will DaBOLL,Jameson Williams,WR,DET,1,lost,roster_full,,9,1304328295260643328
+14,2025-12-09 22:54,greggy2ships,Heads Will DaBOLL,TreVeyon Henderson,RB,NE,1,lost,outbid,,9,1304329501966090240
+14,2025-12-09 23:01,greggy2ships,Heads Will DaBOLL,Harold Fannin,TE,CLE,1,lost,outbid,,9,1304331214680784896
+14,2025-12-09 23:04,greggy2ships,Heads Will DaBOLL,Tyler Warren,TE,IND,1,lost,roster_full,,9,1304331942677712896
+14,2025-12-09 23:06,greggy2ships,Heads Will DaBOLL,Kyren Williams,RB,LAR,1,lost,roster_full,,9,1304332342256472064
+14,2025-12-10 00:09,jodangles,jodangles,Harold Fannin,TE,CLE,3,won,,Oronde Gadsden,3,1304348143340515328
+14,2025-12-10 00:10,jakwok21,Get To The Choppa!,Jaylen Wright,RB,MIA,1,lost,roster_full,,14,1304348534639693824
+14,2025-12-10 00:11,jakwok21,Get To The Choppa!,Jaylen Wright,RB,MIA,1,lost,roster_full,,14,1304348674159034368
+15,2025-12-11 00:17,greggy2ships,Heads Will DaBOLL,Jameson Williams,WR,DET,2,won,,Stefon Diggs,9,1304712692577112064
+15,2025-12-11 00:25,greggy2ships,Heads Will DaBOLL,Justin Jefferson,WR,MIN,2,won,,Jared Goff,9,1304714558111240192
+15,2025-12-16 02:41,jakwok21,Get To The Choppa!,Ja'Marr Chase,WR,CIN,17,won,,Michael Pittman,14,1306560861522915328
+15,2025-12-16 02:43,jakwok21,Get To The Choppa!,Saquon Barkley,RB,PHI,2,won,,Kenneth Walker,14,1306561468447084544
+15,2025-12-16 02:44,jakwok21,Get To The Choppa!,Chase Brown,RB,CIN,2,lost,roster_full,,14,1306561537665683456
+15,2025-12-16 02:44,jakwok21,Get To The Choppa!,Harold Fannin,TE,CLE,1,lost,roster_full,,14,1306561681580646400
+15,2025-12-16 02:45,jakwok21,Get To The Choppa!,Jonathan Taylor,RB,IND,1,lost,outbid,,14,1306561772408283136
+15,2025-12-16 02:47,jakwok21,Get To The Choppa!,Drake London,WR,ATL,1,lost,roster_full,,14,1306562461108822016
+15,2025-12-16 02:48,jakwok21,Get To The Choppa!,Kyren Williams,RB,LAR,1,lost,roster_full,,14,1306562710065913856
+15,2025-12-16 02:50,jakwok21,Get To The Choppa!,Dallas Goedert,TE,PHI,1,won,,Rome Odunze,14,1306563021484601344
+15,2025-12-16 02:56,jakwok21,Get To The Choppa!,Derrick Henry,RB,BAL,1,lost,roster_full,,14,1306564597850865664
+15,2025-12-16 05:17,jakwok21,Get To The Choppa!,Colby Parkinson,TE,LAR,1,lost,roster_full,,14,1306600039434457088
+15,2025-12-16 11:58,jakwok21,Get To The Choppa!,George Pickens,WR,DAL,1,lost,roster_full,,14,1306700962190065664
+15,2025-12-16 20:42,greggy2ships,Heads Will DaBOLL,Ja'Marr Chase,WR,CIN,8,lost,outbid,,9,1306832799252103168
+15,2025-12-16 20:42,greggy2ships,Heads Will DaBOLL,Jonathan Taylor,RB,IND,5,won,,Jake Ferguson,9,1306832915790835712
+15,2025-12-16 22:31,greggy2ships,Heads Will DaBOLL,Saquon Barkley,RB,PHI,2,lost,outbid,,9,1306860264494235648
+15,2025-12-16 22:47,greggy2ships,Heads Will DaBOLL,A.J. Brown,WR,NE,2,won,,DeVonta Smith,9,1306864393971068928
+15,2025-12-16 23:01,greggy2ships,Heads Will DaBOLL,Javonte Williams,RB,DAL,1,lost,roster_full,,9,1306867789402738688
+15,2025-12-17 02:42,greggy2ships,Heads Will DaBOLL,Chase Brown,RB,CIN,2,lost,roster_full,,9,1306923390929498112
+15,2025-12-17 02:43,greggy2ships,Heads Will DaBOLL,Derrick Henry,RB,BAL,2,lost,roster_full,,9,1306923765875118080
+16,2025-12-19 20:34,greggy2ships,Heads Will DaBOLL,Drake Maye,QB,NE,1,won,,Davante Adams,9,1307918022811357184
+16,2025-12-19 20:43,greggy2ships,Heads Will DaBOLL,Drake London,WR,ATL,1,won,,Terry McLaurin,9,1307920291736850432
+16,2025-12-21 02:02,jakwok21,Get To The Choppa!,George Pickens,WR,DAL,1,won,,Breece Hall,14,1308363009868963840
+16,2025-12-21 02:34,jakwok21,Get To The Choppa!,Derrick Henry,RB,BAL,1,lost,roster_full,,14,1308371129374625792
+16,2025-12-21 02:35,jakwok21,Get To The Choppa!,Chase Brown,RB,CIN,1,lost,roster_full,,14,1308371390130311168
+16,2025-12-23 06:58,d3childs,GregswillDaBOLL,Christian McCaffrey,RB,SF,1,lost,outbid,,6,1309162235645427712
+16,2025-12-23 06:58,d3childs,GregswillDaBOLL,Jahmyr Gibbs,RB,DET,1,lost,roster_full,,6,1309162263147462656
+16,2025-12-23 06:58,d3childs,GregswillDaBOLL,Trey McBride,TE,ARI,1,lost,outbid,,6,1309162285045927936
+16,2025-12-23 06:58,d3childs,GregswillDaBOLL,Ja'Marr Chase,WR,CIN,1,lost,roster_full,,6,1309162297452662784
+16,2025-12-23 06:58,d3childs,GregswillDaBOLL,George Pickens,WR,DAL,1,lost,roster_full,,6,1309162349315231744
+16,2025-12-23 06:59,d3childs,GregswillDaBOLL,Chase Brown,RB,CIN,1,lost,roster_full,,6,1309162413190320128
+16,2025-12-23 06:59,d3childs,GregswillDaBOLL,Ashton Jeanty,RB,LV,1,lost,roster_full,,6,1309162430688952320
+16,2025-12-23 09:34,d3childs,GregswillDaBOLL,Josh Allen,QB,BUF,1,won,,,6,1309201458977067008
+16,2025-12-23 09:34,d3childs,GregswillDaBOLL,Dak Prescott,QB,DAL,1,lost,roster_full,,6,1309201483002036224
+16,2025-12-24 00:32,greggy2ships,Heads Will DaBOLL,Christian McCaffrey,RB,SF,2,won,,,9,1309427390719483904
+16,2025-12-24 00:32,greggy2ships,Heads Will DaBOLL,Trey McBride,TE,ARI,1,won,,,9,1309427459564777472
+16,2025-12-24 00:35,greggy2ships,Heads Will DaBOLL,Jahmyr Gibbs,RB,DET,1,won,,Omarion Hampton,9,1309428344927842304
+17,2025-12-24 14:07,greggy2ships,Heads Will DaBOLL,Amon-Ra St. Brown,WR,DET,1,won,,Garrett Wilson,9,1309632513408241664
+17,2025-12-27 10:34,greggy2ships,Heads Will DaBOLL,Ja'Marr Chase,WR,CIN,1,won,,Jameson Williams,9,1310666098290470912
+17,2025-12-27 22:52,greggy2ships,Heads Will DaBOLL,Saquon Barkley,RB,PHI,1,won,,Justin Jefferson,9,1310851901545259008
+17,2025-12-28 00:31,greggy2ships,Heads Will DaBOLL,Harold Fannin,TE,CLE,1,won,,Nico Collins,9,1310876891133009920
+17,2025-12-28 22:41,greggy2ships,Heads Will DaBOLL,Kyren Williams,RB,LAR,1,won,,Tetairoa McMillan,9,1311211549527900160

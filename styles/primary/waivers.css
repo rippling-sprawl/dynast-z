@@ -1,0 +1,674 @@
+/* === Week 1-2 waiver board + week 1 pricing post-mortem ===
+ *
+ * Wears the VegasInsider skin, the same one /football/schedule takes. The
+ * import below is the whole palette change: that sheet redefines the house
+ * tokens (--surface, --border, --accent, --text-*, --warn) rather than
+ * restating rules, so every component here repaints by inheritance. What is
+ * left for this file is the part a token cannot carry — the display face on
+ * headings and column heads, the navy band with the gold rule under it, and
+ * squaring off the radii, because nothing on VegasInsider is round.
+ *
+ * Idioms borrowed from that skin, applied by hand as it intends (see the
+ * `Shared idioms` note in vegasinsider.css): .vi-band on the player heads and
+ * the table head, .vi-label on the small caps, .vi-chip on the badges.
+ *
+ * The bid bars are width-scaled against the top bid *for that player*, not
+ * against the league-wide maximum. Chase went for $900 and the median winner
+ * went for $1 — one shared scale would flatten forty of the forty-three
+ * blocks into invisible slivers. Per-player scaling costs cross-row
+ * comparability, which the dollar figures beside each bar already carry.
+ */
+
+@import url('/styles/base/vegasinsider.css');
+
+.waiver-wrap {
+  max-width: 940px;
+  margin: 0 auto;
+  padding: 16px 12px 48px;
+}
+
+.waiver-head h1 {
+  font-family: var(--vi-display);
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  line-height: 1.1;
+  margin: 0 0 8px;
+  padding-bottom: 8px;
+  border-bottom: 3px solid var(--vi-gold);
+  color: var(--text-hi);
+}
+
+.waiver-head .sub {
+  color: var(--text-3);
+  font-size: 13px;
+  margin: 0 0 16px;
+  line-height: 1.5;
+}
+
+/* --- Summary tiles --- */
+.waiver-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.wstat {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--vi-gold);
+  border-radius: 2px;
+  padding: 10px 12px;
+}
+
+.wstat .n {
+  font-family: var(--vi-display);
+  font-size: 21px;
+  font-weight: 700;
+  color: var(--text-hi);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+
+.wstat .l {
+  font-family: var(--vi-display);
+  font-weight: 700;
+  font-size: 10px;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-top: 3px;
+}
+
+/* --- Controls --- */
+.waiver-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.waiver-controls input[type="text"] {
+  flex: 1 1 180px;
+  min-width: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  padding: 8px 10px;
+  color: var(--text);
+  font-size: 14px;
+}
+
+.waiver-controls input[type="text"]:focus {
+  outline: none;
+  border-color: var(--vi-gold);
+  box-shadow: 0 0 0 3px var(--accent-ring);
+}
+
+.wk-toggle {
+  display: flex;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.wk-toggle button {
+  background: var(--surface);
+  border: 0;
+  border-right: 1px solid var(--border);
+  color: var(--text-3);
+  font-family: var(--vi-display);
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+  padding: 9px 13px;
+  cursor: pointer;
+}
+
+.wk-toggle button:last-child { border-right: 0; }
+.wk-toggle button.active { background: var(--vi-gold); color: var(--vi-bar); }
+
+.csv-link {
+  font-family: var(--vi-display);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  font-size: 11px;
+  color: var(--accent);
+  text-decoration: none;
+  white-space: nowrap;
+  padding: 8px 0;
+}
+
+.csv-link:hover { color: var(--accent-hover); text-decoration: underline; }
+
+/* --- Player block --- */
+.player-block {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  margin-bottom: 8px;
+}
+
+.pb-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--vi-navy);
+  border-bottom: 2px solid var(--vi-gold);
+}
+
+.pb-body { padding: 10px 12px 11px; }
+
+.pb-name {
+  font-family: var(--vi-display);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--vi-band-ink);
+}
+
+.pb-pos {
+  font-family: var(--vi-display);
+  font-weight: 700;
+  font-size: 10px;
+  color: var(--vi-gold);
+  border: 1px solid var(--vi-gold-line);
+  border-radius: 2px;
+  padding: 1px 5px;
+  letter-spacing: 0.7px;
+  white-space: nowrap;
+}
+
+.pb-meta {
+  margin-left: auto;
+  font-family: var(--vi-display);
+  font-weight: 700;
+  font-size: 10px;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--vi-band-ink-2);
+  white-space: nowrap;
+}
+
+/* --- Bid rows --- */
+.bid-row {
+  display: grid;
+  grid-template-columns: 58px 1fr;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 5px;
+}
+
+.bid-row:last-child { margin-bottom: 0; }
+
+.bid-amt {
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+  text-align: right;
+  color: var(--text-2);
+  font-weight: 600;
+}
+
+.bid-row.won .bid-amt { color: var(--good-bright); }
+
+.bid-track {
+  position: relative;
+  height: 22px;
+  border-radius: 2px;
+  background: var(--surface-3);
+  overflow: hidden;
+}
+
+.bid-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 2px;
+  background: var(--surface-2);
+  min-width: 2px;
+}
+
+.bid-row.won .bid-fill { background: var(--vi-gold-soft); border-left: 3px solid var(--vi-gold); }
+.bid-row.void .bid-fill { background: repeating-linear-gradient(
+    135deg, var(--surface-2), var(--surface-2) 5px, transparent 5px, transparent 10px); }
+
+.bid-label {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 100%;
+  padding: 0 8px;
+  font-size: 12px;
+  color: var(--text-2);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.bid-row.won .bid-label { color: var(--text-hi); font-weight: 600; }
+
+.tag {
+  font-family: var(--vi-display);
+  font-size: 9.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  border-radius: 2px;
+  padding: 1px 5px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.tag.got  { background: var(--good); color: #ffffff; }
+.tag.void { background: var(--warn-soft); color: var(--warn); border: 1px solid var(--warn-line); }
+
+.more-bids {
+  font-size: 11px;
+  color: var(--text-4);
+  padding-left: 68px;
+  margin-top: 4px;
+}
+
+.pb-foot {
+  font-size: 11px;
+  color: var(--text-4);
+  margin-top: 8px;
+  padding-top: 7px;
+  border-top: 1px solid var(--border-soft);
+}
+
+.waiver-note {
+  font-size: 12px;
+  color: var(--text-3);
+  line-height: 1.6;
+  margin-top: 22px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
+.waiver-note b { color: var(--text-2); font-weight: 700; }
+.waiver-note p { margin: 0 0 8px; }
+
+#waiver-empty { color: var(--text-3); font-size: 14px; padding: 24px 0; text-align: center; }
+
+@media (max-width: 560px) {
+  .waiver-stats { grid-template-columns: repeat(2, 1fr); }
+  .pb-meta { display: none; }
+  .bid-row { grid-template-columns: 48px 1fr; gap: 8px; }
+  .more-bids { padding-left: 56px; }
+}
+
+/* === Week 1 post-mortem ====================================================
+ * A table rather than more bid blocks: this section compares thirteen claims
+ * on six numbers each, which is a job for aligned columns. The head takes the
+ * navy band, the figures are tabular, and the over/under column is the only
+ * place colour carries meaning — green where the room underpaid, red where it
+ * overpaid, and neither is louder than the other. */
+
+.analysis {
+  margin-top: 34px;
+}
+
+.analysis h2 {
+  font-family: var(--vi-display);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--text-hi);
+  margin: 0 0 8px;
+  padding-bottom: 7px;
+  border-bottom: 3px solid var(--vi-gold);
+}
+
+.analysis .lede {
+  font-size: 13px;
+  color: var(--text-3);
+  line-height: 1.6;
+  margin: 0 0 14px;
+  max-width: 68ch;
+}
+
+.analysis .lede b { color: var(--text-2); font-weight: 700; }
+
+.an-scroll {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  margin-bottom: 10px;
+}
+
+.an-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.an-table thead th {
+  background: var(--vi-navy);
+  border-bottom: 2px solid var(--vi-gold);
+  color: var(--vi-band-ink);
+  font-family: var(--vi-display);
+  font-weight: 700;
+  font-size: 10px;
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+  padding: 8px 9px;
+  text-align: right;
+  position: sticky;
+  top: 0;
+}
+
+.an-table thead th.l,
+.an-table tbody td.l { text-align: left; }
+
+.an-table tbody td {
+  padding: 7px 9px;
+  border-bottom: 1px solid var(--border-soft);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-2);
+}
+
+.an-table tbody tr:nth-child(even) td { background: var(--zebra); }
+.an-table tbody tr:last-child td { border-bottom: 0; }
+
+.an-player {
+  font-family: var(--vi-display);
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.3px;
+  color: var(--text-hi);
+}
+
+.an-fin {
+  font-family: var(--vi-display);
+  font-size: 10px;
+  letter-spacing: 0.5px;
+  color: var(--text-4);
+  margin-left: 5px;
+}
+
+.an-over  { color: var(--bad); font-weight: 700; }
+.an-under { color: var(--good); font-weight: 700; }
+
+/* Chop week. The champion is the one row that never got one. */
+.an-chop {
+  font-family: var(--vi-display);
+  font-weight: 700;
+  font-size: 10px;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  border-radius: 2px;
+  padding: 2px 5px;
+  background: var(--surface-2);
+  color: var(--text-3);
+}
+
+.an-chop.early { background: rgba(248, 81, 73, 0.15); color: var(--bad); }
+.an-chop.champ { background: var(--vi-gold); color: var(--vi-bar); }
+
+/* The delivery bar: what the player scored, and how much of it the buyer was
+ * still alive to start. The track is the full rest-of-season total. */
+.an-deliver {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+/* Track = this player's rest-of-season total against the biggest on the board.
+ * The green inset is the part the buyer was alive to start. The figure sits
+ * beside the bar rather than on it: laid over the fill it was white-on-green
+ * at 10px, which is exactly where small type stops being readable. */
+.an-deliver .track {
+  position: relative;
+  height: 14px;
+  width: 84px;
+  flex-shrink: 0;
+  background: var(--surface-3);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.an-deliver i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: var(--vi-gold-soft);
+  border-right: 2px solid var(--vi-gold-line);
+}
+
+.an-deliver b {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: var(--good);
+  opacity: 0.62;
+}
+
+.an-deliver .lbl {
+  font-size: 10.5px;
+  color: var(--text-4);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.an-legend {
+  font-size: 11.5px;
+  color: var(--text-4);
+  line-height: 1.7;
+  margin-bottom: 20px;
+}
+
+.an-legend code {
+  font-family: var(--vi-display);
+  font-weight: 700;
+  font-size: 10px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--text-2);
+  background: var(--surface-2);
+  border-radius: 2px;
+  padding: 1px 5px;
+}
+
+/* --- Survival panel --- */
+.surv-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.surv-card {
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--vi-gold);
+  border-radius: 2px;
+  background: var(--surface);
+  padding: 10px 12px;
+}
+
+.surv-card h3 {
+  font-family: var(--vi-display);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--text-3);
+  margin: 0 0 7px;
+}
+
+.surv-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+  padding: 3px 0;
+  color: var(--text-2);
+}
+
+.surv-row .m { overflow: hidden; text-overflow: ellipsis; }
+.surv-row .v { font-variant-numeric: tabular-nums; color: var(--text-4); flex-shrink: 0; }
+
+@media (max-width: 560px) {
+  .analysis h2 { font-size: 18px; }
+  .waiver-head h1 { font-size: 21px; }
+}
+
+/* --- Season switch. The league continues under a new id each year, so the
+ * board picks a season rather than a league. A live season gets a note instead
+ * of a silently thin board: 2026 has ten bids to 2025's twelve hundred, and
+ * without the note that reads as breakage. */
+.season-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.season-bar button {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  color: var(--text-3);
+  font-family: var(--vi-display);
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+  padding: 7px 13px;
+  cursor: pointer;
+}
+
+.season-bar button:hover { border-color: var(--vi-gold); }
+.season-bar button.active { background: var(--vi-gold); color: var(--vi-bar); border-color: var(--vi-gold); }
+
+.season-note { font-size: 11.5px; color: var(--text-4); }
+
+/* === This week's targets ===================================================
+ * Sits above the historical board because it is the thing with a deadline.
+ * The bid is the first column, not the last: it is what the reader came for
+ * and what they will type into Sleeper. Watch-only rows keep their place in
+ * the ranking but lose the dollar figure, so nothing that should not be bid on
+ * can be misread as a bid. */
+
+.targets { margin-bottom: 30px; }
+
+.targets h2,
+.board-head {
+  font-family: var(--vi-display);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--text-hi);
+  margin: 0 0 8px;
+  padding-bottom: 7px;
+  border-bottom: 3px solid var(--vi-gold);
+}
+
+.board-head { margin-top: 34px; }
+
+.targets .lede {
+  font-size: 13px;
+  color: var(--text-3);
+  line-height: 1.65;
+  margin: 0 0 14px;
+  max-width: 74ch;
+}
+
+.targets .lede b { color: var(--text-2); font-weight: 700; }
+
+.tg-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  margin-bottom: 10px;
+}
+
+.tg-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.tg-table thead th {
+  background: var(--vi-navy);
+  border-bottom: 2px solid var(--vi-gold);
+  color: var(--vi-band-ink);
+  font-family: var(--vi-display);
+  font-weight: 700;
+  font-size: 10px;
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+  padding: 8px 10px;
+  text-align: right;
+}
+
+.tg-table thead th.l, .tg-table tbody td.l { text-align: left; }
+
+.tg-table tbody td {
+  padding: 9px 10px;
+  border-bottom: 1px solid var(--border-soft);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-2);
+}
+
+.tg-table tbody tr:last-child td { border-bottom: 0; }
+.tg-table tbody tr.is-watch td { opacity: 0.62; }
+
+.tg-bid {
+  font-family: var(--vi-display);
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--vi-gold);
+}
+
+.tg-watch {
+  font-family: var(--vi-display);
+  font-weight: 700;
+  font-size: 10px;
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+  color: var(--text-4);
+}
+
+.tg-name {
+  font-family: var(--vi-display);
+  font-weight: 700;
+  font-size: 12.5px;
+  letter-spacing: 0.3px;
+  color: var(--text-hi);
+}
+
+.tg-pos {
+  font-family: var(--vi-display);
+  font-size: 10px;
+  letter-spacing: 0.5px;
+  color: var(--text-4);
+  margin-left: 6px;
+}
+
+.tg-flag {
+  font-family: var(--vi-display);
+  font-weight: 700;
+  font-size: 9px;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  border-radius: 2px;
+  padding: 1px 5px;
+  margin-left: 6px;
+}
+
+.tg-flag.warn { background: var(--warn-soft); color: var(--warn); border: 1px solid var(--warn-line); }
+.tg-flag.inj  { background: rgba(248, 81, 73, 0.15); color: var(--bad); }
+.tg-none { color: var(--text-5); font-style: italic; }

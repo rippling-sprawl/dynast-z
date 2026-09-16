@@ -1,0 +1,826 @@
+{
+ "league": "Cut Throat",
+ "season": "2025",
+ "total_bid": 1643,
+ "claims": [
+  {
+   "pid": "7564",
+   "player": "Ja'Marr Chase",
+   "pos": "WR",
+   "nfl": "CIN",
+   "bid": 900,
+   "manager": "Hockeystar90",
+   "roster_id": 18,
+   "chop_week": 6,
+   "ros_pts": 285.4,
+   "ros_vor": 144.1,
+   "held_pts": 106.8,
+   "started_pts": 106.8,
+   "weeks_held": 5,
+   "weeks_started": 5,
+   "fair_pts": 271,
+   "fair_vor": 437,
+   "pos_rank": "WR4"
+  },
+  {
+   "pid": "8138",
+   "player": "James Cook",
+   "pos": "RB",
+   "nfl": "BUF",
+   "bid": 290,
+   "manager": "baker28",
+   "roster_id": 1,
+   "chop_week": 5,
+   "ros_pts": 279.5,
+   "ros_vor": 137.1,
+   "held_pts": 74.7,
+   "started_pts": 74.7,
+   "weeks_held": 4,
+   "weeks_started": 4,
+   "fair_pts": 265,
+   "fair_vor": 416,
+   "pos_rank": "RB6"
+  },
+  {
+   "pid": "7525",
+   "player": "DeVonta Smith",
+   "pos": "WR",
+   "nfl": "PHI",
+   "bid": 200,
+   "manager": "clevelandb0b",
+   "roster_id": 7,
+   "chop_week": 13,
+   "ros_pts": 189.0,
+   "ros_vor": 62.5,
+   "held_pts": 153.6,
+   "started_pts": 153.6,
+   "weeks_held": 12,
+   "weeks_started": 11,
+   "fair_pts": 179,
+   "fair_vor": 190,
+   "pos_rank": "WR16"
+  },
+  {
+   "pid": "5892",
+   "player": "David Montgomery",
+   "pos": "RB",
+   "nfl": "HOU",
+   "bid": 100,
+   "manager": "TheCommish1",
+   "roster_id": 4,
+   "chop_week": 4,
+   "ros_pts": 152.12,
+   "ros_vor": 54.02,
+   "held_pts": 43.7,
+   "started_pts": 43.7,
+   "weeks_held": 3,
+   "weeks_started": 3,
+   "fair_pts": 144,
+   "fair_vor": 164,
+   "pos_rank": "RB25"
+  },
+  {
+   "pid": "4033",
+   "player": "David Njoku",
+   "pos": "TE",
+   "nfl": "LAC",
+   "bid": 80,
+   "manager": "Hockeystar90",
+   "roster_id": 18,
+   "chop_week": 6,
+   "ros_pts": 79.6,
+   "ros_vor": 17.8,
+   "held_pts": 44.6,
+   "started_pts": 27.6,
+   "weeks_held": 5,
+   "weeks_started": 3,
+   "fair_pts": 76,
+   "fair_vor": 54,
+   "pos_rank": "TE34"
+  },
+  {
+   "pid": "3163",
+   "player": "Jared Goff",
+   "pos": "QB",
+   "nfl": "DET",
+   "bid": 19,
+   "manager": "BobbyStabs",
+   "roster_id": 12,
+   "chop_week": 2,
+   "ros_pts": 276.92,
+   "ros_vor": 47.96,
+   "held_pts": 33.96,
+   "started_pts": 0,
+   "weeks_held": 1,
+   "weeks_started": 0,
+   "fair_pts": 263,
+   "fair_vor": 145,
+   "pos_rank": "QB9"
+  },
+  {
+   "pid": "9758",
+   "player": "C.J. Stroud",
+   "pos": "QB",
+   "nfl": "HOU",
+   "bid": 15,
+   "manager": "d3childs",
+   "roster_id": 6,
+   "chop_week": 17,
+   "ros_pts": 189.56,
+   "ros_vor": 23.52,
+   "held_pts": 189.56,
+   "started_pts": 117.74,
+   "weeks_held": 16,
+   "weeks_started": 7,
+   "fair_pts": 180,
+   "fair_vor": 71,
+   "pos_rank": "QB20"
+  },
+  {
+   "pid": "5096",
+   "player": "Ray-Ray McCloud",
+   "pos": "WR",
+   "nfl": "FA",
+   "bid": 12,
+   "manager": "baker28",
+   "roster_id": 1,
+   "chop_week": 5,
+   "ros_pts": 5.8,
+   "ros_vor": 0.0,
+   "held_pts": 0,
+   "started_pts": 0,
+   "weeks_held": 1,
+   "weeks_started": 0,
+   "fair_pts": 6,
+   "fair_vor": 0,
+   "pos_rank": "WR190"
+  },
+  {
+   "pid": "12544",
+   "player": "LeQuint Allen",
+   "pos": "RB",
+   "nfl": "JAX",
+   "bid": 10,
+   "manager": "celticsraider",
+   "roster_id": 16,
+   "chop_week": 9,
+   "ros_pts": 24.7,
+   "ros_vor": 0.0,
+   "held_pts": 1.3,
+   "started_pts": 0,
+   "weeks_held": 1,
+   "weeks_started": 0,
+   "fair_pts": 23,
+   "fair_vor": 0,
+   "pos_rank": "RB81"
+  },
+  {
+   "pid": "5857",
+   "player": "Noah Fant",
+   "pos": "TE",
+   "nfl": "NO",
+   "bid": 8,
+   "manager": "baker28",
+   "roster_id": 1,
+   "chop_week": 5,
+   "ros_pts": 62.7,
+   "ros_vor": 9.3,
+   "held_pts": 11.4,
+   "started_pts": 5.8,
+   "weeks_held": 2,
+   "weeks_started": 1,
+   "fair_pts": 60,
+   "fair_vor": 28,
+   "pos_rank": "TE39"
+  },
+  {
+   "pid": "8698",
+   "player": "Jake Tonges",
+   "pos": "TE",
+   "nfl": "SF",
+   "bid": 7,
+   "manager": "jcmandel",
+   "roster_id": 13,
+   "chop_week": 7,
+   "ros_pts": 83.8,
+   "ros_vor": 16.0,
+   "held_pts": 7.1,
+   "started_pts": 0,
+   "weeks_held": 1,
+   "weeks_started": 0,
+   "fair_pts": 80,
+   "fair_vor": 49,
+   "pos_rank": "TE33"
+  },
+  {
+   "pid": "11806",
+   "player": "Casey Washington",
+   "pos": "WR",
+   "nfl": "CAR",
+   "bid": 1,
+   "manager": "BobbyStabs",
+   "roster_id": 12,
+   "chop_week": 2,
+   "ros_pts": 9.1,
+   "ros_vor": 0.0,
+   "held_pts": 0,
+   "started_pts": 0,
+   "weeks_held": 0,
+   "weeks_started": 0,
+   "fair_pts": 9,
+   "fair_vor": 0,
+   "pos_rank": "WR175"
+  },
+  {
+   "pid": "4454",
+   "player": "Kendrick Bourne",
+   "pos": "WR",
+   "nfl": "ARI",
+   "bid": 1,
+   "manager": "jakwok21",
+   "roster_id": 14,
+   "chop_week": 16,
+   "ros_pts": 92.1,
+   "ros_vor": 29.5,
+   "held_pts": 76.3,
+   "started_pts": 62.7,
+   "weeks_held": 8,
+   "weeks_started": 6,
+   "fair_pts": 87,
+   "fair_vor": 89,
+   "pos_rank": "WR60"
+  }
+ ],
+ "survival": [
+  {
+   "manager": "FlashUrTDs",
+   "early_spend": 997,
+   "season_spend": 1000,
+   "chop_week": 11
+  },
+  {
+   "manager": "Hockeystar90",
+   "early_spend": 982,
+   "season_spend": 990,
+   "chop_week": 6
+  },
+  {
+   "manager": "clevelandb0b",
+   "early_spend": 701,
+   "season_spend": 997,
+   "chop_week": 13
+  },
+  {
+   "manager": "baker28",
+   "early_spend": 337,
+   "season_spend": 467,
+   "chop_week": 5
+  },
+  {
+   "manager": "slikyjohnson",
+   "early_spend": 280,
+   "season_spend": 280,
+   "chop_week": 3
+  },
+  {
+   "manager": "celticsraider",
+   "early_spend": 165,
+   "season_spend": 825,
+   "chop_week": 9
+  },
+  {
+   "manager": "TheCommish1",
+   "early_spend": 130,
+   "season_spend": 381,
+   "chop_week": 4
+  },
+  {
+   "manager": "colinjhannah",
+   "early_spend": 80,
+   "season_spend": 722,
+   "chop_week": 12
+  },
+  {
+   "manager": "greggy2ships",
+   "early_spend": 61,
+   "season_spend": 1000,
+   "chop_week": null
+  },
+  {
+   "manager": "jcmandel",
+   "early_spend": 30,
+   "season_spend": 676,
+   "chop_week": 7
+  },
+  {
+   "manager": "BobbyStabs",
+   "early_spend": 22,
+   "season_spend": 22,
+   "chop_week": 2
+  },
+  {
+   "manager": "clikes",
+   "early_spend": 20,
+   "season_spend": 995,
+   "chop_week": 10
+  },
+  {
+   "manager": "d3childs",
+   "early_spend": 16,
+   "season_spend": 1000,
+   "chop_week": 17
+  },
+  {
+   "manager": "jakwok21",
+   "early_spend": 4,
+   "season_spend": 996,
+   "chop_week": 16
+  },
+  {
+   "manager": "jodangles",
+   "early_spend": 2,
+   "season_spend": 950,
+   "chop_week": 15
+  },
+  {
+   "manager": "dylan1990692",
+   "early_spend": 0,
+   "season_spend": 410,
+   "chop_week": 8
+  },
+  {
+   "manager": "emloose",
+   "early_spend": 0,
+   "season_spend": 919,
+   "chop_week": 14
+  },
+  {
+   "manager": "leroymalone",
+   "early_spend": 0,
+   "season_spend": 0,
+   "chop_week": 1
+  }
+ ],
+ "price_rate": {
+  "1": {
+   "spend": 1643,
+   "vor_per_game": 37.04,
+   "dollars_per_point": 44.4
+  },
+  "2": {
+   "spend": 2184,
+   "vor_per_game": 70.0,
+   "dollars_per_point": 31.2
+  },
+  "3": {
+   "spend": 1621,
+   "vor_per_game": 44.15,
+   "dollars_per_point": 36.7
+  },
+  "4": {
+   "spend": 1407,
+   "vor_per_game": 47.81,
+   "dollars_per_point": 29.4
+  },
+  "5": {
+   "spend": 1619,
+   "vor_per_game": 55.41,
+   "dollars_per_point": 29.2
+  },
+  "6": {
+   "spend": 832,
+   "vor_per_game": 39.22,
+   "dollars_per_point": 21.2
+  },
+  "7": {
+   "spend": 736,
+   "vor_per_game": 43.21,
+   "dollars_per_point": 17.0
+  },
+  "8": {
+   "spend": 882,
+   "vor_per_game": 62.14,
+   "dollars_per_point": 14.2
+  },
+  "9": {
+   "spend": 657,
+   "vor_per_game": 37.95,
+   "dollars_per_point": 17.3
+  },
+  "10": {
+   "spend": 185,
+   "vor_per_game": 20.68,
+   "dollars_per_point": 8.9
+  },
+  "11": {
+   "spend": 265,
+   "vor_per_game": 37.85,
+   "dollars_per_point": 7.0
+  },
+  "12": {
+   "spend": 187,
+   "vor_per_game": 38.47,
+   "dollars_per_point": 4.9
+  },
+  "13": {
+   "spend": 199,
+   "vor_per_game": 40.27,
+   "dollars_per_point": 4.9
+  },
+  "14": {
+   "spend": 169,
+   "vor_per_game": 31.65,
+   "dollars_per_point": 5.3
+  },
+  "15": {
+   "spend": 31,
+   "vor_per_game": 5.7,
+   "dollars_per_point": 5.4
+  },
+  "16": {
+   "spend": 8,
+   "vor_per_game": 24.46,
+   "dollars_per_point": 0.3
+  }
+ },
+ "lineup": {
+  "1": {
+   "teams": 18,
+   "QB": 1,
+   "RB": 2,
+   "WR": 2,
+   "TE": 1,
+   "SF": 0,
+   "FLEX": 2,
+   "starters": 8
+  },
+  "2": {
+   "teams": 17,
+   "QB": 1,
+   "RB": 2,
+   "WR": 2,
+   "TE": 1,
+   "SF": 0,
+   "FLEX": 2,
+   "starters": 8
+  },
+  "3": {
+   "teams": 16,
+   "QB": 1,
+   "RB": 2,
+   "WR": 2,
+   "TE": 1,
+   "SF": 0,
+   "FLEX": 3,
+   "starters": 9
+  },
+  "4": {
+   "teams": 15,
+   "QB": 1,
+   "RB": 2,
+   "WR": 2,
+   "TE": 1,
+   "SF": 0,
+   "FLEX": 3,
+   "starters": 9
+  },
+  "5": {
+   "teams": 14,
+   "QB": 1,
+   "RB": 2,
+   "WR": 2,
+   "TE": 1,
+   "SF": 1,
+   "FLEX": 3,
+   "starters": 10
+  },
+  "6": {
+   "teams": 13,
+   "QB": 1,
+   "RB": 2,
+   "WR": 2,
+   "TE": 1,
+   "SF": 1,
+   "FLEX": 3,
+   "starters": 10
+  },
+  "7": {
+   "teams": 12,
+   "QB": 1,
+   "RB": 2,
+   "WR": 3,
+   "TE": 1,
+   "SF": 1,
+   "FLEX": 3,
+   "starters": 11
+  },
+  "8": {
+   "teams": 11,
+   "QB": 1,
+   "RB": 2,
+   "WR": 3,
+   "TE": 1,
+   "SF": 1,
+   "FLEX": 3,
+   "starters": 11
+  },
+  "9": {
+   "teams": 10,
+   "QB": 1,
+   "RB": 2,
+   "WR": 3,
+   "TE": 2,
+   "SF": 1,
+   "FLEX": 3,
+   "starters": 12
+  },
+  "10": {
+   "teams": 9,
+   "QB": 1,
+   "RB": 2,
+   "WR": 3,
+   "TE": 2,
+   "SF": 1,
+   "FLEX": 3,
+   "starters": 12
+  },
+  "11": {
+   "teams": 8,
+   "QB": 1,
+   "RB": 3,
+   "WR": 3,
+   "TE": 2,
+   "SF": 1,
+   "FLEX": 3,
+   "starters": 13
+  },
+  "12": {
+   "teams": 7,
+   "QB": 1,
+   "RB": 3,
+   "WR": 3,
+   "TE": 2,
+   "SF": 1,
+   "FLEX": 3,
+   "starters": 13
+  },
+  "13": {
+   "teams": 6,
+   "QB": 2,
+   "RB": 3,
+   "WR": 3,
+   "TE": 2,
+   "SF": 1,
+   "FLEX": 3,
+   "starters": 14
+  },
+  "14": {
+   "teams": 5,
+   "QB": 2,
+   "RB": 3,
+   "WR": 3,
+   "TE": 2,
+   "SF": 1,
+   "FLEX": 3,
+   "starters": 14
+  },
+  "15": {
+   "teams": 4,
+   "QB": 2,
+   "RB": 3,
+   "WR": 3,
+   "TE": 2,
+   "SF": 1,
+   "FLEX": 4,
+   "starters": 15
+  },
+  "16": {
+   "teams": 3,
+   "QB": 2,
+   "RB": 3,
+   "WR": 3,
+   "TE": 2,
+   "SF": 1,
+   "FLEX": 4,
+   "starters": 15
+  },
+  "17": {
+   "teams": 2,
+   "QB": 2,
+   "RB": 3,
+   "WR": 3,
+   "TE": 2,
+   "SF": 1,
+   "FLEX": 4,
+   "starters": 15
+  }
+ },
+ "replacement": {
+  "1": {
+   "QB": 15.92,
+   "RB": 4.7,
+   "WR": 6.3,
+   "TE": 6.7
+  },
+  "2": {
+   "QB": 19.6,
+   "RB": 6.0,
+   "WR": 9.0,
+   "TE": 7.5
+  },
+  "3": {
+   "QB": 14.06,
+   "RB": 5.8,
+   "WR": 5.6,
+   "TE": 7.9
+  },
+  "4": {
+   "QB": 18.42,
+   "RB": 8.6,
+   "WR": 6.4,
+   "TE": 8.0
+  },
+  "5": {
+   "QB": 12.12,
+   "RB": 4.9,
+   "WR": 7.5,
+   "TE": 9.8
+  },
+  "6": {
+   "QB": 19.22,
+   "RB": 6.5,
+   "WR": 8.6,
+   "TE": 14.0
+  },
+  "7": {
+   "QB": 9.62,
+   "RB": 5.3,
+   "WR": 7.8,
+   "TE": 7.6
+  },
+  "8": {
+   "QB": 22.72,
+   "RB": 8.9,
+   "WR": 8.9,
+   "TE": 6.4
+  },
+  "9": {
+   "QB": 15.8,
+   "RB": 7.3,
+   "WR": 8.3,
+   "TE": 9.0
+  },
+  "10": {
+   "QB": 20.08,
+   "RB": 10.7,
+   "WR": 12.8,
+   "TE": 10.1
+  },
+  "11": {
+   "QB": 13.2,
+   "RB": 8.4,
+   "WR": 9.3,
+   "TE": 8.2
+  },
+  "12": {
+   "QB": 20.14,
+   "RB": 12.4,
+   "WR": 14.4,
+   "TE": 11.1
+  },
+  "13": {
+   "QB": 14.46,
+   "RB": 11.6,
+   "WR": 11.4,
+   "TE": 11.3
+  },
+  "14": {
+   "QB": 20.42,
+   "RB": 11.4,
+   "WR": 11.5,
+   "TE": 12.5
+  },
+  "15": {
+   "QB": 21.56,
+   "RB": 13.5,
+   "WR": 14.5,
+   "TE": 18.7
+  },
+  "16": {
+   "QB": 21.0,
+   "RB": 18.0,
+   "WR": 18.1,
+   "TE": 16.1
+  },
+  "17": {
+   "QB": 23.18,
+   "RB": 18.6,
+   "WR": 19.0,
+   "TE": 17.9
+  }
+ },
+ "started_by_pos": {
+  "1": {
+   "QB": 18,
+   "RB": 42,
+   "WR": 59,
+   "TE": 24
+  },
+  "2": {
+   "QB": 17,
+   "RB": 42,
+   "WR": 55,
+   "TE": 20
+  },
+  "3": {
+   "QB": 16,
+   "RB": 44,
+   "WR": 62,
+   "TE": 20
+  },
+  "4": {
+   "QB": 15,
+   "RB": 40,
+   "WR": 58,
+   "TE": 21
+  },
+  "5": {
+   "QB": 25,
+   "RB": 41,
+   "WR": 55,
+   "TE": 18
+  },
+  "6": {
+   "QB": 13,
+   "RB": 35,
+   "WR": 39,
+   "TE": 8
+  },
+  "7": {
+   "QB": 24,
+   "RB": 39,
+   "WR": 46,
+   "TE": 23
+  },
+  "8": {
+   "QB": 11,
+   "RB": 29,
+   "WR": 43,
+   "TE": 21
+  },
+  "9": {
+   "QB": 20,
+   "RB": 31,
+   "WR": 48,
+   "TE": 21
+  },
+  "10": {
+   "QB": 9,
+   "RB": 25,
+   "WR": 29,
+   "TE": 11
+  },
+  "11": {
+   "QB": 16,
+   "RB": 33,
+   "WR": 38,
+   "TE": 14
+  },
+  "12": {
+   "QB": 7,
+   "RB": 19,
+   "WR": 22,
+   "TE": 8
+  },
+  "13": {
+   "QB": 18,
+   "RB": 26,
+   "WR": 28,
+   "TE": 12
+  },
+  "14": {
+   "QB": 10,
+   "RB": 20,
+   "WR": 25,
+   "TE": 10
+  },
+  "15": {
+   "QB": 12,
+   "RB": 18,
+   "WR": 22,
+   "TE": 8
+  },
+  "16": {
+   "QB": 9,
+   "RB": 14,
+   "WR": 16,
+   "TE": 6
+  },
+  "17": {
+   "QB": 6,
+   "RB": 11,
+   "WR": 9,
+   "TE": 4
+  }
+ }
+}

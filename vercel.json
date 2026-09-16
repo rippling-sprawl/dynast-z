@@ -1,108 +1,372 @@
 {
   "buildCommand": "python3 build.py",
   "redirects": [
-    { "source": "/masters", "destination": "/golf/2026/masters", "statusCode": 301 },
-    { "source": "/masters/:page", "destination": "/golf/2026/masters/:page", "statusCode": 301 },
-    { "source": "/golf/:year/season", "destination": "/season/:year", "statusCode": 301 },
-    { "source": "/league/:leagueId", "destination": "/league/:leagueId/scout", "statusCode": 302 },
-    { "source": "/the-bakers-oven", "destination": "/football/bakers-oven", "statusCode": 301 },
-    { "source": "/the-bakers-oven/:path*", "destination": "/football/bakers-oven/:path*", "statusCode": 301 },
-    { "source": "/bakers-oven", "destination": "/football/bakers-oven", "statusCode": 301 },
-    { "source": "/bakers-oven/:path*", "destination": "/football/bakers-oven/:path*", "statusCode": 301 },
-    { "source": "/trade-calculator", "destination": "/football/trade-calculator", "statusCode": 301 },
-    { "source": "/football/futures", "destination": "/football/action/futures", "statusCode": 301 },
-    { "source": "/game-odds", "has": [{ "type": "query", "key": "game", "value": "(?<gid>[0-9]{1,12})" }], "destination": "/football/schedule/game/:gid", "statusCode": 302 },
-    { "source": "/game-odds", "destination": "/football/schedule", "statusCode": 302 }
+    {
+      "source": "/masters",
+      "destination": "/golf/2026/masters",
+      "statusCode": 301
+    },
+    {
+      "source": "/masters/:page",
+      "destination": "/golf/2026/masters/:page",
+      "statusCode": 301
+    },
+    {
+      "source": "/golf/:year/season",
+      "destination": "/season/:year",
+      "statusCode": 301
+    },
+    {
+      "source": "/league/:leagueId",
+      "destination": "/league/:leagueId/scout",
+      "statusCode": 302
+    },
+    {
+      "source": "/the-bakers-oven",
+      "destination": "/football/bakers-oven",
+      "statusCode": 301
+    },
+    {
+      "source": "/the-bakers-oven/:path*",
+      "destination": "/football/bakers-oven/:path*",
+      "statusCode": 301
+    },
+    {
+      "source": "/bakers-oven",
+      "destination": "/football/bakers-oven",
+      "statusCode": 301
+    },
+    {
+      "source": "/bakers-oven/:path*",
+      "destination": "/football/bakers-oven/:path*",
+      "statusCode": 301
+    },
+    {
+      "source": "/trade-calculator",
+      "destination": "/football/trade-calculator",
+      "statusCode": 301
+    },
+    {
+      "source": "/football/futures",
+      "destination": "/football/action/futures",
+      "statusCode": 301
+    },
+    {
+      "source": "/game-odds",
+      "has": [
+        {
+          "type": "query",
+          "key": "game",
+          "value": "(?<gid>[0-9]{1,12})"
+        }
+      ],
+      "destination": "/football/schedule/game/:gid",
+      "statusCode": 302
+    },
+    {
+      "source": "/game-odds",
+      "destination": "/football/schedule",
+      "statusCode": 302
+    }
   ],
   "rewrites": [
-    { "source": "/", "destination": "/views/index.html" },
-    { "source": "/odds", "destination": "/views/odds/index.html" },
-    { "source": "/bets/audit", "destination": "/views/bets/audit.html" },
-    { "source": "/bets/place", "destination": "/views/bets/place.html" },
-    { "source": "/bets/history", "destination": "/views/bets/history.html" },
-    { "source": "/bets/settle", "destination": "/views/bets/settle.html" },
-    { "source": "/bets", "destination": "/views/bets/index.html" },
-    { "source": "/football/grading-system", "destination": "/views/home/grading-system.html" },
-    { "source": "/football/live-stats", "destination": "/views/football/live-stats.html" },
-    { "source": "/football/schedule/archive", "destination": "/views/football/schedule-archive.html" },
-    { "source": "/football/schedule/game/:gameId", "destination": "/views/football/game-odds.html" },
-    { "source": "/football/schedule", "destination": "/views/football/schedule.html" },
-    { "source": "/football/pickem/standings", "destination": "/views/football/pickem-standings.html" },
-    { "source": "/football/pickem/picks/:week", "destination": "/views/football/pickem-picks.html" },
-    { "source": "/football/pickem/picks", "destination": "/views/football/pickem-picks.html" },
-    { "source": "/football/pickem", "destination": "/views/football/pickem.html" },
-    { "source": "/football/survivor/standings", "destination": "/views/football/survivor-standings.html" },
-    { "source": "/football/survivor/pick/:week", "destination": "/views/football/survivor-pick.html" },
-    { "source": "/football/survivor/pick", "destination": "/views/football/survivor-pick.html" },
-    { "source": "/football/survivor", "destination": "/views/football/survivor.html" },
-    { "source": "/football/action/week/:week", "destination": "/api/action?slug=week-:week" },
-    { "source": "/football/action/:slate", "destination": "/api/action?slug=:slate" },
-    { "source": "/football/action", "destination": "/api/action?slug=index" },
-    { "source": "/football/bakers-buns/methodology", "destination": "/views/football/bakers-buns-methodology.html" },
-    { "source": "/football/bakers-buns", "destination": "/views/football/bakers-buns.html" },
-    { "source": "/football/bakers-oven/:leagueId/week-1", "destination": "/views/football/oven-week1.html" },
-    { "source": "/football/bakers-oven/:leagueId/:rosterId", "destination": "/views/football/oven-board.html" },
-    { "source": "/football/bakers-oven/:leagueId", "destination": "/views/football/oven-league.html" },
-    { "source": "/football/bakers-oven", "destination": "/views/football/oven-leagues.html" },
-    { "source": "/football/trade-calculator", "destination": "/views/football/trade-calculator.html" },
-    { "source": "/football", "destination": "/views/home/football.html" },
-    { "source": "/league/:leagueId/team/:rosterId", "destination": "/views/league/team.html" },
-    { "source": "/league/:leagueId/trades", "destination": "/views/league/trades.html" },
-    { "source": "/league/:leagueId/trades", "destination": "/views/league/league-trades.html" },
-    { "source": "/league/:leagueId/power", "destination": "/views/league/power.html" },
-    { "source": "/league/:leagueId/schedule", "destination": "/views/league/schedule.html" },
-    { "source": "/league/:leagueId/scout", "destination": "/views/league/scout.html" },
-    { "source": "/league/:leagueId/rosters", "destination": "/views/league/league.html" },
-    { "source": "/account", "destination": "/views/home/account.html" },
-    { "source": "/archive", "destination": "/views/home/archive.html" },
-    { "source": "/season/:year", "destination": "/views/golf/season.html" },
-    { "source": "/golf", "destination": "/views/home/golf-hub.html" },
-    { "source": "/golf/:year", "destination": "/api/golf/:year" },
-    { "source": "/golf/:year/:tournament/leaderboard", "destination": "/views/golf/leaderboard.html" },
-    { "source": "/golf/:year/:tournament/select-golfers", "destination": "/views/golf/select-golfers.html" },
-    { "source": "/golf/:year/:tournament/3-ball-results", "destination": "/views/golf/3-ball-results.html" },
-    { "source": "/golf/:year/:tournament/3-ball-lookup", "destination": "/views/golf/3-ball-lookup.html" },
-    { "source": "/golf/:year/:tournament/3-ball", "destination": "/views/golf/3-ball.html" },
-    { "source": "/golf/:year/:tournament/group-results", "destination": "/views/golf/group-results.html" },
-    { "source": "/golf/:year/:tournament/groups", "destination": "/views/golf/groups.html" },
-    { "source": "/golf/:year/:tournament/ev-model", "destination": "/views/golf/ev-model.html" },
-    { "source": "/golf/:year/:tournament", "destination": "/views/golf/hub.html" },
-    { "source": "/appendix", "destination": "/views/home/appendix.html" },
-    { "source": "/acknowledgements", "destination": "/views/home/acknowledgements.html" },
-    { "source": "/api/:path*", "destination": "/api/:path*" }
+    {
+      "source": "/",
+      "destination": "/views/index.html"
+    },
+    {
+      "source": "/odds",
+      "destination": "/views/odds/index.html"
+    },
+    {
+      "source": "/bets/audit",
+      "destination": "/views/bets/audit.html"
+    },
+    {
+      "source": "/bets/place",
+      "destination": "/views/bets/place.html"
+    },
+    {
+      "source": "/bets/history",
+      "destination": "/views/bets/history.html"
+    },
+    {
+      "source": "/bets/settle",
+      "destination": "/views/bets/settle.html"
+    },
+    {
+      "source": "/bets",
+      "destination": "/views/bets/index.html"
+    },
+    {
+      "source": "/football/grading-system",
+      "destination": "/views/home/grading-system.html"
+    },
+    {
+      "source": "/football/live-stats",
+      "destination": "/views/football/live-stats.html"
+    },
+    {
+      "source": "/football/schedule/archive",
+      "destination": "/views/football/schedule-archive.html"
+    },
+    {
+      "source": "/football/schedule/game/:gameId",
+      "destination": "/views/football/game-odds.html"
+    },
+    {
+      "source": "/football/schedule",
+      "destination": "/views/football/schedule.html"
+    },
+    {
+      "source": "/football/pickem/standings",
+      "destination": "/views/football/pickem-standings.html"
+    },
+    {
+      "source": "/football/pickem/picks/:week",
+      "destination": "/views/football/pickem-picks.html"
+    },
+    {
+      "source": "/football/pickem/picks",
+      "destination": "/views/football/pickem-picks.html"
+    },
+    {
+      "source": "/football/pickem",
+      "destination": "/views/football/pickem.html"
+    },
+    {
+      "source": "/football/survivor/standings",
+      "destination": "/views/football/survivor-standings.html"
+    },
+    {
+      "source": "/football/survivor/pick/:week",
+      "destination": "/views/football/survivor-pick.html"
+    },
+    {
+      "source": "/football/survivor/pick",
+      "destination": "/views/football/survivor-pick.html"
+    },
+    {
+      "source": "/football/survivor",
+      "destination": "/views/football/survivor.html"
+    },
+    {
+      "source": "/football/action/week/:week",
+      "destination": "/api/action?slug=week-:week"
+    },
+    {
+      "source": "/football/action/:slate",
+      "destination": "/api/action?slug=:slate"
+    },
+    {
+      "source": "/football/action",
+      "destination": "/api/action?slug=index"
+    },
+    {
+      "source": "/football/bakers-buns/methodology",
+      "destination": "/views/football/bakers-buns-methodology.html"
+    },
+    {
+      "source": "/football/bakers-buns",
+      "destination": "/views/football/bakers-buns.html"
+    },
+    {
+      "source": "/football/bakers-oven/:leagueId/week-1",
+      "destination": "/views/football/oven-week1.html"
+    },
+    {
+      "source": "/football/bakers-oven/:leagueId/:rosterId",
+      "destination": "/views/football/oven-board.html"
+    },
+    {
+      "source": "/football/bakers-oven/:leagueId",
+      "destination": "/views/football/oven-league.html"
+    },
+    {
+      "source": "/football/bakers-oven",
+      "destination": "/views/football/oven-leagues.html"
+    },
+    {
+      "source": "/football/waivers",
+      "destination": "/views/football/waivers.html"
+    },
+    {
+      "source": "/football/trade-calculator",
+      "destination": "/views/football/trade-calculator.html"
+    },
+    {
+      "source": "/football",
+      "destination": "/views/home/football.html"
+    },
+    {
+      "source": "/league/:leagueId/team/:rosterId",
+      "destination": "/views/league/team.html"
+    },
+    {
+      "source": "/league/:leagueId/trades",
+      "destination": "/views/league/trades.html"
+    },
+    {
+      "source": "/league/:leagueId/trades",
+      "destination": "/views/league/league-trades.html"
+    },
+    {
+      "source": "/league/:leagueId/power",
+      "destination": "/views/league/power.html"
+    },
+    {
+      "source": "/league/:leagueId/schedule",
+      "destination": "/views/league/schedule.html"
+    },
+    {
+      "source": "/league/:leagueId/scout",
+      "destination": "/views/league/scout.html"
+    },
+    {
+      "source": "/league/:leagueId/rosters",
+      "destination": "/views/league/league.html"
+    },
+    {
+      "source": "/account",
+      "destination": "/views/home/account.html"
+    },
+    {
+      "source": "/archive",
+      "destination": "/views/home/archive.html"
+    },
+    {
+      "source": "/season/:year",
+      "destination": "/views/golf/season.html"
+    },
+    {
+      "source": "/golf",
+      "destination": "/views/home/golf-hub.html"
+    },
+    {
+      "source": "/golf/:year",
+      "destination": "/api/golf/:year"
+    },
+    {
+      "source": "/golf/:year/:tournament/leaderboard",
+      "destination": "/views/golf/leaderboard.html"
+    },
+    {
+      "source": "/golf/:year/:tournament/select-golfers",
+      "destination": "/views/golf/select-golfers.html"
+    },
+    {
+      "source": "/golf/:year/:tournament/3-ball-results",
+      "destination": "/views/golf/3-ball-results.html"
+    },
+    {
+      "source": "/golf/:year/:tournament/3-ball-lookup",
+      "destination": "/views/golf/3-ball-lookup.html"
+    },
+    {
+      "source": "/golf/:year/:tournament/3-ball",
+      "destination": "/views/golf/3-ball.html"
+    },
+    {
+      "source": "/golf/:year/:tournament/group-results",
+      "destination": "/views/golf/group-results.html"
+    },
+    {
+      "source": "/golf/:year/:tournament/groups",
+      "destination": "/views/golf/groups.html"
+    },
+    {
+      "source": "/golf/:year/:tournament/ev-model",
+      "destination": "/views/golf/ev-model.html"
+    },
+    {
+      "source": "/golf/:year/:tournament",
+      "destination": "/views/golf/hub.html"
+    },
+    {
+      "source": "/appendix",
+      "destination": "/views/home/appendix.html"
+    },
+    {
+      "source": "/acknowledgements",
+      "destination": "/views/home/acknowledgements.html"
+    },
+    {
+      "source": "/api/:path*",
+      "destination": "/api/:path*"
+    }
   ],
   "headers": [
     {
       "source": "/(.*)",
-      "headers": [{ "key": "Cache-Control", "value": "no-store" }]
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        }
+      ]
     },
     {
       "source": "/api/(.*)",
-      "headers": [{ "key": "Cache-Control", "value": "no-store" }]
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        }
+      ]
     },
     {
       "source": "/data/(.*)",
-      "headers": [{ "key": "Cache-Control", "value": "no-store" }]
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        }
+      ]
     },
     {
       "source": "/scripts/(.*)",
-      "headers": [{ "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }]
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate"
+        }
+      ]
     },
     {
       "source": "/styles/(.*)",
-      "headers": [{ "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }]
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate"
+        }
+      ]
     },
     {
       "source": "/assets/(.*)",
-      "headers": [{ "key": "Cache-Control", "value": "public, max-age=86400" }]
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=86400"
+        }
+      ]
     },
     {
       "source": "/assets/icons/(.*)",
-      "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000" }]
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000"
+        }
+      ]
     },
     {
       "source": "/assets/action/(.*)",
-      "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
     }
   ]
 }
