@@ -1804,6 +1804,12 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         elif self.path.split("?")[0] == "/football/schedule":
             self.path = "/views/football/schedule.html"
             super().do_GET()
+        # The longest-reception board. Its own page rather than a tab on the
+        # schedule: the schedule is a slate read for its lines, this is one
+        # market read against a model built from play-by-play.
+        elif self.path.split("?")[0] == "/football/long-reception":
+            self.path = "/views/football/long-reception.html"
+            super().do_GET()
         # One game's odds and box score, under the schedule it hangs off:
         # /football/schedule/game/1392216, where the last segment is the
         # balldontlie game id every schedule row carries. Matched before the
@@ -1822,7 +1828,17 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             api = game_odds_api()
             try:
                 if not game_id:
-                    self._json_response(200, api.load_index())
+                    # The listing's filters, same validation as the function:
+                    # /football/schedule asks for one season with ?lines=1, and
+                    # a value that is not a number is dropped rather than
+                    # 400ing — see load_index().
+                    season = (query.get("season") or [""])[0].strip()
+                    week = (query.get("week") or [""])[0].strip()
+                    self._json_response(200, api.load_index(
+                        season=int(season) if api.SEASON_RE.match(season) else None,
+                        week=int(week) if api.WEEK_RE.match(week) else None,
+                        lines=(query.get("lines") or [""])[0].strip()
+                        in ("1", "true", "yes")))
                 elif not api.GAME_ID_RE.match(game_id):
                     self._json_response(400, {"error": "game must be a numeric game id"})
                 else:

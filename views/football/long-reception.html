@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/assets/icons/app-touch-180.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Dynast-Z">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <title>Longest Reception | Dynast-Z</title>
+  <!-- Theme first: theme.js sets <html data-theme> before the first paint,
+       theme.css holds every colour token the sheets below spend. -->
+  <script src="/scripts/base/theme.js"></script>
+  <link rel="stylesheet" href="/styles/base/theme.css">
+  <link rel="stylesheet" href="/styles/base/styles.css">
+  <link rel="stylesheet" href="/styles/base/hub.css">
+  <!-- The same chrome /football/schedule wears: the dd-row pickers below are
+       that page's controls, and the board sits in its masters shell. -->
+  <link rel="stylesheet" href="/styles/components/nfl-pickers.css">
+  <link rel="stylesheet" href="/styles/primary/nfl-schedule.css">
+  <link rel="stylesheet" href="/styles/primary/long-reception.css">
+  <script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
+  <script defer src="/_vercel/insights/script.js"></script>
+</head>
+<body class="masters-body">
+  <div id="header-mount"></div>
+  <div id="nav-drawer-mount"></div>
+  <script src="/scripts/base/auth.js"></script>
+  <script src="/scripts/base/standalone.js"></script>
+  <script src="/scripts/base/nav.js"></script>
+  <!-- The dropdowns are the schedule's, not this page's: same markup contract
+       (.dd / .dd-btn / .dd-pop.dd-menu), same open-shut behaviour. -->
+  <script src="/scripts/components/nfl-pickers.js"></script>
+  <script>initPage();</script>
+
+  <div class="masters-content">
+    <div class="masters-breadcrumbs">
+      <a href="/football">Football</a><span class="separator">/</span><span>Longest Reception</span>
+    </div>
+
+    <h2>Longest Reception</h2>
+
+    <div class="lr-bar">
+      <div class="lr-bar-grp">
+        <span class="lr-bar-label">Likelihood from</span>
+        <div class="lr-seg" id="src" role="group" aria-label="Model source">
+          <button type="button" data-s="nf" aria-pressed="true">Play-by-play</button>
+          <button type="button" data-s="dk" aria-pressed="false">Book ladder</button>
+        </div>
+      </div>
+      <div class="lr-bar-grp">
+        <span class="lr-bar-label">Sample gate</span>
+        <div class="dd" id="dd-gate">
+          <button type="button" class="dd-btn" id="f-gate" aria-haspopup="true" aria-expanded="false">
+            <span class="dd-value">8 gm &amp; 25 rec</span>
+          </button>
+          <div class="dd-pop dd-menu" id="gate-menu" role="menu" aria-label="Sample gate" hidden></div>
+        </div>
+      </div>
+      <p class="lr-bar-note" id="srcnote"></p>
+    </div>
+
+    <div class="lr-cards">
+      <div class="lr-card">
+        <h3>20+ yard reception — highest likelihood</h3>
+        <p class="lr-card-note" id="l20n"></p>
+        <ol class="lr-rank" id="like20"></ol>
+      </div>
+      <div class="lr-card">
+        <h3>40+ yard reception — highest likelihood</h3>
+        <p class="lr-card-note" id="l40n"></p>
+        <ol class="lr-rank" id="like40"></ol>
+      </div>
+    </div>
+
+    <div class="lr-cards">
+      <div class="lr-card">
+        <h3>20+ — biggest edge vs the posted price</h3>
+        <p class="lr-card-note" id="e20n"></p>
+        <ol class="lr-rank" id="edge20"></ol>
+      </div>
+      <div class="lr-card">
+        <h3>40+ — biggest edge vs the posted price</h3>
+        <p class="lr-card-note" id="e40n"></p>
+        <ol class="lr-rank" id="edge40"></ol>
+      </div>
+    </div>
+
+    <h2>Every priced line</h2>
+    <div class="dd-row">
+      <div class="dd" id="dd-pgame">
+        <button type="button" class="dd-btn" id="f-pgame" aria-haspopup="true" aria-expanded="false">
+          <span class="dd-value">All priced games</span>
+        </button>
+        <div class="dd-pop dd-menu" id="pgame-menu" role="menu" aria-label="Game" hidden></div>
+      </div>
+      <div class="dd" id="dd-rung">
+        <button type="button" class="dd-btn" id="f-rung" aria-haspopup="true" aria-expanded="false">
+          <span class="dd-value">All rungs</span>
+        </button>
+        <div class="dd-pop dd-menu" id="rung-menu" role="menu" aria-label="Rung" hidden></div>
+      </div>
+      <div class="dd" id="dd-price">
+        <button type="button" class="dd-btn" id="f-price" aria-haspopup="true" aria-expanded="false">
+          <span class="dd-value">Any price</span>
+        </button>
+        <div class="dd-pop dd-menu" id="price-menu" role="menu" aria-label="Minimum price" hidden></div>
+      </div>
+      <div class="lr-seg" id="posonly" role="group" aria-label="Edge filter">
+        <button type="button" data-p="1" aria-pressed="true">Positive edge</button>
+        <button type="button" data-p="0">All</button>
+      </div>
+    </div>
+    <div class="lr-scroll"><table class="lr-table lr-list" id="props"></table></div>
+    <p class="lr-note" id="pcount"></p>
+    <h2>Full board</h2>
+    <div class="dd-row">
+      <div class="lr-seg" id="vmode" role="group" aria-label="Cell values">
+        <button type="button" data-m="edge" aria-pressed="true">Edge</button>
+        <button type="button" data-m="odds">Odds</button>
+        <button type="button" data-m="ev">EV</button>
+        <button type="button" data-m="mod" >Likelihood</button>
+        <button type="button" data-m="imp">Implied</button>
+      </div>
+      <div class="dd" id="dd-game">
+        <button type="button" class="dd-btn" id="f-game" aria-haspopup="true" aria-expanded="false">
+          <span class="dd-value">All games</span>
+        </button>
+        <div class="dd-pop dd-menu" id="game-menu" role="menu" aria-label="Game" hidden></div>
+      </div>
+      <div class="dd" id="dd-sort">
+        <button type="button" class="dd-btn" id="f-sort" aria-haspopup="true" aria-expanded="false">
+          <span class="dd-value">Best edge</span>
+        </button>
+        <div class="dd-pop dd-menu" id="sort-menu" role="menu" aria-label="Sort" hidden></div>
+      </div>
+      <button type="button" class="sched-reset" id="f-reset" hidden>Reset</button>
+    </div>
+
+    <div class="lr-scroll">
+      <table class="lr-table" id="board">
+        <thead><tr id="hrow"></tr></thead>
+        <tbody id="brow"><tr><td class="sched-empty">Loading board…</td></tr></tbody>
+      </table>
+    </div>
+    <div class="lr-legend"><span id="rampLo"></span><span class="lr-ramp" id="ramp"></span><span id="rampHi"></span></div>
+    <p class="lr-note" id="boardnote"></p>
+
+
+    <h2>Does it work?</h2>
+    <p class="lr-note" id="btnote"></p>
+    <div class="lr-key">
+      <span><b class="pred" style="background:var(--accent-strong)"></b>Predicted</span>
+      <span><b style="background:var(--heat-warn-fill)"></b>Actual</span>
+    </div>
+    <div class="lr-cards">
+      <div class="lr-card"><h3>By rung — predicted vs actual</h3><ul class="lr-cal" id="calBands"></ul></div>
+      <div class="lr-card"><h3>20+ by predicted decile</h3><ul class="lr-cal" id="calDec"></ul></div>
+    </div>
+    <p class="lr-note" id="calnote"></p>
+
+    <h2>Defenses</h2>
+    <p class="lr-note">Explosive receptions allowed per game, weighted <strong>20% 2024 · 50% 2025 · 30% 2026</strong>.
+      The board applies the position-specific multiplier — a defense can be soft to tight ends and stingy outside.</p>
+    <div class="lr-scroll"><table class="lr-table lr-list" id="dtable"></table></div>
+
+    <div class="lr-method">
+      <h3>Method</h3>
+      <ol>
+        <li><strong>Where it comes from.</strong> nflverse play-by-play for 2024–2026, reduced to every completed
+          reception with its receiver, yardage and defense. The prices are a DraftKings capture: this market is in no
+          odds API — balldontlie carries 18 NFL prop types and this is not one of them.</li>
+        <li><strong>Per-catch explosiveness.</strong> Pooled catch-yardage survival <code>S(x)</code> is measured, not
+          assumed — its tail is heavier than exponential. Each receiver gets one exponent,
+          <code>S_player(x) = S(x)^α</code>, estimated as <code>α = n / −Σ ln S(y)</code> from
+          <em>every</em> catch rather than the rare long ones. That is what makes a 40+ number estimable when the median
+          pass-catcher has two 40+ catches in three seasons. <strong>BPI</strong> is <code>1/α</code>.</li>
+        <li><strong>Volume and defense.</strong> <code>λ(x) = catches/game × S(x)^α × defense</code>, player terms
+          shrunk toward position means, defense position-specific.
+          <code>P(longest ≥ x) = 1 − e^−λ(x)</code>, with one global λ scale fit on a held-out season.</li>
+        <li><strong>Edge.</strong> <code>likelihood − 1/decimal odds</code> against that exact line;
+          <code>EV = (likelihood × decimal) − 1</code>.</li>
+      </ol>
+      <p>The sample gate is not decoration: ungated, the biggest edge on the board belongs to a receiver with zero
+        career catches, where the model reports a position average rather than evidence. Those players are tagged
+        <span class="lr-tag">THIN</span>. The model also knows nothing about injuries, depth-chart changes or coverage,
+        and the book does — where they disagree about a receiver's <em>volume</em> this week, the book is probably
+        right. The durable claim is the shape of a receiver's yardage plus a measured matchup.</p>
+      <p id="freshness"></p>
+    </div>
+  </div>
+
+  <script src="/scripts/primary/long-reception.js"></script>
+</body>
+</html>

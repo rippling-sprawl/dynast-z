@@ -1,0 +1,322 @@
+/* Longest Reception — /football/long-reception
+ *
+ * The page is a board, not a document: a matrix of pass-catchers against the
+ * milestone rungs a book posts, read by scanning for colour and then stopping
+ * on a number. It borrows the schedule's chrome (masters shell, dd-row
+ * pickers, theme tokens) and adds only what a matrix needs.
+ *
+ * Heat: every cell carries a bare `--heat` in 0..1 and a direction class, and
+ * the mixing happens here — the same contract as the z-cells on
+ * /football/bakers-buns, so a theme change re-colours the board without it
+ * being rebuilt. Each rule states its flat colour first and the mix second, so
+ * a browser without color-mix() lands on a readable two-colour table rather
+ * than on unstyled text. */
+
+/* ---------- the model bar: what the numbers are, before any of them ---------- */
+.lr-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 18px;
+  padding: 11px 14px;
+  margin-bottom: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.lr-bar-grp { display: flex; align-items: center; gap: 8px; }
+.lr-bar-label {
+  font-size: 10px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--text-4);
+  white-space: nowrap;
+}
+.lr-bar-note {
+  flex: 1 1 260px;
+  min-width: 220px;
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--text-3);
+}
+.lr-bar-note strong { color: var(--text-2); }
+
+/* A segmented control, sized off the dd-btn it sits beside. */
+.lr-seg {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--surface-2);
+}
+.lr-seg button {
+  padding: 6px 11px;
+  border: 0;
+  background: transparent;
+  color: var(--text-2);
+  font: inherit;
+  font-size: 12px;
+  line-height: 1.2;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.lr-seg button + button { border-left: 1px solid var(--border); }
+.lr-seg button:hover:not([disabled]) { background: var(--surface-3); color: var(--text-hi); }
+.lr-seg button[aria-pressed="true"] { background: var(--accent-strong); color: #fff; }
+.lr-seg button[disabled] { opacity: 0.4; cursor: not-allowed; }
+.lr-seg-off { opacity: 0.45; }
+
+/* ---------- leaderboard cards ---------- */
+.lr-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 14px;
+  margin-bottom: 20px;
+}
+.lr-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 14px 10px;
+}
+.lr-card h3 {
+  margin: 0 0 2px;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-4);
+  font-weight: 600;
+}
+.lr-card-note { margin: 0 0 8px; font-size: 12px; color: var(--text-3); }
+.lr-card-note strong { color: var(--text-2); }
+
+.lr-rank { margin: 0; padding: 0; list-style: none; }
+.lr-rank li {
+  display: grid;
+  grid-template-columns: 16px 1fr 104px 56px;
+  gap: 9px;
+  align-items: center;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--border);
+}
+.lr-rank li:last-child { border-bottom: 0; }
+.lr-rk { font-size: 11px; color: var(--text-4); text-align: right; font-variant-numeric: tabular-nums; }
+.lr-who { min-width: 0; }
+.lr-who b { display: block; font-size: 13px; color: var(--text-hi); font-weight: 650; }
+/* Direct child only: the track below is a span too, and so is the multiplier
+ * pill inside this one — a bare `.lr-who span` turns both into blocks and
+ * breaks the line into three. */
+.lr-who > span:not(.lr-track) {
+  display: block;
+  font-size: 10.5px;
+  color: var(--text-4);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.lr-price { font-size: 11px; text-align: right; color: var(--text-3); font-variant-numeric: tabular-nums; }
+.lr-price b { display: block; font-size: 12.5px; color: var(--text-2); }
+.lr-big {
+  font-size: 13.5px;
+  font-weight: 700;
+  text-align: right;
+  color: var(--text-hi);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The bar under a leaderboard name: likelihood fills from the left, edge
+ * diverges from a centre tick. */
+.lr-track { display: block; height: 6px; margin-top: 4px; border-radius: 3px; background: var(--surface-3); }
+.lr-track i { display: block; height: 100%; border-radius: 3px; background: var(--accent-strong); }
+.lr-diverge { position: relative; }
+.lr-diverge u { position: absolute; top: -1px; bottom: -1px; left: 50%; width: 1px; background: var(--border); }
+.lr-diverge i { position: absolute; top: 0; height: 100%; }
+.lr-diverge i.pos { left: 50%; background: var(--heat-good-fill); }
+.lr-diverge i.neg { right: 50%; background: var(--heat-bad-fill); }
+
+/* ---------- the board ---------- */
+.lr-scroll {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  -webkit-overflow-scrolling: touch;
+}
+.lr-table { border-collapse: separate; border-spacing: 0; width: 100%; font-size: 13px; }
+.lr-table th, .lr-table td { padding: 0; text-align: left; }
+.lr-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  padding: 9px 8px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--text-4);
+  white-space: nowrap;
+}
+.lr-table thead th.num { text-align: center; }
+.lr-table tbody td {
+  height: 32px;
+  padding: 0 8px;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--border);
+}
+.lr-table tbody tr:last-child td { border-bottom: 0; }
+
+/* The player column stays put while the rungs scroll under the thumb. */
+.lr-name {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  min-width: 186px;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+}
+.lr-table thead .lr-name { z-index: 4; }
+.lr-table tbody tr:hover .lr-name { background: var(--surface-2); }
+.lr-name b { font-weight: 650; color: var(--text-hi); white-space: nowrap; }
+.lr-name span { margin-left: 6px; font-size: 9.5px; color: var(--text-4); letter-spacing: 0.04em; }
+.lr-meta { font-size: 11px; color: var(--text-3); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.lr-meta.right { text-align: right; }
+
+/* A defense multiplier reads as a warning when it is generous and as a comfort
+ * when it is not, but the number is always shown — colour is never the only cue. */
+.lr-mult {
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: var(--surface-3);
+  font-size: 10px;
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+}
+.lr-mult.up { color: var(--heat-bad); }
+.lr-mult.dn { color: var(--heat-good); }
+
+/* Thin sample: dimmed and tagged, never silently dropped. */
+.lr-tag {
+  margin-left: 5px;
+  padding: 1px 4px;
+  border-radius: 3px;
+  background: var(--surface-3);
+  font-size: 9px;
+  letter-spacing: 0.05em;
+  color: var(--text-4);
+}
+tr.lr-thin .lr-name b { color: var(--text-3); font-weight: 550; }
+tr.lr-thin .lr-cell i { opacity: 0.45; }
+
+/* ---------- the heat cells ----------
+ * `--heat` is 0..1 and the class is the direction. Sequential cells (a
+ * likelihood, an implied probability) ramp one way from the page; diverging
+ * cells (an edge, an EV) ramp green above zero and orange below, which is the
+ * same pairing the rest of the site spends on a signed number. */
+.lr-cell { min-width: 62px; padding: 0; text-align: center; }
+.lr-cell i {
+  display: block;
+  height: 30px;
+  line-height: 30px;
+  margin: 0 1px;
+  border-radius: 3px;
+  font-style: normal;
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+}
+.lr-cell i.seq {
+  color: var(--text-2);
+  color: color-mix(in oklab, var(--text-hi) calc(var(--heat, 0) * 100%), var(--text-3));
+  background: color-mix(in oklab, var(--heat-info-fill) calc(var(--heat, 0) * 46%), transparent);
+}
+.lr-cell i.pos {
+  color: var(--heat-good);
+  color: color-mix(in oklab, var(--heat-good) calc(var(--heat, 1) * 100%), var(--heat-base));
+  background: color-mix(in oklab, var(--heat-good-fill) calc(var(--heat, 0) * 40%), transparent);
+}
+.lr-cell i.neg {
+  color: var(--heat-bad);
+  color: color-mix(in oklab, var(--heat-bad) calc(var(--heat, 1) * 100%), var(--heat-base));
+  background: color-mix(in oklab, var(--heat-bad-fill) calc(var(--heat, 0) * 40%), transparent);
+}
+.lr-cell i.none { color: var(--text-5); }
+
+/* The scale the board is read against. */
+.lr-legend {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 0 0;
+  font-size: 10.5px;
+  color: var(--text-4);
+  flex-wrap: wrap;
+}
+.lr-ramp { display: flex; width: 168px; height: 9px; border-radius: 3px; overflow: hidden; border: 1px solid var(--border); }
+.lr-ramp i { flex: 1; }
+
+.lr-note { margin: 10px 0 0; font-size: 12.5px; color: var(--text-3); }
+.lr-note strong { color: var(--text-2); }
+
+/* ---------- the priced-line table ---------- */
+.lr-list td, .lr-list th { padding: 7px 10px; white-space: nowrap; }
+.lr-list td { font-size: 11.5px; color: var(--text-3); font-variant-numeric: tabular-nums; }
+.lr-list td.who { font-size: 13px; font-weight: 640; color: var(--text-hi); }
+.lr-list td.num, .lr-list th.num { text-align: right; }
+.lr-list td.odds { color: var(--text-hi); font-weight: 640; }
+.lr-list tbody tr:hover { background: var(--surface-2); }
+.lr-pill {
+  display: inline-block;
+  min-width: 52px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  text-align: right;
+  font-weight: 650;
+}
+.lr-pill.pos {
+  color: var(--heat-good);
+  color: color-mix(in oklab, var(--heat-good) calc(var(--heat, 1) * 100%), var(--heat-base));
+  background: color-mix(in oklab, var(--heat-good-fill) calc(var(--heat, 0) * 40%), transparent);
+}
+.lr-pill.neg {
+  color: var(--heat-bad);
+  color: color-mix(in oklab, var(--heat-bad) calc(var(--heat, 1) * 100%), var(--heat-base));
+  background: color-mix(in oklab, var(--heat-bad-fill) calc(var(--heat, 0) * 40%), transparent);
+}
+
+/* ---------- calibration ---------- */
+.lr-cal { margin: 0; padding: 0; list-style: none; }
+.lr-cal li {
+  display: grid;
+  grid-template-columns: 46px 1fr 96px;
+  gap: 10px;
+  align-items: center;
+  padding: 3px 0;
+}
+.lr-cal-lab { font-size: 10.5px; color: var(--text-4); text-align: right; font-variant-numeric: tabular-nums; }
+.lr-cal-bars { display: flex; flex-direction: column; gap: 2px; }
+.lr-cal-bars i { display: block; height: 7px; min-width: 1px; border-radius: 0 3px 3px 0; }
+.lr-cal-bars i.pred { background: var(--accent-strong); }
+.lr-cal-bars i.act { background: var(--heat-warn-fill); }
+.lr-cal-val { font-size: 10.5px; text-align: right; color: var(--text-3); font-variant-numeric: tabular-nums; }
+.lr-key { display: flex; gap: 14px; margin: 0 0 8px; font-size: 10.5px; color: var(--text-4); }
+.lr-key span { display: inline-flex; align-items: center; gap: 5px; }
+.lr-key b { width: 11px; height: 11px; border-radius: 2px; display: inline-block; }
+
+.lr-method { margin-top: 26px; font-size: 12.5px; color: var(--text-3); }
+.lr-method h3 { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-4); margin: 0 0 8px; }
+.lr-method ol { margin: 0 0 10px; padding-left: 18px; }
+.lr-method li { margin-bottom: 6px; }
+.lr-method code {
+  padding: 1px 4px;
+  border-radius: 3px;
+  background: var(--surface-2);
+  font-size: 11.5px;
+}
+.lr-method strong { color: var(--text-2); }
+
+@media (max-width: 640px) {
+  .lr-rank li { grid-template-columns: 14px 1fr 84px 48px; gap: 7px; }
+  .lr-name { min-width: 150px; }
+  .lr-cal li { grid-template-columns: 40px 1fr 84px; }
+}

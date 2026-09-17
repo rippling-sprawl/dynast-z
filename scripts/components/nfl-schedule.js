@@ -12,6 +12,17 @@
  *     el.innerHTML = schedRenderSeason(doc, { team: 'CHI' });
  *   });
  *
+ * The file in data/ is the fixture list and nothing else — it is committed, so
+ * it cannot know a score or a line. A consumer that wants either asks for them
+ * separately and hands them in as `opts.lines`:
+ *
+ *   schedLoadLines(2026).then(function (lines) {
+ *     el.innerHTML = schedRenderWeek(doc, 2, { lines: lines });
+ *   });
+ *
+ * Without it every row renders exactly as it did before lines existed, which
+ * is what the team card on /football/bakers-buns still wants.
+ *
  * Every render function returns an HTML string and touches no DOM and no state
  * of its own — the schedule page keeps its filters, the card keeps its tabs, and
  * neither has to know what the other does with a pick.
@@ -77,6 +88,47 @@
         throw e;
       });
     return docs[season];
+  }
+
+  /* ---------- the live half ----------
+   * Everything the committed file cannot carry: which games have kicked off,
+   * which have finished, what the score is, and what the spread and total are
+   * right now. It comes from /api/game-odds, the same listing the live-stats
+   * board and the schedule archive read, with `lines=1` for the two fields
+   * only this page renders.
+   *
+   * One request per season, not per week: the page already has the whole season
+   * in hand and switches weeks without touching the network, so a week-scoped
+   * fetch would trade ~14 KB once for a request on every pick.
+   *
+   * A failure is an empty map, not an error. The schedule is the page; the
+   * lines are what the page says about it, and a row with no line renders as
+   * the fixture it always was rather than as a broken one.
+   */
+
+  var lines = {};
+
+  function schedLoadLines(season) {
+    if (lines[season]) return lines[season];
+    lines[season] = fetch('/api/game-odds?season=' + encodeURIComponent(season) +
+                          '&lines=1')
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) { return (d && d.games) || {}; })
+      .catch(function () { return {}; });
+    return lines[season];
+  }
+
+  /* pregame | live | final, for a game the caller may or may not have lines for.
+   *
+   * The API's phase is read off the game's own status_state and is the only
+   * thing that knows a game is under way. Without it a score still settles the
+   * question — data/nfl_schedule_2025.json ships all 272 of them — and a game
+   * with neither has not been captured, which for a fixture list means it has
+   * not happened yet. */
+  function schedPhase(g, byId) {
+    var info = byId && byId[g.id];
+    if (info && info.phase) return info.phase;
+    return g.score || (info && info.score) ? 'final' : 'pregame';
   }
 
   // Cached on the doc itself rather than in a map here: the doc is the identity,
@@ -194,9 +246,11 @@
    * One game, one line. `opts` adds leading columns for the lists that need
    * them: `week` for a team's season, where the week number is the only ordering
    * the reader has, and `date` for any all-weeks list, where the rows are no
-   * longer under a day header that says which day it is. `team` is the picked
-   * team, which decides which side is highlighted and whose side a result is
-   * read from.
+   * longer under a day header that says which day it is. `day` is the same cell
+   * inside a single week — "Sun" rather than "Sep 20", because within one week
+   * the weekday is the whole of what the date says and three characters of it
+   * is width the market beside it needs. `team` is the picked team, which
+   * decides which side is highlighted and whose side a result is read from.
    */
   function gameRow(doc, g, opts) {
     opts = opts || {};
@@ -206,6 +260,8 @@
     var tbd = g.slot === 'tbd';
     var away = by[g.away] || { abbr: g.away };
     var home = by[g.home] || { abbr: g.home };
+    var info = (opts.lines || {})[g.id];
+    var phase = schedPhase(g, opts.lines);
 
     // The picked-team highlight says which side of a home/away pairing is
     // "yours". A neutral-site game has no such pairing — neither team is at
@@ -244,6 +300,16 @@
     // else here.
     var teams = '<span class="sched-teams">' + team(away, 'away') +
       '<span class="sched-at">' + sep + '</span>' + team(home, 'home') + '</span>';
+
+    /* The same slot in the row, two states, never both. Before the whistle the
+     * market is the news and there is no score to tell; after it the score is
+     * the news and the line it was played to is history — a settled game still
+     * quoting a spread invites the reader to price a game that has already been
+     * played. The one page that does keep both is the game's own, which is
+     * where a closing line belongs. */
+    var state = phase === 'final'
+      ? resultCell(g, opts.team, info && info.score)
+      : marketCell(info && info.line, away, home);
     var venue = g.neutral && g.venue
       ? '<span class="sched-venue">' + esc(g.venue) + '</span>' : '';
 
@@ -257,6 +323,7 @@
     // odd Sundays are the morning international kickoffs and the night game, so
     // "SUN" alone would not say which — hence "SUN A.M." on the morning ones.
     // The night games keep a bare "SUN"; their time cell already reads 8:20 PM.
+
     var badge = '';
     if (g.slot === 'odd') {
       var day = f.dayAbbr.format(d);
@@ -266,10 +333,19 @@
       badge = '<span class="sched-slot ' + g.slot + '">' + g.slot + '</span>';
     }
 
+    // The one badge that is not about which day the game is on, and it leads
+    // the row's badges because it is the only one that is about right now. It
+    // has to exist: in the lists that keep their day and week headers a live
+    // game sits in the middle of them, and nothing else on the row says so.
+    // The status-sorted week suppresses it — there the group header does say so.
+    var live = phase === 'live' && !opts.hideLive
+      ? '<span class="sched-slot live">live</span>' : '';
+
     // A TBD game still has a known calendar day — only the kickoff time is
     // unset — so the date cell is real even where the time cell isn't.
     var cls = 'sched-game' + (tbd ? ' is-tbd' : '') +
       (opts.week ? ' has-week' : '') + (opts.date ? ' has-date' : '') +
+      (opts.day ? ' has-day' : '') +
       (opts.slateBreak ? ' is-slate-break' : '');
     var open = g.id
       ? '<a class="' + cls + '" href="/football/schedule/game/' +
@@ -279,9 +355,10 @@
     return open +
       (opts.week ? '<span class="sched-wk">' + esc(opts.week) + '</span>' : '') +
       (opts.date ? '<span class="sched-date">' + esc(f.dayRow.format(d)) + '</span>' : '') +
+      (opts.day ? '<span class="sched-date">' + esc(f.dayAbbr.format(d)) + '</span>' : '') +
       '<span class="sched-time">' + (tbd ? 'TBD' : esc(timeLabel(f, d))) + '</span>' +
       '<span class="sched-matchup">' + teams +
-        resultCell(g, opts.team) + badge + venue + '</span>' +
+        state + live + badge + venue + '</span>' +
     (g.id ? '</a>' : '</div>');
   }
 
@@ -292,9 +369,14 @@
    * from their side and led by the verdict — seventeen rows of "24-20" leave the
    * reader working out which number was theirs on every one of them. With no
    * team picked there is no side to be on, so it stays a bare score. */
-  function resultCell(g, team) {
-    if (!g.score) return '';
-    var a = g.score[0], h = g.score[1];
+  function resultCell(g, team, score) {
+    // The file first, then the one handed in: a committed score belongs to a
+    // season that has been archived and is the copy that will still be right
+    // in five years. Where both exist they agree; where only the API has one
+    // the season is the one being played.
+    score = g.score || score;
+    if (!score) return '';
+    var a = score[0], h = score[1];
 
     if (team !== g.away && team !== g.home) {
       return '<span class="sched-result">' + a + '-' + h + '</span>';
@@ -307,6 +389,57 @@
     return '<span class="sched-result ' + cls + '">' + verdict + ' ' +
       us + '-' + them + '</span>';
   }
+
+  /* The spread and the total, on a game that has not finished.
+   *
+   * `line.spread` is the home team's number, the way a book quotes it and the
+   * way pickem_games stores it. It is rendered against the favourite instead:
+   * a bare "−6.5" on a row that names two teams is only unambiguous to someone
+   * who already knows the convention, and three characters of an abbreviation
+   * buys the row out of that entirely. A negative spread is the home side's,
+   * a positive one the away side's, and zero is a pick'em with no side to name.
+   *
+   * The minus is U+2212, not a hyphen, for the reason the pick 'em board uses
+   * it: at monospace it is the width of a digit and sits on the same optical
+   * line, where a hyphen reads as a bullet between the abbreviation and the
+   * number.
+   *
+   * The total is the bare line. No "o"/"u" prefix — that names a side of a bet,
+   * and there is no price here to take it at; the game's own page is where the
+   * two halves of the market are priced.
+   */
+  function marketCell(line, away, home) {
+    if (!line) return '';
+    var spread = line.spread, total = line.total;
+    var label = '';
+    if (spread === 0) {
+      label = 'PK';
+    } else if (spread !== null && spread !== undefined) {
+      label = (spread < 0 ? home.abbr : away.abbr) + ' \u2212' + Math.abs(spread);
+    }
+    if (!label && (total === null || total === undefined)) return '';
+
+    // One title for the pair, because they are one book's quote of one game and
+    // the provenance is the same fact about both.
+    var book = BOOK_NAMES[line.book] || line.book || 'the market';
+    return '<span class="sched-market" title="' + esc(book + ': ' +
+        (label ? label.replace('\u2212', '-') : 'no spread posted') +
+        (total === null || total === undefined ? '' : ', total ' + total)) + '">' +
+      '<span class="sched-spread">' + esc(label) + '</span>' +
+      '<span class="sched-total">' +
+        (total === null || total === undefined ? '' : esc(total)) +
+      '</span></span>';
+  }
+
+  /* Book slugs as a person names them, for the market cell's tooltip. The same
+   * map the game page carries; only the books a bundle can hold are listed,
+   * and an unmapped slug falls through to itself rather than to nothing. */
+  var BOOK_NAMES = {
+    draftkings: 'DraftKings', fanduel: 'FanDuel', betmgm: 'BetMGM',
+    caesars: 'Caesars', betrivers: 'BetRivers', fanatics: 'Fanatics',
+    espnbet: 'ESPN BET', bet365: 'bet365', pointsbet: 'PointsBet',
+    hardrock: 'Hard Rock Bet'
+  };
 
   /* ---------- per-team links ----------
    * Pro-Football-Reference keys teams by their own three-letter code, which
@@ -347,7 +480,69 @@
 
   /* ---------- the three lists ---------- */
 
-  // One week: group by calendar day, so a week reads Thu / Sun / Mon.
+  /* ---------- a week in flight ----------
+   * A week that is part-played is not read the way a week that is coming up is.
+   * Thursday / Sunday / Monday is the right shape for a slate nobody has
+   * kicked off yet — it answers "when is this on" — but once the games start
+   * it answers a question nobody is asking, and it buries the one game that is
+   * actually happening halfway down a page of results and fixtures.
+   *
+   * So for as long as a week is in flight the day headers give way to the three
+   * states a game can be in: what is on now, what is still to come, then what
+   * has already happened, newest first — a reader coming back at 8pm on a
+   * Sunday wants the 4:25 results, not the 1:00 ones. Every row carries its own
+   * weekday, since the header no longer says it, and the weekday is all a row
+   * inside one week has to say.
+   *
+   * "In flight" is deliberately narrower than "not all final": a week where
+   * nothing has kicked off yet is every future week on the calendar, and
+   * flattening those into one "Scheduled" list would throw away the day
+   * grouping for no gain. It takes a game that has started — live or final —
+   * *and* a game that has not finished. The moment the last whistle blows the
+   * week is chronological again and reads exactly as the 2025 archive does.
+   */
+
+  var PHASE_ORDER = ['live', 'pregame', 'final'];
+  var PHASE_LABEL = { live: 'In progress', pregame: 'Scheduled', final: 'Final' };
+
+  function inFlight(games, byId) {
+    var started = false, unfinished = false;
+    games.forEach(function (g) {
+      var p = schedPhase(g, byId);
+      if (p !== 'pregame') started = true;
+      if (p !== 'final') unfinished = true;
+    });
+    return started && unfinished;
+  }
+
+  function statusList(doc, games, opts) {
+    var buckets = { live: [], pregame: [], final: [] };
+    games.forEach(function (g) { buckets[schedPhase(g, opts.lines)].push(g); });
+
+    return PHASE_ORDER.map(function (phase) {
+      var rows = buckets[phase];
+      if (!rows.length) return '';
+      // Chronological within a bucket, except the finished one — a result is
+      // worth reading in the order the results came in.
+      rows.sort(function (a, b) {
+        var ka = toDate(a.kickoff), kb = toDate(b.kickoff);
+        return phase === 'final' ? kb - ka : ka - kb;
+      });
+      return groupHeader(PHASE_LABEL[phase],
+          rows.length + ' game' + (rows.length === 1 ? '' : 's')) +
+        '<div class="sched-rows">' +
+        rows.map(function (g) {
+          // No live badge in here: the header this row is under is the badge,
+          // and stamping every row in a group with what the group is called is
+          // width spent saying it twice.
+          return gameRow(doc, g, { team: opts.team, lines: opts.lines,
+                                   day: true, hideLive: true });
+        }).join('') + '</div>';
+    }).join('');
+  }
+
+  // One week: group by calendar day, so a week reads Thu / Sun / Mon — unless
+  // the week is part-played, which statusList above re-orders instead.
   function schedRenderWeek(doc, week, opts) {
     opts = opts || {};
     var f = formats(doc);
@@ -361,6 +556,8 @@
           ' are on bye in week ' + wk.week + '.'
         : 'No games in week ' + wk.week + '.') + '</p>';
     }
+
+    if (inFlight(games, opts.lines)) return statusList(doc, games, opts);
     // Rows are wrapped per day so the zebra striping restarts with each group —
     // counted across the whole list, the headers are siblings too and the
     // stripes land on arbitrary rows.
@@ -373,7 +570,8 @@
         html += groupHeader(f.dayLong.format(d)) + '<div class="sched-rows">';
         lastKey = key;
       }
-      html += gameRow(doc, g, { team: opts.team, slateBreak: isSlateBreak(f, prev, d) });
+      html += gameRow(doc, g, { team: opts.team, lines: opts.lines,
+                                slateBreak: isSlateBreak(f, prev, d) });
       prev = d;
     });
     return html + '</div>';
@@ -389,7 +587,8 @@
     var rows = doc.weeks.map(function (wk) {
       var g = wk.games.filter(function (x) { return matches(x, opts.team); })[0];
       return g
-        ? gameRow(doc, g, { team: opts.team, week: wk.week, date: true })
+        ? gameRow(doc, g, { team: opts.team, lines: opts.lines,
+                            week: wk.week, date: true })
         : '<div class="sched-game sched-bye has-week has-date">' +
             '<span class="sched-wk">' + wk.week + '</span>' +
             '<span class="sched-date">&mdash;</span><span class="sched-time"></span>' +
@@ -411,7 +610,8 @@
       return groupHeader('Week ' + wk.week) + '<div class="sched-rows">' +
         wk.games.map(function (g) {
           var d = toDate(g.kickoff);
-          var row = gameRow(doc, g, { date: true, slateBreak: isSlateBreak(f, prev, d) });
+          var row = gameRow(doc, g, { date: true, lines: opts.lines,
+                                      slateBreak: isSlateBreak(f, prev, d) });
           prev = d;
           return row;
         }).join('') + '</div>';
@@ -424,12 +624,25 @@
    * mean days ago. */
   function schedInvalidate() {
     docs = {};
+    lines = {};
+  }
+
+  /* The lines alone. The fixture list is committed and a reader who has had the
+   * page open for an hour is holding a correct copy of it; what has moved in
+   * that hour is which games are under way, what they are, and what the market
+   * is — so a page that wants to catch up drops this half and keeps the 35 KB
+   * it already has. */
+  function schedInvalidateLines() {
+    lines = {};
   }
 
   global.SCHED_SEASONS = SEASONS;
   global.SCHED_CURRENT_SEASON = SEASONS[0];
   global.schedLoad = schedLoad;
+  global.schedLoadLines = schedLoadLines;
+  global.schedPhase = schedPhase;
   global.schedInvalidate = schedInvalidate;
+  global.schedInvalidateLines = schedInvalidateLines;
   global.schedTeamsByAbbr = schedTeamsByAbbr;
   global.schedCurrentWeek = schedCurrentWeek;
   global.schedRenderWeek = schedRenderWeek;

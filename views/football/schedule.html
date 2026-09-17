@@ -62,7 +62,7 @@
 
       <div class="dd" id="dd-team">
         <button type="button" class="dd-btn" id="f-team" aria-haspopup="dialog" aria-expanded="false">
-          <span class="dd-value">All teams</span>
+          <span class="dd-value">Teams</span>
         </button>
         <div class="dd-pop dd-overlay" id="team-overlay" role="dialog" aria-modal="true" aria-label="Team" hidden>
           <div class="tp" id="team-grid"></div>
@@ -96,8 +96,16 @@
      * reload in the URL. */
 
     var doc = null;
+    /* Scores, spreads and totals for the season in view, keyed by game id —
+     * /api/game-odds, fetched alongside the fixture list rather than with it.
+     * Empty until it lands and empty for ever if it never does, which is the
+     * page as it was before it carried a line. */
+    var live = {};
     // The week the clock is in, for the season in view — and null for a season
-    // that has already finished, which has no "this week" to be in.
+    // that has already finished, which has no current week to be in. It decides
+    // which week the page opens on and when Reset has anything to do; it is not
+    // labelled in the menu, because the week it names is the one the page is
+    // already showing.
     var nowWeek = null;
     var state = { season: SCHED_CURRENT_SEASON, week: 1, team: '' };
 
@@ -162,17 +170,12 @@
     function weekOptions() {
       return [{ value: 'all', label: 'All weeks' }].concat(
         doc.weeks.map(function (w) {
-          return {
-            value: w.week,
-            label: 'Week ' + w.week,
-            note: w.week === nowWeek ? 'this week' : ''
-          };
+          return { value: w.week, label: 'Week ' + w.week };
         }));
     }
 
     function weekLabel() {
-      if (state.week === 'all') return 'All weeks';
-      return 'Week ' + state.week + (state.week === nowWeek ? ' — this week' : '');
+      return state.week === 'all' ? 'All weeks' : 'Week ' + state.week;
     }
 
     function seasonOptions() {
@@ -195,7 +198,13 @@
 
     function syncFilters() {
       syncWeekMenu(weekBtn, weekMenu, state.week, weekLabel());
-      syncTeamPicker(teamBtn, teamPicker, state.team, doc.teams);
+      // "Teams", not the component's default "All teams": the control sits
+      // beside a week menu that does say "All weeks", and the two are not the
+      // same kind of word. A week filter set to all weeks is showing all of
+      // them; a team filter is a search, and what it says when nothing is
+      // picked is what it is for rather than a state it is in.
+      syncTeamPicker(teamBtn, teamPicker, state.team, doc.teams,
+                     { emptyLabel: 'Teams' });
       syncOptionMenu(seasonBtn, seasonMenu, state.season, String(state.season), 'season');
     }
 
@@ -268,12 +277,29 @@
       resetBtn.hidden = state.season === SCHED_CURRENT_SEASON &&
         state.week === nowWeek && !state.team;
       var html = state.week === 'all'
-        ? schedRenderAll(doc, { team: state.team })
-        : schedRenderWeek(doc, state.week, { team: state.team });
+        ? schedRenderAll(doc, { team: state.team, lines: live })
+        : schedRenderWeek(doc, state.week, { team: state.team, lines: live });
       // Below the schedule, not above it: the games are what was asked for and
       // the links are where to go next.
       listEl.innerHTML = html + (state.team ? schedTeamLinks(doc, state.team) : '');
       writeParams();
+    }
+
+    /* Asked for after the fixture list has been drawn, never waited on. The
+     * schedule is the page and it is a committed file; the lines are what the
+     * page says about it and they come from an API that can be slow or down,
+     * and holding 272 rows back for them would trade the whole page for a
+     * column of it.
+     *
+     * The season guard is the reader having moved on: they can pick 2025 while
+     * 2026's lines are still in the air, and a late answer must not repaint
+     * the season they left. */
+    function loadLines(season) {
+      schedLoadLines(season).then(function (byId) {
+        if (state.season !== season) return;
+        live = byId;
+        apply();
+      });
     }
 
     /* `fromParams` is the first load only: an explicit ?week=/?team= is the
@@ -282,6 +308,7 @@
      * carrying the old URL's week into it would be answering the wrong one. */
     function load(season, fromParams) {
       listEl.innerHTML = '<p class="sched-empty">Loading schedule…</p>';
+      live = {};
       schedLoad(season).then(function (d) {
         doc = d;
         state.season = season;
@@ -291,6 +318,7 @@
         if (fromParams) readParams();
         refreshPanels();
         apply();
+        loadLines(season);
       }).catch(function (e) {
         listEl.innerHTML = '<p class="sched-empty">Error: ' + esc(e.message) + '</p>';
       });
@@ -314,6 +342,7 @@
         doc = d;
         refreshPanels();
         apply();
+        loadLines(state.season);
       }).catch(function () {
         // Offline, most likely. What is on the page is stale but readable, and
         // wiping it for an error message trades one wrong thing for a worse one.
@@ -322,6 +351,30 @@
 
     window.addEventListener('pageshow', function (e) {
       if (e.persisted) restore();
+    });
+
+    /* Coming back to a tab that was already open.
+     *
+     * The week's order is an answer about right now — what is on, what is next,
+     * what just finished — and a page rendered at 12:55 is still claiming a
+     * one o'clock kickoff is "scheduled" at half past three. So the lines are
+     * re-read when the tab is looked at again, which is the only moment the
+     * answer is being read. Not the fixture list: it is a committed file and
+     * the copy in hand is correct.
+     *
+     * Rate-limited because this fires on every app switch and the schedule is
+     * a page people leave open. A minute is shorter than the two-minute sweep
+     * that refreshes a live game upstream, so nothing is ever waiting on this
+     * that the data itself could have answered sooner. */
+    var REFRESH_FLOOR_MS = 60000;
+    var refreshedAt = Date.now();
+
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden || !doc) return;
+      if (Date.now() - refreshedAt < REFRESH_FLOOR_MS) return;
+      refreshedAt = Date.now();
+      schedInvalidateLines();
+      loadLines(state.season);
     });
 
     state.season = readSeasonParam();

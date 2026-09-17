@@ -1,0 +1,49 @@
+{
+  "sources": {
+    "onField": [
+      "https://github.com/nflverse/nflverse-data/releases/download/pbp/play_by_play_2024.csv.gz",
+      "https://github.com/nflverse/nflverse-data/releases/download/pbp/play_by_play_2025.csv.gz",
+      "https://github.com/nflverse/nflverse-data/releases/download/pbp/play_by_play_2026.csv.gz"
+    ],
+    "players": "https://github.com/nflverse/nflverse-data/releases/download/players/players.csv",
+    "prices": "data/imports/long_reception.json (DraftKings Recorder bundle)",
+    "rosters": "https://api.balldontlie.io/nfl/v1 (/games, /players/active, /odds/player_props)"
+  },
+  "season": 2026,
+  "week": 2,
+  "history_seasons": [
+    2024,
+    2025,
+    2026
+  ],
+  "season_weights": {
+    "2024": 0.2,
+    "2025": 0.5,
+    "2026": 0.3
+  },
+  "catch_count": 23496,
+  "receiver_count": 633,
+  "player_count": 233,
+  "gated_player_count": 140,
+  "game_count": 16,
+  "priced_game_count": 10,
+  "line_count": 339,
+  "lambda_scale": 1.08,
+  "sample_gate": {
+    "games": 8,
+    "catches": 25
+  },
+  "backtest": {
+    "n": 3123,
+    "players": 343,
+    "decile_1": 0.0929,
+    "decile_10": 0.6286
+  },
+  "league": {
+    "explosive20PerGame": 2.774,
+    "explosive40PerGame": 0.484
+  },
+  "size_bytes": 75868,
+  "fetched_at": "2026-09-17T19:23:23+00:00",
+  "fetched_ts": 1789673003
+}

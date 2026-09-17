@@ -4,6 +4,11 @@
 GET  /api/game-odds              -> {"games": {id: {...summary...}}}
 GET  /api/game-odds?game=<id>    -> the full bundle for that game
 
+The listing takes `season` and `week` to narrow it, and `lines=1` to add each
+game's score and its spread/total to the summary -- what /football/schedule
+needs to render a week's board without opening a single bundle. See
+load_index().
+
 Both public: this is the data /football/schedule/game/<id> renders, and that
 page is public. The page route carries the id as a path segment; this endpoint
 keeps it as a query parameter, because it is an API and not a page.
@@ -62,6 +67,32 @@ GAME_ID_RE = re.compile(r"^[0-9]{1,12}$")
 
 SUMMARY_COLUMNS = ("game_id,label,title,away,home,kickoff,season,week,phase,"
                    "has,etag,updated_at")
+
+# The two things /football/schedule renders per row that are not summary
+# columns: the final score, and the game's current spread and total. Both live
+# inside `data`, and both are projected in Postgres rather than in Python --
+# `select=data->game->score` sends the twenty bytes of a score, not the
+# megabyte it sits in. Under ?lines=1 only, because the other two consumers of
+# the listing (the /appendix live-stats board and the schedule archive) render
+# neither, and asking for a jsonb path detoasts the whole column server-side.
+LINE_COLUMNS = "score:data->game->score,odds:data->odds->current"
+
+# Which book's line a row shows, in the order it is taken from them. A bundle
+# carries DraftKings and FanDuel (scripts/fetch_bdl_game.py DEFAULT_BOOKS), so
+# in practice this is "DraftKings, or FanDuel when DK has not posted"; the rest
+# are here so a bundle captured with a wider --books still resolves.
+#
+# One book, not a consensus across them: a schedule row shows the spread beside
+# the total, and the two have to be the same book's quote or the row describes a
+# game nobody is offering. The pick 'em board does take a modal consensus
+# (scripts/pickem_capture.py) because the number it freezes is graded against,
+# and a line no book hung would make a push unreachable. Nothing here is graded.
+LINE_BOOKS = ("draftkings", "fanduel", "betmgm", "caesars", "fanatics", "betrivers")
+
+# Both filters are compared against ints, never interpolated as text: the value
+# reaches a PostgREST filter, which is the same reason GAME_ID_RE exists above.
+SEASON_RE = re.compile(r"^[0-9]{4}$")
+WEEK_RE = re.compile(r"^[0-9]{1,2}$")
 
 # Warm-instance memo, keyed by game id -> (etag, bundle-json-bytes). A Vercel
 # instance handling several requests for the same game skips both the round trip
@@ -132,23 +163,94 @@ def supabase_request(path):
     return json.loads(raw) if raw else None
 
 
-def load_index():
+def num(v):
+    """-> float, or None for anything that is not a number.
+
+    Every line in a bundle is a string -- balldontlie quotes "-6.5", not -6.5 --
+    and a row that has not been posted yet carries None or "". The caller wants
+    a number or nothing; "" formatted into a spread cell renders as a line of
+    zero."""
+    if v is None or v == "":
+        return None
+    try:
+        return float(v)
+    except (TypeError, ValueError):
+        return None
+
+
+def line_of(rows):
+    """-> {"spread": <home spread>, "total": ..., "book": ...}, or None.
+
+    The spread is the home team's, which is how a book quotes it and how
+    pickem_games stores it -- the away number is its negation, and the consumer
+    that wants a favourite reads the sign.
+
+    Both numbers come from one book (see LINE_BOOKS), and a book that posted a
+    spread but no total yields a spread and a null total rather than being
+    passed over: a half-posted market is what the board should say it is."""
+    for book in LINE_BOOKS:
+        for r in rows:
+            if r.get("vendor") != book:
+                continue
+            spread = num(r.get("spread_home_value"))
+            total = num(r.get("total_value"))
+            if spread is None and total is None:
+                continue
+            return {"spread": spread, "total": total, "book": book}
+    return None
+
+
+def score_of(score):
+    """-> [away, home], the order data/nfl_schedule_*.json already carries a
+    score in, so a schedule row reads the two the same way whichever it got.
+
+    None for a game that has not kicked off, and for a live game whose scores
+    have not landed yet -- a half-known score is not one worth rendering."""
+    if not isinstance(score, dict):
+        return None
+    away, home = score.get("away"), score.get("home")
+    if away is None or home is None:
+        return None
+    return [away, home]
+
+
+def load_index(season=None, week=None, lines=False):
     """-> {"games": {"<id>": {...}}, "updated_at": ...}
 
     Shaped as a map keyed by id because that is what the page reads, and because
-    it makes "do we have this game?" a lookup rather than a scan."""
+    it makes "do we have this game?" a lookup rather than a scan.
+
+    `season` and `week` narrow it. /football/schedule asks for one season at a
+    time because that is what it has loaded, and the filter is what keeps the
+    ?lines=1 projection off the 273 finished games of a season nobody is
+    looking at.
+
+    `lines` adds `score` and `line` per game. Both are None on a row that has
+    them absent, and the key is present either way -- a consumer can tell "this
+    game has no line" from "this listing does not carry lines" only if the
+    field is there to be null."""
+    select = SUMMARY_COLUMNS + ("," + LINE_COLUMNS if lines else "")
+    where = ""
+    if season is not None:
+        where += f"&season=eq.{season}"
+    if week is not None:
+        where += f"&week=eq.{week}"
     rows = supabase_request(
-        f"game_odds?select={SUMMARY_COLUMNS}&order=kickoff.desc") or []
+        f"game_odds?select={select}{where}&order=kickoff.desc") or []
     games = {}
     newest = None
     for r in rows:
-        games[str(r["game_id"])] = {
+        g = {
             "id": r["game_id"], "label": r.get("label"), "title": r.get("title"),
             "away": r.get("away"), "home": r.get("home"),
             "kickoff": r.get("kickoff"), "season": r.get("season"),
             "week": r.get("week"), "phase": r.get("phase"),
             "has": r.get("has") or {}, "updated_at": r.get("updated_at"),
         }
+        if lines:
+            g["score"] = score_of(r.get("score"))
+            g["line"] = line_of(r.get("odds") or [])
+        games[str(r["game_id"])] = g
         if r.get("updated_at") and (newest is None or r["updated_at"] > newest):
             newest = r["updated_at"]
     return {"games": games, "updated_at": newest}
@@ -188,8 +290,18 @@ class handler(BaseHTTPRequestHandler):
         game_id = (params.get("game") or [""])[0].strip()
 
         if not game_id:
+            season = (params.get("season") or [""])[0].strip()
+            week = (params.get("week") or [""])[0].strip()
+            lines = (params.get("lines") or [""])[0].strip() in ("1", "true", "yes")
+            # An unparseable filter is dropped rather than 400ing: the listing's
+            # contract is "every game we have, narrowed if you asked", and a
+            # wider answer is still a correct one. A malformed value never
+            # reaches the query either way.
             try:
-                self._json(200, load_index())
+                self._json(200, load_index(
+                    season=int(season) if SEASON_RE.match(season) else None,
+                    week=int(week) if WEEK_RE.match(week) else None,
+                    lines=lines))
             except Exception as e:                       # noqa: BLE001
                 self._json(500, {"error": str(e)})
             return

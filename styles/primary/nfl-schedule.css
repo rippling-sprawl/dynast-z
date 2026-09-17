@@ -196,6 +196,53 @@
   margin-right: 5px;
 }
 
+/* --- The market, at this page's size -------------------------------------
+ * Sized with the final score it replaces — 14px, the same as .sched-result —
+ * because they are the same cell in two states and a row must not change
+ * rhythm when a game kicks off.
+ *
+ * It is wider than the score it stands in for: "KC −6.5  46.5" against
+ * "24-20". A week row holds it on one line down to about a 420pt phone; below
+ * that the odd-slot rows — the three or four a week that carry a THU/SUN/MON
+ * badge — wrap the badge under the matchup, which is the same fallback the
+ * component sheet already takes at that width and drops nothing.
+ */
+
+.sched-market { font-size: 14px; }
+
+/* --- A week in flight ----------------------------------------------------
+ * The status-sorted week: three groups, and every row carrying a weekday in
+ * front of the time because the day headers are gone (see statusList in
+ * scripts/components/nfl-schedule.js).
+ *
+ * It is the other list that cannot have the full size — same as .has-week
+ * below, and for the same reason: it carries a leading column the week view
+ * does not, and every unfinished row in it carries a market. So it takes the
+ * same shorter step, which puts the widest row it has back inside a 390pt
+ * phone with the badge still beside the matchup.
+ */
+
+.sched-game.has-day {
+  gap: 8px;
+  grid-template-columns: 34px 34px minmax(0, 1fr);
+}
+
+.sched-game.has-day .sched-date,
+.sched-game.has-day .sched-time,
+.sched-game.has-day .sched-result,
+.sched-game.has-day .sched-market { font-size: 13px; }
+
+.sched-game.has-day .sched-matchup { gap: 8px; }
+.sched-game.has-day .sched-team { font-size: 15px; }
+.sched-game.has-day .sched-at { font-size: 12px; }
+
+.sched-game.has-day .sched-logo {
+  width: 17px;
+  height: 17px;
+  vertical-align: -4px;
+  margin-right: 4px;
+}
+
 /* The all-weeks list of one team's season is the row that cannot have all of
  * this. It carries three things the week view does not — a week number, a
  * calendar date and a final score — and on a 390pt phone the leading columns
@@ -226,6 +273,11 @@
 .sched-game.has-week .sched-date,
 .sched-game.has-week .sched-time,
 .sched-game.has-week .sched-result { font-size: 13px; }
+
+/* Same step for the market as for the score beside it, and for the same
+ * reason: on this list the two are the only things after the matchup, and a
+ * future row and a played one have to be the same height. */
+.sched-game.has-week .sched-market { font-size: 13px; }
 
 .sched-game.has-week .sched-matchup { gap: 6px; }
 .sched-game.has-week .sched-team { font-size: 15px; }

@@ -70,6 +70,11 @@
 .sched-game.has-date { grid-template-columns: 42px 28px minmax(0, 1fr); }
 .sched-game.has-week.has-date { grid-template-columns: 15px 42px 28px minmax(0, 1fr); }
 
+/* The same leading cell inside a single week, holding "Sun" rather than
+ * "Sep 20" — three characters, so the column is narrower than the date one by
+ * exactly the three it does not need. */
+.sched-game.has-day { grid-template-columns: 26px 28px minmax(0, 1fr); }
+
 .sched-game .sched-wk,
 .sched-game .sched-date {
   font-family: monospace;
@@ -208,6 +213,45 @@
 .sched-result.is-w { color: var(--good); }
 .sched-result.is-l { color: var(--bad); }
 
+/* --- The market ---
+ * The spread and the total, on a game that has not finished. They sit in the
+ * same place a final score does, because they are the same thing in the row:
+ * the one number worth reading about a game in this state.
+ *
+ * Both cells are fixed-width for the reason the team cells are — the badge that
+ * follows has to start at the same x on every row, and a ragged market column
+ * would zigzag it down the page. "WSH −14.5" is the widest spread that can
+ * render at 9 characters; a total is 4 ("41.5" through "60.5").
+ *
+ * The spread carries the weight and the total steps back a shade: on a schedule
+ * the spread is what the row is being scanned for, and the total is context for
+ * it. Both are quieter than the abbreviations beside them either way — the
+ * matchup is still what the row is.
+ */
+
+.sched-market {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  font-family: monospace;
+  font-size: 11px;
+  white-space: nowrap;
+  flex: none;
+}
+
+.sched-spread {
+  display: inline-block;
+  width: 9ch;
+  font-weight: 600;
+  color: var(--text-2);
+}
+
+.sched-total {
+  display: inline-block;
+  width: 4ch;
+  color: var(--text-4);
+}
+
 /* --- Slot badge ---
  * There is deliberately no `.regular` rule: a regular game renders no badge at
  * all, so the marker reads as an exception rather than as a column. */
@@ -229,6 +273,30 @@
   color: var(--warn);
   border-color: var(--warn-line);
   background: var(--warn-soft);
+}
+
+/* A game being played. Built like the day badge beside it — the site's badges
+ * are a tinted pill in the colour of what they mean, and a filled one here
+ * would outshout the matchup it is annotating — but in green rather than amber,
+ * and with the pulse: it is the only thing on the page that will say something
+ * different in ten minutes.
+ *
+ * The animation is hairline-thin on purpose, and it is dropped entirely for a
+ * reader who has asked for less motion. It marks the row as changing; it is not
+ * meant to be watched. */
+.sched-slot.live {
+  color: var(--good);
+  border-color: var(--good-line);
+  background: var(--good-tint);
+  animation: sched-live-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes sched-live-pulse {
+  50% { border-color: var(--good); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sched-slot.live { animation: none; }
 }
 
 .sched-slot.tbd {

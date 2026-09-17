@@ -115,6 +115,10 @@
       "destination": "/views/football/game-odds.html"
     },
     {
+      "source": "/football/long-reception",
+      "destination": "/views/football/long-reception.html"
+    },
+    {
       "source": "/football/schedule",
       "destination": "/views/football/schedule.html"
     },

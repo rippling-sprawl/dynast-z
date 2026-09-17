@@ -36,6 +36,9 @@ const NAV_SECTIONS = [
       // /football/schedule: the week's slate, read for its lines rather than
       // its kickoff times, which is what puts it under Gambling.
       { label: 'Odds', href: '/football/schedule', emoji: '📅' },
+      // The week's longest-reception prices against a likelihood built from
+      // play-by-play rather than from the ladder being priced.
+      { label: 'Longest Reception', href: '/football/long-reception', emoji: '📏' },
       { label: 'NFL Odds', href: '/odds', emoji: '🎲', hidden: true },
     ],
   },
