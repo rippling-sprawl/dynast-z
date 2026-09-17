@@ -202,10 +202,10 @@
  * rhythm when a game kicks off.
  *
  * It is wider than the score it stands in for: "KC −6.5  46.5" against
- * "24-20". A week row holds it on one line down to about a 420pt phone; below
- * that the odd-slot rows — the three or four a week that carry a THU/SUN/MON
- * badge — wrap the badge under the matchup, which is the same fallback the
- * component sheet already takes at that width and drops nothing.
+ * "24-20". A week of every team holds it on one line at 390pt, which it has
+ * the room for because those rows carry no day badge — that is drawn only on a
+ * single team's list (see gameRow in scripts/components/nfl-schedule.js). The
+ * lists that do carry one are the two below, and both take a shorter step.
  */
 
 .sched-market { font-size: 14px; }
@@ -218,8 +218,8 @@
  * It is the other list that cannot have the full size — same as .has-week
  * below, and for the same reason: it carries a leading column the week view
  * does not, and every unfinished row in it carries a market. So it takes the
- * same shorter step, which puts the widest row it has back inside a 390pt
- * phone with the badge still beside the matchup.
+ * same shorter step, which holds the widest row it has — a picked team's, with
+ * a day badge after the market — inside a 390pt phone.
  */
 
 .sched-game.has-day {

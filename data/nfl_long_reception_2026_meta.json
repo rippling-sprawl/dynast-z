@@ -23,11 +23,11 @@
   },
   "catch_count": 23496,
   "receiver_count": 633,
-  "player_count": 233,
-  "gated_player_count": 140,
+  "player_count": 210,
+  "gated_player_count": 133,
   "game_count": 16,
-  "priced_game_count": 10,
-  "line_count": 339,
+  "priced_game_count": 11,
+  "line_count": 356,
   "lambda_scale": 1.08,
   "sample_gate": {
     "games": 8,
@@ -43,7 +43,7 @@
     "explosive20PerGame": 2.774,
     "explosive40PerGame": 0.484
   },
-  "size_bytes": 76372,
-  "fetched_at": "2026-09-17T19:42:58+00:00",
-  "fetched_ts": 1789674178
+  "size_bytes": 70281,
+  "fetched_at": "2026-09-17T20:17:02+00:00",
+  "fetched_ts": 1789676222
 }

@@ -313,22 +313,35 @@
     var venue = g.neutral && g.venue
       ? '<span class="sched-venue">' + esc(g.venue) + '</span>' : '';
 
-    // Only the exceptions are labelled. A regular Sunday-afternoon game is the
-    // default case on 181 of 272 rows, and stamping every one of them "regular"
-    // would bury the ~67 that are actually worth noticing — the badge means
-    // something precisely because most rows don't have one.
+    // Only the exceptions are labelled, and only where the exception is news.
     //
     // The label is the day the game is played, which is what makes the game odd
     // in the first place. Sunday is the exception that needs a second word: the
     // odd Sundays are the morning international kickoffs and the night game, so
     // "SUN" alone would not say which — hence "SUN A.M." on the morning ones.
     // The night games keep a bare "SUN"; their time cell already reads 8:20 PM.
-
+    //
+    // A list of every team already says the day, three times over: the week
+    // view groups under "Thursday, September 17", the status-sorted week puts
+    // the weekday in front of the time, and the all-weeks list dates every row.
+    // Against all of that the badge is a third telling of a fact the reader has
+    // not asked about — sixty-seven pills down a season, each one saying what
+    // the header above it just said. It is news in one place only: a single
+    // team's list, where seventeen rows are seventeen different weeks and "this
+    // one is a Thursday night" is a thing about the game rather than about
+    // where it sits on the page. So it is drawn when a team is picked and
+    // nowhere else.
+    //
+    // TBD is not one of these and is never dropped: it does not name a day, it
+    // says the kickoff time is not set — which is why the time cell beside it
+    // reads "TBD" rather than an hour — and no header anywhere says that.
     var badge = '';
     if (g.slot === 'odd') {
-      var day = f.dayAbbr.format(d);
-      badge = '<span class="sched-slot odd">' +
-        esc(day + (day === 'Sun' && isMorning(f, d) ? ' a.m.' : '')) + '</span>';
+      if (opts.team) {
+        var day = f.dayAbbr.format(d);
+        badge = '<span class="sched-slot odd">' +
+          esc(day + (day === 'Sun' && isMorning(f, d) ? ' a.m.' : '')) + '</span>';
+      }
     } else if (g.slot !== 'regular') {
       badge = '<span class="sched-slot ' + g.slot + '">' + g.slot + '</span>';
     }
