@@ -261,7 +261,20 @@ tr.lr-thin .lr-cell i { opacity: 0.45; }
 /* ---------- the priced-line table ---------- */
 .lr-list td, .lr-list th { padding: 7px 10px; white-space: nowrap; }
 .lr-list td { font-size: 11.5px; color: var(--text-3); font-variant-numeric: tabular-nums; }
+/* The player column stays put while the rest of the row scrolls under the
+ * thumb, the same as the board's. It needs its own background (the row's does
+ * not paint under a sticky cell) and a higher z-index than the sticky header
+ * so the two corners do not fight. */
+.lr-list td.who, .lr-list th.who {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+}
+.lr-list thead th.who { z-index: 4; text-align: left; }
 .lr-list td.who { font-size: 13px; font-weight: 640; color: var(--text-hi); }
+.lr-list tbody tr:hover td.who { background: var(--surface-2); }
 .lr-list td.num, .lr-list th.num { text-align: right; }
 .lr-list td.odds { color: var(--text-hi); font-weight: 640; }
 .lr-list tbody tr:hover { background: var(--surface-2); }

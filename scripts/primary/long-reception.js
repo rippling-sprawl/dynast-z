@@ -18,6 +18,7 @@
   var DATA = null;
   var GRID = [];
   var TEAMS = {};
+  var ABBR = {};        // full team name -> the abbreviation to print
   var M = [];        // every player, decorated with the model in force
   var FLAT = [];     // every priced line, flattened
 
@@ -46,6 +47,9 @@
     return d >= 2 ? '+' + Math.round((d - 1) * 100) : '−' + Math.round(100 / (d - 1));
   }
   function el(id) { return document.getElementById(id); }
+  function ab(team) { return ABBR[team] || team.toUpperCase(); }
+  // "DAL vs WSH" / "CLE @ TB" — the matchup as the rest of the site writes it.
+  function matchup(m) { return ab(m.tm) + (m.v === 'Home' ? ' vs ' : ' @ ') + ab(m.op); }
 
   /* ---------- the two models ----------
    * The shipped likelihood is the play-by-play one. The book ladder is kept as
@@ -123,8 +127,7 @@
     var cls = mv > 1.08 ? 'up' : (mv < 0.92 ? 'dn' : '');
     return '<li><span class="lr-rk">' + (i + 1) + '</span>'
       + '<span class="lr-who"><b>' + esc(m.n) + '</b>'
-      + '<span>' + esc(m.tm.toUpperCase()) + ' ' + (m.v === 'Home' ? 'vs' : '@') + ' '
-      + esc(m.op.toUpperCase()) + ' <span class="lr-mult ' + cls + '">×' + mv.toFixed(2)
+      + '<span>' + esc(matchup(m)) + ' <span class="lr-mult ' + cls + '">×' + mv.toFixed(2)
       + ' vs ' + m.pos + '</span> · BPI ' + m.bpi.toFixed(2) + '</span>'
       + bar + '</span>'
       + '<span class="lr-price">' + right + '</span>'
@@ -227,9 +230,9 @@
         return cell(m.P[x] / 0.90, 'seq', pct(m.P[x], 0));
       }).join('');
       return '<tr class="' + (m.ok ? '' : 'lr-thin') + '">'
-        + '<td class="lr-name"><b>' + esc(m.n) + '</b><span>' + esc(m.tm.toUpperCase()) + '</span>'
+        + '<td class="lr-name"><b>' + esc(m.n) + '</b><span>' + esc(ab(m.tm)) + '</span>'
         + (m.ok ? '' : '<span class="lr-tag">THIN</span>') + '</td>'
-        + '<td class="lr-meta">' + (m.v === 'Home' ? 'vs' : '@') + ' ' + esc(m.op.toUpperCase())
+        + '<td class="lr-meta">' + (m.v === 'Home' ? 'vs' : '@') + ' ' + esc(ab(m.op))
         + ' <span class="lr-mult ' + mcls + '">×' + mv.toFixed(2) + ' ' + m.pos + '</span></td>'
         + '<td class="lr-meta right">' + m.bpi.toFixed(2) + '</td>'
         + '<td class="lr-meta right">' + m.games + 'g · ' + m.catches + '</td>'
@@ -259,22 +262,24 @@
     var cut = state.price ? FLAT.filter(function (e) { return e.m.ok && e.dec < state.price; }).length : 0;
     el('pcount').innerHTML = rows.length + ' of ' + gated + ' gated lines'
       + (cut ? ' · ' + cut + ' cut on price' : '');
+    // Edge sits immediately right of the price it is an edge on, so the two
+    // numbers that decide a bet are read together; the probabilities that
+    // produce it follow.
     el('props').innerHTML =
-      '<thead><tr><th class="num" style="width:30px"></th><th>Player</th><th>Matchup</th>'
-      + '<th class="num">Rung</th><th class="num">Odds</th><th class="num">Implied</th>'
-      + '<th class="num">Likelihood</th><th class="num">Edge</th><th class="num">EV / $100</th>'
-      + '<th class="num">Sample</th></tr></thead><tbody>'
-      + rows.map(function (e, i) {
+      '<thead><tr><th class="who">Player</th><th>Matchup</th>'
+      + '<th class="num">Rung</th><th class="num">Odds</th><th class="num">Edge</th>'
+      + '<th class="num">Implied</th><th class="num">Likelihood</th>'
+      + '<th class="num">EV / $100</th><th class="num">Sample</th></tr></thead><tbody>'
+      + rows.map(function (e) {
         var m = e.m;
-        return '<tr><td class="num">' + (i + 1) + '</td>'
-          + '<td class="who">' + esc(m.n) + '</td>'
-          + '<td>' + esc(m.tm.toUpperCase()) + ' ' + (m.v === 'Home' ? 'vs' : '@') + ' ' + esc(m.op.toUpperCase()) + '</td>'
+        return '<tr><td class="who">' + esc(m.n) + '</td>'
+          + '<td>' + esc(matchup(m)) + '</td>'
           + '<td class="num">' + e.x + '+</td>'
           + '<td class="num odds">' + e.am + '</td>'
-          + '<td class="num">' + pct(e.imp) + '</td>'
-          + '<td class="num" style="color:var(--text-hi)">' + pct(e.p) + '</td>'
           + '<td class="num"><span class="lr-pill ' + (e.edge >= 0 ? 'pos' : 'neg') + '" style="--heat:'
           + Math.min(1, Math.abs(e.edge) / 0.20).toFixed(3) + '">' + pp(e.edge) + '</span></td>'
+          + '<td class="num">' + pct(e.imp) + '</td>'
+          + '<td class="num" style="color:var(--text-hi)">' + pct(e.p) + '</td>'
           + '<td class="num" style="color:' + (e.ev >= 0 ? 'var(--heat-good)' : 'var(--heat-bad)') + '">'
           + (e.ev >= 0 ? '+' : '−') + '$' + Math.abs(e.ev * 100).toFixed(0) + '</td>'
           + '<td class="num">' + m.games + 'g · ' + m.catches + '</td></tr>';
@@ -472,6 +477,7 @@
     DATA = doc;
     GRID = doc.grid;
     TEAMS = doc.teams;
+    ABBR = doc.abbr || {};
     var dt = meta && meta.fetched_at ? new Date(meta.fetched_at) : null;
     el('freshness').textContent = 'Built from ' + (meta ? meta.catch_count.toLocaleString() : '') + ' catches across '
       + (meta ? meta.history_seasons.join(', ') : '') + (dt ? ' · captured ' + dt.toLocaleDateString('en-US',

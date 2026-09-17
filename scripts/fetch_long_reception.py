@@ -526,8 +526,29 @@ def main():
                          catches=pl["catches"], nomkt=not r["L"]))
 
     allgames = sorted(list(games.values()) + extra_games, key=lambda x: x["ko"])
+    # Full name -> the abbreviation to print, so a dense table can say
+    # "DAL vs WSH" without every consumer keeping its own copy of the mapping.
+    #
+    # Taken from data/nfl_schedule_2026.json rather than derived from FULL,
+    # because that file is what the team picker and every other football
+    # surface spell teams from, and play-by-play does not always agree with it
+    # -- pbp writes Washington WAS and the Rams both LA and LAR, the site says
+    # WSH and LAR. Two pages naming the same team differently is a bug a reader
+    # notices before we do. FULL only fills a gap if the schedule ever lacks one.
+    abbr = {}
+    for a, n in FULL.items():
+        if len(a) > len(abbr.get(n, "")):
+            abbr[n] = a
+    try:
+        sched = json.load(open(repo_path("data", "nfl_schedule_2026.json")))
+        for t in sched.get("teams", []):
+            if t.get("short") and t.get("abbr"):
+                abbr[t["short"]] = t["abbr"]
+    except (OSError, ValueError) as exc:
+        print(f"  schedule abbreviations unavailable ({exc}); using play-by-play spellings")
     doc = dict(
         season=2026, week=2, grid=GRID, gate=[GATE_GAMES, GATE_CATCHES], cal=CAL,
+        abbr=abbr,
         lg20=round(LG["20"], 3), lg40=round(LG["40"], 3),
         games=allgames, rows=rows, backtest=bt,
         teams={t: dict(m20=round(v["m20"], 4), m40=round(v["m40"], 4),
