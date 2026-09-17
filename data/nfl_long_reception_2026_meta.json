@@ -10,7 +10,20 @@
     "rosters": "https://api.balldontlie.io/nfl/v1 (/games, /players/active, /odds/player_props)"
   },
   "season": 2026,
-  "week": 2,
+  "latest_week": 2,
+  "weeks": [
+    {
+      "week": 2,
+      "captured": "2026-09-17T20:16:02+00:00",
+      "games": 16,
+      "priced_games": 11,
+      "players": 210,
+      "gated_players": 133,
+      "priced_players": 83,
+      "lines": 356,
+      "rebuilt": true
+    }
+  ],
   "history_seasons": [
     2024,
     2025,
@@ -23,11 +36,6 @@
   },
   "catch_count": 23496,
   "receiver_count": 633,
-  "player_count": 210,
-  "gated_player_count": 133,
-  "game_count": 16,
-  "priced_game_count": 11,
-  "line_count": 356,
   "lambda_scale": 1.08,
   "sample_gate": {
     "games": 8,
@@ -43,7 +51,7 @@
     "explosive20PerGame": 2.774,
     "explosive40PerGame": 0.484
   },
-  "size_bytes": 70281,
-  "fetched_at": "2026-09-17T20:17:02+00:00",
-  "fetched_ts": 1789676222
+  "size_bytes": 70386,
+  "fetched_at": "2026-09-17T20:33:31+00:00",
+  "fetched_ts": 1789677211
 }

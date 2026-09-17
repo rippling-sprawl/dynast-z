@@ -45,6 +45,15 @@
 
     <div class="lr-bar">
       <div class="lr-bar-grp">
+        <span class="lr-bar-label">Week</span>
+        <div class="dd" id="dd-week">
+          <button type="button" class="dd-btn" id="f-week" aria-haspopup="true" aria-expanded="false">
+            <span class="dd-value">Week</span>
+          </button>
+          <div class="dd-pop dd-menu" id="week-menu" role="menu" aria-label="Week" hidden></div>
+        </div>
+      </div>
+      <div class="lr-bar-grp">
         <span class="lr-bar-label">Likelihood from</span>
         <div class="lr-seg" id="src" role="group" aria-label="Model source">
           <button type="button" data-s="nf" aria-pressed="true">Play-by-play</button>
@@ -164,8 +173,7 @@
     <p class="lr-note" id="calnote"></p>
 
     <h2>Defenses</h2>
-    <p class="lr-note">Explosive receptions allowed per game, weighted <strong>20% 2024 · 50% 2025 · 30% 2026</strong>.
-      The board applies the position-specific multiplier — a defense can be soft to tight ends and stingy outside.</p>
+    <p class="lr-note" id="dnote"></p>
     <div class="lr-scroll"><table class="lr-table lr-list" id="dtable"></table></div>
 
     <div class="lr-method">

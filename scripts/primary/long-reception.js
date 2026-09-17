@@ -4,6 +4,13 @@
  * builds from nflverse play-by-play plus a DraftKings capture. The likelihood in
  * that file never saw a price; this page is what prices it.
  *
+ * The file is a list of weeks, each one frozen at the moment it was priced —
+ * its own matchups, its own ladders, and the defense table those prices were
+ * read against. So the page holds one week at a time in `W` and everything
+ * below reads from there, not from the document. Switching weeks touches no
+ * network: the whole season is already in hand, the same way /football/schedule
+ * holds a season and changes weeks locally.
+ *
  * Heat: cells carry a bare `--heat` in 0..1 and a direction class, and
  * styles/primary/long-reception.css does the mixing — same contract as the
  * z-cells on /football/bakers-buns, so the board re-colours on a theme change
@@ -16,13 +23,17 @@
   'use strict';
 
   var DATA = null;
+  var META = null;
+  var WEEKS = [];       // every week the file carries, ascending
+  var W = null;         // the one on screen
   var GRID = [];
-  var TEAMS = {};
+  var TEAMS = {};       // that week's defenses, as they stood when it was priced
   var ABBR = {};        // full team name -> the abbreviation to print
   var M = [];        // every player, decorated with the model in force
   var FLAT = [];     // every priced line, flattened
 
   var state = {
+    week: null,
     src: 'nf',            // 'nf' = play-by-play, 'dk' = reverse-engineered ladder
     gate: [8, 25],
     mode: 'edge',
@@ -79,8 +90,37 @@
     return Math.exp((1 - w) * Math.log(m20) + w * Math.log(m40));
   }
 
+  /* ---------- the week ----------
+   * Which week the page opens on, by the same rule /football/schedule uses: the
+   * file ships each week as [start, end) and the first that has not ended yet is
+   * "now", so a Tuesday reads as the week about to start rather than as nothing.
+   *
+   * Where it differs is the fallthrough. The schedule has all eighteen weeks and
+   * only runs out at the end of a season; the board has only the weeks somebody
+   * captured, so it runs out every time the clock passes the last slate priced.
+   * That lands on the most recent week, which is the last board there is.
+   */
+  function currentWeek() {
+    var now = new Date();
+    for (var i = 0; i < WEEKS.length; i++) {
+      if (WEEKS[i].end && now < new Date(WEEKS[i].end)) return WEEKS[i].week;
+    }
+    return WEEKS[WEEKS.length - 1].week;
+  }
+
+  // "Sep 17–21", or "Sep 30–Oct 4" across a month. The window runs to midnight
+  // after the last game, so the day the reader thinks of as the end is the day
+  // before it. Read in UTC because that is the zone the window was written in.
+  function weekRange(w) {
+    if (!w.start || !w.end) return '';
+    var o = { timeZone: 'UTC', month: 'short', day: 'numeric' };
+    var a = new Date(w.start).toLocaleDateString('en-US', o);
+    var b = new Date(new Date(w.end).getTime() - 864e5).toLocaleDateString('en-US', o);
+    return a.split(' ')[0] === b.split(' ')[0] ? a + '–' + b.split(' ')[1] : a + '–' + b;
+  }
+
   function build() {
-    M = DATA.rows.map(function (r) {
+    M = W.rows.map(function (r) {
       var P = {}, x, i;
       // A player with no posted ladder has nothing to reverse-engineer, so the
       // book-ladder view falls back to the model rather than blanking him out.
@@ -110,9 +150,11 @@
     var gated = FLAT.filter(function (e) { return e.m.ok; });
     var pos = gated.filter(function (e) { return e.edge > 0; }).length;
     var thin = M.filter(function (m) { return !m.ok; }).length;
+    var catches = META && META.catch_count ? META.catch_count.toLocaleString() : '';
     el('srcnote').innerHTML = state.src === 'nf'
-      ? 'Estimated from <strong>' + (DATA.backtest.n ? '23,496' : '') + ' real catches</strong> of play-by-play — '
-        + 'it never sees the posted price, so it covers all ' + DATA.games.length + ' games. <strong>'
+      ? 'Estimated from <strong>' + catches + ' real catches</strong> of play-by-play — '
+        + 'it never sees the posted price, so it covers all ' + W.games.length + ' games of week '
+        + W.week + '. <strong>'
         + pos + '</strong> of ' + gated.length + ' gated lines show positive edge; ' + thin
         + ' of ' + M.length + ' players are flagged thin.'
       : 'Reverse-engineered from the book’s own ladder at a 7% assumed hold, so the only disagreement left is '
@@ -138,7 +180,8 @@
     var pool = M.filter(function (m) { return m.ok; });
     var rows = pool.slice().sort(function (a, b) { return b.P[thr] - a.P[thr]; }).slice(0, 10);
     var nm = rows.filter(function (r) { return r.nomkt; }).length;
-    el(noteId).innerHTML = pool.length + ' gated pass-catchers across all ' + DATA.games.length + ' games'
+    el(noteId).innerHTML = pool.length + ' gated pass-catchers across all ' + W.games.length
+      + ' games of week ' + W.week
       + (nm ? ' · <strong>' + nm + '</strong> of this top 10 have no posted market' : '');
     var mx = rows.length ? rows[0].P[thr] : 1;
     el(id).innerHTML = rows.map(function (m, i) {
@@ -316,7 +359,14 @@
 
   function defenses() {
     var used = {};
-    DATA.rows.forEach(function (r) { used[r.op] = true; });
+    W.rows.forEach(function (r) { used[r.op] = true; });
+    // Frozen with the week, not recomputed: these are the multipliers that
+    // produced the likelihoods above, which for a past week is not what the
+    // same defenses look like today.
+    el('dnote').innerHTML = 'Explosive receptions allowed per game, weighted '
+      + '<strong>20% 2024 · 50% 2025 · 30% 2026</strong> as they stood when week '
+      + W.week + ' was priced. The board applies the position-specific multiplier — '
+      + 'a defense can be soft to tight ends and stingy outside.';
     var list = Object.keys(TEAMS).filter(function (t) { return used[t]; })
       .sort(function (a, b) { return TEAMS[b].rate20 - TEAMS[a].rate20; });
     var mx = TEAMS[list[0]].rate20;
@@ -370,6 +420,58 @@
     return { dd: dd, menu: mEl, btn: el(btnId) };
   }
 
+  /* The two game menus list one week's fixtures, so they are rebuilt on every
+   * week change rather than filled once. Both filters reset to all games with
+   * them: a fixture picked in week 2 is not on week 3's slate, and leaving the
+   * control reading "Lions @ Bills" over an empty table would be worse than
+   * dropping the pick. */
+  var gameM = null, pgM = null, weekM = null;
+  var gameOpts = [], pgOpts = [];
+
+  function optLabel(opts, v) {
+    var hit = opts.filter(function (o) { return String(o.value) === String(v); })[0];
+    return hit ? hit.label : String(v);
+  }
+
+  function rebuildGameMenus() {
+    gameOpts = [{ value: 'all', label: 'All games' }].concat(W.games.map(function (g) {
+      return { value: g.g, label: g.away + ' @ ' + g.home, note: g.nomkt ? 'no market' : '' };
+    }));
+    buildOptionMenu(gameM.menu, gameOpts, 'game');
+    syncOptionMenu(gameM.btn, gameM.menu, state.game, optLabel(gameOpts, state.game), 'game');
+
+    pgOpts = [{ value: 'all', label: 'All priced games' }].concat(
+      W.games.filter(function (g) { return !g.nomkt; }).map(function (g) {
+        return { value: g.g, label: g.away + ' @ ' + g.home };
+      }));
+    buildOptionMenu(pgM.menu, pgOpts, 'pgame');
+    syncOptionMenu(pgM.btn, pgM.menu, state.pgame, optLabel(pgOpts, state.pgame), 'pgame');
+  }
+
+  function setWeek(n) {
+    W = WEEKS.filter(function (w) { return w.week === n; })[0] || WEEKS[WEEKS.length - 1];
+    state.week = W.week;
+    TEAMS = W.teams || {};
+    state.game = 'all';
+    state.pgame = 'all';
+    rebuildGameMenus();
+    syncOptionMenu(weekM.btn, weekM.menu, W.week, 'Week ' + W.week, 'week');
+  }
+
+  // Only the week is worth carrying in the URL: it is the one choice that says
+  // which numbers are on screen rather than how they are arranged.
+  function readWeekParam() {
+    var v = new URLSearchParams(location.search).get('week');
+    var n = Number(v);
+    return v && WEEKS.some(function (w) { return w.week === n; }) ? n : null;
+  }
+
+  function writeWeekParam() {
+    var q = new URLSearchParams(location.search);
+    q.set('week', String(state.week));
+    history.replaceState(null, '', location.pathname + '?' + q.toString());
+  }
+
   function redrawAll() {
     build();
     likeBoard('like20', 20, 'l20n');
@@ -381,6 +483,17 @@
   }
 
   function wire() {
+    var weekOpts = WEEKS.map(function (w) {
+      return { value: w.week, label: 'Week ' + w.week, note: weekRange(w) };
+    });
+    weekM = menu('dd-week', 'f-week', 'week-menu', 'week', weekOpts, function (v) {
+      setWeek(Number(v));
+      writeWeekParam();
+      redrawAll();
+      defenses();
+      freshness();
+    });
+
     segment('src', 'src', function () {
       redrawAll();
     });
@@ -399,15 +512,11 @@
     });
     syncOptionMenu(gate.btn, gate.menu, '8,25', '8 gm & 25 rec', 'gate');
 
-    var gameOpts = [{ value: 'all', label: 'All games' }].concat(DATA.games.map(function (g) {
-      return { value: g.g, label: g.away + ' @ ' + g.home, note: g.nomkt ? 'no market' : '' };
-    }));
-    var game = menu('dd-game', 'f-game', 'game-menu', 'game', gameOpts, function (v) {
+    gameM = menu('dd-game', 'f-game', 'game-menu', 'game', [], function (v) {
       state.game = v;
-      syncOptionMenu(game.btn, game.menu, v, gameOpts.filter(function (o) { return o.value === v; })[0].label, 'game');
+      syncOptionMenu(gameM.btn, gameM.menu, v, optLabel(gameOpts, v), 'game');
       render();
     });
-    syncOptionMenu(game.btn, game.menu, 'all', 'All games', 'game');
 
     var sortOpts = [
       { value: 'best', label: 'Best edge' },
@@ -425,16 +534,11 @@
     });
     syncOptionMenu(sort.btn, sort.menu, 'best', 'Best edge', 'sort');
 
-    var pgOpts = [{ value: 'all', label: 'All priced games' }].concat(
-      DATA.games.filter(function (g) { return !g.nomkt; }).map(function (g) {
-        return { value: g.g, label: g.away + ' @ ' + g.home };
-      }));
-    var pg = menu('dd-pgame', 'f-pgame', 'pgame-menu', 'pgame', pgOpts, function (v) {
+    pgM = menu('dd-pgame', 'f-pgame', 'pgame-menu', 'pgame', [], function (v) {
       state.pgame = v;
-      syncOptionMenu(pg.btn, pg.menu, v, pgOpts.filter(function (o) { return o.value === v; })[0].label, 'pgame');
+      syncOptionMenu(pgM.btn, pgM.menu, v, optLabel(pgOpts, v), 'pgame');
       props();
     });
-    syncOptionMenu(pg.btn, pg.menu, 'all', 'All priced games', 'pgame');
 
     var rungOpts = [{ value: 'all', label: 'All rungs' }].concat(GRID.map(function (x) {
       return { value: String(x), label: x + '+ only' };
@@ -463,7 +567,7 @@
 
     el('f-reset').addEventListener('click', function () {
       state.game = 'all'; state.sort = 'best'; state.mode = 'edge';
-      syncOptionMenu(game.btn, game.menu, 'all', 'All games', 'game');
+      syncOptionMenu(gameM.btn, gameM.menu, 'all', 'All games', 'game');
       syncOptionMenu(sort.btn, sort.menu, 'best', 'Best edge', 'sort');
       paintRamp(); render();
     });
@@ -473,16 +577,30 @@
     window.addEventListener('themechange', paintRamp);
   }
 
+  // The capture date is the selected week's own, not the file's: a past week was
+  // priced off prices taken then, and the file's mtime says nothing about it.
+  function freshness() {
+    var dt = W.captured ? new Date(W.captured)
+      : (META && META.fetched_at ? new Date(META.fetched_at) : null);
+    el('freshness').textContent = 'Built from '
+      + (META ? META.catch_count.toLocaleString() : '') + ' catches across '
+      + (META ? META.history_seasons.join(', ') : '')
+      + (dt ? ' · week ' + W.week + ' prices captured ' + dt.toLocaleDateString('en-US',
+        { month: 'short', day: 'numeric', year: 'numeric' }) : '') + '.';
+  }
+
   function boot(doc, meta) {
     DATA = doc;
+    META = meta;
     GRID = doc.grid;
-    TEAMS = doc.teams;
     ABBR = doc.abbr || {};
-    var dt = meta && meta.fetched_at ? new Date(meta.fetched_at) : null;
-    el('freshness').textContent = 'Built from ' + (meta ? meta.catch_count.toLocaleString() : '') + ' catches across '
-      + (meta ? meta.history_seasons.join(', ') : '') + (dt ? ' · captured ' + dt.toLocaleDateString('en-US',
-        { month: 'short', day: 'numeric', year: 'numeric' }) : '') + '.';
+    WEEKS = (doc.weeks || []).slice().sort(function (a, b) { return a.week - b.week; });
+    if (!WEEKS.length) throw new Error('no weeks in the board file');
+    // An explicit ?week= wins on first load — a link to week 2 has to keep
+    // meaning week 2 once week 3 is the current one.
     wire();
+    setWeek(readWeekParam() || currentWeek());
+    freshness();
     paintRamp();
     redrawAll();
     calibration();

@@ -599,6 +599,8 @@ def kept_weeks(path, windows):
 
 def main():
     ap = argparse.ArgumentParser()
+    ap.add_argument("--import", dest="bundle", metavar="PATH",
+                    help="a capture other than data/imports/long_reception.json")
     ap.add_argument("--no-bdl", action="store_true", help="skip the unpriced games")
     ap.add_argument("--keep-pbp", action="store_true", help="leave the season CSVs in /cache")
     args = ap.parse_args()
@@ -618,38 +620,57 @@ def main():
         idx[norm(v["nm"])].append(pid)
 
     print("\nReading the DraftKings capture ...")
-    priced = read_capture(repo_path("data", "imports", "long_reception.json"))
-    games = {}
+    bundle = args.bundle or repo_path("data", "imports", "long_reception.json")
+    captured, priced = read_capture(bundle)
+    windows = week_windows()
+    byweek = collections.defaultdict(list)
     for r in priced:
-        games.setdefault(r["g"], dict(g=r["g"], ko=r["ko"], nomkt=False,
-                                      away=r["g"].split(" @ ")[0], home=r["g"].split(" @ ")[1]))
+        w = week_of(windows, r["ko"])
+        if w is None:
+            print(f"  {r['g']} kicks outside every week window -- skipped")
+            continue
+        byweek[w].append(r)
+    if not byweek:
+        raise SystemExit(f"no priced games in {bundle}")
     print(f"  {len(priced)} players, {sum(len(r['L']) for r in priced)} priced lines, "
-          f"{len(games)} games")
+          f"week {', '.join(str(w) for w in sorted(byweek))}")
 
-    extra, extra_games = ([], []) if args.no_bdl else unpriced_games(set(games))
-    if extra:
-        print(f"  balldontlie adds {len(extra)} pass-catchers across "
-              f"{len(extra_games)} unpriced games")
+    # The defense table as it stands right now. Every week built by this run
+    # carries its own copy, so the multipliers a past week was priced under stay
+    # readable next to the prices they moved.
+    teams_now = {t: dict(m20=round(v["m20"], 4), m40=round(v["m40"], 4),
+                         rate20=round(v["rate20"], 3), rate40=round(v["rate40"], 3),
+                         **{"m" + P + f: round(v["m" + P + f], 3)
+                            for P in ("WR", "TE", "RB") for f in ("20", "40")})
+                 for t, v in DEF.items()}
+    win = {w["week"]: w for w in windows}
 
-    rows = []
-    for r in priced + extra:
-        cands = idx.get(norm(r["n"]), [])
-        pl = PL[max(cands, key=lambda q: PL[q]["games"])] if cands else None
-        pos = (pl or {}).get("pos") or r.get("pos") or "WR"
-        if pos not in ("WR", "TE", "RB"):
-            pos = r.get("pos") if r.get("pos") in ("WR", "TE", "RB") else "WR"
-        if not pl:
-            pr = PRIOR.get(pos, dict(alpha=1.0, rate=3.0))
-            pl = dict(alpha=pr["alpha"], rate=pr["rate"], games=0, catches=0)
-        d = DEF[r["op"]]
-        P = {str(x): round(1 - math.exp(-lam(pl, S, x, defense_mult(d, pos, x)) * CAL), 4)
-             for x in GRID}
-        rows.append(dict(n=r["n"], tm=r["tm"], op=r["op"], v=r["v"], lng=r["lng"], g=r["g"],
-                         L=r["L"], P=P, pos=pos, alpha=round(pl["alpha"], 3),
-                         rate=round(pl["rate"], 2), games=pl["games"],
-                         catches=pl["catches"], nomkt=not r["L"]))
+    fresh = {}
+    for wk in sorted(byweek):
+        slate = byweek[wk]
+        games = {}
+        for r in slate:
+            games.setdefault(r["g"], dict(g=r["g"], ko=r["ko"], nomkt=False,
+                                          away=r["g"].split(" @ ")[0],
+                                          home=r["g"].split(" @ ")[1]))
+        extra, extra_games = ([], []) if args.no_bdl else unpriced_games(set(games), wk)
+        if extra:
+            print(f"  week {wk}: balldontlie adds {len(extra)} pass-catchers across "
+                  f"{len(extra_games)} unpriced games")
+        rows = price_rows(slate, extra, PL, PRIOR, S, DEF, CAL, idx)
+        fresh[wk] = dict(
+            week=wk, start=win[wk]["start"], end=win[wk]["end"], captured=captured,
+            games=sorted(list(games.values()) + extra_games, key=lambda x: x["ko"]),
+            rows=rows, teams=teams_now)
 
-    allgames = sorted(list(games.values()) + extra_games, key=lambda x: x["ko"])
+    out = repo_path("data", f"nfl_long_reception_{SEASON}.json")
+    board = kept_weeks(out, windows)
+    held = sorted(w for w in board if w not in fresh)
+    board.update(fresh)
+    weeks = [board[k] for k in sorted(board)]
+    if held:
+        print(f"  week {', '.join(str(w) for w in held)} carried through unchanged")
+
     # Full name -> the abbreviation to print, so a dense table can say
     # "DAL vs WSH" without every consumer keeping its own copy of the mapping.
     #
@@ -664,40 +685,42 @@ def main():
         if len(a) > len(abbr.get(n, "")):
             abbr[n] = a
     try:
-        sched = json.load(open(repo_path("data", "nfl_schedule_2026.json")))
+        sched = json.load(open(repo_path("data", f"nfl_schedule_{SEASON}.json")))
         for t in sched.get("teams", []):
             if t.get("short") and t.get("abbr"):
                 abbr[t["short"]] = t["abbr"]
     except (OSError, ValueError) as exc:
         print(f"  schedule abbreviations unavailable ({exc}); using play-by-play spellings")
     doc = dict(
-        season=2026, week=2, grid=GRID, gate=[GATE_GAMES, GATE_CATCHES], cal=CAL,
+        season=SEASON, grid=GRID, gate=[GATE_GAMES, GATE_CATCHES], cal=CAL,
         abbr=abbr,
         lg20=round(LG["20"], 3), lg40=round(LG["40"], 3),
-        games=allgames, rows=rows, backtest=bt,
-        teams={t: dict(m20=round(v["m20"], 4), m40=round(v["m40"], 4),
-                       rate20=round(v["rate20"], 3), rate40=round(v["rate40"], 3),
-                       **{"m" + P + f: round(v["m" + P + f], 3)
-                          for P in ("WR", "TE", "RB") for f in ("20", "40")})
-               for t, v in DEF.items()})
+        backtest=bt, weeks=weeks)
 
-    out = repo_path("data", "nfl_long_reception_2026.json")
     with open(out, "w") as f:
         json.dump(doc, f, separators=(",", ":"))
-    gated = sum(1 for r in rows if r["games"] >= GATE_GAMES and r["catches"] >= GATE_CATCHES)
+
+    def gated(rows):
+        return sum(1 for r in rows if r["games"] >= GATE_GAMES and r["catches"] >= GATE_CATCHES)
+
     meta = dict(
         sources=dict(
             onField=[PBP_URL.format(season=s) for s in SEASONS],
             players=PLAYERS_URL,
             prices="data/imports/long_reception.json (DraftKings Recorder bundle)",
             rosters="https://api.balldontlie.io/nfl/v1 (/games, /players/active, /odds/player_props)"),
-        season=2026, week=2,
+        season=SEASON, latest_week=weeks[-1]["week"],
+        weeks=[dict(week=w["week"], captured=w.get("captured"),
+                    games=len(w["games"]),
+                    priced_games=sum(1 for g in w["games"] if not g["nomkt"]),
+                    players=len(w["rows"]), gated_players=gated(w["rows"]),
+                    priced_players=sum(1 for r in w["rows"] if not r["nomkt"]),
+                    lines=sum(len(r["L"]) for r in w["rows"]),
+                    rebuilt=w["week"] in fresh)
+               for w in weeks],
         history_seasons=[int(s) for s in SEASONS], season_weights=WEIGHT,
         catch_count=sum(len(v["y"]) for v in D["players"].values()),
         receiver_count=len(PL),
-        player_count=len(rows), gated_player_count=gated,
-        game_count=len(allgames), priced_game_count=len(games),
-        line_count=sum(len(r["L"]) for r in rows),
         lambda_scale=CAL, sample_gate=dict(games=GATE_GAMES, catches=GATE_CATCHES),
         backtest=dict(n=bt["n"], players=bt["players"],
                       decile_1=bt["deciles"][0]["act"], decile_10=bt["deciles"][9]["act"]),
@@ -706,12 +729,14 @@ def main():
         size_bytes=os.path.getsize(out),
         fetched_at=datetime.datetime.now(datetime.timezone.utc).replace(microsecond=0).isoformat(),
         fetched_ts=int(datetime.datetime.now(datetime.timezone.utc).timestamp()))
-    with open(repo_path("data", "nfl_long_reception_2026_meta.json"), "w") as f:
+    with open(repo_path("data", f"nfl_long_reception_{SEASON}_meta.json"), "w") as f:
         json.dump(meta, f, indent=2)
         f.write("\n")
-    print(f"\nwrote data/nfl_long_reception_2026.json "
-          f"({meta['size_bytes'] / 1000:.0f} KB) — {len(rows)} players across "
-          f"{len(allgames)} games, {gated} past the sample gate")
+    print(f"\nwrote data/nfl_long_reception_{SEASON}.json "
+          f"({meta['size_bytes'] / 1000:.0f} KB) — {len(weeks)} week"
+          f"{'s' if len(weeks) != 1 else ''}, "
+          + ", ".join(f"w{w['week']} {w['players']} players/{w['lines']} lines"
+                      for w in meta["weeks"]))
 
 
 if __name__ == "__main__":
