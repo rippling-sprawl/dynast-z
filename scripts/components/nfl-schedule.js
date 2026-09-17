@@ -309,7 +309,7 @@
      * where a closing line belongs. */
     var state = phase === 'final'
       ? resultCell(g, opts.team, info && info.score)
-      : marketCell(info && info.line, away, home);
+      : marketCell(info && info.line, home);
     var venue = g.neutral && g.venue
       ? '<span class="sched-venue">' + esc(g.venue) + '</span>' : '';
 
@@ -405,38 +405,39 @@
 
   /* The spread and the total, on a game that has not finished.
    *
-   * `line.spread` is the home team's number, the way a book quotes it and the
-   * way pickem_games stores it. It is rendered against the favourite instead:
-   * a bare "−6.5" on a row that names two teams is only unambiguous to someone
-   * who already knows the convention, and three characters of an abbreviation
-   * buys the row out of that entirely. A negative spread is the home side's,
-   * a positive one the away side's, and zero is a pick'em with no side to name.
+   * The spread is the home team's, signed — "−6.5" is the home side laying it,
+   * "+3.5" is the home side getting it. That is how a book quotes a game and
+   * how pickem_games stores it, and the row is built to be read that way: the
+   * home team is the one the number sits next to, always the second of the two
+   * and always the one the "@" points at.
    *
    * The minus is U+2212, not a hyphen, for the reason the pick 'em board uses
    * it: at monospace it is the width of a digit and sits on the same optical
-   * line, where a hyphen reads as a bullet between the abbreviation and the
-   * number.
+   * line, where a hyphen reads as a bullet in front of the number.
    *
    * The total is the bare line. No "o"/"u" prefix — that names a side of a bet,
    * and there is no price here to take it at; the game's own page is where the
    * two halves of the market are priced.
    */
-  function marketCell(line, away, home) {
+  function marketCell(line, home) {
     if (!line) return '';
     var spread = line.spread, total = line.total;
     var label = '';
     if (spread === 0) {
       label = 'PK';
     } else if (spread !== null && spread !== undefined) {
-      label = (spread < 0 ? home.abbr : away.abbr) + ' \u2212' + Math.abs(spread);
+      label = (spread < 0 ? '\u2212' : '+') + Math.abs(spread);
     }
     if (!label && (total === null || total === undefined)) return '';
 
     // One title for the pair, because they are one book's quote of one game and
-    // the provenance is the same fact about both.
+    // the provenance is the same fact about both. It is also where the team the
+    // spread belongs to is named: the cell has no room for three more
+    // characters, and hovering is the reader asking which side it is.
     var book = BOOK_NAMES[line.book] || line.book || 'the market';
     return '<span class="sched-market" title="' + esc(book + ': ' +
-        (label ? label.replace('\u2212', '-') : 'no spread posted') +
+        (label ? home.abbr + ' ' + label.replace('\u2212', '-')
+               : 'no spread posted') +
         (total === null || total === undefined ? '' : ', total ' + total)) + '">' +
       '<span class="sched-spread">' + esc(label) + '</span>' +
       '<span class="sched-total">' +

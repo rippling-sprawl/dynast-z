@@ -195,12 +195,15 @@
  * ragged column would zigzag the slot badges that follow it down the page.
  *
  * "W 24-20" is the widest thing that renders here at 7 characters; the bare
- * "17-31" of an all-teams list is narrower and sits inside the same column. */
+ * "17-31" of an all-teams list is narrower and sits inside the same column.
+ *
+ * Set at the weight of the row, not above it: the matchup is what a reader
+ * scans down a list of sixteen, and a column of bold numerals beside it reads
+ * as the thing being scanned. The verdict's colour is enough to find. */
 
 .sched-result {
   font-family: monospace;
   font-size: 11px;
-  font-weight: 600;
   min-width: 7ch;
   color: var(--text-3);
   white-space: nowrap;
@@ -220,13 +223,13 @@
  *
  * Both cells are fixed-width for the reason the team cells are — the badge that
  * follows has to start at the same x on every row, and a ragged market column
- * would zigzag it down the page. "WSH −14.5" is the widest spread that can
- * render at 9 characters; a total is 4 ("41.5" through "60.5").
+ * would zigzag it down the page. The spread is the home team's, signed, so
+ * "−14.5" is the widest it goes at 5 characters; a total is 4 ("41.5" through
+ * "60.5").
  *
- * The spread carries the weight and the total steps back a shade: on a schedule
- * the spread is what the row is being scanned for, and the total is context for
- * it. Both are quieter than the abbreviations beside them either way — the
- * matchup is still what the row is.
+ * Neither is bolder than the row it sits in — the matchup is what the list is
+ * scanned by — and the total steps back one further shade than the spread,
+ * which is the order the two are read in on a schedule.
  */
 
 .sched-market {
@@ -241,8 +244,7 @@
 
 .sched-spread {
   display: inline-block;
-  width: 9ch;
-  font-weight: 600;
+  width: 5ch;
   color: var(--text-2);
 }
 

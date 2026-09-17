@@ -43,6 +43,20 @@ partly fit, since the global scale was chosen on that same season. Both go into
 the meta file and onto the page, because a model that shows its own calibration
 is the only kind worth betting.
 
+Weeks
+-----
+A capture is one week's slate, and the file keeps every week it has ever been
+handed rather than only the last one. Each week is a frozen snapshot — its
+matchups, its prices, and the defense table that priced them — so rebuilding
+week 3 cannot move week 2's numbers, even though the play-by-play underneath
+has grown by a week in between. A rebuild rewrites only the weeks present in
+the capture it is given; every other week is copied through untouched.
+
+Which week a capture belongs to is read off its kickoffs against
+data/nfl_schedule_2026.json rather than passed in, so this file and
+/football/schedule can never disagree about where a week ends. A capture that
+straddles two — a Thursday game posted early — writes a snapshot for each.
+
 Defense
 -------
 Per-season rates first, THEN the 20/50/30 blend across 2024/2025/2026 — pooling
@@ -71,6 +85,9 @@ Usage
     python3 scripts/fetch_long_reception.py
     python3 scripts/fetch_long_reception.py --no-bdl      # skip the unpriced games
     python3 scripts/fetch_long_reception.py --keep-pbp    # leave the CSVs in /cache
+    python3 scripts/fetch_long_reception.py --import data/imports/lr_w2.json
+                                                          # rebuild one week from a
+                                                          # bundle kept aside
 """
 
 from __future__ import annotations
@@ -89,7 +106,8 @@ import statistics
 import subprocess
 import sys
 
-SEASONS = ("2024", "2025", "2026")
+SEASONS = ("2024", "2025", "2026")     # the model's history window
+SEASON = 2026                          # the season being priced
 WEIGHT = {"2024": 0.20, "2025": 0.50, "2026": 0.30}
 GRID = [10, 15, 20, 25, 30, 35, 40, 45]
 
@@ -380,6 +398,42 @@ def backtest(D):
 
 # ------------------------------------------------------------------ the prices
 
+ISO = re.compile(r"(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})(?::(\d{2}))?")
+
+
+def to_utc(s):
+    """DraftKings stamps seven fractional digits, the schedule stamps no seconds
+    at all, and fromisoformat wants exactly one shape. Read the fields instead."""
+    m = ISO.match(s or "")
+    if not m:
+        return None
+    f = [int(g or 0) for g in m.groups()]
+    return datetime.datetime(f[0], f[1], f[2], f[3], f[4], f[5],
+                             tzinfo=datetime.timezone.utc)
+
+
+def week_windows():
+    """[start, end) per week, straight from the committed schedule.
+
+    From there rather than inferred from the kickoffs in hand, so that a week
+    boundary means the same thing here as on /football/schedule — which picks
+    "this week" out of these same windows, as does the board.
+    """
+    sched = json.load(open(repo_path("data", f"nfl_schedule_{SEASON}.json")))
+    return [dict(week=w["week"], start=w["start"], end=w["end"]) for w in sched["weeks"]]
+
+
+def week_of(windows, iso):
+    """The week a kickoff falls in, or None if it falls outside the season."""
+    d = to_utc(iso)
+    if d is None:
+        return None
+    for w in windows:
+        if to_utc(w["start"]) <= d < to_utc(w["end"]):
+            return w["week"]
+    return None
+
+
 SUFFIX = re.compile(r"\b(jr|sr|ii|iii|iv|v)\b")
 
 
@@ -389,7 +443,11 @@ def norm(s):
 
 
 def read_capture(path):
-    """A DraftKings Recorder bundle -> [{name, team, opp, venue, lng, game, lines}]."""
+    """A DraftKings Recorder bundle -> (captured_at, [{name, team, opp, lng, game, lines}]).
+
+    The capture time rides along because it is the only provenance a frozen week
+    keeps: the bundle itself is a drop spot that the next week overwrites.
+    """
     bundle = json.load(open(path))
     events, markets, selections = {}, {}, collections.defaultdict(list)
     for cap in bundle.get("captures", []):
@@ -420,11 +478,14 @@ def read_capture(path):
                         g=f"{sides.get('Away')} @ {sides.get('Home')}",
                         ko=e.get("startEventDate", "").replace(".0000000Z", "Z"),
                         L=lines))
-    return out
+    ts = bundle.get("capturedAt")
+    captured = (datetime.datetime.fromtimestamp(ts / 1000, datetime.timezone.utc)
+                .replace(microsecond=0).isoformat() if ts else None)
+    return captured, out
 
 
-def unpriced_games(priced_games, quiet=False):
-    """Pass-catchers in the games nobody posted this market for, via balldontlie.
+def unpriced_games(priced_games, week):
+    """Pass-catchers in that week's games nobody posted this market for, via balldontlie.
 
     Returns [] when the key is missing -- the board simply covers fewer games.
     """
@@ -438,7 +499,7 @@ def unpriced_games(priced_games, quiet=False):
         print(f"  balldontlie unavailable ({exc}) -- skipping the unpriced games")
         return [], []
 
-    games = list(b.paginate("/games", {"seasons[]": [2026], "weeks[]": [2]}, quiet=True))
+    games = list(b.paginate("/games", {"seasons[]": [SEASON], "weeks[]": [week]}, quiet=True))
     players = {str(p["id"]): p for p in b.paginate("/players/active", None, quiet=True)}
     PASS = {"Wide Receiver": "WR", "Tight End": "TE", "Running Back": "RB", "Fullback": "RB"}
     rows, metas = [], []
@@ -469,6 +530,69 @@ def unpriced_games(priced_games, quiet=False):
                              lng=None, g=label, ko=metas[-1]["ko"], L=[],
                              pos=PASS[p["position"]]))
     return rows, metas
+
+
+# -------------------------------------------------------------------- the weeks
+
+def price_rows(priced, extra, PL, PRIOR, S, DEF, CAL, idx):
+    """One week's players, each with a likelihood at every rung on the grid.
+
+    `priced` came from the book, `extra` from balldontlie — they differ only in
+    whether there is a ladder to have an edge against, so they are priced by the
+    same pass.
+    """
+    rows = []
+    for r in priced + extra:
+        cands = idx.get(norm(r["n"]), [])
+        pl = PL[max(cands, key=lambda q: PL[q]["games"])] if cands else None
+        pos = (pl or {}).get("pos") or r.get("pos") or "WR"
+        if pos not in ("WR", "TE", "RB"):
+            pos = r.get("pos") if r.get("pos") in ("WR", "TE", "RB") else "WR"
+        if not pl:
+            pr = PRIOR.get(pos, dict(alpha=1.0, rate=3.0))
+            pl = dict(alpha=pr["alpha"], rate=pr["rate"], games=0, catches=0)
+        d = DEF[r["op"]]
+        P = {str(x): round(1 - math.exp(-lam(pl, S, x, defense_mult(d, pos, x)) * CAL), 4)
+             for x in GRID}
+        rows.append(dict(n=r["n"], tm=r["tm"], op=r["op"], v=r["v"], lng=r["lng"], g=r["g"],
+                         L=r["L"], P=P, pos=pos, alpha=round(pl["alpha"], 3),
+                         rate=round(pl["rate"], 2), games=pl["games"],
+                         catches=pl["catches"], nomkt=not r["L"]))
+    return rows
+
+
+def kept_weeks(path, windows):
+    """Whatever the last build left behind, keyed by week.
+
+    Read back and written out untouched — that copy is the whole of the freeze.
+    A week's numbers are the model as it stood when that week was priced, and
+    re-deriving them from today's play-by-play would silently rewrite history
+    every Tuesday.
+    """
+    if not os.path.exists(path):
+        return {}
+    try:
+        doc = json.load(open(path))
+    except ValueError as exc:
+        print(f"  existing board unreadable ({exc}); starting fresh")
+        return {}
+    weeks = doc.get("weeks")
+    if not isinstance(weeks, list):
+        # The one-week shape this file had before it carried weeks at all.
+        if not doc.get("rows"):
+            return {}
+        weeks = [dict(week=doc.get("week"), captured=None, games=doc.get("games", []),
+                      rows=doc["rows"], teams=doc.get("teams", {}))]
+    win = {w["week"]: w for w in windows}
+    out = {}
+    for w in weeks:
+        n = w.get("week")
+        if n is None:
+            continue
+        w.setdefault("start", win.get(n, {}).get("start"))
+        w.setdefault("end", win.get(n, {}).get("end"))
+        out[n] = w
+    return out
 
 
 # ------------------------------------------------------------------------ main

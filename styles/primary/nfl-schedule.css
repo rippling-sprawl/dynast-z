@@ -201,11 +201,11 @@
  * because they are the same cell in two states and a row must not change
  * rhythm when a game kicks off.
  *
- * It is wider than the score it stands in for: "KC −6.5  46.5" against
- * "24-20". A week of every team holds it on one line at 390pt, which it has
- * the room for because those rows carry no day badge — that is drawn only on a
- * single team's list (see gameRow in scripts/components/nfl-schedule.js). The
- * lists that do carry one are the two below, and both take a shorter step.
+ * Barely wider than the score it stands in for: "−6.5  46.5" against "24-20",
+ * three characters and a gutter. Every list holds it on one line at 390pt —
+ * the two below because they take a shorter step, and the all-teams week
+ * because those rows carry no day badge (that is drawn only on a single team's
+ * list; see gameRow in scripts/components/nfl-schedule.js).
  */
 
 .sched-market { font-size: 14px; }
