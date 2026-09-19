@@ -306,13 +306,11 @@
     el('pcount').innerHTML = rows.length + ' of ' + gated + ' gated lines'
       + (cut ? ' · ' + cut + ' cut on price' : '');
     // Edge sits immediately right of the price it is an edge on, so the two
-    // numbers that decide a bet are read together; the probabilities that
-    // produce it follow.
+    // numbers that decide a bet are read together.
     el('props').innerHTML =
       '<thead><tr><th class="who">Player</th><th>Matchup</th>'
       + '<th class="num">Rung</th><th class="num">Odds</th><th class="num">Edge</th>'
-      + '<th class="num">Implied</th><th class="num">Likelihood</th>'
-      + '<th class="num">EV / $100</th><th class="num">Sample</th></tr></thead><tbody>'
+      + '</tr></thead><tbody>'
       + rows.map(function (e) {
         var m = e.m;
         return '<tr><td class="who">' + esc(m.n) + '</td>'
@@ -321,11 +319,7 @@
           + '<td class="num odds">' + e.am + '</td>'
           + '<td class="num"><span class="lr-pill ' + (e.edge >= 0 ? 'pos' : 'neg') + '" style="--heat:'
           + Math.min(1, Math.abs(e.edge) / 0.20).toFixed(3) + '">' + pp(e.edge) + '</span></td>'
-          + '<td class="num">' + pct(e.imp) + '</td>'
-          + '<td class="num" style="color:var(--text-hi)">' + pct(e.p) + '</td>'
-          + '<td class="num" style="color:' + (e.ev >= 0 ? 'var(--heat-good)' : 'var(--heat-bad)') + '">'
-          + (e.ev >= 0 ? '+' : '−') + '$' + Math.abs(e.ev * 100).toFixed(0) + '</td>'
-          + '<td class="num">' + m.games + 'g · ' + m.catches + '</td></tr>';
+          + '</tr>';
       }).join('')
       + '</tbody>';
   }

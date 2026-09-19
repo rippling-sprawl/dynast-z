@@ -14,13 +14,13 @@
   "weeks": [
     {
       "week": 2,
-      "captured": "2026-09-17T20:16:02+00:00",
+      "captured": "2026-09-19T21:13:38+00:00",
       "games": 16,
-      "priced_games": 11,
-      "players": 210,
-      "gated_players": 133,
-      "priced_players": 83,
-      "lines": 356,
+      "priced_games": 15,
+      "players": 163,
+      "gated_players": 136,
+      "priced_players": 141,
+      "lines": 597,
       "rebuilt": true
     }
   ],
@@ -51,7 +51,7 @@
     "explosive20PerGame": 2.774,
     "explosive40PerGame": 0.484
   },
-  "size_bytes": 70386,
-  "fetched_at": "2026-09-17T20:33:31+00:00",
-  "fetched_ts": 1789677211
+  "size_bytes": 60105,
+  "fetched_at": "2026-09-19T21:29:35+00:00",
+  "fetched_ts": 1789853375
 }
