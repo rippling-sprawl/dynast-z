@@ -41,35 +41,22 @@
       <a href="/football">Football</a><span class="separator">/</span><span>Longest Reception</span>
     </div>
 
-    <h2>Longest Reception</h2>
-
-    <div class="lr-bar">
-      <div class="lr-bar-grp">
-        <span class="lr-bar-label">Week</span>
-        <div class="dd" id="dd-week">
-          <button type="button" class="dd-btn" id="f-week" aria-haspopup="true" aria-expanded="false">
-            <span class="dd-value">Week</span>
-          </button>
-          <div class="dd-pop dd-menu" id="week-menu" role="menu" aria-label="Week" hidden></div>
-        </div>
-      </div>
-      <div class="lr-bar-grp">
-        <span class="lr-bar-label">Position</span>
-        <div class="dd" id="dd-pos">
-          <button type="button" class="dd-btn" id="f-pos" aria-haspopup="true" aria-expanded="false">
-            <span class="dd-value">All positions</span>
-          </button>
-          <div class="dd-pop dd-menu" id="pos-menu" role="menu" aria-label="Position" hidden></div>
-        </div>
-      </div>
-      <p class="lr-bar-note" id="srcnote"></p>
-    </div>
-
-    <h2>Market Edges</h2>
+    <h2>Edges: Longest Rec</h2>
+    <!-- Every control that narrows the board, in one row and ordered by what
+         each one cuts: the week first, then who is in it, then which of their
+         lines. Week and position used to sit in a bar of their own above the
+         heading, which read as page furniture rather than as filters and hid
+         that they narrow these same rows. -->
     <div class="dd-row">
+      <div class="dd" id="dd-week">
+        <button type="button" class="dd-btn" id="f-week" aria-haspopup="true" aria-expanded="false">
+          <span class="dd-value">Week</span>
+        </button>
+        <div class="dd-pop dd-menu" id="week-menu" role="menu" aria-label="Week" hidden></div>
+      </div>
       <div class="dd" id="dd-pgame">
         <button type="button" class="dd-btn" id="f-pgame" aria-haspopup="true" aria-expanded="false">
-          <span class="dd-value">All priced games</span>
+          <span class="dd-value">All games</span>
         </button>
         <div class="dd-pop dd-menu" id="pgame-menu" role="menu" aria-label="Game" hidden></div>
       </div>
@@ -79,15 +66,23 @@
         </button>
         <div class="dd-pop dd-menu" id="rung-menu" role="menu" aria-label="Rung" hidden></div>
       </div>
+      <div class="dd" id="dd-pos">
+        <button type="button" class="dd-btn" id="f-pos" aria-haspopup="true" aria-expanded="false">
+          <span class="dd-value">All positions</span>
+        </button>
+        <div class="dd-pop dd-menu" id="pos-menu" role="menu" aria-label="Position" hidden></div>
+      </div>
       <div class="dd" id="dd-price">
         <button type="button" class="dd-btn" id="f-price" aria-haspopup="true" aria-expanded="false">
-          <span class="dd-value">Any price</span>
+          <span class="dd-value">&gt; −130</span>
         </button>
         <div class="dd-pop dd-menu" id="price-menu" role="menu" aria-label="Minimum price" hidden></div>
       </div>
-      <div class="lr-seg" id="posonly" role="group" aria-label="Edge filter">
-        <button type="button" data-p="1" aria-pressed="true">Positive edge</button>
-        <button type="button" data-p="0">All</button>
+      <div class="dd" id="dd-edge">
+        <button type="button" class="dd-btn" id="f-edge" aria-haspopup="true" aria-expanded="false">
+          <span class="dd-value">+10</span>
+        </button>
+        <div class="dd-pop dd-menu" id="edge-menu" role="menu" aria-label="Minimum edge" hidden></div>
       </div>
     </div>
     <div class="lr-scroll"><table class="lr-table lr-list" id="props"></table></div>
@@ -96,15 +91,14 @@
     <!-- The same rows the table above just drew, as a picture: the price across,
          the model up, and the edge as the perpendicular drop to the fair line. -->
     <div class="lr-chart">
-      <h3>Likelihood vs. the posted price</h3>
-      <p class="lr-card-note" id="scnote"></p>
-      <div class="lr-plot" id="scatter"></div>
+      <h3>Baker Model vs. Implied Odds</h3>
       <p class="lr-chart-key">
         <span><b style="background:var(--heat-good)"></b>Model above the price</span>
         <span><b style="background:var(--heat-bad)"></b>Price above the model</span>
         <span><i class="lr-key-dash"></i>Fair line — the two agree</span>
         <span><i class="lr-key-stem"></i>Edge, as the perpendicular to it</span>
       </p>
+      <div class="lr-plot" id="scatter"></div>
     </div>
 
     <div class="lr-cards">

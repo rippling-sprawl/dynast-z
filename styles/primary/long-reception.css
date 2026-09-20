@@ -12,60 +12,6 @@
  * a browser without color-mix() lands on a readable two-colour table rather
  * than on unstyled text. */
 
-/* ---------- the model bar: what the numbers are, before any of them ---------- */
-.lr-bar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 10px 18px;
-  padding: 11px 14px;
-  margin-bottom: 14px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-}
-.lr-bar-grp { display: flex; align-items: center; gap: 8px; }
-.lr-bar-label {
-  font-size: 10px;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-  color: var(--text-4);
-  white-space: nowrap;
-}
-.lr-bar-note {
-  flex: 1 1 260px;
-  min-width: 220px;
-  margin: 0;
-  font-size: 12.5px;
-  color: var(--text-3);
-}
-.lr-bar-note strong { color: var(--text-2); }
-
-/* A segmented control, sized off the dd-btn it sits beside. */
-.lr-seg {
-  display: inline-flex;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  overflow: hidden;
-  background: var(--surface-2);
-}
-.lr-seg button {
-  padding: 6px 11px;
-  border: 0;
-  background: transparent;
-  color: var(--text-2);
-  font: inherit;
-  font-size: 12px;
-  line-height: 1.2;
-  cursor: pointer;
-  white-space: nowrap;
-}
-.lr-seg button + button { border-left: 1px solid var(--border); }
-.lr-seg button:hover:not([disabled]) { background: var(--surface-3); color: var(--text-hi); }
-.lr-seg button[aria-pressed="true"] { background: var(--accent-strong); color: #fff; }
-.lr-seg button[disabled] { opacity: 0.4; cursor: not-allowed; }
-.lr-seg-off { opacity: 0.45; }
-
 /* ---------- leaderboard cards ---------- */
 .lr-cards {
   display: grid;
@@ -148,7 +94,7 @@
   position: sticky;
   top: 0;
   z-index: 3;
-  padding: 9px 8px;
+  padding: 9px 4px;
   background: var(--surface);
   border-bottom: 1px solid var(--border);
   font-size: 10px;
@@ -161,7 +107,7 @@
 .lr-table thead th.num { text-align: center; }
 .lr-table tbody td {
   height: 32px;
-  padding: 0 8px;
+  padding: 0 4px;
   vertical-align: middle;
   border-bottom: 1px solid var(--border);
 }
@@ -196,25 +142,12 @@
 .lr-mult.up { color: var(--heat-bad); }
 .lr-mult.dn { color: var(--heat-good); }
 
-/* Volume the receptions market set rather than the model's own history. Marked
- * because it is the one number on this board the model did not derive itself,
- * and a reader weighing an edge is entitled to know which half is borrowed. The
- * dot is a marker, not decoration, so it carries its meaning in the header's
- * title rather than in colour alone. */
+/* Catches expected this game — context for the edge to its left, so it sits
+ * back from the numbers a reader is actually scanning down. */
 .lr-vol { color: var(--text-3); }
-.lr-vol.mkt { color: var(--text-2); }
-.lr-vol.mkt::after {
-  content: "";
-  display: inline-block;
-  width: 3px;
-  height: 3px;
-  margin-left: 3px;
-  vertical-align: 3px;
-  border-radius: 50%;
-  background: var(--accent-strong);
-}
-/* Same marker on the leaderboard subtitles, where there is no column to hang
- * a header title off and the superscript has to say it itself. */
+
+/* The leaderboard cards have no column header to hang an explanation off, so
+ * there a market-set volume keeps its superscript and says so on hover. */
 .lr-who sup {
   font-size: 8px;
   color: var(--accent-strong);
@@ -421,12 +354,15 @@ tr.lr-thin .lr-cell i { opacity: 0.45; }
 .lr-plot svg { display: block; max-width: 100%; height: auto; }
 .lr-plot-empty { padding: 30px 10px; text-align: center; font-size: 12.5px; color: var(--text-4); }
 
+/* Above the plot rather than under it: the names now run down the right of the
+ * chart, and a key below would be read as a fifth column of them. */
 .lr-chart-key {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  justify-content: center;
   gap: 6px 14px;
-  margin: 8px 0 0;
+  margin: 10px 0 8px;
   font-size: 10.5px;
   color: var(--text-4);
 }
