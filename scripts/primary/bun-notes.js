@@ -15,7 +15,8 @@
  *
  * Depends on: scripts/base/auth.js (getUser / isLoggedIn / isAdmin) and
  * scripts/components/nfl-pickers.js (the team grid and week menu). Styles for
- * the modal and the bullets live in styles/primary/bakers-buns.css.
+ * the modal and the bullets live in styles/components/bun-notes.css, which is
+ * why /football/schedule/game can show and file notes without bakers-buns.css.
  */
 (function (global) {
   'use strict';
@@ -530,7 +531,13 @@
       var add = e.target.closest ? e.target.closest('[data-note-add]') : null;
       if (add) {
         if (opts.beforeOpen) opts.beforeOpen();
-        open({ team: add.getAttribute('data-note-add') || '' });
+        /* `data-note-week` is optional and the team card never sets it: a note
+         * taken from a team is about the season until its writer says
+         * otherwise. A game page knows better — everything filed from one is
+         * about that game's week — so it states the week on the button and the
+         * dialog opens on it. */
+        open({ team: add.getAttribute('data-note-add') || '',
+               week: add.getAttribute('data-note-week') || 'all' });
       }
     });
   }

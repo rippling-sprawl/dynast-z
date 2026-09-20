@@ -34,18 +34,18 @@
 
   var state = {
     week: null,
-    src: 'nf',            // 'nf' = play-by-play, 'dk' = reverse-engineered ladder
+    // The sample gate still applies to everything drawn -- it is read from the
+    // board file at boot rather than offered as a control, because ungated the
+    // biggest number on the page belongs to a receiver with no career catches.
     gate: [8, 25],
-    mode: 'edge',
-    game: 'all',
-    sort: 'best',
+    pos: 'all',           // 'all' | 'WR' | 'TE' | 'RB'
     pgame: 'all',
     rung: 'all',
     price: 0,             // minimum decimal odds
-    posOnly: true
+    posOnly: true,
+    q: '',                // folded player search, '' when the box is shut
+    qText: ''             // the same thing as typed, for the count line
   };
-
-  var HOLD = 0.07;        // assumed one-sided hold, for the book-ladder model only
 
   function esc(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
@@ -57,30 +57,17 @@
   function amer(d) {
     return d >= 2 ? '+' + Math.round((d - 1) * 100) : '−' + Math.round(100 / (d - 1));
   }
+  // Names on this board carry apostrophes and accents (Ja'Marr, Amon-Ra), so a
+  // search folds case and accents off both sides before it compares.
+  function fold(s) {
+    s = String(s == null ? '' : s).toLowerCase();
+    return s.normalize ? s.normalize('NFD').replace(/[\u0300-\u036f]/g, '') : s;
+  }
   function el(id) { return document.getElementById(id); }
   function ab(team) { return ABBR[team] || team.toUpperCase(); }
   // "DAL vs WSH" / "CLE @ TB" — the matchup as the rest of the site writes it.
   function matchup(m) { return ab(m.tm) + (m.v === 'Home' ? ' vs ' : ' @ ') + ab(m.op); }
 
-  /* ---------- the two models ----------
-   * The shipped likelihood is the play-by-play one. The book ladder is kept as
-   * a comparison: fit lambda(x) = a*e^-bx to the de-vigged posted rungs, then
-   * apply the same matchup multiplier. It exists so the board can show how much
-   * of an edge is the model disagreeing and how much is just the book's own
-   * curve rearranged.
-   */
-  function dkCurve(r) {
-    var lam = function (p) { return -Math.log(Math.max(1e-9, 1 - Math.min(p, 0.9995))); };
-    var pts = r.L.map(function (t) { return [t[0], Math.log(lam((1 / t[1]) / (1 + HOLD)))]; });
-    if (pts.length < 2) return [pts[0][1] + 0.1022 * pts[0][0], 0.1022];
-    var n = pts.length;
-    var mx = pts.reduce(function (s, p) { return s + p[0]; }, 0) / n;
-    var my = pts.reduce(function (s, p) { return s + p[1]; }, 0) / n;
-    var num = pts.reduce(function (s, p) { return s + (p[0] - mx) * (p[1] - my); }, 0);
-    var den = pts.reduce(function (s, p) { return s + (p[0] - mx) * (p[0] - mx); }, 0);
-    var b = -num / den;
-    return [my + b * mx, b];
-  }
   function posMult(op, pos, x) {
     var t = TEAMS[op];
     var m20 = t['m' + pos + '20'], m40 = t['m' + pos + '40'];
@@ -121,18 +108,8 @@
 
   function build() {
     M = W.rows.map(function (r) {
-      var P = {}, x, i;
-      // A player with no posted ladder has nothing to reverse-engineer, so the
-      // book-ladder view falls back to the model rather than blanking him out.
-      if (state.src === 'nf' || !r.L.length) {
-        for (i = 0; i < GRID.length; i++) P[GRID[i]] = r.P[String(GRID[i])];
-      } else {
-        var f = dkCurve(r);
-        for (i = 0; i < GRID.length; i++) {
-          x = GRID[i];
-          P[x] = 1 - Math.exp(-Math.exp(f[0] - f[1] * x) * posMult(r.op, r.pos, x));
-        }
-      }
+      var P = {}, i;
+      for (i = 0; i < GRID.length; i++) P[GRID[i]] = r.P[String(GRID[i])];
       var E = {};
       for (i = 0; i < r.L.length; i++) {
         var lx = r.L[i][0], dec = r.L[i][1], imp = 1 / dec, p = P[lx];
@@ -151,14 +128,19 @@
     var pos = gated.filter(function (e) { return e.edge > 0; }).length;
     var thin = M.filter(function (m) { return !m.ok; }).length;
     var catches = META && META.catch_count ? META.catch_count.toLocaleString() : '';
-    el('srcnote').innerHTML = state.src === 'nf'
-      ? 'Estimated from <strong>' + catches + ' real catches</strong> of play-by-play — '
-        + 'it never sees the posted price, so it covers all ' + W.games.length + ' games of week '
-        + W.week + '. <strong>'
-        + pos + '</strong> of ' + gated.length + ' gated lines show positive edge; ' + thin
-        + ' of ' + M.length + ' players are flagged thin.'
-      : 'Reverse-engineered from the book’s own ladder at a 7% assumed hold, so the only disagreement left is '
-        + 'the matchup. <strong>' + pos + '</strong> of ' + gated.length + ' gated lines positive.';
+    var vol = M.filter(function (m) { return m.mrate != null; }).length;
+    el('srcnote').innerHTML = 'Estimated from <strong>' + catches + ' real catches</strong> of play-by-play — '
+      + 'it never sees the longest-reception price it is judging, so it covers all ' + W.games.length
+      + ' games of week ' + W.week + '. <strong>'
+      + pos + '</strong> of ' + gated.length + ' gated lines show positive edge; ' + thin
+      + ' of ' + M.length + ' players are flagged thin'
+      + (vol ? '; ' + vol + ' take their catch volume from a posted receptions line' : '') + '.';
+  }
+
+  // Gate and position decide what is on the page at all, so every surface asks
+  // the same question rather than each re-deriving it.
+  function shown(m) {
+    return m.ok && (state.pos === 'all' || m.pos === state.pos);
   }
 
   /* ---------- leaderboards ---------- */
@@ -167,17 +149,33 @@
     // that quoted the 20+ number would be describing a different matchup.
     var mv = posMult(m.op, m.pos, thr || 20);
     var cls = mv > 1.08 ? 'up' : (mv < 0.92 ? 'dn' : '');
+    // The two halves of the likelihood, named: how many catches he is getting
+    // and how far they go. A rec figure the receptions market set is marked,
+    // because it is the one number here the model did not derive itself.
+    //
+    // This line is one line by design — nowrap and an ellipsis — so ADOT rides
+    // on BPI's title rather than taking width of its own. That is where a
+    // reader would look for it anyway: BPI is what the model concluded about a
+    // receiver's depth, ADOT is the evidence its prior was set from.
+    //
+    // BPI before volume because the narrow card of a side-by-side pair does
+    // still clip, and what clips should be the number that is repeated in the
+    // table below rather than the one that is only here.
+    var vol = m.rate.toFixed(1) + ' rec' + (m.mrate != null ? '<sup title="from the posted '
+      + 'receptions line">m</sup>' : '');
+    var bpi = '<span' + (m.adot != null ? ' title="' + m.adot.toFixed(1)
+      + ' yd average depth of target"' : '') + '>BPI ' + m.bpi.toFixed(2) + '</span>';
     return '<li><span class="lr-rk">' + (i + 1) + '</span>'
       + '<span class="lr-who"><b>' + esc(m.n) + '</b>'
       + '<span>' + esc(matchup(m)) + ' <span class="lr-mult ' + cls + '">×' + mv.toFixed(2)
-      + ' vs ' + m.pos + '</span> · BPI ' + m.bpi.toFixed(2) + '</span>'
+      + ' vs ' + m.pos + '</span> · ' + bpi + ' · ' + vol + '</span>'
       + bar + '</span>'
       + '<span class="lr-price">' + right + '</span>'
       + '<span class="lr-big">' + big + '</span></li>';
   }
 
   function likeBoard(id, thr, noteId) {
-    var pool = M.filter(function (m) { return m.ok; });
+    var pool = M.filter(shown);
     var rows = pool.slice().sort(function (a, b) { return b.P[thr] - a.P[thr]; }).slice(0, 10);
     var nm = rows.filter(function (r) { return r.nomkt; }).length;
     el(noteId).innerHTML = pool.length + ' gated pass-catchers across all ' + W.games.length
@@ -195,7 +193,7 @@
   }
 
   function edgeBoard(id, thr, noteId) {
-    var pool = FLAT.filter(function (e) { return e.x === thr && e.m.ok; });
+    var pool = FLAT.filter(function (e) { return e.x === thr && shown(e.m); });
     var rows = pool.slice().sort(function (a, b) { return b.edge - a.edge; }).slice(0, 10);
     el(noteId).innerHTML = 'The book posts a ' + thr + '+ rung for <strong>' + pool.length
       + '</strong> gated players.';
@@ -209,119 +207,322 @@
     }).join('');
   }
 
-  /* ---------- the board ----------
-   * A cell is a magnitude (0..1 heat, one direction) or a signed number (heat
-   * on |value|, direction by sign). The CSS owns every colour.
-   */
-  function cell(heat, cls, txt) {
-    return '<td class="lr-cell"><i class="' + cls + '" style="--heat:'
-      + Math.max(0, Math.min(1, heat)).toFixed(3) + '">' + txt + '</i></td>';
-  }
-
-  function paintRamp() {
-    var lo = el('rampLo'), hi = el('rampHi'), ramp = el('ramp'), out = [], i, t;
-    if (state.mode === 'mod' || state.mode === 'imp') {
-      for (i = 0; i < 20; i++) {
-        out.push('<i class="seq" style="--heat:' + (i / 19).toFixed(3)
-          + ';background:color-mix(in oklab, var(--heat-info-fill) calc(var(--heat) * 46%), transparent)"></i>');
-      }
-      lo.textContent = '0%'; hi.textContent = '90%';
-    } else {
-      var span = state.mode === 'ev' ? '50% EV' : '20pt edge';
-      for (i = 0; i < 20; i++) {
-        t = (i / 19) * 2 - 1;
-        out.push('<i style="background:color-mix(in oklab, var(' + (t >= 0 ? '--heat-good-fill' : '--heat-bad-fill')
-          + ') ' + (Math.abs(t) * 40).toFixed(0) + '%, transparent)"></i>');
-      }
-      lo.textContent = '−' + span; hi.textContent = '+' + span;
-    }
-    ramp.innerHTML = out.join('');
-  }
-
-  function render() {
-    var rows = M.filter(function (m) { return state.game === 'all' || m.g === state.game; });
-    var best = function (m) {
-      if (!m.ok) return -99;
-      var v = -9;
-      Object.keys(m.E).forEach(function (k) { if (m.E[k].edge > v) v = m.E[k].edge; });
-      return v;
-    };
-    var cmp = {
-      best: function (a, b) { return best(b) - best(a); },
-      e20: function (a, b) { return (b.E[20] ? b.E[20].edge : -9) - (a.E[20] ? a.E[20].edge : -9); },
-      e40: function (a, b) { return (b.E[40] ? b.E[40].edge : -9) - (a.E[40] ? a.E[40].edge : -9); },
-      p20: function (a, b) { return b.P[20] - a.P[20]; },
-      p40: function (a, b) { return b.P[40] - a.P[40]; },
-      bpi: function (a, b) { return b.bpi - a.bpi; },
-      name: function (a, b) { return a.n.localeCompare(b.n); }
-    };
-    rows = rows.slice().sort(cmp[state.sort]);
-
-    el('brow').innerHTML = rows.map(function (m) {
-      var mv = posMult(m.op, m.pos, 20);
-      var mcls = mv > 1.08 ? 'up' : (mv < 0.92 ? 'dn' : '');
-      var cells = GRID.map(function (x) {
-        var e = m.E[x];
-        if (!e && state.mode !== 'mod') return '<td class="lr-cell"><i class="none">·</i></td>';
-        if (state.mode === 'edge') return cell(Math.abs(e.edge) / 0.20, e.edge >= 0 ? 'pos' : 'neg', pp(e.edge));
-        if (state.mode === 'odds') return cell(Math.abs(e.edge) / 0.20, e.edge >= 0 ? 'pos' : 'neg', e.am);
-        if (state.mode === 'ev') {
-          return cell(Math.abs(e.ev) / 0.50, e.ev >= 0 ? 'pos' : 'neg',
-            (e.ev >= 0 ? '+' : '−') + Math.abs(e.ev * 100).toFixed(0));
-        }
-        if (state.mode === 'imp') return cell(e.imp / 0.90, 'seq', pct(e.imp, 0));
-        return cell(m.P[x] / 0.90, 'seq', pct(m.P[x], 0));
-      }).join('');
-      return '<tr class="' + (m.ok ? '' : 'lr-thin') + '">'
-        + '<td class="lr-name"><b>' + esc(m.n) + '</b><span>' + esc(ab(m.tm)) + '</span>'
-        + (m.ok ? '' : '<span class="lr-tag">THIN</span>') + '</td>'
-        + '<td class="lr-meta">' + (m.v === 'Home' ? 'vs' : '@') + ' ' + esc(ab(m.op))
-        + ' <span class="lr-mult ' + mcls + '">×' + mv.toFixed(2) + ' ' + m.pos + '</span></td>'
-        + '<td class="lr-meta right">' + m.bpi.toFixed(2) + '</td>'
-        + '<td class="lr-meta right">' + m.games + 'g · ' + m.catches + '</td>'
-        + cells + '</tr>';
-    }).join('') || '<tr><td class="sched-empty">No players match.</td></tr>';
-
-    var n = rows.reduce(function (s, m) { return s + Object.keys(m.E).length; }, 0);
-    var nomkt = rows.filter(function (m) { return m.nomkt; }).length;
-    el('boardnote').innerHTML = rows.length + ' players · ' + n + ' priced lines · '
-      + nomkt + ' in games with no posted market · <strong>BPI</strong> is the big-play index '
-      + '(1/α) — higher means more of a receiver’s yardage lives in the tail. '
-      + 'A dot means that rung is not posted.';
-  }
-
   /* ---------- the priced-line table ---------- */
+
+  // The header is built once and never again: it holds a live search box, and
+  // rebuilding it on every keystroke would blur the field mid-word. props()
+  // therefore writes the body only.
+  var headUp = false;
+  var ICON_Q = '<svg class="lr-find-q" viewBox="0 0 16 16" aria-hidden="true">'
+    + '<circle cx="6.9" cy="6.9" r="4.4"/><path d="M10.2 10.2 14 14"/></svg>';
+  var ICON_X = '<svg class="lr-find-x" viewBox="0 0 16 16" aria-hidden="true">'
+    + '<path d="M4.2 4.2 11.8 11.8M11.8 4.2 4.2 11.8"/></svg>';
+
+  function propsHead() {
+    if (headUp) return;
+    headUp = true;
+    // Edge sits immediately right of the price it is an edge on, so the two
+    // numbers that decide a bet are read together.
+    el('props').innerHTML =
+      '<thead><tr><th class="who"><span class="lr-find" id="pfind" data-open="0">'
+      + '<span class="lr-find-lab">Player</span>'
+      + '<input type="text" class="lr-find-in" id="pfind-in" tabindex="-1"'
+      + ' placeholder="Search players" aria-label="Search players"'
+      + ' autocomplete="off" autocapitalize="off" spellcheck="false">'
+      + '<button type="button" class="lr-find-btn" id="pfind-btn"'
+      + ' aria-controls="pfind-in" aria-expanded="false" aria-label="Search players">'
+      + ICON_Q + ICON_X + '</button>'
+      + '</span></th><th>Matchup</th>'
+      + '<th class="num" title="Catches expected this game — the volume half of the '
+      + 'likelihood. A dot marks one the posted receptions line set.">Rec</th>'
+      + '<th class="num">Rung</th><th class="num">Odds</th><th class="num">Edge</th>'
+      + '</tr></thead><tbody id="pbody"></tbody>';
+    wireFind();
+  }
+
+  function wireFind() {
+    var wrap = el('pfind'), box = el('pfind-in'), btn = el('pfind-btn');
+    function open(on) {
+      wrap.setAttribute('data-open', on ? '1' : '0');
+      btn.setAttribute('aria-expanded', String(on));
+      btn.setAttribute('aria-label', on ? 'Clear player search' : 'Search players');
+      // Shut, the box is off the tab order as well as out of sight.
+      box.tabIndex = on ? 0 : -1;
+      if (on) { box.focus(); box.select(); return; }
+      box.value = '';
+      if (state.q) { state.q = ''; state.qText = ''; props(); }
+    }
+    btn.addEventListener('click', function () {
+      open(wrap.getAttribute('data-open') !== '1');
+    });
+    box.addEventListener('input', function () {
+      state.qText = box.value.trim();
+      state.q = fold(state.qText);
+      props();
+    });
+    box.addEventListener('keydown', function (e) {
+      if (e.key !== 'Escape' && e.key !== 'Esc') return;
+      e.stopPropagation();
+      open(false);
+      btn.focus();
+    });
+  }
+
   function props() {
+    propsHead();
     var rows = FLAT.filter(function (e) {
-      return e.m.ok
+      return shown(e.m)
         && (state.pgame === 'all' || e.m.g === state.pgame)
         && (state.rung === 'all' || e.x === state.rung)
         && (!state.posOnly || e.edge > 0)
+        && (!state.q || fold(e.m.n).indexOf(state.q) >= 0)
         && e.dec >= state.price;
     });
     var cmp = { edge: function (a, b) { return b.edge - a.edge; } };
     rows.sort(cmp.edge);
-    var gated = FLAT.filter(function (e) { return e.m.ok; }).length;
-    var cut = state.price ? FLAT.filter(function (e) { return e.m.ok && e.dec < state.price; }).length : 0;
-    el('pcount').innerHTML = rows.length + ' of ' + gated + ' gated lines'
+    var pool = FLAT.filter(function (e) { return shown(e.m); });
+    var cut = state.price ? pool.filter(function (e) { return e.dec < state.price; }).length : 0;
+    el('pcount').innerHTML = rows.length + ' of ' + pool.length + ' gated lines'
+      + (state.pos === 'all' ? '' : ' at ' + state.pos)
+      + (state.q ? ' · matching “' + esc(state.qText) + '”' : '')
       + (cut ? ' · ' + cut + ' cut on price' : '');
-    // Edge sits immediately right of the price it is an edge on, so the two
-    // numbers that decide a bet are read together.
-    el('props').innerHTML =
-      '<thead><tr><th class="who">Player</th><th>Matchup</th>'
-      + '<th class="num">Rung</th><th class="num">Odds</th><th class="num">Edge</th>'
-      + '</tr></thead><tbody>'
-      + rows.map(function (e) {
+    el('pbody').innerHTML = rows.length ? rows.map(function (e) {
         var m = e.m;
         return '<tr><td class="who">' + esc(m.n) + '</td>'
-          + '<td>' + esc(matchup(m)) + '</td>'
+          + '<td>' + (m.v === 'Home' ? 'vs ' : '@ ') + esc(ab(m.op)) + '</td>'
+          + '<td class="num lr-vol' + (m.mrate != null ? ' mkt' : '') + '">'
+          + m.rate.toFixed(1) + '</td>'
           + '<td class="num">' + e.x + '+</td>'
           + '<td class="num odds">' + e.am + '</td>'
           + '<td class="num"><span class="lr-pill ' + (e.edge >= 0 ? 'pos' : 'neg') + '" style="--heat:'
           + Math.min(1, Math.abs(e.edge) / 0.20).toFixed(3) + '">' + pp(e.edge) + '</span></td>'
           + '</tr>';
       }).join('')
-      + '</tbody>';
+      : '<tr><td class="sched-empty" colspan="6">No line matches these filters.</td></tr>';
+    scatter(rows);
+  }
+
+  /* ---------- likelihood against the posted price ----------
+   * The table above is the same numbers; this is their geometry. A line's
+   * price is a probability too — 1/decimal — so the two live on one scale and
+   * can share both axes. Put the book's number across and the model's up and
+   * the fair price is the 45° line y = x: on it the two agree, above it the
+   * model says a bet is likelier than you are being charged for.
+   *
+   * The edge is then literally a distance. `edge = p − imp` is the vertical
+   * gap, and the perpendicular to y = x is that same gap over √2 — the
+   * shortest way off the fair line, which is what the drop from each point
+   * draws. That only reads as a perpendicular if a percentage point is the
+   * same length across as it is up, so the plot is square over one shared
+   * domain and never stretched to the card. The SVG carries its own width and
+   * the sheet centres it.
+   *
+   * Everything here is drawn from the rows props() just filtered, so the
+   * picture is always the table: change the game, the rung, the price floor or
+   * the positive-edge toggle and the chart changes with it.
+   *
+   * It draws the top CAP of them and not the whole filtered set. Five hundred
+   * lines was a smudge along the diagonal — the stems that carry the whole
+   * argument were shorter than the gaps between the points, and the ones worth
+   * looking at were buried under the ones that are not. The rows arrive already
+   * sorted by edge, so the picture is the table's first screen: the shortlist,
+   * with the table underneath it as the record.
+   */
+  var CAP = 25;
+  var lastRows = [];
+
+  function gc(token, fallback) {
+    return (window.Theme && window.Theme.color) ? window.Theme.color(token, fallback) : fallback;
+  }
+
+  function svgText(x, y, s, o) {
+    o = o || {};
+    return '<text x="' + x + '" y="' + y + '"'
+      + ' fill="' + (o.fill || gc('--text-3', '#8b949e')) + '"'
+      + ' font-size="' + (o.size || 10) + '"'
+      + (o.weight ? ' font-weight="' + o.weight + '"' : '')
+      + (o.opacity ? ' opacity="' + o.opacity + '"' : '')
+      // A halo, for the labels that have to sit on top of the cloud. It is
+      // painted under the glyph rather than over it, so the text keeps its own
+      // weight and the card colour does the clearing.
+      + (o.halo ? ' stroke="' + o.halo + '" stroke-width="3" stroke-linejoin="round"'
+        + ' paint-order="stroke fill"' : '')
+      + ' text-anchor="' + (o.anchor || 'start') + '"'
+      + (o.transform ? ' transform="' + o.transform + '"' : '')
+      + '>' + s + '</text>';
+  }
+
+  /* The domain both axes share. Whole percents throughout: the grid has to
+   * land exactly on its bounds, and accumulating 0.05 twenty times does not.
+   * It is derived from what is on screen rather than fixed at 0–100, because a
+   * 40+-only view lives in the bottom corner and would otherwise be a smudge —
+   * but it stays square, so the diagonal is still 45° whatever it spans. */
+  function domain(rows) {
+    var lo = 100, hi = 0;
+    rows.forEach(function (e) {
+      lo = Math.min(lo, e.imp * 100, e.p * 100);
+      hi = Math.max(hi, e.imp * 100, e.p * 100);
+    });
+    if (hi < lo) { lo = 0; hi = 100; }
+    var pad = Math.max(2, (hi - lo) * 0.08);
+    lo = Math.floor((lo - pad) / 5) * 5;
+    hi = Math.ceil((hi + pad) / 5) * 5;
+    lo = Math.max(0, lo);
+    hi = Math.min(100, hi);
+    // A cluster tighter than ten points would magnify rounding into structure.
+    if (hi - lo < 10) { hi = Math.min(100, lo + 10); lo = Math.max(0, hi - 10); }
+    return { lo: lo, hi: hi, span: hi - lo };
+  }
+
+  function scatter(all) {
+    lastRows = all;
+    var host = el('scatter');
+    if (!host) return;
+    var note = el('scnote');
+
+    if (!all.length) {
+      host.innerHTML = '<p class="lr-plot-empty">No line matches these filters.</p>';
+      if (note) note.textContent = '';
+      return;
+    }
+    // Already sorted by edge where it was filtered, so the top of the table is
+    // the top of the chart without a second sort deciding a different order.
+    var rows = all.slice(0, CAP);
+
+    var INK = gc('--text-3', '#8b949e');
+    var FAINT = gc('--text-4', '#6e7681');
+    var AXIS = gc('--border', '#30363d');
+    var GUIDE = gc('--text-5', '#484f58');
+    var GOOD = gc('--heat-good', '#3fb950');
+    var BAD = gc('--heat-bad', '#f0883e');
+    var PAPER = gc('--surface', '#161b22');
+
+    var cw = host.clientWidth || 560;
+    var compact = cw < 520;
+    var mL = compact ? 30 : 42;
+    var mR = compact ? 12 : 16;
+    var mT = compact ? 12 : 16;
+    var mB = compact ? 30 : 38;
+    // Square, capped: past ~430px a bigger square separates nothing further and
+    // only pushes the cards below it off the screen.
+    var side = Math.max(200, Math.min(cw - mL - mR, compact ? 320 : 480));
+    var W = mL + side + mR, H = mT + side + mB;
+    var x0 = mL, x1 = mL + side, yTop = mT, yBot = mT + side;
+
+    var d = domain(rows);
+    var sx = function (v) { return x0 + (v * 100 - d.lo) / d.span * side; };
+    var sy = function (v) { return yTop + (1 - (v * 100 - d.lo) / d.span) * side; };
+
+    var svg = [];
+
+    /* --- grid, in whole percents --- */
+    var step = d.span > 55 ? 20 : (d.span > 25 ? 10 : 5);
+    var g = [], t, px, py;
+    for (t = Math.ceil(d.lo / step) * step; t <= d.hi; t += step) {
+      px = sx(t / 100); py = sy(t / 100);
+      g.push('<line x1="' + px.toFixed(1) + '" y1="' + yTop + '" x2="' + px.toFixed(1)
+        + '" y2="' + yBot + '" stroke="' + AXIS + '" stroke-width="1"/>');
+      g.push('<line x1="' + x0 + '" y1="' + py.toFixed(1) + '" x2="' + x1
+        + '" y2="' + py.toFixed(1) + '" stroke="' + AXIS + '" stroke-width="1"/>');
+      g.push(svgText(px.toFixed(1), yBot + (compact ? 12 : 14), t + '%',
+        { anchor: 'middle', size: compact ? 9 : 10, fill: FAINT }));
+      g.push(svgText(x0 - 6, (py + 3).toFixed(1), t + '%',
+        { anchor: 'end', size: compact ? 9 : 10, fill: FAINT }));
+    }
+    // The bounds close the frame; the loop only reaches them when they happen
+    // to be multiples of the step.
+    g.push('<rect x="' + x0 + '" y="' + yTop + '" width="' + side + '" height="' + side
+      + '" fill="none" stroke="' + AXIS + '" stroke-width="1"/>');
+    svg.push(g.join(''));
+
+    /* --- the fair line, corner to corner because the square guarantees it --- */
+    svg.push('<line x1="' + sx(d.lo / 100).toFixed(1) + '" y1="' + sy(d.lo / 100).toFixed(1)
+      + '" x2="' + sx(d.hi / 100).toFixed(1) + '" y2="' + sy(d.hi / 100).toFixed(1)
+      + '" stroke="' + GUIDE + '" stroke-width="1.5" stroke-dasharray="6 4"/>');
+    // Rides along the line rather than parked in a corner: it labels the line,
+    // and a corner would have it labelling the region instead. Near the far end
+    // because the near one is where the cheap 40+ rungs pile up.
+    var lt = d.lo + d.span * 0.86;
+    var lx = sx(lt / 100) + 9, ly = sy(lt / 100) + 9;
+    svg.push(svgText(lx.toFixed(1), ly.toFixed(1), 'fair price', {
+      anchor: 'middle', size: 9, fill: GUIDE, halo: PAPER,
+      transform: 'rotate(-45 ' + lx.toFixed(1) + ' ' + ly.toFixed(1) + ')'
+    }));
+
+    // What each side of the line means, inside the plot so it costs no margin.
+    svg.push(svgText(x0 + 9, yTop + 14,
+      compact ? 'value' : 'value — model above the price',
+      { size: 9, fill: GOOD, opacity: '0.75' }));
+    svg.push(svgText(x1 - 9, yBot - 9,
+      compact ? 'no value' : 'no value — price above the model',
+      { size: 9, fill: BAD, opacity: '0.75', anchor: 'end' }));
+
+    /* --- one mark per priced line, each with its drop to the fair line ---
+     * Stems first as a layer of their own, so a dense corner does not bury a
+     * point under the next point's stem. */
+    var r = rows.length > 220 ? 2.4 : (rows.length > 90 ? 3 : 3.8);
+    var stems = [], dots = [];
+    rows.forEach(function (e) {
+      var cx = sx(e.imp), cy = sy(e.p);
+      var f = (e.imp + e.p) / 2;                 // the foot of the perpendicular
+      var fx = sx(f), fy = sy(f);
+      var col = e.edge >= 0 ? GOOD : BAD;
+      stems.push('<line x1="' + cx.toFixed(1) + '" y1="' + cy.toFixed(1)
+        + '" x2="' + fx.toFixed(1) + '" y2="' + fy.toFixed(1)
+        + '" stroke="' + col + '" stroke-width="1.4" opacity="0.5"/>');
+      dots.push('<circle cx="' + cx.toFixed(1) + '" cy="' + cy.toFixed(1) + '" r="' + r
+        + '" fill="' + col + '" fill-opacity="0.85" stroke="' + PAPER + '" stroke-width="0.8">'
+        + '<title>' + esc(e.m.n) + ' · ' + e.x + '+ · ' + e.am + '\n'
+        + 'price ' + pct(e.imp, 1) + ' · model ' + pct(e.p, 1) + ' · edge ' + pp(e.edge) + '</title>'
+        + '</circle>');
+    });
+    svg.push(stems.join('') + dots.join(''));
+
+    /* --- the three longest drops, named --- */
+    if (!compact) {
+      rows.slice().sort(function (a, b) { return Math.abs(b.edge) - Math.abs(a.edge); })
+        .slice(0, 3).forEach(function (e) {
+          var cx = sx(e.imp), cy = sy(e.p);
+          var right = cx < x0 + side * 0.72;
+          svg.push(svgText((cx + (right ? 7 : -7)).toFixed(1), (cy + 3).toFixed(1),
+            esc(e.m.n) + ' ' + e.x + '+', {
+              size: 9.5, fill: gc('--text-hi', '#f0f6fc'), halo: PAPER,
+              anchor: right ? 'start' : 'end'
+            }));
+        });
+    }
+
+    /* --- axis titles --- */
+    svg.push(svgText((x0 + x1) / 2, H - (compact ? 4 : 6),
+      compact ? 'price, implied' : 'the book — implied probability of the posted price',
+      { anchor: 'middle', size: compact ? 9.5 : 10, fill: INK }));
+    var my = ((yTop + yBot) / 2).toFixed(1);
+    svg.push(svgText(11, my, compact ? 'model' : 'the model — likelihood',
+      { anchor: 'middle', size: compact ? 9.5 : 10, fill: INK,
+        transform: 'rotate(-90 11 ' + my + ')' }));
+
+    var up = rows.filter(function (e) { return e.edge >= 0; }).length;
+    var capped = all.length > rows.length;
+    host.innerHTML = '<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '"'
+      + ' role="img" aria-label="' + (capped ? 'The ' + rows.length + ' biggest edges of the '
+        + all.length + ' priced lines the table is showing' : rows.length + ' priced lines')
+      + ', plotted with the price’s implied probability across and the model’s likelihood up. '
+      + up + ' sit above the fair line, where the model is likelier than the price. '
+      + 'The table above lists every one of them.">' + svg.join('') + '</svg>';
+
+    if (note) {
+      note.innerHTML = (capped
+        ? 'The <strong>' + rows.length + '</strong> biggest edges of the ' + all.length
+          + ' lines the table is showing — its first ' + rows.length + ' rows.'
+        : 'All <strong>' + rows.length + '</strong> line' + (rows.length === 1 ? '' : 's')
+          + ' the table is showing, one point each.')
+        + ' Distance from the dashed line is the edge: every point drops to it at a right angle, and '
+        + 'both axes carry the same scale so that drop is the shortest way back to a fair price.'
+        + (rows.length > 1
+          ? ' These run ' + pp(rows[0].edge) + ' to ' + pp(rows[rows.length - 1].edge) + ' points'
+            + (up < rows.length ? ', ' + up + ' of them above the line' : '') + '.'
+          : '');
+    }
   }
 
   /* ---------- calibration & defenses ---------- */
@@ -419,8 +620,8 @@
    * them: a fixture picked in week 2 is not on week 3's slate, and leaving the
    * control reading "Lions @ Bills" over an empty table would be worse than
    * dropping the pick. */
-  var gameM = null, pgM = null, weekM = null;
-  var gameOpts = [], pgOpts = [];
+  var pgM = null, weekM = null;
+  var pgOpts = [];
 
   function optLabel(opts, v) {
     var hit = opts.filter(function (o) { return String(o.value) === String(v); })[0];
@@ -428,12 +629,6 @@
   }
 
   function rebuildGameMenus() {
-    gameOpts = [{ value: 'all', label: 'All games' }].concat(W.games.map(function (g) {
-      return { value: g.g, label: g.away + ' @ ' + g.home, note: g.nomkt ? 'no market' : '' };
-    }));
-    buildOptionMenu(gameM.menu, gameOpts, 'game');
-    syncOptionMenu(gameM.btn, gameM.menu, state.game, optLabel(gameOpts, state.game), 'game');
-
     pgOpts = [{ value: 'all', label: 'All priced games' }].concat(
       W.games.filter(function (g) { return !g.nomkt; }).map(function (g) {
         return { value: g.g, label: g.away + ' @ ' + g.home };
@@ -446,7 +641,6 @@
     W = WEEKS.filter(function (w) { return w.week === n; })[0] || WEEKS[WEEKS.length - 1];
     state.week = W.week;
     TEAMS = W.teams || {};
-    state.game = 'all';
     state.pgame = 'all';
     rebuildGameMenus();
     syncOptionMenu(weekM.btn, weekM.menu, W.week, 'Week ' + W.week, 'week');
@@ -472,7 +666,6 @@
     likeBoard('like40', 40, 'l40n');
     edgeBoard('edge20', 20, 'e20n');
     edgeBoard('edge40', 40, 'e40n');
-    render();
     props();
   }
 
@@ -488,45 +681,20 @@
       freshness();
     });
 
-    segment('src', 'src', function () {
-      redrawAll();
-    });
-    segment('vmode', 'mode', function () { paintRamp(); render(); });
     segment('posonly', 'posOnly', props);
 
-    var gateOpts = [
-      { value: '8,25', label: '8 gm & 25 rec', note: 'default' },
-      { value: '16,50', label: '16 gm & 50 rec' },
-      { value: '0,0', label: 'No gate' }
+    var posOpts = [
+      { value: 'all', label: 'All positions' },
+      { value: 'WR', label: 'WR' },
+      { value: 'TE', label: 'TE' },
+      { value: 'RB', label: 'RB' }
     ];
-    var gate = menu('dd-gate', 'f-gate', 'gate-menu', 'gate', gateOpts, function (v) {
-      state.gate = v.split(',').map(Number);
-      syncOptionMenu(gate.btn, gate.menu, v, gateOpts.filter(function (o) { return o.value === v; })[0].label, 'gate');
+    var posM = menu('dd-pos', 'f-pos', 'pos-menu', 'pos', posOpts, function (v) {
+      state.pos = v;
+      syncOptionMenu(posM.btn, posM.menu, v, optLabel(posOpts, v), 'pos');
       redrawAll();
     });
-    syncOptionMenu(gate.btn, gate.menu, '8,25', '8 gm & 25 rec', 'gate');
-
-    gameM = menu('dd-game', 'f-game', 'game-menu', 'game', [], function (v) {
-      state.game = v;
-      syncOptionMenu(gameM.btn, gameM.menu, v, optLabel(gameOpts, v), 'game');
-      render();
-    });
-
-    var sortOpts = [
-      { value: 'best', label: 'Best edge' },
-      { value: 'e20', label: 'Edge on 20+' },
-      { value: 'e40', label: 'Edge on 40+' },
-      { value: 'p20', label: '20+ likelihood' },
-      { value: 'p40', label: '40+ likelihood' },
-      { value: 'bpi', label: 'Big-play index' },
-      { value: 'name', label: 'Player' }
-    ];
-    var sort = menu('dd-sort', 'f-sort', 'sort-menu', 'sort', sortOpts, function (v) {
-      state.sort = v;
-      syncOptionMenu(sort.btn, sort.menu, v, sortOpts.filter(function (o) { return o.value === v; })[0].label, 'sort');
-      render();
-    });
-    syncOptionMenu(sort.btn, sort.menu, 'best', 'Best edge', 'sort');
+    syncOptionMenu(posM.btn, posM.menu, 'all', 'All positions', 'pos');
 
     pgM = menu('dd-pgame', 'f-pgame', 'pgame-menu', 'pgame', [], function (v) {
       state.pgame = v;
@@ -548,9 +716,10 @@
     // bet per dollar, so the board lets a reader cut them off at a floor.
     var priceOpts = [
       { value: '0', label: 'Any price' },
-      { value: '1.5', label: 'No shorter than −200' },
-      { value: '1.769230769', label: 'No shorter than −130' },
-      { value: '2.05', label: 'No shorter than +105' }
+      { value: '1.5', label: 'At Least −200' },
+      { value: '1.769230769', label: 'At Least −130' },
+      { value: '2.05', label: 'At Least +105' },
+      { value: '3', label: 'At Least +200' }
     ];
     var price = menu('dd-price', 'f-price', 'price-menu', 'price', priceOpts, function (v) {
       state.price = Number(v);
@@ -559,16 +728,6 @@
     });
     syncOptionMenu(price.btn, price.menu, '0', 'Any price', 'price');
 
-    el('f-reset').addEventListener('click', function () {
-      state.game = 'all'; state.sort = 'best'; state.mode = 'edge';
-      syncOptionMenu(gameM.btn, gameM.menu, 'all', 'All games', 'game');
-      syncOptionMenu(sort.btn, sort.menu, 'best', 'Best edge', 'sort');
-      paintRamp(); render();
-    });
-
-    // The board re-colours itself off the tokens, but the ramp swatches are
-    // inline styles built once — rebuild them when the theme flips.
-    window.addEventListener('themechange', paintRamp);
   }
 
   // The capture date is the selected week's own, not the file's: a past week was
@@ -588,6 +747,7 @@
     META = meta;
     GRID = doc.grid;
     ABBR = doc.abbr || {};
+    if (Array.isArray(doc.gate) && doc.gate.length === 2) state.gate = doc.gate;
     WEEKS = (doc.weeks || []).slice().sort(function (a, b) { return a.week - b.week; });
     if (!WEEKS.length) throw new Error('no weeks in the board file');
     // An explicit ?week= wins on first load — a link to week 2 has to keep
@@ -595,18 +755,27 @@
     wire();
     setWeek(readWeekParam() || currentWeek());
     freshness();
-    paintRamp();
     redrawAll();
     calibration();
     defenses();
   }
+
+  /* The scatter is measured in pixels and its colours are baked into the SVG as
+   * attribute strings, so both a resize and a theme change mean redrawing it —
+   * the rest of the page is CSS and re-colours itself. */
+  var szT = null;
+  window.addEventListener('resize', function () {
+    clearTimeout(szT);
+    szT = setTimeout(function () { scatter(lastRows); }, 150);
+  });
+  window.addEventListener('themechange', function () { scatter(lastRows); });
 
   Promise.all([
     fetch('/data/nfl_long_reception_2026.json', { cache: 'no-store' }).then(function (r) { return r.json(); }),
     fetch('/data/nfl_long_reception_2026_meta.json', { cache: 'no-store' })
       .then(function (r) { return r.json(); }).catch(function () { return null; })
   ]).then(function (v) { boot(v[0], v[1]); }).catch(function (err) {
-    el('brow').innerHTML = '<tr><td class="sched-empty">Could not load the board.</td></tr>';
+    el('props').innerHTML = '<tbody><tr><td class="sched-empty">Could not load the board.</td></tr></tbody>';
     if (window.console) console.error(err);
   });
 })();

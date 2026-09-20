@@ -54,19 +54,12 @@
         </div>
       </div>
       <div class="lr-bar-grp">
-        <span class="lr-bar-label">Likelihood from</span>
-        <div class="lr-seg" id="src" role="group" aria-label="Model source">
-          <button type="button" data-s="nf" aria-pressed="true">Play-by-play</button>
-          <button type="button" data-s="dk" aria-pressed="false">Book ladder</button>
-        </div>
-      </div>
-      <div class="lr-bar-grp">
-        <span class="lr-bar-label">Sample gate</span>
-        <div class="dd" id="dd-gate">
-          <button type="button" class="dd-btn" id="f-gate" aria-haspopup="true" aria-expanded="false">
-            <span class="dd-value">8 gm &amp; 25 rec</span>
+        <span class="lr-bar-label">Position</span>
+        <div class="dd" id="dd-pos">
+          <button type="button" class="dd-btn" id="f-pos" aria-haspopup="true" aria-expanded="false">
+            <span class="dd-value">All positions</span>
           </button>
-          <div class="dd-pop dd-menu" id="gate-menu" role="menu" aria-label="Sample gate" hidden></div>
+          <div class="dd-pop dd-menu" id="pos-menu" role="menu" aria-label="Position" hidden></div>
         </div>
       </div>
       <p class="lr-bar-note" id="srcnote"></p>
@@ -100,6 +93,20 @@
     <div class="lr-scroll"><table class="lr-table lr-list" id="props"></table></div>
     <p class="lr-note" id="pcount"></p>
 
+    <!-- The same rows the table above just drew, as a picture: the price across,
+         the model up, and the edge as the perpendicular drop to the fair line. -->
+    <div class="lr-chart">
+      <h3>Likelihood vs. the posted price</h3>
+      <p class="lr-card-note" id="scnote"></p>
+      <div class="lr-plot" id="scatter"></div>
+      <p class="lr-chart-key">
+        <span><b style="background:var(--heat-good)"></b>Model above the price</span>
+        <span><b style="background:var(--heat-bad)"></b>Price above the model</span>
+        <span><i class="lr-key-dash"></i>Fair line — the two agree</span>
+        <span><i class="lr-key-stem"></i>Edge, as the perpendicular to it</span>
+      </p>
+    </div>
+
     <div class="lr-cards">
       <div class="lr-card">
         <h3>20+ yard reception — highest likelihood</h3>
@@ -126,40 +133,6 @@
       </div>
     </div>
 
-    <h2>Full board</h2>
-    <div class="dd-row">
-      <div class="lr-seg" id="vmode" role="group" aria-label="Cell values">
-        <button type="button" data-m="edge" aria-pressed="true">Edge</button>
-        <button type="button" data-m="odds">Odds</button>
-        <button type="button" data-m="ev">EV</button>
-        <button type="button" data-m="mod" >Likelihood</button>
-        <button type="button" data-m="imp">Implied</button>
-      </div>
-      <div class="dd" id="dd-game">
-        <button type="button" class="dd-btn" id="f-game" aria-haspopup="true" aria-expanded="false">
-          <span class="dd-value">All games</span>
-        </button>
-        <div class="dd-pop dd-menu" id="game-menu" role="menu" aria-label="Game" hidden></div>
-      </div>
-      <div class="dd" id="dd-sort">
-        <button type="button" class="dd-btn" id="f-sort" aria-haspopup="true" aria-expanded="false">
-          <span class="dd-value">Best edge</span>
-        </button>
-        <div class="dd-pop dd-menu" id="sort-menu" role="menu" aria-label="Sort" hidden></div>
-      </div>
-      <button type="button" class="sched-reset" id="f-reset" hidden>Reset</button>
-    </div>
-
-    <div class="lr-scroll">
-      <table class="lr-table" id="board">
-        <thead><tr id="hrow"></tr></thead>
-        <tbody id="brow"><tr><td class="sched-empty">Loading board…</td></tr></tbody>
-      </table>
-    </div>
-    <div class="lr-legend"><span id="rampLo"></span><span class="lr-ramp" id="ramp"></span><span id="rampHi"></span></div>
-    <p class="lr-note" id="boardnote"></p>
-
-
     <h2>Does it work?</h2>
     <p class="lr-note" id="btnote"></p>
     <div class="lr-key">
@@ -180,24 +153,50 @@
       <h3>Method</h3>
       <ol>
         <li><strong>Where it comes from.</strong> nflverse play-by-play for 2024–2026, reduced to every completed
-          reception with its receiver, yardage and defense. The prices are a DraftKings capture: this market is in no
-          odds API — balldontlie carries 18 NFL prop types and this is not one of them.</li>
-        <li><strong>Per-catch explosiveness.</strong> Pooled catch-yardage survival <code>S(x)</code> is measured, not
-          assumed — its tail is heavier than exponential. Each receiver gets one exponent,
-          <code>S_player(x) = S(x)^α</code>, estimated as <code>α = n / −Σ ln S(y)</code> from
+          reception with its receiver, yardage and defense — and every <em>target</em> with its air yards, which is
+          where depth comes from. The prices are a DraftKings capture: this market is in no
+          odds API — balldontlie carries 18 NFL prop types and this is not one of them. The <em>receptions</em>
+          market is, and that one is read through the API for every game on the slate.</li>
+        <li><strong>Per-catch explosiveness.</strong> Catch-yardage survival <code>S(x)</code> is measured, not
+          assumed — its tail is heavier than exponential — and measured <em>per position</em>. A back is not a short
+          receiver: his bulk is far shorter (<code>S(10)</code> .27 against a receiver's .51) while his 40-yard tail
+          matches a tight end's, because a back's long ones are screens that break rather than routes run deep.
+          Each receiver then gets one exponent against his own position's curve,
+          <code>S_player(x) = S_pos(x)^α</code>, estimated as <code>α = n / −Σ ln S_pos(y)</code> from
           <em>every</em> catch rather than the rare long ones. That is what makes a 40+ number estimable when the median
-          pass-catcher has two 40+ catches in three seasons. <strong>BPI</strong> is <code>1/α</code>.</li>
-        <li><strong>Volume and defense.</strong> <code>λ(x) = catches/game × S(x)^α × defense</code>, player terms
+          pass-catcher has two 40+ catches in three seasons. <strong>BPI</strong> is <code>1/α</code>, read within
+          position.</li>
+        <li><strong>Depth.</strong> One season of catch yardage says less about the next than it looks like it does:
+          regress a receiver's α on last year's and the carryover is only <code>0.28</code>. So α is shrunk hard, and
+          what it is shrunk toward is no longer his position's average shape but his position's average shape
+          <em>at his depth</em> — <code>ADOT</code>, measured over targets at <code>−0.086</code> of log α per yard.
+          Targets and not catches is the whole point: a catch list can only describe balls a receiver caught, so the
+          deep threat who ran twelve go routes and caught three looks to it like a man with three catches. His air
+          yards remember the other nine. It is a prior, never a correction applied on top of α — his catch yardage
+          already carries his depth, and tilting it again double-counts.</li>
+        <li><strong>Volume.</strong> Two catches is two chances at a long one and eight is eight, so the rate term
+          matters as much as the shape does — and it is a question about <em>this</em> Sunday, turning on a depth
+          chart and an injury report no three-season average carries. Where the book posts a receptions line it
+          therefore sets most of that term: the line is de-vigged and <em>solved</em>, not read, since 4.5 at an even
+          price means <code>P(5+) = ½</code> and the mean of a count that clears five half the time is nearer 4.7.
+          Against week-1 actuals the posted line beat the historical rate outright (RMSE 1.98 vs 2.09), and a 70/30
+          blend toward it edges both. A player with no posted line keeps his history. The longest-reception ladder
+          this page has an edge against is never read into any of it.</li>
+        <li><strong>Putting it together.</strong> <code>λ(x) = catches/game × S_pos(x)^α × defense</code>, player terms
           shrunk toward position means, defense position-specific.
-          <code>P(longest ≥ x) = 1 − e^−λ(x)</code>, with one global λ scale fit on a held-out season.</li>
+          <code>P(longest ≥ x) = 1 − e^−λ(x)</code>, with one global λ scale fit on a held-out season.
+          Held out, predicted/actual lands inside 7% at every rung through 20+, where all but a handful of lines
+          live; one shared curve missed a back's 20+ by a quarter and his 40+ by four times. A back priced deeper
+          than 20 still reads ~20% light, so a negative edge there is likelier to be the model than the price.</li>
         <li><strong>Edge.</strong> <code>likelihood − 1/decimal odds</code> against that exact line;
           <code>EV = (likelihood × decimal) − 1</code>.</li>
       </ol>
       <p>The sample gate is not decoration: ungated, the biggest edge on the board belongs to a receiver with zero
         career catches, where the model reports a position average rather than evidence. Those players are tagged
-        <span class="lr-tag">THIN</span>. The model also knows nothing about injuries, depth-chart changes or coverage,
-        and the book does — where they disagree about a receiver's <em>volume</em> this week, the book is probably
-        right. The durable claim is the shape of a receiver's yardage plus a measured matchup.</p>
+        <span class="lr-tag">THIN</span>. On injuries, depth-chart changes and game script the model knows nothing
+        and the book knows a great deal, which is why volume is now largely borrowed rather than guessed — that
+        concession is the receptions line above. What is not borrowed is the shape of a receiver's yardage and the
+        matchup it is measured against, and that, plus a price the model never saw, is the whole of the claim.</p>
       <p id="freshness"></p>
     </div>
   </div>

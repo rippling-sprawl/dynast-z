@@ -23,6 +23,12 @@
   <!-- The dropdown the props board filters with is /football/schedule's week
        menu, unchanged: same trigger, same panel, same keyboard. -->
   <link rel="stylesheet" href="/styles/components/nfl-pickers.css">
+  <!-- The team grid opens as an overlay and pins the page under it with
+       body.lightbox-open, which is defined here. -->
+  <link rel="stylesheet" href="/styles/base/lightbox.css">
+  <!-- The notes card's bullets and the dialog behind the hero's crests: the
+       same component /football/bakers-buns files its notes from. -->
+  <link rel="stylesheet" href="/styles/components/bun-notes.css">
   <link rel="stylesheet" href="/styles/primary/game-odds.css">
   <script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
   <script defer src="/_vercel/insights/script.js"></script>
@@ -34,6 +40,12 @@
   <script src="/scripts/base/standalone.js"></script>
   <script src="/scripts/base/nav.js"></script>
   <script src="/scripts/components/nfl-pickers.js"></script>
+  <!-- The page is pinned while the note dialog is up, and put back when it
+       closes. -->
+  <script src="/scripts/base/scroll-lock.js"></script>
+  <!-- Baker's Buns notes: the store this page reads a week's notes out of, and
+       the modal a crest in the hero opens to write one. -->
+  <script src="/scripts/primary/bun-notes.js"></script>
   <script>initPage();</script>
 
   <div class="masters-content go-wrap">
@@ -746,8 +758,27 @@
         '</span>';
     }
 
+    /* The crest is the button, where there is anybody to press it: tapping a
+     * team in the hero opens the note dialog already set to that team and to
+     * this game's week, which is the whole of what a note taken from a game
+     * page has to say about itself.
+     *
+     * For everyone else it stays the image it always was. `data-note-add` is
+     * only wired by initBunNotes, and initBunNotes declines to run for a reader
+     * who cannot write — so a button rendered here for a signed-out visitor
+     * would be a button that does nothing at all. */
+    function crest(t, wk) {
+      var img = teamLogo(t.abbr, 'go-crest', true);
+      if (!canAddNotes()) return img;
+      var lbl = 'Take a note on ' + (t.name || t.abbr);
+      return '<button type="button" class="go-crest-btn" data-note-add="' +
+        esc(t.abbr) + '" data-note-week="' + esc(wk) + '" title="' + esc(lbl) +
+        '" aria-label="' + esc(lbl) + '">' + img + '</button>';
+    }
+
     function heroSection(b) {
       var g = b.game;
+      var wk = noteWeek(g);
       var sc = g.score;
       var sit = situation(b);
       var ball = sit ? sit.team : '';
@@ -789,7 +820,7 @@
        * was read as one. */
       return '<div class="go-hero"><div class="go-hero-top">' +
         '<span class="go-team' + aw + '">' +
-          teamLogo(g.away.abbr, 'go-crest', true) +
+          crest(g.away, wk) +
           (ball && ball === g.away.abbr ? possMark(g.away.abbr) : '') + '</span>' +
         '<div class="go-hero-mid">' +
           '<span class="go-at">' + (g.neutral ? 'vs' : '@') + '</span>' +
@@ -799,7 +830,7 @@
           '</span>' +
         '</div>' +
         '<span class="go-team' + hw + '">' +
-          teamLogo(g.home.abbr, 'go-crest', true) +
+          crest(g.home, wk) +
           (ball && ball === g.home.abbr ? possMark(g.home.abbr) : '') + '</span>' +
         '</div>' +
         line +
@@ -1430,6 +1461,113 @@
       }
       
       return card('Betting odds', body);
+    }
+
+    /* ---------- notes ----------
+     *
+     * /football/bakers-buns is where a note gets written; this is where the
+     * two or three that bear on a game get read. A note is filed against a
+     * team and a week, which is exactly the pair a fixture is, so there is no
+     * matching to invent: the game says NE @ SEA in week 1, and the card shows
+     * what either club has had filed against week 1.
+     *
+     * Deliberately not either team's whole file. A club carries a season of
+     * notes and almost all of them are about somebody it is not playing on
+     * Sunday, so the unfiltered list would be a wall for the week's handful of
+     * relevant reads to get lost in — and the whole list is one click away on
+     * the team's own card. */
+
+    /* The week a note would be filed under, in bun-notes.js's vocabulary. The
+     * regular season answers with its own number; the preseason and the four
+     * playoff rounds are named there rather than numbered, and the bundle
+     * distinguishes them only by season_type. Pro Bowl week is postseason week
+     * 4 and is not a round anybody files against, so it falls through to '' —
+     * and a game with no week has no notes to show. */
+    var PRESEASON = 1, POSTSEASON = 3;
+    var POST_WEEK = { 1: 'wc', 2: 'div', 3: 'conf', 5: 'sb' };
+
+    function noteWeek(g) {
+      var wk = Number(g.week);
+      if (g.season_type === PRESEASON) return 'pre';
+      if (g.postseason || g.season_type === POSTSEASON) return POST_WEEK[wk] || '';
+      return wk >= 1 && wk <= 18 ? String(wk) : '';
+    }
+
+    function weekLabel(wk) {
+      var out = '';
+      (window.BUN_WEEKS || []).forEach(function (o) {
+        if (o.value === wk) out = o.label;
+      });
+      return out || ('Week ' + wk);
+    }
+
+    /* Whether this reader can file one. The same pair of tests
+     * /football/bakers-buns makes: an account, and a store that actually
+     * loaded — an add button over a list that never arrived would be offering
+     * to append to notes nobody on the page can see. */
+    function canAddNotes() {
+      return typeof canAddNote === 'function' && canAddNote() &&
+        typeof bunNotesLoaded === 'function' && bunNotesLoaded();
+    }
+
+    function notesLoaded() {
+      return typeof bunNotesLoaded === 'function' && bunNotesLoaded();
+    }
+
+    function weekNotesFor(abbr, wk) {
+      if (!wk || !notesLoaded()) return [];
+      return bunNotesFor(abbr).filter(function (n) {
+        return String(n.week) === wk;
+      });
+    }
+
+    function noteBlock(t, wk) {
+      var list = weekNotesFor(t.abbr, wk);
+      return '<div class="go-note-team">' +
+        '<div class="go-note-head">' + teamLogo(t.abbr, 'go-note-logo') +
+          '<span>' + esc(t.name || t.abbr) + '</span></div>' +
+        (list.length
+          ? '<ul class="tc-notes">' + list.map(bunNoteBullet).join('') + '</ul>'
+          : '<p class="go-note-none">Nothing filed.</p>') +
+        (canAddNotes()
+          ? '<button type="button" class="tc-note-add" data-note-add="' +
+            esc(t.abbr) + '" data-note-week="' + esc(wk) + '">+ Add note</button>'
+          : '') +
+        '</div>';
+    }
+
+    /* A note filed against no team is about the league, and it is as much
+     * about this week's game as either club's own is — so it sits under the
+     * two of them rather than being dropped. Only when there is one: unlike a
+     * team, the league has no crest here to hang an empty block off. */
+    function leagueNoteBlock(list) {
+      return '<div class="go-note-league">' +
+        '<div class="go-note-head"><span>Around the league</span></div>' +
+        '<ul class="tc-notes">' + list.map(bunNoteBullet).join('') + '</ul></div>';
+    }
+
+    function notesSection(b) {
+      var g = b.game;
+      var wk = noteWeek(g);
+      if (!wk) return '';
+
+      if (!notesLoaded()) {
+        return card('Notes',
+          '<div class="go-empty">The note store could not be reached. ' +
+          'This week&rsquo;s notes are still on ' +
+          '<a href="/football/bakers-buns">Baker&rsquo;s Buns</a>.</div>', true);
+      }
+
+      var league = weekNotesFor('', wk);
+      var body = '<div class="go-notes">' +
+        noteBlock(g.away, wk) + noteBlock(g.home, wk) + '</div>' +
+        (league.length ? leagueNoteBlock(league) : '');
+
+      /* The week in the band rather than in the title: the title is what the
+       * open/shut state is keyed on, and it is also what the reader scans the
+       * page's left edge for, so it stays the same word on every game. */
+      return card('Notes', body, false,
+        '<span class="go-note-wk">' + esc(weekLabel(wk)) + '</span>');
     }
 
     /* ---------- props ----------
@@ -3190,11 +3328,17 @@
        * there — a dozen rows answering how the score got where the hero says it
        * is — so it sits directly under the odds, and is empty before kickoff
        * for the same reason the box score is. */
-      var props = propsSection(b);
+      /* Nothing at all once the game is settled. A prop board is a page of
+       * prices on a game whose every number is now known, and the books have
+       * taken them down anyway: what is left in a final bundle is the last
+       * quote before kickoff, which reads as a live market and is not one.
+       * Same reason the odds card drops itself at final. */
+      var props = b.phase === 'final' ? '' : propsSection(b);
       var pregame = b.phase === 'pregame';
       pageEl.innerHTML =
         heroSection(b) +
         oddsSection(b) +
+        notesSection(b) +
         scoringSection(b) +
         (pregame ? props : '') +
         playerStatsSection(b) +
@@ -3423,6 +3567,27 @@
       resume();
     });
 
+    /* Once, after the first paint. The dialog is built onto the body and every
+     * control that opens it is reached by a listener delegated off the
+     * document, so both outlive the repaint each poll causes — which is why
+     * this must not be called again from render(). A reader who cannot write
+     * gets none of it, and nothing that would open it is drawn for them.
+     *
+     * The teams list is only there to put names on the grid's buttons, and the
+     * two sides of this game are the only teams the bundle names; the other
+     * thirty come from the picker's own division map, lettered rather than
+     * named. */
+    function wireNotes() {
+      if (typeof initBunNotes !== 'function' || !canAddNotes()) return;
+      var g = lastBundle && lastBundle.game;
+      initBunNotes({
+        teams: g ? [g.away, g.home] : [],
+        // The store is updated in place by the save, so the cheapest correct
+        // repaint is the one the poll loop does anyway.
+        onSaved: function () { if (lastBundle) render(lastBundle); }
+      });
+    }
+
     function load() {
       var id = gameParam();
       // The index is fetched either way: it is what turns "nothing here" into
@@ -3431,10 +3596,18 @@
         return r.ok ? r.json() : null;
       }).catch(function () { return null; });
 
-      Promise.all([id ? fetchBundle(id) : Promise.resolve(null), idxP])
+      /* Joins the same wait rather than chaining behind the bundle: the notes
+       * card is drawn by the first render, and a second round trip would leave
+       * it empty until it landed. Never rejects — a store that could not be
+       * reached reports itself as not loaded, and the card says so. */
+      var notesP = typeof bunNotesLoad === 'function'
+        ? bunNotesLoad() : Promise.resolve(false);
+
+      Promise.all([id ? fetchBundle(id) : Promise.resolve(null), idxP, notesP])
         .then(function (res) {
           currentIndex = res[1];
           paint(id, res[0]);
+          wireNotes();
         });
     }
 

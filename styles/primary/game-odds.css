@@ -68,6 +68,35 @@ html {
   display: block;
 }
 
+/* The crest doubles as the "take a note on this team" control for a reader who
+ * can write one, so it needs a button around it and none of a button's
+ * chrome — the crest is already the affordance and the hero is already the
+ * place a reader's eye is. It lifts on hover and takes a gold ring on focus,
+ * which is the whole of the hint. `line-height: 0` for the same reason
+ * .go-team has it: a button box is otherwise a text box with a logo sat in it,
+ * and the descender space under the crest pushes the possession marker down. */
+.go-crest-btn {
+  display: block;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: none;
+  line-height: 0;
+  cursor: pointer;
+  transition: transform 0.12s ease;
+}
+
+.go-crest-btn:hover { transform: translateY(-2px); }
+
+.go-crest-btn:focus-visible {
+  outline: 2px solid var(--vi-gold);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .go-crest-btn:hover { transform: none; }
+}
+
 /* No abbreviation left to colour, so the losing side dims instead: the winner
  * keeps its crest at full strength and the row still reads at a glance. On a
  * scheduled game neither class is set and both stay lit.
@@ -482,6 +511,107 @@ html {
   color: var(--warn);
   border: 1px solid var(--warn-line);
   background: var(--warn-soft);
+}
+
+/* --- Notes ---------------------------------------------------------------
+ * The week's Baker's Buns notes, one column per club. Two columns because the
+ * two clubs are the two things being compared everywhere else on the page —
+ * the hero, the odds table, the team stats — and a single merged list would be
+ * the one place a reader has to work out which side a line belongs to.
+ *
+ * The bullet itself is not styled here: it is the same bullet the team card on
+ * /football/bakers-buns draws, out of styles/components/bun-notes.css, pencil
+ * and source handle included. What this file owns is the frame around it. */
+
+.go-notes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  /* The card body runs its padding down the top and bottom only, so the
+     columns take their own sides — and the rule between them then runs the
+     full height of the card rather than stopping short of both edges. */
+  padding: 0 14px;
+}
+
+/* The divider belongs to the home column so it cannot double up, and it is the
+   same hairline the tables are ruled with. */
+.go-notes > div + div {
+  border-left: 1px solid var(--hairline);
+  padding-left: 14px;
+}
+
+.go-notes > div:first-child { padding-right: 14px; }
+
+/* Who the notes under it are about. The crest is the identifier and the name
+   is the caption -- the same order the hero reads in. */
+.go-note-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 7px;
+  font-family: var(--vi-display);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+  color: var(--text-hi);
+}
+
+.go-note-logo {
+  width: 20px;
+  height: 20px;
+  flex: none;
+}
+
+.go-note-none {
+  margin: 0;
+  font-size: 11.5px;
+  font-style: italic;
+  color: var(--text-4);
+}
+
+/* Filed against no club, so it sits under both columns rather than inside
+   either -- and it is only ever drawn when there is something in it. */
+.go-note-league {
+  margin: 12px 14px 0;
+  padding-top: 10px;
+  border-top: 1px solid var(--hairline);
+}
+
+/* The bullet's own week chip, off. It is what tells a reader of the team card
+   on /football/bakers-buns that one note out of thirty is dated; here every
+   note in the card is this game's week by construction, and the band says so
+   once, above all of them. */
+.go-notes .tc-note-wk,
+.go-note-league .tc-note-wk { display: none; }
+
+/* The week, in the card's band. Outlined in gold rather than filled, so it
+   reads as a qualifier on the title beside it and not as a second title. */
+.go-note-wk {
+  font-family: var(--vi-display);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--vi-band-ink-2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 2px;
+  padding: 2px 7px;
+}
+
+/* A phone is not two columns of prose wide. Stacked, the divider becomes the
+   rule between them. */
+@media (max-width: 560px) {
+  .go-notes { grid-template-columns: 1fr; }
+
+  .go-notes > div:first-child { padding-right: 0; padding-bottom: 12px; }
+
+  .go-notes > div + div {
+    border-left: none;
+    border-top: 1px solid var(--hairline);
+    padding-left: 0;
+    padding-top: 12px;
+  }
 }
 
 /* --- Generic table ------------------------------------------------------- */

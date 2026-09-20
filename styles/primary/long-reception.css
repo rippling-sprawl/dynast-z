@@ -196,6 +196,31 @@
 .lr-mult.up { color: var(--heat-bad); }
 .lr-mult.dn { color: var(--heat-good); }
 
+/* Volume the receptions market set rather than the model's own history. Marked
+ * because it is the one number on this board the model did not derive itself,
+ * and a reader weighing an edge is entitled to know which half is borrowed. The
+ * dot is a marker, not decoration, so it carries its meaning in the header's
+ * title rather than in colour alone. */
+.lr-vol { color: var(--text-3); }
+.lr-vol.mkt { color: var(--text-2); }
+.lr-vol.mkt::after {
+  content: "";
+  display: inline-block;
+  width: 3px;
+  height: 3px;
+  margin-left: 3px;
+  vertical-align: 3px;
+  border-radius: 50%;
+  background: var(--accent-strong);
+}
+/* Same marker on the leaderboard subtitles, where there is no column to hang
+ * a header title off and the superscript has to say it itself. */
+.lr-who sup {
+  font-size: 8px;
+  color: var(--accent-strong);
+  cursor: help;
+}
+
 /* Thin sample: dimmed and tagged, never silently dropped. */
 .lr-tag {
   margin-left: 5px;
@@ -278,6 +303,80 @@ tr.lr-thin .lr-cell i { opacity: 0.45; }
 .lr-list td.num, .lr-list th.num { text-align: right; }
 .lr-list td.odds { color: var(--text-hi); font-weight: 640; }
 .lr-list tbody tr:hover { background: var(--surface-2); }
+/* The one-cell row a search with no hits leaves behind. */
+.lr-list td.sched-empty { padding: 18px 10px; text-align: center; color: var(--text-4); }
+
+/* Player search. The magnifier rides at the right edge of the heading and the
+ * box slides over the word itself, so the column never changes width and the
+ * glass swaps to an x that both clears and shuts it. */
+.lr-find {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 148px;
+}
+.lr-find-lab { transition: opacity 0.16s ease; }
+.lr-find-in {
+  position: absolute;
+  top: -5px;
+  bottom: -5px;
+  left: -2px;
+  right: 22px;
+  width: auto;
+  margin: 0;
+  padding: 0 2px;
+  border: 0;
+  border-bottom: 1px solid var(--accent-strong);
+  border-radius: 0;
+  background: var(--surface);
+  color: var(--text-hi);
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: normal;
+  text-transform: none;
+  opacity: 0;
+  transform: translateX(-9px);
+  pointer-events: none;
+  transition: opacity 0.16s ease, transform 0.16s ease;
+}
+.lr-find-in::placeholder { color: var(--text-5); }
+.lr-find-in:focus { outline: none; }
+.lr-find[data-open="1"] .lr-find-lab { opacity: 0; }
+.lr-find[data-open="1"] .lr-find-in {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+.lr-find-btn {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  margin-left: auto;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text-4);
+  cursor: pointer;
+  transition: color 0.16s ease;
+}
+.lr-find-btn:hover { color: var(--text-2); }
+.lr-find[data-open="1"] .lr-find-btn { color: var(--accent-strong); }
+.lr-find-btn svg {
+  display: block;
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+}
+.lr-find .lr-find-x, .lr-find[data-open="1"] .lr-find-q { display: none; }
+.lr-find[data-open="1"] .lr-find-x { display: block; }
+@media (prefers-reduced-motion: reduce) {
+  .lr-find-lab, .lr-find-in, .lr-find-btn { transition: none; }
+}
 .lr-pill {
   display: inline-block;
   min-width: 52px;
@@ -295,6 +394,53 @@ tr.lr-thin .lr-cell i { opacity: 0.45; }
   color: var(--heat-bad);
   color: color-mix(in oklab, var(--heat-bad) calc(var(--heat, 1) * 100%), var(--heat-base));
   background: color-mix(in oklab, var(--heat-bad-fill) calc(var(--heat, 0) * 40%), transparent);
+}
+
+/* ---------- likelihood vs price ----------
+ * The scatter under the priced-line table. Its whole argument is geometric —
+ * the edge is the perpendicular drop to the y = x line — and a perpendicular
+ * only looks like one when both axes are on the same scale, so the plot is
+ * drawn square over a shared domain and this sheet must never squash it. The
+ * SVG therefore carries its own width and is centred rather than stretched. */
+.lr-chart {
+  margin-top: 14px;
+  padding: 14px 14px 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.lr-chart h3 {
+  margin: 0 0 2px;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-4);
+  font-weight: 600;
+}
+.lr-plot { display: flex; justify-content: center; }
+.lr-plot svg { display: block; max-width: 100%; height: auto; }
+.lr-plot-empty { padding: 30px 10px; text-align: center; font-size: 12.5px; color: var(--text-4); }
+
+.lr-chart-key {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+  margin: 8px 0 0;
+  font-size: 10.5px;
+  color: var(--text-4);
+}
+.lr-chart-key span { display: inline-flex; align-items: center; gap: 5px; }
+.lr-chart-key b { width: 9px; height: 9px; border-radius: 50%; }
+.lr-key-dash { width: 18px; border-top: 1.5px dashed var(--text-5); }
+/* The stem swatch is drawn at the 45° the chart draws it at, so the key reads
+ * as the same mark rather than as a second one. */
+.lr-key-stem {
+  width: 13px;
+  height: 13px;
+  background:
+    linear-gradient(to top right, transparent calc(50% - 0.8px), var(--heat-good) calc(50% - 0.8px),
+      var(--heat-good) calc(50% + 0.8px), transparent calc(50% + 0.8px));
 }
 
 /* ---------- calibration ---------- */
