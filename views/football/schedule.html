@@ -285,11 +285,11 @@
       writeParams();
     }
 
-    /* Asked for after the fixture list has been drawn, never waited on. The
-     * schedule is the page and it is a committed file; the lines are what the
-     * page says about it and they come from an API that can be slow or down,
-     * and holding 272 rows back for them would trade the whole page for a
-     * column of it.
+    /* Only used to catch a tab back up on its lines once it is already fully
+     * drawn (see the visibilitychange handler below) — the initial draw waits
+     * for both the fixture list and the lines together, so what lands on
+     * screen is always the filtered, reordered, odds-applied result and never
+     * a pass missing one of the three.
      *
      * The season guard is the reader having moved on: they can pick 2025 while
      * 2026's lines are still in the air, and a late answer must not repaint
@@ -302,15 +302,29 @@
       });
     }
 
+    // Guards against two load()s in flight at once — a season picked while
+    // the previous pick is still loading — so whichever finishes last is not
+    // let overwrite the screen with an answer to a question the reader no
+    // longer has open.
+    var loadToken = 0;
+
     /* `fromParams` is the first load only: an explicit ?week=/?team= is the
      * reader arriving with a question already asked, and it outranks the
      * defaults. A season picked from the menu is a question asked here, and
-     * carrying the old URL's week into it would be answering the wrong one. */
+     * carrying the old URL's week into it would be answering the wrong one.
+     *
+     * The fixture list and its lines are fetched together and drawn together:
+     * schedLoadLines never rejects (a dead odds API resolves to an empty map,
+     * not an error), so waiting on both costs nothing when lines are down and
+     * means the one paint that happens is already filtered, reordered and
+     * odds-applied — never a rows-only pass followed by a second repaint. */
     function load(season, fromParams) {
+      var token = ++loadToken;
       listEl.innerHTML = '<p class="sched-empty">Loading schedule…</p>';
-      live = {};
-      schedLoad(season).then(function (d) {
-        doc = d;
+      Promise.all([schedLoad(season), schedLoadLines(season)]).then(function (results) {
+        if (token !== loadToken) return;
+        doc = results[0];
+        live = results[1];
         state.season = season;
         nowWeek = season === SCHED_CURRENT_SEASON ? schedCurrentWeek(doc) : null;
         state.week = state.team ? 'all' : defaultWeek();
@@ -318,8 +332,8 @@
         if (fromParams) readParams();
         refreshPanels();
         apply();
-        loadLines(season);
       }).catch(function (e) {
+        if (token !== loadToken) return;
         listEl.innerHTML = '<p class="sched-empty">Error: ' + esc(e.message) + '</p>';
       });
     }
@@ -338,11 +352,14 @@
      * would reset them to the defaults for the season. */
     function restore() {
       schedInvalidate();
-      schedLoad(state.season).then(function (d) {
-        doc = d;
+      var season = state.season;
+      var token = ++loadToken;
+      Promise.all([schedLoad(season), schedLoadLines(season)]).then(function (results) {
+        if (token !== loadToken) return;
+        doc = results[0];
+        live = results[1];
         refreshPanels();
         apply();
-        loadLines(state.season);
       }).catch(function () {
         // Offline, most likely. What is on the page is stale but readable, and
         // wiping it for an error message trades one wrong thing for a worse one.

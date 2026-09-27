@@ -426,7 +426,7 @@
     if (spread === 0) {
       label = 'PK';
     } else if (spread !== null && spread !== undefined) {
-      label = (spread < 0 ? '\u2212' : '+') + Math.abs(spread);
+      label = (spread < 0 ? '\u2212' : '+') + Math.abs(spread).toFixed(1);
     }
     if (!label && (total === null || total === undefined)) return '';
 
@@ -438,10 +438,10 @@
     return '<span class="sched-market" title="' + esc(book + ': ' +
         (label ? home.abbr + ' ' + label.replace('\u2212', '-')
                : 'no spread posted') +
-        (total === null || total === undefined ? '' : ', total ' + total)) + '">' +
+        (total === null || total === undefined ? '' : ', total ' + total.toFixed(1))) + '">' +
       '<span class="sched-spread">' + esc(label) + '</span>' +
       '<span class="sched-total">' +
-        (total === null || total === undefined ? '' : esc(total)) +
+        (total === null || total === undefined ? '' : esc(total.toFixed(1))) +
       '</span></span>';
   }
 

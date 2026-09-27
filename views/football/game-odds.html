@@ -2996,6 +2996,7 @@
      * something the feed simply did not say. */
     var INJ_HOT_DAYS = 18;
     var INJ_STALE_DAYS = 27;
+    var INJ_IR_DAYS = 10;
 
     /* -> days since the report, or null if it carries no date. */
     function reportAge(iso) {
@@ -3003,9 +3004,25 @@
       return t === null ? null : (Date.now() / 1000 - t) / 86400;
     }
 
+    /* Game-day inactives aren't an injury designation -- they're a roster
+     * decision the club made for one Sunday, gone by the next report. */
+    function isInactiveStatus(v) {
+      return String(v == null ? '' : v).trim().toLowerCase() === 'inactive';
+    }
+
+    /* A comment that says nothing past the badge already on the row. */
+    function isBareQuestionable(comment) {
+      return String(comment == null ? '' : comment).trim().toLowerCase() ===
+        'questionable';
+    }
+
     function dropStale(rows) {
       return rows.filter(function (r) {
+        if (isInactiveStatus(r.status)) return false;
+        if (isBareQuestionable(r.comment)) return false;
         var age = reportAge(r.date);
+        var k = String(r.status == null ? '' : r.status).trim().toLowerCase();
+        if (STATUS_RESERVE[k]) return age !== null && age <= INJ_IR_DAYS;
         return age === null || age <= INJ_STALE_DAYS;
       });
     }

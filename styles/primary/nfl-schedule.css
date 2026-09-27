@@ -190,10 +190,10 @@
  * crest now holds its size on a phone, which is the one place it was least
  * legible and where the row has the width to spare. */
 .sched-logo {
-  width: 20px;
-  height: 20px;
-  vertical-align: -5px;
-  margin-right: 5px;
+  width: 30px;
+  height: 30px;
+  vertical-align: -7.5px;
+  margin-right: 7.5px;
 }
 
 /* --- The market, at this page's size -------------------------------------
@@ -237,10 +237,10 @@
 .sched-game.has-day .sched-at { font-size: 12px; }
 
 .sched-game.has-day .sched-logo {
-  width: 17px;
-  height: 17px;
-  vertical-align: -4px;
-  margin-right: 4px;
+  width: 25.5px;
+  height: 25.5px;
+  vertical-align: -6px;
+  margin-right: 6px;
 }
 
 /* The all-weeks list of one team's season is the row that cannot have all of
@@ -284,10 +284,10 @@
 .sched-game.has-week .sched-at { font-size: 12px; }
 
 .sched-game.has-week .sched-logo {
-  width: 17px;
-  height: 17px;
-  vertical-align: -4px;
-  margin-right: 4px;
+  width: 25.5px;
+  height: 25.5px;
+  vertical-align: -6px;
+  margin-right: 6px;
 }
 
 /* --- Filters --------------------------------------------------------------

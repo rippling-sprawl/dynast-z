@@ -180,14 +180,16 @@ function buildNavDrawerHTML() {
 // --- Bar icons ---
 // Drawn here rather than shipped as files so they inherit the bar's colour with
 // no second request: one path set each, stroked in currentColor, sized by the
-// stylesheet. 24x24 box, 1.8 stroke, so the three read at one weight.
+// stylesheet. 24x24 box, 1.8 stroke, so they read at one weight.
 const NAV_ICONS = {
   // A house: the site root, which is where the hub grid lives.
   home: '<path d="M3.5 10.7 12 4l8.5 6.7"/><path d="M5.8 9.2v9.9a1.9 1.9 0 0 0 1.9 1.9h8.6a1.9 1.9 0 0 0 1.9-1.9V9.2"/><path d="M9.9 21v-5.3a1.3 1.3 0 0 1 1.3-1.3h1.6a1.3 1.3 0 0 1 1.3 1.3V21"/>',
   // A calendar: the slate is a week of dates before it is anything else.
   odds: '<path d="M4 6.5a2.5 2.5 0 0 1 2.5-2.5h11A2.5 2.5 0 0 1 20 6.5v12a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 18.5z"/><path d="M8 2.5v4M16 2.5v4M4 10h16"/>',
-  // A scored loaf: dome, base, three slashes.
-  buns: '<path d="M3.4 14.4a8.6 7.4 0 0 1 17.2 0"/><path d="M2.6 14.4h18.8V17a3 3 0 0 1-3 3H5.6a3 3 0 0 1-3-3z"/><path d="M8.6 8.2 7.2 11.1M12.4 7.5 11 10.7M16.2 8.7l-1.3 2.7"/>',
+  // A trophy: cup, handles, stem and base.
+  trophy: '<path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/>',
+  // A flame: the Oven's mark.
+  oven: '<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>',
   menu: '<path d="M4 7h16M4 12h16M4 17h16"/>',
 };
 
@@ -202,7 +204,8 @@ function navIconHTML(name) {
 const NAV_TABS = [
   { label: 'Home', href: '/', icon: 'home' },
   { label: 'Odds', href: '/football/schedule', icon: 'odds' },
-  { label: 'Buns', href: '/football/bakers-buns', icon: 'buns' },
+  { label: "Pick'em", href: '/football/pickem', icon: 'trophy' },
+  { label: 'Oven', href: '/football/bakers-oven', icon: 'oven' },
 ];
 
 // The page a tab points at, or a page under it (a game page under /schedule),
@@ -213,7 +216,7 @@ function navTabIsCurrent(href) {
   return path === href || path.startsWith(href + '/');
 }
 
-// One header serves both shapes. Its DOM order is the mobile order — the two
+// One header serves both shapes. Its DOM order is the mobile order — the four
 // tabs, then the menu button — and the desktop rule pulls the menu button back
 // in front of the title with `order`, so reading order and tab order match the
 // visual order at both widths without a second copy of the button.

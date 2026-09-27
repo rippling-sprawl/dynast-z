@@ -191,13 +191,13 @@ header a:hover { color: var(--accent); }
 /* --- Site header ---
  * One markup, two shapes. Wide: the menu button and the title, sticky at the
  * top of the page, exactly as before. Narrow: the same controls as a fixed bar
- * across the bottom of the viewport, iOS-style — icon over label, three equal
+ * across the bottom of the viewport, iOS-style — icon over label, equal
  * columns — because that is where a thumb is. The switch is the media query at
  * the end of this section; nothing about it is duplicated in the markup.
  *
- * DOM order is the mobile order (Home, Odds, Buns, Menu). Desktop pulls the
- * menu button in front of the title with `order` instead of moving it, so
- * reading order and tab order match what is on screen at both widths. */
+ * DOM order is the mobile order (Home, Odds, Pick'em, Oven, Menu). Desktop
+ * pulls the menu button in front of the title with `order` instead of moving
+ * it, so reading order and tab order match what is on screen at both widths. */
 
 /* --- The bottom bar's own palette ---
  * The bar is the one piece of chrome every route shares, so it does not take
@@ -474,7 +474,7 @@ header a:hover { color: var(--accent); }
    * left the sheet reading as a card rather than as something over the page. */
   html body .nav-overlay { background: var(--nav-scrim); }
 
-  /* The title is the home link on desktop; down here the four buttons need the
+  /* The title is the home link on desktop; down here the five buttons need the
    * whole width, and the Home tab is what replaces it. */
   .site-title { display: none; }
 
