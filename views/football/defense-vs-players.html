@@ -116,18 +116,18 @@
         '<thead>' +
           '<tr class="dvp-groups">' +
             '<th class="dvp-name"></th>' +
-            '<th colspan="3" class="grp">Rushing</th>' +
-            '<th colspan="4" class="grp">Receiving</th>' +
+            '<th colspan="4" class="grp">Rushing</th>' +
+            '<th colspan="5" class="grp">Receiving</th>' +
             '<th colspan="2" class="grp">Total</th>' +
           '</tr>' +
           '<tr>' +
             '<th class="dvp-name">Player</th>' +
-            '<th class="num grp-start">Att</th><th class="num">Yds</th><th class="num">TD</th>' +
-            '<th class="num grp-start">Tgt</th><th class="num">Rec</th><th class="num">Yds</th><th class="num">TD</th>' +
+            '<th class="num grp-start">Att</th><th class="num">Yds</th><th class="num">TD</th><th class="num">Lng</th>' +
+            '<th class="num grp-start">Tgt</th><th class="num">Rec</th><th class="num">Yds</th><th class="num">TD</th><th class="num">Lng</th>' +
             '<th class="num grp-start">Yds</th><th class="num">TD</th>' +
           '</tr>' +
         '</thead>';
-      var COLS = 10;
+      var COLS = 12;
 
       // Week (in game order, so the postseason lands after week 18), then
       // position RB → WR → TE → anything else, then total yards.
@@ -165,8 +165,8 @@
         }
         return out + '<tr>' +
           '<td class="dvp-name"><b>' + esc(r.player) + '</b></td>' +
-          num(r.rush_att, false, true) + num(r.rush_yds) + num(r.rush_td) +
-          num(r.targets, false, true) + num(r.rec) + num(r.rec_yds) + num(r.rec_td) +
+          num(r.rush_att, false, true) + num(r.rush_yds) + num(r.rush_td) + num(r.rush_lng) +
+          num(r.targets, false, true) + num(r.rec) + num(r.rec_yds) + num(r.rec_td) + num(r.rec_lng) +
           num(r.tot_yds, true, true) + num(r.tot_td, true) +
           '</tr>';
       }).join('');

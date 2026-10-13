@@ -126,10 +126,12 @@ def player_row(p):
         "rush_att": n(ru.get("rushing_attempts")),
         "rush_yds": n(ru.get("rushing_yards")),
         "rush_td": n(ru.get("rushing_touchdowns")),
+        "rush_lng": n(ru.get("long_rushing")),
         "targets": n(rc.get("receiving_targets")),
         "rec": n(rc.get("receptions")),
         "rec_yds": n(rc.get("receiving_yards")),
         "rec_td": n(rc.get("receiving_touchdowns")),
+        "rec_lng": n(rc.get("long_reception")),
     }
     row["tot_yds"] = row["rush_yds"] + row["rec_yds"]
     row["tot_td"] = row["rush_td"] + row["rec_td"]
