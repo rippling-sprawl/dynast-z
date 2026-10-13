@@ -18,8 +18,8 @@
   -webkit-overflow-scrolling: touch;
 }
 
-.dvp-table { border-collapse: separate; border-spacing: 0; width: 100%; font-size: 13px; }
-.dvp-table th, .dvp-table td { padding: 7px 8px; text-align: left; white-space: nowrap; }
+.dvp-table { border-collapse: separate; border-spacing: 0; width: 100%; font-size: 13px; line-height: 1.35; }
+.dvp-table th, .dvp-table td { padding: 2px 8px; text-align: left; white-space: nowrap; }
 
 .dvp-table thead th {
   background: var(--surface);
@@ -50,14 +50,14 @@
  * it with a lighter full-width row; the player rows below carry only the
  * player and his numbers. */
 .dvp-table tbody tr.dvp-game th {
-  padding: 9px 8px 7px;
+  padding: 3px 8px;
   background: var(--surface-2);
   border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
 }
 .dvp-table tbody tr.dvp-game:first-child th { border-top: 0; }
 .dvp-table tbody tr.dvp-pos th {
-  padding: 6px 8px 4px;
+  padding: 1px 8px;
   background: var(--surface);
   border-bottom: 1px solid var(--border-soft);
   font-size: 10px;
@@ -66,7 +66,7 @@
   color: var(--text-4);
 }
 /* The labels ride along on a horizontal scroll, as the player column does. */
-.dvp-label { position: sticky; left: 8px; display: inline-flex; align-items: center; gap: 10px; }
+.dvp-label { position: sticky; left: 8px; display: inline-flex; align-items: center; gap: 8px; }
 
 .dvp-table .grp-start { border-left: 1px solid var(--border-soft); }
 
@@ -81,8 +81,8 @@
 }
 
 .dvp-wk { color: var(--text-hi); font-weight: 650; font-size: 13px; }
-.dvp-opp { color: var(--text-3); font-size: 12px; font-weight: 500; }
-.dvp-opp img { width: 16px; height: 16px; vertical-align: -3px; margin-right: 5px; }
+.dvp-opp { display: inline-flex; align-items: center; gap: 4px; color: var(--text-4); font-size: 11px; font-weight: 500; }
+.dvp-opp img { width: 16px; height: 16px; display: block; }
 /* The corner cell pins both ways, so it sits over everything that scrolls. */
 .dvp-table thead th.dvp-name { z-index: 4; }
 
@@ -96,12 +96,13 @@
 
 .dvp-note { margin: 10px 0 0; font-size: 12.5px; color: var(--text-3); }
 
-/* Column-group toggles: the dd-btn box without the caret, lit while shown. */
-.dvp-toggles { display: flex; gap: 6px; margin-left: auto; }
-.dvp-toggle { color: var(--text-4); }
-.dvp-toggle::after { display: none; }
-.dvp-toggle:focus-visible { outline: none; border-color: var(--text-5); }
-.dvp-toggle[aria-pressed="true"] { color: var(--text); border-color: var(--accent); }
+/* Three groups sharing the picker row; on a phone each takes a line. */
+.dvp-group { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.dvp-toggles { gap: 6px; margin-left: auto; }
+@media (max-width: 640px) {
+  .dvp-controls { flex-direction: column; align-items: flex-start; }
+  .dvp-toggles { margin-left: 0; }
+}
 
 /* A filter is a small label and then its dropdown, which shows only the value. */
 .dvp-filter { display: flex; align-items: center; gap: 6px; }
@@ -112,19 +113,30 @@
   text-transform: uppercase;
   color: var(--text-4);
 }
+.dvp-toggles .dvp-flabel { margin-right: 2px; }
 
-/* The toggle's eye says what pressing it will undo: open while the group is
- * shown, struck through while it is hidden. */
-.dvp-toggle { gap: 6px; }
-.dvp-eye {
-  width: 15px;
-  height: 15px;
+/* Smaller than the schedule's dropdowns: there are six controls here. */
+.dvp-controls .dd-btn { font-size: 11.5px; padding: 3px 8px; gap: 6px; }
+.dvp-controls .dd-logo { width: 15px; height: 15px; }
+.dvp-controls .dd-opt { font-size: 12px; }
+
+/* The position menu ticks each pick, and stays open for the next. */
+#pos-menu .dd-opt::before {
+  content: "";
+  width: 11px;
+  height: 11px;
   flex: none;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
+  align-self: center;
+  border: 1.5px solid var(--text-4);
+  border-radius: 3px;
 }
-.dvp-toggle[aria-pressed="true"] .dvp-eye-off,
-.dvp-toggle[aria-pressed="false"] .dvp-eye-on { display: none; }
+#pos-menu .dd-opt.is-on::before {
+  border-color: var(--accent);
+  background: var(--accent) center / 9px no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 6.2l2.3 2.3 4.7-5' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
+/* Show-only toggles: the dd-btn box without the caret, lit while picked. */
+.dvp-toggle { color: var(--text-3); }
+.dvp-toggle::after { display: none; }
+.dvp-toggle:focus-visible { outline: none; border-color: var(--text-5); }
+.dvp-toggle[aria-pressed="true"] { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }

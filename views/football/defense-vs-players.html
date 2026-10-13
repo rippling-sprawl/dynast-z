@@ -45,49 +45,59 @@
     <h2>Defense vs. Players</h2>
 
     <!-- Markup contract for scripts/components/nfl-pickers.js. -->
-    <div class="dd-row">
-      <div class="dvp-filter">
-        <span class="dvp-flabel" id="l-team">Defense</span>
-        <div class="dd" id="dd-team">
-          <button type="button" class="dd-btn" id="f-team" aria-haspopup="dialog" aria-expanded="false" aria-labelledby="l-team f-team">
-            <span class="dd-value">Pick a team</span>
-          </button>
-          <div class="dd-pop dd-overlay" id="team-overlay" role="dialog" aria-modal="true" aria-label="Team" hidden>
-            <div class="tp" id="team-grid"></div>
+    <!-- Three groups: which defense, which of its opponents' players, and which
+         of their numbers. They share a line where there is room and take a
+         line each on a phone. -->
+    <div class="dd-row dvp-controls">
+      <div class="dvp-group">
+        <div class="dvp-filter">
+          <span class="dvp-flabel" id="l-team">Defense</span>
+          <div class="dd" id="dd-team">
+            <button type="button" class="dd-btn" id="f-team" aria-haspopup="dialog" aria-expanded="false" aria-labelledby="l-team f-team">
+              <span class="dd-value">Pick a team</span>
+            </button>
+            <div class="dd-pop dd-overlay" id="team-overlay" role="dialog" aria-modal="true" aria-label="Team" hidden>
+              <div class="tp" id="team-grid"></div>
+            </div>
           </div>
         </div>
       </div>
-      <div class="dvp-filter">
-        <span class="dvp-flabel" id="l-pos">Pos.</span>
-        <div class="dd" id="dd-pos">
-          <button type="button" class="dd-btn" id="f-pos" aria-haspopup="true" aria-expanded="false" aria-labelledby="l-pos f-pos">
-            <span class="dd-value">All</span>
-          </button>
-          <div class="dd-pop dd-menu" id="pos-menu" role="menu" aria-label="Position" hidden></div>
+      <div class="dvp-group">
+        <div class="dvp-filter">
+          <span class="dvp-flabel" id="l-pos">Pos.</span>
+          <div class="dd" id="dd-pos">
+            <button type="button" class="dd-btn" id="f-pos" aria-haspopup="true" aria-expanded="false" aria-labelledby="l-pos f-pos">
+              <span class="dd-value">All</span>
+            </button>
+            <div class="dd-pop dd-menu" id="pos-menu" role="menu" aria-label="Positions" aria-multiselectable="true" hidden></div>
+          </div>
+        </div>
+        <div class="dvp-filter">
+          <span class="dvp-flabel" id="l-att">Att</span>
+          <div class="dd" id="dd-att">
+            <button type="button" class="dd-btn" id="f-att" aria-haspopup="true" aria-expanded="false" aria-labelledby="l-att f-att">
+              <span class="dd-value">0+</span>
+            </button>
+            <div class="dd-pop dd-menu" id="att-menu" role="menu" aria-label="Minimum rush attempts" hidden></div>
+          </div>
+        </div>
+        <div class="dvp-filter">
+          <span class="dvp-flabel" id="l-tgt">Targets</span>
+          <div class="dd" id="dd-tgt">
+            <button type="button" class="dd-btn" id="f-tgt" aria-haspopup="true" aria-expanded="false" aria-labelledby="l-tgt f-tgt">
+              <span class="dd-value">0+</span>
+            </button>
+            <div class="dd-pop dd-menu" id="tgt-menu" role="menu" aria-label="Minimum targets" hidden></div>
+          </div>
         </div>
       </div>
-      <div class="dvp-filter">
-        <span class="dvp-flabel" id="l-att">Rush Att</span>
-        <div class="dd" id="dd-att">
-          <button type="button" class="dd-btn" id="f-att" aria-haspopup="true" aria-expanded="false" aria-labelledby="l-att f-att">
-            <span class="dd-value">0+</span>
-          </button>
-          <div class="dd-pop dd-menu" id="att-menu" role="menu" aria-label="Minimum rush attempts" hidden></div>
-        </div>
-      </div>
-      <div class="dvp-filter">
-        <span class="dvp-flabel" id="l-tgt">Targets</span>
-        <div class="dd" id="dd-tgt">
-          <button type="button" class="dd-btn" id="f-tgt" aria-haspopup="true" aria-expanded="false" aria-labelledby="l-tgt f-tgt">
-            <span class="dd-value">0+</span>
-          </button>
-          <div class="dd-pop dd-menu" id="tgt-menu" role="menu" aria-label="Minimum targets" hidden></div>
-        </div>
-      </div>
-      <!-- Column groups, not filters: they hide numbers, never players. -->
-      <div class="dvp-toggles" role="group" aria-label="Column groups">
-        <button type="button" class="dd-btn dvp-toggle" id="t-rush" aria-pressed="true"><span>Rushing</span><svg class="dvp-eye dvp-eye-on" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><svg class="dvp-eye dvp-eye-off" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.9 5.2A9.7 9.7 0 0 1 12 5c6.4 0 10 7 10 7a17.6 17.6 0 0 1-2.9 3.9M6.6 6.6C3.7 8.5 2 12 2 12s3.6 7 10 7a9.7 9.7 0 0 0 5.4-1.6M9.9 9.9a3 3 0 0 0 4.2 4.2"/><path d="M2 2l20 20"/></svg></button>
-        <button type="button" class="dd-btn dvp-toggle" id="t-rec" aria-pressed="true"><span>Receiving</span><svg class="dvp-eye dvp-eye-on" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><svg class="dvp-eye dvp-eye-off" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.9 5.2A9.7 9.7 0 0 1 12 5c6.4 0 10 7 10 7a17.6 17.6 0 0 1-2.9 3.9M6.6 6.6C3.7 8.5 2 12 2 12s3.6 7 10 7a9.7 9.7 0 0 0 5.4-1.6M9.9 9.9a3 3 0 0 0 4.2 4.2"/><path d="M2 2l20 20"/></svg></button>
+      <!-- Column groups, not filters: they hide numbers, never players. Picking
+           one shows only it (and drops Total, which would just repeat it);
+           picking it again shows everything. -->
+      <div class="dvp-group dvp-toggles" role="group" aria-labelledby="l-show">
+        <span class="dvp-flabel" id="l-show">Show Only</span>
+        <button type="button" class="dd-btn dvp-toggle" id="t-rush" aria-pressed="false">Rushing</button>
+        <button type="button" class="dd-btn dvp-toggle" id="t-rec" aria-pressed="false">Receiving</button>
       </div>
     </div>
 
@@ -111,7 +121,8 @@
 
     // Filters cut players; the toggles cut column groups. All of it is applied
     // in the browser to the one defense already loaded.
-    var view = { pos: 'all', att: 0, tgt: 0, rush: true, rec: true };
+    // pos: the positions picked, none meaning all. only: '', 'rush' or 'rec'.
+    var view = { pos: {}, att: 0, tgt: 0, only: '' };
 
     var board = document.getElementById('board');
     var note = document.getElementById('note');
@@ -139,12 +150,20 @@
       return '<td class="' + cls + '">' + esc(v || 0) + '</td>';
     }
 
+    // "Nico Collins" -> "N. Collins": the first name to its initial, the rest
+    // as given, so "Amon-Ra St. Brown" keeps his whole surname. The full name
+    // stays on the cell's tooltip.
+    function shortName(name) {
+      var parts = String(name || '').trim().split(/\s+/);
+      return parts.length > 1 ? parts[0].charAt(0) + '. ' + parts.slice(1).join(' ') : parts[0] || '';
+    }
+
     function weekLabel(g) {
       return g && g.postseason ? 'P' + g.week : String(g ? g.week : '');
     }
 
-    // Week (in game order, so the postseason lands after week 18), then
-    // position RB → WR → TE → anything else, then total yards.
+    // Latest week first (in game order, so the postseason sits above week 18),
+    // then position RB → WR → TE → anything else, then total yards.
     var POS_RANK = { RB: 0, WR: 1, TE: 2 };
     function posRank(p) { return p in POS_RANK ? POS_RANK[p] : 3; }
 
@@ -157,29 +176,31 @@
         return;
       }
 
+      var anyPos = !Object.keys(view.pos).length;
+      var showRush = view.only !== 'rec', showRec = view.only !== 'rush', showTot = !view.only;
       var rows = doc.rows.filter(function (r) {
-        return (view.pos === 'all' || r.pos === view.pos) &&
+        return (anyPos || view.pos[r.pos]) &&
           r.rush_att >= view.att && r.targets >= view.tgt;
       }).sort(function (a, b) {
-        return (gameOrder[a.game_id] - gameOrder[b.game_id]) ||
+        return (gameOrder[b.game_id] - gameOrder[a.game_id]) ||
           (posRank(a.pos) - posRank(b.pos)) || String(a.pos).localeCompare(String(b.pos)) ||
           (b.tot_yds - a.tot_yds) || String(a.player).localeCompare(String(b.player));
       });
 
-      var cols = 1 + (view.rush ? 4 : 0) + (view.rec ? 5 : 0) + 2;
+      var cols = 1 + (showRush ? 4 : 0) + (showRec ? 5 : 0) + (showTot ? 2 : 0);
       var head =
         '<thead>' +
           '<tr class="dvp-groups">' +
             '<th class="dvp-name"></th>' +
-            (view.rush ? '<th colspan="4" class="grp">Rushing</th>' : '') +
-            (view.rec ? '<th colspan="5" class="grp">Receiving</th>' : '') +
-            '<th colspan="2" class="grp">Total</th>' +
+            (showRush ? '<th colspan="4" class="grp">Rushing</th>' : '') +
+            (showRec ? '<th colspan="5" class="grp">Receiving</th>' : '') +
+            (showTot ? '<th colspan="2" class="grp">Total</th>' : '') +
           '</tr>' +
           '<tr>' +
             '<th class="dvp-name">Player</th>' +
-            (view.rush ? '<th class="num grp-start">Att</th><th class="num">Yds</th><th class="num">TD</th><th class="num">Lng</th>' : '') +
-            (view.rec ? '<th class="num grp-start">Tgt</th><th class="num">Rec</th><th class="num">Yds</th><th class="num">TD</th><th class="num">Lng</th>' : '') +
-            '<th class="num grp-start">Yds</th><th class="num">TD</th>' +
+            (showRush ? '<th class="num grp-start">Att</th><th class="num">Yds</th><th class="num">TD</th><th class="num">Lng</th>' : '') +
+            (showRec ? '<th class="num grp-start">Tgt</th><th class="num">Rec</th><th class="num">Yds</th><th class="num">TD</th><th class="num">Lng</th>' : '') +
+            (showTot ? '<th class="num grp-start">Yds</th><th class="num">TD</th>' : '') +
           '</tr>' +
         '</thead>';
 
@@ -192,11 +213,12 @@
         var out = '';
         if (r.game_id !== lastGame) {
           var g = byGame[r.game_id];
-          var opp = (g && !g.home ? '@' : 'vs ') + r.opp;
+          // The opponent is its logo alone; @ / vs still says home or away.
           out += '<tr class="dvp-game"><th colspan="' + cols + '"><span class="dvp-label">' +
             '<span class="dvp-wk">' + (g && g.postseason ? '' : 'Wk ') + esc(weekLabel(g)) + '</span>' +
-            '<span class="dvp-opp"><img src="/assets/icons/nfl/' + esc(r.opp) + '.svg" alt="">' +
-            esc(opp) + '</span></span></th></tr>';
+            '<span class="dvp-opp">' + (g && !g.home ? '@' : 'vs') +
+            '<img src="/assets/icons/nfl/' + esc(r.opp) + '.svg" alt="' + esc(r.opp) +
+            '" title="' + esc(r.opp) + '"></span></span></th></tr>';
           lastGame = r.game_id;
           lastPos = null;
         }
@@ -206,10 +228,10 @@
           lastPos = r.pos;
         }
         return out + '<tr>' +
-          '<td class="dvp-name"><b>' + esc(r.player) + '</b></td>' +
-          (view.rush ? num(r.rush_att, false, true) + num(r.rush_yds) + num(r.rush_td) + num(r.rush_lng) : '') +
-          (view.rec ? num(r.targets, false, true) + num(r.rec) + num(r.rec_yds) + num(r.rec_td) + num(r.rec_lng) : '') +
-          num(r.tot_yds, true, true) + num(r.tot_td, true) +
+          '<td class="dvp-name" title="' + esc(r.player) + '"><b>' + esc(shortName(r.player)) + '</b></td>' +
+          (showRush ? num(r.rush_att, false, true) + num(r.rush_yds) + num(r.rush_td) + num(r.rush_lng) : '') +
+          (showRec ? num(r.targets, false, true) + num(r.rec) + num(r.rec_yds) + num(r.rec_td) + num(r.rec_lng) : '') +
+          (showTot ? num(r.tot_yds, true, true) + num(r.tot_td, true) : '') +
           '</tr>';
       }).join('') || '<tr><td class="dvp-none" colspan="' + cols + '">No players match these filters.</td></tr>';
 
@@ -227,18 +249,24 @@
 
     // The column header, the week row and the position row stack as they pin
     // on a vertical scroll, each just under the one above. Their heights are
-    // whatever the font made them, so they are read off the drawn table.
+    // whatever the font made them, so they are read off the drawn table —
+    // unrounded, and overlapped by half a pixel, because a rounded-up offset
+    // leaves a sliver of the rows scrolling underneath showing through.
     function pinOffsets() {
       var table = board.querySelector('.dvp-table');
       if (!table) return;
+      function h(el) { return el ? el.getBoundingClientRect().height : 0; }
       var heads = table.tHead.rows;
-      var game = table.querySelector('tr.dvp-game');
-      var h0 = heads[0].offsetHeight;
-      var h1 = h0 + heads[1].offsetHeight;
+      var h0 = h(heads[0]) - 0.5;
+      var h1 = h0 + h(heads[1]) - 0.5;
       table.style.setProperty('--pin-1', h0 + 'px');
       table.style.setProperty('--pin-game', h1 + 'px');
-      table.style.setProperty('--pin-pos', h1 + (game ? game.offsetHeight : 0) + 'px');
+      table.style.setProperty('--pin-pos', h1 + h(table.querySelector('tr.dvp-game')) - 0.5 + 'px');
     }
+    // The heights move once the web font and the logos land, and on a resize.
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(pinOffsets);
+    window.addEventListener('resize', pinOffsets);
+    board.addEventListener('load', pinOffsets, true);
 
     var loadToken = 0;
 
@@ -294,21 +322,53 @@
       return steps.map(function (n) { return { value: n, label: n + '+' }; });
     }
 
-    menu('pos', [
-      { value: 'all', label: 'All' }, { value: 'RB', label: 'RB' },
-      { value: 'WR', label: 'WR' }, { value: 'TE', label: 'TE' },
-      { value: 'QB', label: 'QB' }
-    ], function (v) { view.pos = v; })('all');
+    // Position is a multi-select: a pick toggles that position and the menu
+    // stays open for the next one. "All" clears the picks, and so does picking
+    // every position, since that is the same table.
+    (function () {
+      var POS = ['RB', 'WR', 'TE', 'QB'];
+      registerDropdown(document.getElementById('dd-pos'));
+      var btn = document.getElementById('f-pos');
+      var mEl = document.getElementById('pos-menu');
+      mEl.innerHTML = ['all'].concat(POS).map(function (p) {
+        return '<button type="button" class="dd-opt" role="menuitemcheckbox" data-pos="' + p + '">' +
+          (p === 'all' ? 'All' : p) + '</button>';
+      }).join('');
+      function sync() {
+        var picked = POS.filter(function (p) { return view.pos[p]; });
+        btn.querySelector('.dd-value').textContent = picked.length ? picked.join(', ') : 'All';
+        [].forEach.call(mEl.querySelectorAll('.dd-opt'), function (o) {
+          var p = o.getAttribute('data-pos');
+          var on = p === 'all' ? !picked.length : !!view.pos[p];
+          o.classList.toggle('is-on', on);
+          o.setAttribute('aria-checked', String(on));
+        });
+      }
+      mEl.addEventListener('click', function (e) {
+        var opt = e.target.closest ? e.target.closest('.dd-opt') : null;
+        if (!opt || !mEl.contains(opt)) return;
+        var p = opt.getAttribute('data-pos');
+        if (p === 'all') view.pos = {};
+        else if (view.pos[p]) delete view.pos[p];
+        else view.pos[p] = true;
+        if (Object.keys(view.pos).length === POS.length) view.pos = {};
+        sync();
+        if (doc) render();
+      });
+      sync();
+    })();
 
     menu('att', minOpts([0, 1, 4, 6, 8, 10]), function (v) { view.att = Number(v); })(0);
 
     menu('tgt', minOpts([0, 1, 2, 3, 4, 5]), function (v) { view.tgt = Number(v); })(0);
 
-    [['t-rush', 'rush'], ['t-rec', 'rec']].forEach(function (t) {
-      var btn = document.getElementById(t[0]);
-      btn.addEventListener('click', function () {
-        view[t[1]] = !view[t[1]];
-        btn.setAttribute('aria-pressed', String(view[t[1]]));
+    var toggles = [['t-rush', 'rush'], ['t-rec', 'rec']];
+    toggles.forEach(function (t) {
+      document.getElementById(t[0]).addEventListener('click', function () {
+        view.only = view.only === t[1] ? '' : t[1];
+        toggles.forEach(function (u) {
+          document.getElementById(u[0]).setAttribute('aria-pressed', String(view.only === u[1]));
+        });
         if (doc) render();
       });
     });
