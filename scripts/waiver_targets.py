@@ -290,7 +290,12 @@ def main():
     # Ownership NOW, not as of the last snapshot — a chopped team's whole roster
     # hits the pool the moment it is eliminated, and that is usually the single
     # biggest event of the waiver week.
-    roster_ids = list(target.get('players') or mine_snapshot.get('players') or [])
+    # IR-slot players sit outside the active roster: they cannot start, they do
+    # not count toward the cap, and dropping one frees the IR slot rather than a
+    # bench spot — so a claim paired with that drop is voided as roster-full.
+    reserve = set(target.get('reserve') or [])
+    roster_ids = [p for p in (target.get('players') or mine_snapshot.get('players') or [])
+                  if p not in reserve]
     starters = [x for x in (mine_snapshot.get('starters') or []) if x and x != '0']
     bench = [p for p in roster_ids if p not in starters]
     slots = league['roster_positions']

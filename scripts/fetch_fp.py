@@ -18,14 +18,14 @@ import sys
 
 UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 
-ARTICLE_URL = "https://www.fantasypros.com/2026/09/fantasy-football-rankings-dynasty-trade-value-chart-september-2026-update/"
+ARTICLE_URL = "https://www.fantasypros.com/2026/10/fantasy-football-rankings-dynasty-trade-value-chart-october-2026-update/"
 
 # Datawrapper CSV endpoints for each position group
 POSITION_CSVS = {
-    "QB": "https://datawrapper.dwcdn.net/l2wfo/1/dataset.csv",
-    "RB": "https://datawrapper.dwcdn.net/20Vr9/1/dataset.csv",
-    "WR": "https://datawrapper.dwcdn.net/m7Gli/1/dataset.csv",
-    "TE": "https://datawrapper.dwcdn.net/Ar02Z/1/dataset.csv",
+    "QB": "https://datawrapper.dwcdn.net/5C2Td/1/dataset.csv",
+    "RB": "https://datawrapper.dwcdn.net/OXAuM/1/dataset.csv",
+    "WR": "https://datawrapper.dwcdn.net/bZZSM/1/dataset.csv",
+    "TE": "https://datawrapper.dwcdn.net/SHamw/1/dataset.csv",
 }
 
 
@@ -260,14 +260,13 @@ def main():
 
     # Verify expected values
     by_name = {p["name"]: p for p in all_players}
-    # Spot values read off the September 2026 article (SF column)
+    # Spot values read off the October 2026 article (SF column). The 2026
+    # rookie class has been drafted, so FP no longer publishes 2026 picks.
     checks = [
         ("Josh Allen", 100),
-        ("Jahmyr Gibbs", 86),
-        ("Ja'Marr Chase", 89),
-        ("Brock Bowers", 72),  # non-TEP column, matching the SF chart
-        ("2026 Pick 1.01", 69),
-        ("2026 Early 2nd", 34),
+        ("Jahmyr Gibbs", 88),
+        ("Ja'Marr Chase", 88),
+        ("Brock Bowers", 71),  # non-TEP column, matching the SF chart
         ("2027 Pick 1.01", 76),
         ("2027 Late 2nd", 35),
         ("2028 Early 1st", 51),

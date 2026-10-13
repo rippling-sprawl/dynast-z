@@ -348,7 +348,8 @@
        <b>$${st.faab_left}</b> FAAB left, roster ${st.roster_size}/${st.roster_cap}${
          st.roster_full ? ' <b>(full &mdash; every claim needs a drop)</b>' : ''}.
        Budget for this week <b>$${b.cap}</b> (${b.cap_pct}% of what's left)${
-         b.capped ? ', which binds &mdash; bids below are scaled to fit' : ''}.`;
+         b.capped ? `, which binds &mdash; the slate is worth <b>$${b.unconstrained}</b>. Bids below
+           are what each player is worth, not scaled to fit: cut the list, not the bids` : ''}.`;
 
     // Grouped by price tier, because the first decision is how much of the
     // budget this week is worth — not which name is marginally better.
@@ -438,7 +439,7 @@
       .map(y => `<button data-season="${y}"${y === yr ? ' class="active"' : ''}>${y}${SEASONS[y].complete ? '' : ' · live'}</button>`)
       .join('') + `<span class="season-note">${cfg.complete
         ? 'Final — 17 weeks, champion decided.'
-        : 'In progress. Week 2 waivers have not run yet.'}</span>`;
+        : 'In progress.'}</span>`;
     // The post-mortem needs a finished season to price anything against.
     document.getElementById('analysis').style.display = cfg.complete ? '' : 'none';
 

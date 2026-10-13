@@ -44,11 +44,11 @@
 
     <div id="fp-stale-banner" class="fp-stale-banner" hidden></div>
     
-    <!-- Three grids, filled from the Gambling, Games and Fantasy sections of
-         NAV_SECTIONS in scripts/base/nav.js — the same list behind the drawer
-         and the home page, including the admin-only Baker's Action card and
-         the hidden NFL Odds entry. This page is the only place all three are
-         shown under one Football heading; the drawer names them separately. -->
+    <!-- Four grids, filled from the Gambling, Games, Fantasy and Sandbox
+         sections of NAV_SECTIONS in scripts/base/nav.js — the same list behind
+         the drawer and the home page, including the hidden Baker's Action and
+         NFL Odds entries. This page is the only place they are all shown under
+         one Football heading; the drawer names them separately. -->
     <h3 class="hub-section">Gambling</h3>
     <div class="hub-grid" data-nav-section="Gambling"></div>
 
@@ -58,13 +58,15 @@
     <h3 class="hub-section">Fantasy</h3>
     <div class="hub-grid" data-nav-section="Fantasy"></div>
 
+    <h3 class="hub-section">Sandbox</h3>
+    <div class="hub-grid" data-nav-section="Sandbox"></div>
+
   </div>
 
   <script>
-    // Cards come from the nav list, which does the admin gating for the Action
-    // entry itself. UI gating only — every page under /football/action is a
-    // static file and is served to anyone who requests it directly (see
-    // auth.js requireAdmin).
+    // Cards come from the nav list, which does the hiding and admin gating
+    // itself. UI gating only — every page is a static file and is served to
+    // anyone who requests it directly (see auth.js requireAdmin).
     mountHubGrids();
   </script>
 

@@ -31,14 +31,11 @@ const NAV_SECTIONS = [
     label: 'Gambling',
     items: [
       { label: "Baker's Buns", href: '/football/bakers-buns', emoji: '🍞' },
-      { label: "Baker's Action", href: '/football/action', emoji: '🏈', admin: true },
+      { label: "Baker's Action", href: '/football/action', emoji: '🏈', admin: true, hidden: true },
       { label: 'Bet Tracker', href: '/bets', emoji: '🎯' },
       // /football/schedule: the week's slate, read for its lines rather than
       // its kickoff times, which is what puts it under Gambling.
-      { label: 'Odds', href: '/football/schedule', emoji: '📅' },
-      // The week's longest-reception prices against a likelihood built from
-      // play-by-play rather than from the ladder being priced.
-      { label: 'Longest Reception', href: '/football/long-reception', emoji: '📏' },
+      { label: 'Schedule', href: '/football/schedule', emoji: '📅' },
       // Every opposing rusher and receiver a defense has faced this season,
       // game by game -- the matchup half of a player prop.
       { label: 'Defense vs. Players', href: '/football/defense-vs-players', emoji: '🛡️' },
@@ -66,6 +63,16 @@ const NAV_SECTIONS = [
       // FAAB log, frozen. Filed under Fantasy because it reads as league
       // history rather than anything to act on this week.
       { label: 'Waiver Board', href: '/football/waivers', emoji: '💸', admin: true },
+    ],
+  },
+  {
+    // Experiments: boards still being proven out, kept apart from the pages
+    // above until they earn a place there.
+    label: 'Sandbox',
+    items: [
+      // The week's longest-reception prices against a likelihood built from
+      // play-by-play rather than from the ladder being priced.
+      { label: 'Longest Reception', href: '/football/long-reception', emoji: '📏' },
     ],
   },
   {
@@ -206,7 +213,7 @@ function navIconHTML(name) {
 // leads, because the bar has no title on it to be the way back to "/".
 const NAV_TABS = [
   { label: 'Home', href: '/', icon: 'home' },
-  { label: 'Odds', href: '/football/schedule', icon: 'odds' },
+  { label: 'Schedule', href: '/football/schedule', icon: 'odds' },
   { label: "Pick'em", href: '/football/pickem', icon: 'trophy' },
   { label: 'Oven', href: '/football/bakers-oven', icon: 'oven' },
 ];
