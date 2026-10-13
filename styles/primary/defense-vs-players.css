@@ -33,18 +33,44 @@
 .dvp-table tbody tr:last-child td { border-bottom: 0; }
 .dvp-table tbody tr:hover td { background: var(--surface-2); }
 
-/* A game starts with a heavier rule, and only its first row carries the week
- * and the opponent — the rest of the rows are read as belonging to it. */
-.dvp-table tbody tr.is-game-start td { border-top: 1px solid var(--border); }
-.dvp-table tbody tr.is-game-start:first-child td { border-top: 0; }
+/* A game opens with a full-width week/opponent row, and each position within
+ * it with a lighter full-width row; the player rows below carry only the
+ * player and his numbers. */
+.dvp-table tbody tr.dvp-game th {
+  padding: 9px 8px 7px;
+  background: var(--surface-2);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.dvp-table tbody tr.dvp-game:first-child th { border-top: 0; }
+.dvp-table tbody tr.dvp-pos th {
+  padding: 6px 8px 4px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border-soft);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  color: var(--text-4);
+}
+/* The labels ride along on a horizontal scroll, as the player column does. */
+.dvp-label { position: sticky; left: 8px; display: inline-flex; align-items: center; gap: 10px; }
 
 .dvp-table .grp-start { border-left: 1px solid var(--border-soft); }
 
-.dvp-wk { color: var(--text-hi); font-weight: 650; }
-.dvp-opp { color: var(--text-3); font-size: 12px; }
+/* The player column stays put on a horizontal scroll; it needs an opaque
+ * background so the numbers slide under it. */
+.dvp-table .dvp-name {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: var(--surface);
+  border-right: 1px solid var(--border-soft);
+}
+
+.dvp-wk { color: var(--text-hi); font-weight: 650; font-size: 13px; }
+.dvp-opp { color: var(--text-3); font-size: 12px; font-weight: 500; }
 .dvp-opp img { width: 16px; height: 16px; vertical-align: -3px; margin-right: 5px; }
 .dvp-name b { font-weight: 650; color: var(--text-hi); }
-.dvp-pos { font-size: 11px; color: var(--text-4); letter-spacing: 0.04em; }
 
 .dvp-table td.is-zero { color: var(--text-5); }
 .dvp-table td.is-strong { color: var(--text-hi); font-weight: 650; }

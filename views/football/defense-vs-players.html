@@ -115,32 +115,56 @@
       var head =
         '<thead>' +
           '<tr class="dvp-groups">' +
-            '<th colspan="4"></th>' +
+            '<th class="dvp-name"></th>' +
             '<th colspan="3" class="grp">Rushing</th>' +
             '<th colspan="4" class="grp">Receiving</th>' +
             '<th colspan="2" class="grp">Total</th>' +
           '</tr>' +
           '<tr>' +
-            '<th class="num">Wk</th><th>Opp</th><th class="dvp-name">Player</th><th>Pos</th>' +
+            '<th class="dvp-name">Player</th>' +
             '<th class="num grp-start">Att</th><th class="num">Yds</th><th class="num">TD</th>' +
             '<th class="num grp-start">Tgt</th><th class="num">Rec</th><th class="num">Yds</th><th class="num">TD</th>' +
             '<th class="num grp-start">Yds</th><th class="num">TD</th>' +
           '</tr>' +
         '</thead>';
+      var COLS = 10;
 
-      var lastGame = null;
-      var body = doc.rows.map(function (r) {
-        var g = byGame[r.game_id];
-        var first = r.game_id !== lastGame;
-        lastGame = r.game_id;
-        var opp = (g && !g.home ? '@' : '') + r.opp;
-        return '<tr' + (first ? ' class="is-game-start"' : '') + '>' +
-          '<td class="num dvp-wk">' + (first ? esc(weekLabel(g)) : '') + '</td>' +
-          '<td class="dvp-opp">' + (first
-            ? '<img src="/assets/icons/nfl/' + esc(r.opp) + '.svg" alt="">' + esc(opp)
-            : '') + '</td>' +
+      // Week (in game order, so the postseason lands after week 18), then
+      // position RB → WR → TE → anything else, then total yards.
+      var gameOrder = {};
+      doc.games.forEach(function (g, i) { gameOrder[g.game_id] = i; });
+      var POS_RANK = { RB: 0, WR: 1, TE: 2 };
+      function posRank(p) { return p in POS_RANK ? POS_RANK[p] : 3; }
+      var rows = doc.rows.slice().sort(function (a, b) {
+        return (gameOrder[a.game_id] - gameOrder[b.game_id]) ||
+          (posRank(a.pos) - posRank(b.pos)) || String(a.pos).localeCompare(String(b.pos)) ||
+          (b.tot_yds - a.tot_yds) || String(a.player).localeCompare(String(b.player));
+      });
+
+      // A game opens with one full-width row carrying the week and opponent,
+      // and each position within it with its own, so the player rows keep only
+      // the player and his numbers. The labels are sticky so they stay in view
+      // on a horizontal scroll.
+      var lastGame = null, lastPos = null;
+      var body = rows.map(function (r) {
+        var out = '';
+        if (r.game_id !== lastGame) {
+          var g = byGame[r.game_id];
+          var opp = (g && !g.home ? '@' : 'vs ') + r.opp;
+          out += '<tr class="dvp-game"><th colspan="' + COLS + '"><span class="dvp-label">' +
+            '<span class="dvp-wk">' + (g && g.postseason ? '' : 'Wk ') + esc(weekLabel(g)) + '</span>' +
+            '<span class="dvp-opp"><img src="/assets/icons/nfl/' + esc(r.opp) + '.svg" alt="">' +
+            esc(opp) + '</span></span></th></tr>';
+          lastGame = r.game_id;
+          lastPos = null;
+        }
+        if (r.pos !== lastPos) {
+          out += '<tr class="dvp-pos"><th colspan="' + COLS + '"><span class="dvp-label">' +
+            esc(r.pos || '—') + '</span></th></tr>';
+          lastPos = r.pos;
+        }
+        return out + '<tr>' +
           '<td class="dvp-name"><b>' + esc(r.player) + '</b></td>' +
-          '<td class="dvp-pos">' + esc(r.pos) + '</td>' +
           num(r.rush_att, false, true) + num(r.rush_yds) + num(r.rush_td) +
           num(r.targets, false, true) + num(r.rec) + num(r.rec_yds) + num(r.rec_td) +
           num(r.tot_yds, true, true) + num(r.tot_td, true) +
