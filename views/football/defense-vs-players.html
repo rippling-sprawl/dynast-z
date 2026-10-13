@@ -54,6 +54,29 @@
           <div class="tp" id="team-grid"></div>
         </div>
       </div>
+      <div class="dd" id="dd-pos">
+        <button type="button" class="dd-btn" id="f-pos" aria-haspopup="true" aria-expanded="false">
+          <span class="dd-value">Pos. All</span>
+        </button>
+        <div class="dd-pop dd-menu" id="pos-menu" role="menu" aria-label="Position" hidden></div>
+      </div>
+      <div class="dd" id="dd-att">
+        <button type="button" class="dd-btn" id="f-att" aria-haspopup="true" aria-expanded="false">
+          <span class="dd-value">Rush Att 0+</span>
+        </button>
+        <div class="dd-pop dd-menu" id="att-menu" role="menu" aria-label="Minimum rush attempts" hidden></div>
+      </div>
+      <div class="dd" id="dd-tgt">
+        <button type="button" class="dd-btn" id="f-tgt" aria-haspopup="true" aria-expanded="false">
+          <span class="dd-value">Targets 0+</span>
+        </button>
+        <div class="dd-pop dd-menu" id="tgt-menu" role="menu" aria-label="Minimum targets" hidden></div>
+      </div>
+      <!-- Column groups, not filters: they hide numbers, never players. -->
+      <div class="dvp-toggles" role="group" aria-label="Column groups">
+        <button type="button" class="dd-btn dvp-toggle" id="t-rush" aria-pressed="true">Rushing</button>
+        <button type="button" class="dd-btn dvp-toggle" id="t-rec" aria-pressed="true">Receiving</button>
+      </div>
     </div>
 
     <div id="board"><p class="sched-empty">Loading teams…</p></div>
@@ -72,6 +95,11 @@
     var season = SCHED_CURRENT_SEASON;
     var teams = [];
     var team = '';
+    var doc = null;   // the loaded defense, redrawn as the filters change
+
+    // Filters cut players; the toggles cut column groups. All of it is applied
+    // in the browser to the one defense already loaded.
+    var view = { pos: 'all', att: 0, tgt: 0, rush: true, rec: true };
 
     var board = document.getElementById('board');
     var note = document.getElementById('note');
@@ -103,43 +131,45 @@
       return g && g.postseason ? 'P' + g.week : String(g ? g.week : '');
     }
 
-    function render(doc) {
-      var byGame = {};
-      doc.games.forEach(function (g) { byGame[g.game_id] = g; });
+    // Week (in game order, so the postseason lands after week 18), then
+    // position RB → WR → TE → anything else, then total yards.
+    var POS_RANK = { RB: 0, WR: 1, TE: 2 };
+    function posRank(p) { return p in POS_RANK ? POS_RANK[p] : 3; }
+
+    function render() {
+      var byGame = {}, gameOrder = {};
+      doc.games.forEach(function (g, i) { byGame[g.game_id] = g; gameOrder[g.game_id] = i; });
 
       if (!doc.rows.length) {
         board.innerHTML = '<p class="sched-empty">No completed games yet this season.</p>';
         return;
       }
 
-      var head =
-        '<thead>' +
-          '<tr class="dvp-groups">' +
-            '<th class="dvp-name"></th>' +
-            '<th colspan="4" class="grp">Rushing</th>' +
-            '<th colspan="5" class="grp">Receiving</th>' +
-            '<th colspan="2" class="grp">Total</th>' +
-          '</tr>' +
-          '<tr>' +
-            '<th class="dvp-name">Player</th>' +
-            '<th class="num grp-start">Att</th><th class="num">Yds</th><th class="num">TD</th><th class="num">Lng</th>' +
-            '<th class="num grp-start">Tgt</th><th class="num">Rec</th><th class="num">Yds</th><th class="num">TD</th><th class="num">Lng</th>' +
-            '<th class="num grp-start">Yds</th><th class="num">TD</th>' +
-          '</tr>' +
-        '</thead>';
-      var COLS = 12;
-
-      // Week (in game order, so the postseason lands after week 18), then
-      // position RB → WR → TE → anything else, then total yards.
-      var gameOrder = {};
-      doc.games.forEach(function (g, i) { gameOrder[g.game_id] = i; });
-      var POS_RANK = { RB: 0, WR: 1, TE: 2 };
-      function posRank(p) { return p in POS_RANK ? POS_RANK[p] : 3; }
-      var rows = doc.rows.slice().sort(function (a, b) {
+      var rows = doc.rows.filter(function (r) {
+        return (view.pos === 'all' || r.pos === view.pos) &&
+          r.rush_att >= view.att && r.targets >= view.tgt;
+      }).sort(function (a, b) {
         return (gameOrder[a.game_id] - gameOrder[b.game_id]) ||
           (posRank(a.pos) - posRank(b.pos)) || String(a.pos).localeCompare(String(b.pos)) ||
           (b.tot_yds - a.tot_yds) || String(a.player).localeCompare(String(b.player));
       });
+
+      var cols = 1 + (view.rush ? 4 : 0) + (view.rec ? 5 : 0) + 2;
+      var head =
+        '<thead>' +
+          '<tr class="dvp-groups">' +
+            '<th class="dvp-name"></th>' +
+            (view.rush ? '<th colspan="4" class="grp">Rushing</th>' : '') +
+            (view.rec ? '<th colspan="5" class="grp">Receiving</th>' : '') +
+            '<th colspan="2" class="grp">Total</th>' +
+          '</tr>' +
+          '<tr>' +
+            '<th class="dvp-name">Player</th>' +
+            (view.rush ? '<th class="num grp-start">Att</th><th class="num">Yds</th><th class="num">TD</th><th class="num">Lng</th>' : '') +
+            (view.rec ? '<th class="num grp-start">Tgt</th><th class="num">Rec</th><th class="num">Yds</th><th class="num">TD</th><th class="num">Lng</th>' : '') +
+            '<th class="num grp-start">Yds</th><th class="num">TD</th>' +
+          '</tr>' +
+        '</thead>';
 
       // A game opens with one full-width row carrying the week and opponent,
       // and each position within it with its own, so the player rows keep only
@@ -151,7 +181,7 @@
         if (r.game_id !== lastGame) {
           var g = byGame[r.game_id];
           var opp = (g && !g.home ? '@' : 'vs ') + r.opp;
-          out += '<tr class="dvp-game"><th colspan="' + COLS + '"><span class="dvp-label">' +
+          out += '<tr class="dvp-game"><th colspan="' + cols + '"><span class="dvp-label">' +
             '<span class="dvp-wk">' + (g && g.postseason ? '' : 'Wk ') + esc(weekLabel(g)) + '</span>' +
             '<span class="dvp-opp"><img src="/assets/icons/nfl/' + esc(r.opp) + '.svg" alt="">' +
             esc(opp) + '</span></span></th></tr>';
@@ -159,20 +189,21 @@
           lastPos = null;
         }
         if (r.pos !== lastPos) {
-          out += '<tr class="dvp-pos"><th colspan="' + COLS + '"><span class="dvp-label">' +
+          out += '<tr class="dvp-pos"><th colspan="' + cols + '"><span class="dvp-label">' +
             esc(r.pos || '—') + '</span></th></tr>';
           lastPos = r.pos;
         }
         return out + '<tr>' +
           '<td class="dvp-name"><b>' + esc(r.player) + '</b></td>' +
-          num(r.rush_att, false, true) + num(r.rush_yds) + num(r.rush_td) + num(r.rush_lng) +
-          num(r.targets, false, true) + num(r.rec) + num(r.rec_yds) + num(r.rec_td) + num(r.rec_lng) +
+          (view.rush ? num(r.rush_att, false, true) + num(r.rush_yds) + num(r.rush_td) + num(r.rush_lng) : '') +
+          (view.rec ? num(r.targets, false, true) + num(r.rec) + num(r.rec_yds) + num(r.rec_td) + num(r.rec_lng) : '') +
           num(r.tot_yds, true, true) + num(r.tot_td, true) +
           '</tr>';
-      }).join('');
+      }).join('') || '<tr><td class="dvp-none" colspan="' + cols + '">No players match these filters.</td></tr>';
 
       board.innerHTML = '<div class="dvp-scroll"><table class="dvp-table">' + head +
         '<tbody>' + body + '</tbody></table></div>';
+      pinOffsets();
 
       var built = doc.built_at ? new Date(doc.built_at) : null;
       note.textContent = doc.games.length + ' completed game' + (doc.games.length === 1 ? '' : 's') +
@@ -182,12 +213,28 @@
         }) : '');
     }
 
+    // The column header, the week row and the position row stack as they pin
+    // on a vertical scroll, each just under the one above. Their heights are
+    // whatever the font made them, so they are read off the drawn table.
+    function pinOffsets() {
+      var table = board.querySelector('.dvp-table');
+      if (!table) return;
+      var heads = table.tHead.rows;
+      var game = table.querySelector('tr.dvp-game');
+      var h0 = heads[0].offsetHeight;
+      var h1 = h0 + heads[1].offsetHeight;
+      table.style.setProperty('--pin-1', h0 + 'px');
+      table.style.setProperty('--pin-game', h1 + 'px');
+      table.style.setProperty('--pin-pos', h1 + (game ? game.offsetHeight : 0) + 'px');
+    }
+
     var loadToken = 0;
 
     function load() {
       writeParams();
       syncTeamPicker(teamBtn, teamGrid, team, teams, { emptyLabel: 'Pick a defense' });
       note.textContent = '';
+      doc = null;
       if (!team) {
         board.innerHTML = '<p class="sched-empty">Pick a team to see every rusher and receiver its defense has faced.</p>';
         return;
@@ -203,12 +250,59 @@
             return body;
           });
         })
-        .then(function (doc) { if (token === loadToken) render(doc); })
+        .then(function (d) { if (token === loadToken) { doc = d; render(); } })
         .catch(function (e) {
           if (token !== loadToken) return;
           board.innerHTML = '<p class="sched-empty">Error: ' + esc(e.message) + '</p>';
         });
     }
+
+    function menu(id, options, label, onPick) {
+      var dd = registerDropdown(document.getElementById('dd-' + id));
+      var btn = document.getElementById('f-' + id);
+      var mEl = document.getElementById(id + '-menu');
+      buildOptionMenu(mEl, options, id);
+      function sync(v) {
+        var hit = options.filter(function (o) { return String(o.value) === String(v); })[0];
+        syncOptionMenu(btn, mEl, v, label(hit ? hit.label : v), id);
+      }
+      mEl.addEventListener('click', function (e) {
+        var opt = e.target.closest ? e.target.closest('.dd-opt') : null;
+        if (!opt || !mEl.contains(opt)) return;
+        var v = opt.getAttribute('data-' + id);
+        onPick(v);
+        sync(v);
+        closeDropdown(dd, true);
+        if (doc) render();
+      });
+      return sync;
+    }
+
+    function minOpts(steps) {
+      return steps.map(function (n) { return { value: n, label: n + '+' }; });
+    }
+
+    menu('pos', [
+      { value: 'all', label: 'All' }, { value: 'RB', label: 'RB' },
+      { value: 'WR', label: 'WR' }, { value: 'TE', label: 'TE' },
+      { value: 'QB', label: 'QB' }
+    ], function (l) { return 'Pos. ' + l; },
+    function (v) { view.pos = v; })('all');
+
+    menu('att', minOpts([0, 1, 4, 6, 8, 10]), function (l) { return 'Rush Att ' + l; },
+      function (v) { view.att = Number(v); })(0);
+
+    menu('tgt', minOpts([0, 1, 2, 3, 4, 5]), function (l) { return 'Targets ' + l; },
+      function (v) { view.tgt = Number(v); })(0);
+
+    [['t-rush', 'rush'], ['t-rec', 'rec']].forEach(function (t) {
+      var btn = document.getElementById(t[0]);
+      btn.addEventListener('click', function () {
+        view[t[1]] = !view[t[1]];
+        btn.setAttribute('aria-pressed', String(view[t[1]]));
+        if (doc) render();
+      });
+    });
 
     var teamDd = registerDropdown(document.getElementById('dd-team'));
 

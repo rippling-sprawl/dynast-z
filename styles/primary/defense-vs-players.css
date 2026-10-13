@@ -5,8 +5,13 @@
  * tokens) and the long-reception board's table treatment; adds only the column
  * groups and the rule that separates one game from the next. */
 
+/* Scrolls both ways in a box no taller than the screen: the header rows can
+ * only pin against a box that scrolls vertically itself, and this one already
+ * has to scroll sideways. */
 .dvp-scroll {
-  overflow-x: auto;
+  overflow: auto;
+  max-height: calc(100dvh - 140px);
+  min-height: 240px;
   border: 1px solid var(--border);
   border-radius: 8px;
   background: var(--surface);
@@ -26,6 +31,14 @@
   color: var(--text-4);
 }
 .dvp-table thead .dvp-groups th { border-bottom: 0; padding-bottom: 0; }
+
+/* Pinned on a vertical scroll, stacked: the two header rows, then the week,
+ * then the position. Offsets come from pinOffsets() in the page script. A
+ * later week or position row slides up over the one pinned before it. */
+.dvp-table thead th { position: sticky; top: 0; z-index: 3; }
+.dvp-table thead tr + tr th { top: var(--pin-1, 0); }
+.dvp-table tbody tr.dvp-game th { position: sticky; top: var(--pin-game, 0); z-index: 2; }
+.dvp-table tbody tr.dvp-pos th { position: sticky; top: var(--pin-pos, 0); z-index: 2; }
 .dvp-table thead th.grp { text-align: center; color: var(--text-3); }
 .dvp-table th.num, .dvp-table td.num { text-align: right; font-variant-numeric: tabular-nums; }
 
@@ -70,6 +83,11 @@
 .dvp-wk { color: var(--text-hi); font-weight: 650; font-size: 13px; }
 .dvp-opp { color: var(--text-3); font-size: 12px; font-weight: 500; }
 .dvp-opp img { width: 16px; height: 16px; vertical-align: -3px; margin-right: 5px; }
+/* The corner cell pins both ways, so it sits over everything that scrolls. */
+.dvp-table thead th.dvp-name { z-index: 4; }
+
+.dvp-table td.dvp-none { color: var(--text-4); text-align: center; padding: 18px 8px; }
+
 .dvp-name b { font-weight: 650; color: var(--text-hi); }
 
 .dvp-table td.is-zero { color: var(--text-5); }
@@ -77,3 +95,10 @@
 .dvp-table td.is-strong.is-zero { color: var(--text-5); font-weight: 400; }
 
 .dvp-note { margin: 10px 0 0; font-size: 12.5px; color: var(--text-3); }
+
+/* Column-group toggles: the dd-btn box without the caret, lit while shown. */
+.dvp-toggles { display: flex; gap: 6px; margin-left: auto; }
+.dvp-toggle { color: var(--text-4); }
+.dvp-toggle::after { display: none; }
+.dvp-toggle:focus-visible { outline: none; border-color: var(--text-5); }
+.dvp-toggle[aria-pressed="true"] { color: var(--text); border-color: var(--accent); }
