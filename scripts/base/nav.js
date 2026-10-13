@@ -39,6 +39,9 @@ const NAV_SECTIONS = [
       // The week's longest-reception prices against a likelihood built from
       // play-by-play rather than from the ladder being priced.
       { label: 'Longest Reception', href: '/football/long-reception', emoji: '📏' },
+      // Every opposing rusher and receiver a defense has faced this season,
+      // game by game -- the matchup half of a player prop.
+      { label: 'Defense vs. Players', href: '/football/defense-vs-players', emoji: '🛡️' },
       { label: 'NFL Odds', href: '/odds', emoji: '🎲', hidden: true },
     ],
   },

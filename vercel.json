@@ -119,6 +119,10 @@
       "destination": "/views/football/long-reception.html"
     },
     {
+      "source": "/football/defense-vs-players",
+      "destination": "/views/football/defense-vs-players.html"
+    },
+    {
       "source": "/football/schedule",
       "destination": "/views/football/schedule.html"
     },

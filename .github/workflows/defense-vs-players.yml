@@ -1,0 +1,77 @@
+# Rebuild /football/defense-vs-players every Tuesday at 5:00am ET.
+#
+# Reads the box score of every final game this season out of Supabase
+# `game_odds` and writes what each defense gave up to `defense_vs_players`, one
+# row per team. Every run is a full rebuild, so a late or repeated run is
+# harmless. See scripts/build_defense_vs_players.py.
+#
+# NOTHING IS COMMITTED. Rows go to Supabase and the page is current on the next
+# request -- the same no-deploy path game_odds and pickem_games take. Hence no
+# write permission.
+#
+# WHY TWO CRONS AND A GUARD
+#
+# GitHub cron is UTC and cannot express a local time. 5:00am ET is 09:00Z from
+# March to November and 10:00Z the rest of the year, so both hours are
+# scheduled and the guard step runs only the one that is actually 5am in New
+# York. A manual dispatch skips the guard.
+#
+# ALSO WORTH KNOWING
+#
+# - Scheduled workflows are disabled automatically after 60 days with no commits
+#   to the repo. In the offseason that is a feature; in season, notice it.
+# - Secrets needed (Settings > Secrets and variables > Actions):
+#     SUPABASE_URL  SUPABASE_KEY
+# - The table must exist first: run scripts/sql/defense_vs_players.sql once.
+
+name: Build Defense vs. Players
+
+on:
+  schedule:
+    - cron: '0 9,10 * * 2'
+  workflow_dispatch:
+    inputs:
+      season:
+        description: 'Season to rebuild (blank = the current one)'
+        default: ''
+
+concurrency:
+  group: defense-vs-players
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Is it 5am in New York?
+        id: guard
+        run: |
+          hour=$(TZ=America/New_York date +%H)
+          echo "ET hour: $hour"
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] || [ "$hour" = "05" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - if: steps.guard.outputs.run == 'true'
+        uses: actions/checkout@v4
+
+      - if: steps.guard.outputs.run == 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      # No install step on purpose: scripts/ is stdlib-only (pyproject.toml).
+      - name: Build
+        if: steps.guard.outputs.run == 'true'
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        run: |
+          python3 scripts/build_defense_vs_players.py \
+            ${{ github.event.inputs.season && format('--season {0}', github.event.inputs.season) || '' }}

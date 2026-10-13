@@ -232,6 +232,22 @@ def game_odds_api():
     return _game_odds_api
 
 
+_defense_vs_players_api = None
+
+
+def defense_vs_players_api():
+    """Load api/defense-vs-players.py. By path because the filename has a
+    hyphen in it, and lazily for the same reason as above."""
+    global _defense_vs_players_api
+    if _defense_vs_players_api is None:
+        import importlib.util
+        path = os.path.join(DATA_DIR, "api", "defense-vs-players.py")
+        spec = importlib.util.spec_from_file_location("defense_vs_players_api", path)
+        _defense_vs_players_api = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(_defense_vs_players_api)
+    return _defense_vs_players_api
+
+
 _bun_notes_api = None
 
 
@@ -1810,6 +1826,27 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         elif self.path.split("?")[0] == "/football/long-reception":
             self.path = "/views/football/long-reception.html"
             super().do_GET()
+        # What one defense has given up, player by player. Query string
+        # tolerated: the page keeps its team in ?team=.
+        elif self.path.split("?")[0] == "/football/defense-vs-players":
+            self.path = "/views/football/defense-vs-players.html"
+            super().do_GET()
+        # Its data, through the deployed function's own loader and validation.
+        elif self.path.split("?")[0] == "/api/defense-vs-players":
+            api = defense_vs_players_api()
+            season, team, error = api.parse(parse_qs(urlparse(self.path).query))
+            if error:
+                self._json_response(400, {"error": error})
+                return
+            try:
+                payload = api.load_team(season, team)
+            except Exception as e:  # noqa: BLE001
+                self._json_response(500, {"error": str(e)})
+                return
+            if payload is None:
+                self._json_response(404, {"error": f"no completed games stored for {team}"})
+            else:
+                self._json_response(200, payload)
         # One game's odds and box score, under the schedule it hangs off:
         # /football/schedule/game/1392216, where the last segment is the
         # balldontlie game id every schedule row carries. Matched before the

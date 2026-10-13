@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/assets/icons/app-touch-180.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Dynast-Z">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <title>Defense vs. Players | Dynast-Z</title>
+  <!-- Theme first: theme.js sets <html data-theme> before the first paint,
+       theme.css holds every colour token the sheets below spend. -->
+  <script src="/scripts/base/theme.js"></script>
+  <link rel="stylesheet" href="/styles/base/theme.css">
+  <link rel="stylesheet" href="/styles/base/styles.css">
+  <link rel="stylesheet" href="/styles/base/hub.css">
+  <!-- The schedule's chrome: the team picker below is that page's modal. -->
+  <link rel="stylesheet" href="/styles/components/nfl-pickers.css">
+  <link rel="stylesheet" href="/styles/primary/nfl-schedule.css">
+  <link rel="stylesheet" href="/styles/base/lightbox.css">
+  <link rel="stylesheet" href="/styles/primary/defense-vs-players.css">
+  <script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
+  <script defer src="/_vercel/insights/script.js"></script>
+</head>
+<body class="masters-body">
+  <div id="header-mount"></div>
+  <div id="nav-drawer-mount"></div>
+  <script src="/scripts/base/auth.js"></script>
+  <script src="/scripts/base/standalone.js"></script>
+  <script src="/scripts/base/nav.js"></script>
+  <!-- The team grid and its open/shut behaviour are /football/schedule's; the
+       league's team list comes from the same schedule file that page reads. -->
+  <script src="/scripts/components/nfl-pickers.js"></script>
+  <script src="/scripts/components/nfl-schedule.js"></script>
+  <script>initPage();</script>
+
+  <div class="masters-content">
+    <div class="masters-breadcrumbs">
+      <a href="/football">Football</a><span class="separator">/</span><span>Defense vs. Players</span>
+    </div>
+
+    <h2>Defense vs. Players</h2>
+
+    <!-- Markup contract for scripts/components/nfl-pickers.js. -->
+    <div class="dd-row">
+      <div class="dd" id="dd-team">
+        <button type="button" class="dd-btn" id="f-team" aria-haspopup="dialog" aria-expanded="false">
+          <span class="dd-value">Pick a defense</span>
+        </button>
+        <div class="dd-pop dd-overlay" id="team-overlay" role="dialog" aria-modal="true" aria-label="Team" hidden>
+          <div class="tp" id="team-grid"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="board"><p class="sched-empty">Loading teams…</p></div>
+    <p class="dvp-note" id="note"></p>
+  </div>
+
+  <script>
+  (function () {
+    'use strict';
+
+    /* One control and one table. The picker is the schedule's team modal; what
+     * it picks is a DEFENSE, and the table is every opposing rusher and
+     * receiver that defense has faced in a completed game this season — built
+     * weekly by scripts/build_defense_vs_players.py, so the page only reads. */
+
+    var season = SCHED_CURRENT_SEASON;
+    var teams = [];
+    var team = '';
+
+    var board = document.getElementById('board');
+    var note = document.getElementById('note');
+    var teamBtn = document.getElementById('f-team');
+    var teamGrid = document.getElementById('team-grid');
+
+    function esc(s) {
+      return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+      });
+    }
+
+    function writeParams() {
+      var q = new URLSearchParams();
+      if (team) q.set('team', team);
+      history.replaceState(null, '', location.pathname + (team ? '?' + q.toString() : ''));
+    }
+
+    // A zero is drawn faint rather than blank: "no carries" is an answer, and a
+    // blank cell reads as missing data.
+    // `start` opens a column group (Rushing, Receiving, Total) with a rule.
+    function num(v, strong, start) {
+      var cls = 'num' + (start ? ' grp-start' : '') + (v ? '' : ' is-zero') +
+        (strong ? ' is-strong' : '');
+      return '<td class="' + cls + '">' + esc(v || 0) + '</td>';
+    }
+
+    function weekLabel(g) {
+      return g && g.postseason ? 'P' + g.week : String(g ? g.week : '');
+    }
+
+    function render(doc) {
+      var byGame = {};
+      doc.games.forEach(function (g) { byGame[g.game_id] = g; });
+
+      if (!doc.rows.length) {
+        board.innerHTML = '<p class="sched-empty">No completed games yet this season.</p>';
+        return;
+      }
+
+      var head =
+        '<thead>' +
+          '<tr class="dvp-groups">' +
+            '<th colspan="4"></th>' +
+            '<th colspan="3" class="grp">Rushing</th>' +
+            '<th colspan="4" class="grp">Receiving</th>' +
+            '<th colspan="2" class="grp">Total</th>' +
+          '</tr>' +
+          '<tr>' +
+            '<th class="num">Wk</th><th>Opp</th><th class="dvp-name">Player</th><th>Pos</th>' +
+            '<th class="num grp-start">Att</th><th class="num">Yds</th><th class="num">TD</th>' +
+            '<th class="num grp-start">Tgt</th><th class="num">Rec</th><th class="num">Yds</th><th class="num">TD</th>' +
+            '<th class="num grp-start">Yds</th><th class="num">TD</th>' +
+          '</tr>' +
+        '</thead>';
+
+      var lastGame = null;
+      var body = doc.rows.map(function (r) {
+        var g = byGame[r.game_id];
+        var first = r.game_id !== lastGame;
+        lastGame = r.game_id;
+        var opp = (g && !g.home ? '@' : '') + r.opp;
+        return '<tr' + (first ? ' class="is-game-start"' : '') + '>' +
+          '<td class="num dvp-wk">' + (first ? esc(weekLabel(g)) : '') + '</td>' +
+          '<td class="dvp-opp">' + (first
+            ? '<img src="/assets/icons/nfl/' + esc(r.opp) + '.svg" alt="">' + esc(opp)
+            : '') + '</td>' +
+          '<td class="dvp-name"><b>' + esc(r.player) + '</b></td>' +
+          '<td class="dvp-pos">' + esc(r.pos) + '</td>' +
+          num(r.rush_att, false, true) + num(r.rush_yds) + num(r.rush_td) +
+          num(r.targets, false, true) + num(r.rec) + num(r.rec_yds) + num(r.rec_td) +
+          num(r.tot_yds, true, true) + num(r.tot_td, true) +
+          '</tr>';
+      }).join('');
+
+      board.innerHTML = '<div class="dvp-scroll"><table class="dvp-table">' + head +
+        '<tbody>' + body + '</tbody></table></div>';
+
+      var built = doc.built_at ? new Date(doc.built_at) : null;
+      note.textContent = doc.games.length + ' completed game' + (doc.games.length === 1 ? '' : 's') +
+        ' · rebuilt Tuesdays 5am ET' +
+        (built ? ' · last built ' + built.toLocaleString([], {
+          weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'
+        }) : '');
+    }
+
+    var loadToken = 0;
+
+    function load() {
+      writeParams();
+      syncTeamPicker(teamBtn, teamGrid, team, teams, { emptyLabel: 'Pick a defense' });
+      note.textContent = '';
+      if (!team) {
+        board.innerHTML = '<p class="sched-empty">Pick a team to see every rusher and receiver its defense has faced.</p>';
+        return;
+      }
+      var token = ++loadToken;
+      board.innerHTML = '<p class="sched-empty">Loading…</p>';
+      fetch('/api/defense-vs-players?team=' + encodeURIComponent(team) +
+            '&season=' + encodeURIComponent(season), { cache: 'no-store' })
+        .then(function (r) {
+          return r.json().then(function (body) {
+            if (r.status === 404) return { games: [], rows: [] };
+            if (!r.ok) throw new Error(body.error || ('HTTP ' + r.status));
+            return body;
+          });
+        })
+        .then(function (doc) { if (token === loadToken) render(doc); })
+        .catch(function (e) {
+          if (token !== loadToken) return;
+          board.innerHTML = '<p class="sched-empty">Error: ' + esc(e.message) + '</p>';
+        });
+    }
+
+    var teamDd = registerDropdown(document.getElementById('dd-team'));
+
+    teamGrid.addEventListener('click', function (e) {
+      var btn = e.target.closest ? e.target.closest('.tp-team') : null;
+      if (!btn || !teamGrid.contains(btn)) return;
+      team = btn.getAttribute('data-team');
+      closeDropdown(teamDd, true);
+      load();
+    });
+
+    schedLoad(season).then(function (doc) {
+      teams = doc.teams;
+      buildTeamPicker(teamGrid, teams);
+      var t = (new URLSearchParams(location.search).get('team') || '').toUpperCase();
+      if (t && schedTeamsByAbbr(doc)[t]) team = t;
+      load();
+    }).catch(function (e) {
+      board.innerHTML = '<p class="sched-empty">Error: ' + esc(e.message) + '</p>';
+    });
+  })();
+  </script>
+</body>
+</html>
