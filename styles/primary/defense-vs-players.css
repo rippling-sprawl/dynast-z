@@ -102,3 +102,29 @@
 .dvp-toggle::after { display: none; }
 .dvp-toggle:focus-visible { outline: none; border-color: var(--text-5); }
 .dvp-toggle[aria-pressed="true"] { color: var(--text); border-color: var(--accent); }
+
+/* A filter is a small label and then its dropdown, which shows only the value. */
+.dvp-filter { display: flex; align-items: center; gap: 6px; }
+.dvp-flabel {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--text-4);
+}
+
+/* The toggle's eye says what pressing it will undo: open while the group is
+ * shown, struck through while it is hidden. */
+.dvp-toggle { gap: 6px; }
+.dvp-eye {
+  width: 15px;
+  height: 15px;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.dvp-toggle[aria-pressed="true"] .dvp-eye-off,
+.dvp-toggle[aria-pressed="false"] .dvp-eye-on { display: none; }

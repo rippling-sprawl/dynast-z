@@ -46,36 +46,48 @@
 
     <!-- Markup contract for scripts/components/nfl-pickers.js. -->
     <div class="dd-row">
-      <div class="dd" id="dd-team">
-        <button type="button" class="dd-btn" id="f-team" aria-haspopup="dialog" aria-expanded="false">
-          <span class="dd-value">Pick a defense</span>
-        </button>
-        <div class="dd-pop dd-overlay" id="team-overlay" role="dialog" aria-modal="true" aria-label="Team" hidden>
-          <div class="tp" id="team-grid"></div>
+      <div class="dvp-filter">
+        <span class="dvp-flabel" id="l-team">Defense</span>
+        <div class="dd" id="dd-team">
+          <button type="button" class="dd-btn" id="f-team" aria-haspopup="dialog" aria-expanded="false" aria-labelledby="l-team f-team">
+            <span class="dd-value">Pick a team</span>
+          </button>
+          <div class="dd-pop dd-overlay" id="team-overlay" role="dialog" aria-modal="true" aria-label="Team" hidden>
+            <div class="tp" id="team-grid"></div>
+          </div>
         </div>
       </div>
-      <div class="dd" id="dd-pos">
-        <button type="button" class="dd-btn" id="f-pos" aria-haspopup="true" aria-expanded="false">
-          <span class="dd-value">Pos. All</span>
-        </button>
-        <div class="dd-pop dd-menu" id="pos-menu" role="menu" aria-label="Position" hidden></div>
+      <div class="dvp-filter">
+        <span class="dvp-flabel" id="l-pos">Pos.</span>
+        <div class="dd" id="dd-pos">
+          <button type="button" class="dd-btn" id="f-pos" aria-haspopup="true" aria-expanded="false" aria-labelledby="l-pos f-pos">
+            <span class="dd-value">All</span>
+          </button>
+          <div class="dd-pop dd-menu" id="pos-menu" role="menu" aria-label="Position" hidden></div>
+        </div>
       </div>
-      <div class="dd" id="dd-att">
-        <button type="button" class="dd-btn" id="f-att" aria-haspopup="true" aria-expanded="false">
-          <span class="dd-value">Rush Att 0+</span>
-        </button>
-        <div class="dd-pop dd-menu" id="att-menu" role="menu" aria-label="Minimum rush attempts" hidden></div>
+      <div class="dvp-filter">
+        <span class="dvp-flabel" id="l-att">Rush Att</span>
+        <div class="dd" id="dd-att">
+          <button type="button" class="dd-btn" id="f-att" aria-haspopup="true" aria-expanded="false" aria-labelledby="l-att f-att">
+            <span class="dd-value">0+</span>
+          </button>
+          <div class="dd-pop dd-menu" id="att-menu" role="menu" aria-label="Minimum rush attempts" hidden></div>
+        </div>
       </div>
-      <div class="dd" id="dd-tgt">
-        <button type="button" class="dd-btn" id="f-tgt" aria-haspopup="true" aria-expanded="false">
-          <span class="dd-value">Targets 0+</span>
-        </button>
-        <div class="dd-pop dd-menu" id="tgt-menu" role="menu" aria-label="Minimum targets" hidden></div>
+      <div class="dvp-filter">
+        <span class="dvp-flabel" id="l-tgt">Targets</span>
+        <div class="dd" id="dd-tgt">
+          <button type="button" class="dd-btn" id="f-tgt" aria-haspopup="true" aria-expanded="false" aria-labelledby="l-tgt f-tgt">
+            <span class="dd-value">0+</span>
+          </button>
+          <div class="dd-pop dd-menu" id="tgt-menu" role="menu" aria-label="Minimum targets" hidden></div>
+        </div>
       </div>
       <!-- Column groups, not filters: they hide numbers, never players. -->
       <div class="dvp-toggles" role="group" aria-label="Column groups">
-        <button type="button" class="dd-btn dvp-toggle" id="t-rush" aria-pressed="true">Rushing</button>
-        <button type="button" class="dd-btn dvp-toggle" id="t-rec" aria-pressed="true">Receiving</button>
+        <button type="button" class="dd-btn dvp-toggle" id="t-rush" aria-pressed="true"><span>Rushing</span><svg class="dvp-eye dvp-eye-on" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><svg class="dvp-eye dvp-eye-off" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.9 5.2A9.7 9.7 0 0 1 12 5c6.4 0 10 7 10 7a17.6 17.6 0 0 1-2.9 3.9M6.6 6.6C3.7 8.5 2 12 2 12s3.6 7 10 7a9.7 9.7 0 0 0 5.4-1.6M9.9 9.9a3 3 0 0 0 4.2 4.2"/><path d="M2 2l20 20"/></svg></button>
+        <button type="button" class="dd-btn dvp-toggle" id="t-rec" aria-pressed="true"><span>Receiving</span><svg class="dvp-eye dvp-eye-on" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><svg class="dvp-eye dvp-eye-off" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.9 5.2A9.7 9.7 0 0 1 12 5c6.4 0 10 7 10 7a17.6 17.6 0 0 1-2.9 3.9M6.6 6.6C3.7 8.5 2 12 2 12s3.6 7 10 7a9.7 9.7 0 0 0 5.4-1.6M9.9 9.9a3 3 0 0 0 4.2 4.2"/><path d="M2 2l20 20"/></svg></button>
       </div>
     </div>
 
@@ -232,7 +244,7 @@
 
     function load() {
       writeParams();
-      syncTeamPicker(teamBtn, teamGrid, team, teams, { emptyLabel: 'Pick a defense' });
+      syncTeamPicker(teamBtn, teamGrid, team, teams, { emptyLabel: 'Pick a team' });
       note.textContent = '';
       doc = null;
       if (!team) {
@@ -257,14 +269,14 @@
         });
     }
 
-    function menu(id, options, label, onPick) {
+    function menu(id, options, onPick) {
       var dd = registerDropdown(document.getElementById('dd-' + id));
       var btn = document.getElementById('f-' + id);
       var mEl = document.getElementById(id + '-menu');
       buildOptionMenu(mEl, options, id);
       function sync(v) {
         var hit = options.filter(function (o) { return String(o.value) === String(v); })[0];
-        syncOptionMenu(btn, mEl, v, label(hit ? hit.label : v), id);
+        syncOptionMenu(btn, mEl, v, hit ? hit.label : String(v), id);
       }
       mEl.addEventListener('click', function (e) {
         var opt = e.target.closest ? e.target.closest('.dd-opt') : null;
@@ -286,14 +298,11 @@
       { value: 'all', label: 'All' }, { value: 'RB', label: 'RB' },
       { value: 'WR', label: 'WR' }, { value: 'TE', label: 'TE' },
       { value: 'QB', label: 'QB' }
-    ], function (l) { return 'Pos. ' + l; },
-    function (v) { view.pos = v; })('all');
+    ], function (v) { view.pos = v; })('all');
 
-    menu('att', minOpts([0, 1, 4, 6, 8, 10]), function (l) { return 'Rush Att ' + l; },
-      function (v) { view.att = Number(v); })(0);
+    menu('att', minOpts([0, 1, 4, 6, 8, 10]), function (v) { view.att = Number(v); })(0);
 
-    menu('tgt', minOpts([0, 1, 2, 3, 4, 5]), function (l) { return 'Targets ' + l; },
-      function (v) { view.tgt = Number(v); })(0);
+    menu('tgt', minOpts([0, 1, 2, 3, 4, 5]), function (v) { view.tgt = Number(v); })(0);
 
     [['t-rush', 'rush'], ['t-rec', 'rec']].forEach(function (t) {
       var btn = document.getElementById(t[0]);
