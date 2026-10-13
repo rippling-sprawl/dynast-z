@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Build /football/defense-vs-players: every opposing rusher and receiver each
+Build /football/defense-vs-players: every opposing passer, rusher and receiver each
 defense has faced, one row per player per completed game.
 
 Why this exists
@@ -113,16 +113,23 @@ def n(v):
 
 
 def player_row(p):
-    """-> one player's rushing and receiving line, or None if he had neither."""
+    """-> one player's passing, rushing and receiving line, or None if he had
+    none of them."""
+    pa = p.get("passing") or {}
     ru = p.get("rushing") or {}
     rc = p.get("receiving") or {}
-    if not ru and not rc:
+    if not pa and not ru and not rc:
         return None
     who = p.get("player") or {}
     row = {
         "player_id": who.get("id"),
         "player": " ".join(x for x in (who.get("first_name"), who.get("last_name")) if x),
         "pos": who.get("position_abbreviation") or "",
+        "pass_cmp": n(pa.get("passing_completions")),
+        "pass_att": n(pa.get("passing_attempts")),
+        "pass_yds": n(pa.get("passing_yards")),
+        "pass_td": n(pa.get("passing_touchdowns")),
+        "pass_int": n(pa.get("passing_interceptions")),
         "rush_att": n(ru.get("rushing_attempts")),
         "rush_yds": n(ru.get("rushing_yards")),
         "rush_td": n(ru.get("rushing_touchdowns")),
@@ -133,6 +140,8 @@ def player_row(p):
         "rec_td": n(rc.get("receiving_touchdowns")),
         "rec_lng": n(rc.get("long_reception")),
     }
+    # Scrimmage yards: passing is left out, or a quarterback's throws would be
+    # counted twice -- once as his and again as his receivers'.
     row["tot_yds"] = row["rush_yds"] + row["rec_yds"]
     row["tot_td"] = row["rush_td"] + row["rec_td"]
     return row

@@ -96,6 +96,7 @@
            picking it again shows everything. -->
       <div class="dvp-group dvp-toggles" role="group" aria-labelledby="l-show">
         <span class="dvp-flabel" id="l-show">Show Only</span>
+        <button type="button" class="dd-btn dvp-toggle" id="t-pass" aria-pressed="false">Passing</button>
         <button type="button" class="dd-btn dvp-toggle" id="t-rush" aria-pressed="false">Rushing</button>
         <button type="button" class="dd-btn dvp-toggle" id="t-rec" aria-pressed="false">Receiving</button>
       </div>
@@ -121,7 +122,7 @@
 
     // Filters cut players; the toggles cut column groups. All of it is applied
     // in the browser to the one defense already loaded.
-    // pos: the positions picked, none meaning all. only: '', 'rush' or 'rec'.
+    // pos: the positions picked, none meaning all. only: '', 'pass', 'rush' or 'rec'.
     var view = { pos: {}, att: 0, tgt: 0, only: '' };
 
     var board = document.getElementById('board');
@@ -177,7 +178,12 @@
       }
 
       var anyPos = !Object.keys(view.pos).length;
-      var showRush = view.only !== 'rec', showRec = view.only !== 'rush', showTot = !view.only;
+      // Showing only one group drops Total too: Total is rushing plus
+      // receiving, never passing, so beside any single group it only repeats.
+      var showPass = !view.only || view.only === 'pass';
+      var showRush = !view.only || view.only === 'rush';
+      var showRec = !view.only || view.only === 'rec';
+      var showTot = !view.only;
       var rows = doc.rows.filter(function (r) {
         return (anyPos || view.pos[r.pos]) &&
           r.rush_att >= view.att && r.targets >= view.tgt;
@@ -187,17 +193,19 @@
           (b.tot_yds - a.tot_yds) || String(a.player).localeCompare(String(b.player));
       });
 
-      var cols = 1 + (showRush ? 4 : 0) + (showRec ? 5 : 0) + (showTot ? 2 : 0);
+      var cols = 1 + (showPass ? 5 : 0) + (showRush ? 4 : 0) + (showRec ? 5 : 0) + (showTot ? 2 : 0);
       var head =
         '<thead>' +
           '<tr class="dvp-groups">' +
             '<th class="dvp-name"></th>' +
+            (showPass ? '<th colspan="5" class="grp">Passing</th>' : '') +
             (showRush ? '<th colspan="4" class="grp">Rushing</th>' : '') +
             (showRec ? '<th colspan="5" class="grp">Receiving</th>' : '') +
             (showTot ? '<th colspan="2" class="grp">Total</th>' : '') +
           '</tr>' +
           '<tr>' +
             '<th class="dvp-name">Player</th>' +
+            (showPass ? '<th class="num grp-start">Cmp</th><th class="num">Att</th><th class="num">Yds</th><th class="num">TD</th><th class="num">Int</th>' : '') +
             (showRush ? '<th class="num grp-start">Att</th><th class="num">Yds</th><th class="num">TD</th><th class="num">Lng</th>' : '') +
             (showRec ? '<th class="num grp-start">Tgt</th><th class="num">Rec</th><th class="num">Yds</th><th class="num">TD</th><th class="num">Lng</th>' : '') +
             (showTot ? '<th class="num grp-start">Yds</th><th class="num">TD</th>' : '') +
@@ -229,6 +237,7 @@
         }
         return out + '<tr>' +
           '<td class="dvp-name" title="' + esc(r.player) + '"><b>' + esc(shortName(r.player)) + '</b></td>' +
+          (showPass ? num(r.pass_cmp, false, true) + num(r.pass_att) + num(r.pass_yds) + num(r.pass_td) + num(r.pass_int) : '') +
           (showRush ? num(r.rush_att, false, true) + num(r.rush_yds) + num(r.rush_td) + num(r.rush_lng) : '') +
           (showRec ? num(r.targets, false, true) + num(r.rec) + num(r.rec_yds) + num(r.rec_td) + num(r.rec_lng) : '') +
           (showTot ? num(r.tot_yds, true, true) + num(r.tot_td, true) : '') +
@@ -276,7 +285,7 @@
       note.textContent = '';
       doc = null;
       if (!team) {
-        board.innerHTML = '<p class="sched-empty">Pick a team to see every rusher and receiver its defense has faced.</p>';
+        board.innerHTML = '<p class="sched-empty">Pick a team to see every passer, rusher and receiver its defense has faced.</p>';
         return;
       }
       var token = ++loadToken;
@@ -362,7 +371,7 @@
 
     menu('tgt', minOpts([0, 1, 2, 3, 4, 5]), function (v) { view.tgt = Number(v); })(0);
 
-    var toggles = [['t-rush', 'rush'], ['t-rec', 'rec']];
+    var toggles = [['t-pass', 'pass'], ['t-rush', 'rush'], ['t-rec', 'rec']];
     toggles.forEach(function (t) {
       document.getElementById(t[0]).addEventListener('click', function () {
         view.only = view.only === t[1] ? '' : t[1];
