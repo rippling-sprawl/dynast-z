@@ -1,0 +1,136 @@
+/* Team Stats — /football/team-stats/*
+ *
+ * The scatter's chrome. Lifted from the Baker's Buns board (.board-* in
+ * bakers-buns.css) under its own prefix rather than shared, because that
+ * sheet carries the whole Buns page with it. Green is a team whose points
+ * trail its yards (due up), orange one whose points run ahead (due down). */
+
+.ts-note {
+  margin: 4px 0 12px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-3);
+}
+.ts-note strong { color: var(--text-2); }
+.ts-meta { font-family: monospace; font-size: 11px; color: var(--text-5); }
+
+/* Positioned, because the tooltip is placed against it. */
+.ts-wrap {
+  position: relative;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 4px 0 2px;
+  background: var(--panel-hi);
+  border: 1px solid var(--panel-hi2);
+  border-radius: 6px;
+}
+
+.ts-chart { position: relative; }
+.ts-svg { display: block; }
+
+/* A halo in the plot's own color, so two overlapping logos stay two. */
+.ts-pt image { filter: drop-shadow(0 0 1px var(--panel-hi)); }
+.ts-pt { cursor: default; }
+.ts-pt:focus-visible { outline: 1px solid var(--accent-2); outline-offset: 2px; }
+
+.ts-axis-note,
+.ts-fit {
+  margin: 6px 0 0;
+  font-family: monospace;
+  font-size: 10px;
+  line-height: 1.5;
+  color: var(--text-5);
+}
+.ts-axis-note[hidden] { display: none; }
+
+.ts-empty {
+  padding: 24px 12px;
+  font-family: monospace;
+  font-size: 12px;
+  color: var(--text-5);
+  text-align: center;
+}
+
+/* --- tooltip --- */
+.ts-tip {
+  position: absolute;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 150px;
+  padding: 6px 8px;
+  pointer-events: none;
+  background: var(--panel-lo);
+  border: 1px solid var(--hairline);
+  border-radius: 5px;
+  box-shadow: 0 6px 14px var(--shadow-color);
+  font-family: monospace;
+  font-size: 10px;
+  line-height: 1.5;
+  color: var(--text-3);
+}
+.ts-tip[hidden] { display: none; }
+.ts-tip strong { font-size: 11px; color: var(--text-bright); }
+.ts-tip b { color: var(--text-2); font-weight: 700; }
+.ts-tip .is-up b { color: var(--good); }
+.ts-tip .is-down b { color: var(--orange); }
+
+/* --- the read-out beneath the chart --- */
+.ts-reads {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.ts-read {
+  padding: 10px 12px 12px;
+  background: var(--panel-hi);
+  border: 1px solid var(--panel-hi2);
+  border-left: 3px solid var(--hairline);
+  border-radius: 4px;
+}
+.ts-read.is-up { border-left-color: var(--good-strong); }
+.ts-read.is-down { border-left-color: var(--orange); }
+
+.ts-read h4 {
+  margin: 0 0 3px;
+  font-family: monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.ts-read.is-up h4 { color: var(--good); }
+.ts-read.is-down h4 { color: var(--orange); }
+
+.ts-read p {
+  margin: 0 0 8px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--text-4);
+}
+
+.ts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ts-list li {
+  display: grid;
+  grid-template-columns: 18px 34px auto 1fr;
+  align-items: center;
+  gap: 8px;
+  font-family: monospace;
+  font-size: 11px;
+}
+.ts-list img { width: 18px; height: 18px; }
+.ts-list .ts-abbr { color: var(--text-2); }
+.ts-list .ts-resid { font-weight: 700; }
+.ts-list.is-up .ts-resid { color: var(--good); }
+.ts-list.is-down .ts-resid { color: var(--orange); }
+.ts-list .ts-ctx { text-align: right; color: var(--text-5); }

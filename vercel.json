@@ -119,6 +119,14 @@
       "destination": "/views/football/long-reception.html"
     },
     {
+      "source": "/football/team-stats/yards-vs-points",
+      "destination": "/views/football/team-stats-yards-vs-points.html"
+    },
+    {
+      "source": "/football/team-stats",
+      "destination": "/views/football/team-stats.html"
+    },
+    {
       "source": "/football/defense-vs-players",
       "destination": "/views/football/defense-vs-players.html"
     },

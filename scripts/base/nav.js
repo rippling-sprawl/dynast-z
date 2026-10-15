@@ -19,8 +19,9 @@ const CURRENT_GOLF_YEAR = 2026;
 //              themselves are static and served to anyone with the URL)
 //   external — opens in a new tab
 //
-// A section may also carry `href` (its own landing page) and `collapsed` (the
-// drawer shows that landing page as one link instead of listing the items).
+// A section may also carry `href` (its own landing page), `collapsed` (the
+// drawer shows that landing page as one link instead of listing the items) and
+// `hidden` (the drawer leaves the section out; its landing page still mounts it).
 const NAV_SECTIONS = [
   {
     // The football pages split three ways by what you are actually doing on
@@ -39,6 +40,9 @@ const NAV_SECTIONS = [
       // Every opposing rusher and receiver a defense has faced this season,
       // game by game -- the matchup half of a player prop.
       { label: 'Defense vs. Players', href: '/football/defense-vs-players', emoji: '🛡️' },
+      // Season-to-date team numbers, read side by side across the league.
+      // One card here; its pages are the Team Stats section below.
+      { label: 'Team Stats', href: '/football/team-stats', emoji: '📈' },
       { label: 'NFL Odds', href: '/odds', emoji: '🎲', hidden: true },
     ],
   },
@@ -76,6 +80,16 @@ const NAV_SECTIONS = [
     ],
   },
   {
+    // The cards on /football/team-stats. `hidden` keeps the section out of the
+    // drawer, where the Gambling row above already links its landing page.
+    label: 'Team Stats',
+    href: '/football/team-stats',
+    hidden: true,
+    items: [
+      { label: 'Yards vs Points', href: '/football/team-stats/yards-vs-points', emoji: '📐' },
+    ],
+  },
+  {
     label: 'Appendix',
     href: '/appendix',
     // Collapsed in the drawer: one link to /appendix rather than a heading with
@@ -108,6 +122,7 @@ function navVisibleItems(section) {
 function buildNavItems() {
   const items = [];
   for (const section of NAV_SECTIONS) {
+    if (section.hidden) continue;
     if (section.collapsed) {
       items.push({ type: 'link', label: section.label, href: section.href, standalone: true });
       continue;

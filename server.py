@@ -1826,6 +1826,13 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         elif self.path.split("?")[0] == "/football/long-reception":
             self.path = "/views/football/long-reception.html"
             super().do_GET()
+        # Team Stats: a landing page of cards, then one page per chart.
+        elif self.path.split("?")[0] == "/football/team-stats/yards-vs-points":
+            self.path = "/views/football/team-stats-yards-vs-points.html"
+            super().do_GET()
+        elif self.path.split("?")[0] == "/football/team-stats":
+            self.path = "/views/football/team-stats.html"
+            super().do_GET()
         # What one defense has given up, player by player. Query string
         # tolerated: the page keeps its team in ?team=.
         elif self.path.split("?")[0] == "/football/defense-vs-players":

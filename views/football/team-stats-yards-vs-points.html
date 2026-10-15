@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/assets/icons/app-touch-180.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Dynast-Z">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <title>Yards vs Points | Dynast-Z</title>
+  <!-- Theme first: theme.js sets <html data-theme> before the first paint,
+       theme.css holds every colour token the sheets below spend. -->
+  <script src="/scripts/base/theme.js"></script>
+  <link rel="stylesheet" href="/styles/base/theme.css">
+  <link rel="stylesheet" href="/styles/base/styles.css">
+  <link rel="stylesheet" href="/styles/base/hub.css">
+  <!-- The schedule's skin, as on the other Gambling pages. -->
+  <link rel="stylesheet" href="/styles/primary/nfl-schedule.css">
+  <link rel="stylesheet" href="/styles/primary/team-stats.css">
+  <script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
+  <script defer src="/_vercel/insights/script.js"></script>
+</head>
+<body class="masters-body">
+  <div id="header-mount"></div>
+  <div id="nav-drawer-mount"></div>
+  <script src="/scripts/base/auth.js"></script>
+  <script src="/scripts/base/standalone.js"></script>
+  <script src="/scripts/base/nav.js"></script>
+  <script src="/scripts/primary/team-stats-scatter.js"></script>
+  <script>initPage();</script>
+
+  <div class="masters-content">
+    <div class="masters-breadcrumbs">
+      <a href="/football">Football</a><span class="separator">/</span><a href="/football/team-stats">Team Stats</a><span class="separator">/</span><span>Yards vs Points</span>
+    </div>
+
+    <h2>Yards vs Points</h2>
+    <p class="ts-note">
+      Each team by <strong>point differential</strong> (across) and
+      <strong>yardage differential</strong> (up), both per game so a bye week
+      does not count against anyone. The dashed line is the league trend: a team
+      left of it is scoring less than its yards say it should, one right of it
+      is scoring more.
+    </p>
+    <p class="ts-meta" id="ts-meta"></p>
+
+    <div class="ts-wrap" id="ts-chart-wrap">
+      <div class="ts-chart" id="ts-chart"></div>
+    </div>
+    <p class="ts-axis-note" id="ts-axis-note" hidden>&uarr; yardage differential per game &middot; &rarr; point differential per game</p>
+    <p class="ts-fit" id="ts-fit"></p>
+
+    <div id="ts-reads"></div>
+  </div>
+
+  <script>
+    // data/nfl_team_stats_{season}.json is written by scripts/fetch_team_stats.py.
+    // March onward is that year's season; before its first game has been
+    // fetched, the previous season's file is what there is to show.
+    (function () {
+      var now = new Date();
+      var season = now.getMonth() >= 2 ? now.getFullYear() : now.getFullYear() - 1;
+      var meta = document.getElementById('ts-meta');
+
+      function load(s) {
+        return fetch('/data/nfl_team_stats_' + s + '.json', { cache: 'no-store' })
+          .then(function (r) { return r.ok ? r.json() : null; });
+      }
+
+      load(season)
+        .then(function (d) { return d || load(season - 1); })
+        .then(function (d) {
+          if (!d) {
+            document.getElementById('ts-chart').innerHTML =
+              '<p class="ts-empty">No team stats have been fetched yet.</p>';
+            return;
+          }
+          var gps = d.teams.map(function (t) { return t.gp; });
+          var lo = Math.min.apply(null, gps), hi = Math.max.apply(null, gps);
+          meta.textContent = d.season + ' regular season · ' +
+            (lo === hi ? lo : lo + '–' + hi) + ' games played · updated ' +
+            new Date(d.fetched_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+          window.renderYardsVsPoints(d.teams);
+        })
+        .catch(function () {
+          document.getElementById('ts-chart').innerHTML =
+            '<p class="ts-empty">Couldn’t load team stats.</p>';
+        });
+    })();
+  </script>
+</body>
+</html>
