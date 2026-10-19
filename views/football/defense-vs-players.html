@@ -376,38 +376,50 @@
      * medians come precomputed in each defense's `summary`
      * (scripts/build_defense_vs_players.py), so this only sorts.
      *
-     * A card is grouped by matchup: any matchup in the top three of any stat
-     * gets one row with all three stats beside it, the ones it ranked in
-     * lit and the rest dimmed for context. */
+     * A card is grouped by matchup: any matchup in the top three of any
+     * ranked stat gets one row with every stat beside it, the ones it ranked
+     * in lit and the rest dimmed for context. */
 
     // The card says the position, so the columns need not say pass/rush/rec.
-    // Att and Recs are volume beside the three ranked stats, never ranked.
+    // Att and Recs are volume, never ranked. Touchdowns are two values: Pass
+    // TD thrown (QB only) and RRTD, rushing plus receiving TDs scored.
     var MX_POS = [
-      { pos: 'QB', label: 'Quarterbacks', names: 1, cols: ['att', 'yds', 'td', 'lng'] },
-      { pos: 'RB', label: 'Running backs', names: 2, cols: ['att', 'rec', 'yds', 'td', 'lng'] },
-      { pos: 'WR', label: 'Wide receivers', names: 2, cols: ['rec', 'yds', 'td', 'lng'] },
-      { pos: 'TE', label: 'Tight ends', names: 1, cols: ['rec', 'yds', 'td', 'lng'] }
+      { pos: 'QB', label: 'Quarterbacks', names: 1, cols: ['att', 'yds', 'ptd', 'rrtd', 'lng'] },
+      { pos: 'RB', label: 'Running backs', names: 2, cols: ['att', 'rec', 'yds', 'rrtd', 'lng'] },
+      { pos: 'WR', label: 'Wide receivers', names: 2, cols: ['rec', 'yds', 'rrtd', 'lng'] },
+      { pos: 'TE', label: 'Tight ends', names: 1, cols: ['rec', 'yds', 'rrtd', 'lng'] }
     ];
-    var MX_LABEL = { att: 'Att', rec: 'Recs', yds: 'Yds', td: 'TD', lng: 'Long' };
-    var MX_STATS = ['yds', 'td', 'lng'];
+    var MX_LABEL = { att: 'Att', rec: 'Recs', yds: 'Yds', ptd: 'Pass TD', rrtd: 'RRTD', lng: 'Long' };
+    var MX_HINT = { rrtd: 'Rush + rec TDs' };
+    var MX_VOLUME = { att: true, rec: true };
+    // TDs are read by their per-game mean — a median of mostly 0s and 1s says
+    // little — and everything else by its median.
+    var MX_TD = { ptd: true, rrtd: true };
+
+    function mxRanked(p) { return p.cols.filter(function (k) { return !MX_VOLUME[k]; }); }
+    function mxVal(c, stat) { return MX_TD[stat] ? c.avg : c.med; }
+    function mxTie(c, stat) { return MX_TD[stat] ? c.med : c.avg; }
 
     // TDs and receptions to one decimal on every value, so 1 reads "1.0";
     // attempts, yards and longs to the nearest whole number.
     function mxNum(v, stat) {
       v = Number(v || 0);
-      return stat === 'td' || stat === 'rec' ? v.toFixed(1) : String(Math.round(v));
+      return MX_TD[stat] || stat === 'rec' ? v.toFixed(1) : String(Math.round(v));
     }
 
     function mxRow(m, p) {
       var sum = all.teams[m.def].summary[p.pos];
       var lead = (((all.teams[m.off] || {}).leaders || {})[p.pos] || []).slice(0, p.names);
-      return '<tr>' +
+      return '<tr class="dvp-mx-link">' +
         '<td class="dvp-mx-who">' +
           '<span class="dvp-mx-match">' +
             '<img src="/assets/icons/nfl/' + esc(m.off) + '.svg" alt="">' +
             '<b>' + esc(m.off) + '</b>' +
             '<span class="dvp-mx-at">' + (m.home ? 'vs' : '@') + '</span>' +
-            '<a href="' + esc(queryFor({ team: m.def, pos: [p.pos], att: view.att, tgt: view.tgt })) +
+            // The link is the team and position alone: everything else starts
+            // from its default when it opens (applyParams resets what the URL
+            // leaves out), whatever filters were set before.
+            '<a href="' + esc(queryFor({ team: m.def, pos: [p.pos] })) +
               '" data-team="' + esc(m.def) + '" title="' + esc(m.def) + ' defense vs. ' + esc(p.pos) + 's, game by game">' +
               '<img src="/assets/icons/nfl/' + esc(m.def) + '.svg" alt="">' + esc(m.def) + '</a>' +
           '</span>' +
@@ -419,36 +431,41 @@
           var c = sum[stat];
           if (!c) return '<td class="num">—</td>';
           var rank = m.ranks[stat];
-          return '<td class="num' + (rank ? ' is-ranked' : '') + '" title="' + esc(MX_LABEL[stat]) +
-            ': median ' + esc(mxNum(c.med, stat)) + ', mean ' + esc(mxNum(c.avg, stat)) +
-            (rank ? ' · #' + rank + ' on the slate' : '') + '">' + esc(mxNum(c.med, stat)) + '</td>';
+          return '<td class="num' + (rank ? ' is-ranked' : '') + '" title="' + esc(MX_HINT[stat] || MX_LABEL[stat]) +
+            ': mean ' + esc(Number(c.avg).toFixed(2)) + ', median ' + esc(c.med) +
+            (rank ? ' · #' + rank + ' on the slate' : '') + '">' + esc(mxNum(mxVal(c, stat), stat)) + '</td>';
         }).join('') +
         '</tr>';
     }
 
-    // soft: most allowed first; stingy: least. The mean breaks median ties.
+    // soft: most allowed first; stingy: least. Ranked on the value shown,
+    // the other measure breaking ties.
     function mxSection(pairs, soft, title, sub) {
       var dir = soft ? -1 : 1;
       var cards = MX_POS.map(function (p) {
         var rows = {}, order = [];
-        MX_STATS.forEach(function (stat) {
-          pairs.slice().sort(function (a, b) {
+        var ranked = mxRanked(p);
+        ranked.forEach(function (stat) {
+          pairs.filter(function (m) { return all.teams[m.def].summary[p.pos][stat]; }).sort(function (a, b) {
             var x = all.teams[a.def].summary[p.pos][stat], y = all.teams[b.def].summary[p.pos][stat];
-            return dir * (x.med - y.med) || dir * (x.avg - y.avg) || a.def.localeCompare(b.def);
+            return dir * (mxVal(x, stat) - mxVal(y, stat)) || dir * (mxTie(x, stat) - mxTie(y, stat)) ||
+              a.def.localeCompare(b.def);
           }).slice(0, 3).forEach(function (m, i) {
             if (!rows[m.def]) { rows[m.def] = { off: m.off, def: m.def, home: m.home, ranks: {} }; order.push(rows[m.def]); }
             rows[m.def].ranks[stat] = i + 1;
           });
         });
         // Most top-three finishes first, then the better finishes, then yards.
-        function score(r) { return MX_STATS.reduce(function (t, k) { return t + (r.ranks[k] ? 4 - r.ranks[k] : 0); }, 0); }
+        function score(r) { return ranked.reduce(function (t, k) { return t + (r.ranks[k] ? 4 - r.ranks[k] : 0); }, 0); }
         order.sort(function (a, b) {
           return (Object.keys(b.ranks).length - Object.keys(a.ranks).length) || (score(b) - score(a)) ||
             dir * (all.teams[a.def].summary[p.pos].yds.med - all.teams[b.def].summary[p.pos].yds.med);
         });
         return '<section class="dvp-mx-card"><h4>' + esc(p.label) + '</h4>' +
           '<table class="dvp-mx-table"><thead><tr><th>Matchup</th>' +
-          p.cols.map(function (k) { return '<th class="num">' + esc(MX_LABEL[k]) + '</th>'; }).join('') +
+          p.cols.map(function (k) {
+            return '<th class="num"' + (MX_HINT[k] ? ' title="' + esc(MX_HINT[k]) + '"' : '') + '>' + esc(MX_LABEL[k]) + '</th>';
+          }).join('') +
           '</tr></thead><tbody>' + order.map(function (m) { return mxRow(m, p); }).join('') +
           '</tbody></table></section>';
       }).join('');
@@ -477,8 +494,8 @@
         '<h3 class="dvp-mx-title">Week ' + esc(week) + ' matchups</h3>' +
         mxSection(pairs, true, 'Softest defenses', 'Top 3 on the slate in each stat, highlighted — offenses facing them have the edge.') +
         mxSection(pairs, false, 'Toughest defenses', 'Bottom 3 on the slate in each stat, highlighted.');
-      note.textContent = 'Median per game of what each defense allowed the position group (mean on hover), from up to ' +
-        n + ' games · counts QBs with 10+ attempts, rushers with 3+ carries, receivers with 2+ targets · ' +
+      note.textContent = 'Per game, what each defense allowed the position group: TDs as an average, everything else as a median, from up to ' +
+        n + ' games · counts QBs with 10+ attempts, rushers with 3+ carries, receivers with 2+ targets · RRTD is rush + rec TDs · Long is the median of every qualifying player\'s long · ' +
         'names are the offense\'s season leaders · rebuilt Tuesdays 5am ET';
     }
 
@@ -498,13 +515,23 @@
       return allLoad;
     }
 
-    // A defense on the board opens its table in place, filtered to the
-    // card's position. Pushed rather than replaced, so Back returns to the board.
+    // A matchup row opens its defense's table in place, filtered to the
+    // card's position. The whole row is the target; the defense inside it
+    // stays a real link, for the keyboard and for opening in a new tab.
+    // Pushed rather than replaced, so Back returns to the board.
     board.addEventListener('click', function (e) {
-      var a = e.target.closest ? e.target.closest('a[data-team]') : null;
-      if (!a || !board.contains(a) || e.metaKey || e.ctrlKey || e.shiftKey) return;
+      var row = e.target.closest ? e.target.closest('tr.dvp-mx-link') : null;
+      if (!row || !board.contains(row)) return;
+      var a = row.querySelector('a[data-team]');
+      if (!a) return;
+      var href = a.getAttribute('href');
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) {
+        // On the link itself the browser already does this.
+        if (!e.target.closest('a')) window.open(href, '_blank');
+        return;
+      }
       e.preventDefault();
-      history.pushState(null, '', a.getAttribute('href'));
+      history.pushState(null, '', href);
       applyParams(location.search);
       window.scrollTo(0, 0);
       load();

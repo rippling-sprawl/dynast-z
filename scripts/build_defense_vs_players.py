@@ -182,48 +182,64 @@ def player_row(p, long_pass=None):
 # targets, not 3+ carries.
 PASSER, RUSHER, RECEIVER = ("pass_att", 10), ("rush_att", 3), ("targets", 2)
 SUMMARY_POS = {
-    "QB": {"min": PASSER, "yds": "pass_yds", "td": "pass_td", "lng": "pass_lng",
-           "extra": {"att": ("pass_att", PASSER)}},
-    "RB": {"min": RUSHER, "yds": "rush_yds", "td": "rush_td", "lng": "rush_lng",
+    "QB": {"min": PASSER, "yds": "pass_yds", "lng": "pass_lng",
+           "extra": {"att": ("pass_att", PASSER), "ptd": ("pass_td", PASSER)}},
+    "RB": {"min": RUSHER, "yds": "rush_yds", "lng": "rush_lng",
            "extra": {"att": ("rush_att", RUSHER), "rec": ("rec", RECEIVER)}},
-    "WR": {"min": RECEIVER, "yds": "rec_yds", "td": "rec_td", "lng": "rec_lng",
+    "WR": {"min": RECEIVER, "yds": "rec_yds", "lng": "rec_lng",
            "extra": {"rec": ("rec", RECEIVER)}},
-    "TE": {"min": RECEIVER, "yds": "rec_yds", "td": "rec_td", "lng": "rec_lng",
+    "TE": {"min": RECEIVER, "yds": "rec_yds", "lng": "rec_lng",
            "extra": {"rec": ("rec", RECEIVER)}},
 }
 
 
-def summarize(rows, games):
-    """-> {pos: {"yds"|"td"|"lng"|"att"|"rec": {"med", "avg", "n"}}}: the median
-    per game of what one defense allowed each position group, regular season
-    only. "att" and "rec" are present only where the position has them.
+def qualifies(r, bar):
+    return r[bar[0]] >= bar[1]
 
-    A game's value is the group's total from its qualifying players -- except
-    the long, which cannot be summed and is the longest of theirs. A game in
+
+def summarize(rows, games):
+    """-> {pos: {stat: {"med", "avg", "n"}}}: per game, what one defense allowed
+    each position group, regular season only. Every position has "yds",
+    "lng" and "rrtd"; "att", "rec" and the QB's "ptd" only where they apply.
+
+    A game's value is the group's total from its qualifying players. A game in
     which nobody at the position qualified counts as zero: the defense held
-    that group to nothing. The mean rides along to break median ties, which
-    for touchdowns are most of them."""
+    that group to nothing.
+
+    The long is the exception: it is read per PLAYER, not per game -- every
+    qualifying player's long in every game, one value each, and the median of
+    those. It answers a single player's longest-reception (or rush, or
+    completion) prop; the group's longest each game would only ever be the
+    ceiling, and drop every other player's long on the floor. Its `n` is
+    player-games, not games.
+
+    Touchdowns are kept apart: "ptd" is passing TDs thrown, "rrtd" rushing plus
+    receiving TDs scored. RRTD counts every player at the position who clears
+    any bar -- carries, targets, or (for a QB) attempts -- so a quarterback's
+    sneak or a receiver's end-around is in it. The page reads TDs by their
+    mean, the other stats by their median."""
     game_ids = [g["game_id"] for g in games if not g["postseason"]]
     out = {}
     for pos, spec in SUMMARY_POS.items():
-        field, floor = spec["min"]
-        stats = ("yds", "td", "lng") + tuple(spec["extra"])
+        stats = ("yds", "rrtd") + tuple(spec["extra"])
         per_game = {gid: dict.fromkeys(stats, 0) for gid in game_ids}
+        longs = []
         for r in rows:
             g = per_game.get(r["game_id"])
             if g is None or r["pos"] != pos:
                 continue
-            for stat, (src, (qfield, qfloor)) in spec["extra"].items():
-                if r[qfield] >= qfloor:
+            for stat, (src, bar) in spec["extra"].items():
+                if qualifies(r, bar):
                     g[stat] += r[src]
-            if r[field] < floor:
-                continue
-            g["yds"] += r[spec["yds"]]
-            g["td"] += r[spec["td"]]
-            g["lng"] = max(g["lng"], r[spec["lng"]])
+            if any(qualifies(r, bar) for bar in (spec["min"], RUSHER, RECEIVER)):
+                g["rrtd"] += r["tot_td"]
+            if qualifies(r, spec["min"]):
+                g["yds"] += r[spec["yds"]]
+                longs.append(r[spec["lng"]])
         out[pos] = {}
-        for stat in stats:
-            vals = [g[stat] for g in per_game.values()]
+        series = {stat: [g[stat] for g in per_game.values()] for stat in stats}
+        series["lng"] = longs
+        for stat, vals in series.items():
             out[pos][stat] = {
                 "med": statistics.median(vals) if vals else 0,
                 "avg": round(statistics.mean(vals), 2) if vals else 0,
