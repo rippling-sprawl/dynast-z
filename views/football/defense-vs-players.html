@@ -382,28 +382,30 @@
 
     // The card says the position, so the columns need not say pass/rush/rec.
     // `rank` is what puts a matchup on the card; the other columns are
-    // context (Att and Recs are volume, never ranked). Touchdowns are two
-    // values: Pass TD thrown (QB only) and RRTD, rushing plus receiving TDs
-    // scored (not on the QB card: there it is the odd sneak). A back does
-    // both jobs, so his card splits into Rushing and Receiving `groups` and
-    // scrolls sideways; his longs are shown but rank nothing.
+    // context (Att and Recs are volume, never ranked). Every card has one TD
+    // column, which counts what that card is about: passing TDs thrown for
+    // the QB (never his sneaks), rushing plus receiving TDs for WRs and TEs.
+    // A back does both jobs, so he gets two cards, Rush and Rec, each with
+    // only its own TDs; his longs are shown but rank nothing.
     var MX_POS = [
       { pos: 'QB', label: 'Quarterbacks', names: 1, cols: ['att', 'yds', 'ptd', 'lng'],
         rank: ['yds', 'ptd', 'lng'] },
-      { pos: 'RB', label: 'Running backs', names: 2, cols: ['rrtd', 'att', 'yds', 'lng', 'rec', 'ryds', 'rlng'],
-        rank: ['rrtd', 'yds', 'ryds'],
-        groups: [{ label: '', n: 1 }, { label: 'Rushing', n: 3 }, { label: 'Receiving', n: 3 }] },
+      { pos: 'RB', label: 'Running Backs (Rush)', names: 2, cols: ['rtd', 'att', 'yds', 'lng'],
+        rank: ['rtd', 'yds'] },
+      { pos: 'RB', label: 'Running Backs (Rec)', names: 2, cols: ['ctd', 'rec', 'ryds', 'rlng'],
+        rank: ['ctd', 'ryds'] },
       { pos: 'WR', label: 'Wide receivers', names: 2, cols: ['rrtd', 'rec', 'yds', 'lng'],
         rank: ['rrtd', 'yds', 'lng'] },
       { pos: 'TE', label: 'Tight ends', names: 1, cols: ['rrtd', 'rec', 'yds', 'lng'],
         rank: ['rrtd', 'yds', 'lng'] }
     ];
-    var MX_LABEL = { att: 'Att', rec: 'Recs', yds: 'Yds', ptd: 'Pass TD', rrtd: 'RRTD', lng: 'Long',
-                     ryds: 'Yds', rlng: 'Long' };
-    var MX_HINT = { rrtd: 'Rush + rec TDs', ryds: 'Receiving yds', rlng: 'Longest reception' };
+    var MX_LABEL = { att: 'Att', rec: 'Recs', yds: 'Yds', lng: 'Long', ryds: 'Yds', rlng: 'Long',
+                     ptd: 'TD', rrtd: 'TD', rtd: 'TD', ctd: 'TD' };
+    var MX_HINT = { ptd: 'Passing TDs', rrtd: 'Rush + rec TDs', rtd: 'Rushing TDs', ctd: 'Receiving TDs',
+                    ryds: 'Receiving yds', rlng: 'Longest reception' };
     // TDs are read by their per-game mean — a median of mostly 0s and 1s says
     // little — and everything else by its median.
-    var MX_TD = { ptd: true, rrtd: true };
+    var MX_TD = { ptd: true, rrtd: true, rtd: true, ctd: true };
 
     function mxRanked(p) { return p.rank; }
     function mxVal(c, stat) { return MX_TD[stat] ? c.avg : c.med; }
@@ -416,7 +418,7 @@
       return MX_TD[stat] || stat === 'rec' ? v.toFixed(1) : String(Math.round(v));
     }
 
-    function mxRow(m, p, starts) {
+    function mxRow(m, p) {
       var sum = all.teams[m.def].summary[p.pos];
       var lead = (((all.teams[m.off] || {}).leaders || {})[p.pos] || []).slice(0, p.names);
       return '<tr class="dvp-mx-link">' +
@@ -438,7 +440,7 @@
         '</td>' +
         p.cols.map(function (stat) {
           var c = sum[stat];
-          var cls = 'num' + (starts[stat] ? ' grp-start' : '');
+          var cls = 'num';
           if (!c) return '<td class="' + cls + '">—</td>';
           var rank = m.ranks[stat];
           return '<td class="' + cls + (rank ? ' is-ranked' : '') + '" title="' + esc(MX_HINT[stat] || MX_LABEL[stat]) +
@@ -450,7 +452,7 @@
 
     // soft: most allowed first; stingy: least. Ranked on the value shown,
     // the other measure breaking ties.
-    function mxSection(pairs, soft, title, sub) {
+    function mxSection(pairs, soft, title) {
       var dir = soft ? -1 : 1;
       var cards = MX_POS.map(function (p) {
         var rows = {}, order = [];
@@ -471,25 +473,17 @@
           var x = all.teams[a.def].summary[p.pos].yds, y = all.teams[b.def].summary[p.pos].yds;
           return dir * (x.med - y.med) || dir * (x.avg - y.avg) || a.def.localeCompare(b.def);
         });
-        var groupRow = p.groups ? '<tr class="dvp-mx-groups"><th class="dvp-mx-who"></th>' +
-          p.groups.map(function (g) {
-            return '<th colspan="' + g.n + '"' + (g.label ? ' class="grp"' : '') + '>' + esc(g.label) + '</th>';
-          }).join('') + '</tr>' : '';
-        // Where a group starts, a rule: the first column of each group past the first.
-        var starts = {}, at = 0;
-        (p.groups || []).forEach(function (g, i) { if (i) starts[p.cols[at]] = true; at += g.n; });
         return '<section class="dvp-mx-card"><h4>' + esc(p.label) + '</h4>' +
-          '<div class="dvp-mx-scroll"><table class="dvp-mx-table' + (p.groups ? ' has-groups' : '') + '"><thead>' + groupRow +
+          '<table class="dvp-mx-table"><thead>' +
           '<tr><th class="dvp-mx-who">Matchup</th>' +
           p.cols.map(function (k) {
-            return '<th class="num' + (starts[k] ? ' grp-start' : '') + '"' +
-              (MX_HINT[k] ? ' title="' + esc(MX_HINT[k]) + '"' : '') + '>' + esc(MX_LABEL[k]) + '</th>';
+            return '<th class="num"' + (MX_HINT[k] ? ' title="' + esc(MX_HINT[k]) + '"' : '') + '>' + esc(MX_LABEL[k]) + '</th>';
           }).join('') +
-          '</tr></thead><tbody>' + order.map(function (m) { return mxRow(m, p, starts); }).join('') +
-          '</tbody></table></div></section>';
+          '</tr></thead><tbody>' + order.map(function (m) { return mxRow(m, p); }).join('') +
+          '</tbody></table></section>';
       }).join('');
       return '<div class="dvp-mx-section ' + (soft ? 'is-soft' : 'is-stingy') + '">' +
-        '<h3>' + esc(title) + '</h3><p class="dvp-mx-sub">' + esc(sub) + '</p>' +
+        '<h3>' + esc(title) + '</h3>' +
         '<div class="dvp-mx-grid">' + cards + '</div></div>';
     }
 
@@ -511,10 +505,10 @@
       pairs.forEach(function (m) { n = Math.max(n, all.teams[m.def].summary.QB.yds.n); });
       board.innerHTML =
         '<h3 class="dvp-mx-title">Week ' + esc(week) + ' matchups</h3>' +
-        mxSection(pairs, true, 'Softest defenses', 'Top 3 on the slate in each stat, highlighted — offenses facing them have the edge.') +
-        mxSection(pairs, false, 'Toughest defenses', 'Bottom 3 on the slate in each stat, highlighted.');
+        mxSection(pairs, true, 'Softest defenses') +
+        mxSection(pairs, false, 'Toughest defenses');
       note.textContent = 'Per game, what each defense allowed the position group: TDs as an average, everything else as a median, from up to ' +
-        n + ' games · counts QBs with 10+ attempts, rushers with 3+ carries, receivers with 2+ targets · RRTD is rush + rec TDs · Long is the median of every qualifying player\'s long · ' +
+        n + ' games · counts QBs with 10+ attempts, rushers with 3+ carries, receivers with 2+ targets · TD is passing TDs for QBs, rushing or receiving TDs for each RB card, rush + rec TDs for WRs and TEs · Long is the median of every qualifying player\'s long · ' +
         'names are the offense\'s season leaders · rebuilt Tuesdays 5am ET';
     }
 

@@ -217,13 +217,13 @@
 .dvp-toggle[aria-pressed="false"] { opacity: 0.4; }
 
 /* ---------- The matchup board: shown before a team is picked ----------
- * Two sections (softest, toughest), each four position cards, each card three
+ * Two sections (softest, toughest), each five position cards (backs get two), each card three
  * top-3 lists. A row is the matchup, the median allowed, and the offense's
  * leaders at the position underneath. */
 .dvp-mx-title { margin: 4px 0 12px; font-size: 17px; color: var(--text-hi); }
 .dvp-mx-section { margin-bottom: 22px; }
 .dvp-mx-section h3 {
-  margin: 0;
+  margin: 0 0 10px;
   font-size: 13px;
   font-weight: 650;
   letter-spacing: 0.06em;
@@ -231,7 +231,6 @@
 }
 .dvp-mx-section.is-soft h3 { color: var(--good); }
 .dvp-mx-section.is-stingy h3 { color: var(--bad); }
-.dvp-mx-sub { margin: 2px 0 10px; font-size: 12px; color: var(--text-4); }
 
 /* Two by two, so no position sits alone on a row; one column on a phone. */
 .dvp-mx-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
@@ -284,24 +283,3 @@
 .dvp-mx-link:hover .dvp-mx-match a { color: var(--accent); text-decoration: underline; }
 .dvp-mx-table :is(td, th):first-child { padding-left: 4px; }
 .dvp-mx-table :is(td, th):last-child { padding-right: 4px; }
-
-/* The running backs' card: Rushing and Receiving column groups, wider than
- * the card, so it scrolls sideways with the matchup column pinned. */
-.dvp-mx-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-.dvp-mx-table.has-groups { width: max-content; min-width: 100%; }
-.dvp-mx-table.has-groups .dvp-mx-who {
-  position: sticky;
-  left: 0;
-  z-index: 1;
-  background: var(--surface);
-  padding-right: 10px;
-}
-.dvp-mx-table.has-groups .dvp-mx-names { white-space: nowrap; }
-.dvp-mx-table .dvp-mx-groups th { padding-bottom: 2px; }
-.dvp-mx-table .dvp-mx-groups th.grp {
-  text-align: center;
-  color: var(--text-3);
-  border-bottom: 1px solid var(--border-soft);
-}
-.dvp-mx-table .grp-start { border-left: 1px solid var(--border-soft); }
-.dvp-mx-table th.grp + th.grp, .dvp-mx-table .dvp-mx-groups th.grp:not(:nth-child(2)) { border-left: 1px solid var(--border-soft); }

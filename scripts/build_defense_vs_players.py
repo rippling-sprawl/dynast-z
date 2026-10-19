@@ -181,6 +181,8 @@ def player_row(p, long_pass=None):
 # -- a back's catches are a receiving number, so they count backs with 2+
 # targets, not 3+ carries. `longs` is the same for a second long, read per
 # player like the first: a back's longest catch beside his longest run.
+# `tds` splits the RRTD count by how it was scored, for a back whose page
+# card is split into rushing and receiving.
 PASSER, RUSHER, RECEIVER = ("pass_att", 10), ("rush_att", 3), ("targets", 2)
 SUMMARY_POS = {
     "QB": {"min": PASSER, "yds": "pass_yds", "lng": "pass_lng",
@@ -188,7 +190,8 @@ SUMMARY_POS = {
     "RB": {"min": RUSHER, "yds": "rush_yds", "lng": "rush_lng",
            "extra": {"att": ("rush_att", RUSHER), "rec": ("rec", RECEIVER),
                      "ryds": ("rec_yds", RECEIVER)},
-           "longs": {"rlng": ("rec_lng", RECEIVER)}},
+           "longs": {"rlng": ("rec_lng", RECEIVER)},
+           "tds": {"rtd": "rush_td", "ctd": "rec_td"}},
     "WR": {"min": RECEIVER, "yds": "rec_yds", "lng": "rec_lng",
            "extra": {"rec": ("rec", RECEIVER)}},
     "TE": {"min": RECEIVER, "yds": "rec_yds", "lng": "rec_lng",
@@ -203,8 +206,8 @@ def qualifies(r, bar):
 def summarize(rows, games):
     """-> {pos: {stat: {"med", "avg", "n"}}}: per game, what one defense allowed
     each position group, regular season only. Every position has "yds",
-    "lng" and "rrtd"; "att", "rec", the QB's "ptd" and the RB's receiving
-    "ryds" and "rlng" only where they apply.
+    "lng" and "rrtd"; "att", "rec", the QB's "ptd", the RB's receiving
+    "ryds" and "rlng" and his "rtd"/"ctd" only where they apply.
 
     A game's value is the group's total from its qualifying players. A game in
     which nobody at the position qualified counts as zero: the defense held
@@ -220,12 +223,14 @@ def summarize(rows, games):
     Touchdowns are kept apart: "ptd" is passing TDs thrown, "rrtd" rushing plus
     receiving TDs scored. RRTD counts every player at the position who clears
     any bar -- carries, targets, or (for a QB) attempts -- so a quarterback's
-    sneak or a receiver's end-around is in it. The page reads TDs by their
+    sneak or a receiver's end-around is in it. A back's RRTD is also split
+    into "rtd" (rushing) and "ctd" (receiving), counted by the same rule, so
+    the two add up to it. The page reads TDs by their
     mean, the other stats by their median."""
     game_ids = [g["game_id"] for g in games if not g["postseason"]]
     out = {}
     for pos, spec in SUMMARY_POS.items():
-        stats = ("yds", "rrtd") + tuple(spec["extra"])
+        stats = ("yds", "rrtd") + tuple(spec["extra"]) + tuple(spec.get("tds", {}))
         per_game = {gid: dict.fromkeys(stats, 0) for gid in game_ids}
         longs = {"lng": []}
         longs.update((k, []) for k in spec.get("longs", {}))
@@ -238,6 +243,8 @@ def summarize(rows, games):
                     g[stat] += r[src]
             if any(qualifies(r, bar) for bar in (spec["min"], RUSHER, RECEIVER)):
                 g["rrtd"] += r["tot_td"]
+                for stat, src in spec.get("tds", {}).items():
+                    g[stat] += r[src]
             for stat, (src, bar) in spec.get("longs", {}).items():
                 if qualifies(r, bar):
                     longs[stat].append(r[src])
