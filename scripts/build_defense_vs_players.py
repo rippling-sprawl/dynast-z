@@ -25,7 +25,9 @@ rebuild of the season, so a late, skipped or repeated run is harmless -- the
 next one simply writes the right answer.
 
 Only `final` bundles count. A game captured mid-play would put a half-game in
-the table that the next run silently changes.
+the table that the next run silently changes. And only whole weeks count: a
+week with any game still to play is left out entirely (open_weeks), so a run
+mid-Sunday or before Monday night leaves the matchup board as it was.
 
 Usage:
     python3 scripts/build_defense_vs_players.py --dry-run --team DAL
@@ -40,7 +42,7 @@ import statistics
 import sys
 import urllib.error
 import urllib.request
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, "scripts"))
@@ -103,6 +105,63 @@ def supabase(path, method="GET", body=None, headers=None):
 def final_games(season):
     return supabase(f"game_odds?select={SELECT}&season=eq.{season}"
                     "&phase=eq.final&order=kickoff.asc") or []
+
+
+# ---------------------------------------------------------------------------
+# Whole weeks only
+# ---------------------------------------------------------------------------
+
+# A game not final this long after kickoff is taken as postponed or stuck, and
+# stops holding its week open -- or one lost game would freeze that week out
+# of every defense's numbers for the rest of the season.
+GIVE_UP = timedelta(days=3)
+
+
+def parse_ts(stamp):
+    """Schedule kickoffs are "2026-09-10T00:20Z", game_odds' are Postgres
+    "2026-09-10T00:20:00+00:00"; this reads both on Python 3.9."""
+    return datetime.fromisoformat(stamp.replace("Z", "+00:00"))
+
+
+def scheduled_games(season):
+    """-> {game_id: (week, kickoff)}: the regular season's fixture list, so a
+    game with no game_odds row yet still holds its week open."""
+    path = os.path.join(ROOT, "data", f"nfl_schedule_{season}.json")
+    if not os.path.exists(path):
+        return {}
+    with open(path) as f:
+        doc = json.load(f)
+    return {str(g["id"]): (wk.get("week"), g.get("kickoff"))
+            for wk in doc.get("weeks", []) for g in wk.get("games", [])}
+
+
+def open_weeks(season, now):
+    """-> {(postseason, week)} with a game still to be played, so the build
+    leaves that week out whole until it is done.
+
+    The page ranks this week's matchups on what each defense has allowed; a
+    build run on a Sunday night or before Monday night would rank them on a
+    week half counted, with some defenses a game ahead of others. A week is
+    only counted once every game in it is final, or past GIVE_UP."""
+    games = {gid: ((False, week), kick) for gid, (week, kick) in scheduled_games(season).items()}
+    rows = supabase(f"game_odds?select=game_id,week,kickoff,phase,"
+                    f"postseason:data->game->postseason&season=eq.{season}") or []
+    final = set()
+    for r in rows:
+        gid = str(r["game_id"])
+        games[gid] = ((bool(r.get("postseason")), r.get("week")), r.get("kickoff"))
+        if r.get("phase") == "final":
+            final.add(gid)
+    out = set()
+    for gid, (week, kick) in games.items():
+        if gid in final:
+            continue
+        if kick and now - parse_ts(kick) > GIVE_UP:
+            print(f"  game {gid} (week {week[1]}) is not final {GIVE_UP.days}+ days "
+                  "after kickoff -- counting its week without it")
+            continue
+        out.add(week)
+    return out
 
 
 # ---------------------------------------------------------------------------
@@ -374,9 +433,19 @@ def main():
     season = args.season or season_for(now)
 
     try:
-        games = final_games(season)
+        held = open_weeks(season, now)
+        games, dropped = [], {}
+        for g in final_games(season):
+            week = (bool((g.get("game") or {}).get("postseason")), g.get("week"))
+            if week in held:
+                dropped[week] = dropped.get(week, 0) + 1
+            else:
+                games.append(g)
         payloads = build(season, games, now)
         print(f"season {season}: {len(games)} final games, {len(payloads)} defenses")
+        for (post, week), k in sorted(dropped.items(), key=lambda w: (w[0][0], w[0][1] or 0)):
+            print(f"  held out: {'postseason ' if post else ''}week {week} "
+                  f"({k} final, not every game played yet)")
         if args.dry_run:
             team = (args.team or "").upper()
             if team:
