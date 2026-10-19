@@ -25,7 +25,6 @@ and the standings between them, and the smaller one should not keep evicting
 the larger.
 """
 from http.server import BaseHTTPRequestHandler
-import json
 import os
 import sys
 import urllib.parse
@@ -34,6 +33,7 @@ import urllib.parse
 # everything shared lives under api/.
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from _pickem import scoring, store  # noqa: E402
+from _http import send_json  # noqa: E402
 
 
 def build_standings(season, week, now):
@@ -123,12 +123,10 @@ class handler(BaseHTTPRequestHandler):
             self._json(500, {"error": str(e)})
 
     def _json(self, status, data):
-        self.send_response(status)
-        self.send_header("Content-Type", "application/json")
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type, X-User-Id")
-        self.end_headers()
-        self.wfile.write(json.dumps(data).encode())
+        send_json(self, status, data, {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Headers": "Content-Type, X-User-Id",
+        })
 
     def do_OPTIONS(self):
         self.send_response(204)

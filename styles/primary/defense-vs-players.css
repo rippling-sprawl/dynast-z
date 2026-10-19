@@ -38,7 +38,6 @@
 .dvp-table thead th { position: sticky; top: 0; z-index: 3; }
 .dvp-table thead tr + tr th { top: var(--pin-1, 0); }
 .dvp-table tbody tr.dvp-game th { position: sticky; top: var(--pin-game, 0); z-index: 2; }
-.dvp-table tbody tr.dvp-pos th { position: sticky; top: var(--pin-pos, 0); z-index: 2; }
 .dvp-table thead th.grp { text-align: center; color: var(--text-3); }
 .dvp-table th.num, .dvp-table td.num { text-align: right; font-variant-numeric: tabular-nums; }
 
@@ -46,9 +45,8 @@
 .dvp-table tbody tr:last-child td { border-bottom: 0; }
 .dvp-table tbody tr:hover td { background: var(--surface-2); }
 
-/* A game opens with a full-width week/opponent row, and each position within
- * it with a lighter full-width row; the player rows below carry only the
- * player and his numbers. */
+/* A game opens with a full-width week/opponent row; each position within it
+ * is a narrow column cell spanning its players' rows, single-letter label. */
 .dvp-table tbody tr.dvp-game th {
   padding: 3px 8px;
   background: var(--surface-2);
@@ -56,15 +54,39 @@
   border-bottom: 1px solid var(--border);
 }
 .dvp-table tbody tr.dvp-game:first-child th { border-top: 0; }
-.dvp-table tbody tr.dvp-pos th {
-  padding: 1px 8px;
+
+/* A bye: a quiet row where the regular season skips a week. */
+.dvp-table tbody tr.dvp-bye th {
+  padding: 2px 8px;
   background: var(--surface);
-  border-bottom: 1px solid var(--border-soft);
+  border-top: 1px dashed var(--border);
+  border-bottom: 1px dashed var(--border);
   font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.07em;
+  text-transform: uppercase;
+  text-align: left;
   color: var(--text-4);
 }
+
+.dvp-table .dvp-poscol, .dvp-table .dvp-poscell { width: 18px; min-width: 18px; padding: 0 2px; text-align: center; }
+.dvp-table th.dvp-poscell {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: var(--surface);
+  border-right: 1px solid var(--border-soft);
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.07em;
+  color: var(--text-4);
+}
+.dvp-table thead th.dvp-poscol { position: sticky; left: 0; z-index: 4; }
+/* A position's last player row closes the group with the stronger rule. */
+.dvp-table tbody tr:has(+ tr.dvp-first) td, .dvp-table tbody tr:has(+ tr.dvp-game) td,
+.dvp-table tbody tr:has(+ tr.dvp-bye) td { border-bottom-color: var(--border); }
 /* The labels ride along on a horizontal scroll, as the player column does. */
 .dvp-label { position: sticky; left: 8px; display: inline-flex; align-items: center; gap: 8px; }
 
@@ -74,7 +96,7 @@
  * background so the numbers slide under it. */
 .dvp-table .dvp-name {
   position: sticky;
-  left: 0;
+  left: 18px;
   z-index: 1;
   background: var(--surface);
   border-right: 1px solid var(--border-soft);
@@ -84,7 +106,8 @@
 .dvp-opp { display: inline-flex; align-items: center; gap: 4px; color: var(--text-4); font-size: 11px; font-weight: 500; }
 .dvp-opp img { width: 16px; height: 16px; display: block; }
 /* The corner cell pins both ways, so it sits over everything that scrolls. */
-.dvp-table thead th.dvp-name { z-index: 4; }
+.dvp-table thead th.dvp-name { z-index: 4; left: 18px; }
+.dvp-table.no-pos .dvp-name, .dvp-table.no-pos thead th.dvp-name { left: 0; }
 
 .dvp-table td.dvp-none { color: var(--text-4); text-align: center; padding: 18px 8px; }
 
@@ -96,13 +119,68 @@
 
 .dvp-note { margin: 10px 0 0; font-size: 12.5px; color: var(--text-3); }
 
-/* Three groups sharing the picker row; on a phone each takes a line. */
-.dvp-group { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.dvp-toggles { gap: 6px; margin-left: auto; }
-@media (max-width: 640px) {
-  .dvp-controls { flex-direction: column; align-items: flex-start; }
-  .dvp-toggles { margin-left: 0; }
+/* Defense, position and the filters icon share one line, phone included. */
+.dvp-controls { flex-wrap: nowrap; gap: 12px; }
+
+/* The filters icon: a dd-btn box without the caret, square to its siblings.
+ * The dot says something inside the modal is off its default. */
+.dvp-filters-btn { position: relative; padding: 3px 6px; color: var(--text-3); }
+.dvp-filters-btn::after { display: none; }
+.dvp-filters-btn:hover { color: var(--text-hi); }
+.dvp-filters-btn svg { display: block; }
+.dvp-filters-dot {
+  display: none;
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 2px var(--bg, var(--surface));
 }
+.dvp-filters-btn.is-set { color: var(--accent); }
+.dvp-filters-btn.is-set .dvp-filters-dot { display: block; }
+
+/* The modal: the minimums and the column toggles, one labelled row each.
+ * overflow stays visible so the minimum menus can hang below their rows. */
+.dvp-modal {
+  width: min(320px, calc(100vw - 32px));
+  margin: auto;
+  padding: 0;
+  overflow: visible;
+  background: var(--bg-alt);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 16px 48px var(--overlay-strong);
+}
+.dvp-modal::backdrop { background: var(--scrim); }
+.dvp-modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px 8px 16px;
+  border-bottom: 1px solid var(--border-soft);
+}
+.dvp-modal-head h3 { margin: 0; font-size: 14px; font-weight: 650; color: var(--text-hi); }
+.dvp-modal-x {
+  background: none;
+  border: 0;
+  padding: 0 4px;
+  font-size: 22px;
+  line-height: 1;
+  color: var(--text-4);
+  cursor: pointer;
+}
+.dvp-modal-x:hover { color: var(--text-hi); }
+.dvp-modal-body { display: flex; flex-direction: column; gap: 12px; padding: 14px 16px 16px; }
+.dvp-modal-body .dvp-filter { justify-content: space-between; }
+.dvp-toggle-set { display: flex; gap: 6px; }
+/* Each minimum's menu hangs off its own button, right-aligned with it — the
+ * phone rule that spans menus across the filter row has no row in here. */
+.dvp-modal .dd { position: relative; }
+.dvp-modal .dd-menu { left: auto; right: 0; width: max-content; }
 
 /* A filter is a small label and then its dropdown, which shows only the value. */
 .dvp-filter { display: flex; align-items: center; gap: 6px; }
@@ -113,9 +191,8 @@
   text-transform: uppercase;
   color: var(--text-4);
 }
-.dvp-toggles .dvp-flabel { margin-right: 2px; }
 
-/* Smaller than the schedule's dropdowns: there are six controls here. */
+/* Smaller than the schedule's dropdowns, to keep the row on one line. */
 .dvp-controls .dd-btn { font-size: 11.5px; padding: 3px 8px; gap: 6px; }
 .dvp-controls .dd-logo { width: 15px; height: 15px; }
 .dvp-controls .dd-opt { font-size: 12px; }
@@ -135,8 +212,68 @@
   background: var(--accent) center / 9px no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 6.2l2.3 2.3 4.7-5' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
 }
 
-/* Show-only toggles: the dd-btn box without the caret, lit while picked. */
-.dvp-toggle { color: var(--text-3); }
+/* Column-group toggles: the dd-btn box without the caret, faded once hidden. */
 .dvp-toggle::after { display: none; }
-.dvp-toggle:focus-visible { outline: none; border-color: var(--text-5); }
-.dvp-toggle[aria-pressed="true"] { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
+.dvp-toggle[aria-pressed="false"] { opacity: 0.4; }
+
+/* ---------- The matchup board: shown before a team is picked ----------
+ * Two sections (softest, toughest), each four position cards, each card three
+ * top-3 lists. A row is the matchup, the median allowed, and the offense's
+ * leaders at the position underneath. */
+.dvp-mx-title { margin: 4px 0 12px; font-size: 17px; color: var(--text-hi); }
+.dvp-mx-section { margin-bottom: 22px; }
+.dvp-mx-section h3 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.dvp-mx-section.is-soft h3 { color: var(--good); }
+.dvp-mx-section.is-stingy h3 { color: var(--bad); }
+.dvp-mx-sub { margin: 2px 0 10px; font-size: 12px; color: var(--text-4); }
+
+/* Two by two, so no position sits alone on a row; one column on a phone. */
+.dvp-mx-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 560px) { .dvp-mx-grid { grid-template-columns: minmax(0, 1fr); } }
+.dvp-mx-card {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  padding: 10px 12px 4px;
+}
+.dvp-mx-card h4 { margin: 0 0 6px; font-size: 14px; font-weight: 650; color: var(--text-hi); }
+
+/* One row per matchup, its three stats in headed columns. A stat it ranked
+ * top (or bottom) three in is lit; the rest are there for context. */
+.dvp-mx-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 6px; }
+.dvp-mx-table th {
+  padding: 0 0 4px;
+  text-align: left;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--text-4);
+  white-space: nowrap;
+}
+.dvp-mx-table td { padding: 4px 0; border-top: 1px solid var(--border-soft); vertical-align: top; }
+.dvp-mx-table .num { text-align: right; padding-left: 10px; font-variant-numeric: tabular-nums; }
+.dvp-mx-table td.num { color: var(--text-5); }
+.dvp-mx-table td.is-ranked { font-weight: 650; }
+.is-soft .dvp-mx-table td.is-ranked { color: var(--good-bright); }
+.is-stingy .dvp-mx-table td.is-ranked { color: var(--bad-bright); }
+
+.dvp-mx-who { min-width: 0; }
+.dvp-mx-match { display: inline-flex; align-items: center; gap: 5px; color: var(--text-2); white-space: nowrap; }
+.dvp-mx-match img { width: 16px; height: 16px; display: block; flex: none; }
+.dvp-mx-match b { font-weight: 650; color: var(--text-hi); }
+.dvp-mx-at { font-size: 11px; color: var(--text-4); }
+.dvp-mx-match a { display: inline-flex; align-items: center; gap: 4px; color: var(--text-2); text-decoration: none; }
+.dvp-mx-match a:hover { color: var(--accent); text-decoration: underline; }
+.dvp-mx-names {
+  display: block;
+  padding-left: 21px;
+  font-size: 11.5px;
+  color: var(--text-3);
+}

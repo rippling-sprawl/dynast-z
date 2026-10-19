@@ -53,9 +53,13 @@ from http.server import BaseHTTPRequestHandler
 import json
 import os
 import re
+import sys
 import urllib.error
 import urllib.parse
 import urllib.request
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from _http import send_json  # noqa: E402
 
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "")
@@ -369,16 +373,10 @@ class handler(BaseHTTPRequestHandler):
         # No `cache` argument any more: vercel.json puts every /api/* route on
         # no-store, and a header set here would only be overwritten. Freshness
         # is `?known=`, not HTTP.
-        body = json.dumps(data).encode()
-        self.send_response(status)
-        self.send_header("Content-Type", "application/json")
-        self.send_header("Content-Length", str(len(body)))
-        self.send_header("Cache-Control", "no-store")
+        headers = {"Cache-Control": "no-store", "Access-Control-Allow-Origin": "*"}
         if etag:
-            self.send_header("ETag", etag)
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.end_headers()
-        self.wfile.write(body)
+            headers["ETag"] = etag
+        send_json(self, status, data, headers)
 
     def do_OPTIONS(self):
         self.send_response(204)

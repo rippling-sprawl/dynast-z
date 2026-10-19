@@ -47,17 +47,17 @@
    * since 2002, so a static map is the right home for it; the abbreviations are
    * the feeds' own, which is also how the logo files are named. */
   var NFL_CONFERENCES = [
-    { name: 'AFC', divisions: [
-      { name: 'East',  teams: ['BUF', 'MIA', 'NE', 'NYJ'] },
-      { name: 'North', teams: ['BAL', 'CIN', 'CLE', 'PIT'] },
-      { name: 'South', teams: ['HOU', 'IND', 'JAX', 'TEN'] },
-      { name: 'West',  teams: ['DEN', 'KC', 'LAC', 'LV'] }
-    ] },
     { name: 'NFC', divisions: [
       { name: 'East',  teams: ['DAL', 'NYG', 'PHI', 'WSH'] },
       { name: 'North', teams: ['CHI', 'DET', 'GB', 'MIN'] },
       { name: 'South', teams: ['ATL', 'CAR', 'NO', 'TB'] },
       { name: 'West',  teams: ['ARI', 'LAR', 'SEA', 'SF'] }
+    ] },
+    { name: 'AFC', divisions: [
+      { name: 'East',  teams: ['BUF', 'MIA', 'NE', 'NYJ'] },
+      { name: 'North', teams: ['BAL', 'CIN', 'CLE', 'PIT'] },
+      { name: 'South', teams: ['HOU', 'IND', 'JAX', 'TEN'] },
+      { name: 'West',  teams: ['DEN', 'KC', 'LAC', 'LV'] }
     ] }
   ];
 
@@ -66,6 +66,12 @@
   function teamName(t) {
     if (!t) return '';
     return t.name || t.team || t.abbr || '';
+  }
+
+  // "Kansas City Chiefs" -> "Chiefs": every NFL nickname is one word.
+  function nickname(name) {
+    var parts = String(name || '').trim().split(/\s+/);
+    return parts[parts.length - 1];
   }
 
   function teamMap(teams) {
@@ -233,9 +239,10 @@
     // cannot be picked at all.
     var placed = {};
     var html = NFL_CONFERENCES.map(function (conf) {
-      return '<div class="tp-conf"><h3 class="tp-conf-name">' + esc(conf.name) + '</h3>' +
+      return '<div class="tp-conf tp-conf-' + esc(conf.name.toLowerCase()) + '"><h3 class="tp-conf-name">' + esc(conf.name) + '</h3>' +
         conf.divisions.map(function (div) {
-          return '<div class="tp-div"><span class="tp-div-name">' + esc(div.name) + '</span>' +
+          return '<div class="tp-div tp-div-' + esc(div.name.toLowerCase()) + '" role="group"' +
+            ' aria-label="' + esc(conf.name + ' ' + div.name) + '">' +
             '<div class="tp-teams">' + div.teams.map(function (abbr) {
               placed[abbr] = true;
               return teamButton(abbr, byAbbr);
@@ -271,7 +278,7 @@
 
     btn.querySelector('.dd-value').innerHTML = t
       ? '<img class="dd-logo" src="/assets/icons/nfl/' + esc(t.abbr) + '.svg" alt="">' +
-        esc(teamName(t) || t.abbr)
+        esc(opts.nicknameOnly ? nickname(teamName(t) || t.abbr) : (teamName(t) || t.abbr))
       : esc(opts.emptyLabel || 'All teams');
 
     grid.classList.toggle('has-pick', !!team);

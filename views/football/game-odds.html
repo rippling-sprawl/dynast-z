@@ -1391,44 +1391,51 @@
         function (v) { return (side === 'over' ? 'o' : 'u') + v; });
     }
 
-    function oddsRow(t, spread, ml, tot) {
-      return '<tr><th scope="row" class="go-tm">' + teamLogo(t.abbr, 'go-logo-sm') +
+    function oddsRow(t, spread, ml, tot, bookCell) {
+      return '<tr>' + (bookCell || '') +
+        '<th scope="row" class="go-tm">' + teamLogo(t.abbr, 'go-logo-sm') +
         esc(t.abbr) + '</th>' +
         '<td class="is-num">' + esc(spread) + '</td>' +
         '<td class="is-num">' + esc(ml) + '</td>' +
         '<td class="is-num">' + esc(tot) + '</td></tr>';
     }
 
-    /* One book, one table: the book names the team column, the markets are the
-     * other three headings, and the away team leads the way it does everywhere
-     * else on the page. */
-    function bookTable(r, g) {
+    /* One book is two rows (away over home) under a book cell that spans both,
+     * its ticker turned on its side so the column stays narrow. */
+    function bookRows(r, g) {
       var b = bookHeading(r.vendor);
-      return '<div class="go-book"><table class="go-table go-odds"><thead><tr>' +
-          '<th class="go-tm"' + (b.t ? ' title="' + esc(b.t) + '"' : '') + '>' +
-            esc(b.s) + '</th>' +
+      var cell = '<th scope="rowgroup" rowspan="2" class="go-bk"' +
+        (b.t ? ' title="' + esc(b.t) + '"' : '') + '><span>' + esc(b.s) +
+        '</span></th>';
+      return oddsRow(g.away,
+          lineCell(r.spread_away_value, r.spread_away_odds, fmtSpread),
+          fmtOdds(r.moneyline_away_odds),
+          totalCell(r, 'over'), cell) +
+        oddsRow(g.home,
+          lineCell(r.spread_home_value, r.spread_home_odds, fmtSpread),
+          fmtOdds(r.moneyline_home_odds),
+          totalCell(r, 'under'));
+    }
+
+    /* One quote per book, in one table. The current line wins; a book with
+     * only an opening line still shows that rather than vanishing. */
+    function oddsTable(current, opening, g) {
+      var byBook = {};
+      opening.concat(current).forEach(function (r) {
+        byBook[String(r.vendor)] = r;
+      });
+      var quotes = Object.keys(byBook).sort().map(function (k) {
+        return byBook[k];
+      });
+      return '<div class="go-books"><div class="go-book">' +
+        '<table class="go-table go-odds"><thead><tr>' +
+          '<th class="go-bk"></th><th class="go-tm"></th>' +
           thCell(heading('Spread', 'Point spread'), 'is-num') +
           thCell(heading('ML', 'Moneyline'), 'is-num') +
           thCell(heading('Total', 'Total points line'), 'is-num') +
         '</tr></thead><tbody>' +
-        oddsRow(g.away,
-          lineCell(r.spread_away_value, r.spread_away_odds, fmtSpread),
-          fmtOdds(r.moneyline_away_odds),
-          totalCell(r, 'over')) +
-        oddsRow(g.home,
-          lineCell(r.spread_home_value, r.spread_home_odds, fmtSpread),
-          fmtOdds(r.moneyline_home_odds),
-          totalCell(r, 'under')) +
-        '</tbody></table></div>';
-    }
-
-    function oddsTable(rows, g) {
-      var quotes = rows.slice().sort(function (a, b2) {
-        return String(a.vendor).localeCompare(String(b2.vendor));
-      });
-      return '<div class="go-books">' +
-        quotes.map(function (r) { return bookTable(r, g); }).join('') +
-        '</div>';
+        quotes.map(function (r) { return bookRows(r, g); }).join('') +
+        '</tbody></table></div></div>';
     }
 
     /* A finished game has no odds worth showing. The market it was quoting has
@@ -1452,14 +1459,7 @@
         return card('Betting odds',
           emptyState(b, ['/odds', '/odds/opening'], 'odds'), true);
       }
-      var body = '';
-      if (o.current.length) {
-        body += oddsTable(o.current, b.game);
-      }
-      if (o.opening.length) {
-        body += oddsTable(o.opening, b.game);
-      }
-      
+      var body = oddsTable(o.current, o.opening, b.game);
       return card('Betting odds', body);
     }
 

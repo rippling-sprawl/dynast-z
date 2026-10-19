@@ -1,8 +1,12 @@
 from http.server import BaseHTTPRequestHandler
 import json
 import os
+import sys
 import subprocess
 from urllib.parse import urlparse, parse_qs
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from _http import send_json  # noqa: E402
 
 UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 
@@ -56,12 +60,10 @@ class handler(BaseHTTPRequestHandler):
             try:
                 with open(data_path, "r") as f:
                     data = json.load(f)
-                self.send_response(200)
-                self.send_header("Content-Type", "application/json")
-                self.send_header("Access-Control-Allow-Origin", "*")
-                self.send_header("Cache-Control", "public, max-age=86400, s-maxage=86400")
-                self.end_headers()
-                self.wfile.write(json.dumps(data).encode())
+                send_json(self, 200, data, {
+                    "Access-Control-Allow-Origin": "*",
+                    "Cache-Control": "public, max-age=86400, s-maxage=86400",
+                })
             except FileNotFoundError:
                 self._json(404, {"error": f"Archive data not found for {tournament} {year}"})
             return
@@ -70,22 +72,16 @@ class handler(BaseHTTPRequestHandler):
             try:
                 raw = http_fetch(config["url"])
                 data = json.loads(raw)
-                self.send_response(200)
-                self.send_header("Content-Type", "application/json")
-                self.send_header("Access-Control-Allow-Origin", "*")
-                self.send_header("Cache-Control", "s-maxage=300, stale-while-revalidate=600")
-                self.end_headers()
-                self.wfile.write(json.dumps(data).encode())
+                send_json(self, 200, data, {
+                    "Access-Control-Allow-Origin": "*",
+                    "Cache-Control": "s-maxage=300, stale-while-revalidate=600",
+                })
             except Exception as e:
                 self._json(500, {"error": str(e)})
             return
 
     def _json(self, status, data):
-        self.send_response(status)
-        self.send_header("Content-Type", "application/json")
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.end_headers()
-        self.wfile.write(json.dumps(data).encode())
+        send_json(self, status, data, {"Access-Control-Allow-Origin": "*"})
 
     def do_OPTIONS(self):
         self.send_response(204)

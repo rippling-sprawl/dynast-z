@@ -22,10 +22,16 @@ import hashlib
 import hmac
 import secrets
 import subprocess
+import sys
 import time
 import urllib.request
 from datetime import datetime, timedelta, timezone
 from urllib.parse import urlparse, parse_qs
+
+# api/_http.py is the response writer the Vercel functions share; dev uses it
+# too so local responses are compacted and gzipped the same way.
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "api"))
+from _http import send_json  # noqa: E402
 
 PORT = 8000
 IS_VERCEL = os.environ.get("VERCEL") == "1"
@@ -1408,13 +1414,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
     def do_GET(self):
         if self.path == "/api/players":
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json")
-            self.send_header("Access-Control-Allow-Origin", "*")
-            if IS_VERCEL:
-                self.send_header("Cache-Control", "s-maxage=3600, stale-while-revalidate=86400")
-            self.end_headers()
-            try:
+            def players_payload():
                 ktc_raw = fetch_ktc()
                 fc_raw = fetch_fc()
                 fp_raw = load_fp()
@@ -1439,72 +1439,28 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                         # Unresolved (ambiguous name or Sleeper down): fall back to
                         # the name+position rookie signal so it isn't lost.
                         p["rookie"] = f"{p['name']}|{p['position']}" in rookie_fallback
-                self.wfile.write(json.dumps(players).encode())
-            except Exception as e:
-                self.wfile.write(json.dumps({"error": str(e)}).encode())
+                return players
+            self._api_json(players_payload, cache=True)
         elif re.match(r"/api/league/[^/]+/team/[^/]+", self.path):
             parts = self.path.split("/")
             league_id = parts[3]
             roster_id = parts[5].split("?")[0]
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json")
-            self.send_header("Access-Control-Allow-Origin", "*")
-            if IS_VERCEL:
-                self.send_header("Cache-Control", "s-maxage=3600, stale-while-revalidate=86400")
-            self.end_headers()
-            try:
-                data = build_team_roster(league_id, roster_id)
-                self.wfile.write(json.dumps(data).encode())
-            except Exception as e:
-                self.wfile.write(json.dumps({"error": str(e)}).encode())
+            self._api_json(lambda: build_team_roster(league_id, roster_id), cache=True)
         elif re.match(r"/api/league/[^/]+/transactions", self.path):
             league_id = self.path.split("/api/league/")[1].split("/transactions")[0]
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json")
-            self.send_header("Access-Control-Allow-Origin", "*")
-            self.end_headers()
-            try:
-                data = fetch_league_transactions(league_id)
-                self.wfile.write(json.dumps(data).encode())
-            except Exception as e:
-                self.wfile.write(json.dumps({"error": str(e)}).encode())
+            self._api_json(lambda: fetch_league_transactions(league_id))
         elif re.match(r"/api/league/[^/]+/teams", self.path):
             league_id = self.path.split("/api/league/")[1].split("/teams")[0]
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json")
-            self.send_header("Access-Control-Allow-Origin", "*")
-            if IS_VERCEL:
-                self.send_header("Cache-Control", "s-maxage=3600, stale-while-revalidate=86400")
-            self.end_headers()
-            try:
-                data = build_teams_list(league_id)
-                self.wfile.write(json.dumps(data).encode())
-            except Exception as e:
-                self.wfile.write(json.dumps({"error": str(e)}).encode())
+            self._api_json(lambda: build_teams_list(league_id), cache=True)
         elif re.match(r"/api/league/[^/]+/schedule", self.path):
             league_id = self.path.split("/api/league/")[1].split("/schedule")[0]
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json")
-            self.send_header("Access-Control-Allow-Origin", "*")
-            if IS_VERCEL:
-                self.send_header("Cache-Control", "s-maxage=3600, stale-while-revalidate=86400")
-            self.end_headers()
-            try:
-                data = fetch_league_schedule(league_id)
-                self.wfile.write(json.dumps(data).encode())
-            except Exception as e:
-                self.wfile.write(json.dumps({"error": str(e)}).encode())
+            self._api_json(lambda: fetch_league_schedule(league_id), cache=True)
         elif self.path == "/api/trades":
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json")
-            self.send_header("Access-Control-Allow-Origin", "*")
-            self.end_headers()
-            try:
+            def trades_payload():
                 trades_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "trades.json")
                 with open(trades_path, "r") as f:
-                    self.wfile.write(f.read().encode())
-            except Exception as e:
-                self.wfile.write(json.dumps({"error": str(e)}).encode())
+                    return json.load(f)
+            self._api_json(trades_payload)
         elif self.path.startswith("/api/sync"):
             user_id = self.headers.get("X-User-Id")
             if not user_id:
@@ -1716,33 +1672,12 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             if not tournament or not year:
                 self._json_response(400, {"error": "tournament and year parameters are required"})
                 return
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json")
-            self.send_header("Access-Control-Allow-Origin", "*")
-            if IS_VERCEL:
-                config = GOLF_TOURNAMENTS.get((tournament, year), {})
-                if config.get("mode") == "archive":
-                    self.send_header("Cache-Control", "public, max-age=86400, s-maxage=86400")
-                else:
-                    self.send_header("Cache-Control", "s-maxage=300, stale-while-revalidate=600")
-            self.end_headers()
-            try:
-                data = fetch_golf_scores(tournament, year)
-                self.wfile.write(json.dumps(data).encode())
-            except Exception as e:
-                self.wfile.write(json.dumps({"error": str(e)}).encode())
+            config = GOLF_TOURNAMENTS.get((tournament, year), {})
+            cache = ("public, max-age=86400, s-maxage=86400" if config.get("mode") == "archive"
+                     else "s-maxage=300, stale-while-revalidate=600")
+            self._api_json(lambda: fetch_golf_scores(tournament, year), cache=cache)
         elif self.path == "/api/masters/scores":
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json")
-            self.send_header("Access-Control-Allow-Origin", "*")
-            if IS_VERCEL:
-                self.send_header("Cache-Control", "public, max-age=86400, s-maxage=86400")
-            self.end_headers()
-            try:
-                data = fetch_masters_scores()
-                self.wfile.write(json.dumps(data).encode())
-            except Exception as e:
-                self.wfile.write(json.dumps({"error": str(e)}).encode())
+            self._api_json(fetch_masters_scores, cache="public, max-age=86400, s-maxage=86400")
         # Query string tolerated: gated pages link here as /account?next=…, and
         # Vercel's rewrites match on the path alone, so dev must too.
         elif self.path.split("?")[0] == "/account":
@@ -1841,7 +1776,25 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         # Its data, through the deployed function's own loader and validation.
         elif self.path.split("?")[0] == "/api/defense-vs-players":
             api = defense_vs_players_api()
-            season, team, error = api.parse(parse_qs(urlparse(self.path).query))
+            query = parse_qs(urlparse(self.path).query)
+            # Every defense's summary, for the matchup board shown before a
+            # team is picked.
+            if (query.get("all") or [""])[0] == "1":
+                season = (query.get("season") or [""])[0].strip()
+                if season and not api.SEASON_RE.match(season):
+                    self._json_response(400, {"error": "season must be a year"})
+                    return
+                try:
+                    payload = api.load_all(int(season) if season else None)
+                except Exception as e:  # noqa: BLE001
+                    self._json_response(500, {"error": str(e)})
+                    return
+                if payload is None:
+                    self._json_response(404, {"error": "no defenses stored for that season"})
+                else:
+                    self._json_response(200, payload)
+                return
+            season, team, error = api.parse(query)
             if error:
                 self._json_response(400, {"error": error})
                 return
@@ -2514,12 +2467,25 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         self.wfile.write(body)
 
     def _json_response(self, status, data):
-        self.send_response(status)
-        self.send_header("Content-Type", "application/json")
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type, X-User-Id, X-Audit-User-Id")
-        self.end_headers()
-        self.wfile.write(json.dumps(data).encode())
+        send_json(self, status, data, {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Headers": "Content-Type, X-User-Id, X-Audit-User-Id",
+        })
+
+    def _api_json(self, compute, cache=None):
+        """200 with compute()'s result, or 200 with {"error"} if it raises.
+
+        A failure still answers 200 because the pages read `.error` off the
+        body rather than the status. `cache` is a Cache-Control value (True for
+        the hour-long league default) and only applies on Vercel."""
+        try:
+            data = compute()
+        except Exception as e:
+            data = {"error": str(e)}
+        headers = {"Access-Control-Allow-Origin": "*"}
+        if cache and IS_VERCEL:
+            headers["Cache-Control"] = "s-maxage=3600, stale-while-revalidate=86400" if cache is True else cache
+        send_json(self, 200, data, headers)
 
     def log_message(self, format, *args):
         # send_error() routes through here with an HTTPStatus as args[0], not a

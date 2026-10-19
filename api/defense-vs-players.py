@@ -1,7 +1,14 @@
 """/api/defense-vs-players -- what one defense has given up, player by player.
 
 GET /api/defense-vs-players?team=DAL[&season=2026]
-    -> {"season", "team", "games": [...], "rows": [...], "built_at", "updated_at"}
+    -> {"season", "team", "games": [...], "rows": [...], "summary", "leaders",
+        "built_at", "updated_at"}
+
+GET /api/defense-vs-players?all=1[&season=2026]
+    -> {"season", "teams": {"DAL": {"summary", "leaders"}, ...}, "updated_at"}
+    Every defense's per-position medians and every offense's leaders, without
+    the per-game rows -- what the page's matchup board ranks before a team is
+    picked.
 
 `rows` is every opposing rusher and receiver in every completed game that team
 played, one row per player per game, already sorted week ascending then total
@@ -15,10 +22,14 @@ stored one row per (season, team) in `defense_vs_players`
 from http.server import BaseHTTPRequestHandler
 import json
 import os
+import sys
 import re
 import urllib.error
 import urllib.parse
 import urllib.request
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from _http import send_json  # noqa: E402
 
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "")
@@ -64,6 +75,32 @@ def load_team(season, team):
     return payload
 
 
+def load_all(season):
+    """-> every team's summary and leaders for one season (the newest stored
+    when none is given), or None when nothing has been built.
+
+    Projected in Postgres so the per-game rows, the bulk of each payload, never
+    leave the database."""
+    if not season:
+        newest = supabase_request(
+            "defense_vs_players?select=season&order=season.desc&limit=1")
+        if not newest:
+            return None
+        season = newest[0]["season"]
+    rows = supabase_request(
+        "defense_vs_players?select=team,updated_at,"
+        "summary:data->summary,leaders:data->leaders"
+        f"&season=eq.{season}&order=team.asc")
+    if not rows:
+        return None
+    return {
+        "season": season,
+        "teams": {r["team"]: {"summary": r.get("summary") or {},
+                              "leaders": r.get("leaders") or {}} for r in rows},
+        "updated_at": max(r.get("updated_at") or "" for r in rows),
+    }
+
+
 def parse(params):
     """-> (season | None, team, error | None)."""
     team = (params.get("team") or [""])[0].strip().upper()
@@ -78,6 +115,9 @@ def parse(params):
 class handler(BaseHTTPRequestHandler):
     def do_GET(self):
         params = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+        if (params.get("all") or [""])[0] == "1":
+            self._all(params)
+            return
         season, team, error = parse(params)
         if error:
             self._json(400, {"error": error})
@@ -92,12 +132,23 @@ class handler(BaseHTTPRequestHandler):
             return
         self._json(200, payload)
 
+    def _all(self, params):
+        season = (params.get("season") or [""])[0].strip()
+        if season and not SEASON_RE.match(season):
+            self._json(400, {"error": "season must be a year"})
+            return
+        try:
+            payload = load_all(int(season) if season else None)
+        except Exception as e:  # noqa: BLE001
+            self._json(500, {"error": str(e)})
+            return
+        if payload is None:
+            self._json(404, {"error": "no defenses stored for that season"})
+            return
+        self._json(200, payload)
+
     def _json(self, status, data):
-        self.send_response(status)
-        self.send_header("Content-Type", "application/json")
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.end_headers()
-        self.wfile.write(json.dumps(data).encode())
+        send_json(self, status, data, {"Access-Control-Allow-Origin": "*"})
 
     def do_OPTIONS(self):
         self.send_response(204)

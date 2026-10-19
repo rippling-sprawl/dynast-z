@@ -20,6 +20,9 @@ import sys
 import urllib.parse
 import urllib.request
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from _http import send_json  # noqa: E402
+
 # Import the shared merge library. __file__-relative so it resolves regardless of
 # the serverless runtime's working dir; vercel.json bundles scripts/** alongside.
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "scripts"))
@@ -151,12 +154,10 @@ class handler(BaseHTTPRequestHandler):
                                                if k not in ("book", "changed_keys")})})
 
     def _json(self, status, data):
-        self.send_response(status)
-        self.send_header("Content-Type", "application/json")
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type, X-User-Id")
-        self.end_headers()
-        self.wfile.write(json.dumps(data).encode())
+        send_json(self, status, data, {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Headers": "Content-Type, X-User-Id",
+        })
 
     def do_OPTIONS(self):
         self.send_response(204)

@@ -348,8 +348,6 @@
   font-family: var(--vi-display);
   font-size: 13px;
   letter-spacing: 0.9px;
-  border-bottom: 2px solid var(--vi-gold);
-  padding-bottom: 3px;
 }
 
 .tp-div-name {

@@ -1,7 +1,11 @@
 from http.server import BaseHTTPRequestHandler
 import json
 import os
+import sys
 import urllib.request
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from _http import send_json  # noqa: E402
 
 
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "")
@@ -46,12 +50,10 @@ class handler(BaseHTTPRequestHandler):
             self._json(500, {"error": str(e)})
 
     def _json(self, status, data):
-        self.send_response(status)
-        self.send_header("Content-Type", "application/json")
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type, X-User-Id")
-        self.end_headers()
-        self.wfile.write(json.dumps(data).encode())
+        send_json(self, status, data, {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Headers": "Content-Type, X-User-Id",
+        })
 
     def do_OPTIONS(self):
         self.send_response(204)

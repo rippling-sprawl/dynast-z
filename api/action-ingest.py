@@ -33,9 +33,13 @@ Schema in scripts/sql/action_pages.sql.
 from http.server import BaseHTTPRequestHandler
 import json
 import os
+import sys
 import re
 import urllib.parse
 import urllib.request
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from _http import send_json  # noqa: E402
 
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "")
@@ -141,15 +145,11 @@ class handler(BaseHTTPRequestHandler):
                          "unchanged": len(rows) - len(changed), "removed": gone})
 
     def _json(self, status, data):
-        body = json.dumps(data).encode()
-        self.send_response(status)
-        self.send_header("Content-Type", "application/json")
-        self.send_header("Content-Length", str(len(body)))
-        self.send_header("Cache-Control", "no-store")
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type, X-User-Id")
-        self.end_headers()
-        self.wfile.write(body)
+        send_json(self, status, data, {
+            "Cache-Control": "no-store",
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Headers": "Content-Type, X-User-Id",
+        })
 
     def do_OPTIONS(self):
         self.send_response(204)

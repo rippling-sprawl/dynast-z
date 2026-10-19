@@ -1,5 +1,9 @@
 from http.server import BaseHTTPRequestHandler
 import os
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from _http import send  # noqa: E402
 
 
 class handler(BaseHTTPRequestHandler):
@@ -8,8 +12,5 @@ class handler(BaseHTTPRequestHandler):
         html_path = os.path.join(base_dir, "views", "golf", "season.html")
         with open(html_path, "r") as f:
             content = f.read()
-        self.send_response(200)
-        self.send_header("Content-Type", "text/html; charset=utf-8")
-        self.send_header("Cache-Control", "public, max-age=0, must-revalidate")
-        self.end_headers()
-        self.wfile.write(content.encode())
+        send(self, 200, content.encode(), "text/html; charset=utf-8",
+             {"Cache-Control": "public, max-age=0, must-revalidate"})

@@ -36,6 +36,7 @@ Usage:
 import argparse
 import json
 import os
+import statistics
 import sys
 import urllib.error
 import urllib.request
@@ -50,7 +51,7 @@ TABLE = "defense_vs_players"
 # Only the box-score columns, projected in Postgres: `data->player_stats` is a
 # few KB of a bundle whose bulk is player props, and a season is ~270 bundles.
 SELECT = ("game_id,week,away,home,kickoff,"
-          "game:data->game,stats:data->player_stats")
+          "game:data->game,stats:data->player_stats,plays:data->plays->all")
 
 
 class BuildError(RuntimeError):
@@ -112,7 +113,25 @@ def n(v):
     return v or 0
 
 
-def player_row(p):
+# A completion is a pass-reception play, or the passing touchdown that ends one.
+COMPLETION_SLUGS = ("pass-reception", "passing-touchdown")
+
+
+def long_completions(plays):
+    """-> {passer player_id: longest completion in yards}. The box score has no
+    such field, so it is read off the play-by-play."""
+    out = {}
+    for pl in plays or []:
+        if pl.get("type_slug") not in COMPLETION_SLUGS:
+            continue
+        for q in pl.get("participants") or []:
+            if q.get("type") == "passer":
+                yds = pl.get("stat_yardage") or 0
+                out[q.get("player_id")] = max(out.get(q.get("player_id"), yds), yds)
+    return out
+
+
+def player_row(p, long_pass=None):
     """-> one player's passing, rushing and receiving line, or None if he had
     none of them."""
     pa = p.get("passing") or {}
@@ -130,6 +149,7 @@ def player_row(p):
         "pass_yds": n(pa.get("passing_yards")),
         "pass_td": n(pa.get("passing_touchdowns")),
         "pass_int": n(pa.get("passing_interceptions")),
+        "pass_lng": (long_pass or {}).get(who.get("id"), 0) if pa else 0,
         "rush_att": n(ru.get("rushing_attempts")),
         "rush_yds": n(ru.get("rushing_yards")),
         "rush_td": n(ru.get("rushing_touchdowns")),
@@ -147,6 +167,109 @@ def player_row(p):
     return row
 
 
+# ---------------------------------------------------------------------------
+# The matchup summary -- what the page shows before a team is picked
+# ---------------------------------------------------------------------------
+
+# Per position: which line of the box score it is judged on, who counts, and
+# which fields are its yards, touchdowns and long. Players under the bar are
+# left out so a backup's one carry or a decoy's lone target does not count as
+# the group: rushers need 3+ carries, receivers 2+ targets, passers 10+
+# attempts (which keeps a trick-play throw out of the QB line).
+#
+# `extra` is volume shown beside the three ranked stats, each with its own bar
+# -- a back's catches are a receiving number, so they count backs with 2+
+# targets, not 3+ carries.
+PASSER, RUSHER, RECEIVER = ("pass_att", 10), ("rush_att", 3), ("targets", 2)
+SUMMARY_POS = {
+    "QB": {"min": PASSER, "yds": "pass_yds", "td": "pass_td", "lng": "pass_lng",
+           "extra": {"att": ("pass_att", PASSER)}},
+    "RB": {"min": RUSHER, "yds": "rush_yds", "td": "rush_td", "lng": "rush_lng",
+           "extra": {"att": ("rush_att", RUSHER), "rec": ("rec", RECEIVER)}},
+    "WR": {"min": RECEIVER, "yds": "rec_yds", "td": "rec_td", "lng": "rec_lng",
+           "extra": {"rec": ("rec", RECEIVER)}},
+    "TE": {"min": RECEIVER, "yds": "rec_yds", "td": "rec_td", "lng": "rec_lng",
+           "extra": {"rec": ("rec", RECEIVER)}},
+}
+
+
+def summarize(rows, games):
+    """-> {pos: {"yds"|"td"|"lng"|"att"|"rec": {"med", "avg", "n"}}}: the median
+    per game of what one defense allowed each position group, regular season
+    only. "att" and "rec" are present only where the position has them.
+
+    A game's value is the group's total from its qualifying players -- except
+    the long, which cannot be summed and is the longest of theirs. A game in
+    which nobody at the position qualified counts as zero: the defense held
+    that group to nothing. The mean rides along to break median ties, which
+    for touchdowns are most of them."""
+    game_ids = [g["game_id"] for g in games if not g["postseason"]]
+    out = {}
+    for pos, spec in SUMMARY_POS.items():
+        field, floor = spec["min"]
+        stats = ("yds", "td", "lng") + tuple(spec["extra"])
+        per_game = {gid: dict.fromkeys(stats, 0) for gid in game_ids}
+        for r in rows:
+            g = per_game.get(r["game_id"])
+            if g is None or r["pos"] != pos:
+                continue
+            for stat, (src, (qfield, qfloor)) in spec["extra"].items():
+                if r[qfield] >= qfloor:
+                    g[stat] += r[src]
+            if r[field] < floor:
+                continue
+            g["yds"] += r[spec["yds"]]
+            g["td"] += r[spec["td"]]
+            g["lng"] = max(g["lng"], r[spec["lng"]])
+        out[pos] = {}
+        for stat in stats:
+            vals = [g[stat] for g in per_game.values()]
+            out[pos][stat] = {
+                "med": statistics.median(vals) if vals else 0,
+                "avg": round(statistics.mean(vals), 2) if vals else 0,
+                "n": len(vals),
+            }
+    return out
+
+
+def offense_leaders(by_team):
+    """-> {offense: {pos: [up to 2 players]}}: each team's season leaders, as an
+    OFFENSE, in the yards its position is judged on.
+
+    Every row's `opp` is the team whose player it is, so this is the defense
+    rows regrouped. Only players who appeared in that offense's latest game
+    count, which drops the injured, the traded and the benched without an
+    injury feed."""
+    seasons = {}
+    latest = {}
+    for entry in by_team.values():
+        for r in entry["rows"]:
+            off = r["opp"]
+            if (r["kickoff"] or "") > latest.get(off, ("", None))[0]:
+                latest[off] = (r["kickoff"] or "", r["game_id"])
+            spec = SUMMARY_POS.get(r["pos"])
+            if not spec:
+                continue
+            p = seasons.setdefault(off, {}).setdefault(r["pos"], {}).setdefault(
+                r["player_id"], {"player_id": r["player_id"], "player": r["player"],
+                                 "yds": 0, "games": 0, "last": None})
+            p["yds"] += r[spec["yds"]]
+            p["games"] += 1
+            if (r["kickoff"] or "") >= (p["last"] or ("",))[0]:
+                p["last"] = (r["kickoff"] or "", r["game_id"])
+
+    out = {}
+    for off, by_pos in seasons.items():
+        last_game = latest.get(off, ("", None))[1]
+        out[off] = {}
+        for pos, players in by_pos.items():
+            active = [p for p in players.values() if p["last"][1] == last_game]
+            active.sort(key=lambda p: (-p["yds"], p["player"]))
+            out[off][pos] = [{k: p[k] for k in ("player_id", "player", "yds", "games")}
+                             for p in active[:2]]
+    return out
+
+
 def build(season, games, now):
     """-> {team: payload} for every team that appears in a final game.
 
@@ -156,6 +279,7 @@ def build(season, games, now):
     for g in games:
         game = g.get("game") or {}
         stats = g.get("stats") or {}
+        long_pass = long_completions(g.get("plays"))
         score = game.get("score") or {}
         for defense, side, opp, home in ((g["away"], "home", g["home"], False),
                                          (g["home"], "away", g["away"], True)):
@@ -171,12 +295,13 @@ def build(season, games, now):
                 "pts_against": score.get(side),
             })
             for p in stats.get(side) or []:
-                row = player_row(p)
+                row = player_row(p, long_pass)
                 if row:
                     row.update(game_id=g["game_id"], week=g.get("week"),
                                kickoff=g.get("kickoff"), opp=opp)
                     entry["rows"].append(row)
 
+    leaders = offense_leaders(by_team)
     out = {}
     for team, entry in by_team.items():
         # Week ascending, then total yards descending. Ordered by kickoff rather
@@ -189,6 +314,11 @@ def build(season, games, now):
             "team": team,
             "games": entry["games"],
             "rows": entry["rows"],
+            # What this team's defense allows each position, per game.
+            "summary": summarize(entry["rows"], entry["games"]),
+            # This team as an OFFENSE: its leaders by position, named beside
+            # the matchups where it faces a soft or stingy defense.
+            "leaders": leaders.get(team, {}),
             "built_at": iso(now),
         }
     return out
@@ -224,6 +354,14 @@ def main():
                           f" rush {r['rush_att']:>2}-{r['rush_yds']:>4}-{r['rush_td']}"
                           f"  rec {r['rec']:>2}/{r['targets']:>2}-{r['rec_yds']:>4}-{r['rec_td']}"
                           f"  tot {r['tot_yds']:>4}")
+                p = payloads.get(team) or {}
+                for pos, stats in (p.get("summary") or {}).items():
+                    print(f"  allowed {pos}: " + "  ".join(
+                        f"{s} med {v['med']} avg {v['avg']}" for s, v in stats.items())
+                        + f"  (n={stats['yds']['n']})")
+                for pos, players in (p.get("leaders") or {}).items():
+                    print(f"  offense {pos}: " + ", ".join(
+                        f"{x['player']} {x['yds']}" for x in players))
             return 0
         publish(season, payloads, now)
         print(f"published {len(payloads)} rows to {TABLE}")

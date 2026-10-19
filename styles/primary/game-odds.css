@@ -1072,6 +1072,25 @@ html {
 .go-odds th, .go-odds td { padding: 6px 10px; }
 .go-odds th.is-num { text-align: right; }
 
+/* The book ticker spans its two team rows, turned 90 degrees. */
+.go-odds th.go-bk {
+  width: 1%;
+  padding: 6px 4px;
+  text-align: center;
+  vertical-align: middle;
+  position: static;
+  color: var(--vi-gold);
+  background: none;
+  letter-spacing: 1px;
+  border-right: 1px solid var(--border);
+}
+.go-odds th.go-bk span {
+  display: inline-block;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+}
+.go-odds tbody tr:nth-child(2n) th.go-bk { border-bottom: 1px solid var(--border); }
+
 /* Nothing below the last row to separate it from, and the box already draws
  * the edge the hairline would double. */
 .go-odds tbody tr:last-child th,
@@ -1079,7 +1098,6 @@ html {
 
 /* The book ticker heads the column the team abbreviations run down, so it is
  * read as the label of the table rather than of the column. */
-.go-odds thead th.go-tm { color: var(--vi-gold); letter-spacing: 1px; }
 
 /* A team cell labels its row, so it is a th — which otherwise inherits the
  * sticky, uppercased treatment meant for column headings, and would lift out

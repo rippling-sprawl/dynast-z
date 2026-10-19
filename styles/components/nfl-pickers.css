@@ -206,70 +206,85 @@
  * faster than a name is read, and the whole league is visible at once, so
  * picking a team is one tap rather than open-scroll-select.
  *
- * The layout is the league's own: conferences side by side, divisions stacked
- * down each one, four teams to a division as a 2x2 block. Four icon columns
- * total — the widest thing that still leaves a phone-width column readable,
- * and the reason the whole league fits on one screen without scrolling. */
+ * Each conference is a four-column, four-row block laid out like the map of
+ * its divisions: the West down the left edge, the East down the right, and the
+ * North and South as 2x2 blocks stacked between them. A heavier rule separates
+ * the divisions, so where one ends and the next begins is drawn, not inferred. */
 
 .tp {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
   width: 460px;
   max-width: 100%;
 }
 
 .tp-conf {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: auto repeat(4, auto);
   min-width: 0;
 }
 
-/* The NFC column reads as its own half of the league rather than as more of
- * the AFC's list. The rule is the divider; the gap alone was ambiguous. */
-.tp-conf + .tp-conf {
-  border-left: 1px solid var(--surface-2);
-  padding-left: 22px;
-  margin-left: -22px;
-}
-
 .tp-conf-name {
-  font-size: 10px;
+  grid-column: 1 / -1;
+  font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.7px;
-  color: var(--text-3);
+  letter-spacing: 0.9px;
+  color: #fff;
+  background: var(--conf-color, var(--text-3));
+  text-align: center;
   font-family: monospace;
   margin: 0;
-  padding-bottom: 2px;
-  border-bottom: 1px solid var(--surface-2);
+  padding: 3px 0;
+  border-radius: 4px 4px 0 0;
   line-height: 1.4;
 }
 
-.tp-div-name {
-  display: block;
-  font-size: 9px;
-  text-transform: uppercase;
-  letter-spacing: 0.7px;
-  color: var(--text-5);
-  font-family: monospace;
-  margin-bottom: 1px;
+.tp-conf-nfc { --conf-color: #013369; }
+.tp-conf-afc { --conf-color: #d50a0a; }
+
+/* Divisions share edges. The 2px rule is the division line; each division
+ * draws only its right and bottom edges, and the grid draws the outer
+ * top/left once, so no seam is ever doubled. */
+.tp-div {
+  display: flex;
+  border: 0 solid var(--border);
+  border-right-width: 2px;
+  border-bottom-width: 2px;
+  min-width: 0;
 }
 
-/* centerd rather than stretched: the selected ring is drawn on the button, so
- * a button as wide as its grid column would put a large empty box around a
- * small logo. The button hugs the logo and the slack sits in the gutters. */
+.tp-div-west  { grid-column: 1;     grid-row: 2 / span 4; border-left-width: 2px; }
+.tp-div-north { grid-column: 2 / 4; grid-row: 2 / span 2; }
+.tp-div-south { grid-column: 2 / 4; grid-row: 4 / span 2; }
+.tp-div-east  { grid-column: 4;     grid-row: 2 / span 4; }
+
+.tp-div-north { border-top-width: 2px; }
+.tp-div-west  { border-top-width: 2px; }
+.tp-div-east  { border-top-width: 2px; }
+
 .tp-teams {
+  flex: 1;
   display: grid;
-  grid-template-columns: 1fr 1fr;
   gap: 2px;
+  padding: 3px;
   justify-items: center;
+  align-content: space-evenly;
 }
+
+.tp-div-west .tp-teams,
+.tp-div-east .tp-teams { grid-template-columns: 1fr; }
+
+.tp-div-north .tp-teams,
+.tp-div-south .tp-teams { grid-template-columns: 1fr 1fr; }
 
 /* An unplaced team — one the division map doesn't know — gets its own block
  * across the full width rather than vanishing from the picker. */
-.tp-stray { grid-column: 1 / -1; }
+.tp-stray { display: block; }
+.tp-stray .tp-teams { grid-template-columns: repeat(4, 1fr); }
+.tp-stray .tp-div { border-width: 2px; }
 
 .tp-team {
   display: flex;
@@ -321,7 +336,6 @@
  * the absence of one — a league-wide note on Baker's Buns. It spans the grid
  * above the conferences, because it is not a 33rd club. */
 .tp-any {
-  grid-column: 1 / -1;
   display: block;
   width: 100%;
   background: none;
@@ -369,16 +383,9 @@
    * phone, which is what makes each one a comfortable tap target. The cap on
    * the logo grows with it so the grid fills the width instead of leaving four
    * thin columns of icons stranded up the left. */
-  .tp { gap: 8px 14px; }
+  .tp { gap: 12px; }
 
   .dd-overlay { padding: 4vh 4vw; }
-
-  .tp-conf { gap: 6px; }
-
-  .tp-conf + .tp-conf {
-    padding-left: 14px;
-    margin-left: -14px;
-  }
 
   /* Sized so all eight rows clear the fold on a phone: four logo columns wide
    * enough to aim at, and the whole league still on one screen. */

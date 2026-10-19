@@ -45,61 +45,84 @@
     <h2>Defense vs. Players</h2>
 
     <!-- Markup contract for scripts/components/nfl-pickers.js. -->
-    <!-- Three groups: which defense, which of its opponents' players, and which
-         of their numbers. They share a line where there is room and take a
-         line each on a phone. -->
+    <!-- The row holds the two filters that change most — which defense, which
+         positions — and a button for the rest, which open in a modal. -->
     <div class="dd-row dvp-controls">
-      <div class="dvp-group">
-        <div class="dvp-filter">
-          <span class="dvp-flabel" id="l-team">Defense</span>
-          <div class="dd" id="dd-team">
-            <button type="button" class="dd-btn" id="f-team" aria-haspopup="dialog" aria-expanded="false" aria-labelledby="l-team f-team">
-              <span class="dd-value">Pick a team</span>
-            </button>
-            <div class="dd-pop dd-overlay" id="team-overlay" role="dialog" aria-modal="true" aria-label="Team" hidden>
-              <div class="tp" id="team-grid"></div>
+      <div class="dvp-filter">
+        <span class="dvp-flabel" id="l-team">Def.</span>
+        <div class="dd" id="dd-team">
+          <button type="button" class="dd-btn" id="f-team" aria-haspopup="dialog" aria-expanded="false" aria-labelledby="l-team f-team">
+            <span class="dd-value">Pick a team</span>
+          </button>
+          <div class="dd-pop dd-overlay" id="team-overlay" role="dialog" aria-modal="true" aria-label="Team" hidden>
+            <div class="tp" id="team-grid"></div>
+          </div>
+        </div>
+      </div>
+      <div class="dvp-filter">
+        <span class="dvp-flabel" id="l-pos">Pos.</span>
+        <div class="dd" id="dd-pos">
+          <button type="button" class="dd-btn" id="f-pos" aria-haspopup="true" aria-expanded="false" aria-labelledby="l-pos f-pos">
+            <span class="dd-value">All</span>
+          </button>
+          <div class="dd-pop dd-menu" id="pos-menu" role="menu" aria-label="Positions" aria-multiselectable="true" hidden></div>
+        </div>
+      </div>
+      <button type="button" class="dd-btn dvp-filters-btn" id="f-more" aria-haspopup="dialog" aria-expanded="false" aria-label="More filters" title="Filters">
+        <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true" focusable="false">
+          <g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+            <path d="M3 5h14M3 10h14M3 15h14"/>
+          </g>
+          <g fill="var(--surface-2)" stroke="currentColor" stroke-width="1.6">
+            <circle cx="7" cy="5" r="2"/>
+            <circle cx="13" cy="10" r="2"/>
+            <circle cx="9" cy="15" r="2"/>
+          </g>
+        </svg>
+        <span class="dvp-filters-dot" aria-hidden="true"></span>
+      </button>
+
+      <!-- The rest: minimums that cut players, and column groups that cut
+           numbers. Lives inside .dvp-controls so the compact control styles
+           reach it; as a modal <dialog> it renders in the top layer anyway. -->
+      <dialog class="dvp-modal" id="more-modal" aria-labelledby="more-title">
+        <div class="dvp-modal-head">
+          <h3 id="more-title">Filters</h3>
+          <button type="button" class="dvp-modal-x" data-close aria-label="Close">&times;</button>
+        </div>
+        <div class="dvp-modal-body">
+          <div class="dvp-filter">
+            <span class="dvp-flabel" id="l-att">Min. rush att</span>
+            <div class="dd" id="dd-att">
+              <button type="button" class="dd-btn" id="f-att" aria-haspopup="true" aria-expanded="false" aria-labelledby="l-att f-att">
+                <span class="dd-value">0+</span>
+              </button>
+              <div class="dd-pop dd-menu" id="att-menu" role="menu" aria-label="Minimum rush attempts" hidden></div>
             </div>
           </div>
-        </div>
-      </div>
-      <div class="dvp-group">
-        <div class="dvp-filter">
-          <span class="dvp-flabel" id="l-pos">Pos.</span>
-          <div class="dd" id="dd-pos">
-            <button type="button" class="dd-btn" id="f-pos" aria-haspopup="true" aria-expanded="false" aria-labelledby="l-pos f-pos">
-              <span class="dd-value">All</span>
-            </button>
-            <div class="dd-pop dd-menu" id="pos-menu" role="menu" aria-label="Positions" aria-multiselectable="true" hidden></div>
+          <div class="dvp-filter">
+            <span class="dvp-flabel" id="l-tgt">Min. targets</span>
+            <div class="dd" id="dd-tgt">
+              <button type="button" class="dd-btn" id="f-tgt" aria-haspopup="true" aria-expanded="false" aria-labelledby="l-tgt f-tgt">
+                <span class="dd-value">0+</span>
+              </button>
+              <div class="dd-pop dd-menu" id="tgt-menu" role="menu" aria-label="Minimum targets" hidden></div>
+            </div>
+          </div>
+          <!-- Column groups, not filters: they hide numbers, never players. All
+               are shown to start; a faded toggle is a hidden group. The
+               position filter sets them too, for groups that position never
+               has. -->
+          <div class="dvp-filter dvp-toggles" role="group" aria-labelledby="l-show">
+            <span class="dvp-flabel" id="l-show">Show</span>
+            <span class="dvp-toggle-set">
+              <button type="button" class="dd-btn dvp-toggle" id="t-pass" aria-pressed="true">Pass</button>
+              <button type="button" class="dd-btn dvp-toggle" id="t-rush" aria-pressed="true">Rush</button>
+              <button type="button" class="dd-btn dvp-toggle" id="t-rec" aria-pressed="true">Rec</button>
+            </span>
           </div>
         </div>
-        <div class="dvp-filter">
-          <span class="dvp-flabel" id="l-att">Att</span>
-          <div class="dd" id="dd-att">
-            <button type="button" class="dd-btn" id="f-att" aria-haspopup="true" aria-expanded="false" aria-labelledby="l-att f-att">
-              <span class="dd-value">0+</span>
-            </button>
-            <div class="dd-pop dd-menu" id="att-menu" role="menu" aria-label="Minimum rush attempts" hidden></div>
-          </div>
-        </div>
-        <div class="dvp-filter">
-          <span class="dvp-flabel" id="l-tgt">Targets</span>
-          <div class="dd" id="dd-tgt">
-            <button type="button" class="dd-btn" id="f-tgt" aria-haspopup="true" aria-expanded="false" aria-labelledby="l-tgt f-tgt">
-              <span class="dd-value">0+</span>
-            </button>
-            <div class="dd-pop dd-menu" id="tgt-menu" role="menu" aria-label="Minimum targets" hidden></div>
-          </div>
-        </div>
-      </div>
-      <!-- Column groups, not filters: they hide numbers, never players. Picking
-           one shows only it (and drops Total, which would just repeat it);
-           picking it again shows everything. -->
-      <div class="dvp-group dvp-toggles" role="group" aria-labelledby="l-show">
-        <span class="dvp-flabel" id="l-show">Show Only</span>
-        <button type="button" class="dd-btn dvp-toggle" id="t-pass" aria-pressed="false">Passing</button>
-        <button type="button" class="dd-btn dvp-toggle" id="t-rush" aria-pressed="false">Rushing</button>
-        <button type="button" class="dd-btn dvp-toggle" id="t-rec" aria-pressed="false">Receiving</button>
-      </div>
+      </dialog>
     </div>
 
     <div id="board"><p class="sched-empty">Loading teams…</p></div>
@@ -116,14 +139,16 @@
      * weekly by scripts/build_defense_vs_players.py, so the page only reads. */
 
     var season = SCHED_CURRENT_SEASON;
+    var sched = null; // the season's fixture list, for this week's matchups
+    var all = null;   // every defense's summary, fetched once for the board
     var teams = [];
     var team = '';
     var doc = null;   // the loaded defense, redrawn as the filters change
 
     // Filters cut players; the toggles cut column groups. All of it is applied
     // in the browser to the one defense already loaded.
-    // pos: the positions picked, none meaning all. only: '', 'pass', 'rush' or 'rec'.
-    var view = { pos: {}, att: 0, tgt: 0, only: '' };
+    // pos: the positions picked, none meaning all. hide: column groups hidden.
+    var view = { pos: {}, att: 0, tgt: 0, hide: {} };
 
     var board = document.getElementById('board');
     var note = document.getElementById('note');
@@ -136,10 +161,71 @@
       });
     }
 
-    function writeParams() {
+    /* ---------- the URL is the state ----------
+     * Every filter and toggle lives in the query string, so a link — the
+     * matchup board's included — opens exactly the view it was copied from:
+     *   ?team=DAL&pos=RB,WR&att=4&tgt=2&hide=pass
+     * Defaults are left out. `hide` is written only where it differs from what
+     * the positions hide on their own (see posDefaults), and an empty `hide=`
+     * means "show everything" where those positions would have hidden some. */
+    var POS = ['QB', 'RB', 'WR', 'TE'];
+    var ATT_STEPS = [0, 1, 4, 6, 8, 10];
+    var TGT_STEPS = [0, 1, 2, 3, 4, 5];
+    var GROUPS = ['pass', 'rush', 'rec'];
+
+    function hideList(h) { return GROUPS.filter(function (g) { return h[g]; }).join(','); }
+
+    // s: { team, pos: [..], att, tgt, hide: {..} | undefined }
+    function queryFor(s) {
       var q = new URLSearchParams();
-      if (team) q.set('team', team);
-      history.replaceState(null, '', location.pathname + (team ? '?' + q.toString() : ''));
+      var pos = POS.filter(function (p) { return s.pos.indexOf(p) >= 0; });
+      if (s.team) q.set('team', s.team);
+      if (pos.length) q.set('pos', pos.join(','));
+      if (s.att) q.set('att', s.att);
+      if (s.tgt) q.set('tgt', s.tgt);
+      if (s.hide) {
+        var h = hideList(s.hide);
+        if (h !== hideList(posDefaults(pos))) q.set('hide', h);
+      }
+      var str = q.toString().replace(/%2C/g, ',');
+      return location.pathname + (str ? '?' + str : '');
+    }
+
+    function current() {
+      return { team: team, pos: Object.keys(view.pos), att: view.att, tgt: view.tgt, hide: view.hide };
+    }
+
+    function writeParams() {
+      syncMore();
+      var url = queryFor(current());
+      if (url !== location.pathname + location.search) history.replaceState(null, '', url);
+    }
+
+    // Reads a query string into the page's state and every control. Values the
+    // controls cannot show are dropped rather than trusted.
+    function applyParams(search) {
+      var q = new URLSearchParams(search);
+      var t = (q.get('team') || '').toUpperCase();
+      team = t && sched && schedTeamsByAbbr(sched)[t] ? t : '';
+      view.pos = {};
+      (q.get('pos') || '').toUpperCase().split(',').forEach(function (p) {
+        if (POS.indexOf(p) >= 0) view.pos[p] = true;
+      });
+      if (Object.keys(view.pos).length === POS.length) view.pos = {};
+      var att = Number(q.get('att')), tgt = Number(q.get('tgt'));
+      view.att = ATT_STEPS.indexOf(att) >= 0 ? att : 0;
+      view.tgt = TGT_STEPS.indexOf(tgt) >= 0 ? tgt : 0;
+      view.hide = posDefaults(Object.keys(view.pos));
+      if (q.has('hide')) {
+        var h = q.get('hide').toLowerCase().split(',');
+        view.hide = {};
+        GROUPS.forEach(function (g) { view.hide[g] = h.indexOf(g) >= 0; });
+      }
+      posSync();
+      attSync(view.att);
+      tgtSync(view.tgt);
+      syncToggles();
+      syncMore();
     }
 
     // A zero is drawn faint rather than blank: "no carries" is an answer, and a
@@ -164,9 +250,9 @@
     }
 
     // Latest week first (in game order, so the postseason sits above week 18),
-    // then position RB → WR → TE → anything else, then total yards.
-    var POS_RANK = { RB: 0, WR: 1, TE: 2 };
-    function posRank(p) { return p in POS_RANK ? POS_RANK[p] : 3; }
+    // then position QB → RB → WR → TE → anything else, then total yards.
+    var POS_RANK = { QB: 0, RB: 1, WR: 2, TE: 3 };
+    function posRank(p) { return p in POS_RANK ? POS_RANK[p] : 4; }
 
     function render() {
       var byGame = {}, gameOrder = {};
@@ -178,12 +264,12 @@
       }
 
       var anyPos = !Object.keys(view.pos).length;
-      // Showing only one group drops Total too: Total is rushing plus
-      // receiving, never passing, so beside any single group it only repeats.
-      var showPass = !view.only || view.only === 'pass';
-      var showRush = !view.only || view.only === 'rush';
-      var showRec = !view.only || view.only === 'rec';
-      var showTot = !view.only;
+      // Total is rushing plus receiving, so it goes when either is hidden:
+      // beside a single group it only repeats.
+      var showPass = !view.hide.pass;
+      var showRush = !view.hide.rush;
+      var showRec = !view.hide.rec;
+      var showTot = showRush && showRec;
       var rows = doc.rows.filter(function (r) {
         return (anyPos || view.pos[r.pos]) &&
           r.rush_att >= view.att && r.targets >= view.tgt;
@@ -193,34 +279,47 @@
           (b.tot_yds - a.tot_yds) || String(a.player).localeCompare(String(b.player));
       });
 
-      var cols = 1 + (showPass ? 5 : 0) + (showRush ? 4 : 0) + (showRec ? 5 : 0) + (showTot ? 2 : 0);
+      // One position picked makes the position column say the same thing on every row.
+      var showPos = Object.keys(view.pos).length !== 1;
+      var cols = (showPos ? 2 : 1) + (showPass ? 6 : 0) + (showRush ? 4 : 0) + (showRec ? 5 : 0) + (showTot ? 2 : 0);
       var head =
         '<thead>' +
           '<tr class="dvp-groups">' +
-            '<th class="dvp-name"></th>' +
-            (showPass ? '<th colspan="5" class="grp">Passing</th>' : '') +
+            (showPos ? '<th class="dvp-poscol"></th>' : '') + '<th class="dvp-name"></th>' +
+            (showPass ? '<th colspan="6" class="grp">Passing</th>' : '') +
             (showRush ? '<th colspan="4" class="grp">Rushing</th>' : '') +
             (showRec ? '<th colspan="5" class="grp">Receiving</th>' : '') +
             (showTot ? '<th colspan="2" class="grp">Total</th>' : '') +
           '</tr>' +
           '<tr>' +
-            '<th class="dvp-name">Player</th>' +
-            (showPass ? '<th class="num grp-start">Cmp</th><th class="num">Att</th><th class="num">Yds</th><th class="num">TD</th><th class="num">Int</th>' : '') +
+            (showPos ? '<th class="dvp-poscol"></th>' : '') + '<th class="dvp-name">Player</th>' +
+            (showPass ? '<th class="num grp-start">Cmp</th><th class="num">Att</th><th class="num">Yds</th><th class="num">TD</th><th class="num">Int</th><th class="num">Lng</th>' : '') +
             (showRush ? '<th class="num grp-start">Att</th><th class="num">Yds</th><th class="num">TD</th><th class="num">Lng</th>' : '') +
             (showRec ? '<th class="num grp-start">Tgt</th><th class="num">Rec</th><th class="num">Yds</th><th class="num">TD</th><th class="num">Lng</th>' : '') +
             (showTot ? '<th class="num grp-start">Yds</th><th class="num">TD</th>' : '') +
           '</tr>' +
         '</thead>';
 
-      // A game opens with one full-width row carrying the week and opponent,
-      // and each position within it with its own, so the player rows keep only
-      // the player and his numbers. The labels are sticky so they stay in view
-      // on a horizontal scroll.
-      var lastGame = null, lastPos = null;
+      // A game opens with one full-width row carrying the week and opponent.
+      // Within it each position is a narrow column cell spanning its players'
+      // rows, its label turned on its side. A bye is a thin row of its own
+      // wherever the regular-season weeks skip one. The labels are sticky so
+      // they stay in view on a horizontal scroll.
+      var lastGame = null, lastPos = null, lastWeek = null;
+      var span = {};
+      rows.forEach(function (r) { var k = r.game_id + '|' + r.pos; span[k] = (span[k] || 0) + 1; });
       var body = rows.map(function (r) {
         var out = '';
         if (r.game_id !== lastGame) {
           var g = byGame[r.game_id];
+          // Games run latest first, so a skipped week sits between this game's
+          // week and the one before it in the list.
+          if (lastWeek != null && g && !g.postseason) {
+            for (var w = lastWeek - 1; w > g.week; w--) {
+              out += '<tr class="dvp-bye"><th colspan="' + cols + '"><span class="dvp-label">Wk ' + w + ' &middot; Bye</span></th></tr>';
+            }
+          }
+          lastWeek = g && !g.postseason ? g.week : null;
           // The opponent is its logo alone; @ / vs still says home or away.
           out += '<tr class="dvp-game"><th colspan="' + cols + '"><span class="dvp-label">' +
             '<span class="dvp-wk">' + (g && g.postseason ? '' : 'Wk ') + esc(weekLabel(g)) + '</span>' +
@@ -230,33 +329,27 @@
           lastGame = r.game_id;
           lastPos = null;
         }
+        var posCell = '';
         if (r.pos !== lastPos) {
-          out += '<tr class="dvp-pos"><th colspan="' + cols + '"><span class="dvp-label">' +
-            esc(r.pos || '—') + '</span></th></tr>';
+          if (showPos) posCell = '<th class="dvp-poscell" rowspan="' + span[r.game_id + '|' + r.pos] + '" scope="rowgroup">' +
+            '<span title="' + esc(r.pos) + '">' + esc((r.pos || '—').charAt(0)) + '</span></th>';
           lastPos = r.pos;
         }
-        return out + '<tr>' +
+        return out + '<tr' + (posCell ? ' class="dvp-first"' : '') + '>' + posCell +
           '<td class="dvp-name" title="' + esc(r.player) + '"><b>' + esc(shortName(r.player)) + '</b></td>' +
-          (showPass ? num(r.pass_cmp, false, true) + num(r.pass_att) + num(r.pass_yds) + num(r.pass_td) + num(r.pass_int) : '') +
+          (showPass ? num(r.pass_cmp, false, true) + num(r.pass_att) + num(r.pass_yds) + num(r.pass_td) + num(r.pass_int) + num(r.pass_lng) : '') +
           (showRush ? num(r.rush_att, false, true) + num(r.rush_yds) + num(r.rush_td) + num(r.rush_lng) : '') +
           (showRec ? num(r.targets, false, true) + num(r.rec) + num(r.rec_yds) + num(r.rec_td) + num(r.rec_lng) : '') +
           (showTot ? num(r.tot_yds, true, true) + num(r.tot_td, true) : '') +
           '</tr>';
       }).join('') || '<tr><td class="dvp-none" colspan="' + cols + '">No players match these filters.</td></tr>';
 
-      board.innerHTML = '<div class="dvp-scroll"><table class="dvp-table">' + head +
+      board.innerHTML = '<div class="dvp-scroll"><table class="dvp-table' + (showPos ? '' : ' no-pos') + '">' + head +
         '<tbody>' + body + '</tbody></table></div>';
       pinOffsets();
-
-      var built = doc.built_at ? new Date(doc.built_at) : null;
-      note.textContent = doc.games.length + ' completed game' + (doc.games.length === 1 ? '' : 's') +
-        ' · rebuilt Tuesdays 5am ET' +
-        (built ? ' · last built ' + built.toLocaleString([], {
-          weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'
-        }) : '');
     }
 
-    // The column header, the week row and the position row stack as they pin
+    // The column header and the week row stack as they pin
     // on a vertical scroll, each just under the one above. Their heights are
     // whatever the font made them, so they are read off the drawn table —
     // unrounded, and overlapped by half a pixel, because a rounded-up offset
@@ -270,25 +363,179 @@
       var h1 = h0 + h(heads[1]) - 0.5;
       table.style.setProperty('--pin-1', h0 + 'px');
       table.style.setProperty('--pin-game', h1 + 'px');
-      table.style.setProperty('--pin-pos', h1 + h(table.querySelector('tr.dvp-game')) - 0.5 + 'px');
     }
     // The heights move once the web font and the logos land, and on a resize.
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(pinOffsets);
     window.addEventListener('resize', pinOffsets);
     board.addEventListener('load', pinOffsets, true);
 
+    /* ---------- the matchup board: what shows before a team is picked ----------
+     * This week's slate read from both sides: every game is two (offense,
+     * defense) pairs. Per position and stat, the three defenses on the slate
+     * that allow the most per game and the three that allow the least — the
+     * medians come precomputed in each defense's `summary`
+     * (scripts/build_defense_vs_players.py), so this only sorts.
+     *
+     * A card is grouped by matchup: any matchup in the top three of any stat
+     * gets one row with all three stats beside it, the ones it ranked in
+     * lit and the rest dimmed for context. */
+
+    // The card says the position, so the columns need not say pass/rush/rec.
+    // Att and Recs are volume beside the three ranked stats, never ranked.
+    var MX_POS = [
+      { pos: 'QB', label: 'Quarterbacks', names: 1, cols: ['att', 'yds', 'td', 'lng'] },
+      { pos: 'RB', label: 'Running backs', names: 2, cols: ['att', 'rec', 'yds', 'td', 'lng'] },
+      { pos: 'WR', label: 'Wide receivers', names: 2, cols: ['rec', 'yds', 'td', 'lng'] },
+      { pos: 'TE', label: 'Tight ends', names: 1, cols: ['rec', 'yds', 'td', 'lng'] }
+    ];
+    var MX_LABEL = { att: 'Att', rec: 'Recs', yds: 'Yds', td: 'TD', lng: 'Long' };
+    var MX_STATS = ['yds', 'td', 'lng'];
+
+    // TDs and receptions to one decimal on every value, so 1 reads "1.0";
+    // attempts, yards and longs to the nearest whole number.
+    function mxNum(v, stat) {
+      v = Number(v || 0);
+      return stat === 'td' || stat === 'rec' ? v.toFixed(1) : String(Math.round(v));
+    }
+
+    function mxRow(m, p) {
+      var sum = all.teams[m.def].summary[p.pos];
+      var lead = (((all.teams[m.off] || {}).leaders || {})[p.pos] || []).slice(0, p.names);
+      return '<tr>' +
+        '<td class="dvp-mx-who">' +
+          '<span class="dvp-mx-match">' +
+            '<img src="/assets/icons/nfl/' + esc(m.off) + '.svg" alt="">' +
+            '<b>' + esc(m.off) + '</b>' +
+            '<span class="dvp-mx-at">' + (m.home ? 'vs' : '@') + '</span>' +
+            '<a href="' + esc(queryFor({ team: m.def, pos: [p.pos], att: view.att, tgt: view.tgt })) +
+              '" data-team="' + esc(m.def) + '" title="' + esc(m.def) + ' defense vs. ' + esc(p.pos) + 's, game by game">' +
+              '<img src="/assets/icons/nfl/' + esc(m.def) + '.svg" alt="">' + esc(m.def) + '</a>' +
+          '</span>' +
+          (lead.length ? '<span class="dvp-mx-names">' + lead.map(function (x) {
+            return '<span title="' + esc(x.player) + '">' + esc(shortName(x.player)) + '</span>';
+          }).join(', ') + '</span>' : '') +
+        '</td>' +
+        p.cols.map(function (stat) {
+          var c = sum[stat];
+          if (!c) return '<td class="num">—</td>';
+          var rank = m.ranks[stat];
+          return '<td class="num' + (rank ? ' is-ranked' : '') + '" title="' + esc(MX_LABEL[stat]) +
+            ': median ' + esc(mxNum(c.med, stat)) + ', mean ' + esc(mxNum(c.avg, stat)) +
+            (rank ? ' · #' + rank + ' on the slate' : '') + '">' + esc(mxNum(c.med, stat)) + '</td>';
+        }).join('') +
+        '</tr>';
+    }
+
+    // soft: most allowed first; stingy: least. The mean breaks median ties.
+    function mxSection(pairs, soft, title, sub) {
+      var dir = soft ? -1 : 1;
+      var cards = MX_POS.map(function (p) {
+        var rows = {}, order = [];
+        MX_STATS.forEach(function (stat) {
+          pairs.slice().sort(function (a, b) {
+            var x = all.teams[a.def].summary[p.pos][stat], y = all.teams[b.def].summary[p.pos][stat];
+            return dir * (x.med - y.med) || dir * (x.avg - y.avg) || a.def.localeCompare(b.def);
+          }).slice(0, 3).forEach(function (m, i) {
+            if (!rows[m.def]) { rows[m.def] = { off: m.off, def: m.def, home: m.home, ranks: {} }; order.push(rows[m.def]); }
+            rows[m.def].ranks[stat] = i + 1;
+          });
+        });
+        // Most top-three finishes first, then the better finishes, then yards.
+        function score(r) { return MX_STATS.reduce(function (t, k) { return t + (r.ranks[k] ? 4 - r.ranks[k] : 0); }, 0); }
+        order.sort(function (a, b) {
+          return (Object.keys(b.ranks).length - Object.keys(a.ranks).length) || (score(b) - score(a)) ||
+            dir * (all.teams[a.def].summary[p.pos].yds.med - all.teams[b.def].summary[p.pos].yds.med);
+        });
+        return '<section class="dvp-mx-card"><h4>' + esc(p.label) + '</h4>' +
+          '<table class="dvp-mx-table"><thead><tr><th>Matchup</th>' +
+          p.cols.map(function (k) { return '<th class="num">' + esc(MX_LABEL[k]) + '</th>'; }).join('') +
+          '</tr></thead><tbody>' + order.map(function (m) { return mxRow(m, p); }).join('') +
+          '</tbody></table></section>';
+      }).join('');
+      return '<div class="dvp-mx-section ' + (soft ? 'is-soft' : 'is-stingy') + '">' +
+        '<h3>' + esc(title) + '</h3><p class="dvp-mx-sub">' + esc(sub) + '</p>' +
+        '<div class="dvp-mx-grid">' + cards + '</div></div>';
+    }
+
+    function renderMatchups() {
+      var week = schedCurrentWeek(sched);
+      var wk = sched.weeks.filter(function (w) { return w.week === week; })[0];
+      var pairs = [];
+      ((wk && wk.games) || []).forEach(function (g) {
+        [[g.away, g.home, false], [g.home, g.away, true]].forEach(function (s) {
+          var d = all.teams[s[1]];
+          if (d && d.summary && d.summary.QB) pairs.push({ off: s[0], def: s[1], home: s[2] });
+        });
+      });
+      if (!pairs.length) {
+        board.innerHTML = '<p class="sched-empty">Pick a team to see every passer, rusher and receiver its defense has faced.</p>';
+        return;
+      }
+      var n = 0;
+      pairs.forEach(function (m) { n = Math.max(n, all.teams[m.def].summary.QB.yds.n); });
+      board.innerHTML =
+        '<h3 class="dvp-mx-title">Week ' + esc(week) + ' matchups</h3>' +
+        mxSection(pairs, true, 'Softest defenses', 'Top 3 on the slate in each stat, highlighted — offenses facing them have the edge.') +
+        mxSection(pairs, false, 'Toughest defenses', 'Bottom 3 on the slate in each stat, highlighted.');
+      note.textContent = 'Median per game of what each defense allowed the position group (mean on hover), from up to ' +
+        n + ' games · counts QBs with 10+ attempts, rushers with 3+ carries, receivers with 2+ targets · ' +
+        'names are the offense\'s season leaders · rebuilt Tuesdays 5am ET';
+    }
+
+    var allLoad = null;
+    function loadAll() {
+      if (!allLoad) {
+        allLoad = fetch('/api/defense-vs-players?all=1&season=' + encodeURIComponent(season), { cache: 'no-store' })
+          .then(function (r) {
+            return r.json().then(function (body) {
+              if (r.status === 404) return { teams: {} };
+              if (!r.ok) throw new Error(body.error || ('HTTP ' + r.status));
+              return body;
+            });
+          })
+          .catch(function (e) { allLoad = null; throw e; });
+      }
+      return allLoad;
+    }
+
+    // A defense on the board opens its table in place, filtered to the
+    // card's position. Pushed rather than replaced, so Back returns to the board.
+    board.addEventListener('click', function (e) {
+      var a = e.target.closest ? e.target.closest('a[data-team]') : null;
+      if (!a || !board.contains(a) || e.metaKey || e.ctrlKey || e.shiftKey) return;
+      e.preventDefault();
+      history.pushState(null, '', a.getAttribute('href'));
+      applyParams(location.search);
+      window.scrollTo(0, 0);
+      load();
+    });
+
+    window.addEventListener('popstate', function () {
+      if (!sched) return;
+      applyParams(location.search);
+      load();
+    });
+
     var loadToken = 0;
 
     function load() {
       writeParams();
-      syncTeamPicker(teamBtn, teamGrid, team, teams, { emptyLabel: 'Pick a team' });
+      syncTeamPicker(teamBtn, teamGrid, team, teams, { emptyLabel: 'Pick a team', nicknameOnly: true });
       note.textContent = '';
       doc = null;
+      var token = ++loadToken;
       if (!team) {
-        board.innerHTML = '<p class="sched-empty">Pick a team to see every passer, rusher and receiver its defense has faced.</p>';
+        board.innerHTML = '<p class="sched-empty">Loading this week\'s matchups…</p>';
+        loadAll().then(function (d) {
+          if (token !== loadToken) return;
+          all = d;
+          renderMatchups();
+        }).catch(function (e) {
+          if (token !== loadToken) return;
+          board.innerHTML = '<p class="sched-empty">Error: ' + esc(e.message) + '</p>';
+        });
         return;
       }
-      var token = ++loadToken;
       board.innerHTML = '<p class="sched-empty">Loading…</p>';
       fetch('/api/defense-vs-players?team=' + encodeURIComponent(team) +
             '&season=' + encodeURIComponent(season), { cache: 'no-store' })
@@ -322,6 +569,7 @@
         onPick(v);
         sync(v);
         closeDropdown(dd, true);
+        writeParams();
         if (doc) render();
       });
       return sync;
@@ -334,8 +582,7 @@
     // Position is a multi-select: a pick toggles that position and the menu
     // stays open for the next one. "All" clears the picks, and so does picking
     // every position, since that is the same table.
-    (function () {
-      var POS = ['RB', 'WR', 'TE', 'QB'];
+    var posSync = (function () {
       registerDropdown(document.getElementById('dd-pos'));
       var btn = document.getElementById('f-pos');
       var mEl = document.getElementById('pos-menu');
@@ -362,30 +609,88 @@
         else view.pos[p] = true;
         if (Object.keys(view.pos).length === POS.length) view.pos = {};
         sync();
+        posHides();
+        writeParams();
         if (doc) render();
       });
       sync();
+      return sync;
     })();
 
-    menu('att', minOpts([0, 1, 4, 6, 8, 10]), function (v) { view.att = Number(v); })(0);
+    var attSync = menu('att', minOpts(ATT_STEPS), function (v) { view.att = Number(v); });
+    attSync(0);
 
-    menu('tgt', minOpts([0, 1, 2, 3, 4, 5]), function (v) { view.tgt = Number(v); })(0);
+    var tgtSync = menu('tgt', minOpts(TGT_STEPS), function (v) { view.tgt = Number(v); });
+    tgtSync(0);
 
     var toggles = [['t-pass', 'pass'], ['t-rush', 'rush'], ['t-rec', 'rec']];
+    function syncToggles() {
+      toggles.forEach(function (u) {
+        document.getElementById(u[0]).setAttribute('aria-pressed', String(!view.hide[u[1]]));
+      });
+    }
     toggles.forEach(function (t) {
       document.getElementById(t[0]).addEventListener('click', function () {
-        view.only = view.only === t[1] ? '' : t[1];
-        toggles.forEach(function (u) {
-          document.getElementById(u[0]).setAttribute('aria-pressed', String(view.only === u[1]));
-        });
+        view.hide[t[1]] = !view.hide[t[1]];
+        syncToggles();
+        writeParams();
         if (doc) render();
       });
+    });
+
+    // The position filter hides the groups its players never have: no passing
+    // unless QB is in (or All), no rushing for WR/TE alone, no receiving for
+    // QB alone. It sets the toggles; they can still be flipped afterward.
+    function posDefaults(p) {
+      var qb = p.indexOf('QB') >= 0;
+      var rest = p.filter(function (x) { return x !== 'QB'; });
+      return {
+        pass: !!p.length && !qb,
+        rush: !!p.length && p.every(function (x) { return x === 'WR' || x === 'TE'; }),
+        rec: qb && !rest.length
+      };
+    }
+
+    function posHides() {
+      view.hide = posDefaults(Object.keys(view.pos));
+      syncToggles();
+    }
+
+    /* ---------- the filters modal ----------
+     * Minimums and column groups, behind the icon beside the position filter.
+     * A native <dialog>: Esc, the backdrop and the focus trap come with it.
+     * The dot on the icon says something in here is off its default, so a
+     * thinned table is never a mystery. */
+    var moreBtn = document.getElementById('f-more');
+    var moreModal = document.getElementById('more-modal');
+
+    function syncMore() {
+      var h = hideList(view.hide) !== hideList(posDefaults(Object.keys(view.pos)));
+      moreBtn.classList.toggle('is-set', !!(view.att || view.tgt || h));
+    }
+
+    moreBtn.addEventListener('click', function () {
+      closeAllDropdowns();
+      moreModal.showModal();
+      moreBtn.setAttribute('aria-expanded', 'true');
+    });
+    moreModal.addEventListener('close', function () {
+      closeAllDropdowns();
+      moreBtn.setAttribute('aria-expanded', 'false');
+    });
+    moreModal.addEventListener('click', function (e) {
+      if (e.target === moreModal || e.target.closest('[data-close]')) moreModal.close();
+    });
+    // An Esc with a menu open inside is for the menu: the dropdowns' own
+    // handler shuts it, and the dialog stays.
+    moreModal.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && anyDropdownOpen()) e.preventDefault();
     });
 
     var teamDd = registerDropdown(document.getElementById('dd-team'));
 
     teamGrid.addEventListener('click', function (e) {
-      var btn = e.target.closest ? e.target.closest('.tp-team') : null;
+      var btn = e.target.closest ? e.target.closest('.tp-team, .tp-any') : null;
       if (!btn || !teamGrid.contains(btn)) return;
       team = btn.getAttribute('data-team');
       closeDropdown(teamDd, true);
@@ -393,10 +698,10 @@
     });
 
     schedLoad(season).then(function (doc) {
+      sched = doc;
       teams = doc.teams;
-      buildTeamPicker(teamGrid, teams);
-      var t = (new URLSearchParams(location.search).get('team') || '').toUpperCase();
-      if (t && schedTeamsByAbbr(doc)[t]) team = t;
+      buildTeamPicker(teamGrid, teams, { anyLabel: 'No team — this week\'s matchups' });
+      applyParams(location.search);
       load();
     }).catch(function (e) {
       board.innerHTML = '<p class="sched-empty">Error: ' + esc(e.message) + '</p>';

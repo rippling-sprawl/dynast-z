@@ -52,6 +52,7 @@ import urllib.request
 # serverless runtime sets as the working directory.
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from _action import render as R  # noqa: E402
+from _http import send  # noqa: E402
 
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "")
@@ -135,14 +136,10 @@ class handler(BaseHTTPRequestHandler):
             self.end_headers()
             return
 
-        body = html.encode()
-        self.send_response(200)
-        self.send_header("Content-Type", "text/html; charset=utf-8")
-        self.send_header("Content-Length", str(len(body)))
-        self.send_header("ETag", quoted)
-        self.send_header("Cache-Control", "public, max-age=0, must-revalidate")
-        self.end_headers()
-        self.wfile.write(body)
+        send(self, 200, html.encode(), "text/html; charset=utf-8", {
+            "ETag": quoted,
+            "Cache-Control": "public, max-age=0, must-revalidate",
+        })
 
     def _html(self, status, title, detail):
         """A plain page for the cases that have no board to draw.
@@ -156,9 +153,5 @@ class handler(BaseHTTPRequestHandler):
                 f"<p>{R.esc(detail)}</p>"
                 "<p><a href=\"/football/action\">Back to the book</a></p>"
                 "</div>").encode()
-        self.send_response(status)
-        self.send_header("Content-Type", "text/html; charset=utf-8")
-        self.send_header("Content-Length", str(len(body)))
-        self.send_header("Cache-Control", "no-store")
-        self.end_headers()
-        self.wfile.write(body)
+        send(self, status, body, "text/html; charset=utf-8",
+             {"Cache-Control": "no-store"})
