@@ -758,27 +758,20 @@
         '</span>';
     }
 
-    /* The crest is the button, where there is anybody to press it: tapping a
-     * team in the hero opens the note dialog already set to that team and to
-     * this game's week, which is the whole of what a note taken from a game
-     * page has to say about itself.
-     *
-     * For everyone else it stays the image it always was. `data-note-add` is
-     * only wired by initBunNotes, and initBunNotes declines to run for a reader
-     * who cannot write — so a button rendered here for a signed-out visitor
-     * would be a button that does nothing at all. */
-    function crest(t, wk) {
-      var img = teamLogo(t.abbr, 'go-crest', true);
-      if (!canAddNotes()) return img;
-      var lbl = 'Take a note on ' + (t.name || t.abbr);
-      return '<button type="button" class="go-crest-btn" data-note-add="' +
-        esc(t.abbr) + '" data-note-week="' + esc(wk) + '" title="' + esc(lbl) +
-        '" aria-label="' + esc(lbl) + '">' + img + '</button>';
+    /* The crest is a link to that club's season on /football/schedule — the
+     * team filter, every week, and the season this game belongs to. Notes are
+     * still filed from the notes card's own "+ Add note" buttons below. */
+    function crest(t, season) {
+      var q = new URLSearchParams({ week: 'all', team: t.abbr });
+      if (season) q.set('season', String(season));
+      var lbl = (t.name || t.abbr) + ' schedule';
+      return '<a class="go-crest-btn" href="/football/schedule?' + esc(q.toString()) +
+        '" title="' + esc(lbl) + '" aria-label="' + esc(lbl) + '">' +
+        teamLogo(t.abbr, 'go-crest', true) + '</a>';
     }
 
     function heroSection(b) {
       var g = b.game;
-      var wk = noteWeek(g);
       var sc = g.score;
       var sit = situation(b);
       var ball = sit ? sit.team : '';
@@ -820,7 +813,7 @@
        * was read as one. */
       return '<div class="go-hero"><div class="go-hero-top">' +
         '<span class="go-team' + aw + '">' +
-          crest(g.away, wk) +
+          crest(g.away, g.season) +
           (ball && ball === g.away.abbr ? possMark(g.away.abbr) : '') + '</span>' +
         '<div class="go-hero-mid">' +
           '<span class="go-at">' + (g.neutral ? 'vs' : '@') + '</span>' +
@@ -830,7 +823,7 @@
           '</span>' +
         '</div>' +
         '<span class="go-team' + hw + '">' +
-          crest(g.home, wk) +
+          crest(g.home, g.season) +
           (ball && ball === g.home.abbr ? possMark(g.home.abbr) : '') + '</span>' +
         '</div>' +
         line +

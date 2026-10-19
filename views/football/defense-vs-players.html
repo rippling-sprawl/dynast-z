@@ -381,22 +381,31 @@
      * in lit and the rest dimmed for context. */
 
     // The card says the position, so the columns need not say pass/rush/rec.
-    // Att and Recs are volume, never ranked. Touchdowns are two values: Pass
-    // TD thrown (QB only) and RRTD, rushing plus receiving TDs scored.
+    // `rank` is what puts a matchup on the card; the other columns are
+    // context (Att and Recs are volume, never ranked). Touchdowns are two
+    // values: Pass TD thrown (QB only) and RRTD, rushing plus receiving TDs
+    // scored (not on the QB card: there it is the odd sneak). A back does
+    // both jobs, so his card splits into Rushing and Receiving `groups` and
+    // scrolls sideways; his longs are shown but rank nothing.
     var MX_POS = [
-      { pos: 'QB', label: 'Quarterbacks', names: 1, cols: ['att', 'yds', 'ptd', 'rrtd', 'lng'] },
-      { pos: 'RB', label: 'Running backs', names: 2, cols: ['att', 'rec', 'yds', 'rrtd', 'lng'] },
-      { pos: 'WR', label: 'Wide receivers', names: 2, cols: ['rec', 'yds', 'rrtd', 'lng'] },
-      { pos: 'TE', label: 'Tight ends', names: 1, cols: ['rec', 'yds', 'rrtd', 'lng'] }
+      { pos: 'QB', label: 'Quarterbacks', names: 1, cols: ['att', 'yds', 'ptd', 'lng'],
+        rank: ['yds', 'ptd', 'lng'] },
+      { pos: 'RB', label: 'Running backs', names: 2, cols: ['rrtd', 'att', 'yds', 'lng', 'rec', 'ryds', 'rlng'],
+        rank: ['rrtd', 'yds', 'ryds'],
+        groups: [{ label: '', n: 1 }, { label: 'Rushing', n: 3 }, { label: 'Receiving', n: 3 }] },
+      { pos: 'WR', label: 'Wide receivers', names: 2, cols: ['rrtd', 'rec', 'yds', 'lng'],
+        rank: ['rrtd', 'yds', 'lng'] },
+      { pos: 'TE', label: 'Tight ends', names: 1, cols: ['rrtd', 'rec', 'yds', 'lng'],
+        rank: ['rrtd', 'yds', 'lng'] }
     ];
-    var MX_LABEL = { att: 'Att', rec: 'Recs', yds: 'Yds', ptd: 'Pass TD', rrtd: 'RRTD', lng: 'Long' };
-    var MX_HINT = { rrtd: 'Rush + rec TDs' };
-    var MX_VOLUME = { att: true, rec: true };
+    var MX_LABEL = { att: 'Att', rec: 'Recs', yds: 'Yds', ptd: 'Pass TD', rrtd: 'RRTD', lng: 'Long',
+                     ryds: 'Yds', rlng: 'Long' };
+    var MX_HINT = { rrtd: 'Rush + rec TDs', ryds: 'Receiving yds', rlng: 'Longest reception' };
     // TDs are read by their per-game mean — a median of mostly 0s and 1s says
     // little — and everything else by its median.
     var MX_TD = { ptd: true, rrtd: true };
 
-    function mxRanked(p) { return p.cols.filter(function (k) { return !MX_VOLUME[k]; }); }
+    function mxRanked(p) { return p.rank; }
     function mxVal(c, stat) { return MX_TD[stat] ? c.avg : c.med; }
     function mxTie(c, stat) { return MX_TD[stat] ? c.med : c.avg; }
 
@@ -407,7 +416,7 @@
       return MX_TD[stat] || stat === 'rec' ? v.toFixed(1) : String(Math.round(v));
     }
 
-    function mxRow(m, p) {
+    function mxRow(m, p, starts) {
       var sum = all.teams[m.def].summary[p.pos];
       var lead = (((all.teams[m.off] || {}).leaders || {})[p.pos] || []).slice(0, p.names);
       return '<tr class="dvp-mx-link">' +
@@ -429,9 +438,10 @@
         '</td>' +
         p.cols.map(function (stat) {
           var c = sum[stat];
-          if (!c) return '<td class="num">—</td>';
+          var cls = 'num' + (starts[stat] ? ' grp-start' : '');
+          if (!c) return '<td class="' + cls + '">—</td>';
           var rank = m.ranks[stat];
-          return '<td class="num' + (rank ? ' is-ranked' : '') + '" title="' + esc(MX_HINT[stat] || MX_LABEL[stat]) +
+          return '<td class="' + cls + (rank ? ' is-ranked' : '') + '" title="' + esc(MX_HINT[stat] || MX_LABEL[stat]) +
             ': mean ' + esc(Number(c.avg).toFixed(2)) + ', median ' + esc(c.med) +
             (rank ? ' · #' + rank + ' on the slate' : '') + '">' + esc(mxNum(mxVal(c, stat), stat)) + '</td>';
         }).join('') +
@@ -455,19 +465,28 @@
             rows[m.def].ranks[stat] = i + 1;
           });
         });
-        // Most top-three finishes first, then the better finishes, then yards.
-        function score(r) { return ranked.reduce(function (t, k) { return t + (r.ranks[k] ? 4 - r.ranks[k] : 0); }, 0); }
+        // Yards allowed, the section's way round: most first when soft, least
+        // first when stingy. The mean breaks ties.
         order.sort(function (a, b) {
-          return (Object.keys(b.ranks).length - Object.keys(a.ranks).length) || (score(b) - score(a)) ||
-            dir * (all.teams[a.def].summary[p.pos].yds.med - all.teams[b.def].summary[p.pos].yds.med);
+          var x = all.teams[a.def].summary[p.pos].yds, y = all.teams[b.def].summary[p.pos].yds;
+          return dir * (x.med - y.med) || dir * (x.avg - y.avg) || a.def.localeCompare(b.def);
         });
+        var groupRow = p.groups ? '<tr class="dvp-mx-groups"><th class="dvp-mx-who"></th>' +
+          p.groups.map(function (g) {
+            return '<th colspan="' + g.n + '"' + (g.label ? ' class="grp"' : '') + '>' + esc(g.label) + '</th>';
+          }).join('') + '</tr>' : '';
+        // Where a group starts, a rule: the first column of each group past the first.
+        var starts = {}, at = 0;
+        (p.groups || []).forEach(function (g, i) { if (i) starts[p.cols[at]] = true; at += g.n; });
         return '<section class="dvp-mx-card"><h4>' + esc(p.label) + '</h4>' +
-          '<table class="dvp-mx-table"><thead><tr><th>Matchup</th>' +
+          '<div class="dvp-mx-scroll"><table class="dvp-mx-table' + (p.groups ? ' has-groups' : '') + '"><thead>' + groupRow +
+          '<tr><th class="dvp-mx-who">Matchup</th>' +
           p.cols.map(function (k) {
-            return '<th class="num"' + (MX_HINT[k] ? ' title="' + esc(MX_HINT[k]) + '"' : '') + '>' + esc(MX_LABEL[k]) + '</th>';
+            return '<th class="num' + (starts[k] ? ' grp-start' : '') + '"' +
+              (MX_HINT[k] ? ' title="' + esc(MX_HINT[k]) + '"' : '') + '>' + esc(MX_LABEL[k]) + '</th>';
           }).join('') +
-          '</tr></thead><tbody>' + order.map(function (m) { return mxRow(m, p); }).join('') +
-          '</tbody></table></section>';
+          '</tr></thead><tbody>' + order.map(function (m) { return mxRow(m, p, starts); }).join('') +
+          '</tbody></table></div></section>';
       }).join('');
       return '<div class="dvp-mx-section ' + (soft ? 'is-soft' : 'is-stingy') + '">' +
         '<h3>' + esc(title) + '</h3><p class="dvp-mx-sub">' + esc(sub) + '</p>' +

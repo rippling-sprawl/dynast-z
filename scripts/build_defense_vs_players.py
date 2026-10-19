@@ -179,13 +179,16 @@ def player_row(p, long_pass=None):
 #
 # `extra` is volume shown beside the three ranked stats, each with its own bar
 # -- a back's catches are a receiving number, so they count backs with 2+
-# targets, not 3+ carries.
+# targets, not 3+ carries. `longs` is the same for a second long, read per
+# player like the first: a back's longest catch beside his longest run.
 PASSER, RUSHER, RECEIVER = ("pass_att", 10), ("rush_att", 3), ("targets", 2)
 SUMMARY_POS = {
     "QB": {"min": PASSER, "yds": "pass_yds", "lng": "pass_lng",
            "extra": {"att": ("pass_att", PASSER), "ptd": ("pass_td", PASSER)}},
     "RB": {"min": RUSHER, "yds": "rush_yds", "lng": "rush_lng",
-           "extra": {"att": ("rush_att", RUSHER), "rec": ("rec", RECEIVER)}},
+           "extra": {"att": ("rush_att", RUSHER), "rec": ("rec", RECEIVER),
+                     "ryds": ("rec_yds", RECEIVER)},
+           "longs": {"rlng": ("rec_lng", RECEIVER)}},
     "WR": {"min": RECEIVER, "yds": "rec_yds", "lng": "rec_lng",
            "extra": {"rec": ("rec", RECEIVER)}},
     "TE": {"min": RECEIVER, "yds": "rec_yds", "lng": "rec_lng",
@@ -200,7 +203,8 @@ def qualifies(r, bar):
 def summarize(rows, games):
     """-> {pos: {stat: {"med", "avg", "n"}}}: per game, what one defense allowed
     each position group, regular season only. Every position has "yds",
-    "lng" and "rrtd"; "att", "rec" and the QB's "ptd" only where they apply.
+    "lng" and "rrtd"; "att", "rec", the QB's "ptd" and the RB's receiving
+    "ryds" and "rlng" only where they apply.
 
     A game's value is the group's total from its qualifying players. A game in
     which nobody at the position qualified counts as zero: the defense held
@@ -223,7 +227,8 @@ def summarize(rows, games):
     for pos, spec in SUMMARY_POS.items():
         stats = ("yds", "rrtd") + tuple(spec["extra"])
         per_game = {gid: dict.fromkeys(stats, 0) for gid in game_ids}
-        longs = []
+        longs = {"lng": []}
+        longs.update((k, []) for k in spec.get("longs", {}))
         for r in rows:
             g = per_game.get(r["game_id"])
             if g is None or r["pos"] != pos:
@@ -233,12 +238,15 @@ def summarize(rows, games):
                     g[stat] += r[src]
             if any(qualifies(r, bar) for bar in (spec["min"], RUSHER, RECEIVER)):
                 g["rrtd"] += r["tot_td"]
+            for stat, (src, bar) in spec.get("longs", {}).items():
+                if qualifies(r, bar):
+                    longs[stat].append(r[src])
             if qualifies(r, spec["min"]):
                 g["yds"] += r[spec["yds"]]
-                longs.append(r[spec["lng"]])
+                longs["lng"].append(r[spec["lng"]])
         out[pos] = {}
         series = {stat: [g[stat] for g in per_game.values()] for stat in stats}
-        series["lng"] = longs
+        series.update(longs)
         for stat, vals in series.items():
             out[pos][stat] = {
                 "med": statistics.median(vals) if vals else 0,

@@ -284,3 +284,24 @@
 .dvp-mx-link:hover .dvp-mx-match a { color: var(--accent); text-decoration: underline; }
 .dvp-mx-table :is(td, th):first-child { padding-left: 4px; }
 .dvp-mx-table :is(td, th):last-child { padding-right: 4px; }
+
+/* The running backs' card: Rushing and Receiving column groups, wider than
+ * the card, so it scrolls sideways with the matchup column pinned. */
+.dvp-mx-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.dvp-mx-table.has-groups { width: max-content; min-width: 100%; }
+.dvp-mx-table.has-groups .dvp-mx-who {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: var(--surface);
+  padding-right: 10px;
+}
+.dvp-mx-table.has-groups .dvp-mx-names { white-space: nowrap; }
+.dvp-mx-table .dvp-mx-groups th { padding-bottom: 2px; }
+.dvp-mx-table .dvp-mx-groups th.grp {
+  text-align: center;
+  color: var(--text-3);
+  border-bottom: 1px solid var(--border-soft);
+}
+.dvp-mx-table .grp-start { border-left: 1px solid var(--border-soft); }
+.dvp-mx-table th.grp + th.grp, .dvp-mx-table .dvp-mx-groups th.grp:not(:nth-child(2)) { border-left: 1px solid var(--border-soft); }

@@ -68,12 +68,11 @@ html {
   display: block;
 }
 
-/* The crest doubles as the "take a note on this team" control for a reader who
- * can write one, so it needs a button around it and none of a button's
- * chrome — the crest is already the affordance and the hero is already the
+/* The crest links to that team's schedule, so it needs a link around it and
+ * none of a link's chrome — the crest is already the affordance and the hero is already the
  * place a reader's eye is. It lifts on hover and takes a gold ring on focus,
  * which is the whole of the hint. `line-height: 0` for the same reason
- * .go-team has it: a button box is otherwise a text box with a logo sat in it,
+ * .go-team has it: the link box is otherwise a text box with a logo sat in it,
  * and the descender space under the crest pushes the possession marker down. */
 .go-crest-btn {
   display: block;
