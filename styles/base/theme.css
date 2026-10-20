@@ -121,6 +121,10 @@
   --heat-info: #58a6ff;
   --heat-info-fill: #58a6ff;
   --heat-fill-max: 24%;
+  /* Text on a solid good/bad fill (--good-solid, --bad-line-hi, --bad): white
+   * in both themes. Its own token because --on-accent is re-pointed at ink
+   * by the masters skin. */
+  --on-solid: #ffffff;
 
   /* The sequential (green→red) and diverging (green wash) scales the league
    * pages draw with. Both are built in CSS from a value the view hands over as

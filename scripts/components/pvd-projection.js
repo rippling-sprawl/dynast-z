@@ -247,19 +247,18 @@
   }
 
   // Volume per game: this season newest first, decayed, with last season as
-  // a prior. -> { value, last5Share }.
+  // a prior. -> { value }.
   function volumeOf(cur, prev, field) {
-    var w = 1, sw = 0, sx = 0, w5 = 0;
-    cur.forEach(function (g, i) {
+    var w = 1, sw = 0, sx = 0;
+    cur.forEach(function (g) {
       sx += w * (g[field] || 0); sw += w;
-      if (i < 5) w5 += w;
       w *= LAMBDA;
     });
     if (prev.length) {
       sx += PRIOR_GAMES * sum(prev, function (g) { return g[field] || 0; }) / prev.length;
       sw += PRIOR_GAMES;
     }
-    return { value: sw ? sx / sw : 0, last5Share: sw ? w5 / sw : 0 };
+    return { value: sw ? sx / sw : 0 };
   }
 
   // What the defense allowed this position, game by game, against what those
@@ -463,25 +462,17 @@
    *    projection as N equally likely games (a quantile dotplot), each a
    *    circle -- blue over the line, orange under -- stacked by result, with
    *    the median's diamond on its 80% range under them. Below, one row per
-   *    input: its real games as ▲ / ▼, its own estimate as a hollow square,
-   *    and what it is worth beside the label. Circles are games that might
+   *    input: its real games as ▲ / ▼, and what it is worth beside the
+   *    label. Circles are games that might
    *    happen and triangles games that did, so the two never share a shape.
    *    The line runs through every row. */
   function projectionChart(m, line, def, width) {
     var unit = m.spec.unit, base = m.base, key = m.key;
-    var curSeason = m.cur, last5 = m.cur.slice(0, 5);
-    var vol = m.volumes[0].volume;
+    var curSeason = m.cur;
     var rows = [];
     rows.push({
       label: 'This season', sub: 'n=' + curSeason.length + (m.prev.length ? ' + ' + (m.season - 1) + ' prior' : ''),
-      dots: curSeason.map(function (g) { return { v: g[key] || 0, tip: 'Wk ' + g.week + ' ' + (g.home ? 'vs ' : '@ ') + g.opp + ': ' + (g[key] || 0) + ' ' + unit }; }),
-      est: base, estTip: 'Baseline ' + fmt(base) + ' ' + unit + ': volume, decayed, × efficiency, regressed'
-    });
-    rows.push({
-      label: 'Last 5', sub: 'n=' + last5.length + ' · ' + pct(vol.last5Share) + ' of base',
-      dots: last5.map(function (g) { return { v: g[key] || 0, tip: 'Wk ' + g.week + ' ' + (g.home ? 'vs ' : '@ ') + g.opp + ': ' + (g[key] || 0) + ' ' + unit }; }),
-      est: last5.length ? sum(last5, function (g) { return g[key] || 0; }) / last5.length : null,
-      estTip: 'Last-5 average'
+      dots: curSeason.map(function (g) { return { v: g[key] || 0, tip: 'Wk ' + g.week + ' ' + (g.home ? 'vs ' : '@ ') + g.opp + ': ' + (g[key] || 0) + ' ' + unit }; })
     });
     var h = m.history;
     rows.push({
@@ -490,18 +481,14 @@
         var g = e.g;
         return { v: g[key] || 0, old: g.season < m.season, tip: "'" + String(g.season).slice(2) + ' Wk ' + g.week + ': ' + (g[key] || 0) + ' ' + unit +
           (e.ratio != null ? ' (' + signPct(e.ratio) + ' vs his season avg)' : '') };
-      }),
-      est: h.games.length ? base * h.ratio : null,
-      estTip: 'His record vs ' + def + ', scaled to now: ' + signPct(h.ratio)
+      })
     });
     var d = m.defense;
     rows.push({
       label: def + ' allowed', sub: d.pending ? 'awaiting build' : d.none ? 'no games yet' : 'n=' + d.n + ' · ×' + d.factor.toFixed(2),
       dots: d.games.map(function (g) {
         return { v: base * g.ratio, tip: 'Wk ' + g.week + ' vs ' + g.opp + ': allowed ' + fmt(g.allowed) + ', those players avg ' + fmt(g.exp) + ' (' + signPct(g.ratio) + ')' };
-      }),
-      est: d.n ? base * d.factor : null,
-      estTip: 'Raw ' + signPct(d.raw) + ', regressed to ' + signPct(d.factor) + ' (pulled toward even by ' + (d.k || 0) + ' games)'
+      })
     });
 
     // The projected games: N equally likely outcomes, fewer for touchdowns,
@@ -586,10 +573,6 @@
         placed.push({ x: cx, lane: lane });
         s += mark('pvd-ev-dot' + (dt.old ? ' is-old' : ''), cx, y + lanes[lane], 4.5, dt.v > line, dt.tip);
       });
-      if (r.est != null) {
-        s += '<rect class="pvd-est" x="' + (x(r.est) - 5.5) + '" y="' + (y - 5.5) + '" width="11" height="11" rx="1.5" data-tip="' +
-          esc(r.estTip + ' → ' + fmt(r.est) + ' ' + unit) + '"/>';
-      }
     });
     var y0 = hgt - pad.b;
     s += axis(x, xmax, y0, width, pad, width < 420 ? 3 : 5);
@@ -725,10 +708,19 @@
    * to, the model's chance of the over at that line, and the 80% range --
    * one row on a wide screen, two on a phone. A touchdown's median is nearly
    * always 0, which says nothing, so it shows the expected count. */
+  // The chance of the over on the site's red/green scale: 55%+ green, 60%+
+  // dark green, 45% and under red, 40% and under dark red. Read off the
+  // rounded figure, so the color always agrees with the number printed.
+  function chanceHeat(p) {
+    var v = Math.round(p * 100);
+    return v >= 60 ? 'is-good-2' : v >= 55 ? 'is-good-1' : v <= 40 ? 'is-bad-2' : v <= 45 ? 'is-bad-1' : '';
+  }
+
   function topBar(m, line) {
     var c = chances(m, line), td = m.spec.kind === 'td', q = m.quote;
-    var stat = function (v, k, tip) {
-      return '<span class="pvd-top-stat" data-tip="' + esc(tip) + '"><b>' + esc(v) + '</b> ' + esc(k) + '</span>';
+    var stat = function (v, k, tip, heat) {
+      return '<span class="pvd-top-stat" data-tip="' + esc(tip) + '"><b' + (heat ? ' class="pvd-heat ' + heat + '"' : '') + '>' +
+        esc(v) + '</b> ' + esc(k) + '</span>';
     };
     var html = '<div class="pvd-top"><div class="pvd-linectl" role="group" aria-label="Line">' +
       '<button type="button" class="dd-btn pvd-step" data-step="-1" aria-label="Lower the line">−</button>' +
@@ -743,7 +735,7 @@
       ? stat((Math.round(m.mean * 100) / 100).toFixed(2), 'exp. TDs', 'How many touchdowns the model expects.')
       : stat(fmt(m.median), 'proj.', 'The middle outcome: half his projected games land above it, half below.');
     html += stat(pct(c.over), m.spec.anytime ? 'to score' : glyph(true) + ' over' + (c.push ? ' · push ' + pct(c.push) : ''),
-      'The model\'s chance he clears the line.');
+      'The model\'s chance he clears the line.', chanceHeat(c.over));
     if (!td) html += '<span class="pvd-top-range" data-tip="8 in 10 of his projected games land in this range.">80%: ' +
       fmt(m.lo) + '–' + fmt(m.hi) + '</span>';
     return html + '</span></div>';
@@ -758,7 +750,6 @@
       [sw(mark('pvd-key-sw', 7, 7, 5, true)), 'Real game, over'],
       [sw(mark('pvd-key-sw', 7, 7, 5, false)), 'Real game, under'],
       [sw('<line class="pvd-line" x1="7" x2="7" y1="0" y2="14"/>'), 'The line'],
-      [sw('<rect class="pvd-est" x="2" y="2" width="10" height="10" rx="1.5"/>'), 'One input\'s estimate'],
       [sw('<line class="pvd-range" x1="1" x2="23" y1="7" y2="7"/><path class="pvd-diamond" d="M12,1L18,7L12,13L6,7Z"/>', 24), 'Projection, 80% range'],
       [sw('<rect class="pvd-ring" x="1.5" y="1.5" width="11" height="11" rx="3"/>'), 'vs ' + esc(def)],
       [sw(mark('pvd-key-sw is-old', 7, 7, 5, false)), 'Earlier season']
@@ -790,9 +781,8 @@
         'stacked by result: blue clears the line, orange falls short, and the share that are blue is the chance of the over. ' +
         'The diamond under them is the median and its bar spans 8 in 10 games. The fewer ' + esc(unit) + ' he gets, the wider the ' +
         'spread: one long play decides more of a game, and a smaller role swings more with game script and who else is healthy. ' +
-        'The rows below are what built it, each ▲ or ▼ a real game over or under the line, ' +
-        'and the hollow square what that input says on its own. <i>This season</i> is the baseline: recent games count most, ' +
-        'last season fills in early. <i>Last 5</i> shows how much of that baseline its five latest games carry. ' +
+        'The rows below are what built it, each ▲ or ▼ a real game over or under the line. <i>This season</i> is the baseline: recent games count most, ' +
+        'last season fills in early. ' +
         '<i>vs ' + esc(def) + ' career</i> gets a few percent of say at most, because a handful of games years apart predict little. ' +
         '<i>' + esc(def) + ' allowed</i> puts each of its games in his terms: his baseline × how far that week\'s ' + esc(m.pos) +
         's went over or under their norm; ×1.00 is an average defense. Marks that would overlap are stacked a step apart.') +

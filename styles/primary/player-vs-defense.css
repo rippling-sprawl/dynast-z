@@ -114,6 +114,15 @@
 .pvd-top-stats { display: flex; align-items: baseline; flex-wrap: wrap; gap: 2px 12px; }
 .pvd-top-stat { white-space: nowrap; cursor: help; }
 .pvd-top-stat b { font-size: 15px; font-weight: 700; color: var(--text-hi); font-variant-numeric: tabular-nums; }
+/* The chance of the over, on the site's red/green scale (chanceHeat). The
+ * deep steps are solid with white text; the dark theme's deep red is its
+ * --bad-line-hi, since --bad there is too light to carry white text. */
+.pvd-heat { padding: 1px 6px; border-radius: 5px; }
+.pvd-heat.is-good-1 { background: var(--good-tint); box-shadow: inset 0 0 0 1px var(--good-line); color: var(--good); }
+.pvd-heat.is-good-2 { background: var(--good-solid); color: var(--on-solid); }
+.pvd-heat.is-bad-1 { background: var(--bad-tint); box-shadow: inset 0 0 0 1px var(--bad-line); color: var(--bad); }
+.pvd-heat.is-bad-2 { background: var(--bad-line-hi); color: var(--on-solid); }
+:root[data-theme="light"] .pvd-heat.is-bad-2 { background: var(--bad); }
 .pvd-top-range { white-space: nowrap; font-variant-numeric: tabular-nums; cursor: help; }
 
 .pvd-h { margin: 16px 0 6px; font-size: 14px; font-weight: 650; color: var(--text-hi); }
@@ -157,8 +166,6 @@
 .pvd-row-t { paint-order: stroke; stroke: var(--surface); stroke-width: 3px; stroke-linejoin: round; }
 .pvd-ev-dot.is-over { fill: var(--series-a); }
 .pvd-ev-dot.is-under { fill: var(--series-b); }
-/* Hollow, so a game sitting where its input's estimate lands still shows. */
-.pvd-est { fill: none; stroke: var(--text-hi); stroke-width: 2; pointer-events: all; }
 .pvd-range { stroke: var(--text-3); stroke-width: 3; stroke-linecap: round; }
 .pvd-diamond { fill: var(--text-hi); }
 .pvd-svg [data-tip] { cursor: default; }
