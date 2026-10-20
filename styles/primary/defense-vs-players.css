@@ -216,6 +216,20 @@
 .dvp-toggle::after { display: none; }
 .dvp-toggle[aria-pressed="false"] { opacity: 0.4; }
 
+/* This week's opposing players, under the position toggles: a row per
+ * position, a toggle per player, wrapping on a phone. */
+.dvp-opp-list { display: flex; flex-direction: column; gap: 6px; margin-top: -4px; }
+.dvp-opp-list[hidden] { display: none; }
+.dvp-opp-pos { display: flex; align-items: baseline; gap: 6px; }
+.dvp-opp-names { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.dvp-opp-plabel {
+  flex: none;
+  width: 22px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-4);
+}
+
 /* ---------- The matchup board: shown before a team is picked ----------
  * Two sections (softest, toughest), each five position cards (backs get two), each card three
  * top-3 lists. A row is the matchup, the median allowed, and the offense's

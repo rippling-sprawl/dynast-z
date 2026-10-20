@@ -132,6 +132,9 @@
               <button type="button" class="dd-btn dvp-toggle" id="o-TE" aria-pressed="false">TE</button>
             </span>
           </div>
+          <!-- The players those positions bring, one toggle each: switch one
+               off to drop him from the table. Filled once they load. -->
+          <div class="dvp-opp-list" id="opp-list" role="group" aria-label="Opposing players shown" hidden></div>
         </div>
       </dialog>
     </div>
@@ -160,7 +163,8 @@
     // in the browser to the one defense already loaded.
     // pos: the positions picked, none meaning all. hide: column groups hidden.
     // opp: the positions of this week's opposing players shown above the table.
-    var view = { pos: {}, att: 0, tgt: 0, hide: {}, opp: {} };
+    // oppOff: ids of opposing players switched off, one by one, in the modal.
+    var view = { pos: {}, att: 0, tgt: 0, hide: {}, opp: {}, oppOff: {} };
 
     var board = document.getElementById('board');
     var note = document.getElementById('note');
@@ -176,7 +180,7 @@
     /* ---------- the URL is the state ----------
      * Every filter and toggle lives in the query string, so a link — the
      * matchup board's included — opens exactly the view it was copied from:
-     *   ?team=DAL&pos=RB,WR&att=4&tgt=2&hide=pass&opp=QB,WR
+     *   ?team=DAL&pos=RB,WR&att=4&tgt=2&hide=pass&opp=QB,WR&oppoff=123,456
      * Defaults are left out. `hide` is written only where it differs from what
      * the positions hide on their own (see posDefaults), and an empty `hide=`
      * means "show everything" where those positions would have hidden some. */
@@ -201,12 +205,14 @@
       }
       var opp = POS.filter(function (p) { return s.opp && s.opp[p]; });
       if (opp.length) q.set('opp', opp.join(','));
+      var off = Object.keys(s.oppOff || {});
+      if (opp.length && off.length) q.set('oppoff', off.join(','));
       var str = q.toString().replace(/%2C/g, ',');
       return location.pathname + (str ? '?' + str : '');
     }
 
     function current() {
-      return { team: team, pos: Object.keys(view.pos), att: view.att, tgt: view.tgt, hide: view.hide, opp: view.opp };
+      return { team: team, pos: Object.keys(view.pos), att: view.att, tgt: view.tgt, hide: view.hide, opp: view.opp, oppOff: view.oppOff };
     }
 
     function writeParams() {
@@ -238,6 +244,10 @@
       view.opp = {};
       (q.get('opp') || '').toUpperCase().split(',').forEach(function (p) {
         if (POS.indexOf(p) >= 0) view.opp[p] = true;
+      });
+      view.oppOff = {};
+      (q.get('oppoff') || '').split(',').forEach(function (id) {
+        if (/^\d+$/.test(id)) view.oppOff[id] = true;
       });
       posSync();
       attSync(view.att);
@@ -605,7 +615,7 @@
       var token = ++matchupToken;
       var picked = POS.filter(function (p) { return view.opp[p]; });
       matchup = null;
-      if (!team || !picked.length || !sched) { if (doc) render(); return; }
+      if (!team || !picked.length || !sched) { matchupChanged(); return; }
       var def = team;
       var m = thisWeekOpp(def);
       matchup = { team: def, m: m };
@@ -620,18 +630,51 @@
           });
         matchups[def].catch(function () { delete matchups[def]; });
       }
-      if (doc) render();
+      matchupChanged();
       if (!m) return;
       matchups[def].then(function (d) {
         if (token !== matchupToken) return;
         matchup.data = d;
-        if (doc) render();
+        matchupChanged();
       }).catch(function (e) {
         if (token !== matchupToken) return;
         matchup.error = e.message;
-        if (doc) render();
+        matchupChanged();
       });
     }
+
+    function matchupChanged() {
+      syncOppList();
+      if (doc) render();
+    }
+
+    // The modal's list of this week's opposing players, for the positions
+    // toggled on: each a toggle, faded once switched off.
+    var oppList = document.getElementById('opp-list');
+    function syncOppList() {
+      var d = matchup && matchup.team === team && matchup.data;
+      var ps = d ? d.players.filter(function (p) { return view.opp[p.pos]; }) : [];
+      oppList.hidden = !ps.length;
+      oppList.innerHTML = POS.filter(function (pos) { return view.opp[pos]; }).map(function (pos) {
+        var row = ps.filter(function (p) { return p.pos === pos; });
+        if (!row.length) return '';
+        return '<div class="dvp-opp-pos"><span class="dvp-opp-plabel">' + esc(pos) + '</span><span class="dvp-opp-names">' +
+          row.map(function (p) {
+            return '<button type="button" class="dd-btn dvp-toggle" data-pid="' + esc(p.id) + '" aria-pressed="' +
+              String(!view.oppOff[p.id]) + '" title="' + esc(p.name) + ' · ' + esc(p.season_yds) + ' yds">' +
+              esc(p.name) + (p.status ? ' <span class="dvp-pstatus">' + esc(p.status) + '</span>' : '') + '</button>';
+          }).join('') + '</span></div>';
+      }).join('');
+    }
+    oppList.addEventListener('click', function (e) {
+      var btn = e.target.closest ? e.target.closest('[data-pid]') : null;
+      if (!btn || !oppList.contains(btn)) return;
+      var id = btn.getAttribute('data-pid');
+      if (view.oppOff[id]) delete view.oppOff[id]; else view.oppOff[id] = true;
+      btn.setAttribute('aria-pressed', String(!view.oppOff[id]));
+      writeParams();
+      if (doc) render();
+    });
 
     function logo(t) {
       return '<img src="/assets/icons/nfl/' + esc(t) + '.svg" alt="' + esc(t) + '" title="' + esc(t) + '">';
@@ -706,6 +749,7 @@
       return head + POS.filter(function (p) { return view.opp[p]; }).map(function (pos) {
         var ps = d.players.filter(function (p) { return p.pos === pos; });
         if (!ps.length) return msgRow(c, 'No ' + pos + ' found for ' + d.offense + '.');
+        ps = ps.filter(function (p) { return !view.oppOff[p.id]; });
         return ps.map(function (p) {
           return '<tr class="dvp-player"><th colspan="' + c.cols + '"><span class="dvp-label">' +
               '<b>' + esc(p.name) + '</b><span class="dvp-ppos">' + esc(p.pos) + '</span>' +
@@ -908,6 +952,7 @@
       var btn = e.target.closest ? e.target.closest('.tp-team, .tp-any') : null;
       if (!btn || !teamGrid.contains(btn)) return;
       team = btn.getAttribute('data-team');
+      view.oppOff = {}; // another defense, another opponent
       closeDropdown(teamDd, true);
       load();
     });
