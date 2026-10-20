@@ -26,6 +26,10 @@ anyone balldontlie's injury report has on IR, PUP, NFI or out. For each,
 `vs` is every career game against `defense` and `recent` his last five games
 of `season`, both newest first and in the row shape above.
 
+GET /api/player-vs-defense?props=1392309&player_id=36
+    -> this week's lines for one player, for the page's projection. See
+       load_props().
+
 Live, unlike /api/defense-vs-players: one search and one or two /stats pages
 per player, cached at the CDN for six hours. Needs BALLDONTLIE_API_KEY.
 """
@@ -299,6 +303,16 @@ def parse_matchup(params):
     return offense, defense, int(season), None
 
 
+def parse_props(params):
+    """-> (game_id, player_id, error | None). Both are checked as digits
+    before the game id reaches a PostgREST filter."""
+    game_id = (params.get("props") or [""])[0].strip()
+    player_id = (params.get("player_id") or [""])[0].strip()
+    if not GAME_ID_RE.match(game_id) or not GAME_ID_RE.match(player_id):
+        return None, None, "props and player_id must be ids, e.g. ?props=1392309&player_id=36"
+    return game_id, int(player_id), None
+
+
 def parse(params):
     """-> (name, pos, team, error | None)."""
     name = (params.get("name") or [""])[0].strip()
@@ -336,11 +350,102 @@ def load(name, pos, team):
     return payload
 
 
+# ---------------------------------------------------------------------------
+# This week's lines
+# ---------------------------------------------------------------------------
+#
+# GET /api/player-vs-defense?props=<game id>&player_id=<balldontlie id>
+#     -> {"game_id", "player_id", "props": {prop_type: {"vendor", "line",
+#         "over", "under"}}, "anytime_td": {"vendor", "odds"} | null}
+#
+# The page's projection is drawn against the line a book is actually hanging,
+# so it reads the one game bundle scripts/bdl_refresh.py keeps in Supabase
+# `game_odds` -- the same rows /football/schedule/game/<id> renders -- and
+# returns only this player's full-game over/unders. One book per market, in
+# PROP_BOOKS order, as the schedule's lines are: the page shows one price, and
+# it has to be a price someone is offering.
+#
+# A book that shows two lines for one player in one market is quoting a
+# second market under the first one's name (views/football/game-odds.html,
+# "markets wearing another market's name"): the lowest is the real one,
+# because every impostor is a superset of it.
+
+PROP_MARKETS = ("passing_yards", "passing_completions", "passing_tds",
+                "rushing_yards", "rushing_attempts", "receptions", "receiving_yards")
+PROP_BOOKS = ("draftkings", "fanduel", "betmgm", "caesars", "fanatics", "betrivers")
+PROPS_CACHE_CONTROL = "s-maxage=300, stale-while-revalidate=600"
+GAME_ID_RE = re.compile(r"^[0-9]{1,12}$")
+PROPS_TTL = 300
+_props_memo = {}
+
+
+def supabase_get(path):
+    url = os.environ.get("SUPABASE_URL", "").rstrip("/")
+    key = os.environ.get("SUPABASE_KEY", "")
+    if not url or not key:
+        raise RuntimeError("SUPABASE_URL and SUPABASE_KEY are not set")
+    req = urllib.request.Request(f"{url}/rest/v1/{path}", headers={
+        "apikey": key, "Authorization": f"Bearer {key}", "Accept": "application/json"})
+    try:
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            return json.load(resp)
+    except urllib.error.HTTPError as e:
+        detail = e.read().decode(errors="replace")[:200]
+        raise RuntimeError(f"supabase {e.code}: {detail}") from None
+
+
+def game_props(game_id):
+    """-> the game's current player props, memoized for PROPS_TTL: every
+    player on the page's two teams reads the same bundle."""
+    hit = _props_memo.get(game_id)
+    if hit and time.time() - hit[0] < PROPS_TTL:
+        return hit[1]
+    rows = supabase_get(f"game_odds?game_id=eq.{game_id}"
+                        "&select=props:data->player_props->current")
+    props = (rows[0].get("props") if rows else None) or []
+    _props_memo[game_id] = (time.time(), props)
+    return props
+
+
+def book_rank(vendor):
+    return PROP_BOOKS.index(vendor) if vendor in PROP_BOOKS else len(PROP_BOOKS)
+
+
+def load_props(game_id, player_id):
+    best, td = {}, None
+    for r in game_props(game_id):
+        if r.get("player_id") != player_id:
+            continue
+        m = r.get("market") or {}
+        try:
+            line = float(r.get("line_value"))
+        except (TypeError, ValueError):
+            continue
+        vendor = r.get("vendor") or ""
+        if r.get("prop_type") == "anytime_td" and m.get("type") == "milestone":
+            if m.get("odds") is not None and (td is None or book_rank(vendor) < book_rank(td["vendor"])):
+                td = {"vendor": vendor, "odds": m.get("odds")}
+            continue
+        if r.get("prop_type") not in PROP_MARKETS or m.get("type") != "over_under":
+            continue
+        quote = {"vendor": vendor, "line": line,
+                 "over": m.get("over_odds"), "under": m.get("under_odds")}
+        cur = best.get(r["prop_type"])
+        # The best-ranked book, and within one book its lowest line.
+        if (cur is None or book_rank(vendor) < book_rank(cur["vendor"]) or
+                (vendor == cur["vendor"] and line < cur["line"])):
+            best[r["prop_type"]] = quote
+    return {"game_id": int(game_id), "player_id": player_id, "props": best, "anytime_td": td}
+
+
 class handler(BaseHTTPRequestHandler):
     def do_GET(self):
         params = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
         if params.get("offense"):
             self._matchup(params)
+            return
+        if params.get("props"):
+            self._props(params)
             return
         name, pos, team, error = parse(params)
         if error:
@@ -367,6 +472,18 @@ class handler(BaseHTTPRequestHandler):
             self._json(502, {"error": str(e)})
             return
         self._json(200, payload, {"Cache-Control": CACHE_CONTROL})
+
+    def _props(self, params):
+        game_id, player_id, error = parse_props(params)
+        if error:
+            self._json(400, {"error": error})
+            return
+        try:
+            payload = load_props(game_id, player_id)
+        except Exception as e:  # noqa: BLE001
+            self._json(502, {"error": str(e)})
+            return
+        self._json(200, payload, {"Cache-Control": PROPS_CACHE_CONTROL})
 
     def _json(self, status, data, extra=None):
         send_json(self, status, data, {"Access-Control-Allow-Origin": "*", **(extra or {})})

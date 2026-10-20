@@ -360,6 +360,47 @@ def offense_leaders(by_team):
     return out
 
 
+# The box-score fields /football/player-vs-defense adjusts by: what a defense
+# allowed is read against what the same players do everywhere else.
+EXPECTED_STATS = ("pass_att", "pass_cmp", "pass_yds", "pass_td",
+                  "rush_att", "rush_yds", "rush_td",
+                  "targets", "rec", "rec_yds", "rec_td", "tot_td")
+
+
+def attach_expected(by_team):
+    """Give every row `exp`: that player's per-game average in his OTHER
+    regular-season games this season, and `exp_n`, how many games that is.
+
+    A defense that held 90-yard receivers to 60 is stingy; one that held
+    40-yard receivers to 60 is not, and raw yards allowed cannot tell them
+    apart. The ratio of a defense's rows to their `exp` can. His own game is
+    left out of his average, or every defense would be pulled toward
+    whatever it allowed him. A player with no other game gets `exp` None.
+
+    Every player-game appears once across all the teams' rows (on the
+    defense's side), so the season totals are those rows summed."""
+    post = {g["game_id"] for entry in by_team.values() for g in entry["games"] if g["postseason"]}
+    totals = {}
+    for entry in by_team.values():
+        for r in entry["rows"]:
+            if r["game_id"] in post or r["player_id"] is None:
+                continue
+            t = totals.setdefault(r["player_id"], {"n": 0, **dict.fromkeys(EXPECTED_STATS, 0)})
+            t["n"] += 1
+            for k in EXPECTED_STATS:
+                t[k] += r[k]
+    for entry in by_team.values():
+        for r in entry["rows"]:
+            t = totals.get(r["player_id"])
+            own = 0 if r["game_id"] in post else 1
+            others = (t["n"] - own) if t else 0
+            if others < 1:
+                r["exp"], r["exp_n"] = None, 0
+                continue
+            r["exp"] = {k: round((t[k] - own * r[k]) / others, 2) for k in EXPECTED_STATS}
+            r["exp_n"] = others
+
+
 def build(season, games, now):
     """-> {team: payload} for every team that appears in a final game.
 
@@ -394,6 +435,7 @@ def build(season, games, now):
                     entry["rows"].append(row)
 
     leaders = offense_leaders(by_team)
+    attach_expected(by_team)
     out = {}
     for team, entry in by_team.items():
         # Week ascending, then total yards descending. Ordered by kickoff rather

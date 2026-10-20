@@ -33,6 +33,7 @@
   <script src="/scripts/components/nfl-pickers.js"></script>
   <script src="/scripts/components/nfl-schedule.js"></script>
   <script src="/scripts/components/player-logs.js"></script>
+  <script src="/scripts/components/pvd-projection.js"></script>
   <script>initPage();</script>
 
   <div class="masters-content">
@@ -101,8 +102,19 @@
     </div>
 
     <div id="head"></div>
-    <div id="board"><p class="sched-empty">Loading players…</p></div>
-    <p class="dvp-note" id="note"></p>
+    <!-- Three views of one matchup, one at a time: the projection, the
+         defense it is adjusted by, and his every game against it. -->
+    <div class="dvp-toggle-set pvd-views" id="views" role="tablist" aria-label="View" hidden>
+      <button type="button" class="dd-btn dvp-toggle" role="tab" data-view="proj" id="tab-proj" aria-controls="proj">Projection</button>
+      <button type="button" class="dd-btn dvp-toggle" role="tab" data-view="defense" id="tab-defense" aria-controls="defp">Defense</button>
+      <button type="button" class="dd-btn dvp-toggle" role="tab" data-view="games" id="tab-games" aria-controls="games">Games</button>
+    </div>
+    <div id="proj" role="tabpanel" aria-labelledby="tab-proj"></div>
+    <div id="defp" role="tabpanel" aria-labelledby="tab-defense" hidden></div>
+    <div id="games" role="tabpanel" aria-labelledby="tab-games">
+      <div id="board"><p class="sched-empty">Loading players…</p></div>
+      <p class="dvp-note" id="note"></p>
+    </div>
   </div>
 
   <script>
@@ -130,8 +142,15 @@
     var doc = null;    // its /api/player-vs-defense payload
     var def = '';      // the defense picked by hand; '' means this week's opponent
     var hide = {};     // column groups hidden: { pass, rush, rec }
+    var stat = '';     // the projection's stat; '' means the position's first
+    var lines = {};    // lines moved by hand, by stat; reset with the matchup
+    var view = 'proj'; // the tab: proj | defense | games
 
     var board = document.getElementById('board');
+    var proj = document.getElementById('proj');
+    var defp = document.getElementById('defp');
+    var viewsEl = document.getElementById('views');
+    var VIEWS = { proj: proj, defense: defp, games: document.getElementById('games') };
     var head = document.getElementById('head');
     var note = document.getElementById('note');
     var input = document.getElementById('f-player');
@@ -164,7 +183,7 @@
       var wk = sched.weeks.filter(function (w) { return w.week === week; })[0];
       var g = ((wk && wk.games) || []).filter(function (x) { return x.away === team || x.home === team; })[0];
       if (!g) return null;
-      return { opp: g.away === team ? g.home : g.away, home: g.home === team, kickoff: g.kickoff };
+      return { id: g.id, opp: g.away === team ? g.home : g.away, home: g.home === team, kickoff: g.kickoff };
     }
 
     function playerTeam() {
@@ -179,7 +198,7 @@
     function defense() { return def || scheduledOpp(); }
 
     /* ---------- the URL is the state ----------
-     *   ?player=Breece%20Hall&pos=RB[&def=NE][&hide=rec]
+     *   ?player=Breece%20Hall&pos=RB[&def=NE][&hide=rec][&stat=rec_yds][&view=defense]
      * `def` only when it is not this week's opponent, so a shared link keeps
      * following the schedule. `hide` only where it differs from what the
      * position hides on its own (posDefaults); an empty `hide=` shows every
@@ -199,6 +218,8 @@
       if (player) { q.set('player', player.name); q.set('pos', player.pos); }
       if (def && def !== scheduledOpp()) q.set('def', def);
       if (player && hideList(hide) !== hideList(posDefaults(player.pos))) q.set('hide', hideList(hide));
+      if (player && stat && stat !== (PvdProjection.BY_POS[player.pos] || [])[0]) q.set('stat', stat);
+      if (player && view !== 'proj') q.set('view', view);
       syncMore();
       var str = q.toString().replace(/%2C/g, ',');
       var url = location.pathname + (str ? '?' + str : '');
@@ -212,6 +233,11 @@
       var d = (q.get('def') || '').toUpperCase();
       def = d && schedTeamsByAbbr(sched)[d] ? d : '';
       input.value = player ? player.name : '';
+      var vw = q.get('view') || '';
+      view = VIEWS[vw] ? vw : 'proj';
+      var st = q.get('stat') || '';
+      stat = player && (PvdProjection.BY_POS[player.pos] || []).indexOf(st) >= 0 ? st : '';
+      lines = {};
       hide = posDefaults(player ? player.pos : '');
       if (player && q.has('hide')) {
         var h = q.get('hide').toLowerCase().split(',');
@@ -242,23 +268,169 @@
       renderHead();
       var d = defense();
       if (!d) {
+        proj.innerHTML = '';
+        defp.innerHTML = '';
+        syncViews();
         board.innerHTML = '<p class="sched-empty">' + esc(playerTeam() || 'His team') +
           ' has no game in week ' + esc(week) + '. Pick a defense to see his games against it.</p>';
         return;
       }
+      renderProj(d);
+      renderTable(d);
+      syncViews();
+    }
+
+    /* ---------- the views ----------
+     * The tabs show once there is a matchup to show; before that (no player,
+     * loading, a bye week) the games panel carries the page's message alone. */
+    function syncViews() {
+      var on = !!(doc && defense());
+      viewsEl.hidden = !on;
+      Object.keys(VIEWS).forEach(function (k) {
+        VIEWS[k].hidden = on ? k !== view : k !== 'games';
+        var tab = document.getElementById('tab-' + k);
+        tab.setAttribute('aria-selected', String(k === view));
+        tab.setAttribute('aria-pressed', String(k === view));
+        tab.tabIndex = k === view ? 0 : -1;
+      });
+    }
+
+    function showView(v) {
+      view = v;
+      writeParams();
+      syncViews();
+      // The charts are drawn to the card's width, which is 0 while hidden.
+      var c = document.getElementById('pvd-card');
+      if (v === 'proj' && model && !model.error && c && c.clientWidth !== drawnWidth) drawProj();
+    }
+
+    viewsEl.addEventListener('click', function (e) {
+      var t = e.target.closest ? e.target.closest('[data-view]') : null;
+      if (t) showView(t.getAttribute('data-view'));
+    });
+    // Arrow keys move between the tabs, as a tablist's should.
+    viewsEl.addEventListener('keydown', function (e) {
+      if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+      var keys = Object.keys(VIEWS), i = keys.indexOf(view);
+      i = (i + (e.key === 'ArrowRight' ? 1 : keys.length - 1)) % keys.length;
+      showView(keys[i]);
+      document.getElementById('tab-' + keys[i]).focus();
+      e.preventDefault();
+    });
+
+    function renderTable(d) {
       var rows = doc.games.filter(function (g) { return g.opp === d; });
       var name = doc.player.name;
+      // The header and the Def. picker already name the defense.
+      var title = '';
       if (!rows.length) {
-        board.innerHTML = '<p class="sched-empty">' + esc(name) + ' has no games against ' + esc(d) + ' in balldontlie.</p>';
+        board.innerHTML = title + '<p class="sched-empty">' + esc(name) + ' has no games against ' + esc(d) + ' in balldontlie.</p>';
+        note.textContent = '';
         return;
       }
-      var pos = doc.player.pos || player.pos;
-      board.innerHTML = playerLogTable({ team: playerTeam() }, [{ rows: rows }],
+      board.innerHTML = title + playerLogTable({ team: playerTeam() }, [{ rows: rows }],
         { pass: !hide.pass, rush: !hide.rush, rec: !hide.rec });
       note.textContent = 'Every regular-season and playoff game ' + name + ' has played against ' + d +
         ', newest first, from balldontlie box scores · Avg is per game; its Lng is the longest' +
         (!hide.pass ? ' · balldontlie\'s box score carries no long completion, so Passing has no Lng' : '');
     }
+
+    /* ---------- the projection ----------
+     * scripts/components/pvd-projection.js: his season, his history against
+     * the defense and what the defense has allowed, as one projected line
+     * per stat, drawn against this week's book line when there is one. The
+     * defense is /api/defense-vs-players (built weekly, with each row's
+     * `exp`); the line is the game bundle's, only for this week's game. One
+     * stat at a time, picked from the row of buttons over the card. */
+    var defDocs = {}, propDocs = {};
+    var model = null, modelDef = '', projToken = 0, drawnWidth = 0;
+
+    function getJson(url) {
+      return fetch(url).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; });
+    }
+
+    function defDoc(d) {
+      return defDocs[d] || (defDocs[d] = getJson('/api/defense-vs-players?team=' + encodeURIComponent(d) +
+        '&season=' + encodeURIComponent(season)));
+    }
+
+    // Only this week's game has a line to read.
+    function propsFor(d) {
+      var m = thisWeek(playerTeam());
+      if (!m || m.opp !== d || !doc.player.id) return Promise.resolve(null);
+      var k = m.id + '|' + doc.player.id;
+      return propDocs[k] || (propDocs[k] = getJson('/api/player-vs-defense?props=' + encodeURIComponent(m.id) +
+        '&player_id=' + encodeURIComponent(doc.player.id)));
+    }
+
+    function renderProj(d) {
+      var token = ++projToken;
+      if (modelDef !== d) {
+        proj.innerHTML = '<p class="sched-empty">Projecting against ' + esc(d) + '…</p>';
+        defp.innerHTML = '<p class="sched-empty">Loading the ' + esc(d) + ' defense…</p>';
+      }
+      Promise.all([defDoc(d), propsFor(d)]).then(function (res) {
+        if (token !== projToken || !doc) return;
+        model = PvdProjection.build({
+          games: doc.games, pos: doc.player.pos || player.pos, season: season,
+          def: d, defDoc: res[0], props: res[1]
+        });
+        modelDef = d;
+        drawProj();
+      });
+    }
+
+    function drawProj() {
+      var d = modelDef;
+      if (model.error) {
+        proj.innerHTML = defp.innerHTML = '<p class="sched-empty">' + esc(model.error) + '</p>';
+        return;
+      }
+      var keys = model.stats.map(function (m) { return m.key; });
+      if (keys.indexOf(stat) < 0) stat = keys[0];
+      var m = model.stats[keys.indexOf(stat)];
+      var line = lines[stat] != null ? lines[stat] : m.defaultLine;
+      proj.innerHTML = '<div class="dvp-toggle-set pvd-tabs" role="group" aria-label="Stat">' + model.stats.map(function (x) {
+          return '<button type="button" class="dd-btn dvp-toggle" data-stat="' + x.key + '" aria-pressed="' + (x.key === stat) + '">' +
+            esc(x.spec.label) + '</button>';
+        }).join('') + '</div>' +
+        '<div class="pvd-card" id="pvd-card"></div><div id="pvd-notes"></div>';
+      defp.innerHTML = PvdProjection.defensePanel(model, d);
+      var cardEl = document.getElementById('pvd-card');
+      // Hidden behind another tab it measures 0; showView redraws it.
+      drawnWidth = cardEl.clientWidth;
+      cardEl.innerHTML = PvdProjection.card(m, line, d, Math.max(260, drawnWidth || 360));
+      document.getElementById('pvd-notes').innerHTML = PvdProjection.notes(m, d, Math.max(260, drawnWidth || 360));
+      PvdProjection.bindTips(proj);
+      PvdProjection.bindTips(defp);
+    }
+
+    proj.addEventListener('click', function (e) {
+      var t = e.target.closest ? e.target.closest('[data-stat], .pvd-step, .pvd-reset') : null;
+      if (!t || !model || model.error) return;
+      if (t.hasAttribute('data-stat')) {
+        stat = t.getAttribute('data-stat');
+        writeParams();
+      } else {
+        var m = model.stats.filter(function (x) { return x.key === stat; })[0];
+        var cur = lines[stat] != null ? lines[stat] : m.defaultLine;
+        if (t.classList.contains('pvd-reset')) delete lines[stat];
+        else {
+          var step = m.spec.kind === 'yds' && cur >= 30 ? 5 : 1;
+          lines[stat] = Math.max(0.5, cur + step * Number(t.getAttribute('data-step')));
+        }
+      }
+      drawProj();
+    });
+
+    var resizeTimer = 0;
+    window.addEventListener('resize', function () {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(function () {
+        var c = document.getElementById('pvd-card');
+        if (model && !model.error && c && c.clientWidth !== drawnWidth) drawProj();
+      }, 150);
+    });
 
     /* ---------- the Show toggles ----------
      * defense-vs-players' column-group toggles, in its filters modal. A pick
@@ -283,7 +455,7 @@
         hide[t[1]] = !hide[t[1]];
         syncToggles();
         writeParams();
-        if (doc) render();
+        if (doc && defense()) renderTable(defense());
       });
     });
 
@@ -303,6 +475,11 @@
     function load() {
       var token = ++loadToken;
       doc = null;
+      model = null;
+      modelDef = '';
+      proj.innerHTML = '';
+      defp.innerHTML = '';
+      syncViews();
       note.textContent = '';
       syncDef();
       writeParams();
@@ -345,6 +522,7 @@
       var btn = e.target.closest ? e.target.closest('.tp-team, .tp-any') : null;
       if (!btn || !teamGrid.contains(btn)) return;
       def = btn.getAttribute('data-team') || '';
+      lines = {};
       closeDropdown(teamDd, true);
       syncDef();
       writeParams();
@@ -401,6 +579,9 @@
       input.blur();
       if (same) return;
       def = '';
+      stat = '';
+      view = 'proj';
+      lines = {};
       hide = posDefaults(p.pos);
       syncToggles();
       load();
