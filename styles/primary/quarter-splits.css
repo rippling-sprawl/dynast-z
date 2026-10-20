@@ -128,8 +128,11 @@
 
 /* Per-game average and median lead each section. */
 .qs-table tr.qs-aggrow .qs-rowhead { background: var(--surface); }
-.qs-table tr.qs-aggrow + tr:not(.qs-aggrow):not(.qs-group) td,
-.qs-table tr.qs-aggrow + tr:not(.qs-aggrow):not(.qs-group) th { border-top: 1px solid var(--border); }
+/* The median row closes the team's summary with a heavier rule, so the season
+ * figures read apart from the newest game beneath them. */
+.qs-table tr.qs-aggrow:has(+ tr:not(.qs-aggrow):not(.qs-group)) td,
+.qs-table tr.qs-aggrow:has(+ tr:not(.qs-aggrow):not(.qs-group)) th { border-bottom: 2px solid var(--text-5); }
+.qs-table tr.qs-aggrow + tr.qs-bye th { border-top: 0; }
 
 .qs-table td.qs-none { color: var(--text-4); text-align: center; padding: 14px 10px; }
 

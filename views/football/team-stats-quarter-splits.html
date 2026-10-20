@@ -171,43 +171,65 @@
       return v === 'diff' && x > 0 ? '+' + s : s;
     }
 
-    // -> the class a value is coloured by, from the view its row reads: points
-    // scored are green, points allowed red. So the opponent's rows always wear
-    // the opposite colour to the team's — the team's offense (green) against
-    // the opponent's defense (red), and the other way round. A differential
-    // takes its sign, read from the picked team's side: `flip` is set on the
-    // opponent's rows, so a quarter the opponent wins reads red.
-    function tone(x, v, flip) {
-      if (!x) return '';
-      if (v === 'for') return 'is-pos';
-      if (v === 'against') return 'is-neg';
-      return (x > 0) !== !!flip ? 'is-pos' : 'is-neg';
+    /* ---------- the heatmap ----------
+     * Every colour is read from the PICKED team's side: green is good for it,
+     * red is bad, and the deeper the colour the further from the middle.
+     *
+     *   Scored   high is green, low red — for the team's scoring and for what
+     *            the opponent allows alike: a defense that gives up a lot is
+     *            the team's chance to score.
+     *   Allowed  low is green, high red — for what the team allows and for
+     *            what the opponent scores.
+     *   Diff     the team's differential green when positive; the opponent's
+     *            green when negative, since a quarter the opponent loses is
+     *            one the team can win.
+     *
+     * A scale is built over a set of rows, so the rows it covers are coloured
+     * against each other (see render: the opponent's and the team's summary
+     * rows share one). It returns a cell's "goodness", -1..1. */
+    function heatScale(rows) {
+      var q = [];
+      rows.forEach(function (r) {
+        r.forEach(function (x, i) { if (!IS_TOT[i]) q.push(x); });
+      });
+      if (!q.length) return null;
+      var lo = Math.min.apply(null, q), hi = Math.max.apply(null, q);
+      if (view === 'diff') {
+        var m = Math.max(Math.abs(lo), Math.abs(hi));
+        return function (x, opp) { var s = m ? x / m : 0; return opp ? -s : s; };
+      }
+      var mid = (lo + hi) / 2, half = (hi - lo) / 2;
+      return function (x) {
+        var s = half ? (x - mid) / half : 0;
+        return view === 'for' ? s : -s;
+      };
     }
 
-    // One period cell. Quarters are heatmapped against `scale` (the largest
-    // absolute quarter value in their group); HT and FT never are.
-    function cell(x, i, v, scale, dp, star, flip) {
+    // HT and FT are not heatmapped, but a differential's total is still
+    // coloured by whose favour it runs, from the picked team's side.
+    function totTone(x, opp) {
+      if (!x) return '';
+      return (x > 0) !== !!opp ? 'is-pos' : 'is-neg';
+    }
+
+    // One period cell. `scale` is a heatScale; `opp` marks the opponent's rows.
+    function cell(x, i, v, scale, dp, star, opp) {
       var cls = [];
       var style = '';
       if (IS_TOT[i]) {
         cls.push('qs-tot');
-        if (v === 'diff') cls.push(tone(x, v, flip));
-      } else if (x && scale) {
-        cls.push('heat', tone(x, v, flip));
-        style = ' style="--heat:' + Math.min(1, Math.abs(x) / scale).toFixed(3) + '"';
+        if (v === 'diff') cls.push(totTone(x, opp));
+      } else if (scale) {
+        var g = scale(x, opp);
+        if (Math.abs(g) > 0.001) {
+          cls.push('heat', g > 0 ? 'is-pos' : 'is-neg');
+          style = ' style="--heat:' + Math.min(1, Math.abs(g)).toFixed(3) + '"';
+        }
       }
-      if (!x) cls.push('is-zero');
+      if (!x && !style) cls.push('is-zero');
       return '<td class="' + cls.join(' ') + '"' + style +
         (star ? ' title="Includes points scored in overtime"' : '') + '>' +
         esc(fmt(x, v, dp)) + (star ? '<span class="qs-ot">*</span>' : '') + '</td>';
-    }
-
-    function quarterScale(rows) {
-      var m = 0;
-      rows.forEach(function (r) {
-        r.forEach(function (x, i) { if (!IS_TOT[i]) m = Math.max(m, Math.abs(x)); });
-      });
-      return m;
     }
 
     function median(xs) {
@@ -217,8 +239,11 @@
       return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
     }
 
-    // -> { avg: [6], med: [6], n, ot } over a list of games. Each column's
-    // median is its own: HT's is the median halftime score, not 1st + 2nd.
+    function round1(x) { return Math.round(x * 10) / 10; }
+
+    // -> { avg: [6], med: [6], n, ot } over a list of games, to one decimal as
+    // shown. Each column's median is its own: HT's is the median halftime
+    // score, not 1st + 2nd.
     function aggregate(games, v) {
       var cols = [[], [], [], [], [], []], ot = 0;
       games.forEach(function (g) {
@@ -227,8 +252,8 @@
       });
       var n = games.length;
       return {
-        avg: cols.map(function (c) { return n ? c.reduce(function (a, b) { return a + b; }, 0) / n : 0; }),
-        med: cols.map(median),
+        avg: cols.map(function (c) { return n ? round1(c.reduce(function (a, b) { return a + b; }, 0) / n) : 0; }),
+        med: cols.map(function (c) { return round1(median(c)); }),
         n: n,
         ot: ot
       };
@@ -248,18 +273,15 @@
       return '<tr><td class="qs-none" colspan="' + NCOL + '">' + esc(text) + '</td></tr>';
     }
 
-    // Average and median per game, each row heatmapped on its own. `flip`
-    // marks the opponent's rows (see tone).
-    function aggRows(games, v, flip) {
-      var a = aggregate(games, v);
-      function row(label, vals, dp) {
-        var scale = quarterScale([vals]);
+    // Average and median per game, from aggregate(). `opp` marks the
+    // opponent's rows.
+    function aggRows(a, v, scale, opp) {
+      function row(label, vals) {
         return '<tr class="qs-aggrow"><th class="qs-rowhead qs-agg">' + esc(label) + '</th>' +
-          vals.map(function (x, i) {
-            return cell(dp ? Math.round(x * 10) / 10 : x, i, v, scale, dp, a.ot > 0 && i === 5, flip);
-          }).join('') + '</tr>';
+          vals.map(function (x, i) { return cell(x, i, v, scale, 1, a.ot > 0 && i === 5, opp); }).join('') +
+          '</tr>';
       }
-      return row('Average', a.avg, 1) + row('Median', a.med, 1);
+      return row('Average', a.avg) + row('Median', a.med);
     }
 
     function gamesLabel(n) { return n + ' game' + (n === 1 ? '' : 's'); }
@@ -272,28 +294,29 @@
       return g.postseason ? 'P' + g.week : 'Wk ' + g.week;
     }
 
-    function oppRows() {
+    function oppRows(a, scale) {
       var v = OPP_VIEW[view];
       if (!next) {
         return groupRow(team, 'opponent', '') + msgRow('No game left on ' + team + '\'s schedule.');
       }
-      var games = (oppDoc && oppDoc.games) || [];
       var sub = 'Wk ' + esc(next.week) + ' · ' + esc(team) + ' ' +
         (next.home || next.neutral ? 'vs' : '@') + ' ' + esc(next.opp) +
-        (games.length ? ' · ' + gamesLabel(games.length) : '');
+        (a.n ? ' · ' + gamesLabel(a.n) : '');
       return groupRow(next.opp, VIEW_WORD[v], sub) +
-        (games.length ? aggRows(games, v, true) : msgRow('No completed games yet for ' + next.opp + '.'));
+        (a.n ? aggRows(a, v, scale, true) : msgRow('No completed games yet for ' + next.opp + '.'));
     }
 
-    // The team's own games, newest first, under its average and median.
+    // The team's own games, newest first, under its average and median. The
+    // game rows are heatmapped against each other: a single game's quarters
+    // run wider than any average, and would wash the summary rows out.
     // A regular-season week skipped between two games is a bye, and so is one
     // between its latest game and the one coming up.
-    function teamRows() {
+    function teamRows(a, scale) {
       var games = (doc.games || []).slice().reverse();
       var head = groupRow(team, VIEW_WORD[view], games.length ? gamesLabel(games.length) : '');
       if (!games.length) return head + msgRow('No completed games yet this season.');
       var lines = games.map(function (g) { return periods(lineOf(g, view)); });
-      var scale = quarterScale(lines);
+      var heat = heatScale(lines);
       var lastWeek = next && !games[0].postseason ? next.week : null;
       var body = games.map(function (g, k) {
         var out = '';
@@ -304,19 +327,28 @@
         var star = otScored(g, view);
         return out + '<tr><th class="qs-rowhead"><span class="qs-wk"><b>' + esc(weekLabel(g)) + '</b>' +
           '<span class="qs-at">' + (g.home || g.neutral ? 'vs' : '@') + '</span>' + logo(g.opp) + '</span></th>' +
-          lines[k].map(function (x, i) { return cell(x, i, view, scale, 0, star && i === 5); }).join('') +
+          lines[k].map(function (x, i) { return cell(x, i, view, heat, 0, star && i === 5); }).join('') +
           '</tr>';
       }).join('');
-      return head + aggRows(doc.games, view) + body;
+      return head + aggRows(a, view, scale, false) + body;
     }
 
     function render() {
       if (!doc) return;
+      // The opponent's and the team's summary rows share one scale, so the
+      // colours compare across the matchup as well as down a column.
+      var oppAgg = aggregate((next && oppDoc && oppDoc.games) || [], OPP_VIEW[view]);
+      var teamAgg = aggregate(doc.games || [], view);
+      var sums = [];
+      if (oppAgg.n) sums.push(oppAgg.avg, oppAgg.med);
+      if (teamAgg.n) sums.push(teamAgg.avg, teamAgg.med);
+      var scale = heatScale(sums);
       board.innerHTML = '<div class="qs-scroll"><table class="qs-table">' +
         '<thead><tr><th class="qs-rowhead"></th>' +
         COLS.map(function (c, i) { return '<th' + (IS_TOT[i] ? ' class="qs-tot"' : '') + '>' + c + '</th>'; }).join('') +
-        '</tr></thead><tbody>' + oppRows() + teamRows() + '</tbody></table></div>';
-      note.textContent = 'The opponent is read from the other side: under Scored it shows what they allow, under Allowed what they score · ' +
+        '</tr></thead><tbody>' + oppRows(oppAgg, scale) + teamRows(teamAgg, scale) + '</tbody></table></div>';
+      note.textContent = 'Every colour is relative to ' + team + ': green is good for ' + team + ', red is bad · ' +
+        'The opponent is read from the other side: under Scored it shows what they allow, under Allowed what they score · ' +
         'HT and FT are running totals and are not heatmapped · OT has no column of its own: its points are in FT, marked * · ' +
         (view === 'diff' ? 'Diff is points scored minus points allowed in that period · ' : '') +
         'rebuilt Tuesdays 5am ET';
