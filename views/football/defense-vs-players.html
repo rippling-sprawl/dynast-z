@@ -35,7 +35,6 @@
        league's team list comes from the same schedule file that page reads. -->
   <script src="/scripts/components/nfl-pickers.js"></script>
   <script src="/scripts/components/nfl-schedule.js"></script>
-  <script src="/scripts/components/player-logs.js"></script>
   <script>initPage();</script>
 
   <div class="masters-content">
@@ -137,7 +136,6 @@
       </dialog>
     </div>
 
-    <div id="matchup"></div>
     <div id="board"><p class="sched-empty">Loading teams…</p></div>
     <p class="dvp-note" id="note"></p>
   </div>
@@ -364,6 +362,12 @@
           '</tr>';
       }).join('') || '<tr><td class="dvp-none" colspan="' + cols + '">No players match these filters.</td></tr>';
 
+      // This week's opposing players first, when toggled on; then the
+      // defense's own games under a group row of their own.
+      var c = { cols: cols, showPos: showPos, showPass: showPass, showRush: showRush, showRec: showRec, showTot: showTot };
+      var opp = matchupRows(c);
+      if (opp) body = opp + groupRow(c, team, 'defense', 'every player faced, game by game') + body;
+
       board.innerHTML = '<div class="dvp-scroll"><table class="dvp-table' + (showPos ? '' : ' no-pos') + '">' + head +
         '<tbody>' + body + '</tbody></table></div>';
       pinOffsets();
@@ -577,18 +581,19 @@
     });
 
     /* ---------- this week's opposing players ----------
-     * Above the table, per position toggled on in the filters modal: the top
-     * QB, two RBs, three WRs and two TEs of the offense this defense plays
-     * this week, each with his career games against it and his last five.
+     * Per position toggled on in the filters modal: the top QB, two RBs,
+     * three WRs and two TEs of the offense this defense plays this week, each
+     * with his career games against it and his last five. They open the
+     * defense's own table, in its columns, under a full-width group row the
+     * way Quarter Splits stacks the opponent over the team.
      * /api/player-vs-defense picks them (season yards, the injured left out)
      * and pulls the logs from balldontlie, once per defense; the toggles only
      * show and hide what it returned. */
-    var matchupEl = document.getElementById('matchup');
-    var OPP_LABEL = { QB: 'Quarterback', RB: 'Running backs', WR: 'Wide receivers', TE: 'Tight ends' };
-    var matchups = {};  // team -> Promise of its payload
+    var matchups = {};   // team -> Promise of its payload
+    var matchup = null;  // { team, m, data | error } for the defense on screen
     var matchupToken = 0;
 
-    // -> { off, home } for the defense's game this week, or null on a bye.
+    // -> { off, home, week } for the defense's game this week, or null on a bye.
     function thisWeekOpp(def) {
       var week = schedCurrentWeek(sched);
       var wk = sched.weeks.filter(function (w) { return w.week === week; })[0];
@@ -599,53 +604,118 @@
     function loadMatchup() {
       var token = ++matchupToken;
       var picked = POS.filter(function (p) { return view.opp[p]; });
-      if (!team || !picked.length || !sched) { matchupEl.innerHTML = ''; return; }
-      var m = thisWeekOpp(team);
-      if (!m) {
-        matchupEl.innerHTML = '<p class="sched-empty">' + esc(team) + ' has no game in week ' +
-          esc(schedCurrentWeek(sched)) + '.</p>';
-        return;
-      }
-      if (!matchups[team]) {
-        matchups[team] = fetch('/api/player-vs-defense?offense=' + encodeURIComponent(m.off) +
-            '&defense=' + encodeURIComponent(team) + '&season=' + encodeURIComponent(season))
+      matchup = null;
+      if (!team || !picked.length || !sched) { if (doc) render(); return; }
+      var def = team;
+      var m = thisWeekOpp(def);
+      matchup = { team: def, m: m };
+      if (m && !matchups[def]) {
+        matchups[def] = fetch('/api/player-vs-defense?offense=' + encodeURIComponent(m.off) +
+            '&defense=' + encodeURIComponent(def) + '&season=' + encodeURIComponent(season))
           .then(function (r) {
             return r.json().then(function (body) {
               if (!r.ok) throw new Error(body.error || ('HTTP ' + r.status));
               return body;
             });
           });
-        matchups[team].catch(function () { delete matchups[team]; });
+        matchups[def].catch(function () { delete matchups[def]; });
       }
-      var def = team;
-      matchupEl.innerHTML = '<p class="sched-empty">Loading ' + esc(m.off) + '\'s players…</p>';
+      if (doc) render();
+      if (!m) return;
       matchups[def].then(function (d) {
-        if (token === matchupToken) renderMatchup(d, m, picked);
+        if (token !== matchupToken) return;
+        matchup.data = d;
+        if (doc) render();
       }).catch(function (e) {
-        if (token === matchupToken) matchupEl.innerHTML = '<p class="sched-empty">Error: ' + esc(e.message) + '</p>';
+        if (token !== matchupToken) return;
+        matchup.error = e.message;
+        if (doc) render();
       });
     }
 
-    function renderMatchup(d, m, picked) {
-      var logo = function (t) { return '<img src="/assets/icons/nfl/' + esc(t) + '.svg" alt="">'; };
-      var cards = picked.map(function (pos) {
+    function logo(t) {
+      return '<img src="/assets/icons/nfl/' + esc(t) + '.svg" alt="' + esc(t) + '" title="' + esc(t) + '">';
+    }
+
+    // A section opens with a full-width row: whose numbers follow, and a note.
+    function groupRow(c, abbr, word, sub) {
+      return '<tr class="dvp-group"><th colspan="' + c.cols + '"><span class="dvp-glabel">' +
+        (abbr ? logo(abbr) + '<b>' + esc(abbr) + '</b> ' : '') + esc(word) +
+        (sub ? '<span class="dvp-gsub">' + sub + '</span>' : '') + '</span></th></tr>';
+    }
+
+    function msgRow(c, text) {
+      return '<tr><td class="dvp-none" colspan="' + c.cols + '">' + esc(text) + '</td></tr>';
+    }
+
+    function outcome(g) {
+      if (g.status !== 'final' || g.pts_for == null || g.pts_against == null) return '';
+      return g.pts_for > g.pts_against ? 'W' : g.pts_for < g.pts_against ? 'L' : 'T';
+    }
+
+    // One game of an opposing player's, or a section's per-game average, in
+    // the table's own columns. The player is named in the row above, so the
+    // name column holds the game. balldontlie has no long completion, so the
+    // passing Lng is a dash.
+    function logRow(c, g, rows, withOpp, team0) {
+      var v = rows
+        ? function (k) { var t = 0; rows.forEach(function (r) { t += r[k] || 0; }); return (t / rows.length).toFixed(1); }
+        : function (k) { return g[k]; };
+      var lng = rows
+        ? function (k) { return rows.reduce(function (m, r) { return Math.max(m, r[k] || 0); }, 0); }
+        : v;
+      var label;
+      if (rows) {
+        var n = { W: 0, L: 0, T: 0 };
+        rows.forEach(function (r) { var o = outcome(r); if (o) n[o]++; });
+        label = '<b>Avg</b><span class="pl-res">' + n.W + '-' + n.L + (n.T ? '-' + n.T : '') + '</span>';
+      } else {
+        var o = outcome(g);
+        label = '<b>' + esc(g.season) + ' ' + (g.postseason ? 'Playoffs' : 'Wk ' + esc(g.week)) + '</b>' +
+          (withOpp ? '<span class="dvp-opp">' + (g.home ? 'vs' : '@') + logo(g.opp) + '</span>' : '') +
+          (o ? '<span class="pl-res is-' + o.toLowerCase() + '">' + o + ' ' + esc(g.pts_for) + '-' + esc(g.pts_against) + '</span>' : '') +
+          (g.team && g.team !== team0 ? '<span class="pl-was" title="Played for ' + esc(g.team) + '">' + esc(g.team) + '</span>' : '');
+      }
+      return '<tr' + (rows ? ' class="pl-avg"' : '') + '>' +
+        (c.showPos ? '<th class="dvp-poscell"></th>' : '') +
+        '<td class="dvp-name"><span class="pl-game">' + label + '</span></td>' +
+        (c.showPass ? num(v('pass_cmp'), false, true) + num(v('pass_att')) + num(v('pass_yds')) + num(v('pass_td')) + num(v('pass_int')) +
+          '<td class="num is-zero" title="Not in balldontlie\'s box score">—</td>' : '') +
+        (c.showRush ? num(v('rush_att'), false, true) + num(v('rush_yds')) + num(v('rush_td')) + num(lng('rush_lng')) : '') +
+        (c.showRec ? num(v('targets'), false, true) + num(v('rec')) + num(v('rec_yds')) + num(v('rec_td')) + num(lng('rec_lng')) : '') +
+        (c.showTot ? num(v('tot_yds'), true, true) + num(v('tot_td'), true) : '') +
+        '</tr>';
+    }
+
+    function logSection(c, title, rows, empty, withOpp, team0) {
+      var out = '<tr class="dvp-sub"><th colspan="' + c.cols + '"><span class="dvp-label">' + esc(title) + '</span></th></tr>';
+      if (!rows.length) return out + '<tr><td class="dvp-none pl-none" colspan="' + c.cols + '">' + esc(empty) + '</td></tr>';
+      return out + rows.map(function (g) { return logRow(c, g, null, withOpp, team0); }).join('') +
+        logRow(c, null, rows, false, team0);
+    }
+
+    // The opposing players' rows, or '' when none are toggled on.
+    function matchupRows(c) {
+      if (!matchup || matchup.team !== team) return '';
+      var m = matchup.m;
+      if (!m) return groupRow(c, '', 'Opposing players', 'Wk ' + esc(schedCurrentWeek(sched)) + ' · ' + esc(team) + ' bye');
+      var head = groupRow(c, m.off, 'offense', 'Wk ' + esc(m.week) + ' · ' + esc(m.off) + ' ' + (m.home ? '@' : 'vs') + ' ' + esc(team));
+      if (matchup.error) return head + msgRow(c, 'Error: ' + matchup.error);
+      var d = matchup.data;
+      if (!d) return head + msgRow(c, 'Loading ' + m.off + '\'s players…');
+      return head + POS.filter(function (p) { return view.opp[p]; }).map(function (pos) {
         var ps = d.players.filter(function (p) { return p.pos === pos; });
-        if (!ps.length) return '<p class="dvp-note">No ' + esc(OPP_LABEL[pos].toLowerCase()) + ' found for ' + esc(d.offense) + '.</p>';
+        if (!ps.length) return msgRow(c, 'No ' + pos + ' found for ' + d.offense + '.');
         return ps.map(function (p) {
-          return '<section class="dvp-pcard"><div class="dvp-pcard-head">' +
-            '<b>' + esc(p.name) + '</b><span class="dvp-pcard-pos">' + esc(p.pos) + '</span>' +
-            (p.status ? '<span class="dvp-pcard-status">' + esc(p.status) + '</span>' : '') +
-            '<span>' + esc(p.season_yds) + ' yds in ' + esc(d.season) + '</span></div>' +
-            playerLogTable(p, [
-              { title: 'Career vs. ' + d.defense, rows: p.vs, empty: 'Has not played ' + d.defense },
-              { title: 'Last ' + p.recent.length + ' · ' + d.season, rows: p.recent, empty: 'No games this season' }
-            ]) + '</section>';
+          return '<tr class="dvp-player"><th colspan="' + c.cols + '"><span class="dvp-label">' +
+              '<b>' + esc(p.name) + '</b><span class="dvp-ppos">' + esc(p.pos) + '</span>' +
+              (p.status ? '<span class="dvp-pstatus">' + esc(p.status) + '</span>' : '') +
+              '<span class="dvp-gsub">' + esc(p.season_yds) + ' yds in ' + esc(d.season) + '</span>' +
+            '</span></th></tr>' +
+            logSection(c, 'Career vs. ' + d.defense, p.vs, 'Has not played ' + d.defense, false, p.team) +
+            logSection(c, 'Last ' + p.recent.length + ' · ' + d.season, p.recent, 'No games this season', true, p.team);
         }).join('');
       }).join('');
-      matchupEl.innerHTML = '<div class="dvp-opp-wrap"><h3 class="dvp-opp-title">Week ' + esc(m.week) + ': ' +
-        logo(d.offense) + esc(d.offense) + ' ' + (m.home ? '@' : 'vs') + ' ' + logo(d.defense) + esc(d.defense) +
-        ' <small>' + esc(d.offense) + '\'s top players by ' + esc(d.season) + ' yards; injured players left out</small></h3>' +
-        cards + '</div>';
     }
 
     POS.forEach(function (p) {
@@ -661,10 +731,10 @@
 
     function load() {
       writeParams();
-      loadMatchup();
       syncTeamPicker(teamBtn, teamGrid, team, teams, { emptyLabel: 'Pick a team', nicknameOnly: true });
       note.textContent = '';
       doc = null;
+      loadMatchup();
       var token = ++loadToken;
       if (!team) {
         board.innerHTML = '<p class="sched-empty">Loading this week\'s matchups…</p>';

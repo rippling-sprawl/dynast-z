@@ -171,27 +171,29 @@
       return v === 'diff' && x > 0 ? '+' + s : s;
     }
 
-    // -> the class a value is coloured by. Colour follows the TOGGLE, not the
-    // row: the opponent's rows sit under the team's to be compared column by
-    // column, so in Scored both read green and in Allowed both read red. A
-    // differential takes its own sign.
-    function tone(x) {
+    // -> the class a value is coloured by, from the view its row reads: points
+    // scored are green, points allowed red. So the opponent's rows always wear
+    // the opposite colour to the team's — the team's offense (green) against
+    // the opponent's defense (red), and the other way round. A differential
+    // takes its sign, read from the picked team's side: `flip` is set on the
+    // opponent's rows, so a quarter the opponent wins reads red.
+    function tone(x, v, flip) {
       if (!x) return '';
-      if (view === 'for') return 'is-pos';
-      if (view === 'against') return 'is-neg';
-      return x > 0 ? 'is-pos' : 'is-neg';
+      if (v === 'for') return 'is-pos';
+      if (v === 'against') return 'is-neg';
+      return (x > 0) !== !!flip ? 'is-pos' : 'is-neg';
     }
 
     // One period cell. Quarters are heatmapped against `scale` (the largest
     // absolute quarter value in their group); HT and FT never are.
-    function cell(x, i, v, scale, dp, star) {
+    function cell(x, i, v, scale, dp, star, flip) {
       var cls = [];
       var style = '';
       if (IS_TOT[i]) {
         cls.push('qs-tot');
-        if (v === 'diff') cls.push(tone(x));
+        if (v === 'diff') cls.push(tone(x, v, flip));
       } else if (x && scale) {
-        cls.push('heat', tone(x));
+        cls.push('heat', tone(x, v, flip));
         style = ' style="--heat:' + Math.min(1, Math.abs(x) / scale).toFixed(3) + '"';
       }
       if (!x) cls.push('is-zero');
@@ -246,14 +248,15 @@
       return '<tr><td class="qs-none" colspan="' + NCOL + '">' + esc(text) + '</td></tr>';
     }
 
-    // Average and median per game, each row heatmapped on its own.
-    function aggRows(games, v) {
+    // Average and median per game, each row heatmapped on its own. `flip`
+    // marks the opponent's rows (see tone).
+    function aggRows(games, v, flip) {
       var a = aggregate(games, v);
       function row(label, vals, dp) {
         var scale = quarterScale([vals]);
         return '<tr class="qs-aggrow"><th class="qs-rowhead qs-agg">' + esc(label) + '</th>' +
           vals.map(function (x, i) {
-            return cell(dp ? Math.round(x * 10) / 10 : x, i, v, scale, dp, a.ot > 0 && i === 5);
+            return cell(dp ? Math.round(x * 10) / 10 : x, i, v, scale, dp, a.ot > 0 && i === 5, flip);
           }).join('') + '</tr>';
       }
       return row('Average', a.avg, 1) + row('Median', a.med, 1);
@@ -279,7 +282,7 @@
         (next.home || next.neutral ? 'vs' : '@') + ' ' + esc(next.opp) +
         (games.length ? ' · ' + gamesLabel(games.length) : '');
       return groupRow(next.opp, VIEW_WORD[v], sub) +
-        (games.length ? aggRows(games, v) : msgRow('No completed games yet for ' + next.opp + '.'));
+        (games.length ? aggRows(games, v, true) : msgRow('No completed games yet for ' + next.opp + '.'));
     }
 
     // The team's own games, newest first, under its average and median.

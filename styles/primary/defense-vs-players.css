@@ -284,20 +284,56 @@
 .dvp-mx-table :is(td, th):first-child { padding-left: 4px; }
 .dvp-mx-table :is(td, th):last-child { padding-right: 4px; }
 
-/* ---------- This week's opposing players: above the table ----------
- * Toggled per position in the filters modal. A card per player — the top QB,
- * two backs, three receivers and two tight ends of the offense this defense
- * plays this week — each holding a scripts/components/player-logs.js table:
- * his career against this defense, then his last five games. */
-.dvp-opp-wrap { margin: 0 0 18px; }
-.dvp-opp-title { margin: 4px 0 10px; font-size: 15px; color: var(--text-hi); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-.dvp-opp-title img { width: 18px; height: 18px; display: block; }
-.dvp-opp-title small { font-size: 12px; font-weight: 400; color: var(--text-4); }
-.dvp-pcard { margin: 0 0 12px; }
-.dvp-pcard-head { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; margin: 0 0 5px; font-size: 13px; color: var(--text-3); }
-.dvp-pcard-head b { color: var(--text-hi); font-size: 14px; font-weight: 650; }
-.dvp-pcard-pos { font-size: 10px; font-weight: 600; letter-spacing: 0.07em; color: var(--text-4); }
-.dvp-pcard-status { font-size: 10px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--bad); }
+/* ---------- This week's opposing players: atop the table ----------
+ * Toggled per position in the filters modal. A group row for the offense,
+ * then per player a name row and two titled runs of games (career against
+ * this defense, last five), in the table's own columns; then a group row
+ * for the defense's games below. Group rows read like Quarter Splits'. */
+.dvp-table tbody tr.dvp-group th {
+  padding: 6px 10px;
+  text-align: left;
+  background: var(--surface-2);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.dvp-table tbody tr.dvp-group:first-child th { border-top: 0; }
+.dvp-glabel {
+  position: sticky;
+  left: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+.dvp-glabel b { color: var(--text-hi); font-weight: 650; }
+.dvp-glabel img { width: 18px; height: 18px; display: block; }
+.dvp-gsub { font-weight: 500; letter-spacing: 0; text-transform: none; color: var(--text-4); margin-left: 4px; font-size: 12px; }
+
+/* A player: his name over his two runs of games. */
+.dvp-table tbody tr.dvp-player th { padding: 6px 8px 3px; text-align: left; background: var(--surface); border-top: 1px solid var(--border); }
+.dvp-player b { color: var(--text-hi); font-size: 13.5px; font-weight: 650; }
+.dvp-ppos { font-size: 10px; font-weight: 600; letter-spacing: 0.07em; color: var(--text-4); }
+.dvp-pstatus { font-size: 10px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--bad); }
+/* "Career vs. CHI", "Last 5 · 2026": the quietest label in the table. */
+.dvp-table tbody tr.dvp-sub th {
+  padding: 2px 8px;
+  text-align: left;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--text-4);
+  border-bottom: 1px solid var(--border-soft);
+}
+/* A run with no games: one quiet line, not the table's empty state. */
+.dvp-table td.dvp-none.pl-none { padding: 4px 8px; text-align: left; font-size: 12px; }
+.pl-res { color: var(--text-4); font-size: 11px; font-weight: 500; }
+.pl-res.is-w { color: var(--good); }
+.pl-res.is-l { color: var(--bad); }
 
 /* The log tables are a few rows each: no screen-height box, no pinning. */
 .pl-scroll { max-height: none; min-height: 0; }
@@ -305,9 +341,12 @@
 .pl-scroll .dvp-table th.dvp-name, .pl-scroll .dvp-table td.dvp-name { position: sticky; left: 0; }
 .pl-game { display: inline-flex; align-items: center; gap: 6px; }
 .pl-game b { font-weight: 600; }
-.pl-res { color: var(--text-4); font-size: 11px; font-weight: 500; }
-.pl-res.is-w { color: var(--good); }
-.pl-res.is-l { color: var(--bad); }
+/* The result column: W/L and the score, coloured; W-L on the average row. */
+/* The game and result columns take only what they need; the numbers get the rest. */
+.pl-scroll .dvp-name, .dvp-table .pl-rescol { width: 1%; }
+.dvp-table td.pl-rescol { font-size: 12px; font-variant-numeric: tabular-nums; color: var(--text-3); }
+.dvp-table td.pl-rescol.is-w { color: var(--good); }
+.dvp-table td.pl-rescol.is-l { color: var(--bad); }
 .pl-was { font-size: 10px; font-weight: 600; letter-spacing: 0.05em; color: var(--text-4); }
 .pl-avg td { background: var(--surface-2); color: var(--text-hi); font-weight: 650; }
 .pl-avg td.dvp-name { background: var(--surface-2); }

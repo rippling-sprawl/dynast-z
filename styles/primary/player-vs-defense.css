@@ -1,9 +1,9 @@
 /* Player vs. Defense — /football/player-vs-defense
  *
  * The defense-vs-players table turned round: one player, every game he has
- * played against one defense. The table is that page's (.dvp-* in
- * defense-vs-players.css, loaded first); this sheet adds only the player
- * search, the matchup line above the table and the average row under it. */
+ * played against one defense. The table is scripts/components/player-logs.js,
+ * styled in defense-vs-players.css (loaded first); this sheet adds only the
+ * player search and the matchup line above the table. */
 
 /* The search box: the dd-btn look, as a text field, with the dd-menu list
  * hanging off it. Wide enough for a long name, narrower on a phone. */
@@ -50,21 +50,3 @@
 .pvd-head .pvd-who { display: inline-flex; align-items: center; gap: 6px; color: var(--text-hi); font-weight: 650; font-size: 15px; }
 .pvd-head .pvd-tag { font-size: 10px; font-weight: 600; letter-spacing: 0.07em; color: var(--text-4); }
 .pvd-head .pvd-match { display: inline-flex; align-items: center; gap: 5px; }
-
-/* A game's result beside its opponent, and the team he played for when it
- * was not the one he is on now. */
-.pvd-res { color: var(--text-4); font-size: 11px; font-weight: 500; }
-.pvd-res.is-w { color: var(--good); }
-.pvd-res.is-l { color: var(--bad); }
-.dvp-name .pvd-was { margin-left: 5px; font-size: 10px; font-weight: 600; letter-spacing: 0.05em; color: var(--text-4); }
-
-/* Per-game averages: the table's last word, ruled off from the games. */
-.dvp-table tfoot td, .dvp-table tfoot th {
-  border-top: 1px solid var(--border);
-  background: var(--surface-2);
-  color: var(--text-hi);
-  font-weight: 650;
-  position: sticky;
-  bottom: 0;
-}
-.dvp-table tfoot .dvp-name { z-index: 2; background: var(--surface-2); }

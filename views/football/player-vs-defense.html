@@ -32,6 +32,7 @@
   <script src="/scripts/base/nav.js"></script>
   <script src="/scripts/components/nfl-pickers.js"></script>
   <script src="/scripts/components/nfl-schedule.js"></script>
+  <script src="/scripts/components/player-logs.js"></script>
   <script>initPage();</script>
 
   <div class="masters-content">
@@ -115,11 +116,6 @@
         .toLowerCase().replace(/[^a-z0-9 ]/g, '');
     }
 
-    function shortName(name) {
-      var parts = String(name || '').trim().split(/\s+/);
-      return parts.length > 1 ? parts[0].charAt(0) + '. ' + parts.slice(1).join(' ') : parts[0] || '';
-    }
-
     function logo(abbr) {
       return '<img src="/assets/icons/nfl/' + esc(abbr) + '.svg" alt="' + esc(abbr) + '" title="' + esc(abbr) + '">';
     }
@@ -169,39 +165,11 @@
     }
 
     /* ---------- the table ----------
-     * defense-vs-players' table with one player in it: a week row per game
-     * (season added, since these run across years, and the score), then his
-     * line. No position column, the way that page drops it for one position.
-     * Groups by position, as there — no passing unless a QB, no rushing for a
-     * WR or TE, no receiving for a QB — but a group comes back whenever he has
-     * a number in it, so a receiver's jet sweeps still show. */
-    function num(v, strong, start, title) {
-      var cls = 'num' + (start ? ' grp-start' : '') + (Number(v) ? '' : ' is-zero') + (strong ? ' is-strong' : '');
-      return '<td class="' + cls + '"' + (title ? ' title="' + esc(title) + '"' : '') + '>' + esc(v || 0) + '</td>';
-    }
-
-    function avg(rows, k) {
-      var s = 0;
-      rows.forEach(function (r) { s += r[k] || 0; });
-      return rows.length ? (s / rows.length).toFixed(1) : 0;
-    }
-    function max(rows, k) {
-      return rows.reduce(function (m, r) { return Math.max(m, r[k] || 0); }, 0);
-    }
-    function any(rows, keys) {
-      return rows.some(function (r) { return keys.some(function (k) { return r[k]; }); });
-    }
-
-    function weekLabel(g) {
-      return g.season + ' ' + (g.postseason ? 'Playoffs' : 'Wk ' + g.week);
-    }
-
-    function result(g) {
-      if (g.status !== 'final' || g.pts_for == null || g.pts_against == null) return '';
-      var r = g.pts_for > g.pts_against ? 'W' : g.pts_for < g.pts_against ? 'L' : 'T';
-      return '<span class="pvd-res is-' + r.toLowerCase() + '">' + r + ' ' + esc(g.pts_for) + '-' + esc(g.pts_against) + '</span>';
-    }
-
+     * scripts/components/player-logs.js: one row per game, the season and week
+     * then the result, the player and the defense being in the line above
+     * the table. Groups by position, as on defense-vs-players, but a group
+     * comes back whenever he has a number in it, so a receiver's jet sweeps
+     * still show. */
     function renderHead() {
       if (!player) { head.innerHTML = ''; return; }
       var team = playerTeam();
@@ -229,73 +197,12 @@
         board.innerHTML = '<p class="sched-empty">' + esc(name) + ' has no games against ' + esc(d) + ' in balldontlie.</p>';
         return;
       }
-
       var pos = doc.player.pos || player.pos;
-      var showPass = pos === 'QB' || any(rows, ['pass_att']);
-      var showRush = pos === 'QB' || pos === 'RB' || any(rows, ['rush_att']);
-      var showRec = pos !== 'QB' || any(rows, ['targets']);
-      var showTot = showRush && showRec;
-      var cols = 1 + (showPass ? 5 : 0) + (showRush ? 4 : 0) + (showRec ? 5 : 0) + (showTot ? 2 : 0);
-
-      var thead =
-        '<thead>' +
-          '<tr class="dvp-groups"><th class="dvp-name"></th>' +
-            (showPass ? '<th colspan="5" class="grp">Passing</th>' : '') +
-            (showRush ? '<th colspan="4" class="grp">Rushing</th>' : '') +
-            (showRec ? '<th colspan="5" class="grp">Receiving</th>' : '') +
-            (showTot ? '<th colspan="2" class="grp">Total</th>' : '') +
-          '</tr>' +
-          '<tr><th class="dvp-name">Player</th>' +
-            (showPass ? '<th class="num grp-start">Cmp</th><th class="num">Att</th><th class="num">Yds</th><th class="num">TD</th><th class="num">Int</th>' : '') +
-            (showRush ? '<th class="num grp-start">Att</th><th class="num">Yds</th><th class="num">TD</th><th class="num">Lng</th>' : '') +
-            (showRec ? '<th class="num grp-start">Tgt</th><th class="num">Rec</th><th class="num">Yds</th><th class="num">TD</th><th class="num">Lng</th>' : '') +
-            (showTot ? '<th class="num grp-start">Yds</th><th class="num">TD</th>' : '') +
-          '</tr>' +
-        '</thead>';
-
-      function line(r, foot) {
-        var v = foot ? function (k) { return avg(rows, k); } : function (k) { return r[k]; };
-        var lng = foot ? function (k) { return max(rows, k); } : v;
-        var lt = foot ? 'Longest in these games' : '';
-        return (showPass ? num(v('pass_cmp'), false, true) + num(v('pass_att')) + num(v('pass_yds')) + num(v('pass_td')) + num(v('pass_int')) : '') +
-          (showRush ? num(v('rush_att'), false, true) + num(v('rush_yds')) + num(v('rush_td')) + num(lng('rush_lng'), false, false, lt) : '') +
-          (showRec ? num(v('targets'), false, true) + num(v('rec')) + num(v('rec_yds')) + num(v('rec_td')) + num(lng('rec_lng'), false, false, lt) : '') +
-          (showTot ? num(v('tot_yds'), true, true) + num(v('tot_td'), true) : '');
-      }
-
-      var team = playerTeam();
-      var body = rows.map(function (g) {
-        var was = g.team && g.team !== team ? '<span class="pvd-was" title="Played for ' + esc(g.team) + '">' + esc(g.team) + '</span>' : '';
-        return '<tr class="dvp-game"><th colspan="' + cols + '"><span class="dvp-label">' +
-            '<span class="dvp-wk">' + esc(weekLabel(g)) + '</span>' +
-            '<span class="dvp-opp">' + (g.home ? 'vs' : '@') + logo(g.opp) + '</span>' + result(g) +
-          '</span></th></tr>' +
-          '<tr class="dvp-first"><td class="dvp-name" title="' + esc(name) + '"><b>' + esc(shortName(name)) + '</b>' + was + '</td>' +
-          line(g) + '</tr>';
-      }).join('');
-      var foot = '<tfoot><tr><td class="dvp-name" title="Per game; Lng is the longest">Avg (' + rows.length + ' g)</td>' +
-        line(null, true) + '</tr></tfoot>';
-
-      board.innerHTML = '<div class="dvp-scroll"><table class="dvp-table no-pos">' + thead +
-        '<tbody>' + body + '</tbody>' + foot + '</table></div>';
+      board.innerHTML = playerLogTable({ pos: pos, team: playerTeam() }, [{ rows: rows }]);
       note.textContent = 'Every regular-season and playoff game ' + name + ' has played against ' + d +
         ', newest first, from balldontlie box scores · Avg is per game; its Lng is the longest' +
-        (showPass ? ' · balldontlie\'s box score carries no long completion, so Passing has no Lng' : '');
-      pinOffsets();
+        (pos === 'QB' ? ' · balldontlie\'s box score carries no long completion, so Passing has no Lng' : '');
     }
-
-    function pinOffsets() {
-      var table = board.querySelector('.dvp-table');
-      if (!table) return;
-      function h(el) { return el ? el.getBoundingClientRect().height : 0; }
-      var heads = table.tHead.rows;
-      var h0 = h(heads[0]) - 0.5;
-      table.style.setProperty('--pin-1', h0 + 'px');
-      table.style.setProperty('--pin-game', (h0 + h(heads[1]) - 0.5) + 'px');
-    }
-    if (document.fonts && document.fonts.ready) document.fonts.ready.then(pinOffsets);
-    window.addEventListener('resize', pinOffsets);
-    board.addEventListener('load', pinOffsets, true);
 
     /* ---------- loading ---------- */
 
