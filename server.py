@@ -254,6 +254,22 @@ def defense_vs_players_api():
     return _defense_vs_players_api
 
 
+_quarter_splits_api = None
+
+
+def quarter_splits_api():
+    """Load api/quarter-splits.py. By path because the filename has a hyphen
+    in it, and lazily for the same reason as above."""
+    global _quarter_splits_api
+    if _quarter_splits_api is None:
+        import importlib.util
+        path = os.path.join(DATA_DIR, "api", "quarter-splits.py")
+        spec = importlib.util.spec_from_file_location("quarter_splits_api", path)
+        _quarter_splits_api = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(_quarter_splits_api)
+    return _quarter_splits_api
+
+
 _bun_notes_api = None
 
 
@@ -1765,6 +1781,26 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         elif self.path.split("?")[0] == "/football/team-stats/yards-vs-points":
             self.path = "/views/football/team-stats-yards-vs-points.html"
             super().do_GET()
+        # Query string tolerated: the page keeps its team and view in ?team=&view=.
+        elif self.path.split("?")[0] == "/football/team-stats/quarter-splits":
+            self.path = "/views/football/team-stats-quarter-splits.html"
+            super().do_GET()
+        # Its data, through the deployed function's own loader and validation.
+        elif self.path.split("?")[0] == "/api/quarter-splits":
+            api = quarter_splits_api()
+            season, team, error = api.parse(parse_qs(urlparse(self.path).query))
+            if error:
+                self._json_response(400, {"error": error})
+                return
+            try:
+                payload = api.load_team(season, team)
+            except Exception as e:  # noqa: BLE001
+                self._json_response(500, {"error": str(e)})
+                return
+            if payload is None:
+                self._json_response(404, {"error": f"no completed games stored for {team}"})
+            else:
+                self._json_response(200, payload)
         elif self.path.split("?")[0] == "/football/team-stats":
             self.path = "/views/football/team-stats.html"
             super().do_GET()

@@ -324,7 +324,14 @@
       return fetch('/api/quarter-splits?team=' + encodeURIComponent(abbr) +
                    '&season=' + encodeURIComponent(season), { cache: 'no-store' })
         .then(function (r) {
-          return r.json().then(function (body) {
+          // Read as text first: a route that is not wired up answers with an
+          // HTML page, and r.json() on that fails with a message (Safari's
+          // "string did not match the expected pattern") that says nothing.
+          return r.text().then(function (text) {
+            var body;
+            try { body = JSON.parse(text); } catch (e) {
+              throw new Error('quarter splits unavailable (HTTP ' + r.status + ')');
+            }
             if (r.status === 404) return { games: [] };
             if (!r.ok) throw new Error(body.error || ('HTTP ' + r.status));
             return body;
