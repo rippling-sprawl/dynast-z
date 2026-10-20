@@ -46,8 +46,11 @@
          picked, any other team from the same picker as defense-vs-players. -->
     <div class="dd-row dvp-controls">
       <div class="dvp-filter pvd-search">
-        <label class="dvp-flabel" for="f-player">Player</label>
-        <input type="text" class="pvd-input" id="f-player" placeholder="Search QB, RB, WR, TE…"
+        <!-- The Trade Calculator's magnifying glass, as the field's label. -->
+        <label class="pvd-glass" for="f-player" title="Search players">
+          <svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true" focusable="false"><circle cx="7" cy="7" r="4.5"/><line x1="10.6" y1="10.6" x2="14" y2="14"/></svg>
+        </label>
+        <input type="text" class="pvd-input" id="f-player" placeholder="Search QB, RB, WR, TE…" aria-label="Search players"
                autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list"
                aria-expanded="false" aria-controls="player-list">
         <div class="dd-pop dd-menu pvd-list" id="player-list" role="listbox" aria-label="Players" hidden></div>
@@ -63,6 +66,38 @@
           </div>
         </div>
       </div>
+      <!-- defense-vs-players' filters button and modal, holding only its Show
+           toggles: the position is the player's, so there is nothing else to
+           filter. -->
+      <button type="button" class="dd-btn dvp-filters-btn" id="f-more" aria-haspopup="dialog" aria-expanded="false" aria-label="More filters" title="Filters">
+        <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true" focusable="false">
+          <g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+            <path d="M3 5h14M3 10h14M3 15h14"/>
+          </g>
+          <g fill="var(--surface-2)" stroke="currentColor" stroke-width="1.6">
+            <circle cx="7" cy="5" r="2"/>
+            <circle cx="13" cy="10" r="2"/>
+            <circle cx="9" cy="15" r="2"/>
+          </g>
+        </svg>
+        <span class="dvp-filters-dot" aria-hidden="true"></span>
+      </button>
+      <dialog class="dvp-modal" id="more-modal" aria-labelledby="more-title">
+        <div class="dvp-modal-head">
+          <h3 id="more-title">Filters</h3>
+          <button type="button" class="dvp-modal-x" data-close aria-label="Close">&times;</button>
+        </div>
+        <div class="dvp-modal-body">
+          <div class="dvp-filter dvp-toggles" role="group" aria-labelledby="l-show">
+            <span class="dvp-flabel" id="l-show">Show</span>
+            <span class="dvp-toggle-set">
+              <button type="button" class="dd-btn dvp-toggle" id="t-pass" aria-pressed="true">Pass</button>
+              <button type="button" class="dd-btn dvp-toggle" id="t-rush" aria-pressed="true">Rush</button>
+              <button type="button" class="dd-btn dvp-toggle" id="t-rec" aria-pressed="true">Rec</button>
+            </span>
+          </div>
+        </div>
+      </dialog>
     </div>
 
     <div id="head"></div>
@@ -94,6 +129,7 @@
     var player = null; // the picked row of `players`
     var doc = null;    // its /api/player-vs-defense payload
     var def = '';      // the defense picked by hand; '' means this week's opponent
+    var hide = {};     // column groups hidden: { pass, rush, rec }
 
     var board = document.getElementById('board');
     var head = document.getElementById('head');
@@ -143,14 +179,28 @@
     function defense() { return def || scheduledOpp(); }
 
     /* ---------- the URL is the state ----------
-     *   ?player=Breece%20Hall&pos=RB[&def=NE]
+     *   ?player=Breece%20Hall&pos=RB[&def=NE][&hide=rec]
      * `def` only when it is not this week's opponent, so a shared link keeps
-     * following the schedule. */
+     * following the schedule. `hide` only where it differs from what the
+     * position hides on its own (posDefaults); an empty `hide=` shows every
+     * group, as on defense-vs-players. */
+    var GROUPS = ['pass', 'rush', 'rec'];
+    function hideList(h) { return GROUPS.filter(function (g) { return h[g]; }).join(','); }
+
+    // defense-vs-players' posDefaults with one position, which is all a
+    // player has: no passing unless a QB, no rushing for a WR or TE, no
+    // receiving for a QB.
+    function posDefaults(pos) {
+      return { pass: pos !== 'QB', rush: pos === 'WR' || pos === 'TE', rec: pos === 'QB' };
+    }
+
     function writeParams() {
       var q = new URLSearchParams();
       if (player) { q.set('player', player.name); q.set('pos', player.pos); }
       if (def && def !== scheduledOpp()) q.set('def', def);
-      var str = q.toString();
+      if (player && hideList(hide) !== hideList(posDefaults(player.pos))) q.set('hide', hideList(hide));
+      syncMore();
+      var str = q.toString().replace(/%2C/g, ',');
       var url = location.pathname + (str ? '?' + str : '');
       if (url !== location.pathname + location.search) history.replaceState(null, '', url);
     }
@@ -162,14 +212,19 @@
       var d = (q.get('def') || '').toUpperCase();
       def = d && schedTeamsByAbbr(sched)[d] ? d : '';
       input.value = player ? player.name : '';
+      hide = posDefaults(player ? player.pos : '');
+      if (player && q.has('hide')) {
+        var h = q.get('hide').toLowerCase().split(',');
+        hide = {};
+        GROUPS.forEach(function (g) { hide[g] = h.indexOf(g) >= 0; });
+      }
+      syncToggles();
     }
 
     /* ---------- the table ----------
      * scripts/components/player-logs.js: one row per game, the season and week
      * then the result, the player and the defense being in the line above
-     * the table. Groups by position, as on defense-vs-players, but a group
-     * comes back whenever he has a number in it, so a receiver's jet sweeps
-     * still show. */
+     * the table. Its column groups are the Show toggles. */
     function renderHead() {
       if (!player) { head.innerHTML = ''; return; }
       var team = playerTeam();
@@ -198,11 +253,49 @@
         return;
       }
       var pos = doc.player.pos || player.pos;
-      board.innerHTML = playerLogTable({ pos: pos, team: playerTeam() }, [{ rows: rows }]);
+      board.innerHTML = playerLogTable({ team: playerTeam() }, [{ rows: rows }],
+        { pass: !hide.pass, rush: !hide.rush, rec: !hide.rec });
       note.textContent = 'Every regular-season and playoff game ' + name + ' has played against ' + d +
         ', newest first, from balldontlie box scores · Avg is per game; its Lng is the longest' +
-        (pos === 'QB' ? ' · balldontlie\'s box score carries no long completion, so Passing has no Lng' : '');
+        (!hide.pass ? ' · balldontlie\'s box score carries no long completion, so Passing has no Lng' : '');
     }
+
+    /* ---------- the Show toggles ----------
+     * defense-vs-players' column-group toggles, in its filters modal. A pick
+     * resets them to the new player's position; after that they are the
+     * viewer's. The dot on the icon says they are off that default. */
+    var moreBtn = document.getElementById('f-more');
+    var moreModal = document.getElementById('more-modal');
+    var toggles = [['t-pass', 'pass'], ['t-rush', 'rush'], ['t-rec', 'rec']];
+
+    function syncToggles() {
+      toggles.forEach(function (u) {
+        document.getElementById(u[0]).setAttribute('aria-pressed', String(!hide[u[1]]));
+      });
+    }
+
+    function syncMore() {
+      moreBtn.classList.toggle('is-set', !!player && hideList(hide) !== hideList(posDefaults(player.pos)));
+    }
+
+    toggles.forEach(function (t) {
+      document.getElementById(t[0]).addEventListener('click', function () {
+        hide[t[1]] = !hide[t[1]];
+        syncToggles();
+        writeParams();
+        if (doc) render();
+      });
+    });
+
+    moreBtn.addEventListener('click', function () {
+      closeAllDropdowns();
+      moreModal.showModal();
+      moreBtn.setAttribute('aria-expanded', 'true');
+    });
+    moreModal.addEventListener('close', function () { moreBtn.setAttribute('aria-expanded', 'false'); });
+    moreModal.addEventListener('click', function (e) {
+      if (e.target === moreModal || e.target.closest('[data-close]')) moreModal.close();
+    });
 
     /* ---------- loading ---------- */
 
@@ -308,6 +401,8 @@
       input.blur();
       if (same) return;
       def = '';
+      hide = posDefaults(p.pos);
+      syncToggles();
       load();
     }
 

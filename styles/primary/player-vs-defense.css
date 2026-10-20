@@ -8,6 +8,7 @@
 /* The search box: the dd-btn look, as a text field, with the dd-menu list
  * hanging off it. Wide enough for a long name, narrower on a phone. */
 .pvd-search { position: relative; flex: 0 1 auto; min-width: 0; }
+.pvd-glass { display: flex; align-items: center; color: var(--text-4); cursor: text; }
 .pvd-input {
   width: 220px;
   min-width: 0;

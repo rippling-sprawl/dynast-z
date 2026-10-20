@@ -335,18 +335,31 @@
 .pl-res.is-w { color: var(--good); }
 .pl-res.is-l { color: var(--bad); }
 
-/* The log tables are a few rows each: no screen-height box, no pinning. */
+/* The player-logs.js table (/football/player-vs-defense): a few rows at a
+ * time, so no screen-height box and no pinned header rows. The year and week
+ * columns pin on a horizontal scroll instead, as the player column does on
+ * the defense table; the year is a fixed width so the week knows its offset. */
 .pl-scroll { max-height: none; min-height: 0; }
 .pl-scroll .dvp-table thead th, .pl-scroll .dvp-table tbody tr.dvp-game th { position: static; }
-.pl-scroll .dvp-table th.dvp-name, .pl-scroll .dvp-table td.dvp-name { position: sticky; left: 0; }
+.dvp-table .pl-yr, .dvp-table .pl-wk {
+  position: sticky;
+  z-index: 1;
+  background: var(--surface);
+  font-variant-numeric: tabular-nums;
+}
+.pl-scroll .dvp-table thead th.pl-yr, .pl-scroll .dvp-table thead th.pl-wk { position: sticky; z-index: 2; }
+.dvp-table .pl-yr { left: 0; width: 34px; min-width: 34px; max-width: 34px; color: var(--text-3); font-weight: 600; text-align: left; }
+.dvp-table .pl-wk { left: 34px; width: 34px; min-width: 34px; border-right: 1px solid var(--border-soft); color: var(--text-hi); font-weight: 650; }
+.dvp-table tbody th.pl-yr { font-size: 12.5px; }
+.dvp-table thead th.pl-yr, .dvp-table thead th.pl-wk { color: var(--text-4); font-weight: 600; }
+.pl-avg th.pl-yr { max-width: none; color: var(--text-hi); font-weight: 650; border-right: 1px solid var(--border-soft); }
 .pl-game { display: inline-flex; align-items: center; gap: 6px; }
 .pl-game b { font-weight: 600; }
-/* The result column: W/L and the score, coloured; W-L on the average row. */
-/* The game and result columns take only what they need; the numbers get the rest. */
-.pl-scroll .dvp-name, .dvp-table .pl-rescol { width: 1%; }
+/* The result column takes only what it needs; the numbers get the rest. */
+.dvp-table .pl-rescol { width: 1%; }
 .dvp-table td.pl-rescol { font-size: 12px; font-variant-numeric: tabular-nums; color: var(--text-3); }
 .dvp-table td.pl-rescol.is-w { color: var(--good); }
 .dvp-table td.pl-rescol.is-l { color: var(--bad); }
-.pl-was { font-size: 10px; font-weight: 600; letter-spacing: 0.05em; color: var(--text-4); }
-.pl-avg td { background: var(--surface-2); color: var(--text-hi); font-weight: 650; }
+.pl-was { margin-left: 6px; font-size: 10px; font-weight: 600; letter-spacing: 0.05em; color: var(--text-4); }
+.pl-avg td, .pl-avg th { background: var(--surface-2); color: var(--text-hi); font-weight: 650; }
 .pl-avg td.dvp-name { background: var(--surface-2); }

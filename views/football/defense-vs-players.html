@@ -671,7 +671,7 @@
         label = '<b>Avg</b><span class="pl-res">' + n.W + '-' + n.L + (n.T ? '-' + n.T : '') + '</span>';
       } else {
         var o = outcome(g);
-        label = '<b>' + esc(g.season) + ' ' + (g.postseason ? 'Playoffs' : 'Wk ' + esc(g.week)) + '</b>' +
+        label = '<b>\u2019' + esc(String(g.season).slice(-2)) + ' ' + (g.postseason ? 'Playoffs' : 'Wk ' + esc(g.week)) + '</b>' +
           (withOpp ? '<span class="dvp-opp">' + (g.home ? 'vs' : '@') + logo(g.opp) + '</span>' : '') +
           (o ? '<span class="pl-res is-' + o.toLowerCase() + '">' + o + ' ' + esc(g.pts_for) + '-' + esc(g.pts_against) + '</span>' : '') +
           (g.team && g.team !== team0 ? '<span class="pl-was" title="Played for ' + esc(g.team) + '">' + esc(g.team) + '</span>' : '');
