@@ -1,0 +1,70 @@
+/* Player vs. Defense — /football/player-vs-defense
+ *
+ * The defense-vs-players table turned round: one player, every game he has
+ * played against one defense. The table is that page's (.dvp-* in
+ * defense-vs-players.css, loaded first); this sheet adds only the player
+ * search, the matchup line above the table and the average row under it. */
+
+/* The search box: the dd-btn look, as a text field, with the dd-menu list
+ * hanging off it. Wide enough for a long name, narrower on a phone. */
+.pvd-search { position: relative; flex: 0 1 auto; min-width: 0; }
+.pvd-input {
+  width: 220px;
+  min-width: 0;
+  flex: 1 1 auto;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font: inherit;
+  font-size: 12.5px;
+  padding: 4px 9px;
+}
+.pvd-input::placeholder { color: var(--text-4); }
+.pvd-input:focus { outline: none; border-color: var(--accent); }
+
+.pvd-list { min-width: 240px; }
+.pvd-list .dd-opt { align-items: center; }
+.pvd-list .dd-opt[aria-selected="true"] { background: var(--surface); }
+.pvd-list img { width: 16px; height: 16px; flex: none; }
+.pvd-list .pvd-pos {
+  margin-left: auto;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  color: var(--text-4);
+}
+.pvd-list .dd-note { padding: 5px 9px; color: var(--text-4); }
+
+/* Who, and who he sees this week. */
+.pvd-head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  margin: 2px 0 10px;
+  color: var(--text-3);
+  font-size: 13px;
+}
+.pvd-head img { width: 20px; height: 20px; display: block; }
+.pvd-head .pvd-who { display: inline-flex; align-items: center; gap: 6px; color: var(--text-hi); font-weight: 650; font-size: 15px; }
+.pvd-head .pvd-tag { font-size: 10px; font-weight: 600; letter-spacing: 0.07em; color: var(--text-4); }
+.pvd-head .pvd-match { display: inline-flex; align-items: center; gap: 5px; }
+
+/* A game's result beside its opponent, and the team he played for when it
+ * was not the one he is on now. */
+.pvd-res { color: var(--text-4); font-size: 11px; font-weight: 500; }
+.pvd-res.is-w { color: var(--good); }
+.pvd-res.is-l { color: var(--bad); }
+.dvp-name .pvd-was { margin-left: 5px; font-size: 10px; font-weight: 600; letter-spacing: 0.05em; color: var(--text-4); }
+
+/* Per-game averages: the table's last word, ruled off from the games. */
+.dvp-table tfoot td, .dvp-table tfoot th {
+  border-top: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text-hi);
+  font-weight: 650;
+  position: sticky;
+  bottom: 0;
+}
+.dvp-table tfoot .dvp-name { z-index: 2; background: var(--surface-2); }

@@ -254,6 +254,22 @@ def defense_vs_players_api():
     return _defense_vs_players_api
 
 
+_player_vs_defense_api = None
+
+
+def player_vs_defense_api():
+    """Load api/player-vs-defense.py. By path because the filename has a
+    hyphen in it, and lazily for the same reason as above."""
+    global _player_vs_defense_api
+    if _player_vs_defense_api is None:
+        import importlib.util
+        path = os.path.join(DATA_DIR, "api", "player-vs-defense.py")
+        spec = importlib.util.spec_from_file_location("player_vs_defense_api", path)
+        _player_vs_defense_api = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(_player_vs_defense_api)
+    return _player_vs_defense_api
+
+
 _quarter_splits_api = None
 
 
@@ -1843,6 +1859,48 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 self._json_response(404, {"error": f"no completed games stored for {team}"})
             else:
                 self._json_response(200, payload)
+        # One player's game logs against one defense. Query string tolerated:
+        # the page keeps its player and defense in ?player= and ?def=.
+        elif self.path.split("?")[0] == "/football/player-vs-defense":
+            self.path = "/views/football/player-vs-defense.html"
+            super().do_GET()
+        # Its data: the player's whole career off balldontlie, live.
+        elif self.path.split("?")[0] == "/api/player-vs-defense":
+            api = player_vs_defense_api()
+            query = parse_qs(urlparse(self.path).query)
+            # This week's opposing players for one defense, for
+            # /football/defense-vs-players.
+            if query.get("offense"):
+                offense, defense, season, error = api.parse_matchup(query)
+                if error:
+                    self._json_response(400, {"error": error})
+                    return
+                try:
+                    payload = api.load_matchup(offense, defense, season)
+                except Exception as e:  # noqa: BLE001
+                    self._json_response(502, {"error": str(e)})
+                    return
+                headers = {"Access-Control-Allow-Origin": "*"}
+                if IS_VERCEL:
+                    headers["Cache-Control"] = api.CACHE_CONTROL
+                send_json(self, 200, payload, headers)
+                return
+            name, pos, team, error = api.parse(query)
+            if error:
+                self._json_response(400, {"error": error})
+                return
+            try:
+                payload = api.load(name, pos, team)
+            except Exception as e:  # noqa: BLE001
+                self._json_response(502, {"error": str(e)})
+                return
+            if payload is None:
+                self._json_response(404, {"error": f"{name} not found in balldontlie"})
+                return
+            headers = {"Access-Control-Allow-Origin": "*"}
+            if IS_VERCEL:
+                headers["Cache-Control"] = api.CACHE_CONTROL
+            send_json(self, 200, payload, headers)
         # One game's odds and box score, under the schedule it hangs off:
         # /football/schedule/game/1392216, where the last segment is the
         # balldontlie game id every schedule row carries. Matched before the

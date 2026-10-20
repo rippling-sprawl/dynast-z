@@ -33,21 +33,6 @@
 .qs-seg button:hover { color: var(--text-hi); }
 .qs-seg button[aria-pressed="true"] { background: var(--surface-2); color: var(--accent); }
 
-.qs-section { margin: 0 0 18px; }
-.qs-section h3 {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin: 0 0 8px;
-  font-size: 13px;
-  font-weight: 650;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--text-3);
-}
-.qs-section h3 img { width: 18px; height: 18px; display: block; }
-.qs-section h3 .qs-sub { font-weight: 500; letter-spacing: 0; text-transform: none; color: var(--text-4); font-size: 12px; }
-
 .qs-scroll {
   overflow-x: auto;
   border: 1px solid var(--border);
@@ -115,9 +100,37 @@
   background: var(--surface);
 }
 
-/* Season total and per-game average close the weekly table. */
-.qs-table tfoot td, .qs-table tfoot th { border-top: 1px solid var(--border); background: var(--surface-2); }
-.qs-table tfoot tr + tr td, .qs-table tfoot tr + tr th { border-top: 1px solid var(--border-soft); }
-.qs-table tfoot .qs-rowhead { background: var(--surface-2); }
+/* A section label spanning the table: the opponent's numbers, then the
+ * team's. The label rides along on a horizontal scroll. */
+.qs-table tr.qs-group th {
+  padding: 6px 10px;
+  text-align: left;
+  background: var(--surface-2);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.qs-table tbody tr.qs-group:first-child th { border-top: 0; }
+.qs-glabel {
+  position: sticky;
+  left: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+.qs-glabel b { color: var(--text-hi); font-weight: 650; }
+.qs-glabel img { width: 18px; height: 18px; display: block; }
+.qs-glabel .qs-sub { font-weight: 500; letter-spacing: 0; text-transform: none; color: var(--text-4); margin-left: 4px; }
+
+/* Per-game average and median lead each section. */
+.qs-table tr.qs-aggrow .qs-rowhead { background: var(--surface); }
+.qs-table tr.qs-aggrow + tr:not(.qs-aggrow):not(.qs-group) td,
+.qs-table tr.qs-aggrow + tr:not(.qs-aggrow):not(.qs-group) th { border-top: 1px solid var(--border); }
+
+.qs-table td.qs-none { color: var(--text-4); text-align: center; padding: 14px 10px; }
 
 .qs-note { margin: 10px 0 0; font-size: 12.5px; color: var(--text-3); }

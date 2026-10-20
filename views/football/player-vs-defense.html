@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/assets/icons/app-touch-180.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Dynast-Z">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <title>Player vs. Defense | Dynast-Z</title>
+  <script src="/scripts/base/theme.js"></script>
+  <link rel="stylesheet" href="/styles/base/theme.css">
+  <link rel="stylesheet" href="/styles/base/styles.css">
+  <link rel="stylesheet" href="/styles/base/hub.css">
+  <link rel="stylesheet" href="/styles/components/nfl-pickers.css">
+  <link rel="stylesheet" href="/styles/primary/nfl-schedule.css">
+  <link rel="stylesheet" href="/styles/base/lightbox.css">
+  <!-- The table is /football/defense-vs-players', from its sheet. -->
+  <link rel="stylesheet" href="/styles/primary/defense-vs-players.css">
+  <link rel="stylesheet" href="/styles/primary/player-vs-defense.css">
+  <script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
+  <script defer src="/_vercel/insights/script.js"></script>
+</head>
+<body class="masters-body">
+  <div id="header-mount"></div>
+  <div id="nav-drawer-mount"></div>
+  <script src="/scripts/base/auth.js"></script>
+  <script src="/scripts/base/standalone.js"></script>
+  <script src="/scripts/base/nav.js"></script>
+  <script src="/scripts/components/nfl-pickers.js"></script>
+  <script src="/scripts/components/nfl-schedule.js"></script>
+  <script>initPage();</script>
+
+  <div class="masters-content">
+    <div class="masters-breadcrumbs">
+      <a href="/football">Football</a><span class="separator">/</span><span>Player vs. Defense</span>
+    </div>
+
+    <h2>Player vs. Defense</h2>
+
+    <!-- The player, then the defense: this week's opponent once a player is
+         picked, any other team from the same picker as defense-vs-players. -->
+    <div class="dd-row dvp-controls">
+      <div class="dvp-filter pvd-search">
+        <label class="dvp-flabel" for="f-player">Player</label>
+        <input type="text" class="pvd-input" id="f-player" placeholder="Search QB, RB, WR, TE…"
+               autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list"
+               aria-expanded="false" aria-controls="player-list">
+        <div class="dd-pop dd-menu pvd-list" id="player-list" role="listbox" aria-label="Players" hidden></div>
+      </div>
+      <div class="dvp-filter">
+        <span class="dvp-flabel" id="l-team">Def.</span>
+        <div class="dd" id="dd-team">
+          <button type="button" class="dd-btn" id="f-team" aria-haspopup="dialog" aria-expanded="false" aria-labelledby="l-team f-team">
+            <span class="dd-value">Opp.</span>
+          </button>
+          <div class="dd-pop dd-overlay" id="team-overlay" role="dialog" aria-modal="true" aria-label="Defense" hidden>
+            <div class="tp" id="team-grid"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="head"></div>
+    <div id="board"><p class="sched-empty">Loading players…</p></div>
+    <p class="dvp-note" id="note"></p>
+  </div>
+
+  <script>
+  (function () {
+    'use strict';
+
+    /* A player search and one table. The players are the Trade Calculator's
+     * (/api/players: the ~500 QBs, RBs, WRs and TEs the dynasty sites value),
+     * not balldontlie's full roster list, so the search is not buried in
+     * long snappers. The pick goes to /api/player-vs-defense, which finds him
+     * in balldontlie and returns every game of his career; the page keeps the
+     * ones against the defense — this week's opponent unless another is
+     * picked — and draws them in the defense-vs-players table. */
+
+    var POS = ['QB', 'RB', 'WR', 'TE'];
+    var LIST_MAX = 12;
+    // The dynasty sources' Washington; balldontlie and the schedule say WSH.
+    var TEAM_ALIAS = { WAS: 'WSH' };
+
+    var season = SCHED_CURRENT_SEASON;
+    var sched = null;
+    var teams = [];
+    var players = [];  // [{ name, pos, team, key }], in trade-value order
+    var player = null; // the picked row of `players`
+    var doc = null;    // its /api/player-vs-defense payload
+    var def = '';      // the defense picked by hand; '' means this week's opponent
+
+    var board = document.getElementById('board');
+    var head = document.getElementById('head');
+    var note = document.getElementById('note');
+    var input = document.getElementById('f-player');
+    var list = document.getElementById('player-list');
+    var teamBtn = document.getElementById('f-team');
+    var teamGrid = document.getElementById('team-grid');
+
+    function esc(s) {
+      return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+      });
+    }
+
+    // Case, accents and punctuation dropped, so "amon ra" finds Amon-Ra and
+    // "jsn" does not need its hyphen.
+    function fold(s) {
+      return String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '')
+        .toLowerCase().replace(/[^a-z0-9 ]/g, '');
+    }
+
+    function shortName(name) {
+      var parts = String(name || '').trim().split(/\s+/);
+      return parts.length > 1 ? parts[0].charAt(0) + '. ' + parts.slice(1).join(' ') : parts[0] || '';
+    }
+
+    function logo(abbr) {
+      return '<img src="/assets/icons/nfl/' + esc(abbr) + '.svg" alt="' + esc(abbr) + '" title="' + esc(abbr) + '">';
+    }
+
+    /* ---------- this week ---------- */
+
+    var week = null;
+    // -> { opp, home, kickoff } for the team's game this week, or null on a bye.
+    function thisWeek(team) {
+      var wk = sched.weeks.filter(function (w) { return w.week === week; })[0];
+      var g = ((wk && wk.games) || []).filter(function (x) { return x.away === team || x.home === team; })[0];
+      if (!g) return null;
+      return { opp: g.away === team ? g.home : g.away, home: g.home === team, kickoff: g.kickoff };
+    }
+
+    function playerTeam() {
+      return (doc && doc.player.team) || (player && player.team) || '';
+    }
+
+    function scheduledOpp() {
+      var m = playerTeam() && sched ? thisWeek(playerTeam()) : null;
+      return m ? m.opp : '';
+    }
+
+    function defense() { return def || scheduledOpp(); }
+
+    /* ---------- the URL is the state ----------
+     *   ?player=Breece%20Hall&pos=RB[&def=NE]
+     * `def` only when it is not this week's opponent, so a shared link keeps
+     * following the schedule. */
+    function writeParams() {
+      var q = new URLSearchParams();
+      if (player) { q.set('player', player.name); q.set('pos', player.pos); }
+      if (def && def !== scheduledOpp()) q.set('def', def);
+      var str = q.toString();
+      var url = location.pathname + (str ? '?' + str : '');
+      if (url !== location.pathname + location.search) history.replaceState(null, '', url);
+    }
+
+    function applyParams(search) {
+      var q = new URLSearchParams(search);
+      var name = fold(q.get('player')), pos = (q.get('pos') || '').toUpperCase();
+      player = players.filter(function (p) { return p.key === name && (!pos || p.pos === pos); })[0] || null;
+      var d = (q.get('def') || '').toUpperCase();
+      def = d && schedTeamsByAbbr(sched)[d] ? d : '';
+      input.value = player ? player.name : '';
+    }
+
+    /* ---------- the table ----------
+     * defense-vs-players' table with one player in it: a week row per game
+     * (season added, since these run across years, and the score), then his
+     * line. No position column, the way that page drops it for one position.
+     * Groups by position, as there — no passing unless a QB, no rushing for a
+     * WR or TE, no receiving for a QB — but a group comes back whenever he has
+     * a number in it, so a receiver's jet sweeps still show. */
+    function num(v, strong, start, title) {
+      var cls = 'num' + (start ? ' grp-start' : '') + (Number(v) ? '' : ' is-zero') + (strong ? ' is-strong' : '');
+      return '<td class="' + cls + '"' + (title ? ' title="' + esc(title) + '"' : '') + '>' + esc(v || 0) + '</td>';
+    }
+
+    function avg(rows, k) {
+      var s = 0;
+      rows.forEach(function (r) { s += r[k] || 0; });
+      return rows.length ? (s / rows.length).toFixed(1) : 0;
+    }
+    function max(rows, k) {
+      return rows.reduce(function (m, r) { return Math.max(m, r[k] || 0); }, 0);
+    }
+    function any(rows, keys) {
+      return rows.some(function (r) { return keys.some(function (k) { return r[k]; }); });
+    }
+
+    function weekLabel(g) {
+      return g.season + ' ' + (g.postseason ? 'Playoffs' : 'Wk ' + g.week);
+    }
+
+    function result(g) {
+      if (g.status !== 'final' || g.pts_for == null || g.pts_against == null) return '';
+      var r = g.pts_for > g.pts_against ? 'W' : g.pts_for < g.pts_against ? 'L' : 'T';
+      return '<span class="pvd-res is-' + r.toLowerCase() + '">' + r + ' ' + esc(g.pts_for) + '-' + esc(g.pts_against) + '</span>';
+    }
+
+    function renderHead() {
+      if (!player) { head.innerHTML = ''; return; }
+      var team = playerTeam();
+      var m = sched && team ? thisWeek(team) : null;
+      var match = m
+        ? 'Week ' + esc(week) + ' <span class="pvd-match">' + (m.home ? 'vs' : '@') + ' ' + logo(m.opp) + esc(m.opp) + '</span>'
+        : 'Week ' + esc(week) + ': bye';
+      head.innerHTML = '<div class="pvd-head">' +
+        '<span class="pvd-who">' + (team ? logo(team) : '') + esc(doc ? doc.player.name : player.name) + '</span>' +
+        '<span class="pvd-tag">' + esc(player.pos) + (team ? ' &middot; ' + esc(team) : '') + '</span>' +
+        '<span>' + match + '</span></div>';
+    }
+
+    function render() {
+      renderHead();
+      var d = defense();
+      if (!d) {
+        board.innerHTML = '<p class="sched-empty">' + esc(playerTeam() || 'His team') +
+          ' has no game in week ' + esc(week) + '. Pick a defense to see his games against it.</p>';
+        return;
+      }
+      var rows = doc.games.filter(function (g) { return g.opp === d; });
+      var name = doc.player.name;
+      if (!rows.length) {
+        board.innerHTML = '<p class="sched-empty">' + esc(name) + ' has no games against ' + esc(d) + ' in balldontlie.</p>';
+        return;
+      }
+
+      var pos = doc.player.pos || player.pos;
+      var showPass = pos === 'QB' || any(rows, ['pass_att']);
+      var showRush = pos === 'QB' || pos === 'RB' || any(rows, ['rush_att']);
+      var showRec = pos !== 'QB' || any(rows, ['targets']);
+      var showTot = showRush && showRec;
+      var cols = 1 + (showPass ? 5 : 0) + (showRush ? 4 : 0) + (showRec ? 5 : 0) + (showTot ? 2 : 0);
+
+      var thead =
+        '<thead>' +
+          '<tr class="dvp-groups"><th class="dvp-name"></th>' +
+            (showPass ? '<th colspan="5" class="grp">Passing</th>' : '') +
+            (showRush ? '<th colspan="4" class="grp">Rushing</th>' : '') +
+            (showRec ? '<th colspan="5" class="grp">Receiving</th>' : '') +
+            (showTot ? '<th colspan="2" class="grp">Total</th>' : '') +
+          '</tr>' +
+          '<tr><th class="dvp-name">Player</th>' +
+            (showPass ? '<th class="num grp-start">Cmp</th><th class="num">Att</th><th class="num">Yds</th><th class="num">TD</th><th class="num">Int</th>' : '') +
+            (showRush ? '<th class="num grp-start">Att</th><th class="num">Yds</th><th class="num">TD</th><th class="num">Lng</th>' : '') +
+            (showRec ? '<th class="num grp-start">Tgt</th><th class="num">Rec</th><th class="num">Yds</th><th class="num">TD</th><th class="num">Lng</th>' : '') +
+            (showTot ? '<th class="num grp-start">Yds</th><th class="num">TD</th>' : '') +
+          '</tr>' +
+        '</thead>';
+
+      function line(r, foot) {
+        var v = foot ? function (k) { return avg(rows, k); } : function (k) { return r[k]; };
+        var lng = foot ? function (k) { return max(rows, k); } : v;
+        var lt = foot ? 'Longest in these games' : '';
+        return (showPass ? num(v('pass_cmp'), false, true) + num(v('pass_att')) + num(v('pass_yds')) + num(v('pass_td')) + num(v('pass_int')) : '') +
+          (showRush ? num(v('rush_att'), false, true) + num(v('rush_yds')) + num(v('rush_td')) + num(lng('rush_lng'), false, false, lt) : '') +
+          (showRec ? num(v('targets'), false, true) + num(v('rec')) + num(v('rec_yds')) + num(v('rec_td')) + num(lng('rec_lng'), false, false, lt) : '') +
+          (showTot ? num(v('tot_yds'), true, true) + num(v('tot_td'), true) : '');
+      }
+
+      var team = playerTeam();
+      var body = rows.map(function (g) {
+        var was = g.team && g.team !== team ? '<span class="pvd-was" title="Played for ' + esc(g.team) + '">' + esc(g.team) + '</span>' : '';
+        return '<tr class="dvp-game"><th colspan="' + cols + '"><span class="dvp-label">' +
+            '<span class="dvp-wk">' + esc(weekLabel(g)) + '</span>' +
+            '<span class="dvp-opp">' + (g.home ? 'vs' : '@') + logo(g.opp) + '</span>' + result(g) +
+          '</span></th></tr>' +
+          '<tr class="dvp-first"><td class="dvp-name" title="' + esc(name) + '"><b>' + esc(shortName(name)) + '</b>' + was + '</td>' +
+          line(g) + '</tr>';
+      }).join('');
+      var foot = '<tfoot><tr><td class="dvp-name" title="Per game; Lng is the longest">Avg (' + rows.length + ' g)</td>' +
+        line(null, true) + '</tr></tfoot>';
+
+      board.innerHTML = '<div class="dvp-scroll"><table class="dvp-table no-pos">' + thead +
+        '<tbody>' + body + '</tbody>' + foot + '</table></div>';
+      note.textContent = 'Every regular-season and playoff game ' + name + ' has played against ' + d +
+        ', newest first, from balldontlie box scores · Avg is per game; its Lng is the longest' +
+        (showPass ? ' · balldontlie\'s box score carries no long completion, so Passing has no Lng' : '');
+      pinOffsets();
+    }
+
+    function pinOffsets() {
+      var table = board.querySelector('.dvp-table');
+      if (!table) return;
+      function h(el) { return el ? el.getBoundingClientRect().height : 0; }
+      var heads = table.tHead.rows;
+      var h0 = h(heads[0]) - 0.5;
+      table.style.setProperty('--pin-1', h0 + 'px');
+      table.style.setProperty('--pin-game', (h0 + h(heads[1]) - 0.5) + 'px');
+    }
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(pinOffsets);
+    window.addEventListener('resize', pinOffsets);
+    board.addEventListener('load', pinOffsets, true);
+
+    /* ---------- loading ---------- */
+
+    var loadToken = 0;
+    function load() {
+      var token = ++loadToken;
+      doc = null;
+      note.textContent = '';
+      syncDef();
+      writeParams();
+      if (!player) {
+        head.innerHTML = '';
+        board.innerHTML = '<p class="sched-empty">Search for a player to see his games against this week\'s opponent.</p>';
+        return;
+      }
+      renderHead();
+      board.innerHTML = '<p class="sched-empty">Loading ' + esc(player.name) + '\'s game logs…</p>';
+      var q = new URLSearchParams({ name: player.name, pos: player.pos, team: player.team });
+      fetch('/api/player-vs-defense?' + q.toString())
+        .then(function (r) {
+          return r.json().then(function (body) {
+            if (!r.ok) throw new Error(body.error || ('HTTP ' + r.status));
+            return body;
+          });
+        })
+        .then(function (d) {
+          if (token !== loadToken) return;
+          doc = d;
+          syncDef();
+          writeParams();
+          render();
+        })
+        .catch(function (e) {
+          if (token !== loadToken) return;
+          board.innerHTML = '<p class="sched-empty">Error: ' + esc(e.message) + '</p>';
+        });
+    }
+
+    // The defense button shows the team in play, scheduled or picked; the
+    // grid's "any" button goes back to the schedule's.
+    function syncDef() {
+      syncTeamPicker(teamBtn, teamGrid, defense(), teams, { emptyLabel: 'Opp.', nicknameOnly: true });
+    }
+
+    var teamDd = registerDropdown(document.getElementById('dd-team'));
+    teamGrid.addEventListener('click', function (e) {
+      var btn = e.target.closest ? e.target.closest('.tp-team, .tp-any') : null;
+      if (!btn || !teamGrid.contains(btn)) return;
+      def = btn.getAttribute('data-team') || '';
+      closeDropdown(teamDd, true);
+      syncDef();
+      writeParams();
+      if (doc) render();
+    });
+
+    /* ---------- the player search ----------
+     * A combobox over the list: names matching every word typed, best-valued
+     * first, a dozen at most. Arrows move, Enter picks, Escape closes. Empty,
+     * it offers the top of the list. */
+    var shown = [], active = -1;
+
+    function search(text) {
+      var words = fold(text).split(/\s+/).filter(Boolean);
+      return players.filter(function (p) {
+        return words.every(function (w) { return p.key.indexOf(w) >= 0; });
+      }).slice(0, LIST_MAX);
+    }
+
+    function openList() {
+      shown = search(input.value);
+      active = shown.length ? 0 : -1;
+      list.innerHTML = shown.length ? shown.map(function (p, i) {
+        return '<button type="button" class="dd-opt" role="option" id="pvd-opt-' + i + '" data-i="' + i + '" tabindex="-1"' +
+          ' aria-selected="' + (i === active) + '">' + logo(p.team) + esc(p.name) +
+          '<span class="pvd-pos">' + esc(p.pos) + '</span></button>';
+      }).join('') : '<div class="dd-note">No match</div>';
+      list.hidden = false;
+      input.setAttribute('aria-expanded', 'true');
+      markActive();
+    }
+
+    function closeList() {
+      list.hidden = true;
+      input.setAttribute('aria-expanded', 'false');
+      input.removeAttribute('aria-activedescendant');
+    }
+
+    function markActive() {
+      [].forEach.call(list.querySelectorAll('.dd-opt'), function (o, i) {
+        o.setAttribute('aria-selected', String(i === active));
+        if (i === active) o.scrollIntoView({ block: 'nearest' });
+      });
+      if (active >= 0) input.setAttribute('aria-activedescendant', 'pvd-opt-' + active);
+      else input.removeAttribute('aria-activedescendant');
+    }
+
+    function pick(p) {
+      closeList();
+      if (!p) return;
+      var same = p === player;
+      // Set before the blur, whose handler puts the picked name back.
+      player = p;
+      input.blur();
+      if (same) return;
+      def = '';
+      load();
+    }
+
+    input.addEventListener('focus', function () { input.select(); openList(); });
+    input.addEventListener('input', openList);
+    input.addEventListener('keydown', function (e) {
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        if (list.hidden) openList();
+        if (!shown.length) return;
+        active = (active + (e.key === 'ArrowDown' ? 1 : -1) + shown.length) % shown.length;
+        markActive();
+        e.preventDefault();
+      } else if (e.key === 'Enter') {
+        if (!list.hidden && active >= 0) pick(shown[active]);
+        e.preventDefault();
+      } else if (e.key === 'Escape') {
+        closeList();
+        input.value = player ? player.name : '';
+        input.blur();
+      }
+    });
+    // mousedown, not click: the click would land after the blur below shut the list.
+    list.addEventListener('mousedown', function (e) {
+      var opt = e.target.closest ? e.target.closest('.dd-opt') : null;
+      if (!opt) return;
+      e.preventDefault();
+      pick(shown[Number(opt.getAttribute('data-i'))]);
+    });
+    // Typing is only a search: leaving the box without a pick puts back the
+    // player already shown.
+    input.addEventListener('blur', function () {
+      closeList();
+      input.value = player ? player.name : '';
+    });
+
+    window.addEventListener('popstate', function () {
+      if (!sched) return;
+      applyParams(location.search);
+      load();
+    });
+
+    /* ---------- start ---------- */
+
+    function loadPlayers() {
+      return fetch('/api/players').then(function (r) { return r.json(); }).then(function (d) {
+        if (!Array.isArray(d)) throw new Error((d && d.error) || 'player list unavailable');
+        var seen = {};
+        return d.filter(function (p) {
+          return POS.indexOf(p.position) >= 0 && p.team && p.team !== 'FA';
+        }).map(function (p) {
+          return { name: p.name, pos: p.position, team: TEAM_ALIAS[p.team] || p.team, key: fold(p.name) };
+        }).filter(function (p) {
+          var k = p.key + '|' + p.pos;
+          return seen[k] ? false : (seen[k] = true);
+        });
+      });
+    }
+
+    Promise.all([schedLoad(season), loadPlayers()]).then(function (res) {
+      sched = res[0];
+      teams = sched.teams;
+      week = schedCurrentWeek(sched);
+      players = res[1];
+      buildTeamPicker(teamGrid, teams, { anyLabel: 'This week\'s opponent' });
+      applyParams(location.search);
+      load();
+    }).catch(function (e) {
+      board.innerHTML = '<p class="sched-empty">Error: ' + esc(e.message) + '</p>';
+    });
+  })();
+  </script>
+</body>
+</html>

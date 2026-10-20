@@ -39,6 +39,9 @@ const NAV_SECTIONS = [
       // Every opposing rusher and receiver a defense has faced this season,
       // game by game -- the matchup half of a player prop.
       { label: 'Defense vs. Players', href: '/football/defense-vs-players', emoji: '🛡️' },
+      // The same question from the other side: one player's career against
+      // the defense he faces this week.
+      { label: 'Player vs. Defense', href: '/football/player-vs-defense', emoji: '🏃' },
       // Season-to-date team numbers, read side by side across the league.
       // One card here; its pages are the Team Stats section below.
       { label: 'Team Stats', href: '/football/team-stats', emoji: '📈' },

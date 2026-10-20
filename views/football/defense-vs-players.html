@@ -35,6 +35,7 @@
        league's team list comes from the same schedule file that page reads. -->
   <script src="/scripts/components/nfl-pickers.js"></script>
   <script src="/scripts/components/nfl-schedule.js"></script>
+  <script src="/scripts/components/player-logs.js"></script>
   <script>initPage();</script>
 
   <div class="masters-content">
@@ -121,10 +122,22 @@
               <button type="button" class="dd-btn dvp-toggle" id="t-rec" aria-pressed="true">Rec</button>
             </span>
           </div>
+          <!-- Players, not columns: this week's opposing offense, one position
+               at a time, shown above the table. All off to start. -->
+          <div class="dvp-filter dvp-toggles" role="group" aria-labelledby="l-opp">
+            <span class="dvp-flabel" id="l-opp" title="This week's opponent's top players: their games against this defense, and their last five">Opp. players</span>
+            <span class="dvp-toggle-set">
+              <button type="button" class="dd-btn dvp-toggle" id="o-QB" aria-pressed="false">QB</button>
+              <button type="button" class="dd-btn dvp-toggle" id="o-RB" aria-pressed="false">RB</button>
+              <button type="button" class="dd-btn dvp-toggle" id="o-WR" aria-pressed="false">WR</button>
+              <button type="button" class="dd-btn dvp-toggle" id="o-TE" aria-pressed="false">TE</button>
+            </span>
+          </div>
         </div>
       </dialog>
     </div>
 
+    <div id="matchup"></div>
     <div id="board"><p class="sched-empty">Loading teams…</p></div>
     <p class="dvp-note" id="note"></p>
   </div>
@@ -148,7 +161,8 @@
     // Filters cut players; the toggles cut column groups. All of it is applied
     // in the browser to the one defense already loaded.
     // pos: the positions picked, none meaning all. hide: column groups hidden.
-    var view = { pos: {}, att: 0, tgt: 0, hide: {} };
+    // opp: the positions of this week's opposing players shown above the table.
+    var view = { pos: {}, att: 0, tgt: 0, hide: {}, opp: {} };
 
     var board = document.getElementById('board');
     var note = document.getElementById('note');
@@ -164,7 +178,7 @@
     /* ---------- the URL is the state ----------
      * Every filter and toggle lives in the query string, so a link — the
      * matchup board's included — opens exactly the view it was copied from:
-     *   ?team=DAL&pos=RB,WR&att=4&tgt=2&hide=pass
+     *   ?team=DAL&pos=RB,WR&att=4&tgt=2&hide=pass&opp=QB,WR
      * Defaults are left out. `hide` is written only where it differs from what
      * the positions hide on their own (see posDefaults), and an empty `hide=`
      * means "show everything" where those positions would have hidden some. */
@@ -187,12 +201,14 @@
         var h = hideList(s.hide);
         if (h !== hideList(posDefaults(pos))) q.set('hide', h);
       }
+      var opp = POS.filter(function (p) { return s.opp && s.opp[p]; });
+      if (opp.length) q.set('opp', opp.join(','));
       var str = q.toString().replace(/%2C/g, ',');
       return location.pathname + (str ? '?' + str : '');
     }
 
     function current() {
-      return { team: team, pos: Object.keys(view.pos), att: view.att, tgt: view.tgt, hide: view.hide };
+      return { team: team, pos: Object.keys(view.pos), att: view.att, tgt: view.tgt, hide: view.hide, opp: view.opp };
     }
 
     function writeParams() {
@@ -221,6 +237,10 @@
         view.hide = {};
         GROUPS.forEach(function (g) { view.hide[g] = h.indexOf(g) >= 0; });
       }
+      view.opp = {};
+      (q.get('opp') || '').toUpperCase().split(',').forEach(function (p) {
+        if (POS.indexOf(p) >= 0) view.opp[p] = true;
+      });
       posSync();
       attSync(view.att);
       tgtSync(view.tgt);
@@ -556,10 +576,92 @@
       load();
     });
 
+    /* ---------- this week's opposing players ----------
+     * Above the table, per position toggled on in the filters modal: the top
+     * QB, two RBs, three WRs and two TEs of the offense this defense plays
+     * this week, each with his career games against it and his last five.
+     * /api/player-vs-defense picks them (season yards, the injured left out)
+     * and pulls the logs from balldontlie, once per defense; the toggles only
+     * show and hide what it returned. */
+    var matchupEl = document.getElementById('matchup');
+    var OPP_LABEL = { QB: 'Quarterback', RB: 'Running backs', WR: 'Wide receivers', TE: 'Tight ends' };
+    var matchups = {};  // team -> Promise of its payload
+    var matchupToken = 0;
+
+    // -> { off, home } for the defense's game this week, or null on a bye.
+    function thisWeekOpp(def) {
+      var week = schedCurrentWeek(sched);
+      var wk = sched.weeks.filter(function (w) { return w.week === week; })[0];
+      var g = ((wk && wk.games) || []).filter(function (x) { return x.away === def || x.home === def; })[0];
+      return g ? { off: g.away === def ? g.home : g.away, home: g.home === def, week: week } : null;
+    }
+
+    function loadMatchup() {
+      var token = ++matchupToken;
+      var picked = POS.filter(function (p) { return view.opp[p]; });
+      if (!team || !picked.length || !sched) { matchupEl.innerHTML = ''; return; }
+      var m = thisWeekOpp(team);
+      if (!m) {
+        matchupEl.innerHTML = '<p class="sched-empty">' + esc(team) + ' has no game in week ' +
+          esc(schedCurrentWeek(sched)) + '.</p>';
+        return;
+      }
+      if (!matchups[team]) {
+        matchups[team] = fetch('/api/player-vs-defense?offense=' + encodeURIComponent(m.off) +
+            '&defense=' + encodeURIComponent(team) + '&season=' + encodeURIComponent(season))
+          .then(function (r) {
+            return r.json().then(function (body) {
+              if (!r.ok) throw new Error(body.error || ('HTTP ' + r.status));
+              return body;
+            });
+          });
+        matchups[team].catch(function () { delete matchups[team]; });
+      }
+      var def = team;
+      matchupEl.innerHTML = '<p class="sched-empty">Loading ' + esc(m.off) + '\'s players…</p>';
+      matchups[def].then(function (d) {
+        if (token === matchupToken) renderMatchup(d, m, picked);
+      }).catch(function (e) {
+        if (token === matchupToken) matchupEl.innerHTML = '<p class="sched-empty">Error: ' + esc(e.message) + '</p>';
+      });
+    }
+
+    function renderMatchup(d, m, picked) {
+      var logo = function (t) { return '<img src="/assets/icons/nfl/' + esc(t) + '.svg" alt="">'; };
+      var cards = picked.map(function (pos) {
+        var ps = d.players.filter(function (p) { return p.pos === pos; });
+        if (!ps.length) return '<p class="dvp-note">No ' + esc(OPP_LABEL[pos].toLowerCase()) + ' found for ' + esc(d.offense) + '.</p>';
+        return ps.map(function (p) {
+          return '<section class="dvp-pcard"><div class="dvp-pcard-head">' +
+            '<b>' + esc(p.name) + '</b><span class="dvp-pcard-pos">' + esc(p.pos) + '</span>' +
+            (p.status ? '<span class="dvp-pcard-status">' + esc(p.status) + '</span>' : '') +
+            '<span>' + esc(p.season_yds) + ' yds in ' + esc(d.season) + '</span></div>' +
+            playerLogTable(p, [
+              { title: 'Career vs. ' + d.defense, rows: p.vs, empty: 'Has not played ' + d.defense },
+              { title: 'Last ' + p.recent.length + ' · ' + d.season, rows: p.recent, empty: 'No games this season' }
+            ]) + '</section>';
+        }).join('');
+      }).join('');
+      matchupEl.innerHTML = '<div class="dvp-opp-wrap"><h3 class="dvp-opp-title">Week ' + esc(m.week) + ': ' +
+        logo(d.offense) + esc(d.offense) + ' ' + (m.home ? '@' : 'vs') + ' ' + logo(d.defense) + esc(d.defense) +
+        ' <small>' + esc(d.offense) + '\'s top players by ' + esc(d.season) + ' yards; injured players left out</small></h3>' +
+        cards + '</div>';
+    }
+
+    POS.forEach(function (p) {
+      document.getElementById('o-' + p).addEventListener('click', function () {
+        if (view.opp[p]) delete view.opp[p]; else view.opp[p] = true;
+        syncToggles();
+        writeParams();
+        loadMatchup();
+      });
+    });
+
     var loadToken = 0;
 
     function load() {
       writeParams();
+      loadMatchup();
       syncTeamPicker(teamBtn, teamGrid, team, teams, { emptyLabel: 'Pick a team', nicknameOnly: true });
       note.textContent = '';
       doc = null;
@@ -668,6 +770,9 @@
       toggles.forEach(function (u) {
         document.getElementById(u[0]).setAttribute('aria-pressed', String(!view.hide[u[1]]));
       });
+      POS.forEach(function (p) {
+        document.getElementById('o-' + p).setAttribute('aria-pressed', String(!!view.opp[p]));
+      });
     }
     toggles.forEach(function (t) {
       document.getElementById(t[0]).addEventListener('click', function () {
@@ -706,7 +811,7 @@
 
     function syncMore() {
       var h = hideList(view.hide) !== hideList(posDefaults(Object.keys(view.pos)));
-      moreBtn.classList.toggle('is-set', !!(view.att || view.tgt || h));
+      moreBtn.classList.toggle('is-set', !!(view.att || view.tgt || h || Object.keys(view.opp).length));
     }
 
     moreBtn.addEventListener('click', function () {

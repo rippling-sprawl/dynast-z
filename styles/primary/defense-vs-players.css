@@ -283,3 +283,31 @@
 .dvp-mx-link:hover .dvp-mx-match a { color: var(--accent); text-decoration: underline; }
 .dvp-mx-table :is(td, th):first-child { padding-left: 4px; }
 .dvp-mx-table :is(td, th):last-child { padding-right: 4px; }
+
+/* ---------- This week's opposing players: above the table ----------
+ * Toggled per position in the filters modal. A card per player — the top QB,
+ * two backs, three receivers and two tight ends of the offense this defense
+ * plays this week — each holding a scripts/components/player-logs.js table:
+ * his career against this defense, then his last five games. */
+.dvp-opp-wrap { margin: 0 0 18px; }
+.dvp-opp-title { margin: 4px 0 10px; font-size: 15px; color: var(--text-hi); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.dvp-opp-title img { width: 18px; height: 18px; display: block; }
+.dvp-opp-title small { font-size: 12px; font-weight: 400; color: var(--text-4); }
+.dvp-pcard { margin: 0 0 12px; }
+.dvp-pcard-head { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; margin: 0 0 5px; font-size: 13px; color: var(--text-3); }
+.dvp-pcard-head b { color: var(--text-hi); font-size: 14px; font-weight: 650; }
+.dvp-pcard-pos { font-size: 10px; font-weight: 600; letter-spacing: 0.07em; color: var(--text-4); }
+.dvp-pcard-status { font-size: 10px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--bad); }
+
+/* The log tables are a few rows each: no screen-height box, no pinning. */
+.pl-scroll { max-height: none; min-height: 0; }
+.pl-scroll .dvp-table thead th, .pl-scroll .dvp-table tbody tr.dvp-game th { position: static; }
+.pl-scroll .dvp-table th.dvp-name, .pl-scroll .dvp-table td.dvp-name { position: sticky; left: 0; }
+.pl-game { display: inline-flex; align-items: center; gap: 6px; }
+.pl-game b { font-weight: 600; }
+.pl-res { color: var(--text-4); font-size: 11px; font-weight: 500; }
+.pl-res.is-w { color: var(--good); }
+.pl-res.is-l { color: var(--bad); }
+.pl-was { font-size: 10px; font-weight: 600; letter-spacing: 0.05em; color: var(--text-4); }
+.pl-avg td { background: var(--surface-2); color: var(--text-hi); font-weight: 650; }
+.pl-avg td.dvp-name { background: var(--surface-2); }
