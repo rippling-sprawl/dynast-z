@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/assets/icons/app-touch-180.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Dynast-Z">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <title>Quarter Splits | Dynast-Z</title>
+  <!-- Theme first: theme.js sets <html data-theme> before the first paint,
+       theme.css holds every colour token the sheets below spend. -->
+  <script src="/scripts/base/theme.js"></script>
+  <link rel="stylesheet" href="/styles/base/theme.css">
+  <link rel="stylesheet" href="/styles/base/styles.css">
+  <link rel="stylesheet" href="/styles/base/hub.css">
+  <!-- The schedule's chrome: the team picker below is that page's modal. -->
+  <link rel="stylesheet" href="/styles/components/nfl-pickers.css">
+  <link rel="stylesheet" href="/styles/primary/nfl-schedule.css">
+  <link rel="stylesheet" href="/styles/primary/quarter-splits.css">
+  <script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
+  <script defer src="/_vercel/insights/script.js"></script>
+</head>
+<body class="masters-body">
+  <div id="header-mount"></div>
+  <div id="nav-drawer-mount"></div>
+  <script src="/scripts/base/auth.js"></script>
+  <script src="/scripts/base/standalone.js"></script>
+  <script src="/scripts/base/nav.js"></script>
+  <!-- The team grid is /football/schedule's, as on /football/defense-vs-players;
+       the league's team list and the next opponent come from the same
+       schedule file that page reads. -->
+  <script src="/scripts/components/nfl-pickers.js"></script>
+  <script src="/scripts/components/nfl-schedule.js"></script>
+  <script>initPage();</script>
+
+  <div class="masters-content">
+    <div class="masters-breadcrumbs">
+      <a href="/football">Football</a><span class="separator">/</span><a href="/football/team-stats">Team Stats</a><span class="separator">/</span><span>Quarter Splits</span>
+    </div>
+
+    <h2>Quarter Splits</h2>
+
+    <!-- Markup contract for scripts/components/nfl-pickers.js. -->
+    <div class="dd-row qs-controls">
+      <div class="qs-filter">
+        <span class="qs-flabel" id="l-team">Team</span>
+        <div class="dd" id="dd-team">
+          <button type="button" class="dd-btn" id="f-team" aria-haspopup="dialog" aria-expanded="false" aria-labelledby="l-team f-team">
+            <span class="dd-value">Pick a team</span>
+          </button>
+          <div class="dd-pop dd-overlay" id="team-overlay" role="dialog" aria-modal="true" aria-label="Team" hidden>
+            <div class="tp" id="team-grid"></div>
+          </div>
+        </div>
+      </div>
+      <div class="qs-seg" role="group" aria-label="Points">
+        <button type="button" data-view="for" aria-pressed="true">Scored</button>
+        <button type="button" data-view="against" aria-pressed="false">Allowed</button>
+        <button type="button" data-view="diff" aria-pressed="false">Diff</button>
+      </div>
+    </div>
+
+    <div id="board"><p class="sched-empty">Loading teams…</p></div>
+    <p class="qs-note" id="note"></p>
+  </div>
+
+  <script>
+  (function () {
+    'use strict';
+
+    /* A team's points by quarter, game by game, read three ways: what it
+     * scored, what it allowed, and the difference. Above it, the same three
+     * views of its next opponent's season, aggregated. Built weekly by
+     * scripts/build_quarter_splits.py, so the page only reads and adds up. */
+
+    var season = SCHED_CURRENT_SEASON;
+    var sched = null;
+    var teams = [];
+    var team = '';
+    var view = 'for';     // for | against | diff
+    var doc = null;       // the picked team's games
+    var oppDoc = null;    // its next opponent's games, or null
+    var next = null;      // { opp, week, home, neutral } from the schedule
+
+    var VIEWS = ['for', 'against', 'diff'];
+    var VIEW_LABEL = { 'for': 'Points scored', against: 'Points allowed', diff: 'Point differential' };
+
+    var board = document.getElementById('board');
+    var note = document.getElementById('note');
+    var teamBtn = document.getElementById('f-team');
+    var teamGrid = document.getElementById('team-grid');
+    var segBtns = [].slice.call(document.querySelectorAll('.qs-seg button'));
+
+    function esc(s) {
+      return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+      });
+    }
+
+    function logo(abbr) {
+      return '<img src="/assets/icons/nfl/' + esc(abbr) + '.svg" alt="' + esc(abbr) + '" title="' + esc(abbr) + '">';
+    }
+
+    /* ---------- the URL is the state ----------
+     *   ?team=DAL&view=against     (view=for, the default, is left out) */
+    function writeParams() {
+      var q = new URLSearchParams();
+      if (team) q.set('team', team);
+      if (view !== 'for') q.set('view', view);
+      var str = q.toString();
+      var url = location.pathname + (str ? '?' + str : '');
+      if (url !== location.pathname + location.search) history.replaceState(null, '', url);
+    }
+
+    function applyParams(search) {
+      var q = new URLSearchParams(search);
+      var t = (q.get('team') || '').toUpperCase();
+      team = t && schedTeamsByAbbr(sched)[t] ? t : '';
+      var v = (q.get('view') || '').toLowerCase();
+      view = VIEWS.indexOf(v) >= 0 ? v : 'for';
+      syncSeg();
+    }
+
+    function syncSeg() {
+      segBtns.forEach(function (b) {
+        b.setAttribute('aria-pressed', String(b.getAttribute('data-view') === view));
+      });
+    }
+
+    /* ---------- the numbers ----------
+     * A game's line is [q1, q2, q3, q4, ot]. The periods shown are the four
+     * quarters plus two running totals: HT after the 2nd, FT at the end with
+     * overtime folded in. OT never gets a column of its own. */
+
+    // -> the line for the current view, one game.
+    function lineOf(g) {
+      if (view === 'for') return g.pf;
+      if (view === 'against') return g.pa;
+      return g.pf.map(function (v, i) { return v - g.pa[i]; });
+    }
+
+    // Did OT points land on the side this view reads?
+    function otScored(g) {
+      if (view === 'for') return g.pf[4] > 0;
+      if (view === 'against') return g.pa[4] > 0;
+      return g.pf[4] > 0 || g.pa[4] > 0;
+    }
+
+    // -> [q1, q2, ht, q3, q4, ft]
+    function periods(l) {
+      return [l[0], l[1], l[0] + l[1], l[2], l[3], l[0] + l[1] + l[2] + l[3] + l[4]];
+    }
+
+    var COLS = ['1st', '2nd', 'HT', '3rd', '4th', 'FT'];
+    var IS_TOT = [false, false, true, false, false, true];
+
+    function fmt(v, dp) {
+      var s = dp ? v.toFixed(dp) : String(v);
+      return view === 'diff' && v > 0 ? '+' + s : s;
+    }
+
+    // -> the sign class a value is coloured by. Scored leans good, allowed
+    // leans bad, a differential takes its own sign.
+    function tone(v) {
+      if (!v) return '';
+      if (view === 'for') return 'is-pos';
+      if (view === 'against') return 'is-neg';
+      return v > 0 ? 'is-pos' : 'is-neg';
+    }
+
+    // One period cell. Quarters are heatmapped against `scale` (the largest
+    // absolute quarter value in the table); HT and FT never are.
+    function cell(v, i, scale, dp, star) {
+      var cls = [];
+      var style = '';
+      if (IS_TOT[i]) {
+        cls.push('qs-tot');
+        if (view === 'diff') cls.push(tone(v));
+      } else if (v && scale) {
+        cls.push('heat', tone(v));
+        style = ' style="--heat:' + Math.min(1, Math.abs(v) / scale).toFixed(3) + '"';
+      }
+      if (!v) cls.push('is-zero');
+      return '<td class="' + cls.join(' ') + '"' + style +
+        (star ? ' title="Includes points scored in overtime"' : '') + '>' +
+        esc(fmt(v, dp)) + (star ? '<span class="qs-ot">*</span>' : '') + '</td>';
+    }
+
+    function head(first) {
+      return '<thead><tr><th class="qs-rowhead">' + esc(first) + '</th>' +
+        COLS.map(function (c, i) { return '<th' + (IS_TOT[i] ? ' class="qs-tot"' : '') + '>' + c + '</th>'; }).join('') +
+        '</tr></thead>';
+    }
+
+    // -> { total: [6], avg: [6], n, ot } over a list of games.
+    function aggregate(games) {
+      var total = [0, 0, 0, 0, 0, 0], ot = 0;
+      games.forEach(function (g) {
+        periods(lineOf(g)).forEach(function (v, i) { total[i] += v; });
+        if (otScored(g)) ot++;
+      });
+      var n = games.length;
+      return { total: total, avg: total.map(function (v) { return n ? v / n : 0; }), n: n, ot: ot };
+    }
+
+    function quarterScale(rows) {
+      var m = 0;
+      rows.forEach(function (r) {
+        r.forEach(function (v, i) { if (!IS_TOT[i]) m = Math.max(m, Math.abs(v)); });
+      });
+      return m;
+    }
+
+    function weekLabel(g) {
+      return g.postseason ? 'P' + g.week : 'Wk ' + g.week;
+    }
+
+    function atLabel(g) {
+      return g.neutral ? 'vs' : g.home ? 'vs' : '@';
+    }
+
+    /* ---------- the opponent table ----------
+     * The season so far, summed and per game, for whoever the picked team
+     * plays next. Each row is heatmapped on its own: the total row's colours
+     * are the per-game row's scaled up, so they say the same thing. */
+    function renderOpp() {
+      if (!next) {
+        return '<section class="qs-section"><h3>Opponent</h3>' +
+          '<p class="sched-empty">No game left on ' + esc(team) + '\'s schedule.</p></section>';
+      }
+      var title = '<h3>Opponent ' + logo(next.opp) + esc(next.opp) +
+        '<span class="qs-sub">Wk ' + esc(next.week) + ' · ' + esc(team) + ' ' +
+        (next.home || next.neutral ? 'vs' : '@') + ' ' + esc(next.opp) + '</span></h3>';
+      var games = (oppDoc && oppDoc.games) || [];
+      if (!games.length) {
+        return '<section class="qs-section">' + title +
+          '<p class="sched-empty">No completed games yet for ' + esc(next.opp) + '.</p></section>';
+      }
+      var a = aggregate(games);
+      function row(label, vals, dp, star) {
+        var scale = quarterScale([vals]);
+        return '<tr><th class="qs-rowhead qs-agg">' + esc(label) + '</th>' +
+          vals.map(function (v, i) { return cell(dp ? Math.round(v * 10) / 10 : v, i, scale, dp, star && i === 5); }).join('') +
+          '</tr>';
+      }
+      return '<section class="qs-section">' + title +
+        '<div class="qs-scroll"><table class="qs-table">' + head(a.n + ' game' + (a.n === 1 ? '' : 's')) +
+        '<tbody>' + row('Total', a.total, 0, a.ot > 0) + row('Per game', a.avg, 1, a.ot > 0) +
+        '</tbody></table></div></section>';
+    }
+
+    /* ---------- the weekly table ---------- */
+    function renderTeam() {
+      var games = doc.games || [];
+      var title = '<h3>' + logo(team) + esc(team) + '<span class="qs-sub">' + esc(VIEW_LABEL[view]) + '</span></h3>';
+      if (!games.length) {
+        return '<section class="qs-section">' + title + '<p class="sched-empty">No completed games yet this season.</p></section>';
+      }
+      var lines = games.map(function (g) { return periods(lineOf(g)); });
+      var scale = quarterScale(lines);
+      var lastWeek = null;
+      var body = games.map(function (g, k) {
+        var out = '';
+        // A skipped regular-season week between two games is the bye.
+        if (lastWeek != null && !g.postseason) {
+          for (var w = lastWeek + 1; w < g.week; w++) {
+            out += '<tr class="qs-bye"><th colspan="7">Wk ' + w + ' · Bye</th></tr>';
+          }
+        }
+        lastWeek = g.postseason ? lastWeek : g.week;
+        var star = otScored(g);
+        return out + '<tr><th class="qs-rowhead"><span class="qs-wk"><b>' + esc(weekLabel(g)) + '</b>' +
+          '<span class="qs-at">' + atLabel(g) + '</span>' + logo(g.opp) + '</span></th>' +
+          lines[k].map(function (v, i) { return cell(v, i, scale, 0, star && i === 5); }).join('') +
+          '</tr>';
+      }).join('');
+      var a = aggregate(games);
+      function foot(label, vals, dp) {
+        return '<tr><th class="qs-rowhead qs-agg">' + esc(label) + '</th>' +
+          vals.map(function (v, i) { return cell(dp ? Math.round(v * 10) / 10 : v, i, 0, dp, false); }).join('') +
+          '</tr>';
+      }
+      return '<section class="qs-section">' + title +
+        '<div class="qs-scroll"><table class="qs-table">' + head('Week') +
+        '<tbody>' + body + '</tbody>' +
+        '<tfoot>' + foot('Total', a.total, 0) + foot('Per game', a.avg, 1) + '</tfoot>' +
+        '</table></div></section>';
+    }
+
+    function render() {
+      if (!doc) return;
+      board.innerHTML = renderOpp() + renderTeam();
+      note.textContent = 'HT and FT are running totals and are not heatmapped · OT has no column of its own: ' +
+        'its points are in FT, marked * · ' +
+        (view === 'diff' ? 'Diff is points scored minus points allowed in that period · ' : '') +
+        'rebuilt Tuesdays 5am ET';
+    }
+
+    /* ---------- the next opponent ----------
+     * The first game on the picked team's schedule that has not finished. A
+     * game counts as finished four hours after kickoff, which is when the
+     * weekly build would have it anyway. */
+    var GAME_MS = 4 * 3600 * 1000;
+    function nextGame(abbr) {
+      var now = Date.now();
+      for (var i = 0; i < sched.weeks.length; i++) {
+        var wk = sched.weeks[i];
+        for (var j = 0; j < (wk.games || []).length; j++) {
+          var g = wk.games[j];
+          if (g.away !== abbr && g.home !== abbr) continue;
+          if (new Date(g.kickoff).getTime() + GAME_MS < now) continue;
+          var home = g.home === abbr;
+          return { opp: home ? g.away : g.home, week: wk.week, home: home && !g.neutral, neutral: !!g.neutral };
+        }
+      }
+      return null;
+    }
+
+    function fetchTeam(abbr) {
+      return fetch('/api/quarter-splits?team=' + encodeURIComponent(abbr) +
+                   '&season=' + encodeURIComponent(season), { cache: 'no-store' })
+        .then(function (r) {
+          return r.json().then(function (body) {
+            if (r.status === 404) return { games: [] };
+            if (!r.ok) throw new Error(body.error || ('HTTP ' + r.status));
+            return body;
+          });
+        });
+    }
+
+    var loadToken = 0;
+
+    function load() {
+      writeParams();
+      syncTeamPicker(teamBtn, teamGrid, team, teams, { emptyLabel: 'Pick a team', nicknameOnly: true });
+      note.textContent = '';
+      doc = oppDoc = null;
+      var token = ++loadToken;
+      if (!team) {
+        board.innerHTML = '<p class="sched-empty">Pick a team to see its points by quarter, game by game.</p>';
+        return;
+      }
+      board.innerHTML = '<p class="sched-empty">Loading…</p>';
+      next = nextGame(team);
+      Promise.all([fetchTeam(team), next ? fetchTeam(next.opp) : Promise.resolve(null)])
+        .then(function (res) {
+          if (token !== loadToken) return;
+          doc = res[0];
+          oppDoc = res[1];
+          render();
+        })
+        .catch(function (e) {
+          if (token !== loadToken) return;
+          board.innerHTML = '<p class="sched-empty">Error: ' + esc(e.message) + '</p>';
+        });
+    }
+
+    segBtns.forEach(function (b) {
+      b.addEventListener('click', function () {
+        view = b.getAttribute('data-view');
+        syncSeg();
+        writeParams();
+        render();
+      });
+    });
+
+    var teamDd = registerDropdown(document.getElementById('dd-team'));
+
+    teamGrid.addEventListener('click', function (e) {
+      var btn = e.target.closest ? e.target.closest('.tp-team, .tp-any') : null;
+      if (!btn || !teamGrid.contains(btn)) return;
+      team = btn.getAttribute('data-team');
+      closeDropdown(teamDd, true);
+      load();
+    });
+
+    window.addEventListener('popstate', function () {
+      if (!sched) return;
+      applyParams(location.search);
+      load();
+    });
+
+    schedLoad(season).then(function (d) {
+      sched = d;
+      teams = d.teams;
+      buildTeamPicker(teamGrid, teams, { anyLabel: 'No team' });
+      applyParams(location.search);
+      load();
+    }).catch(function (e) {
+      board.innerHTML = '<p class="sched-empty">Error: ' + esc(e.message) + '</p>';
+    });
+  })();
+  </script>
+</body>
+</html>

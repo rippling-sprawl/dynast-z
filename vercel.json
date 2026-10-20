@@ -123,6 +123,10 @@
       "destination": "/views/football/team-stats-yards-vs-points.html"
     },
     {
+      "source": "/football/team-stats/quarter-splits",
+      "destination": "/views/football/team-stats-quarter-splits.html"
+    },
+    {
       "source": "/football/team-stats",
       "destination": "/views/football/team-stats.html"
     },

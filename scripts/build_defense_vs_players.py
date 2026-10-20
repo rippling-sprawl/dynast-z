@@ -386,7 +386,9 @@ def build(season, games, now):
             })
             for p in stats.get(side) or []:
                 row = player_row(p, long_pass)
-                if row:
+                # QB, RB, WR and TE only: a fullback's carry or a tackle-eligible
+                # catch is not a matchup anyone bets.
+                if row and row["pos"] in SUMMARY_POS:
                     row.update(game_id=g["game_id"], week=g.get("week"),
                                kickoff=g.get("kickoff"), opp=opp)
                     entry["rows"].append(row)

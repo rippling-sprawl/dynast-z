@@ -31,7 +31,6 @@ const NAV_SECTIONS = [
     // the sport they share.
     label: 'Gambling',
     items: [
-      { label: "Baker's Buns", href: '/football/bakers-buns', emoji: '🍞' },
       { label: "Baker's Action", href: '/football/action', emoji: '🏈', admin: true, hidden: true },
       { label: 'Bet Tracker', href: '/bets', emoji: '🎯' },
       // /football/schedule: the week's slate, read for its lines rather than
@@ -74,6 +73,7 @@ const NAV_SECTIONS = [
     // above until they earn a place there.
     label: 'Sandbox',
     items: [
+      { label: "Baker's Buns", href: '/football/bakers-buns', emoji: '🍞' },
       // The week's longest-reception prices against a likelihood built from
       // play-by-play rather than from the ladder being priced.
       { label: 'Longest Reception', href: '/football/long-reception', emoji: '📏' },
@@ -87,6 +87,8 @@ const NAV_SECTIONS = [
     hidden: true,
     items: [
       { label: 'Yards vs Points', href: '/football/team-stats/yards-vs-points', emoji: '📐' },
+      // Points by quarter, scored and allowed, one team's games stacked.
+      { label: 'Quarter Splits', href: '/football/team-stats/quarter-splits', emoji: '⏱️' },
     ],
   },
   {

@@ -1,0 +1,123 @@
+/* Quarter Splits — /football/team-stats/quarter-splits
+ *
+ * Two tables over one team: its next opponent's season by quarter, then the
+ * team's own games a row each. Borrows the schedule's chrome (masters shell,
+ * dd-row team picker, theme tokens) and the defense-vs-players table look. */
+
+.qs-controls { flex-wrap: wrap; gap: 12px; align-items: center; }
+.qs-filter { display: flex; align-items: center; gap: 6px; }
+.qs-flabel {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--text-4);
+}
+.qs-controls .dd-btn { font-size: 11.5px; padding: 3px 8px; gap: 6px; }
+.qs-controls .dd-logo { width: 15px; height: 15px; }
+
+/* Scored / Allowed / Diff: one segmented control, the pressed one lit. */
+.qs-seg { display: inline-flex; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+.qs-seg button {
+  background: var(--surface);
+  border: 0;
+  border-left: 1px solid var(--border);
+  padding: 4px 10px;
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-3);
+  cursor: pointer;
+}
+.qs-seg button:first-child { border-left: 0; }
+.qs-seg button:hover { color: var(--text-hi); }
+.qs-seg button[aria-pressed="true"] { background: var(--surface-2); color: var(--accent); }
+
+.qs-section { margin: 0 0 18px; }
+.qs-section h3 {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+.qs-section h3 img { width: 18px; height: 18px; display: block; }
+.qs-section h3 .qs-sub { font-weight: 500; letter-spacing: 0; text-transform: none; color: var(--text-4); font-size: 12px; }
+
+.qs-scroll {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  -webkit-overflow-scrolling: touch;
+}
+
+.qs-table { border-collapse: separate; border-spacing: 0; width: 100%; font-size: 13px; line-height: 1.35; }
+.qs-table th, .qs-table td { padding: 4px 10px; white-space: nowrap; }
+.qs-table thead th {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--text-4);
+  text-align: right;
+}
+.qs-table thead th.qs-rowhead { text-align: left; }
+.qs-table td { text-align: right; font-variant-numeric: tabular-nums; color: var(--text-2); border-bottom: 1px solid var(--border-soft); }
+.qs-table tbody tr:last-child td, .qs-table tbody tr:last-child th { border-bottom: 0; }
+
+/* The first column: week and opponent, or the aggregate's label. */
+.qs-table .qs-rowhead {
+  text-align: left;
+  font-weight: 400;
+  border-bottom: 1px solid var(--border-soft);
+  border-right: 1px solid var(--border-soft);
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: var(--surface);
+}
+.qs-wk { display: inline-flex; align-items: center; gap: 6px; }
+.qs-wk b { min-width: 30px; color: var(--text-hi); font-weight: 650; }
+.qs-at { font-size: 11px; color: var(--text-4); width: 16px; text-align: center; }
+.qs-wk img { width: 18px; height: 18px; display: block; }
+.qs-agg { color: var(--text-hi); font-weight: 650; }
+
+/* HT and FT are running totals, not periods: set apart and never heatmapped. */
+.qs-table .qs-tot { border-left: 1px solid var(--border); color: var(--text-hi); font-weight: 650; }
+.qs-table td.qs-tot.is-pos { color: var(--good-bright, var(--good)); }
+.qs-table td.qs-tot.is-neg { color: var(--bad-bright, var(--bad)); }
+.qs-ot { color: var(--accent); margin-left: 1px; }
+
+/* The heatmap: --heat is 0..1, set per cell by the page. Points scored lean
+ * good, points allowed lean bad, a differential takes its sign's colour. */
+.qs-table td.heat.is-pos { background: color-mix(in srgb, var(--good) calc(var(--heat, 0) * 55%), transparent); }
+.qs-table td.heat.is-neg { background: color-mix(in srgb, var(--bad) calc(var(--heat, 0) * 55%), transparent); }
+.qs-table td.is-zero { color: var(--text-5); }
+
+/* A bye: a quiet row where the regular season skips a week. */
+.qs-table tr.qs-bye th {
+  padding: 2px 10px;
+  border-top: 1px dashed var(--border);
+  border-bottom: 1px dashed var(--border);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  text-align: left;
+  color: var(--text-4);
+  background: var(--surface);
+}
+
+/* Season total and per-game average close the weekly table. */
+.qs-table tfoot td, .qs-table tfoot th { border-top: 1px solid var(--border); background: var(--surface-2); }
+.qs-table tfoot tr + tr td, .qs-table tfoot tr + tr th { border-top: 1px solid var(--border-soft); }
+.qs-table tfoot .qs-rowhead { background: var(--surface-2); }
+
+.qs-note { margin: 10px 0 0; font-size: 12.5px; color: var(--text-3); }
