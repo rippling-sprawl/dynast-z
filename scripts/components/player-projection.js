@@ -1157,16 +1157,6 @@
       label: 'This season',
       dots: curSeason.map(function (g) { return { v: g[key] || 0, tip: 'Wk ' + g.week + ' ' + (g.home ? 'vs ' : '@ ') + g.opp + ': ' + (g[key] || 0) + ' ' + unit }; })
     });
-    // The team context: his games with this week's lineup, and what the
-    // context does to his baseline.
-    var c = m.context;
-    if (c) {
-      var like = curSeason.filter(function (g) { return c.matched[g.game_id]; });
-      rows.push({
-        label: 'Team context',
-        dots: like.map(function (g) { return { v: g[key] || 0, tip: 'Wk ' + g.week + ' ' + (g.home ? 'vs ' : '@ ') + g.opp + ' with this week\'s lineup: ' + (g[key] || 0) + ' ' + unit }; })
-      });
-    }
     var h = m.history;
     rows.push({
       label: 'vs ' + def + ' career',
@@ -1208,9 +1198,9 @@
     var pad = { l: 10, r: 12, t: 18, b: 22 }, rowH = CAP + 28;
     var pw = width - pad.l - pad.r;
     var x = function (v) { return pad.l + clamp(v, 0, xmax) / xmax * pw; };
-    // Each section's name, in its top right.
+    // Each section's name, in its top left.
     var caption = function (y, label, cls) {
-      return '<text class="pp-row-t' + (cls || '') + '" x="' + (width - 4) + '" y="' + y + '" text-anchor="end">' + esc(label) + '</text>';
+      return '<text class="pp-row-t' + (cls || '') + '" x="4" y="' + y + '">' + esc(label) + '</text>';
     };
 
     // Stack them: a count on its own value while each value has room for a
@@ -1625,8 +1615,6 @@
           'chances were overconfident, but the direction of its biggest disagreements held up. <i>Model alone</i> in the bar above is its own number. ' : '') +
         'The rows below are what built it, each ▲ or ▼ a real game over or under the line. <i>This season</i> is the baseline: recent games count most, ' +
         'last season fills in early. ' +
-        (m.context ? '<i>Team context</i> is his games with the lineup ' + esc(m.context.team) + ' expects this week, and how far the team around him ' +
-          'moves the baseline: his share of the carries and targets, who is in and out, the pace and the spread. ' : '') +
         '<i>vs ' + esc(def) + ' career</i> gets a few percent of say at most, because a handful of games years apart predict little. ' +
         '<i>' + esc(def) + ' allowed</i> puts each of its games in his terms: his baseline × how far that week\'s ' + esc(m.pos) +
         's went over or under their norm, so a mark is not what that week\'s players had — hover one for both. ' +
