@@ -729,15 +729,16 @@
         var v = (n * sAll[f] * teamVol[f] + CTX.PRIOR_GAMES * vol0[f]) / (n + CTX.PRIOR_GAMES);
         vol[f] = v / vol0[f];
       });
-      // The starter throws the starter's share, whatever his own games were:
-      // a quarterback named after weeks of mop-up duty is not a backup now.
+      // The starter throws all of the team's passes, whatever his own games
+      // were: he is projected to play the whole game, so the snaps a backup
+      // took in a blowout or after an injury are not his to lose this week,
+      // and a quarterback named after weeks of mop-up duty is not a backup now.
       qbStart = pos === 'QB' && starterId === pid && vol0.pass_att > 0;
       if (qbStart) {
-        var starterShare = decayed(games, function (g) { var q = leadQb(g); return q ? shareIn(g, q, 'pass_att') : null; }, LAMBDA) || 0.95;
-        vol.pass_att = starterShare * teamVol.pass_att / vol0.pass_att;
-        parts.unshift((starts[pid] || 0) < n ? 'starting (' + (starts[pid] || 0) + ' of his ' + n + ' games were starts): the starter throws ' +
-          Math.round(starterShare * 100) + '% of ' + doc.team + '\'s ' + Math.round(teamVol.pass_att) + ' passes' :
-          Math.round(starterShare * 100) + '% of ' + doc.team + '\'s passes as the starter');
+        vol.pass_att = teamVol.pass_att / vol0.pass_att;
+        parts.unshift((starts[pid] || 0) < n ? 'starting (' + (starts[pid] || 0) + ' of his ' + n + ' games were starts): the starter throws all of ' +
+          doc.team + '\'s ' + Math.round(teamVol.pass_att) + ' passes' :
+          'all of ' + doc.team + '\'s ' + Math.round(teamVol.pass_att) + ' passes as the starter');
       }
       ['rush_att', 'targets'].forEach(function (f) {
         if (sAll[f] < 0.02) return;
@@ -764,7 +765,7 @@
     if (n && changes.length) {
       var lv = {};
       CTX_FIELDS.forEach(function (f) { if (sAll[f] > 0) lv[f] = sLine[f] / sAll[f]; });
-      // A starting quarterback's throws are the role factor's starter share.
+      // A starting quarterback's throws are the role factor's: all the team's.
       if (qbStart) delete lv.pass_att;
       var said = changes.map(function (T) {
         var missed = mine.filter(function (g) { return !inLineup(g, T); });
