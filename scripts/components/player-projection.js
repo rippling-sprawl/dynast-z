@@ -59,6 +59,32 @@
   var H2H_MAX = 0.05;     // the most say career games vs the defense get
   var ALLOWED_MARK_CAP = 3; // a defense row's mark, at most this times his baseline
   var CV_PRIOR_GAMES = 8; // his own spread, against the position's
+  // With a book's line in hand, the projection is pulled toward it: the
+  // line knows what this model cannot (a starter named, a back returning, a
+  // coach's plan), and a model that disagrees with it by 40% is more often
+  // missing something than finding something. MARKET_W is how much of the
+  // model's own gap from the line survives. Fit on 2025's opening lines
+  // (6,001 RB/WR/TE over/unders, each projected from earlier games only):
+  // alone, the model's chances were worse than a coin's (Brier 0.263; it
+  // called 10-20% overs that hit 49%), but its strongest disagreements were
+  // right. At 0.35 its 10%+ edges hit 58.7% (523 picks) and a 30-40%
+  // chance came in at 43%.
+  var MARKET_W = 0.35;
+  // And a starter's line is not quite the market's middle: the public bets
+  // overs on the names it knows -- people root for points and yards -- so
+  // books hang those lines a little high. Most of the under's edge (53% of
+  // 2025's opening lines) is skew the distributions already carry: a right-
+  // skewed stat's line near its mean sits above its median. What is left is
+  // on the big lines -- 30+ receiving yards went over 45.2% against the
+  // model's 48.5% -- so lines from SHADE_FROM up are anchored lower by
+  // MARKET_SHADE, by market, each fit to bring 2025's predicted over rate
+  // onto the actual one. Rushing needed none. Passing is not in that
+  // backtest (it replays from team box scores, which carry no passing
+  // yards); its 3% is the receiving side's reasoning, not a fit. Small lines
+  // (a backup's 1.5 catches) are left as they are: there the over won more
+  // than the model said.
+  var MARKET_SHADE = { rec_yds: 0.08, rec: 0.03, rush_yds: 0, rush_att: 0, pass_yds: 0.03, pass_cmp: 0.03 };
+  var SHADE_FROM = { pass_yds: 200, pass_cmp: 18, rush_yds: 30, rush_att: 10, rec: 3, rec_yds: 30 };
 
   // League rates by position, and how many opportunities of his it takes to
   // be worth as much as the league's (the stabilization point).
@@ -143,6 +169,9 @@
     STATUS_MULT: { questionable: 0.93, doubtful: 0.75 },
     // ... but questionable after a full practice almost always plays.
     STATUS_FULL_PRACTICE: 0.98,
+    // A teammate's chance of playing, by his tag and, when questionable, his
+    // last practice. Starting points from how often each has played.
+    PLAYS: { doubtful: 0.15, questionable: 0.7, full: 0.9, limited: 0.75, did_not_participate: 0.4 },
     // A game he left early: under PARTIAL_FRAC of his usual snaps (for a
     // player whose usual is PARTIAL_REG or more) and then a missed game. Its
     // volume is an injury's, not his role's. A low-snap game he does not then
@@ -464,6 +493,20 @@
     return vals.length ? sum(vals, function (v) { return v; }) / vals.length : null;
   }
 
+  // -> the chance he plays this week, off his report: a questionable tag
+  // is a coin weighted by his last practice.
+  function presence(st) {
+    if (st.manual && !st.status) return 1;
+    var s = st.status;
+    if (s === 'out') return 0;
+    if (s === 'doubtful') return CTX.PLAYS.doubtful;
+    if (s === 'questionable') {
+      var last = ((st.row && st.row.practice) || []).slice(-1)[0];
+      return st.manual ? CTX.PLAYS.questionable : (CTX.PLAYS[last] != null ? CTX.PLAYS[last] : CTX.PLAYS.questionable);
+    }
+    return 1;
+  }
+
   /* -> {game id: week} of the games he left early (CTX.PARTIAL_*): a
    * starter hurt on his tenth snap has a box score that says "two targets",
    * and his share and volume should not believe it. */
@@ -527,8 +570,11 @@
     // doubtful, and either on the report or in one of the last two games --
     // a starter traded or cut is simply gone.
     var recent = games.slice(0, 2);
+    var market = ctx.market || {};
+    var teamVol = {};
+    CTX_FIELDS.forEach(function (f) { teamVol[f] = decayed(games, function (g) { return teamTotal(g, f); }, LAMBDA) || 0; });
     // A quarterback is in the lineup when he starts, not when he mops up:
-    // the one who threw the most that game. Only the latest starter is key.
+    // the one who threw the most that game.
     var leadQb = function (g) {
       var best = null;
       for (var id in g.players) {
@@ -538,37 +584,70 @@
     };
     // A game he left early counts as one he missed, for his teammates too.
     var inLineup = function (g, T) { return T.pos === 'QB' ? leadQb(g) === T.id : played(g, T.id) && !T.partial[g.game_id]; };
-    var mates = Object.keys(doc.players).map(function (id) {
-      var p = doc.players[id], st = statusOf(ctx, id), pg = id === pid ? partial : partialGames(doc, id);
-      var share = {};
+
+    // The share a book's lines imply, for a player with no games to read one
+    // off: a back's carries line over the team's carries, a receiver's
+    // catches over a catch rate over the team's targets.
+    function marketShare(lines, posn) {
+      var o = { pass_att: 0, rush_att: 0, targets: 0 };
+      var car = lines.rushing_attempts != null ? lines.rushing_attempts : lines.rushing_yards != null ? lines.rushing_yards / 4.3 : 0;
+      var tgt = lines.receptions != null ? lines.receptions / ((LEAGUE[posn] || LEAGUE.WR).catch) :
+        lines.receiving_yards != null ? lines.receiving_yards / ((LEAGUE[posn] || LEAGUE.WR).ypt) : 0;
+      if (teamVol.rush_att) o.rush_att = Math.min(car / teamVol.rush_att, 0.9);
+      if (teamVol.targets) o.targets = Math.min(tgt / teamVol.targets, 0.5);
+      return o;
+    }
+
+    // Everyone with a share of this offense this season, and everyone the
+    // books hang a line on this week who has not played yet -- a back back
+    // from a season on IR, a quarterback just signed.
+    var ids = Object.keys(doc.players);
+    Object.keys(market).forEach(function (id) { if (!doc.players[id] && GROUP[market[id].pos]) ids.push(id); });
+    var mates = ids.map(function (id) {
+      var p = doc.players[id] || market[id], st = statusOf(ctx, id), pg = id === pid ? partial : partialGames(doc, id);
+      var lines = (market[id] || {}).lines || null, share = {};
       CTX_FIELDS.forEach(function (f) {
         share[f] = decayed(games, function (g) { return pg[g.game_id] ? null : shareIn(g, id, f); }, CTX.LAMBDA_SHARE) || 0;
       });
-      // The player being projected is taken to play unless he is listed out:
-      // asking for his projection is asking what he does when he does.
-      var gone = id !== pid && !st.manual && !st.row && !recent.some(function (g) { return played(g, id); });
-      var expected = st.status !== 'out' && st.status !== 'doubtful' && !gone;
-      return { id: id, name: p.name, pos: p.pos, group: GROUP[p.pos], share: share, expected: expected, gone: gone, st: st, partial: pg };
+      var fresh = !doc.players[id];
+      if (fresh && lines) share = marketShare(lines, p.pos);
+      // Gone: off the report, out of the last two games and without a line --
+      // traded, cut or benched. The player being projected is taken to play
+      // unless listed out: asking for his projection is asking what he does
+      // when he does.
+      var gone = id !== pid && !st.manual && !st.row && !lines && !recent.some(function (g) { return played(g, id); });
+      var prob = gone ? 0 : presence(st);
+      return { id: id, name: p.name, pos: p.pos, group: GROUP[p.pos], share: share, p: prob, expected: prob >= 0.5,
+        gone: gone, fresh: fresh, lines: lines, st: st, partial: pg };
     });
-    // This week's starter: of the quarterbacks expected to play, the one with
-    // the most starts; a tie goes to whoever started first -- the incumbent a
-    // backup was filling in for. Not simply last week's: a starter back from
-    // three weeks hurt is still the starter.
+    // This week's starter. The books name him: the quarterback they hang a
+    // passing line on. Without one, of those expected to play, the one with
+    // the most starts; a tie goes to whoever started first -- the incumbent
+    // a backup was filling in for. Not simply last week's: a starter back
+    // from three weeks hurt is still the starter.
     var starts = {}, firstStart = {};
     games.forEach(function (g, i) {
       var q = leadQb(g);
       if (q) { starts[q] = (starts[q] || 0) + 1; firstStart[q] = i; }
     });
     var lastStarter = leadQb(games[0]);
-    var starterId = (mates.filter(function (m) { return m.pos === 'QB' && m.expected && starts[m.id]; })
+    var qbs = mates.filter(function (m) { return m.pos === 'QB' && m.expected; });
+    var named = qbs.filter(function (m) { return m.lines && (m.lines.passing_yards || m.lines.passing_attempts); })
+      .sort(function (a, b) { return (b.lines.passing_yards || 0) - (a.lines.passing_yards || 0); })[0];
+    var starterId = named ? named.id : (qbs.filter(function (m) { return starts[m.id]; })
       .sort(function (a, b) { return starts[b.id] - starts[a.id] || firstStart[b.id] - firstStart[a.id]; })[0] || { id: lastStarter }).id;
     mates.forEach(function (m) {
+      if (m.pos === 'QB') { m.p = m.id === starterId ? 1 : 0; m.expected = m.p === 1; }
       m.key = m.id !== pid && !!m.group && (m.pos === 'QB' ? m.id === starterId
         : m.share.rush_att >= CTX.KEY_SHARE || m.share.targets >= CTX.KEY_SHARE);
     });
     var me = mates.filter(function (m) { return m.id === pid; })[0];
     var keys = mates.filter(function (m) { return m.key; });
     var pool = mates.filter(function (m) { return m.expected || m.id === pid; });
+    // How far a game's lineup is from this week's, for one teammate: 1 if he
+    // played then and will not now, -1 the other way, a fraction for a
+    // teammate who may or may not.
+    var gap = function (g, T) { return (inLineup(g, T) ? 1 : 0) - T.p; };
 
     // How much of a teammate's share comes to him: by rank among the backs
     // for a back's carries, partly by position for targets, the rest pro
@@ -594,34 +673,48 @@
       return sameT + (1 - (peers.length ? CTX.TGT_SAME_POS : 0)) * pro;
     }
 
-    // Which of his games had this week's lineup.
+    // Which of his games had this week's lineup, near enough.
     var matched = {};
     mine.forEach(function (g) {
-      if (keys.every(function (T) { return inLineup(g, T) === T.expected; })) matched[g.game_id] = true;
+      if (keys.every(function (T) { return Math.abs(gap(g, T)) < 0.5; })) matched[g.game_id] = true;
     });
 
-    var sAll = {}, sLine = {}, teamVol = {};
+    // His share of one field in game g, moved to this week's lineup by the
+    // teammates `only` picks.
+    function translate(g, f, only) {
+      var s = shareIn(g, pid, f), a = s;
+      if (s == null) return null;
+      keys.forEach(function (T) {
+        var d = gap(g, T);
+        if (Math.abs(d) < 0.01 || (only && !only(T))) return;
+        a += d * (d > 0 ? (shareIn(g, T.id, f) || 0) : T.share[f]) * alloc(T, f) * CTX.REDIST[f];
+      });
+      return Math.max(a, s * 0.3);
+    }
+    var isBack = function (T) { return T.group === 'RB'; };
+    var sAll = {}, sLine = {};
     CTX_FIELDS.forEach(function (f) {
-      teamVol[f] = decayed(games, function (g) { return teamTotal(g, f); }, LAMBDA) || 0;
       sAll[f] = decayed(mine, function (g) { return shareIn(g, pid, f); }, CTX.LAMBDA_SHARE) || 0;
       var w = 1, sw = 0, sx = 0;
       mine.forEach(function (g) {
         var s = shareIn(g, pid, f);
         if (s == null) return;
-        var a = s;
-        keys.forEach(function (T) {
-          var was = inLineup(g, T);
-          if (was === T.expected) return;
-          var k = alloc(T, f) * CTX.REDIST[f];
-          a += was ? (shareIn(g, T.id, f) || 0) * k : -T.share[f] * k;
-        });
-        a = Math.max(a, s * 0.3);
+        var a = translate(g, f);
+        // Backs share one set of snaps: a back returning takes the other's
+        // snaps, so his targets go with his carries, not just the few the
+        // returning back catches himself.
+        var sc = shareIn(g, pid, 'rush_att');
+        if (f === 'targets' && GROUP[pos] === 'RB' && sc > 0) {
+          a = Math.max(s * (translate(g, 'rush_att', isBack) / sc) +
+            (translate(g, 'targets', function (T) { return !isBack(T); }) - s), s * 0.3);
+        }
         var wt = w * (matched[g.game_id] ? 1 : CTX.MISMATCH_W);
         sx += wt * a; sw += wt; w *= CTX.LAMBDA_SHARE;
       });
       sLine[f] = sw ? sx / sw : sAll[f];
     });
 
+    var qbStart = false;
     var snapOf = function (g) { var p = g.players[pid]; return p && p.snap != null ? p.snap : null; };
     var snapRecent = avgOf(mine.slice(0, 3), snapOf), snapSeason = avgOf(mine, snapOf);
     var n = mine.length;
@@ -636,6 +729,16 @@
         var v = (n * sAll[f] * teamVol[f] + CTX.PRIOR_GAMES * vol0[f]) / (n + CTX.PRIOR_GAMES);
         vol[f] = v / vol0[f];
       });
+      // The starter throws the starter's share, whatever his own games were:
+      // a quarterback named after weeks of mop-up duty is not a backup now.
+      qbStart = pos === 'QB' && starterId === pid && vol0.pass_att > 0;
+      if (qbStart) {
+        var starterShare = decayed(games, function (g) { var q = leadQb(g); return q ? shareIn(g, q, 'pass_att') : null; }, LAMBDA) || 0.95;
+        vol.pass_att = starterShare * teamVol.pass_att / vol0.pass_att;
+        parts.unshift((starts[pid] || 0) < n ? 'starting (' + (starts[pid] || 0) + ' of his ' + n + ' games were starts): the starter throws ' +
+          Math.round(starterShare * 100) + '% of ' + doc.team + '\'s ' + Math.round(teamVol.pass_att) + ' passes' :
+          Math.round(starterShare * 100) + '% of ' + doc.team + '\'s passes as the starter');
+      }
       ['rush_att', 'targets'].forEach(function (f) {
         if (sAll[f] < 0.02) return;
         var last3 = avgOf(mine.slice(0, 3), function (g) { return shareIn(g, pid, f); });
@@ -657,19 +760,34 @@
     }
 
     // lineup: the key teammates whose presence differs from his games.
-    var changes = keys.filter(function (T) { return mine.some(function (g) { return inLineup(g, T) !== T.expected; }); });
+    var changes = keys.filter(function (T) { return mine.some(function (g) { return Math.abs(gap(g, T)) >= 0.25; }); });
     if (n && changes.length) {
       var lv = {};
       CTX_FIELDS.forEach(function (f) { if (sAll[f] > 0) lv[f] = sLine[f] / sAll[f]; });
+      // A starting quarterback's throws are the role factor's starter share.
+      if (qbStart) delete lv.pass_att;
       var said = changes.map(function (T) {
         var missed = mine.filter(function (g) { return !inLineup(g, T); });
-        if (!T.expected) {
+        var name = lastName(T.name);
+        if (T.pos === 'QB') {
+          return name + ' starting' + (T.lines && !starts[T.id] ? ' (named: the books\' passing line is his)' : '') +
+            (missed.length ? '; another QB started ' + weekList(missed) : '');
+        }
+        if (T.p <= 0.01) {
           var why = T.st.manual ? 'set out by hand' : T.gone ? 'not played since ' + weekList(games.filter(function (g) { return inLineup(g, T); }).slice(0, 1)) :
             (T.st.row && (T.st.row.injury || T.st.row.label)) || T.st.status;
-          return lastName(T.name) + ' out (' + why + ')' + (missed.length ? '; ' + missed.length + ' of ' + who + '\'s games without him' : '');
+          return name + ' out (' + why + ')' + (missed.length ? '; ' + missed.length + ' of ' + who + '\'s games without him' : '');
         }
-        if (T.pos === 'QB') return lastName(T.name) + ' starting; another QB started ' + weekList(missed);
-        return lastName(T.name) + ' back' + (T.st.manual ? ' (set in by hand)' : '') + '; missed ' + weekList(missed);
+        var odds = T.p < 0.99 ? ', ' + Math.round(T.p * 100) + '% to play (' + T.st.status +
+          (T.st.row && T.st.row.practice && T.st.row.practice.length ? ', ' + T.st.row.practice.slice(-1)[0].replace(/_/g, ' ') : '') + ')' : '';
+        if (T.fresh) {
+          return name + ' back' + odds + ': no games this season, so his share is the books\' lines (' +
+            ['rush_att', 'targets'].filter(function (f) { return T.share[f] >= 0.02; }).map(function (f) {
+              return Math.round(T.share[f] * 100) + '% of ' + (f === 'rush_att' ? 'carries' : 'targets');
+            }).join(', ') + ')';
+        }
+        return name + (T.expected ? ' back' : ' likely out') + (T.st.manual ? ' (set by hand)' : '') + odds +
+          (missed.length ? '; missed ' + weekList(missed) : '');
       });
       var nm = Object.keys(matched).length;
       var shares = ['rush_att', 'targets'].filter(function (f) { return sAll[f] >= 0.02; }).map(function (f) {
@@ -890,13 +1008,40 @@
         // volume's swing, plus its count noise for the volume stat itself.
         over = (key === 'rush_att' ? (VOL_PHI - 1) / Math.max(mean, 0.5) : 0) + role * role;
       }
-      var dist = distribution(spec.kind, mean, cv, spec.family, over);
       var quote = null;
       if (spec.anytime) {
         var td = opts.props && opts.props.anytime_td;
         if (td) quote = { vendor: td.vendor, line: 0.5, over: td.odds, under: null };
       } else if (opts.props && opts.props.props) {
         quote = opts.props.props[spec.market] || null;
+      }
+      var dist = distribution(spec.kind, mean, cv, spec.family, over);
+      // The pull toward the book's line (MARKET_W): the whole distribution
+      // scaled so its middle lands that share of the way from the line back
+      // to the model's. Yards by the median, the line being the book's
+      // median; counts by the mean, whose medians move in whole steps.
+      var model = { mean: mean, median: dist.q(0.5) };
+      var mw = opts.marketW != null ? opts.marketW : MARKET_W, blended = false;
+      var shade = opts.marketShade != null ? opts.marketShade : MARKET_SHADE[key] || 0;
+      if (quote && mw < 1) {
+        if (spec.kind === 'td') {
+          // A touchdown line is 0.5 at a price: the price, vig out, is the
+          // book's chance of one or more, and a Poisson's mean is -ln(1-p).
+          var pm = impliedOver(quote);
+          if (pm != null && quote.line === 0.5) {
+            var lam = -Math.log(1 - pm);
+            mean = lam + mw * (mean - lam);
+            blended = true;
+          }
+        } else {
+          var mid = spec.kind === 'yds' ? model.median : mean;
+          if (mid > 0.5) {
+            var anchor = quote.line * (quote.line >= (SHADE_FROM[key] || Infinity) ? 1 - shade : 1);
+            mean *= (anchor + mw * (mid - anchor)) / mid;
+            blended = true;
+          }
+        }
+        if (blended) dist = distribution(spec.kind, mean, cv, spec.family, over);
       }
       var median = dist.q(0.5);
       return {
@@ -905,13 +1050,23 @@
         // base0: his own log alone, before any team context.
         cur: cur, prev: prev, base: base,
         base0: sum(volumes, function (v) { return v.volume.value * v.rate.value; }),
-        volumes: volumes, context: context, effects: effects,
+        volumes: volumes, context: context, effects: effects, model: model,
+        marketW: blended ? mw : 1,
         defense: defense, history: history, mean: mean, median: median, cv: cv,
         dist: dist, lo: dist.q(0.1), hi: dist.q(0.9), quote: quote,
         defaultLine: quote ? quote.line : Math.max(0.5, Math.floor(median) + 0.5)
       };
     });
     return { pos: pos, stats: stats, context: context };
+  }
+
+  // -> the book's chance of the over with its margin taken out, or null.
+  function impliedOver(q) {
+    var prob = function (o) { return o == null ? null : o > 0 ? 100 / (o + 100) : -o / (-o + 100); };
+    var po = prob(q.over), pu = prob(q.under);
+    if (po == null) return null;
+    // One side only (an anytime TD): take a typical 4.5% margin off it.
+    return clamp(pu != null ? po / (po + pu) : po / 1.045, 0.01, 0.99);
   }
 
   // -> { over, under, push } for a line.
@@ -1286,6 +1441,11 @@
       'The model\'s chance he clears the line.', chanceHeat(c.over));
     if (!td) html += '<span class="pp-top-range" data-tip="8 in 10 of his projected games land in this range.">80%: ' +
       fmt(m.lo) + '–' + fmt(m.hi) + '</span>';
+    if (m.marketW < 1 && q) {
+      html += '<span class="pp-top-range" data-tip="' + esc('The model alone projects ' + fmt(m.model.median) + '. The projection keeps ' +
+        Math.round(m.marketW * 100) + '% of its gap from the ' + (BOOK[q.vendor] || 'book') + ' line: a line knows things the model cannot, ' +
+        'and in 2025 the model\'s own chances were overconfident.') + '">model alone: ' + fmt(m.model.median) + '</span>';
+    }
     return html + '</span></div>';
   }
 
@@ -1339,7 +1499,9 @@
         '. The projection is what he would do if he played.</p>';
     }
     html += '<p class="pp-ctx-sum">His own games project <b>' + num(own) + '</b> ' + esc(unit) + '; with ' + esc(c.team) +
-      '’s lineup, pace and script this week, <b>' + num(m.mean) + '</b>.</p>';
+      '’s lineup, pace and script this week, <b>' + num(m.model.mean) + '</b>' +
+      (m.marketW < 1 && m.quote ? '; pulled toward ' + (BOOK[m.quote.vendor] || 'the book') + '’s ' +
+        (m.spec.kind === 'td' ? 'price' : 'line of ' + m.quote.line) + ', <b>' + num(m.mean) + '</b>' : '') + '.</p>';
     html += '<ul class="pp-ctx-list">' + c.factors.map(function (f, i) {
       var d = (m.effects[i] || {}).delta, flat = d == null || Math.abs(d) < (td ? 0.005 : 0.05);
       var cls = f.off || flat ? '' : d > 0 ? ' is-over' : ' is-under';
@@ -1422,6 +1584,8 @@
         'stacked by result: blue clears the line, orange falls short, and the share that are blue is the chance of the over. ' +
         'The diamond under them is the median and its bar spans 8 in 10 games. The fewer ' + esc(unit) + ' he gets, the wider the ' +
         'spread: one long play decides more of a game, and a smaller role swings more with game script and who else is healthy. ' +
+        (m.marketW < 1 ? 'With a book line up, the projection keeps ' + Math.round(m.marketW * 100) + '% of the model\'s gap from it: in 2025 the model\'s own ' +
+          'chances were overconfident, but the direction of its biggest disagreements held up. <i>Model alone</i> in the bar above is its own number. ' : '') +
         'The rows below are what built it, each ▲ or ▼ a real game over or under the line. <i>This season</i> is the baseline: recent games count most, ' +
         'last season fills in early. ' +
         (m.context ? '<i>Team context</i> is his games with the lineup ' + esc(m.context.team) + ' expects this week, and how far the team around him ' +

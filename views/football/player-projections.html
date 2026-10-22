@@ -594,6 +594,7 @@
      * 18 points off even, and an under pick. Each row opens the player on
      * that stat. Built once per visit; the lines move slower than that. */
     var TOP_N = 20;
+    var MIN_YDS_LINE = 5;
     var TOP_STAT = { passing_yards: 'pass_yds', rushing_yards: 'rush_yds', receiving_yards: 'rec_yds' };
     var topPromise = null, topRows = [];
 
@@ -636,8 +637,11 @@
             Object.keys(p.lines).forEach(function (mk) {
               count++;
               var st = !m.error && m.stats.filter(function (x) { return x.key === TOP_STAT[mk]; })[0];
-              // A player ruled out is no bet, whatever his line says.
-              if (!st || (m.context && m.context.out)) return;
+              // A player ruled out is no bet, whatever his line says. Nor is a
+              // yards line under MIN_YDS_LINE: a quarterback's 0.5 rushing
+              // yards is a bet on kneel-downs, whose negative yards the
+              // model's distribution, which starts at zero, cannot see.
+              if (!st || (m.context && m.context.out) || p.lines[mk].line < MIN_YDS_LINE) return;
               var over = PlayerProjection.chances(st, p.lines[mk].line).over;
               rows.push({ p: p, m: st, quote: p.lines[mk], over: over, edge: Math.abs(over - 0.5) });
             });

@@ -572,14 +572,18 @@ def load_board(game_ids):
 #                          "spread", "total",
 #                          "status": {bdl id: {"name", "pos", "status", "label",
 #                                              "injury", "practice"}},
-#                          "ol": [{"name", "snap", "status"}]}}}
+#                          "ol": [{"name", "snap", "status"}],
+#                          "market": {bdl id: {"name", "pos", "lines": {prop_type: line}}}}}}
 #
 # Everything the page's team-context factors read for one game, both sides:
 # the offense's season from `team_context` (scripts/build_team_context.py)
 # and this week's injury report and line from the game's bundle. The
 # opponent's side is the same shape, so its defense's plays faced come from
-# its own `doc`. The projections are pregame, so the report and line are
-# cached for CONTEXT_TTL, at the CDN and in a warm function.
+# its own `doc`. `market` is every player the books hang a volume or yards
+# line on this week: who the market thinks plays, and how much -- a starter
+# just named, a back returning who has not played all season. The
+# projections are pregame, so the report and lines are cached for
+# CONTEXT_TTL, at the CDN and in a warm function.
 #
 # GET /api/player-projections?adjustments=1&season=2026&week=7&teams=NE,CHI
 #     -> {abbr: {"data", "updated_by", "updated_at"}} for the teams with any.
@@ -699,6 +703,39 @@ def line_status(doc, status):
             for name, pct in sorted(snap.items(), key=lambda kv: -kv[1])]
 
 
+# The over/unders that say how big a role the market expects.
+MARKET_ROLE = ("passing_attempts", "passing_yards", "rushing_attempts", "rushing_yards",
+               "receptions", "receiving_yards")
+
+
+def market_roles(props, players, team):
+    """-> {bdl id: {"name", "pos", "lines": {prop_type: line}}} for one team's
+    QBs, backs and receivers: the best-ranked book's lowest line, as
+    load_props."""
+    best = {}
+    for r in props or []:
+        m = r.get("market") or {}
+        info = (players or {}).get(str(r.get("player_id"))) or {}
+        if (r.get("prop_type") not in MARKET_ROLE or m.get("type") != "over_under" or
+                info.get("team") != team or info.get("position") not in POSITIONS):
+            continue
+        try:
+            line = float(r.get("line_value"))
+        except (TypeError, ValueError):
+            continue
+        key = (str(r["player_id"]), r["prop_type"])
+        vendor = r.get("vendor") or ""
+        cur = best.get(key)
+        if (cur is None or book_rank(vendor) < book_rank(cur[0]) or
+                (vendor == cur[0] and line < cur[1])):
+            best[key] = (vendor, line)
+    out = {}
+    for (pid, market), (_, line) in best.items():
+        info = players[pid]
+        out.setdefault(pid, {"name": info.get("name"), "pos": info.get("position"), "lines": {}})["lines"][market] = line
+    return out
+
+
 def side_line(odds, home):
     """-> (this side's spread, total) off the best-ranked book, or (None, None)."""
     for o in sorted(odds or [], key=lambda o: book_rank(o.get("vendor"))):
@@ -716,7 +753,8 @@ def load_context(game_id):
         return hit[1]
     rows = supabase_get(f"game_odds?game_id=eq.{game_id}&select=phase,game:data->game,"
                         "injuries:data->injuries,designations:data->designations,"
-                        "current:data->odds->current,opening:data->odds->opening")
+                        "current:data->odds->current,opening:data->odds->opening,"
+                        "players:data->players,props:data->player_props->current")
     if not rows:
         return None
     r = rows[0]
@@ -733,7 +771,9 @@ def load_context(game_id):
                                (r.get("designations") or {}).get(side))
         spread, total = side_line(odds, side == "home")
         teams[abbr] = {"doc": docs.get(abbr), "spread": spread, "total": total,
-                       "status": status, "ol": line_status(docs.get(abbr), status)}
+                       "status": status, "ol": line_status(docs.get(abbr), status),
+                       "market": market_roles(r.get("props") if r.get("phase") == "pregame" else None,
+                                              r.get("players"), abbr)}
     base = {"game": {"id": int(game_id), "season": season, "week": g.get("week"),
                      "away": away, "home": home, "kickoff": g.get("kickoff_utc"),
                      "phase": r.get("phase")},

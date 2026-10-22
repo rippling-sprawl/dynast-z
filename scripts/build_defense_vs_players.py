@@ -103,14 +103,25 @@ def supabase(path, method="GET", body=None, headers=None):
         raise BuildError(f"Supabase {method} failed ({e.code}): {detail}")
 
 
+# Games per read. Each run rebuilds the whole season, and one read of every
+# final game's play-by-play outgrows Postgres's statement timeout by mid-season
+# (all of 2025 at once did); a page of this many stays well inside it.
+PAGE = 32
+
+
 def final_games(season, odds=False, plays=True):
-    """`odds` adds each game's opening lines and `plays=False` drops the
-    play-by-play, both for scripts/build_team_context.py: a whole season's
-    plays is what pushes the read past Postgres's statement timeout."""
+    """-> every final game of the season, oldest first, read a page at a time.
+    `odds` adds each game's opening lines and `plays=False` drops the
+    play-by-play, both for scripts/build_team_context.py."""
     select = (SELECT if plays else SELECT.replace(",plays:data->plays->all", "")) + \
         (",odds:data->odds->opening" if odds else "")
-    return supabase(f"game_odds?select={select}&season=eq.{season}"
-                    "&phase=eq.final&order=kickoff.asc") or []
+    out = []
+    while True:
+        page = supabase(f"game_odds?select={select}&season=eq.{season}&phase=eq.final"
+                        f"&order=kickoff.asc,game_id.asc&limit={PAGE}&offset={len(out)}") or []
+        out += page
+        if len(page) < PAGE:
+            return out
 
 
 # ---------------------------------------------------------------------------
