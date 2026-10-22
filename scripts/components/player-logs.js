@@ -3,7 +3,7 @@
 // For a page that already names the player and the defense, so it is one row
 // per game: the season ('25) and week, both pinned on a horizontal scroll
 // where defense-vs-players pins its player, then the result. Rows come from
-// /api/player-vs-defense in its row shape. Sections stack in one table so
+// /api/player-projections in its row shape. Sections stack in one table so
 // their columns line up, each with an optional title row above and a
 // per-game average under it, whose result cell is the W-L record.
 //

@@ -94,16 +94,22 @@ def supabase(path, method="GET", body=None, headers=None):
         detail = e.read().decode(errors="replace")[:300]
         if "PGRST205" in detail:
             ref = url.split("//")[-1].split(".")[0]
+            table = path.split("?")[0]
             raise BuildError(
-                f"The {TABLE} table does not exist yet.\n\n"
-                f"  Run scripts/sql/{TABLE}.sql once, in the SQL editor at\n"
+                f"The {table} table does not exist yet.\n\n"
+                f"  Run scripts/sql/{table}.sql once, in the SQL editor at\n"
                 f"  https://supabase.com/dashboard/project/{ref}/sql/new\n\n"
                 "  Then re-run this command.")
         raise BuildError(f"Supabase {method} failed ({e.code}): {detail}")
 
 
-def final_games(season):
-    return supabase(f"game_odds?select={SELECT}&season=eq.{season}"
+def final_games(season, odds=False, plays=True):
+    """`odds` adds each game's opening lines and `plays=False` drops the
+    play-by-play, both for scripts/build_team_context.py: a whole season's
+    plays is what pushes the read past Postgres's statement timeout."""
+    select = (SELECT if plays else SELECT.replace(",plays:data->plays->all", "")) + \
+        (",odds:data->odds->opening" if odds else "")
+    return supabase(f"game_odds?select={select}&season=eq.{season}"
                     "&phase=eq.final&order=kickoff.asc") or []
 
 
@@ -360,7 +366,7 @@ def offense_leaders(by_team):
     return out
 
 
-# The box-score fields /football/player-vs-defense adjusts by: what a defense
+# The box-score fields /football/player-projections adjusts by: what a defense
 # allowed is read against what the same players do everywhere else.
 EXPECTED_STATS = ("pass_att", "pass_cmp", "pass_yds", "pass_td",
                   "rush_att", "rush_yds", "rush_td",

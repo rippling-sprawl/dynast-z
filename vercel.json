@@ -2,6 +2,11 @@
   "buildCommand": "python3 build.py",
   "redirects": [
     {
+      "source": "/football/player-vs-defense",
+      "destination": "/football/player-projections",
+      "statusCode": 301
+    },
+    {
       "source": "/masters",
       "destination": "/golf/2026/masters",
       "statusCode": 301
@@ -135,8 +140,8 @@
       "destination": "/views/football/defense-vs-players.html"
     },
     {
-      "source": "/football/player-vs-defense",
-      "destination": "/views/football/player-vs-defense.html"
+      "source": "/football/player-projections",
+      "destination": "/views/football/player-projections.html"
     },
     {
       "source": "/football/schedule",

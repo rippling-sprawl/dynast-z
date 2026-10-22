@@ -254,20 +254,20 @@ def defense_vs_players_api():
     return _defense_vs_players_api
 
 
-_player_vs_defense_api = None
+_player_projections_api = None
 
 
-def player_vs_defense_api():
-    """Load api/player-vs-defense.py. By path because the filename has a
+def player_projections_api():
+    """Load api/player-projections.py. By path because the filename has a
     hyphen in it, and lazily for the same reason as above."""
-    global _player_vs_defense_api
-    if _player_vs_defense_api is None:
+    global _player_projections_api
+    if _player_projections_api is None:
         import importlib.util
-        path = os.path.join(DATA_DIR, "api", "player-vs-defense.py")
-        spec = importlib.util.spec_from_file_location("player_vs_defense_api", path)
-        _player_vs_defense_api = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(_player_vs_defense_api)
-    return _player_vs_defense_api
+        path = os.path.join(DATA_DIR, "api", "player-projections.py")
+        spec = importlib.util.spec_from_file_location("player_projections_api", path)
+        _player_projections_api = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(_player_projections_api)
+    return _player_projections_api
 
 
 _quarter_splits_api = None
@@ -1859,14 +1859,21 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 self._json_response(404, {"error": f"no completed games stored for {team}"})
             else:
                 self._json_response(200, payload)
+        # The page used to be /football/player-vs-defense. Old links keep
+        # their ?player= and ?def= and land in one hop, as in vercel.json.
+        elif self.path.split("?")[0] == "/football/player-vs-defense":
+            query = urlparse(self.path).query
+            self.send_response(301)
+            self.send_header("Location", "/football/player-projections" + ("?" + query if query else ""))
+            self.end_headers()
         # One player's game logs against one defense. Query string tolerated:
         # the page keeps its player and defense in ?player= and ?def=.
-        elif self.path.split("?")[0] == "/football/player-vs-defense":
-            self.path = "/views/football/player-vs-defense.html"
+        elif self.path.split("?")[0] == "/football/player-projections":
+            self.path = "/views/football/player-projections.html"
             super().do_GET()
         # Its data: the player's whole career off balldontlie, live.
-        elif self.path.split("?")[0] == "/api/player-vs-defense":
-            api = player_vs_defense_api()
+        elif self.path.split("?")[0] == "/api/player-projections":
+            api = player_projections_api()
             query = parse_qs(urlparse(self.path).query)
             # This week's opposing players for one defense, for
             # /football/defense-vs-players.
@@ -1900,6 +1907,61 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 if IS_VERCEL:
                     headers["Cache-Control"] = api.PROPS_CACHE_CONTROL
                 send_json(self, 200, payload, headers)
+                return
+            # Every DK yards line this week, for the top 20 before a pick.
+            if query.get("board"):
+                game_ids, error = api.parse_board(query)
+                if error:
+                    self._json_response(400, {"error": error})
+                    return
+                try:
+                    payload = api.load_board(game_ids)
+                except Exception as e:  # noqa: BLE001
+                    self._json_response(502, {"error": str(e)})
+                    return
+                headers = {"Access-Control-Allow-Origin": "*"}
+                if IS_VERCEL:
+                    headers["Cache-Control"] = api.PROPS_CACHE_CONTROL
+                send_json(self, 200, payload, headers)
+                return
+            # Both teams' context for one game: their seasons, this week's
+            # injury report and line. Pregame, so cached six hours.
+            if query.get("context"):
+                game_id, error = api.parse_context(query)
+                if error:
+                    self._json_response(400, {"error": error})
+                    return
+                try:
+                    payload = api.load_context(game_id)
+                except Exception as e:  # noqa: BLE001
+                    self._json_response(502, {"error": str(e)})
+                    return
+                if payload is None:
+                    self._json_response(404, {"error": f"no game {game_id}"})
+                    return
+                headers = {"Access-Control-Allow-Origin": "*"}
+                if IS_VERCEL:
+                    headers["Cache-Control"] = api.CONTEXT_CACHE_CONTROL
+                send_json(self, 200, payload, headers)
+                return
+            # The hand adjustments for those teams that week. Never cached:
+            # an editor's save shows on the next load.
+            if query.get("adjustments"):
+                season, week, teams, error = api.parse_adjustments(query)
+                if error:
+                    self._json_response(400, {"error": error})
+                    return
+                try:
+                    payload = api.load_adjustments(season, week, teams)
+                except Exception as e:  # noqa: BLE001
+                    self._json_response(502, {"error": str(e)})
+                    return
+                send_json(self, 200, payload, {"Access-Control-Allow-Origin": "*", "Cache-Control": "no-store"})
+                return
+            # Whether the signed-in account may adjust: its role, asked fresh.
+            if query.get("can_adjust"):
+                send_json(self, 200, {"can_adjust": api.can_adjust(self.headers.get("X-User-Id"))},
+                          {"Cache-Control": "no-store"})
                 return
             name, pos, team, error = api.parse(query)
             if error:
@@ -2334,6 +2396,31 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 self._json_response(200, {"ok": True})
             except Exception as e:
                 self._json_response(500, {"error": str(e)})
+        # Player Projections' hand adjustments: an admin or editor only, by
+        # the deployed function's own rule (resolve_editor).
+        elif self.path.split("?")[0] == "/api/player-projections":
+            api = player_projections_api()
+            if not parse_qs(urlparse(self.path).query).get("adjust"):
+                self._json_response(404, {"error": "PUT ?adjust=1 is the only write"})
+                return
+            try:
+                username, err = api.resolve_editor(self.headers.get("X-User-Id"))
+                if err:
+                    self._json_response(*err)
+                    return
+                length = int(self.headers.get("Content-Length", 0))
+                body = json.loads(self.rfile.read(length)) if length else {}
+                payload, error = api.save_adjust(body, username)
+            except json.JSONDecodeError:
+                self._json_response(400, {"error": "Body must be JSON"})
+                return
+            except Exception as e:  # noqa: BLE001
+                self._json_response(502, {"error": str(e)})
+                return
+            if error:
+                self._json_response(400, {"error": error})
+                return
+            self._json_response(200, payload)
         elif self.path.startswith("/api/bun-notes"):
             api = bun_notes_api()
             user_id, is_admin, err = resolve_notes_actor(self.headers)

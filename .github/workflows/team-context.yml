@@ -1,0 +1,69 @@
+# Rebuild the team context /football/player-projections reads, daily from
+# 5:00am ET.
+#
+# Reads every final game's box score and opening line out of Supabase
+# `game_odds`, joins nflverse's snap counts, and writes one row per offense to
+# `team_context`. Daily rather than weekly because nflverse posts snap counts a
+# day or two after the games, and Thursday's game should count by the weekend.
+# Every run is a full rebuild, so a late or repeated run is harmless. See
+# scripts/build_team_context.py.
+#
+# NOTHING IS COMMITTED, as defense-vs-players.yml: rows go to Supabase.
+#
+# The cron, the guard and the backup hour are defense-vs-players.yml's, for the
+# reasons written there (UTC cron, GitHub dropping top-of-the-hour runs).
+#
+# - Secrets needed: SUPABASE_URL  SUPABASE_KEY
+# - The table must exist first: run scripts/sql/team_context.sql once.
+
+name: Build Team Context
+
+on:
+  schedule:
+    - cron: '23 9,10,13 * * *'
+  workflow_dispatch:
+    inputs:
+      season:
+        description: 'Season to rebuild (blank = the current one)'
+        default: ''
+
+concurrency:
+  group: team-context
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Is it 5am or later in New York?
+        id: guard
+        run: |
+          hour=$(TZ=America/New_York date +%H)
+          echo "ET hour: $hour"
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] || [ "$((10#$hour))" -ge 5 ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - if: steps.guard.outputs.run == 'true'
+        uses: actions/checkout@v4
+
+      - if: steps.guard.outputs.run == 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      # No install step on purpose: scripts/ is stdlib-only (pyproject.toml).
+      - name: Build
+        if: steps.guard.outputs.run == 'true'
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        run: |
+          python3 scripts/build_team_context.py \
+            ${{ github.event.inputs.season && format('--season {0}', github.event.inputs.season) || '' }}

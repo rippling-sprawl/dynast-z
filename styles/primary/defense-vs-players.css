@@ -349,7 +349,7 @@
 .pl-res.is-w { color: var(--good); }
 .pl-res.is-l { color: var(--bad); }
 
-/* The player-logs.js table (/football/player-vs-defense): a few rows at a
+/* The player-logs.js table (/football/player-projections): a few rows at a
  * time, so no screen-height box and no pinned header rows. The year and week
  * columns pin on a horizontal scroll instead, as the player column does on
  * the defense table; the year is a fixed width so the week knows its offset. */

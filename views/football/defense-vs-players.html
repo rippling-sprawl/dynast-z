@@ -596,7 +596,7 @@
      * with his career games against it and his last five. They open the
      * defense's own table, in its columns, under a full-width group row the
      * way Quarter Splits stacks the opponent over the team.
-     * /api/player-vs-defense picks them (season yards, the injured left out)
+     * /api/player-projections picks them (season yards, the injured left out)
      * and pulls the logs from balldontlie, once per defense; the toggles only
      * show and hide what it returned. */
     var matchups = {};   // team -> Promise of its payload
@@ -620,7 +620,7 @@
       var m = thisWeekOpp(def);
       matchup = { team: def, m: m };
       if (m && !matchups[def]) {
-        matchups[def] = fetch('/api/player-vs-defense?offense=' + encodeURIComponent(m.off) +
+        matchups[def] = fetch('/api/player-projections?offense=' + encodeURIComponent(m.off) +
             '&defense=' + encodeURIComponent(def) + '&season=' + encodeURIComponent(season))
           .then(function (r) {
             return r.json().then(function (body) {

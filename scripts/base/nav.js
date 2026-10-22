@@ -41,7 +41,7 @@ const NAV_SECTIONS = [
       { label: 'Defense vs. Players', href: '/football/defense-vs-players', emoji: '🛡️' },
       // The same question from the other side: one player's career against
       // the defense he faces this week.
-      { label: 'Player vs. Defense', href: '/football/player-vs-defense', emoji: '🏃' },
+      { label: 'Player Projections', href: '/football/player-projections', emoji: '🏃' },
       // Season-to-date team numbers, read side by side across the league.
       // One card here; its pages are the Team Stats section below.
       { label: 'Team Stats', href: '/football/team-stats', emoji: '📈' },
