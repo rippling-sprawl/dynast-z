@@ -57,6 +57,7 @@
   var LAMBDA = 0.88;      // weight per game back, this season
   var PRIOR_GAMES = 3;    // last season's average, as this many games
   var H2H_MAX = 0.05;     // the most say career games vs the defense get
+  var ALLOWED_MARK_CAP = 3; // a defense row's mark, at most this times his baseline
   var CV_PRIOR_GAMES = 8; // his own spread, against the position's
 
   // League rates by position, and how many opportunities of his it takes to
@@ -140,6 +141,14 @@
     SCRIPT_CAP: 0.06,
     // His own report: volume kept if questionable or doubtful.
     STATUS_MULT: { questionable: 0.93, doubtful: 0.75 },
+    // ... but questionable after a full practice almost always plays.
+    STATUS_FULL_PRACTICE: 0.98,
+    // A game he left early: under PARTIAL_FRAC of his usual snaps (for a
+    // player whose usual is PARTIAL_REG or more) and then a missed game. Its
+    // volume is an injury's, not his role's. A low-snap game he does not then
+    // miss is left in: in 2025 that was a smaller role more often than a
+    // knock, and dropping it made every stat's backtest worse.
+    PARTIAL_FRAC: 0.5, PARTIAL_REG: 0.5,
     // Per lineman starter out.
     OL: { ypc: 0.97, ypa: 0.985 },
     // A new starting quarterback, before his games say otherwise, and how
@@ -147,7 +156,7 @@
     QB_YPT: 0.92, K_QB: 40,
     // His rate in games like this week's, shrunk by this many carries or
     // targets, and never more than EFF_CAP from his rate overall.
-    K_EFF: { ypc: 120, ypt: 60 }, EFF_CAP: 0.1, EFF_MIN_GAMES: 2,
+    K_EFF: { ypc: 120, ypt: 60 }, EFF_CAP: 0.1, EFF_MIN_GAMES: 2, EFF_MIN_OPPS: 10,
     // Before this many games with the team, his own log leads.
     PRIOR_GAMES: 3,
     // More spread when the context moves his volume by more than this.
@@ -455,6 +464,26 @@
     return vals.length ? sum(vals, function (v) { return v; }) / vals.length : null;
   }
 
+  /* -> {game id: week} of the games he left early (CTX.PARTIAL_*): a
+   * starter hurt on his tenth snap has a box score that says "two targets",
+   * and his share and volume should not believe it. */
+  function partialGames(doc, id) {
+    var out = {};
+    if (!doc || !doc.games) return out;
+    var games = doc.games.filter(function (g) { return !g.postseason; });
+    var snaps = games.map(function (g) { return g.players[id] && g.players[id].snap; })
+      .filter(function (v) { return v != null && v > 0; }).sort(function (a, b) { return a - b; });
+    if (snaps.length < 2) return out;
+    var med = snaps[Math.floor(snaps.length / 2)];
+    if (med < CTX.PARTIAL_REG) return out;
+    games.forEach(function (g, i) {
+      var p = g.players[id], next = games[i - 1];
+      if (!p || p.snap == null || p.snap >= CTX.PARTIAL_FRAC * med) return;
+      if (next && !played(next, id)) out[g.game_id] = g.week;
+    });
+    return out;
+  }
+
   // -> his status this week: { status: out|doubtful|questionable|null, row, manual }.
   function statusOf(ctx, id) {
     var adj = ((ctx.adjust || {}).data || {}).status || {};
@@ -481,7 +510,8 @@
     if (!games.length) return null;
     var adj = (ctx.adjust || {}).data || {}, off = adj.off || {}, mineAdj = (adj.players || {})[pid] || {};
     var game = adj.game || {};
-    var mine = games.filter(function (g) { return played(g, pid); });
+    var partial = partialGames(doc, pid);
+    var mine = games.filter(function (g) { return played(g, pid) && !partial[g.game_id]; });
     var factors = [];
     // A factor about the team is switched off for the team; one about him,
     // for him alone.
@@ -506,21 +536,35 @@
       }
       return best;
     };
-    var starterId = leadQb(games[0]);
-    var inLineup = function (g, T) { return T.pos === 'QB' ? leadQb(g) === T.id : played(g, T.id); };
+    // A game he left early counts as one he missed, for his teammates too.
+    var inLineup = function (g, T) { return T.pos === 'QB' ? leadQb(g) === T.id : played(g, T.id) && !T.partial[g.game_id]; };
     var mates = Object.keys(doc.players).map(function (id) {
-      var p = doc.players[id], st = statusOf(ctx, id);
+      var p = doc.players[id], st = statusOf(ctx, id), pg = id === pid ? partial : partialGames(doc, id);
       var share = {};
       CTX_FIELDS.forEach(function (f) {
-        share[f] = decayed(games, function (g) { return shareIn(g, id, f); }, CTX.LAMBDA_SHARE) || 0;
+        share[f] = decayed(games, function (g) { return pg[g.game_id] ? null : shareIn(g, id, f); }, CTX.LAMBDA_SHARE) || 0;
       });
-      var gone = !st.manual && !st.row && !recent.some(function (g) { return played(g, id); });
+      // The player being projected is taken to play unless he is listed out:
+      // asking for his projection is asking what he does when he does.
+      var gone = id !== pid && !st.manual && !st.row && !recent.some(function (g) { return played(g, id); });
       var expected = st.status !== 'out' && st.status !== 'doubtful' && !gone;
-      return {
-        id: id, name: p.name, pos: p.pos, group: GROUP[p.pos], share: share, expected: expected, gone: gone, st: st,
-        key: id !== pid && !!GROUP[p.pos] && (p.pos === 'QB' ? id === starterId
-          : share.rush_att >= CTX.KEY_SHARE || share.targets >= CTX.KEY_SHARE)
-      };
+      return { id: id, name: p.name, pos: p.pos, group: GROUP[p.pos], share: share, expected: expected, gone: gone, st: st, partial: pg };
+    });
+    // This week's starter: of the quarterbacks expected to play, the one with
+    // the most starts; a tie goes to whoever started first -- the incumbent a
+    // backup was filling in for. Not simply last week's: a starter back from
+    // three weeks hurt is still the starter.
+    var starts = {}, firstStart = {};
+    games.forEach(function (g, i) {
+      var q = leadQb(g);
+      if (q) { starts[q] = (starts[q] || 0) + 1; firstStart[q] = i; }
+    });
+    var lastStarter = leadQb(games[0]);
+    var starterId = (mates.filter(function (m) { return m.pos === 'QB' && m.expected && starts[m.id]; })
+      .sort(function (a, b) { return starts[b.id] - starts[a.id] || firstStart[b.id] - firstStart[a.id]; })[0] || { id: lastStarter }).id;
+    mates.forEach(function (m) {
+      m.key = m.id !== pid && !!m.group && (m.pos === 'QB' ? m.id === starterId
+        : m.share.rush_att >= CTX.KEY_SHARE || m.share.targets >= CTX.KEY_SHARE);
     });
     var me = mates.filter(function (m) { return m.id === pid; })[0];
     var keys = mates.filter(function (m) { return m.key; });
@@ -602,10 +646,14 @@
         parts.push(Math.round(snapSeason * 100) + '% of snaps' +
           (snapRecent != null && n > 3 && Math.abs(snapRecent - snapSeason) >= 0.05 ? ' (last 3: ' + Math.round(snapRecent * 100) + '%)' : ''));
       }
+      var left = Object.keys(partial).map(function (id) {
+        var g = games.filter(function (x) { return String(x.game_id) === id; })[0];
+        return 'wk ' + g.week + ' (' + Math.round(g.players[pid].snap * 100) + '% of snaps)';
+      });
       add({ key: 'role', label: 'Role', source: 'auto', vol: vol,
         why: who + ' this season, recent games weighted most: ' + (parts.join(' · ') || 'a small share') +
           ', of the ' + Math.round(teamVol.rush_att) + ' carries and ' + Math.round(teamVol.targets) + ' targets ' +
-          doc.team + ' averages' });
+          doc.team + ' averages' + (left.length ? '. Left out, as games he left early: ' + left.join(', ') : '') });
     }
 
     // lineup: the key teammates whose presence differs from his games.
@@ -675,9 +723,11 @@
     var stWhy = (mySt.manual ? 'Set ' + (mySt.status || 'in') + ' by hand' : (row.label || mySt.status || '')) +
       (row.injury ? ' (' + row.injury + ')' : '') +
       (row.practice && row.practice.length ? ' · practice: ' + row.practice.map(function (p) { return p.replace(/_/g, ' '); }).join(', ') : '');
-    if (CTX.STATUS_MULT[mySt.status]) {
+    var stMult = CTX.STATUS_MULT[mySt.status];
+    if (mySt.status === 'questionable' && !mySt.manual && (row.practice || []).slice(-1)[0] === 'full') stMult = CTX.STATUS_FULL_PRACTICE;
+    if (stMult) {
       add({ key: 'status', label: 'His status', source: mySt.manual ? 'manual' : 'auto',
-        vol: everyField(CTX.STATUS_MULT[mySt.status]), why: stWhy });
+        vol: everyField(stMult), why: stWhy });
     }
 
     // line: starters out, by the report or by hand.
@@ -691,36 +741,46 @@
     }
 
     // qb: his receivers' rate under a quarterback who is not the starter.
-    // The starter is whoever threw the most in the last game.
-    var g0 = games[0];
-    var starter = mates.filter(function (m) { return m.pos === 'QB' && m.id !== pid && played(g0, m.id); })
-      .sort(function (a, b) { return (g0.players[b.id].pass_att || 0) - (g0.players[a.id].pass_att || 0); })[0];
-    if (pos !== 'QB' && starter && !starter.expected) {
-      var tw2 = 0, yw = 0, tWith = 0, yWith = 0;
+    // qb: a different quarterback from last game's, for his receivers --
+    // a backup stepping in, or the starter back. His own games with this
+    // week's starter say how much, against a prior: a backup costs QB_YPT,
+    // the incumbent back costs nothing.
+    var newQb = mates.filter(function (m) { return m.id === starterId; })[0];
+    var oldQb = mates.filter(function (m) { return m.id === lastStarter; })[0];
+    if (pos !== 'QB' && newQb && oldQb && starterId !== lastStarter) {
+      var tNew = 0, yNew = 0, tOld = 0, yOld = 0;
       mine.forEach(function (g) {
         var p = g.players[pid];
-        if (leadQb(g) === starter.id) { tWith += p.targets || 0; yWith += p.rec_yds || 0; } else { tw2 += p.targets || 0; yw += p.rec_yds || 0; }
+        if (leadQb(g) === starterId) { tNew += p.targets || 0; yNew += p.rec_yds || 0; } else { tOld += p.targets || 0; yOld += p.rec_yds || 0; }
       });
-      var seen = tw2 && tWith ? (yw / tw2) / (yWith / tWith) : null;
-      var qm = clamp(((seen != null ? tw2 * seen : 0) + CTX.K_QB * CTX.QB_YPT) / ((seen != null ? tw2 : 0) + CTX.K_QB), 0.8, 1.05);
-      add({ key: 'qb', label: 'Quarterback', source: starter.st.manual ? 'manual' : 'auto',
+      var seen = tNew && tOld && yOld ? (yNew / tNew) / (yOld / tOld) : null;
+      var prior = firstStart[starterId] > firstStart[lastStarter] ? 1 : CTX.QB_YPT;
+      var qm = clamp(((seen != null ? tNew * seen : 0) + CTX.K_QB * prior) / ((seen != null ? tNew : 0) + CTX.K_QB), 0.8, 1.15);
+      add({ key: 'qb', label: 'Quarterback', source: newQb.st.manual || oldQb.st.manual ? 'manual' : 'auto',
         eff: { ypt: qm, catch: 1 - (1 - qm) / 3 },
-        why: lastName(starter.name) + ' out' + (seen != null ? '; ' + who + ' had ' + tw2 + ' targets without him at ' +
-          r1(yw / tw2) + ' yds each, ' + r1(yWith / tWith) + ' with' : '; no games without him to go on') });
+        why: lastName(newQb.name) + ' starting; ' + lastName(oldQb.name) + ' started the last game' +
+          (oldQb.expected ? '' : ' and is ' + (oldQb.st.status || 'out')) +
+          (seen != null ? '. ' + who + ' had ' + tNew + ' targets from ' + lastName(newQb.name) + ' at ' + r1(yNew / tNew) +
+            ' yds each, ' + r1(yOld / tOld) + ' from the others' : '. No games of his with ' + lastName(newQb.name) + ' to go on') });
     }
 
     // roleEff: his rate in games like this week's, where there are others.
     var nm2 = Object.keys(matched).length;
     if (nm2 >= CTX.EFF_MIN_GAMES && nm2 < n) {
       var eff = {}, ew = [];
+      // With a quarterback change his per-target rate is the qb factor's,
+      // read off much the same games; counting it here too would be twice.
+      var hasQb = factors.some(function (f) { return f.key === 'qb'; });
       [['rush_att', 'rush_yds', 'ypc', 'yds/carry'], ['targets', 'rec_yds', 'ypt', 'yds/target']].forEach(function (r) {
+        if (hasQb && r[2] === 'ypt') return;
         var oM = 0, yM = 0, oA = 0, yA = 0;
         mine.forEach(function (g) {
           var p = g.players[pid];
           oA += p[r[0]] || 0; yA += p[r[1]] || 0;
           if (matched[g.game_id]) { oM += p[r[0]] || 0; yM += p[r[1]] || 0; }
         });
-        if (!oM || !oA || !yA) return;
+        // A wide receiver's lone carry says nothing about anything.
+        if (oM < CTX.EFF_MIN_OPPS || !oA || !yA) return;
         var ratio = (yM / oM) / (yA / oA);
         eff[r[2]] = clamp(1 + oM / (oM + CTX.K_EFF[r[2]]) * (ratio - 1), 1 - CTX.EFF_CAP, 1 + CTX.EFF_CAP);
         if (Math.abs(eff[r[2]] - 1) >= 0.005) ew.push(r1(yM / oM) + ' ' + r[3] + ' over ' + oM + ' vs ' + r1(yA / oA) + ' overall');
@@ -783,9 +843,12 @@
     if (!cur.length && !prev.length) return { error: 'No games this season or last to project from.' };
     var recent = cur.concat(prev);
     var c = opts.context, context = null;
+    // Games he left early count for his efficiency, not his volume.
+    var partial = c && c.team ? partialGames(c.team.doc, String(c.player_id)) : {};
+    var full = cur.filter(function (g) { return !partial[g.game_id]; });
     if (c && c.team) {
       var vol0 = {};
-      CTX_FIELDS.forEach(function (f) { vol0[f] = volumeOf(cur, prev, f).value; });
+      CTX_FIELDS.forEach(function (f) { vol0[f] = volumeOf(full, prev, f).value; });
       context = contextOf(c.team, c.opp, c.player_id, pos, vol0);
     }
     var factors = context ? context.factors : [];
@@ -801,7 +864,7 @@
       var spec = STATS[key];
       var volumes = [];
       spec.parts.forEach(function (p) {
-        volumes.push({ field: p[0], volume: volumeOf(cur, prev, p[0]), rate: rateOf(recent, p[1], pos), rateKey: p[1] });
+        volumes.push({ field: p[0], volume: volumeOf(full, prev, p[0]), rate: rateOf(recent, p[1], pos), rateKey: p[1] });
       });
       var baseWith = function (skip) {
         return sum(volumes, function (v) {
@@ -821,7 +884,7 @@
       var cv = null, over = 0;
       if (spec.kind === 'yds') {
         var perSd = ((SD_PER[v0.rateKey] || {})[pos]) || 8;
-        cv = spreadOf(recent, key, v0.field, pos, structuralCv(vol, v0.rate.value, perSd, role));
+        cv = spreadOf(full.concat(prev), key, v0.field, pos, structuralCv(vol, v0.rate.value, perSd, role));
       } else if (spec.kind === 'count') {
         // Extra spread over Poisson, as 1/r of a negative binomial: the
         // volume's swing, plus its count noise for the volume stat itself.
@@ -962,8 +1025,17 @@
     var d = m.defense;
     rows.push({
       label: def + ' allowed', sub: d.pending ? 'awaiting build' : d.none ? 'no games yet' : 'n=' + d.n + ' · ×' + d.factor.toFixed(2),
+      // Each game in his terms: his baseline x how far over or under their
+      // norm that week's players went. A group with a small norm makes a
+      // wild ratio (86 yards against a 7.8 norm is 11x), so a mark stops at
+      // ALLOWED_MARK_CAP times his baseline; the factor itself is the
+      // season's sums, untouched. The tip leads with where the mark is.
       dots: d.games.map(function (g) {
-        return { v: base * g.ratio, tip: 'Wk ' + g.week + ' vs ' + g.opp + ': allowed ' + fmt(g.allowed) + ', those players avg ' + fmt(g.exp) + ' (' + signPct(g.ratio) + ')' };
+        var r = clamp(g.ratio, 1 / ALLOWED_MARK_CAP, ALLOWED_MARK_CAP), v = base * r;
+        var times = g.ratio >= 2.5 ? r1(g.ratio) + '× their usual' : signPct(g.ratio) + ' vs their usual';
+        return { v: v, tip: 'Wk ' + g.week + ' vs ' + g.opp + ': ≈' + fmt(v) + ' ' + unit + ' in his terms' +
+          (r !== g.ratio ? ' (capped at ' + ALLOWED_MARK_CAP + '×)' : '') + ' · ' + g.opp + '\'s ' + m.pos + 's had ' +
+          fmt(g.allowed) + ', ' + times + ' of ' + fmt(g.exp) };
       })
     });
 
@@ -1356,7 +1428,9 @@
           'moves the baseline: his share of the carries and targets, who is in and out, the pace and the spread. ' : '') +
         '<i>vs ' + esc(def) + ' career</i> gets a few percent of say at most, because a handful of games years apart predict little. ' +
         '<i>' + esc(def) + ' allowed</i> puts each of its games in his terms: his baseline × how far that week\'s ' + esc(m.pos) +
-        's went over or under their norm; ×1.00 is an average defense. Marks that would overlap are stacked a step apart.') +
+        's went over or under their norm, so a mark is not what that week\'s players had — hover one for both. ' +
+        'A mark stops at ' + ALLOWED_MARK_CAP + '× his baseline: against a small norm one big game makes a wild ratio. ' +
+        '×1.00 is an average defense. Marks that would overlap are stacked a step apart.') +
       p('Game log', 'His games, oldest to newest, against the line, with ' + esc(unit) + ' under each. A ringed bar is a game against ' +
         'this defense; an outlined one is from last season.' +
         (cut ? ' The screen fits his latest ' + (m.cur.length - cut) + '; the projection uses all ' + m.cur.length + '.' : '')) +
