@@ -1154,7 +1154,7 @@
     var curSeason = m.cur;
     var rows = [];
     rows.push({
-      label: 'This season', sub: 'n=' + curSeason.length + (m.prev.length ? ' + ' + (m.season - 1) + ' prior' : ''),
+      label: 'This season',
       dots: curSeason.map(function (g) { return { v: g[key] || 0, tip: 'Wk ' + g.week + ' ' + (g.home ? 'vs ' : '@ ') + g.opp + ': ' + (g[key] || 0) + ' ' + unit }; })
     });
     // The team context: his games with this week's lineup, and what the
@@ -1163,14 +1163,13 @@
     if (c) {
       var like = curSeason.filter(function (g) { return c.matched[g.game_id]; });
       rows.push({
-        label: 'Team context', sub: (like.length ? 'n=' + like.length + ' like this week' : 'no games like this week') +
-          ' · ' + signPct(m.base0 ? m.base / m.base0 : 1),
+        label: 'Team context',
         dots: like.map(function (g) { return { v: g[key] || 0, tip: 'Wk ' + g.week + ' ' + (g.home ? 'vs ' : '@ ') + g.opp + ' with this week\'s lineup: ' + (g[key] || 0) + ' ' + unit }; })
       });
     }
     var h = m.history;
     rows.push({
-      label: 'vs ' + def + ' career', sub: 'n=' + h.games.length + ' · ' + (h.share ? Math.round(h.share * 100) + '% say' : 'no say'),
+      label: 'vs ' + def + ' career',
       dots: h.games.map(function (e) {
         var g = e.g;
         return { v: g[key] || 0, old: g.season < m.season, tip: "'" + String(g.season).slice(2) + ' Wk ' + g.week + ': ' + (g[key] || 0) + ' ' + unit +
@@ -1179,7 +1178,7 @@
     });
     var d = m.defense;
     rows.push({
-      label: def + ' allowed', sub: d.pending ? 'awaiting build' : d.none ? 'no games yet' : 'n=' + d.n + ' · ×' + d.factor.toFixed(2),
+      label: def + ' allowed',
       // Each game in his terms: his baseline x how far over or under their
       // norm that week's players went. A group with a small norm makes a
       // wild ratio (86 yards against a 7.8 norm is 11x), so a mark stops at
@@ -1209,9 +1208,9 @@
     var pad = { l: 10, r: 12, t: 18, b: 22 }, rowH = CAP + 28;
     var pw = width - pad.l - pad.r;
     var x = function (v) { return pad.l + clamp(v, 0, xmax) / xmax * pw; };
-    var caption = function (y, label, sub, cls) {
-      return '<text class="pp-row-t' + (cls || '') + '" x="4" y="' + y + '">' + esc(label) +
-        (sub ? '<tspan class="pp-row-s" dx="6">' + esc(sub) + '</tspan>' : '') + '</text>';
+    // Each section's name, in its top right.
+    var caption = function (y, label, cls) {
+      return '<text class="pp-row-t' + (cls || '') + '" x="' + (width - 4) + '" y="' + y + '" text-anchor="end">' + esc(label) + '</text>';
     };
 
     // Stack them: a count on its own value while each value has room for a
@@ -1246,7 +1245,7 @@
     var hgt = pad.t + projH + rows.length * rowH + pad.b;
     var s = svgOpen(width, hgt, over + ' of ' + N + ' projected games go over ' + line + '; median ' + fmt(m.median) + ' ' + unit);
     var yb = pad.t + CAP + tall * cell, yr = yb + 11;
-    s += caption(pad.t + 11, 'Projection', '● = 1 in ' + N + ' games', ' is-proj');
+    s += caption(pad.t + 11, 'Projection', ' is-proj');
     sims.forEach(function (d) {
       var isOver = d.q > line;
       s += '<circle class="pp-sim ' + (isOver ? 'is-over' : 'is-under') + '" cx="' + d.cx.toFixed(1) + '" cy="' + (yb - (d.k - 0.5) * cell).toFixed(1) +
@@ -1263,7 +1262,7 @@
     rows.forEach(function (r, i) {
       var rt = top + i * rowH, y = rt + CAP + 15;
       if (i % 2 === 1) s += '<rect class="pp-band" x="0" y="' + rt + '" width="' + width + '" height="' + rowH + '"/>';
-      s += caption(rt + 13, r.label, r.sub);
+      s += caption(rt + 13, r.label);
       // A season of games piles up on a phone, so a dot that would sit on
       // another steps up or down a lane (a small beeswarm).
       var lanes = [0, -5, 5, -10, 10], placed = [];
@@ -1407,10 +1406,11 @@
 
   /* ---------- the card ---------- */
 
-  /* The bar over the charts: the line and its − / +, then what he projects
-   * to, the model's chance of the over at that line, and the 80% range --
-   * one row on a wide screen, two on a phone. A touchdown's median is nearly
-   * always 0, which says nothing, so it shows the expected count. */
+  /* The bar over the charts, one labeled row each: the line and its − / +,
+   * the projection at it (the middle outcome, the chance of the over, and
+   * that chance as a price), the 80% range, and the model's own number when
+   * a book line has pulled the projection toward it. A touchdown's median is
+   * nearly always 0, which says nothing, so it shows the expected count. */
   // The chance of the over on the site's red/green scale: 55%+ green, 60%+
   // dark green, 45% and under red, 40% and under dark red. Read off the
   // rounded figure, so the color always agrees with the number printed.
@@ -1419,34 +1419,71 @@
     return v >= 60 ? 'is-good-2' : v >= 55 ? 'is-good-1' : v <= 40 ? 'is-bad-2' : v <= 45 ? 'is-bad-1' : '';
   }
 
+  // -> a chance as American odds with no margin in them: what a fair price
+  // for that side would be. 60% is −150, 40% is +150.
+  function fairOdds(p) {
+    p = clamp(p, 0.005, 0.995);
+    return p >= 0.5 ? '−' + Math.round(100 * p / (1 - p)) : '+' + Math.round(100 * (1 - p) / p);
+  }
+
+  // The line the − / + step to: the book's alternate ladder -- yards in
+  // tens (passing in 25s), everything else in ones -- each rung an "N+"
+  // (N − 0.5). The book's own line is a rung too, and a rung within half a
+  // step of it is skipped as the same bet: from 71.5 the ladder runs 59.5,
+  // 71.5, 79.5, 89.5.
+  var LADDER = { pass_yds: 25, rush_yds: 10, rec_yds: 10 };
+  function stepLine(m, cur, dir) {
+    var step = LADDER[m.key] || 1, book = m.quote && !m.spec.anytime ? m.quote.line : m.defaultLine;
+    var next = function (x) {
+      var k = dir > 0 ? Math.floor((x + 0.5) / step) + 1 : Math.ceil((x + 0.5) / step) - 1;
+      return k * step - 0.5;
+    };
+    var r = next(cur);
+    while (r !== book && Math.abs(r - book) < step / 2) r = next(r);
+    if ((dir > 0 && cur < book && book < r) || (dir < 0 && r < book && book < cur)) r = book;
+    return r < 0.5 ? cur : r;
+  }
+
+  // "O/U 71.5" for the book's line (or the model's, with none); "80+" for a
+  // rung of the ladder.
+  function lineText(m, line) {
+    var base = m.quote && !m.spec.anytime ? m.quote.line : m.defaultLine;
+    return line === base ? lineLabel(line) : fmt(line + 0.5) + '+';
+  }
+
   function topBar(m, line) {
     var c = chances(m, line), td = m.spec.kind === 'td', q = m.quote;
-    var stat = function (v, k, tip, heat) {
-      return '<span class="pp-top-stat" data-tip="' + esc(tip) + '"><b' + (heat ? ' class="pp-heat ' + heat + '"' : '') + '>' +
-        esc(v) + '</b> ' + esc(k) + '</span>';
+    var book = q ? BOOK[q.vendor] || 'Book' : null, moved = q && q.line !== line;
+    var row = function (label, value, tip) {
+      return '<span class="pp-top-l"' + (tip ? ' data-tip="' + esc(tip) + '"' : '') + '>' + esc(label) + '</span>' +
+        '<span class="pp-top-v">' + value + '</span>';
     };
-    var html = '<div class="pp-top"><div class="pp-linectl" role="group" aria-label="Line">' +
+    var html = '<div class="pp-top">';
+    html += row(q && !moved ? book + ' line' : 'Line',
+      '<span class="pp-linectl" role="group" aria-label="Line">' +
       '<button type="button" class="dd-btn pp-step" data-step="-1" aria-label="Lower the line">−</button>' +
-      '<span class="pp-line-v">' + lineLabel(line) + '</span>' +
+      '<span class="pp-line-v">' + esc(lineText(m, line)) + '</span>' +
       '<button type="button" class="dd-btn pp-step" data-step="1" aria-label="Raise the line">+</button>' +
-      '<span class="pp-src" title="' + esc(q ? 'The book\'s line' : 'No book line yet: the line is the projection\'s') + '">' +
-      (q ? BOOK[q.vendor] : 'model') + '</span>' +
-      (q && q.line !== line ? '<button type="button" class="dd-btn pp-reset">Book ' + q.line + '</button>' : '') + '</div>';
-    // The three numbers wrap as one, so a phone keeps them on one row.
-    html += '<span class="pp-top-stats">';
-    html += td
-      ? stat((Math.round(m.mean * 100) / 100).toFixed(2), 'exp. TDs', 'How many touchdowns the model expects.')
-      : stat(fmt(m.median), 'proj.', 'The middle outcome: half his projected games land above it, half below.');
-    html += stat(pct(c.over), m.spec.anytime ? 'to score' : glyph(true) + ' over' + (c.push ? ' · push ' + pct(c.push) : ''),
-      'The model\'s chance he clears the line.', chanceHeat(c.over));
-    if (!td) html += '<span class="pp-top-range" data-tip="8 in 10 of his projected games land in this range.">80%: ' +
-      fmt(m.lo) + '–' + fmt(m.hi) + '</span>';
+      (q ? '' : '<span class="pp-src" title="No book line yet: the line is the projection\'s">model</span>') +
+      (moved ? '<button type="button" class="dd-btn pp-reset">' + esc(book) + ' ' + q.line + '</button>' : '') + '</span>',
+      q ? 'The ' + book + ' line. − / + step through its alternate lines.' : null);
+    var chance = m.spec.anytime ? 'to score' : glyph(true) + (c.push ? ' · push ' + pct(c.push) : '');
+    html += row('Proj',
+      '<b class="pp-top-n" data-tip="' + esc(td ? 'How many touchdowns the model expects.' :
+        'The middle outcome: half his projected games land above it, half below.') + '">' +
+      (td ? (Math.round(m.mean * 100) / 100).toFixed(2) + '</b> <span class="pp-top-u">exp. TDs</span>' : fmt(m.median) + '</b>') +
+      '<span class="pp-top-stat" data-tip="The model\'s chance he ' + (m.spec.anytime ? 'scores' : 'clears the line') + '."><b class="pp-heat ' +
+      chanceHeat(c.over) + '">' + pct(c.over) + '</b> ' + chance + '</span>' +
+      '<span class="pp-fair" data-tip="' + esc('Fair odds: ' + pct(c.over) + ' as a price with no margin. A book paying more than this is worth a look.') +
+      '">' + fairOdds(c.over) + ' <span class="pp-top-u">fair</span></span>');
+    if (!td) html += row('80% range', '<span class="pp-top-range">' + fmt(m.lo) + '–' + fmt(m.hi) + '</span>',
+      '8 in 10 of his projected games land in this range.');
     if (m.marketW < 1 && q) {
-      html += '<span class="pp-top-range" data-tip="' + esc('The model alone projects ' + fmt(m.model.median) + '. The projection keeps ' +
-        Math.round(m.marketW * 100) + '% of its gap from the ' + (BOOK[q.vendor] || 'book') + ' line: a line knows things the model cannot, ' +
-        'and in 2025 the model\'s own chances were overconfident.') + '">model alone: ' + fmt(m.model.median) + '</span>';
+      html += row('Model alone', '<span class="pp-top-range">' + (td ? (Math.round(m.model.mean * 100) / 100).toFixed(2) : fmt(m.model.median)) + '</span>',
+        'The model\'s own projection. The one above keeps ' + Math.round(m.marketW * 100) + '% of its gap from the ' + book +
+        ' line: a line knows things the model cannot, and in 2025 the model\'s own chances were overconfident.');
     }
-    return html + '</span></div>';
+    return html + '</div>';
   }
 
 
@@ -1579,7 +1616,7 @@
     var cut = logGames(m, width).cut;
     var p = function (head, text) { return '<p><b>' + head + '.</b> ' + text + '</p>'; };
     return '<section class="pp-notes"><h4 class="pp-h">How to read these charts</h4>' +
-      p('Projection and what goes into it', 'All on one scale, with the line through every row. ' +
+      p('Projections & Priors', 'All on one scale, with the line through every row. ' +
         '<i>Projection</i> is ' + (width < 520 || m.spec.kind === 'td' ? 20 : 50) + ' equally likely games the model expects, one circle each, ' +
         'stacked by result: blue clears the line, orange falls short, and the share that are blue is the chance of the over. ' +
         'The diamond under them is the median and its bar spans 8 in 10 games. The fewer ' + esc(unit) + ' he gets, the wider the ' +
@@ -1594,7 +1631,7 @@
         '<i>' + esc(def) + ' allowed</i> puts each of its games in his terms: his baseline × how far that week\'s ' + esc(m.pos) +
         's went over or under their norm, so a mark is not what that week\'s players had — hover one for both. ' +
         'A mark stops at ' + ALLOWED_MARK_CAP + '× his baseline: against a small norm one big game makes a wild ratio. ' +
-        '×1.00 is an average defense. Marks that would overlap are stacked a step apart.') +
+        'Marks that would overlap are stacked a step apart.') +
       p('Game log', 'His games, oldest to newest, against the line, with ' + esc(unit) + ' under each. A ringed bar is a game against ' +
         'this defense; an outlined one is from last season.' +
         (cut ? ' The screen fits his latest ' + (m.cur.length - cut) + '; the projection uses all ' + m.cur.length + '.' : '')) +
@@ -1633,6 +1670,7 @@
     BY_POS: BY_POS,
     build: build,
     chances: chances,
+    stepLine: stepLine,
     card: card,
     notes: notes,
     defensePanel: defensePanel,

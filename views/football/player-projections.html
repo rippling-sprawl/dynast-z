@@ -570,8 +570,7 @@
         var cur = lines[stat] != null ? lines[stat] : m.defaultLine;
         if (t.classList.contains('pp-reset')) delete lines[stat];
         else {
-          var step = m.spec.kind === 'yds' && cur >= 30 ? 5 : 1;
-          lines[stat] = Math.max(0.5, cur + step * Number(t.getAttribute('data-step')));
+          lines[stat] = PlayerProjection.stepLine(m, cur, Number(t.getAttribute('data-step')));
         }
       }
       drawProj();

@@ -99,21 +99,36 @@
 .pp-line-v { min-width: 58px; font-size: 13px; text-align: center; font-weight: 650; color: var(--text-hi); font-variant-numeric: tabular-nums; }
 .pp-src { margin-left: 2px; font-size: 10px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-4); }
 
-/* The line, its − / +, and the projection at it, in one bar. */
+/* The line, its − / +, and the projection at it: one labeled row each,
+ * the labels in a column on the left and a rule between rows. */
 .pp-top {
-  display: flex;
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
   align-items: center;
-  flex-wrap: wrap;
-  gap: 4px 14px;
-  padding: 5px 8px;
+  padding: 2px 10px;
   background: var(--surface-2);
   border-radius: 6px;
   font-size: 12px;
   color: var(--text-3);
 }
-.pp-top-stats { display: flex; align-items: baseline; flex-wrap: wrap; gap: 2px 12px; }
+.pp-top-l, .pp-top-v { padding: 6px 0; min-height: 26px; display: flex; align-items: center; }
+.pp-top-l + .pp-top-v ~ .pp-top-l, .pp-top-l + .pp-top-v ~ .pp-top-l + .pp-top-v { border-top: 1px solid var(--border); }
+.pp-top-l {
+  padding-right: 14px;
+  font-size: 10.5px;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-4);
+  cursor: help;
+}
+.pp-top-l:not([data-tip]) { cursor: default; }
+.pp-top-v { flex-wrap: wrap; gap: 4px 12px; }
+.pp-top-n { font-size: 16px; font-weight: 700; color: var(--text-hi); font-variant-numeric: tabular-nums; cursor: help; }
+.pp-top-u { font-size: 11px; color: var(--text-4); }
 .pp-top-stat { white-space: nowrap; cursor: help; }
-.pp-top-stat b { font-size: 15px; font-weight: 700; color: var(--text-hi); font-variant-numeric: tabular-nums; }
+.pp-top-stat b { font-size: 14px; font-weight: 700; color: var(--text-hi); font-variant-numeric: tabular-nums; }
+.pp-fair { white-space: nowrap; font-size: 13px; font-weight: 650; color: var(--text-2); font-variant-numeric: tabular-nums; cursor: help; }
 /* The chance of the over, on the site's red/green scale (chanceHeat). The
  * deep steps are solid with white text; the dark theme's deep red is its
  * --bad-line-hi, since --bad there is too light to carry white text. */
@@ -161,9 +176,6 @@
 
 .pp-row-t { font-size: 12px; font-weight: 600; fill: var(--text-2); }
 .pp-row-t.is-proj { fill: var(--text-hi); font-weight: 700; }
-.pp-row-s { font-size: 10.5px; font-weight: 400; fill: var(--text-4); }
-/* A row's caption sits in its top left, where the line can cross it. */
-.pp-row-t { paint-order: stroke; stroke: var(--surface); stroke-width: 3px; stroke-linejoin: round; }
 .pp-ev-dot.is-over { fill: var(--series-a); }
 .pp-ev-dot.is-under { fill: var(--series-b); }
 .pp-range { stroke: var(--text-3); stroke-width: 3; stroke-linecap: round; }
@@ -212,8 +224,8 @@
   pointer-events: none;
 }
 .pp-step::after, .pp-reset::after { display: none; }
-/* A value or line label that lands on the dashed line stays readable. */
-.pp-val, .pp-line-t { paint-order: stroke; stroke: var(--surface); stroke-width: 3px; stroke-linejoin: round; }
+/* A game log value that lands on the dashed line stays readable. */
+.pp-val { paint-order: stroke; stroke: var(--surface); stroke-width: 3px; stroke-linejoin: round; }
 
 /* The key under each card's charts, and the line of explanation under each chart. */
 .pp-key {
