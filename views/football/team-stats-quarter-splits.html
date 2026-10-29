@@ -138,8 +138,9 @@
 
     /* ---------- the numbers ----------
      * A game's line is [q1, q2, q3, q4, ot]. The periods shown are the four
-     * quarters plus two running totals: HT after the 2nd, FT at the end with
-     * overtime folded in. OT never gets a column of its own.
+     * quarters plus three totals: HT after the 2nd, 2H (3rd + 4th) after the
+     * 4th, and FT at the end with overtime folded in. OT never gets a column
+     * of its own, and is left out of 2H.
      *
      * Everything below takes the view `v` it reads, since the opponent's rows
      * read the opposite one to the team's. */
@@ -157,13 +158,14 @@
       return g.pf[4] > 0 || g.pa[4] > 0;
     }
 
-    // -> [q1, q2, ht, q3, q4, ft]
+    // -> [q1, q2, ht, q3, q4, 2h, ft]
     function periods(l) {
-      return [l[0], l[1], l[0] + l[1], l[2], l[3], l[0] + l[1] + l[2] + l[3] + l[4]];
+      return [l[0], l[1], l[0] + l[1], l[2], l[3], l[2] + l[3], l[0] + l[1] + l[2] + l[3] + l[4]];
     }
 
-    var COLS = ['1st', '2nd', 'HT', '3rd', '4th', 'FT'];
-    var IS_TOT = [false, false, true, false, false, true];
+    var COLS = ['1st', '2nd', 'HT', '3rd', '4th', '2H', 'FT'];
+    var IS_TOT = [false, false, true, false, false, true, true];
+    var FT = COLS.length - 1;
     var NCOL = COLS.length + 1;
 
     function fmt(x, v, dp) {
@@ -208,7 +210,7 @@
       return view === 'for' ? s : -s;
     }
 
-    // HT and FT are not heatmapped, but a differential's total is still
+    // HT, 2H and FT are not heatmapped, but a differential's total is still
     // coloured by whose favour it runs, from the picked team's side.
     function totTone(x, opp) {
       if (!x) return '';
@@ -244,11 +246,11 @@
 
     function round1(x) { return Math.round(x * 10) / 10; }
 
-    // -> { avg: [6], med: [6], n, ot } over a list of games, to one decimal as
+    // -> { avg: [7], med: [7], n, ot } over a list of games, to one decimal as
     // shown. Each column's median is its own: HT's is the median halftime
-    // score, not 1st + 2nd.
+    // score, not 1st + 2nd, and likewise 2H's.
     function aggregate(games, v) {
-      var cols = [[], [], [], [], [], []], ot = 0;
+      var cols = COLS.map(function () { return []; }), ot = 0;
       games.forEach(function (g) {
         periods(lineOf(g, v)).forEach(function (x, i) { cols[i].push(x); });
         if (otScored(g, v)) ot++;
@@ -281,7 +283,7 @@
     function aggRows(a, v, opp) {
       function row(label, vals) {
         return '<tr class="qs-aggrow"><th class="qs-rowhead qs-agg">' + esc(label) + '</th>' +
-          vals.map(function (x, i) { return cell(x, i, v, 1, a.ot > 0 && i === 5, opp); }).join('') +
+          vals.map(function (x, i) { return cell(x, i, v, 1, a.ot > 0 && i === FT, opp); }).join('') +
           '</tr>';
       }
       return row('Average', a.avg) + row('Median', a.med);
@@ -327,7 +329,7 @@
         var star = otScored(g, view);
         return out + '<tr><th class="qs-rowhead"><span class="qs-wk"><b>' + esc(weekLabel(g)) + '</b>' +
           '<span class="qs-at">' + (g.home || g.neutral ? 'vs' : '@') + '</span>' + logo(g.opp) + '</span></th>' +
-          lines[k].map(function (x, i) { return cell(x, i, view, 0, star && i === 5); }).join('') +
+          lines[k].map(function (x, i) { return cell(x, i, view, 0, star && i === FT); }).join('') +
           '</tr>';
       }).join('');
       return head + aggRows(a, view, false) + body;
@@ -346,7 +348,7 @@
           ? 'Colours run on a fixed league-wide range: even at 0, deepest at ±10 or more in a quarter · '
           : 'Colours run on a fixed league-wide range: 0 points in a quarter, 5.5 average (uncoloured), 7 above average, 10 high, 13+ the most · ') +
         'The opponent is read from the other side: under Scored it shows what they allow, under Allowed what they score · ' +
-        'HT and FT are running totals and are not heatmapped · OT has no column of its own: its points are in FT, marked * · ' +
+        'HT, 2H and FT are totals and are not heatmapped · 2H is the 3rd plus the 4th · OT has no column of its own: its points are in FT only, marked * · ' +
         (view === 'diff' ? 'Diff is points scored minus points allowed in that period · ' : '') +
         'rebuilt Tuesdays 5am ET';
     }
