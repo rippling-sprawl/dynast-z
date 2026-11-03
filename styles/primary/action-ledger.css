@@ -86,7 +86,7 @@
 
 /* ---- chart ---- */
 .al-graph {
-  position: relative; margin-bottom: 12px; padding: 12px 12px 8px;
+  position: relative; margin-bottom: 12px; padding: 12px 0px 8px;
   background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
 }
 .al-graph[hidden] { display: none; }

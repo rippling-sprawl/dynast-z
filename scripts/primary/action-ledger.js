@@ -363,7 +363,7 @@
   function drawChart(pts) {
     const W = Math.max(300, Math.floor(els.graph.clientWidth - 24));
     const H = 256;
-    const mL = 76, mR = 14, mT = 30, mB = 44;
+    const mL = 62, mR = 14, mT = 30, mB = 44;
     const x0 = mL, x1 = W - mR, yTop = mT, yBot = H - mB;
     let min = Math.min(0, ...pts.map(p => p.cum));
     let max = Math.max(0, ...pts.map(p => p.cum));
@@ -408,9 +408,8 @@
         ticks.map(v => `<line class="al-grid" x1="${x0}" x2="${x1}" y1="${yAt(v).toFixed(1)}" y2="${yAt(v).toFixed(1)}"/>` +
           `<text class="al-ax" x="${x0 - 8}" y="${(yAt(v) + 3.5).toFixed(1)}" text-anchor="end">${short(v)}</text>`).join('') +
         vGrid +
-        // Axis titles: the y title turned up the left edge, the x title under
-        // the dates, naming what the vertical lines mark.
-        `<text class="al-ax-title" transform="translate(12 ${((yTop + yBot) / 2).toFixed(1)}) rotate(-90)" text-anchor="middle">Cumulative net ($)</text>` +
+        // The x title, under the dates, names what the vertical lines mark.
+        // The y axis has none: the chart's title already says what it counts.
         `<text class="al-ax-title" x="${((x0 + x1) / 2).toFixed(1)}" y="${H - 4}" text-anchor="middle">Date · by ${unit}</text>` +
         `<line class="al-zero" x1="${x0}" x2="${x1}" y1="${zeroY}" y2="${zeroY}"/>` +
         `<path class="al-area-up" d="${area}" clip-path="url(#al-up)"/>` +
