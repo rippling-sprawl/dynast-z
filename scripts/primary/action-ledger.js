@@ -36,12 +36,13 @@
 
   const TYPE_ORDER = ['Spread', 'Moneyline', 'Total', 'Prop', 'Parlay', 'Teaser',
     'Future', 'Custom', 'Competition', 'Other'];
-  // Outlook buckets for open futures, by win chance in percent: a ticket goes
-  // in the first bucket whose floor it meets.
+  // Outlook buckets for open futures, by win chance in whole percent: a ticket
+  // goes in the first bucket whose floor it meets, so toss-up is 40-60
+  // inclusive, lean win 61-69 and lean loss 30-39.
   const OUTLOOK = [
     { key: 'likely-win', label: 'Likely win', min: 70 },
-    { key: 'lean-win', label: 'Lean win', min: 55 },
-    { key: 'toss-up', label: 'Toss-up', min: 45 },
+    { key: 'lean-win', label: 'Lean win', min: 61 },
+    { key: 'toss-up', label: 'Toss-up', min: 40 },
     { key: 'lean-loss', label: 'Lean loss', min: 30 },
     { key: 'likely-loss', label: 'Likely loss', min: 0 },
   ];
@@ -90,8 +91,13 @@
   // American odds -> implied win chance, in percent (vig left in).
   const implied = o => o == null || o === 0 ? null : o > 0 ? 10000 / (o + 100) : -o * 100 / (-o + 100);
   const hasOwnChance = r => CHANCES[r.id] != null;
-  const chanceOf = r => hasOwnChance(r) ? CHANCES[r.id] : implied(r.o);
-  const pct = v => v == null ? '—' : (Math.round(v * 10) / 10) + '%';
+  // Chances are whole percents everywhere -- shown, bucketed and weighed --
+  // whether typed or implied by the odds.
+  const chanceOf = r => {
+    const v = hasOwnChance(r) ? CHANCES[r.id] : implied(r.o);
+    return v == null ? null : Math.round(v);
+  };
+  const pct = v => v == null ? '—' : v + '%';
   const showChances = () => state.type === 'Future';
   const isoDay = t => new Date(t - new Date(t).getTimezoneOffset() * 60000).toISOString().slice(0, 10);
 
@@ -133,7 +139,7 @@
     }
     if (state.result && r.r !== state.result) return false;
     if (state.q) {
-      const hay = (r.d + ' ' + (r.m || '') + ' ' + (r.sub || '') + ' ' +
+      const hay = (r.d + ' ' + (r.x || '') + ' ' + (r.m || '') + ' ' + (r.sub || '') + ' ' +
         (r.legs || []).map(l => l.d + ' ' + (l.m || '')).join(' ')).toLowerCase();
       if (!state.q.toLowerCase().split(/\s+/).every(w => hay.includes(w))) return false;
     }
@@ -409,7 +415,7 @@
     // the float dust so it reads $0, not +$0 or −$0.01.
     open.length && [total, unrated, ...Object.values(by)].forEach(a => { a.ev = Math.round(a.ev) || 0; });
     const tone = v => v > 0 ? 'al-pos' : v < 0 ? 'al-neg' : '';
-    const range = (b, i) => i === 0 ? `${b.min}%+` : `${b.min}–${OUTLOOK[i - 1].min}%`;
+    const range = (b, i) => i === 0 ? `${b.min}%+` : `${b.min}–${OUTLOOK[i - 1].min - 1}%`;
     const row = (label, hint, a, cls) => `<tr class="${cls || ''}"><th scope="row">${label}` +
       (hint ? ` <span class="al-meta al-inline">${hint}</span>` : '') + '</th>' +
       `<td class="al-r al-num">${a.n.toLocaleString()}</td><td class="al-r al-num">${money(a.s)}</td>` +
@@ -470,6 +476,7 @@
         return `<td class="al-bet">` +
           (legs ? `<button type="button" class="al-legs-btn" data-id="${r.id}" aria-expanded="${expanded.has(r.id)}">${expanded.has(r.id) ? '▾' : '▸'}</button>` : '') +
           `<span class="al-desc">${esc(r.d)}</span>` +
+          (r.x ? `<span class="al-detail">${esc(r.x)}</span>` : '') +
           (sub ? `<span class="al-meta">${sub}</span>` : '') + '</td>';
       }
       case 'type': return `<td><span class="al-chip">${esc(r.t)}</span></td>`;
@@ -482,8 +489,8 @@
         if (r.r !== 'pending') return `<td class="al-r al-num al-chance-done">${pct(v)}</td>`;
         const own = hasOwnChance(r);
         return `<td class="al-r al-num al-chance-cell${own ? ' al-chance-own' : ''}">` +
-          `<input class="al-chance" type="number" inputmode="decimal" min="0" max="100" step="0.1" data-id="${r.id}" ` +
-          `value="${v == null ? '' : Math.round(v * 10) / 10}" aria-label="Win chance for ${esc(r.d)}"><span class="al-pct">%</span></td>`;
+          `<input class="al-chance" type="number" inputmode="numeric" min="0" max="100" step="1" data-id="${r.id}" ` +
+          `value="${v == null ? '' : v}" aria-label="Win chance for ${esc(r.d)}"><span class="al-pct">%</span></td>`;
       }
       case 'stake': return `<td class="al-r al-num">${money(r.s)}</td>`;
       case 'towin': return `<td class="al-r al-num">${money(r.w)}</td>`;
@@ -592,7 +599,7 @@
       const td = input.closest('td');
       td.classList.toggle('al-chance-own', hasOwnChance(r));
       const v = chanceOf(r);
-      input.value = v == null ? '' : Math.round(v * 10) / 10;
+      input.value = v == null ? '' : v;
       renderBuckets(lastRows);
     };
     paint();
@@ -617,10 +624,10 @@
     if (!input) return;
     const id = Number(input.dataset.id);
     const raw = input.value.trim();
-    const v = Math.min(100, Math.max(0, Math.round(Number(raw) * 10) / 10));
+    const v = Math.min(100, Math.max(0, Math.round(Number(raw))));
     if (raw === '' || isNaN(v)) {
       const cur = chanceOf(ROWS.find(x => x.id === id));
-      input.value = cur == null ? '' : Math.round(cur * 10) / 10;
+      input.value = cur == null ? '' : cur;
       return;
     }
     saveChance(id, v, input);

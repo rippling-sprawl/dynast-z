@@ -21,6 +21,9 @@ ROW SHAPE (short keys: ~11k rows, so every byte is paid eleven thousand times)
     t    bet type: Spread, Moneyline, Total, Prop, Future, Custom, Parlay, ...
     sub  prop market, when t is Prop ("Anytime TD", "Receiving Yards")
     d    description, as entered
+    x    what a future is on ("AFC Conference", "Offensive Rookie of the
+         Year"), futures only -- left off over/unders, whose line already says
+         it, and off Action Network's catch-all "Custom Picks"
     lg   league slug, or "" when Action Network has none
     tm   team nicknames the ticket touches (both sides of every game in it)
          -- absent when none are known, as is any other field that would be null
@@ -121,6 +124,26 @@ def money(v):
     return None if v is None else round(float(v), 2)
 
 
+# "Josh Allen o450.5", "Packers u8.5", "Over 9.5": the line is the bet.
+OVER_UNDER = re.compile(r"(?:\s[ou]\d|\b(?:over|under)\b)", re.I)
+# Action Network names a market "2026 NFL AFC Conference - To Win". The season
+# and league are every future's, and a future is always to win, so all three
+# are trimmed: "AFC Conference". Same for "2026-27 NBA ", "2026 MLB ", etc.
+MARKET_PREFIX = re.compile(r"^\d{4}(?:-\d{2})?\s+[A-Z]+\s+")
+MARKET_SUFFIX = re.compile(r"\s+-\s+To Win$", re.I)
+
+
+def future_detail(p, raw):
+    """The market a future is in, when the description alone does not say."""
+    if not p.get("is_future"):
+        return None
+    market = (raw.get("meta") or {}).get("description") or raw.get("custom_pick_name") or ""
+    desc = p.get("description") or ""
+    if not market or market == "Custom Picks" or market == desc or OVER_UNDER.search(desc):
+        return None
+    return MARKET_SUFFIX.sub("", MARKET_PREFIX.sub("", market)) or None
+
+
 def build(data):
     straight_like = (data["straight"] + data["futures"]["pending"]
                      + data["futures"]["settled"])
@@ -157,6 +180,9 @@ def build(data):
             }
             if sub:
                 row["sub"] = sub
+            detail = future_detail(p, raw)
+            if detail:
+                row["x"] = detail
             teams = set(teams_of(p.get("matchup")))
             if p.get("matchup"):
                 row["m"] = p["matchup"]

@@ -103,7 +103,7 @@ def set_chance(body):
         return None, "id must be a ticket id"
     if isinstance(chance, bool) or not isinstance(chance, (int, float)) or not 0 <= chance <= 100:
         return None, "chance must be a number from 0 to 100"
-    chance = round(float(chance), 1)
+    chance = round(chance)
     chances = load_chances()
     chances[str(tid)] = chance
     supabase_request(
