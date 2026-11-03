@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/assets/icons/app-touch-180.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Dynast-Z">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <title>Action Ledger | Dynast-Z</title>
+  <!-- Theme first: theme.js sets <html data-theme> before the first paint,
+       theme.css holds every colour token the sheets below spend. -->
+  <script src="/scripts/base/theme.js"></script>
+  <link rel="stylesheet" href="/styles/base/theme.css">
+  <link rel="stylesheet" href="/styles/base/styles.css">
+  <link rel="stylesheet" href="/styles/primary/bets.css">
+  <link rel="stylesheet" href="/styles/primary/action-ledger.css">
+  <script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
+  <script defer src="/_vercel/insights/script.js"></script>
+</head>
+<body>
+  <div id="header-mount"></div>
+  <div id="nav-drawer-mount"></div>
+  <script src="/scripts/base/auth.js"></script>
+  <script src="/scripts/base/standalone.js"></script>
+  <script src="/scripts/base/nav.js"></script>
+  <script src="/scripts/components/table-sort.js"></script>
+  <script>initPage();</script>
+
+  <main class="bets-content al-content">
+    <div class="bets-breadcrumbs"><a href="/football">Football</a><span class="sep">/</span><span>Sandbox</span><span class="sep">/</span><span>Action Ledger</span></div>
+
+    <h2 class="bets-h2">📒 Action Ledger</h2>
+    <p class="bets-sub" id="al-sub">Loading…</p>
+
+    <!-- Three views of the same rows. The filter bar below narrows all three;
+         the date range only applies to All Bets, since Pending and Futures are
+         defined by a date window of their own. -->
+    <div class="al-tabs" role="tablist" aria-label="Ledger view">
+      <button type="button" class="al-tab" role="tab" data-view="all" aria-selected="true">All Bets</button>
+      <button type="button" class="al-tab" role="tab" data-view="pending" aria-selected="false">Pending <span class="al-tab-hint">next 2 wks</span></button>
+      <button type="button" class="al-tab" role="tab" data-view="futures" aria-selected="false">Futures <span class="al-tab-hint">NFL, 2027+</span></button>
+    </div>
+
+    <div class="al-filters" id="al-filters">
+      <label class="al-field al-date-only">
+        <span class="al-label">Date</span>
+        <select class="al-input" id="f-range">
+          <option value="7">Last 7 days</option>
+          <option value="30">Last 30 days</option>
+          <option value="60" selected>Last 60 days</option>
+          <option value="90">Last 90 days</option>
+          <option value="365">Last 365 days</option>
+          <option value="ytd">This year</option>
+          <option value="all">All time</option>
+          <option value="custom">Custom…</option>
+        </select>
+      </label>
+      <label class="al-field al-date-only al-custom" hidden>
+        <span class="al-label">From</span>
+        <input class="al-input" type="date" id="f-from">
+      </label>
+      <label class="al-field al-date-only al-custom" hidden>
+        <span class="al-label">To</span>
+        <input class="al-input" type="date" id="f-to">
+      </label>
+      <label class="al-field">
+        <span class="al-label">Bet type</span>
+        <select class="al-input" id="f-type"><option value="">All types</option></select>
+      </label>
+      <label class="al-field">
+        <span class="al-label">League</span>
+        <select class="al-input" id="f-league"><option value="">All leagues</option></select>
+      </label>
+      <label class="al-field">
+        <span class="al-label">Team</span>
+        <select class="al-input" id="f-team"><option value="">All teams</option></select>
+      </label>
+      <label class="al-field">
+        <span class="al-label">Result</span>
+        <select class="al-input" id="f-result">
+          <option value="">Any</option>
+          <option value="win">Won</option>
+          <option value="loss">Lost</option>
+          <option value="push">Push</option>
+          <option value="pending">Pending</option>
+        </select>
+      </label>
+      <label class="al-field al-grow">
+        <span class="al-label">Search</span>
+        <input class="al-input" type="search" id="f-q" placeholder="Player, team, market…">
+      </label>
+      <button type="button" class="al-reset" id="f-reset">Reset</button>
+    </div>
+
+    <div class="al-stats" id="al-stats"></div>
+    <div class="pl-graph al-graph" id="al-graph"></div>
+
+    <div class="al-table-wrap">
+      <table class="al-table" id="al-table">
+        <thead id="al-head"></thead>
+        <tbody id="al-body"></tbody>
+      </table>
+    </div>
+    <div class="al-more" id="al-more"></div>
+  </main>
+
+  <script src="/scripts/primary/action-ledger.js"></script>
+</body>
+</html>

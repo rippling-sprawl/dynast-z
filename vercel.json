@@ -124,6 +124,10 @@
       "destination": "/views/football/long-reception.html"
     },
     {
+      "source": "/football/action-ledger",
+      "destination": "/views/football/action-ledger.html"
+    },
+    {
       "source": "/football/team-stats/yards-vs-points",
       "destination": "/views/football/team-stats-yards-vs-points.html"
     },

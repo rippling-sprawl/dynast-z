@@ -656,8 +656,15 @@
       return o == null ? '' : o > 0 ? '+' + o : '−' + Math.abs(o);
     }
 
+    // The board waits for the viewer to ask for it: it is a DraftKings call
+    // plus a context fetch per game, too much to spend on every visit.
     function showTop() {
       syncViews();
+      if (!topPromise) {
+        topEl.innerHTML = '<p class="sched-empty"><button type="button" class="dd-btn pp-top-load">' +
+          'Load week ' + esc(week) + '’s biggest edges</button></p>';
+        return;
+      }
       if (!topRows.length) topEl.innerHTML = '<p class="sched-empty">Projecting this week\'s DraftKings yards lines…</p>';
       loadTop().then(function (t) {
         topRows = t.rows;
@@ -699,6 +706,11 @@
 
     // A row opens that player on that stat, the way a search pick would.
     topEl.addEventListener('click', function (e) {
+      if (e.target.closest && e.target.closest('.pp-top-load')) {
+        loadTop();
+        showTop();
+        return;
+      }
       var a = e.target.closest ? e.target.closest('a[data-i]') : null;
       if (!a || e.metaKey || e.ctrlKey || e.shiftKey || e.button) return;
       e.preventDefault();

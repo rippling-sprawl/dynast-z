@@ -80,6 +80,10 @@ const NAV_SECTIONS = [
       // The week's longest-reception prices against a likelihood built from
       // play-by-play rather than from the ladder being priced.
       { label: 'Longest Reception', href: '/football/long-reception', emoji: '📏' },
+      // Every Action Network bet, filterable, with a P/L chart over the
+      // filtered set. Admin-only, and enforced: /api/action-ledger checks
+      // X-User-Id, so the gate is more than this flag.
+      { label: 'Action Ledger', href: '/football/action-ledger', emoji: '📒', admin: true },
     ],
   },
   {

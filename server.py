@@ -221,6 +221,22 @@ PICKEM_PICKS_RE = re.compile(r"^/football/pickem/picks(?:/[0-9]{1,2})?/?$")
 # week" itself.
 SURVIVOR_PICK_RE = re.compile(r"^/football/survivor/pick(?:/[0-9]{1,2})?/?$")
 
+_action_ledger_api = None
+
+
+def action_ledger_api():
+    """Load api/action-ledger.py so dev gates and reads the ledger exactly as
+    production does. By path because of the hyphen, lazily like the rest."""
+    global _action_ledger_api
+    if _action_ledger_api is None:
+        import importlib.util
+        path = os.path.join(DATA_DIR, "api", "action-ledger.py")
+        spec = importlib.util.spec_from_file_location("action_ledger_api", path)
+        _action_ledger_api = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(_action_ledger_api)
+    return _action_ledger_api
+
+
 _game_odds_api = None
 
 
@@ -1793,6 +1809,26 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         elif self.path.split("?")[0] == "/football/long-reception":
             self.path = "/views/football/long-reception.html"
             super().do_GET()
+        # Every Action Network bet in one filterable list. Admin-only: the
+        # page gates itself and its data endpoint below checks X-User-Id.
+        elif self.path.split("?")[0] == "/football/action-ledger":
+            self.path = "/views/football/action-ledger.html"
+            super().do_GET()
+        elif self.path.split("?")[0] == "/api/action-ledger":
+            api = action_ledger_api()
+            try:
+                err = api.resolve_admin(self.headers.get("X-User-Id"))
+                if err:
+                    self._json_response(*err)
+                    return
+                data = api.load()
+            except Exception as e:  # noqa: BLE001
+                self._json_response(500, {"error": str(e)})
+                return
+            if data is None:
+                self._json_response(404, {"error": "No ledger yet -- run scripts/build_action_ledger.py --push"})
+                return
+            self._json_response(200, data)
         # Team Stats: a landing page of cards, then one page per chart.
         elif self.path.split("?")[0] == "/football/team-stats/yards-vs-points":
             self.path = "/views/football/team-stats-yards-vs-points.html"
@@ -2396,6 +2432,26 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 self._json_response(200, {"ok": True})
             except Exception as e:
                 self._json_response(500, {"error": str(e)})
+        elif self.path.split("?")[0] == "/api/action-ledger":
+            api = action_ledger_api()
+            try:
+                err = api.resolve_admin(self.headers.get("X-User-Id"))
+                if err:
+                    self._json_response(*err)
+                    return
+                length = int(self.headers.get("Content-Length", 0))
+                body = json.loads(self.rfile.read(length)) if length else {}
+                result, error = api.save(body)
+            except json.JSONDecodeError:
+                self._json_response(400, {"error": "Body must be JSON"})
+                return
+            except Exception as e:  # noqa: BLE001
+                self._json_response(500, {"error": str(e)})
+                return
+            if error:
+                self._json_response(400, {"error": error})
+                return
+            self._json_response(200, result)
         # Player Projections' hand adjustments: an admin or editor only, by
         # the deployed function's own rule (resolve_editor).
         elif self.path.split("?")[0] == "/api/player-projections":
