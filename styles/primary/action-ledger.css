@@ -34,21 +34,29 @@
 .al-tab-hint { font-size: 11px; font-weight: 600; letter-spacing: 0.5px; color: var(--text-5); margin-left: 4px; }
 
 /* ---- filters: the dd-row, plus the custom dates and the search ---- */
-.al-filters { margin-bottom: 12px; }
+/* Every dropdown at the size of defense-vs-players' and player-projections'
+ * (.dvp-controls .dd-btn), not the schedule's larger default; the inputs and
+ * Reset are cut to the same height. */
+.al-filters { margin-bottom: 12px; gap: 8px; }
+.al-filters .dd-btn { font-size: 11.5px; padding: 3px 8px; gap: 6px; }
+.al-filters .dd-opt { font-size: 12px; }
+.al-filters .sched-reset { font-size: 11.5px; padding: 3px 2px; }
 .al-custom { display: flex; align-items: center; gap: 6px; }
 .al-custom[hidden], .dd[hidden] { display: none; }
 .al-to {
-  font-family: var(--vi-display); font-size: 12px; font-weight: 700;
+  font-family: var(--vi-display); font-size: 11px; font-weight: 700;
   text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-4);
 }
 .al-input {
   background: var(--surface-2); border: 1px solid var(--border); color: var(--text);
-  font: inherit; font-size: 13px; padding: 5px 9px; border-radius: 2px;
+  font: inherit; font-size: 11.5px; padding: 3px 8px; border-radius: 2px;
   line-height: 1.5; min-width: 0;
 }
 .al-input:hover { border-color: var(--vi-gold); }
 .al-input:focus { outline: none; border-color: var(--vi-gold); background: var(--surface-3); }
 .al-input::placeholder { color: var(--text-5); }
+/* A date field draws its own picker icon, two pixels taller than text. */
+.al-input[type="date"] { padding-top: 2px; padding-bottom: 2px; }
 .al-search { display: flex; align-items: center; gap: 6px; flex: 1 1 120px; min-width: 0; }
 .al-search .al-input { flex: 1 1 auto; width: 100%; }
 .al-glass { display: flex; align-items: center; color: var(--text-4); cursor: text; }
@@ -93,6 +101,10 @@
 }
 .al-ax { fill: var(--text-4); font-size: 10px; font-variant-numeric: tabular-nums; }
 .al-grid { stroke: var(--border-soft); stroke-width: 1; }
+.al-ax-title {
+  fill: var(--text-4); font-family: var(--vi-display); font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.7px;
+}
 .al-zero { stroke: var(--text-5); stroke-width: 1; stroke-dasharray: 3 3; }
 .al-area-up { fill: var(--pl-up-fill); }
 .al-area-down { fill: var(--pl-down-fill); }
@@ -144,6 +156,25 @@
 .al-num { font-variant-numeric: tabular-nums; white-space: nowrap; }
 .al-nowrap { white-space: nowrap; color: var(--text-3); }
 .al-bet { min-width: 220px; }
+/* Bet is pinned: it stays put while the numbers scroll under it on a narrow
+ * screen. Pinned cells need their own fill, and a rule to scroll beneath. */
+.al-table thead th:first-child, .al-row td:first-child {
+  position: sticky; left: 0; z-index: 1; background: var(--surface);
+  box-shadow: inset -1px 0 0 var(--border);
+}
+.al-table thead th:first-child { z-index: 2; }
+.al-row:hover td:first-child { background: linear-gradient(var(--surface-hover), var(--surface-hover)), var(--surface); }
+/* Each day's tickets sit under a full-width row naming the day. Its label
+ * is pinned too, so it is still read when the table is scrolled sideways. */
+.al-day-row th {
+  padding: 0; text-align: left; background: var(--surface-2);
+  border-bottom: 1px solid var(--border);
+}
+.al-day {
+  position: sticky; left: 0; display: inline-block; padding: 5px 8px;
+  font-family: var(--vi-display); font-size: 10.5px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.7px; color: var(--text-3);
+}
 .al-desc { color: var(--text-hi); font-weight: 650; }
 .al-meta { display: block; font-size: 11px; color: var(--text-4); margin-top: 1px; }
 /* What a future is on, under the team or player it backs: smaller and lighter
@@ -174,6 +205,7 @@
 
 @media (max-width: 640px) {
   .al-search { flex-basis: 100%; }
+  .al-bet { min-width: 160px; max-width: 200px; }
   .al-tab { font-size: 13px; padding: 7px 9px 6px; }
 }
 
@@ -219,7 +251,9 @@
   display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 7px;
   vertical-align: 0; box-sizing: border-box; border: 2px solid currentColor; background: currentColor;
 }
-.al-ok-likely-win, .al-ok-lean-win { color: var(--good-strong); }
+.al-ok-win, .al-ok-likely-win, .al-ok-lean-win { color: var(--good-strong); }
 .al-ok-toss-up { color: var(--text-4); }
-.al-ok-lean-loss, .al-ok-likely-loss { color: var(--bad); }
+.al-ok-lean-loss, .al-ok-likely-loss, .al-ok-loss { color: var(--bad); }
 .al-ok-lean-win, .al-ok-lean-loss { background: transparent; }
+/* Win and Loss are decided, not likely: a square rather than a dot. */
+.al-ok-win, .al-ok-loss { border-radius: 1px; }

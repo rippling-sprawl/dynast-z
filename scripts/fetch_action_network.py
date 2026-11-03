@@ -52,6 +52,22 @@ FIVE THINGS THAT ARE NOT OBVIOUS, EACH LEARNED THE HARD WAY
    running from a walked-back start date to the far future. Extending the end
    date is free; only the start date costs, so that is the axis that moves.
 
+   The sweep has a ceiling, though: once the walk-back 504s, a future placed
+   before that start date and ending after the horizon is in no window at all.
+   An awards future placed in September and graded the following September is
+   exactly that. Two more steps close it:
+
+6. `&futures=true` lifts the containment rule for futures. With it, ANY window
+   -- even one day in 2024 -- returns every PENDING market future in
+   custom_picks (awards, divisions, season totals). It does not return
+   free-form custom bets ("Chig: most WSH TDs") or settled futures, so it adds
+   to the sweep rather than replacing it. See fetch_futures_flag().
+
+7. A pending future can settle or be deleted without any crawl seeing it, so
+   one cached as pending stays pending forever. GET /mobile/v1/picks/<id>
+   (no auth; the /web base 404s on it) returns the pick's current state, or a
+   404 once it is deleted. See recheck_pending_futures().
+
 WHERE THE OUTPUT GOES
 
 cache/, never data/. Every sibling fetch_*.py writes to data/, but data/ is
@@ -121,6 +137,9 @@ except ImportError:
     pass
 
 API_BASE = "https://api.actionnetwork.com/web"
+# Single picks are only served off the mobile base, to the app's User-Agent.
+MOBILE_BASE = "https://api.actionnetwork.com/mobile"
+MOBILE_USER_AGENT = "Action-App/61203 CFNetwork/901.1 Darwin/17.6.0"
 PICKS_ENDPOINT = "/v1/me/picks"
 PROFILE_ENDPOINT = "/v1/me"
 BOOKS_ENDPOINT = "/v1/books"
@@ -178,7 +197,11 @@ class WindowTooWide(RuntimeError):
     """A 504 -- the window needs splitting, not reporting."""
 
 
-def curl_json(path, token=None, timeout=60):
+class NotFound(ApiError):
+    """A 404 -- for a single pick, it has been deleted."""
+
+
+def curl_json(path, token=None, timeout=60, base=API_BASE, user_agent=USER_AGENT):
     """GET an api.actionnetwork.com path and return parsed JSON.
 
     subprocess+curl rather than requests/httpx because neither is installed
@@ -188,10 +211,10 @@ def curl_json(path, token=None, timeout=60):
     token surfaces as "your token expired" rather than a JSON parse error on the
     401 body, and a 504 raises WindowTooWide for the caller to split.
     """
-    url = f"{API_BASE}{path}"
+    url = f"{base}{path}"
     cmd = ["curl", "-s", "--max-time", str(timeout),
            "-w", "\n%{http_code}",
-           "-A", USER_AGENT,
+           "-A", user_agent,
            "-H", "Accept: application/json"]
     if token:
         cmd += ["-H", f"authorization: {token}"]
@@ -215,6 +238,8 @@ def curl_json(path, token=None, timeout=60):
             "the User-Agent header did not go out -- see note 1 in this file.")
     if status in ("502", "503", "504"):
         raise WindowTooWide(f"HTTP {status}")
+    if status == "404":
+        raise NotFound(f"HTTP 404 from {url}")
     if status != "200":
         raise ApiError(f"HTTP {status} from {url}: {body[:200]}")
     if not body:
@@ -322,6 +347,53 @@ def fetch_futures_sweep(token, today):
         time.sleep(0.15)
 
     return picks, earliest
+
+
+def fetch_futures_flag(token, today):
+    """Every pending market future, in one request. See note 6.
+
+    The window is one day because `futures=true` ignores it for futures; the
+    narrower it is, the fewer game picks ride along and the less likely a 504.
+    """
+    for _ in range(SWEEP_RETRIES):
+        try:
+            payload = curl_json(
+                f"{PICKS_ENDPOINT}?startDate={ymd(today)}"
+                f"&endDate={ymd(today + timedelta(days=1))}&futures=true",
+                token, timeout=120)
+            break
+        except WindowTooWide:
+            time.sleep(1)
+    else:
+        return []
+    picks = []
+    collect(payload, picks)
+    return picks
+
+
+def recheck_pending_futures(cached, fresh_keys):
+    """Re-read every cached pending future this run did not return. See note 7.
+
+    Returns (picks, gone): the current body of each one still on the account,
+    tagged with the array it was cached from, and the keys of the deleted ones.
+    """
+    stale = [shaped for name, shaped in cached
+             if name == "futures" and shaped.get("result") == "pending"
+             and entry_key(shaped) not in fresh_keys]
+    picks, gone = [], set()
+    for shaped in stale:
+        try:
+            pick = curl_json(f"/v1/picks/{shaped['id']}", base=MOBILE_BASE,
+                             user_agent=MOBILE_USER_AGENT, timeout=30)
+        except NotFound:
+            gone.add(entry_key(shaped))
+            continue
+        except (ApiError, WindowTooWide):
+            continue                       # keep the cached copy; try next run
+        pick["_array"] = shaped.get("source")
+        picks.append(pick)
+        time.sleep(0.1)
+    return picks, gone
 
 
 def fetch_all(token, since, until):
@@ -434,7 +506,8 @@ def describe(pick):
     if pick.get("play"):
         return pick["play"]
     if is_group_pick(pick):
-        legs = pick.get("picks") or []
+        # Hand-entered legs land in custom_picks, not picks -- see note 2.
+        legs = (pick.get("picks") or []) + (pick.get("custom_picks") or [])
         return f"{(pick.get('group_pick_type') or 'group').title()} ({len(legs)} legs)"
     competition = pick.get("competition") or {}
     return ((competition.get("meta") or {}).get("title")
@@ -641,10 +714,13 @@ def refresh_days_held(shaped, now):
     return shaped
 
 
-def merge_entries(cached, fresh, now):
-    """Fresh picks win; everything else is carried over untouched."""
+def merge_entries(cached, fresh, now, gone=frozenset()):
+    """Fresh picks win; everything else is carried over untouched, except the
+    picks Action Network confirmed deleted (`gone`), which are dropped."""
     index = {}
     for name, shaped in cached:
+        if entry_key(shaped) in gone:
+            continue
         index[entry_key(shaped)] = (name, refresh_days_held(shaped, now))
 
     added, updated = 0, 0
@@ -698,18 +774,22 @@ def warn_if_shrunk(out_path, shaped):
         print(f"          ... and {len(dropped) - 5} more")
 
 
-def verify_merged(entries, cached, shaped):
-    """A merged run may only ever add. Same discipline as verify(): a
-    half-working fetch must not clobber an export that was fine."""
+def verify_merged(entries, cached, shaped, gone=frozenset()):
+    """A merged run may only ever add, bar picks a 404 proved deleted. Same
+    discipline as verify(): a half-working fetch must not clobber an export
+    that was fine."""
     ok = True
 
-    if len(entries) < len(cached):
+    floor = len(cached) - len(gone)
+    if len(entries) < floor:
         print(f"  FAIL  merge lost picks: {len(entries)} after merge vs "
-              f"{len(cached)} in the cache")
+              f"{len(cached)} in the cache ({len(gone)} deleted)")
         ok = False
     else:
-        print(f"  ok    {len(entries)} picks after merge, none dropped "
-              f"(cache had {len(cached)})")
+        print(f"  ok    {len(entries)} picks after merge, "
+              + (f"{len(gone)} deleted on Action Network dropped "
+                 if gone else "none dropped ")
+              + f"(cache had {len(cached)})")
 
     total = (len(shaped["futures"]["pending"]) + len(shaped["futures"]["settled"])
              + len(shaped["parlays"]) + len(shaped["teasers"]) + len(shaped["straight"]))
@@ -992,15 +1072,25 @@ def main():
         print(str(e), file=sys.stderr)
         return 1
 
-    picks, dupes = dedupe(history + swept)
+    print("\nPass 2b -- every pending market future (futures=true)\n")
+    flagged = fetch_futures_flag(token, today)
+    print(f"  {len(flagged)} picks")
+
+    picks, dupes = dedupe(history + swept + flagged)
 
     books = fetch_books()
     now = datetime.now(timezone.utc)
 
     added = updated = 0
+    gone = set()
     if merging:
         fresh = [(bucket_name(pick), normalize(pick, now, books)) for pick in picks]
-        entries, added, updated = merge_entries(cached, fresh, now)
+        print("\nPass 2c -- re-reading cached pending futures no pass returned\n")
+        rechecked, gone = recheck_pending_futures(
+            cached, {entry_key(shaped) for _, shaped in fresh})
+        print(f"  {len(rechecked)} still on the account, {len(gone)} deleted")
+        fresh += [(bucket_name(pick), normalize(pick, now, books)) for pick in rechecked]
+        entries, added, updated = merge_entries(cached, fresh, now, gone)
         shaped = assemble(entries)
         print(f"\nMerged {len(picks)} fetched picks onto {len(cached)} cached: "
               f"{added} new, {updated} changed, "
@@ -1020,7 +1110,7 @@ def main():
         print("  warn  the futures sweep never completed a window -- pending "
               "futures are\n        almost certainly undercounted")
     if merging:
-        checks_pass = verify_merged(entries, cached, shaped)
+        checks_pass = verify_merged(entries, cached, shaped, gone)
     else:
         checks_pass = verify(picks, shaped)
         warn_if_shrunk(out_path, shaped)
@@ -1063,6 +1153,7 @@ def main():
                 "fetched": len(picks),
                 "added": added,
                 "updated": updated,
+                "deleted": len(gone),
                 "previous_fetched_at": prior_meta.get("fetched_at"),
             } if merging else None,
             "pick_count": written,

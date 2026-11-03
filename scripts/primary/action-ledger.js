@@ -38,13 +38,17 @@
     'Future', 'Custom', 'Competition', 'Other'];
   // Outlook buckets for open futures, by win chance in whole percent: a ticket
   // goes in the first bucket whose floor it meets, so toss-up is 40-60
-  // inclusive, lean win 61-69 and lean loss 30-39.
+  // inclusive, lean win 61-69 and lean loss 30-39. Win (100) and Loss (0) are
+  // decided bets that have not paid yet -- an over already cleared, a player
+  // out for the season -- so they sit at the two ends on their own.
   const OUTLOOK = [
+    { key: 'win', label: 'Win', min: 100 },
     { key: 'likely-win', label: 'Likely win', min: 70 },
     { key: 'lean-win', label: 'Lean win', min: 61 },
     { key: 'toss-up', label: 'Toss-up', min: 40 },
     { key: 'lean-loss', label: 'Lean loss', min: 30 },
-    { key: 'likely-loss', label: 'Likely loss', min: 0 },
+    { key: 'likely-loss', label: 'Likely loss', min: 1 },
+    { key: 'loss', label: 'Loss', min: 0 },
   ];
   const RESULT_LABEL = { win: 'Won', loss: 'Lost', push: 'Push', pending: 'Pending', void: 'Void' };
 
@@ -78,6 +82,8 @@
   const eventTime = r => ts(r.st || r.pl);
   const fmtDate = (t, tz) => isNaN(t) ? '—' : new Date(t).toLocaleDateString('en-US',
     { month: 'short', day: 'numeric', year: 'numeric', timeZone: tz });
+  const fmtDay = (t, tz) => isNaN(t) ? 'No date' : new Date(t).toLocaleDateString('en-US',
+    { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', timeZone: tz });
   const fmtOdds = o => o == null ? '—' : (o > 0 ? '+' + o : String(o));
   // Whole dollars stay whole; anything with cents shows both digits ($87.50).
   const money = v => {
@@ -130,8 +136,16 @@
     return [start.getTime() - (Number(r) - 1) * DAY, now];
   }
 
+  // A parlay with a futures leg is typed Future but is still a parlay, so it
+  // carries both types: both chips, and either filter finds it.
+  const GROUP_TYPE = { parlay: 'Parlay', teaser: 'Teaser' };
+  function typesOf(r) {
+    const g = GROUP_TYPE[r.k];
+    return g && g !== r.t ? [r.t, g] : [r.t];
+  }
+
   function matchesShared(r) {
-    if (state.type && r.t !== state.type) return false;
+    if (state.type && !typesOf(r).includes(state.type)) return false;
     if (state.league && r.lg !== state.league) return false;
     if (state.team) {
       const [lg, team] = state.team.split('|');
@@ -196,7 +210,7 @@
   function fillOptions() {
     setOptions('range', RANGE_OPTS);
     setOptions('result', RESULT_OPTS);
-    const types = new Set(ROWS.map(r => r.t));
+    const types = new Set(ROWS.flatMap(typesOf));
     setOptions('type', [{ value: '', label: 'All types' }].concat(
       TYPE_ORDER.filter(t => types.has(t)).map(t => ({ value: t, label: t }))));
 
@@ -314,10 +328,42 @@
     return out;
   }
 
+  // The vertical grid: calendar weeks for a window under 90 days, months for
+  // anything longer. A custom range goes by its own length; one left open at
+  // an end goes by the span of the bets it holds.
+  function gridUnit(pts) {
+    const r = state.range;
+    if (r === 'custom') {
+      const lo = state.from ? Date.parse(state.from + 'T00:00') : pts[0].t;
+      const hi = state.to ? Date.parse(state.to + 'T00:00') : pts[pts.length - 1].t;
+      return (hi - lo) / 864e5 < 90 ? 'week' : 'month';
+    }
+    return /^\d+$/.test(r) && Number(r) < 90 ? 'week' : 'month';
+  }
+
+  // Each week (from Monday) or month that starts inside (tLo, tHi], at local
+  // midnight, with its label: a week by the date it starts, a month by name,
+  // the year added on January.
+  function gridBreaks(unit, tLo, tHi) {
+    const d = new Date(tLo);
+    d.setHours(0, 0, 0, 0);
+    if (unit === 'week') d.setDate(d.getDate() + ((8 - d.getDay()) % 7 || 7));
+    else d.setDate(1), d.setMonth(d.getMonth() + 1);
+    const out = [];
+    for (; d.getTime() <= tHi; unit === 'week' ? d.setDate(d.getDate() + 7) : d.setMonth(d.getMonth() + 1)) {
+      const t = d.getTime();
+      const label = unit === 'week'
+        ? d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+        : d.toLocaleDateString('en-US', d.getMonth() === 0 ? { month: 'short', year: 'numeric' } : { month: 'short' });
+      out.push({ t, label, month: d.getMonth() });
+    }
+    return out;
+  }
+
   function drawChart(pts) {
     const W = Math.max(300, Math.floor(els.graph.clientWidth - 24));
-    const H = 240;
-    const mL = 62, mR = 14, mT = 30, mB = 28;
+    const H = 256;
+    const mL = 76, mR = 14, mT = 30, mB = 44;
     const x0 = mL, x1 = W - mR, yTop = mT, yBot = H - mB;
     let min = Math.min(0, ...pts.map(p => p.cum));
     let max = Math.max(0, ...pts.map(p => p.cum));
@@ -334,11 +380,22 @@
     const ticks = niceTicks(min, max, 4);
     const short = v => (v < 0 ? '−' : '') + '$' + (Math.abs(v) >= 1000
       ? (Math.abs(v) / 1000).toFixed(Math.abs(v) >= 10000 ? 0 : 1) + 'k' : Math.round(Math.abs(v)));
-    const xLabels = [0, 0.5, 1].map(f => {
-      const t = tLo + (tHi - tLo) * f;
-      const anchor = f === 0 ? 'start' : f === 1 ? 'end' : 'middle';
-      return `<text class="al-ax" x="${xAt(t).toFixed(1)}" y="${yBot + 18}" text-anchor="${anchor}">${fmtDate(t)}</text>`;
-    }).join('');
+    // A line at every break; a label on as many as fit, thinned so labels
+    // stay ~56px apart: every nth week, or months on a calendar step (every
+    // 2nd, quarter, half, year) so January, and its year, is always kept. None so
+    // near either end that it runs into the first or last day's date, which
+    // are always labelled, so even a window with no break in it is dated.
+    const unit = gridUnit(pts);
+    const breaks = gridBreaks(unit, tLo, tHi);
+    let every = Math.max(1, Math.ceil(56 / ((x1 - x0) / Math.max(1, breaks.length))));
+    if (unit === 'month') every = [1, 2, 3, 6, 12].find(n => n >= every) || 12;
+    const vGrid = breaks.map((b, i) => {
+      const x = xAt(b.t);
+      const label = (unit === 'month' ? b.month % every === 0 : i % every === 0) && x - x0 > 72 && x1 - x > 72
+        ? `<text class="al-ax" x="${x.toFixed(1)}" y="${yBot + 18}" text-anchor="middle">${b.label}</text>` : '';
+      return `<line class="al-grid" x1="${x.toFixed(1)}" x2="${x.toFixed(1)}" y1="${yTop}" y2="${yBot}"/>` + label;
+    }).join('') + [[tLo, 'start'], [tHi, 'end']].map(([t, anchor]) =>
+      `<text class="al-ax" x="${xAt(t).toFixed(1)}" y="${yBot + 18}" text-anchor="${anchor}">${fmtDate(t)}</text>`).join('');
     const total = pts[pts.length - 1].cum;
 
     els.graph.innerHTML =
@@ -350,12 +407,16 @@
         `<text class="al-title" x="${x0}" y="16">Cumulative net · <tspan class="${total >= 0 ? 'al-pos' : 'al-neg'}">${signed(total)}</tspan></text>` +
         ticks.map(v => `<line class="al-grid" x1="${x0}" x2="${x1}" y1="${yAt(v).toFixed(1)}" y2="${yAt(v).toFixed(1)}"/>` +
           `<text class="al-ax" x="${x0 - 8}" y="${(yAt(v) + 3.5).toFixed(1)}" text-anchor="end">${short(v)}</text>`).join('') +
+        vGrid +
+        // Axis titles: the y title turned up the left edge, the x title under
+        // the dates, naming what the vertical lines mark.
+        `<text class="al-ax-title" transform="translate(12 ${((yTop + yBot) / 2).toFixed(1)}) rotate(-90)" text-anchor="middle">Cumulative net ($)</text>` +
+        `<text class="al-ax-title" x="${((x0 + x1) / 2).toFixed(1)}" y="${H - 4}" text-anchor="middle">Date · by ${unit}</text>` +
         `<line class="al-zero" x1="${x0}" x2="${x1}" y1="${zeroY}" y2="${zeroY}"/>` +
         `<path class="al-area-up" d="${area}" clip-path="url(#al-up)"/>` +
         `<path class="al-area-down" d="${area}" clip-path="url(#al-down)"/>` +
         `<path class="al-line-up" d="${line}" clip-path="url(#al-up)"/>` +
         `<path class="al-line-down" d="${line}" clip-path="url(#al-down)"/>` +
-        xLabels +
         `<line class="al-cross" id="al-cross" x1="0" x2="0" y1="${yTop}" y2="${yBot}" visibility="hidden"/>` +
         `<circle class="al-dot" id="al-dot" r="4.5" visibility="hidden"/>` +
         `<rect class="al-hit" x="${x0}" y="${yTop}" width="${x1 - x0}" height="${yBot - yTop}"/>` +
@@ -415,7 +476,10 @@
     // the float dust so it reads $0, not +$0 or −$0.01.
     open.length && [total, unrated, ...Object.values(by)].forEach(a => { a.ev = Math.round(a.ev) || 0; });
     const tone = v => v > 0 ? 'al-pos' : v < 0 ? 'al-neg' : '';
-    const range = (b, i) => i === 0 ? `${b.min}%+` : `${b.min}–${OUTLOOK[i - 1].min - 1}%`;
+    const range = (b, i) => {
+      const hi = i === 0 ? b.min : OUTLOOK[i - 1].min - 1;
+      return hi === b.min ? `${b.min}%` : `${b.min}–${hi}%`;
+    };
     const row = (label, hint, a, cls) => `<tr class="${cls || ''}"><th scope="row">${label}` +
       (hint ? ` <span class="al-meta al-inline">${hint}</span>` : '') + '</th>' +
       `<td class="al-r al-num">${a.n.toLocaleString()}</td><td class="al-r al-num">${money(a.s)}</td>` +
@@ -430,11 +494,16 @@
   }
 
   // ---- table --------------------------------------------------------------
+  // The date is not a column: it heads each day's run of tickets as a
+  // full-width row (DATE_KEY is what that row shows and the view's default
+  // order). Bet is first and pinned; an open ticket's To win stands where a
+  // settled one's Net does.
   const COLUMNS = {
-    all: ['date', 'bet', 'type', 'league', 'odds', 'stake', 'net', 'result'],
-    pending: ['ends', 'bet', 'type', 'league', 'odds', 'stake', 'towin'],
-    futures: ['ends', 'bet', 'type', 'odds', 'stake', 'towin', 'result'],
+    all: ['bet', 'net', 'stake', 'odds', 'type', 'league'],
+    pending: ['bet', 'towin', 'stake', 'odds', 'type', 'league'],
+    futures: ['bet', 'net', 'towin', 'stake', 'odds', 'type'],
   };
+  const DATE_KEY = { all: 'date', pending: 'ends', futures: 'ends' };
   const COL = {
     date: { label: 'Date', get: r => eventTime(r), num: true, dir: 'desc' },
     ends: { label: 'Ends', get: r => ts(r.en), num: true, dir: 'asc' },
@@ -446,7 +515,6 @@
     stake: { label: 'Stake', get: r => r.s, num: true, dir: 'desc', right: true },
     towin: { label: 'To win', get: r => r.w, num: true, dir: 'desc', right: true },
     net: { label: 'Net', get: r => r.n, num: true, dir: 'desc', right: true },
-    result: { label: 'Result', get: r => r.r },
   };
 
   // The Chances column rides in after Odds, and only for futures.
@@ -455,6 +523,11 @@
     if (showChances()) cols.splice(cols.indexOf('odds') + 1, 0, 'chance');
     return cols;
   }
+
+  const dateSort = () => { const k = DATE_KEY[state.view]; return { key: k, dir: COL[k].dir }; };
+  // The day a row falls under, and its heading: the same clock as the
+  // column it replaced (event time local, a future's end in AN's zone).
+  const dayOf = r => DATE_KEY[state.view] === 'date' ? fmtDay(eventTime(r)) : fmtDay(ts(r.en), AN_TZ);
 
   function renderHead() {
     const s = sorts[state.view];
@@ -468,8 +541,6 @@
 
   function cell(k, r) {
     switch (k) {
-      case 'date': return `<td class="al-nowrap">${fmtDate(eventTime(r))}</td>`;
-      case 'ends': return `<td class="al-nowrap">${fmtDate(ts(r.en), AN_TZ)}</td>`;
       case 'bet': {
         const legs = r.legs && r.legs.length;
         const sub = [r.sub, r.m].filter(Boolean).map(esc).join(' · ');
@@ -479,7 +550,7 @@
           (r.x ? `<span class="al-detail">${esc(r.x)}</span>` : '') +
           (sub ? `<span class="al-meta">${sub}</span>` : '') + '</td>';
       }
-      case 'type': return `<td><span class="al-chip">${esc(r.t)}</span></td>`;
+      case 'type': return `<td>${typesOf(r).map(t => `<span class="al-chip">${esc(t)}</span>`).join(' ')}</td>`;
       case 'league': return `<td>${esc(league(r.lg))}</td>`;
       case 'odds': return `<td class="al-r al-num">${fmtOdds(r.o)}</td>`;
       case 'chance': {
@@ -494,8 +565,10 @@
       }
       case 'stake': return `<td class="al-r al-num">${money(r.s)}</td>`;
       case 'towin': return `<td class="al-r al-num">${money(r.w)}</td>`;
-      case 'net': return `<td class="al-r al-num ${r.n > 0 ? 'al-pos' : r.n < 0 ? 'al-neg' : ''}">${r.r === 'pending' ? '—' : signed(r.n)}</td>`;
-      case 'result': return `<td><span class="al-res al-res-${esc(r.r)}">${RESULT_LABEL[r.r] || esc(r.r)}</span></td>`;
+      // Net carries the result's badge, so a graded ticket reads won/lost
+      // at a glance without a column of its own.
+      case 'net': return `<td class="al-r al-num">${r.r === 'pending' ? '—' :
+        `<span class="al-res al-res-${esc(r.r)}" title="${RESULT_LABEL[r.r] || esc(r.r)}">${signed(r.n)}</span>`}</td>`;
     }
     return '<td></td>';
   }
@@ -510,8 +583,16 @@
       els.more.innerHTML = '';
       return;
     }
+    // A day row heads each run of one day's tickets. In date order that is
+    // one per day; sorted by anything else, the rows of a day scatter and so
+    // do their headings.
+    let lastDay = null;
     els.body.innerHTML = sorted.slice(0, shown).map(r => {
-      let html = `<tr class="al-row al-row-${esc(r.r)}">` + cols.map(k => cell(k, r)).join('') + '</tr>';
+      const day = dayOf(r);
+      let html = day === lastDay ? '' :
+        `<tr class="al-day-row"><th scope="rowgroup" colspan="${cols.length}"><span class="al-day">${day}</span></th></tr>`;
+      lastDay = day;
+      html += `<tr class="al-row al-row-${esc(r.r)}">` + cols.map(k => cell(k, r)).join('') + '</tr>';
       if (r.legs && expanded.has(r.id)) {
         html += `<tr class="al-legs-row"><td colspan="${cols.length}"><ul class="al-legs">` +
           r.legs.map(l => `<li><span class="al-res al-res-${esc(l.r)}">${RESULT_LABEL[l.r] || esc(l.r)}</span>` +
@@ -532,7 +613,7 @@
     writeUrl();
     lastRows = filtered();
     // The Chances sort has nothing to sort on once the column is gone.
-    if (!columns().includes(sorts[state.view].key)) sorts[state.view] = { key: COLUMNS[state.view][0], dir: COL[COLUMNS[state.view][0]].dir };
+    if (!columns().includes(sorts[state.view].key)) sorts[state.view] = dateSort();
     renderStats(lastRows);
     renderChart(lastRows);
     renderBuckets(lastRows);
@@ -576,7 +657,9 @@
     const b = e.target.closest('[data-sort]');
     if (!b) return;
     const k = b.dataset.sort;
-    sorts[state.view] = Sort.toggle(sorts[state.view], k, COL[k].dir || 'asc');
+    // A third click on a column hands the order back to the date.
+    const cur = sorts[state.view], first = COL[k].dir || 'asc';
+    sorts[state.view] = cur.key === k && cur.dir !== first ? dateSort() : Sort.toggle(cur, k, first);
     renderHead();
     renderBody(lastRows);
   });

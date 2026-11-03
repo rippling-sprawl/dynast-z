@@ -19,6 +19,8 @@ ROW SHAPE (short keys: ~11k rows, so every byte is paid eleven thousand times)
     id   pick id (straight/future) or group id (parlay/teaser)
     k    kind: straight | future | parlay | teaser
     t    bet type: Spread, Moneyline, Total, Prop, Future, Custom, Parlay, ...
+         -- a parlay or teaser with any futures leg is a Future (k still says
+         it is a parlay, and the page files it under both)
     sub  prop market, when t is Prop ("Anytime TD", "Receiving Yards")
     d    description, as entered
     x    what a future is on ("AFC Conference", "Offensive Rookie of the
@@ -85,15 +87,26 @@ def load_env():
         os.environ.setdefault(key.strip(), value.strip().strip("'\""))
 
 
+def is_future_leg(leg):
+    """fetch_action_network.is_futures(), for a raw leg: legs are not shaped, so
+    they carry the meta flag and custom_pick_type but no `is_future`."""
+    if (leg.get("meta") or {}).get("is_future"):
+        return True
+    kind = leg.get("custom_pick_type")
+    return isinstance(kind, str) and "futures" in kind
+
+
 def bet_type(pick, kind):
-    """(type, sub) for one ticket. Kind wins first: a parlay of spreads is a
-    parlay, and a futures ticket is a future whatever market it was entered on."""
-    if kind == "parlays":
-        return "Parlay", None
-    if kind == "teasers":
-        return "Teaser", None
+    """(type, sub) for one ticket. A futures ticket is a future whatever market
+    it was entered on, and so is a parlay with even one futures leg -- it cannot
+    settle before that leg does. Otherwise kind wins: a parlay of spreads is a
+    parlay."""
     if pick.get("is_future"):
         return "Future", None
+    if kind in ("parlays", "teasers"):
+        if any(is_future_leg(leg) for leg in legs_of(pick.get("raw") or {})):
+            return "Future", None
+        return ("Parlay" if kind == "parlays" else "Teaser"), None
     pt = pick.get("pick_type") or (pick.get("raw") or {}).get("type") or ""
     if pt.startswith("spread"):
         return "Spread", None
@@ -196,6 +209,9 @@ def build(data):
                         out["m"] = m
                     legs.append(out)
                 row["legs"] = legs
+                # The cached label may predate describe() counting custom_picks.
+                if not raw.get("play"):
+                    row["d"] = f"{(raw.get('group_pick_type') or 'group').title()} ({len(legs)} legs)"
                 if not row["lg"]:
                     lgs = {leg.get("league_name") for leg in legs_of(raw)} - {None}
                     row["lg"] = lgs.pop() if len(lgs) == 1 else ("multi" if lgs else "")
