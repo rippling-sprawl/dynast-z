@@ -7,10 +7,10 @@ GET  -> {"rows": [...], "fetched_at": "...", "built_at": "...",
         in scripts/build_action_ledger.py, which is what writes it.
 PUT  -> {"data": {"rows": [...], ...}, "etag": "..."}
         Replaces the ledger. Same auth.
-POST -> {"id": <ticket id>, "chance": 0-100 | null}
-        Sets (or, with null, clears) an admin's hand-set win chance for one
-        ticket. Same auth. A ticket with no entry falls back, on the page, to
-        the chance its odds imply.
+POST -> {"id": <ticket id>, "chance": 0-100}
+        Sets an admin's win chance for one ticket. Same auth. Once set it is
+        the ticket's chance; there is no clearing it back to the odds'. A
+        ticket with no entry shows, on the page, the chance its odds imply.
 
 Unlike the Action book (api/action.py), which is unlisted-public, this one is
 gated: the book is a board of open futures, the ledger is the whole betting
@@ -92,7 +92,7 @@ def load_chances():
 
 
 def set_chance(body):
-    """(result, error). One ticket's chance, as a percent; null clears it.
+    """(result, error). One ticket's chance, as a percent.
 
     Read-modify-write of one small JSON object: fine for a page only admins
     edit, one cell at a time."""
@@ -101,15 +101,11 @@ def set_chance(body):
     tid, chance = body.get("id"), body.get("chance")
     if isinstance(tid, bool) or not isinstance(tid, int):
         return None, "id must be a ticket id"
-    if chance is not None:
-        if isinstance(chance, bool) or not isinstance(chance, (int, float)) or not 0 <= chance <= 100:
-            return None, "chance must be a number from 0 to 100, or null"
-        chance = round(float(chance), 1)
+    if isinstance(chance, bool) or not isinstance(chance, (int, float)) or not 0 <= chance <= 100:
+        return None, "chance must be a number from 0 to 100"
+    chance = round(float(chance), 1)
     chances = load_chances()
-    if chance is None:
-        chances.pop(str(tid), None)
-    else:
-        chances[str(tid)] = chance
+    chances[str(tid)] = chance
     supabase_request(
         "action_pages?on_conflict=slug", method="POST",
         body=[{"slug": CHANCES_SLUG, "data": {"chances": chances},

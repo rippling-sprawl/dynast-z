@@ -185,15 +185,10 @@
 .al-chance::-webkit-inner-spin-button, .al-chance::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 .al-chance:hover { border-color: var(--border); }
 .al-chance:focus { outline: none; border-color: var(--vi-gold); background: var(--surface-2); color: var(--text-hi); }
-/* A hand-set chance reads as such: bold ink, and a reset beside it. */
+/* A hand-set chance reads as such: bold ink. */
 .al-chance-own .al-chance { color: var(--text-hi); font-weight: 700; }
 .al-chance-err, .al-chance-err:focus { border-color: var(--bad); }
 .al-pct { color: var(--text-3); margin-left: 1px; }
-.al-chance-reset {
-  background: none; border: 0; color: var(--accent); cursor: pointer;
-  font-size: 13px; padding: 0 4px; min-width: 22px; min-height: 22px;
-}
-.al-chance-reset[hidden] { display: none; }
 .al-chance-done { color: var(--text-3); }
 
 .al-buckets {

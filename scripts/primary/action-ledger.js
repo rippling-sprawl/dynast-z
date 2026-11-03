@@ -15,9 +15,10 @@
  * Filters live in the query string so a view is linkable and survives a reload.
  *
  * With the type filter on Future, every view adds a Chances column (the win
- * chance as a percent: by default what the odds imply, but an admin can type
- * their own, which POSTs to /api/action-ledger and is kept server-side) and an
- * outlook table that buckets the open tickets by that chance.
+ * chance as a percent: what the odds imply until an admin types their own,
+ * which POSTs to /api/action-ledger, is kept server-side, and from then on is
+ * the ticket's chance -- there is no going back to the odds') and an outlook
+ * table that buckets the open tickets by that chance.
  */
 (function () {
   'use strict';
@@ -481,7 +482,6 @@
         if (r.r !== 'pending') return `<td class="al-r al-num al-chance-done">${pct(v)}</td>`;
         const own = hasOwnChance(r);
         return `<td class="al-r al-num al-chance-cell${own ? ' al-chance-own' : ''}">` +
-          `<button type="button" class="al-chance-reset" data-id="${r.id}" title="Back to the odds' ${pct(implied(r.o))}" aria-label="Reset to the odds' chance"${own ? '' : ' hidden'}>↺</button>` +
           `<input class="al-chance" type="number" inputmode="decimal" min="0" max="100" step="0.1" data-id="${r.id}" ` +
           `value="${v == null ? '' : Math.round(v * 10) / 10}" aria-label="Win chance for ${esc(r.d)}"><span class="al-pct">%</span></td>`;
       }
@@ -514,7 +514,7 @@
       return html;
     }).join('');
     els.more.innerHTML = sorted.length > shown
-      ? `<button type="button" class="al-reset" id="al-more-btn">Show ${Math.min(PAGE, sorted.length - shown)} more of ${(sorted.length - shown).toLocaleString()}</button>`
+      ? `<button type="button" class="sched-reset" id="al-more-btn">Show ${Math.min(PAGE, sorted.length - shown)} more of ${(sorted.length - shown).toLocaleString()}</button>`
       : '';
   }
 
@@ -581,16 +581,16 @@
     renderBody(lastRows);
   });
   // A chance edit saves on change and repaints only the outlook and its own
-  // cell, not the table, so tabbing down the column keeps focus.
+  // cell, not the table, so tabbing down the column keeps focus. A saved
+  // chance replaces the odds' for good; an emptied box just snaps back.
   async function saveChance(id, chance, input) {
     const key = String(id);
     const before = CHANCES[key];
-    if (chance == null) delete CHANCES[key]; else CHANCES[key] = chance;
+    CHANCES[key] = chance;
     const paint = () => {
       const r = ROWS.find(x => x.id === id);
       const td = input.closest('td');
       td.classList.toggle('al-chance-own', hasOwnChance(r));
-      td.querySelector('.al-chance-reset').hidden = !hasOwnChance(r);
       const v = chanceOf(r);
       input.value = v == null ? '' : Math.round(v * 10) / 10;
       renderBuckets(lastRows);
@@ -615,15 +615,15 @@
   els.body.addEventListener('change', e => {
     const input = e.target.closest('.al-chance');
     if (!input) return;
+    const id = Number(input.dataset.id);
     const raw = input.value.trim();
-    const v = raw === '' ? null : Math.min(100, Math.max(0, Math.round(Number(raw) * 10) / 10));
-    if (raw !== '' && isNaN(v)) return;
-    saveChance(Number(input.dataset.id), v, input);
-  });
-  els.body.addEventListener('click', e => {
-    const b = e.target.closest('.al-chance-reset');
-    if (!b) return;
-    saveChance(Number(b.dataset.id), null, b.closest('td').querySelector('.al-chance'));
+    const v = Math.min(100, Math.max(0, Math.round(Number(raw) * 10) / 10));
+    if (raw === '' || isNaN(v)) {
+      const cur = chanceOf(ROWS.find(x => x.id === id));
+      input.value = cur == null ? '' : Math.round(cur * 10) / 10;
+      return;
+    }
+    saveChance(id, v, input);
   });
   els.more.addEventListener('click', e => {
     if (!e.target.closest('#al-more-btn')) return;
