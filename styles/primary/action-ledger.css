@@ -1,51 +1,57 @@
-/* Action Ledger (/football/action-ledger). Rides bets.css for the page shell
- * (.bets-content, breadcrumbs, .pl-graph) and widens it: this is a table of
- * eight columns, not the tracker's one-column tiles. Every colour is a theme
- * token, the chart's included -- its SVG is styled by class here rather than
- * by presentation attributes, so a theme switch repaints it with no redraw. */
+/* Action Ledger (/football/action-ledger).
+ *
+ * Dressed as a /football page: the masters shell from hub.css, the schedule's
+ * dd-row pickers from nfl-pickers.css, and the VegasInsider skin with its
+ * repaint of those pickers from nfl-schedule.css. What is here is only what a
+ * ledger adds -- tabs, tiles, the chart, the tables -- set in the same idiom as
+ * /football/long-reception: display caps on headings, chips and tabs; small
+ * uppercase column heads; 32px rows; squared badges.
+ *
+ * Every colour is a theme token, the chart's included -- its SVG is styled by
+ * class here rather than by presentation attributes, so a theme switch
+ * repaints it with no redraw. */
 
-.al-content { max-width: 1100px; }
+.al-sub {
+  font-family: var(--vi-display);
+  font-size: 13px; letter-spacing: 0.5px; text-transform: uppercase;
+  color: var(--text-4); margin: -4px 0 14px;
+}
 
 /* ---- view tabs ---- */
 .al-tabs {
-  display: flex; gap: 4px; margin-bottom: 14px;
+  display: flex; gap: 2px; margin-bottom: 12px;
   border-bottom: 1px solid var(--border);
   overflow-x: auto;
 }
 .al-tab {
-  background: none; border: 0; border-bottom: 2px solid transparent;
-  color: var(--text-3); font: inherit; font-size: 14px; font-weight: 600;
-  padding: 8px 12px; cursor: pointer; white-space: nowrap; margin-bottom: -1px;
+  background: none; border: 0; border-bottom: 3px solid transparent;
+  color: var(--text-4); font-family: var(--vi-display); font-size: 15px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.6px;
+  padding: 7px 12px 6px; cursor: pointer; white-space: nowrap; margin-bottom: -1px;
 }
 .al-tab:hover { color: var(--text-hi); }
-.al-tab[aria-selected="true"] { color: var(--text-hi); border-bottom-color: var(--accent); }
-.al-tab-hint { font-size: 11px; font-weight: 500; color: var(--text-4); margin-left: 4px; }
+.al-tab[aria-selected="true"] { color: var(--text-hi); border-bottom-color: var(--vi-gold); }
+.al-tab-hint { font-size: 11px; font-weight: 600; letter-spacing: 0.5px; color: var(--text-5); margin-left: 4px; }
 
-/* ---- filters: one row, wrapping ---- */
-.al-filters {
-  display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end;
-  margin-bottom: 14px;
-}
-.al-field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
-.al-field[hidden] { display: none; }
-.al-grow { flex: 1 1 180px; }
-.al-label {
-  font-size: 10px; font-weight: 600; letter-spacing: 0.5px;
-  text-transform: uppercase; color: var(--text-3);
+/* ---- filters: the dd-row, plus the custom dates and the search ---- */
+.al-filters { margin-bottom: 12px; }
+.al-custom { display: flex; align-items: center; gap: 6px; }
+.al-custom[hidden], .dd[hidden] { display: none; }
+.al-to {
+  font-family: var(--vi-display); font-size: 12px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-4);
 }
 .al-input {
   background: var(--surface-2); border: 1px solid var(--border); color: var(--text);
-  font: inherit; font-size: 13px; padding: 6px 8px; border-radius: 6px;
-  max-width: 220px; min-height: 32px;
+  font: inherit; font-size: 13px; padding: 5px 9px; border-radius: 2px;
+  line-height: 1.5; min-width: 0;
 }
-.al-grow .al-input { max-width: none; width: 100%; }
-.al-input:focus { outline: none; border-color: var(--accent); }
-.al-reset {
-  background: var(--surface-2); border: 1px solid var(--border); color: var(--text-2);
-  font: inherit; font-size: 13px; padding: 6px 12px; border-radius: 6px;
-  cursor: pointer; min-height: 32px;
-}
-.al-reset:hover { border-color: var(--accent); color: var(--text-hi); }
+.al-input:hover { border-color: var(--vi-gold); }
+.al-input:focus { outline: none; border-color: var(--vi-gold); background: var(--surface-3); }
+.al-input::placeholder { color: var(--text-5); }
+.al-search { display: flex; align-items: center; gap: 6px; flex: 1 1 120px; min-width: 0; }
+.al-search .al-input { flex: 1 1 auto; width: 100%; }
+.al-glass { display: flex; align-items: center; color: var(--text-4); cursor: text; }
 
 /* ---- stat tiles ---- */
 .al-stats {
@@ -54,14 +60,15 @@
 }
 .al-stat {
   background: var(--surface); border: 1px solid var(--border);
-  border-radius: 8px; padding: 10px 12px;
+  border-top: 2px solid var(--vi-gold); border-radius: 2px; padding: 9px 12px 10px;
 }
 .al-stat-label {
-  font-size: 10px; font-weight: 600; letter-spacing: 0.5px;
-  text-transform: uppercase; color: var(--text-3);
+  font-family: var(--vi-display); font-size: 11px; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-4);
 }
 .al-stat-value {
-  font-size: 18px; font-weight: 700; color: var(--text-hi); margin-top: 2px;
+  font-family: var(--vi-display); font-size: 20px; font-weight: 700;
+  color: var(--text-hi); margin-top: 2px;
   font-variant-numeric: tabular-nums; white-space: nowrap;
 }
 .al-pos { color: var(--good-strong); fill: var(--good-strong); }
@@ -70,11 +77,21 @@
 .al-stat-value.neg { color: var(--bad); }
 
 /* ---- chart ---- */
-.al-graph { position: relative; }
+.al-graph {
+  position: relative; margin-bottom: 12px; padding: 12px 12px 8px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+}
 .al-graph[hidden] { display: none; }
-.al-graph svg { touch-action: pan-y; }
-.al-title { fill: var(--text-hi); font-size: 12px; font-weight: 700; }
-.al-ax { fill: var(--text-3); font-size: 10px; font-variant-numeric: tabular-nums; }
+.al-graph svg { display: block; width: 100%; height: auto; touch-action: pan-y; }
+.al-graph-empty {
+  height: 160px; display: flex; align-items: center; justify-content: center;
+  color: var(--text-4); font-size: 12.5px; text-align: center;
+}
+.al-title {
+  fill: var(--text-4); font-family: var(--vi-display); font-size: 11px; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase;
+}
+.al-ax { fill: var(--text-4); font-size: 10px; font-variant-numeric: tabular-nums; }
 .al-grid { stroke: var(--border-soft); stroke-width: 1; }
 .al-zero { stroke: var(--text-5); stroke-width: 1; stroke-dasharray: 3 3; }
 .al-area-up { fill: var(--pl-up-fill); }
@@ -91,47 +108,52 @@
 .al-hit { fill: transparent; cursor: crosshair; }
 .al-tip {
   position: absolute; pointer-events: none; z-index: 2;
-  background: var(--surface-2); border: 1px solid var(--border); border-radius: 6px;
-  padding: 6px 8px; font-size: 12px; color: var(--text); white-space: nowrap;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25); font-variant-numeric: tabular-nums;
+  background: var(--bg-alt); border: 1px solid var(--border); border-top: 2px solid var(--vi-gold);
+  border-radius: 2px; padding: 6px 8px; font-size: 12px; color: var(--text); white-space: nowrap;
+  box-shadow: 0 6px 18px var(--shadow-color-lg); font-variant-numeric: tabular-nums;
 }
-.al-tip-date { font-weight: 700; color: var(--text-hi); margin-bottom: 2px; }
-.al-tip-k { color: var(--text-3); }
+.al-tip-date {
+  font-family: var(--vi-display); font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.5px; color: var(--text-hi); margin-bottom: 2px;
+}
+.al-tip-k { color: var(--text-4); }
 
-/* ---- table ---- */
+/* ---- tables: long-reception's board ---- */
 .al-table-wrap {
   background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
-  overflow-x: auto;
+  overflow-x: auto; -webkit-overflow-scrolling: touch;
 }
-.al-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.al-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px; }
 .al-table thead th {
   text-align: left; padding: 0; border-bottom: 1px solid var(--border);
-  position: sticky; top: 0; background: var(--surface);
+  position: sticky; top: 0; z-index: 1; background: var(--surface);
 }
 .al-table th.al-r { text-align: right; }
 .al-sort {
   background: none; border: 0; font: inherit; cursor: pointer; width: 100%;
-  text-align: inherit; padding: 9px 10px 7px; white-space: nowrap;
-  font-size: 10px; font-weight: 600; letter-spacing: 0.5px;
-  text-transform: uppercase; color: var(--text-3);
+  text-align: inherit; padding: 9px 8px; white-space: nowrap;
+  font-size: 10px; font-weight: 600; letter-spacing: 0.07em;
+  text-transform: uppercase; color: var(--text-4);
 }
 .al-sort:hover, th[aria-sort="ascending"] .al-sort, th[aria-sort="descending"] .al-sort { color: var(--text-hi); }
-.al-table td { padding: 8px 10px; color: var(--text-2); vertical-align: top; }
-.al-row td { border-top: 1px solid var(--surface-2); }
+.al-table td { height: 32px; padding: 6px 8px; color: var(--text-2); vertical-align: middle; }
+.al-row td { border-bottom: 1px solid var(--border); }
+.al-table tbody tr:last-child td { border-bottom: 0; }
+.al-row:hover td { background: var(--surface-hover); }
 .al-r { text-align: right; }
 .al-num { font-variant-numeric: tabular-nums; white-space: nowrap; }
 .al-nowrap { white-space: nowrap; color: var(--text-3); }
 .al-bet { min-width: 220px; }
-.al-desc { color: var(--text-hi); font-weight: 600; }
-.al-meta { display: block; font-size: 11px; color: var(--text-3); margin-top: 2px; }
-.al-chip {
-  font-size: 11px; color: var(--text-2); background: var(--surface-2);
-  border: 1px solid var(--border); border-radius: 10px; padding: 1px 7px; white-space: nowrap;
+.al-desc { color: var(--text-hi); font-weight: 650; }
+.al-meta { display: block; font-size: 11px; color: var(--text-4); margin-top: 1px; }
+/* Badges are vi-chips: squared, display caps. */
+.al-chip, .al-res {
+  display: inline-block; font-family: var(--vi-display); font-size: 10.5px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.7px; border-radius: 2px;
+  padding: 1px 6px; white-space: nowrap; border: 1px solid var(--border);
 }
-.al-res {
-  display: inline-block; font-size: 11px; font-weight: 600; border-radius: 4px;
-  padding: 1px 6px; white-space: nowrap; border: 1px solid var(--border); color: var(--text-3);
-}
+.al-chip { color: var(--text-2); background: var(--surface-2); }
+.al-res { color: var(--text-3); }
 .al-res-win { color: var(--good-strong); border-color: var(--good-line); background: var(--good-tint); }
 .al-res-loss { color: var(--bad); border-color: var(--bad-line); background: var(--bad-tint); }
 .al-res-pending { color: var(--warn); border-color: var(--warn-line-2); background: var(--warn-tint); }
@@ -139,18 +161,17 @@
   background: none; border: 0; color: var(--accent); cursor: pointer;
   font-size: 12px; padding: 0 6px 0 0; min-width: 18px;
 }
-.al-legs-row td { background: var(--surface-3); padding: 6px 10px 10px 34px; }
+.al-legs-row td { background: var(--surface-3); padding: 6px 10px 10px 34px; border-bottom: 1px solid var(--border); }
 .al-legs { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
 .al-legs li { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px; }
 .al-legs .al-desc { font-weight: 500; }
 .al-legs .al-meta { display: inline; margin: 0; }
 .al-empty { text-align: center; color: var(--text-4); padding: 28px 10px !important; }
-.al-more { display: flex; justify-content: center; margin: 12px 0 24px; }
+.al-more { display: flex; justify-content: center; margin: 10px 0 24px; }
 
 @media (max-width: 640px) {
-  .al-input { max-width: none; }
-  .al-field:not(.al-grow) { flex: 1 1 calc(50% - 5px); }
-  .al-field:not(.al-grow) .al-input { width: 100%; }
+  .al-search { flex-basis: 100%; }
+  .al-tab { font-size: 13px; padding: 7px 9px 6px; }
 }
 
 /* ---- Chances (bet type = Future) ---- */
@@ -158,12 +179,12 @@
 .al-chance {
   width: 64px; text-align: right; font: inherit; font-size: 13px;
   font-variant-numeric: tabular-nums; color: var(--text-2);
-  background: transparent; border: 1px solid transparent; border-radius: 4px;
+  background: transparent; border: 1px solid transparent; border-radius: 2px;
   padding: 2px 4px; -moz-appearance: textfield;
 }
 .al-chance::-webkit-inner-spin-button, .al-chance::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 .al-chance:hover { border-color: var(--border); }
-.al-chance:focus { outline: none; border-color: var(--accent); background: var(--surface-2); color: var(--text-hi); }
+.al-chance:focus { outline: none; border-color: var(--vi-gold); background: var(--surface-2); color: var(--text-hi); }
 /* A hand-set chance reads as such: bold ink, and a reset beside it. */
 .al-chance-own .al-chance { color: var(--text-hi); font-weight: 700; }
 .al-chance-err, .al-chance-err:focus { border-color: var(--bad); }
@@ -181,15 +202,17 @@
 }
 .al-buckets[hidden] { display: none; }
 .al-outlook-cap {
-  text-align: left; padding: 10px 10px 6px; font-size: 12px; font-weight: 700; color: var(--text-hi);
+  text-align: left; padding: 12px 8px 4px; font-family: var(--vi-display); font-size: 11px;
+  font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-4);
 }
 .al-outlook thead th {
-  padding: 6px 10px; font-size: 10px; font-weight: 600; letter-spacing: 0.5px;
-  text-transform: uppercase; color: var(--text-3); position: static;
+  padding: 9px 8px; font-size: 10px; font-weight: 600; letter-spacing: 0.07em;
+  text-transform: uppercase; color: var(--text-4); position: static;
 }
-.al-outlook tbody th { text-align: left; font-weight: 600; color: var(--text-hi); padding: 7px 10px; white-space: nowrap; }
-.al-outlook tbody td, .al-outlook tbody th { border-top: 1px solid var(--surface-2); }
-.al-outlook-total th, .al-outlook-total td { border-top: 1px solid var(--border) !important; font-weight: 700; color: var(--text-hi); }
+.al-outlook tbody th { text-align: left; font-weight: 650; color: var(--text-hi); padding: 6px 8px; white-space: nowrap; }
+.al-outlook tbody td, .al-outlook tbody th { border-bottom: 1px solid var(--border); }
+.al-outlook tbody tr:last-child td, .al-outlook tbody tr:last-child th { border-bottom: 0; }
+.al-outlook-total th, .al-outlook-total td { border-top: 1px solid var(--hairline-hi); font-weight: 700; color: var(--text-hi); }
 .al-inline { display: inline; margin: 0 0 0 4px; font-weight: 500; }
 /* Bucket swatches run good -> neutral -> bad: "likely" is a filled dot, "lean"
  * a ring of the same colour, so the pair differs by shape rather than by a

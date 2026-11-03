@@ -50,8 +50,7 @@
   const els = {
     sub: $('al-sub'), stats: $('al-stats'), graph: $('al-graph'), buckets: $('al-buckets'),
     head: $('al-head'), body: $('al-body'), more: $('al-more'),
-    range: $('f-range'), from: $('f-from'), to: $('f-to'), type: $('f-type'),
-    league: $('f-league'), team: $('f-team'), result: $('f-result'), q: $('f-q'),
+    from: $('f-from'), to: $('f-to'), q: $('f-q'),
     reset: $('f-reset'), tabs: document.querySelectorAll('.al-tab'),
   };
 
@@ -153,17 +152,52 @@
 
   const filtered = () => ROWS.filter(r => inView(r, state.view) && matchesShared(r));
 
-  // ---- filter options -----------------------------------------------------
+  // ---- filter pickers -----------------------------------------------------
+  // Each filter is one of the schedule's dropdowns (nfl-pickers.js): a button
+  // showing the value, over a menu of .dd-opt buttons carrying data-v.
+  const PICKERS = {};
+  const RANGE_OPTS = [
+    { value: '7', label: 'Last 7 days' }, { value: '30', label: 'Last 30 days' },
+    { value: '60', label: 'Last 60 days' }, { value: '90', label: 'Last 90 days' },
+    { value: '365', label: 'Last 365 days' }, { value: 'ytd', label: 'This year' },
+    { value: 'all', label: 'All time' }, { value: 'custom', label: 'Custom…', groupStart: true },
+  ];
+  const RESULT_OPTS = [{ value: '', label: 'Any result' }].concat(
+    ['win', 'loss', 'push', 'pending'].map(v => ({ value: v, label: RESULT_LABEL[v] })));
+
+  function picker(key) {
+    const dd = registerDropdown($('dd-' + key));
+    const menu = $(key + '-menu');
+    menu.addEventListener('click', e => {
+      const opt = e.target.closest('.dd-opt');
+      if (!opt || !menu.contains(opt)) return;
+      closeDropdown(dd, true);
+      pick(key, opt.getAttribute('data-v'));
+    });
+    PICKERS[key] = { dd, menu, btn: $('f-' + key), opts: [] };
+  }
+  function setOptions(key, opts) {
+    PICKERS[key].opts = opts;
+    buildOptionMenu(PICKERS[key].menu, opts, 'v');
+  }
+  function syncPicker(key) {
+    const p = PICKERS[key];
+    const hit = p.opts.find(o => o.value === state[key]) || p.opts[0];
+    syncOptionMenu(p.btn, p.menu, state[key], hit ? hit.label : '', 'v');
+  }
+
   function fillOptions() {
+    setOptions('range', RANGE_OPTS);
+    setOptions('result', RESULT_OPTS);
     const types = new Set(ROWS.map(r => r.t));
-    els.type.innerHTML = '<option value="">All types</option>' + TYPE_ORDER.filter(t => types.has(t))
-      .map(t => `<option value="${t}">${t}</option>`).join('');
+    setOptions('type', [{ value: '', label: 'All types' }].concat(
+      TYPE_ORDER.filter(t => types.has(t)).map(t => ({ value: t, label: t }))));
 
     const counts = {};
     ROWS.forEach(r => { if (r.lg) counts[r.lg] = (counts[r.lg] || 0) + 1; });
-    els.league.innerHTML = '<option value="">All leagues</option>' + Object.keys(counts)
+    setOptions('league', [{ value: '', label: 'All leagues' }].concat(Object.keys(counts)
       .sort((a, b) => counts[b] - counts[a])
-      .map(lg => `<option value="${esc(lg)}">${esc(league(lg))} (${counts[lg]})</option>`).join('');
+      .map(lg => ({ value: lg, label: league(lg), note: counts[lg].toLocaleString() }))));
     fillTeams();
   }
 
@@ -176,25 +210,24 @@
       const set = byLeague[r.lg] = byLeague[r.lg] || new Set();
       r.tm.forEach(t => set.add(t));
     });
-    const groups = Object.keys(byLeague).sort((a, b) => byLeague[b].size - byLeague[a].size);
-    const opt = (lg, t) => `<option value="${esc(lg + '|' + t)}">${esc(t)}</option>`;
-    els.team.innerHTML = '<option value="">All teams</option>' + (state.league
-      ? [...(byLeague[state.league] || [])].sort().map(t => opt(state.league, t)).join('')
-      : groups.map(lg => `<optgroup label="${esc(league(lg))}">` +
-          [...byLeague[lg]].sort().map(t => opt(lg, t)).join('') + '</optgroup>').join(''));
-    if (state.team && ![...els.team.options].some(o => o.value === state.team)) state.team = '';
-    els.team.value = state.team;
+    // With no league picked, each league is its own run in the menu, ruled
+    // off from the last and its name noted on every team in it.
+    const groups = state.league ? [state.league]
+      : Object.keys(byLeague).sort((a, b) => byLeague[b].size - byLeague[a].size);
+    const opts = [{ value: '', label: 'All teams' }];
+    groups.forEach(lg => [...(byLeague[lg] || [])].sort().forEach((t, i) => opts.push({
+      value: lg + '|' + t, label: t, groupStart: i === 0,
+      note: state.league ? '' : league(lg),
+    })));
+    setOptions('team', opts);
+    if (state.team && !opts.some(o => o.value === state.team)) state.team = '';
   }
 
   function syncControls() {
-    els.range.value = state.range;
+    ['range', 'type', 'league', 'team', 'result'].forEach(syncPicker);
     els.from.value = state.from;
     els.to.value = state.to;
-    els.type.value = state.type;
-    els.league.value = state.league;
-    els.team.value = state.team;
-    els.result.value = state.result;
-    els.q.value = state.q;
+    if (els.q.value.trim() !== state.q) els.q.value = state.q;
     document.querySelectorAll('.al-date-only').forEach(el => {
       el.hidden = state.view !== 'all' || (el.classList.contains('al-custom') && state.range !== 'custom');
     });
@@ -250,7 +283,7 @@
     });
     const days = [...byDay.keys()].sort();
     if (days.length < 2) {
-      els.graph.innerHTML = '<div class="pl-graph-empty">Not enough settled bets in this filter to chart.</div>';
+      els.graph.innerHTML = '<div class="al-graph-empty">Not enough settled bets in this filter to chart.</div>';
       lastChart = null;
       return;
     }
@@ -508,22 +541,20 @@
 
   // ---- wiring -------------------------------------------------------------
   els.tabs.forEach(t => t.addEventListener('click', () => update({ view: t.dataset.view })));
-  els.range.addEventListener('change', () => {
-    const patch = { range: els.range.value };
+  function pick(key, v) {
+    if (key === 'league') { state.league = v; fillTeams(); update({}); return; }
+    const patch = { [key]: v };
     // Seed a custom range with the window it replaces, rather than empty.
-    if (patch.range === 'custom' && !state.from && !state.to) {
+    if (key === 'range' && v === 'custom' && !state.from && !state.to) {
       const [lo, hi] = dateBounds();
       if (isFinite(lo)) patch.from = isoDay(lo);
       patch.to = isoDay(isFinite(hi) ? hi : Date.now());
     }
     update(patch);
-  });
+  }
+  ['range', 'type', 'league', 'team', 'result'].forEach(picker);
   els.from.addEventListener('change', () => update({ from: els.from.value }));
   els.to.addEventListener('change', () => update({ to: els.to.value }));
-  els.type.addEventListener('change', () => update({ type: els.type.value }));
-  els.league.addEventListener('change', () => { state.league = els.league.value; fillTeams(); update({}); });
-  els.team.addEventListener('change', () => update({ team: els.team.value }));
-  els.result.addEventListener('change', () => update({ result: els.result.value }));
   let qTimer;
   els.q.addEventListener('input', () => {
     clearTimeout(qTimer);

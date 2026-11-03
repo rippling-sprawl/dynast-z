@@ -16,27 +16,34 @@
   <script src="/scripts/base/theme.js"></script>
   <link rel="stylesheet" href="/styles/base/theme.css">
   <link rel="stylesheet" href="/styles/base/styles.css">
-  <link rel="stylesheet" href="/styles/primary/bets.css">
+  <!-- The /football look: the hub shell, the shared dd-row pickers, and
+       nfl-schedule.css for the VegasInsider skin and its repaint of them. -->
+  <link rel="stylesheet" href="/styles/base/hub.css">
+  <link rel="stylesheet" href="/styles/components/nfl-pickers.css">
+  <link rel="stylesheet" href="/styles/primary/nfl-schedule.css">
   <link rel="stylesheet" href="/styles/primary/action-ledger.css">
   <script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
   <script defer src="/_vercel/insights/script.js"></script>
 </head>
-<body>
+<body class="masters-body">
   <div id="header-mount"></div>
   <div id="nav-drawer-mount"></div>
   <script src="/scripts/base/auth.js"></script>
   <script src="/scripts/base/standalone.js"></script>
   <script src="/scripts/base/nav.js"></script>
   <script src="/scripts/components/table-sort.js"></script>
+  <script src="/scripts/components/nfl-pickers.js"></script>
   <script>initPage();</script>
 
-  <main class="bets-content al-content">
-    <div class="bets-breadcrumbs"><a href="/football">Football</a><span class="sep">/</span><span>Sandbox</span><span class="sep">/</span><span>Action Ledger</span></div>
+  <main class="masters-content al-content">
+    <div class="masters-breadcrumbs">
+      <a href="/football">Football</a><span class="separator">/</span><span>Sandbox</span><span class="separator">/</span><span>Action Ledger</span>
+    </div>
 
-    <h2 class="bets-h2">📒 Action Ledger</h2>
-    <p class="bets-sub" id="al-sub">Loading…</p>
+    <h2>Action Ledger</h2>
+    <p class="al-sub" id="al-sub">Loading…</p>
 
-    <!-- Three views of the same rows. The filter bar below narrows all three;
+    <!-- Three views of the same rows. The filter row below narrows all three;
          the date range only applies to All Bets, since Pending and Futures are
          defined by a date window of their own. -->
     <div class="al-tabs" role="tablist" aria-label="Ledger view">
@@ -45,59 +52,56 @@
       <button type="button" class="al-tab" role="tab" data-view="futures" aria-selected="false">Futures <span class="al-tab-hint">NFL, 2027+</span></button>
     </div>
 
-    <div class="al-filters" id="al-filters">
-      <label class="al-field al-date-only">
-        <span class="al-label">Date</span>
-        <select class="al-input" id="f-range">
-          <option value="7">Last 7 days</option>
-          <option value="30">Last 30 days</option>
-          <option value="60" selected>Last 60 days</option>
-          <option value="90">Last 90 days</option>
-          <option value="365">Last 365 days</option>
-          <option value="ytd">This year</option>
-          <option value="all">All time</option>
-          <option value="custom">Custom…</option>
-        </select>
-      </label>
-      <label class="al-field al-date-only al-custom" hidden>
-        <span class="al-label">From</span>
-        <input class="al-input" type="date" id="f-from">
-      </label>
-      <label class="al-field al-date-only al-custom" hidden>
-        <span class="al-label">To</span>
-        <input class="al-input" type="date" id="f-to">
-      </label>
-      <label class="al-field">
-        <span class="al-label">Bet type</span>
-        <select class="al-input" id="f-type"><option value="">All types</option></select>
-      </label>
-      <label class="al-field">
-        <span class="al-label">League</span>
-        <select class="al-input" id="f-league"><option value="">All leagues</option></select>
-      </label>
-      <label class="al-field">
-        <span class="al-label">Team</span>
-        <select class="al-input" id="f-team"><option value="">All teams</option></select>
-      </label>
-      <label class="al-field">
-        <span class="al-label">Result</span>
-        <select class="al-input" id="f-result">
-          <option value="">Any</option>
-          <option value="win">Won</option>
-          <option value="loss">Lost</option>
-          <option value="push">Push</option>
-          <option value="pending">Pending</option>
-        </select>
-      </label>
-      <label class="al-field al-grow">
-        <span class="al-label">Search</span>
-        <input class="al-input" type="search" id="f-q" placeholder="Player, team, market…">
-      </label>
-      <button type="button" class="al-reset" id="f-reset">Reset</button>
+    <!-- The schedule's dropdowns (nfl-pickers.js), one per filter, each showing
+         only its value, in the order they cut: when, what, where, who, how it
+         ended -- then the free-text search and Reset. -->
+    <div class="dd-row al-filters" id="al-filters">
+      <div class="dd al-date-only" id="dd-range">
+        <button type="button" class="dd-btn" id="f-range" aria-haspopup="true" aria-expanded="false" aria-label="Date range">
+          <span class="dd-value">Last 60 days</span>
+        </button>
+        <div class="dd-pop dd-menu" id="range-menu" role="menu" aria-label="Date range" hidden></div>
+      </div>
+      <div class="al-custom al-date-only" hidden>
+        <input class="al-input" type="date" id="f-from" aria-label="From">
+        <span class="al-to">to</span>
+        <input class="al-input" type="date" id="f-to" aria-label="To">
+      </div>
+      <div class="dd" id="dd-type">
+        <button type="button" class="dd-btn" id="f-type" aria-haspopup="true" aria-expanded="false" aria-label="Bet type">
+          <span class="dd-value">All types</span>
+        </button>
+        <div class="dd-pop dd-menu" id="type-menu" role="menu" aria-label="Bet type" hidden></div>
+      </div>
+      <div class="dd" id="dd-league">
+        <button type="button" class="dd-btn" id="f-league" aria-haspopup="true" aria-expanded="false" aria-label="League">
+          <span class="dd-value">All leagues</span>
+        </button>
+        <div class="dd-pop dd-menu" id="league-menu" role="menu" aria-label="League" hidden></div>
+      </div>
+      <div class="dd" id="dd-team">
+        <button type="button" class="dd-btn" id="f-team" aria-haspopup="true" aria-expanded="false" aria-label="Team">
+          <span class="dd-value">All teams</span>
+        </button>
+        <div class="dd-pop dd-menu" id="team-menu" role="menu" aria-label="Team" hidden></div>
+      </div>
+      <div class="dd" id="dd-result">
+        <button type="button" class="dd-btn" id="f-result" aria-haspopup="true" aria-expanded="false" aria-label="Result">
+          <span class="dd-value">Any result</span>
+        </button>
+        <div class="dd-pop dd-menu" id="result-menu" role="menu" aria-label="Result" hidden></div>
+      </div>
+      <div class="al-search">
+        <label class="al-glass" for="f-q" title="Search bets">
+          <svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true" focusable="false"><circle cx="7" cy="7" r="4.5"/><line x1="10.6" y1="10.6" x2="14" y2="14"/></svg>
+        </label>
+        <input class="al-input" type="search" id="f-q" placeholder="Search bets…" aria-label="Search bets" autocomplete="off" spellcheck="false">
+      </div>
+      <button type="button" class="sched-reset" id="f-reset">Reset</button>
     </div>
 
     <div class="al-stats" id="al-stats"></div>
-    <div class="pl-graph al-graph" id="al-graph"></div>
+    <div class="al-graph" id="al-graph"></div>
     <!-- Bet type = Future only: open futures bucketed by their Chances. -->
     <div class="al-buckets" id="al-buckets" hidden></div>
 
