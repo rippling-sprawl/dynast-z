@@ -71,10 +71,12 @@ def fetch_user(user_id):
 
 
 def manifest():
-    # `ledger` shares the table but is not a page of the book (it is
-    # api/action-ledger.py's), so it is left out here -- otherwise every push,
-    # which deletes whatever slug it was not sent, would delete it.
-    rows = supabase_request("action_pages?select=slug,etag&slug=neq.ledger") or []
+    # `ledger` and `ledger-chances` share the table but are not pages of the
+    # book (they are api/action-ledger.py's), so they are left out here --
+    # otherwise every push, which deletes whatever slug it was not sent, would
+    # delete them.
+    rows = supabase_request(
+        "action_pages?select=slug,etag&slug=not.in.(ledger,ledger-chances)") or []
     return {r["slug"]: r["etag"] for r in rows}
 
 

@@ -152,3 +152,53 @@
   .al-field:not(.al-grow) { flex: 1 1 calc(50% - 5px); }
   .al-field:not(.al-grow) .al-input { width: 100%; }
 }
+
+/* ---- Chances (bet type = Future) ---- */
+.al-chance-cell { white-space: nowrap; }
+.al-chance {
+  width: 64px; text-align: right; font: inherit; font-size: 13px;
+  font-variant-numeric: tabular-nums; color: var(--text-2);
+  background: transparent; border: 1px solid transparent; border-radius: 4px;
+  padding: 2px 4px; -moz-appearance: textfield;
+}
+.al-chance::-webkit-inner-spin-button, .al-chance::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.al-chance:hover { border-color: var(--border); }
+.al-chance:focus { outline: none; border-color: var(--accent); background: var(--surface-2); color: var(--text-hi); }
+/* A hand-set chance reads as such: bold ink, and a reset beside it. */
+.al-chance-own .al-chance { color: var(--text-hi); font-weight: 700; }
+.al-chance-err, .al-chance-err:focus { border-color: var(--bad); }
+.al-pct { color: var(--text-3); margin-left: 1px; }
+.al-chance-reset {
+  background: none; border: 0; color: var(--accent); cursor: pointer;
+  font-size: 13px; padding: 0 4px; min-width: 22px; min-height: 22px;
+}
+.al-chance-reset[hidden] { display: none; }
+.al-chance-done { color: var(--text-3); }
+
+.al-buckets {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+  margin-bottom: 12px; overflow-x: auto;
+}
+.al-buckets[hidden] { display: none; }
+.al-outlook-cap {
+  text-align: left; padding: 10px 10px 6px; font-size: 12px; font-weight: 700; color: var(--text-hi);
+}
+.al-outlook thead th {
+  padding: 6px 10px; font-size: 10px; font-weight: 600; letter-spacing: 0.5px;
+  text-transform: uppercase; color: var(--text-3); position: static;
+}
+.al-outlook tbody th { text-align: left; font-weight: 600; color: var(--text-hi); padding: 7px 10px; white-space: nowrap; }
+.al-outlook tbody td, .al-outlook tbody th { border-top: 1px solid var(--surface-2); }
+.al-outlook-total th, .al-outlook-total td { border-top: 1px solid var(--border) !important; font-weight: 700; color: var(--text-hi); }
+.al-inline { display: inline; margin: 0 0 0 4px; font-weight: 500; }
+/* Bucket swatches run good -> neutral -> bad: "likely" is a filled dot, "lean"
+ * a ring of the same colour, so the pair differs by shape rather than by a
+ * paler tint that washes out in one theme. The label always names it. */
+.al-dot-k {
+  display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 7px;
+  vertical-align: 0; box-sizing: border-box; border: 2px solid currentColor; background: currentColor;
+}
+.al-ok-likely-win, .al-ok-lean-win { color: var(--good-strong); }
+.al-ok-toss-up { color: var(--text-4); }
+.al-ok-lean-loss, .al-ok-likely-loss { color: var(--bad); }
+.al-ok-lean-win, .al-ok-lean-loss { background: transparent; }

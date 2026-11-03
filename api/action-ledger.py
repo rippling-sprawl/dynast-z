@@ -1,20 +1,27 @@
 """
 /api/action-ledger — every tracked Action Network bet, for admins only.
 
-GET  -> {"rows": [...], "fetched_at": "...", "built_at": "..."}
+GET  -> {"rows": [...], "fetched_at": "...", "built_at": "...",
+         "chances": {"<ticket id>": 35.5, ...}}
         Auth: X-User-Id, must be an active admin. The row shape is documented
         in scripts/build_action_ledger.py, which is what writes it.
 PUT  -> {"data": {"rows": [...], ...}, "etag": "..."}
         Replaces the ledger. Same auth.
+POST -> {"id": <ticket id>, "chance": 0-100 | null}
+        Sets (or, with null, clears) an admin's hand-set win chance for one
+        ticket. Same auth. A ticket with no entry falls back, on the page, to
+        the chance its odds imply.
 
 Unlike the Action book (api/action.py), which is unlisted-public, this one is
 gated: the book is a board of open futures, the ledger is the whole betting
 history with stakes and results on every row.
 
 Storage: Supabase `action_pages`, slug `ledger` -- the same table as the book,
-so no schema change, but not part of the book. api/action-ingest.py excludes
-this slug from its manifest, which is what keeps a book push (which deletes any
-slug it was not sent) from removing it.
+so no schema change, but not part of the book. The hand-set chances are their
+own slug, `ledger-chances`, so re-seeding the ledger never wipes them.
+api/action-ingest.py excludes both slugs from its manifest, which is what keeps
+a book push (which deletes any slug it was not sent) from removing them, and
+api/action.py only serves its own allowlisted slugs, so neither is public.
 
 Size: ~11k rows, ~3.8 MB of JSON and ~0.5 MB gzipped. _http.send gzips it.
 """
@@ -33,6 +40,7 @@ SUPABASE_URL = os.environ.get("SUPABASE_URL", "")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "")
 
 SLUG = "ledger"
+CHANCES_SLUG = "ledger-chances"
 
 
 def supabase_request(path, method="GET", body=None, headers=None):
@@ -69,8 +77,45 @@ def resolve_admin(user_id):
 
 
 def load():
-    rows = supabase_request(f"action_pages?slug=eq.{SLUG}&select=data")
-    return rows[0]["data"] if rows else None
+    rows = supabase_request(
+        f"action_pages?slug=in.({SLUG},{CHANCES_SLUG})&select=slug,data") or []
+    by_slug = {r["slug"]: r["data"] for r in rows}
+    data = by_slug.get(SLUG)
+    if data is None:
+        return None
+    return {**data, "chances": (by_slug.get(CHANCES_SLUG) or {}).get("chances", {})}
+
+
+def load_chances():
+    rows = supabase_request(f"action_pages?slug=eq.{CHANCES_SLUG}&select=data")
+    return ((rows[0]["data"] if rows else None) or {}).get("chances", {})
+
+
+def set_chance(body):
+    """(result, error). One ticket's chance, as a percent; null clears it.
+
+    Read-modify-write of one small JSON object: fine for a page only admins
+    edit, one cell at a time."""
+    if not isinstance(body, dict):
+        return None, "Body must be an object"
+    tid, chance = body.get("id"), body.get("chance")
+    if isinstance(tid, bool) or not isinstance(tid, int):
+        return None, "id must be a ticket id"
+    if chance is not None:
+        if isinstance(chance, bool) or not isinstance(chance, (int, float)) or not 0 <= chance <= 100:
+            return None, "chance must be a number from 0 to 100, or null"
+        chance = round(float(chance), 1)
+    chances = load_chances()
+    if chance is None:
+        chances.pop(str(tid), None)
+    else:
+        chances[str(tid)] = chance
+    supabase_request(
+        "action_pages?on_conflict=slug", method="POST",
+        body=[{"slug": CHANCES_SLUG, "data": {"chances": chances},
+               "etag": str(len(chances)), "updated_at": "now()"}],
+        headers={"Prefer": "resolution=merge-duplicates,return=minimal"})
+    return {"id": tid, "chance": chance}, None
 
 
 def save(body):
@@ -105,7 +150,13 @@ class handler(BaseHTTPRequestHandler):
             return
         self._json(200, data)
 
+    def do_POST(self):
+        self._write(set_chance)
+
     def do_PUT(self):
+        self._write(save)
+
+    def _write(self, fn):
         try:
             err = resolve_admin(self.headers.get("X-User-Id"))
             if err:
@@ -120,7 +171,7 @@ class handler(BaseHTTPRequestHandler):
             self._json(500, {"error": str(e)})
             return
         try:
-            result, error = save(body)
+            result, error = fn(body)
         except Exception as e:                       # noqa: BLE001
             self._json(500, {"error": str(e)})
             return

@@ -2255,6 +2255,28 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             except Exception as e:
                 self._json_response(500, {"error": str(e)})
             return
+        # Action Ledger: an admin's hand-set win chance for one ticket.
+        if self.path.split("?")[0] == "/api/action-ledger":
+            api = action_ledger_api()
+            try:
+                err = api.resolve_admin(self.headers.get("X-User-Id"))
+                if err:
+                    self._json_response(*err)
+                    return
+                length = int(self.headers.get("Content-Length", 0))
+                body = json.loads(self.rfile.read(length)) if length else {}
+                result, error = api.set_chance(body)
+            except json.JSONDecodeError:
+                self._json_response(400, {"error": "Body must be JSON"})
+                return
+            except Exception as e:  # noqa: BLE001
+                self._json_response(500, {"error": str(e)})
+                return
+            if error:
+                self._json_response(400, {"error": error})
+                return
+            self._json_response(200, result)
+            return
         if self.path == "/api/auth":
             length = int(self.headers.get("Content-Length", 0))
             body = json.loads(self.rfile.read(length)) if length else {}

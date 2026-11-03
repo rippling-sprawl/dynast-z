@@ -13,6 +13,11 @@
  * applies to `all`, since the other two are defined by a date window of their own.
  *
  * Filters live in the query string so a view is linkable and survives a reload.
+ *
+ * With the type filter on Future, every view adds a Chances column (the win
+ * chance as a percent: by default what the odds imply, but an admin can type
+ * their own, which POSTs to /api/action-ledger and is kept server-side) and an
+ * outlook table that buckets the open tickets by that chance.
  */
 (function () {
   'use strict';
@@ -30,11 +35,20 @@
 
   const TYPE_ORDER = ['Spread', 'Moneyline', 'Total', 'Prop', 'Parlay', 'Teaser',
     'Future', 'Custom', 'Competition', 'Other'];
+  // Outlook buckets for open futures, by win chance in percent: a ticket goes
+  // in the first bucket whose floor it meets.
+  const OUTLOOK = [
+    { key: 'likely-win', label: 'Likely win', min: 70 },
+    { key: 'lean-win', label: 'Lean win', min: 55 },
+    { key: 'toss-up', label: 'Toss-up', min: 45 },
+    { key: 'lean-loss', label: 'Lean loss', min: 30 },
+    { key: 'likely-loss', label: 'Likely loss', min: 0 },
+  ];
   const RESULT_LABEL = { win: 'Won', loss: 'Lost', push: 'Push', pending: 'Pending', void: 'Void' };
 
   const $ = id => document.getElementById(id);
   const els = {
-    sub: $('al-sub'), stats: $('al-stats'), graph: $('al-graph'),
+    sub: $('al-sub'), stats: $('al-stats'), graph: $('al-graph'), buckets: $('al-buckets'),
     head: $('al-head'), body: $('al-body'), more: $('al-more'),
     range: $('f-range'), from: $('f-from'), to: $('f-to'), type: $('f-type'),
     league: $('f-league'), team: $('f-team'), result: $('f-result'), q: $('f-q'),
@@ -43,6 +57,7 @@
 
   let ROWS = [];
   let META = {};
+  let CHANCES = {};
   let shown = PAGE;
   let lastChart = null;
   const expanded = new Set();
@@ -72,6 +87,12 @@
   };
   const signed = v => v == null ? '—' : (v > 0 ? '+' : v < 0 ? '−' : '') + money(v);
   const league = lg => lg ? lg.toUpperCase().replace(/_/g, ' ') : '—';
+  // American odds -> implied win chance, in percent (vig left in).
+  const implied = o => o == null || o === 0 ? null : o > 0 ? 10000 / (o + 100) : -o * 100 / (-o + 100);
+  const hasOwnChance = r => CHANCES[r.id] != null;
+  const chanceOf = r => hasOwnChance(r) ? CHANCES[r.id] : implied(r.o);
+  const pct = v => v == null ? '—' : (Math.round(v * 10) / 10) + '%';
+  const showChances = () => state.type === 'Future';
   const isoDay = t => new Date(t - new Date(t).getTimezoneOffset() * 60000).toISOString().slice(0, 10);
 
   // ---- query string -------------------------------------------------------
@@ -331,6 +352,43 @@
     hit.addEventListener('pointerleave', hide);
   }
 
+  // ---- outlook ------------------------------------------------------------
+  // The open futures in the filter, bucketed by win chance. Expected is the
+  // chance-weighted net: p * to-win - (1 - p) * stake.
+  function renderBuckets(rows) {
+    if (!showChances()) { els.buckets.hidden = true; return; }
+    els.buckets.hidden = false;
+    const open = rows.filter(r => r.r === 'pending');
+    const agg = () => ({ n: 0, s: 0, w: 0, ev: 0 });
+    const by = Object.fromEntries(OUTLOOK.map(b => [b.key, agg()]));
+    const total = agg(), unrated = agg();
+    open.forEach(r => {
+      const c = chanceOf(r);
+      const a = c == null ? unrated : by[OUTLOOK.find(b => c >= b.min).key];
+      const p = (c || 0) / 100, s = r.s || 0, w = r.w || 0;
+      for (const t of c == null ? [a] : [a, total]) {
+        t.n += 1; t.s += s; t.w += w;
+        if (c != null) t.ev += p * w - (1 - p) * s;
+      }
+    });
+    // At the odds' own chances, expected is zero by construction; round off
+    // the float dust so it reads $0, not +$0 or −$0.01.
+    open.length && [total, unrated, ...Object.values(by)].forEach(a => { a.ev = Math.round(a.ev) || 0; });
+    const tone = v => v > 0 ? 'al-pos' : v < 0 ? 'al-neg' : '';
+    const range = (b, i) => i === 0 ? `${b.min}%+` : `${b.min}–${OUTLOOK[i - 1].min}%`;
+    const row = (label, hint, a, cls) => `<tr class="${cls || ''}"><th scope="row">${label}` +
+      (hint ? ` <span class="al-meta al-inline">${hint}</span>` : '') + '</th>' +
+      `<td class="al-r al-num">${a.n.toLocaleString()}</td><td class="al-r al-num">${money(a.s)}</td>` +
+      `<td class="al-r al-num">${money(a.w)}</td><td class="al-r al-num ${a.n ? tone(a.ev) : ''}">${a.n ? signed(a.ev) : '—'}</td></tr>`;
+    els.buckets.innerHTML =
+      '<table class="al-table al-outlook"><caption class="al-outlook-cap">Open futures by Chances</caption>' +
+      '<thead><tr><th scope="col">Outlook</th><th scope="col" class="al-r">Tickets</th><th scope="col" class="al-r">At risk</th>' +
+      '<th scope="col" class="al-r">To win</th><th scope="col" class="al-r">Expected</th></tr></thead><tbody>' +
+      OUTLOOK.map((b, i) => row(`<span class="al-dot-k al-ok-${b.key}"></span>${b.label}`, range(b, i), by[b.key])).join('') +
+      (unrated.n ? row('No chance', 'no odds', unrated) : '') +
+      row('Total', '', total, 'al-outlook-total') + '</tbody></table>';
+  }
+
   // ---- table --------------------------------------------------------------
   const COLUMNS = {
     all: ['date', 'bet', 'type', 'league', 'odds', 'stake', 'net', 'result'],
@@ -344,15 +402,23 @@
     type: { label: 'Type', get: r => r.t },
     league: { label: 'League', get: r => r.lg || null },
     odds: { label: 'Odds', get: r => r.o, num: true, dir: 'desc', right: true },
+    chance: { label: 'Chances', get: chanceOf, num: true, dir: 'desc', right: true },
     stake: { label: 'Stake', get: r => r.s, num: true, dir: 'desc', right: true },
     towin: { label: 'To win', get: r => r.w, num: true, dir: 'desc', right: true },
     net: { label: 'Net', get: r => r.n, num: true, dir: 'desc', right: true },
     result: { label: 'Result', get: r => r.r },
   };
 
+  // The Chances column rides in after Odds, and only for futures.
+  function columns() {
+    const cols = COLUMNS[state.view].slice();
+    if (showChances()) cols.splice(cols.indexOf('odds') + 1, 0, 'chance');
+    return cols;
+  }
+
   function renderHead() {
     const s = sorts[state.view];
-    els.head.innerHTML = '<tr>' + COLUMNS[state.view].map(k => {
+    els.head.innerHTML = '<tr>' + columns().map(k => {
       const c = COL[k];
       const active = s.key === k;
       return `<th class="${c.right ? 'al-r' : ''}" aria-sort="${active ? (s.dir === 'asc' ? 'ascending' : 'descending') : 'none'}">` +
@@ -375,6 +441,17 @@
       case 'type': return `<td><span class="al-chip">${esc(r.t)}</span></td>`;
       case 'league': return `<td>${esc(league(r.lg))}</td>`;
       case 'odds': return `<td class="al-r al-num">${fmtOdds(r.o)}</td>`;
+      case 'chance': {
+        const v = chanceOf(r);
+        // Only an open ticket's chance is worth setting; a graded one shows
+        // what it was.
+        if (r.r !== 'pending') return `<td class="al-r al-num al-chance-done">${pct(v)}</td>`;
+        const own = hasOwnChance(r);
+        return `<td class="al-r al-num al-chance-cell${own ? ' al-chance-own' : ''}">` +
+          `<button type="button" class="al-chance-reset" data-id="${r.id}" title="Back to the odds' ${pct(implied(r.o))}" aria-label="Reset to the odds' chance"${own ? '' : ' hidden'}>↺</button>` +
+          `<input class="al-chance" type="number" inputmode="decimal" min="0" max="100" step="0.1" data-id="${r.id}" ` +
+          `value="${v == null ? '' : Math.round(v * 10) / 10}" aria-label="Win chance for ${esc(r.d)}"><span class="al-pct">%</span></td>`;
+      }
       case 'stake': return `<td class="al-r al-num">${money(r.s)}</td>`;
       case 'towin': return `<td class="al-r al-num">${money(r.w)}</td>`;
       case 'net': return `<td class="al-r al-num ${r.n > 0 ? 'al-pos' : r.n < 0 ? 'al-neg' : ''}">${r.r === 'pending' ? '—' : signed(r.n)}</td>`;
@@ -384,7 +461,7 @@
   }
 
   function renderBody(rows) {
-    const cols = COLUMNS[state.view];
+    const cols = columns();
     const s = sorts[state.view];
     const c = COL[s.key];
     const sorted = Sort.sortBy(rows, s.dir, { numeric: !!c.num, accessor: c.get });
@@ -414,8 +491,11 @@
     syncControls();
     writeUrl();
     lastRows = filtered();
+    // The Chances sort has nothing to sort on once the column is gone.
+    if (!columns().includes(sorts[state.view].key)) sorts[state.view] = { key: COLUMNS[state.view][0], dir: COL[COLUMNS[state.view][0]].dir };
     renderStats(lastRows);
     renderChart(lastRows);
+    renderBuckets(lastRows);
     renderHead();
     renderBody(lastRows);
   }
@@ -469,6 +549,51 @@
     expanded.has(id) ? expanded.delete(id) : expanded.add(id);
     renderBody(lastRows);
   });
+  // A chance edit saves on change and repaints only the outlook and its own
+  // cell, not the table, so tabbing down the column keeps focus.
+  async function saveChance(id, chance, input) {
+    const key = String(id);
+    const before = CHANCES[key];
+    if (chance == null) delete CHANCES[key]; else CHANCES[key] = chance;
+    const paint = () => {
+      const r = ROWS.find(x => x.id === id);
+      const td = input.closest('td');
+      td.classList.toggle('al-chance-own', hasOwnChance(r));
+      td.querySelector('.al-chance-reset').hidden = !hasOwnChance(r);
+      const v = chanceOf(r);
+      input.value = v == null ? '' : Math.round(v * 10) / 10;
+      renderBuckets(lastRows);
+    };
+    paint();
+    input.classList.remove('al-chance-err');
+    try {
+      const res = await fetch('/api/action-ledger', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-User-Id': getUser().user_id },
+        body: JSON.stringify({ id, chance }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+    } catch (err) {
+      if (before == null) delete CHANCES[key]; else CHANCES[key] = before;
+      paint();
+      input.classList.add('al-chance-err');
+      input.title = `Not saved: ${err.message}`;
+    }
+  }
+  els.body.addEventListener('change', e => {
+    const input = e.target.closest('.al-chance');
+    if (!input) return;
+    const raw = input.value.trim();
+    const v = raw === '' ? null : Math.min(100, Math.max(0, Math.round(Number(raw) * 10) / 10));
+    if (raw !== '' && isNaN(v)) return;
+    saveChance(Number(input.dataset.id), v, input);
+  });
+  els.body.addEventListener('click', e => {
+    const b = e.target.closest('.al-chance-reset');
+    if (!b) return;
+    saveChance(Number(b.dataset.id), null, b.closest('td').querySelector('.al-chance'));
+  });
   els.more.addEventListener('click', e => {
     if (!e.target.closest('#al-more-btn')) return;
     shown += PAGE;
@@ -488,6 +613,7 @@
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
       ROWS = data.rows || [];
+      CHANCES = data.chances || {};
       META = data;
     } catch (err) {
       els.sub.textContent = `Couldn't load the ledger: ${err.message}`;
