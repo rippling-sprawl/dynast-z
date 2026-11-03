@@ -565,9 +565,9 @@
       case 'stake': return `<td class="al-r al-num">${money(r.s)}</td>`;
       case 'towin': return `<td class="al-r al-num">${money(r.w)}</td>`;
       // Net carries the result's badge, so a graded ticket reads won/lost
-      // at a glance without a column of its own.
+      // at a glance without a column of its own. Whole dollars only.
       case 'net': return `<td class="al-r al-num">${r.r === 'pending' ? '—' :
-        `<span class="al-res al-res-${esc(r.r)}" title="${RESULT_LABEL[r.r] || esc(r.r)}">${signed(r.n)}</span>`}</td>`;
+        `<span class="al-res al-res-${esc(r.r)}" title="${RESULT_LABEL[r.r] || esc(r.r)}">${signed(Math.round(r.n))}</span>`}</td>`;
     }
     return '<td></td>';
   }
