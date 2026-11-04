@@ -57,20 +57,25 @@
   </div>
 
   <script>
-    // data/nfl_team_stats_{season}.json is written by scripts/fetch_team_stats.py.
-    // March onward is that year's season; before its first game has been
-    // fetched, the previous season's file is what there is to show.
+    // /api/team-season-stats serves the newest season in Supabase, rebuilt every
+    // Tuesday by scripts/fetch_team_stats.py (.github/workflows/team-season-stats.yml).
+    // If it has nothing, fall back to the committed data/nfl_team_stats_{season}.json
+    // the same script writes. March onward is that year's season; before its
+    // first game has been fetched, the previous season's file is what there is.
     (function () {
       var now = new Date();
       var season = now.getMonth() >= 2 ? now.getFullYear() : now.getFullYear() - 1;
       var meta = document.getElementById('ts-meta');
 
-      function load(s) {
-        return fetch('/data/nfl_team_stats_' + s + '.json', { cache: 'no-store' })
-          .then(function (r) { return r.ok ? r.json() : null; });
+      function get(url) {
+        return fetch(url, { cache: 'no-store' })
+          .then(function (r) { return r.ok ? r.json() : null; })
+          .catch(function () { return null; });
       }
+      function load(s) { return get('/data/nfl_team_stats_' + s + '.json'); }
 
-      load(season)
+      get('/api/team-season-stats')
+        .then(function (d) { return (d && d.teams) ? d : load(season); })
         .then(function (d) { return d || load(season - 1); })
         .then(function (d) {
           if (!d) {

@@ -1,0 +1,69 @@
+# Rebuild /football/team-stats/yards-vs-points every Tuesday from 5:00am ET.
+#
+# Asks balldontlie for every team's season totals -- points and net yards, for
+# and against -- and writes the league to `team_season_stats`, one row per
+# season. Every run is a full rebuild, so a late or repeated run is harmless.
+# See scripts/fetch_team_stats.py.
+#
+# NOTHING IS COMMITTED. The row goes to Supabase and the page is current on the
+# next request. Hence no write permission.
+#
+# The schedule is defense-vs-players.yml's, for the same reasons -- see the
+# notes there on why it is three crons and a guard.
+#
+# - Secrets needed (Settings > Secrets and variables > Actions):
+#     BALLDONTLIE_API_KEY  SUPABASE_URL  SUPABASE_KEY
+# - The table must exist first: run scripts/sql/team_season_stats.sql once.
+
+name: Build Team Season Stats
+
+on:
+  schedule:
+    - cron: '17 9,10,13 * * 2'
+  workflow_dispatch:
+    inputs:
+      season:
+        description: 'Season to rebuild (blank = the current one)'
+        default: ''
+
+concurrency:
+  group: team-season-stats
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Is it 5am or later in New York?
+        id: guard
+        run: |
+          hour=$(TZ=America/New_York date +%H)
+          echo "ET hour: $hour"
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] || [ "$((10#$hour))" -ge 5 ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - if: steps.guard.outputs.run == 'true'
+        uses: actions/checkout@v4
+
+      - if: steps.guard.outputs.run == 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      # No install step on purpose: scripts/ is stdlib-only (pyproject.toml).
+      - name: Build
+        if: steps.guard.outputs.run == 'true'
+        env:
+          BALLDONTLIE_API_KEY: ${{ secrets.BALLDONTLIE_API_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        run: |
+          python3 scripts/fetch_team_stats.py --publish \
+            ${{ github.event.inputs.season && format('--season {0}', github.event.inputs.season) || '' }}

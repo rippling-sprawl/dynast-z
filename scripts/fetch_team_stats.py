@@ -29,13 +29,18 @@ KC 2025); the plain `total_offensive_yards` field is a larger gross number.
 
 When
 ----
-By hand, after a week's games are final -- Tuesday morning, as with the other
-weekly boards. The file is committed and served from the CDN, so a re-run plus a
-deploy is what moves the page. The default mode is `record` rather than the
-family's usual `auto`, because `auto` would replay last week's cassette.
+Tuesdays from 5:00am ET, after a week's games are final, by
+.github/workflows/team-season-stats.yml -- the same schedule as the other
+weekly boards. With --publish the league goes to Supabase `team_season_stats`
+(scripts/sql/team_season_stats.sql), which api/team-season-stats.py serves, so
+the page is current on the next request with no commit or deploy. The JSON file
+is still written every run; the page falls back to it when the endpoint has
+nothing. The default mode is `record` rather than the family's usual `auto`,
+because `auto` would replay last week's cassette.
 
 Usage:
-    python3 scripts/fetch_team_stats.py                 # current season
+    python3 scripts/fetch_team_stats.py                 # current season, file only
+    python3 scripts/fetch_team_stats.py --publish       # ... and to Supabase
     python3 scripts/fetch_team_stats.py --season 2025
     python3 scripts/fetch_team_stats.py --dry-run
     python3 scripts/fetch_team_stats.py --replay        # offline, from cache/bdl
@@ -45,6 +50,8 @@ import argparse
 import json
 import os
 import sys
+import urllib.error
+import urllib.request
 from datetime import datetime, timezone
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -114,10 +121,36 @@ def verify(teams):
             raise SystemExit(f"league {label} for ({sa}) != against ({sb})")
 
 
+def publish(out):
+    """Upsert the league as one row keyed on season."""
+    url = (os.environ.get("SUPABASE_URL") or "").rstrip("/")
+    key = os.environ.get("SUPABASE_KEY") or ""
+    if not url or not key:
+        raise SystemExit("SUPABASE_URL and SUPABASE_KEY are needed for --publish. Add them to .env.")
+    body = json.dumps([{"season": out["season"], "data": out,
+                        "updated_at": out["fetched_at"]}]).encode()
+    req = urllib.request.Request(f"{url}/rest/v1/team_season_stats?on_conflict=season",
+                                 data=body, method="POST")
+    req.add_header("apikey", key)
+    req.add_header("Authorization", f"Bearer {key}")
+    req.add_header("Content-Type", "application/json")
+    req.add_header("Prefer", "resolution=merge-duplicates,return=minimal")
+    try:
+        with urllib.request.urlopen(req, timeout=60):
+            pass
+    except urllib.error.HTTPError as e:
+        detail = e.read().decode(errors="replace")[:300]
+        if "PGRST205" in detail:
+            raise SystemExit("The team_season_stats table does not exist yet -- run "
+                             "scripts/sql/team_season_stats.sql once in the Supabase SQL editor.")
+        raise SystemExit(f"Supabase POST failed ({e.code}): {detail}")
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--season", type=int, default=None)
     ap.add_argument("--dry-run", action="store_true", help="print, write nothing")
+    ap.add_argument("--publish", action="store_true", help="also upsert to Supabase team_season_stats")
     bdl_common.add_mode_args(ap)
     ap.set_defaults(mode="record")
     args = ap.parse_args()
@@ -146,6 +179,9 @@ def main():
         f.write("\n")
     print(f"wrote {os.path.relpath(path, ROOT)} ({len(teams)} teams, "
           f"games played {min(t['gp'] for t in teams)}-{max(t['gp'] for t in teams)})")
+    if args.publish:
+        publish(out)
+        print(f"published season {season} to team_season_stats")
 
 
 if __name__ == "__main__":

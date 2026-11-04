@@ -302,6 +302,22 @@ def quarter_splits_api():
     return _quarter_splits_api
 
 
+_team_season_stats_api = None
+
+
+def team_season_stats_api():
+    """Load api/team-season-stats.py. By path because the filename has a
+    hyphen in it, and lazily for the same reason as above."""
+    global _team_season_stats_api
+    if _team_season_stats_api is None:
+        import importlib.util
+        path = os.path.join(DATA_DIR, "api", "team-season-stats.py")
+        spec = importlib.util.spec_from_file_location("team_season_stats_api", path)
+        _team_season_stats_api = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(_team_season_stats_api)
+    return _team_season_stats_api
+
+
 _bun_notes_api = None
 
 
@@ -1851,6 +1867,22 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 return
             if payload is None:
                 self._json_response(404, {"error": f"no completed games stored for {team}"})
+            else:
+                self._json_response(200, payload)
+        # Its data, through the deployed function's own loader and validation.
+        elif self.path.split("?")[0] == "/api/team-season-stats":
+            api = team_season_stats_api()
+            season, error = api.parse(parse_qs(urlparse(self.path).query))
+            if error:
+                self._json_response(400, {"error": error})
+                return
+            try:
+                payload = api.load_season(season)
+            except Exception as e:  # noqa: BLE001
+                self._json_response(500, {"error": str(e)})
+                return
+            if payload is None:
+                self._json_response(404, {"error": "no team stats stored for that season"})
             else:
                 self._json_response(200, payload)
         elif self.path.split("?")[0] == "/football/team-stats":
