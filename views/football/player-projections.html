@@ -33,6 +33,7 @@
   <script src="/scripts/components/nfl-pickers.js"></script>
   <script src="/scripts/components/nfl-schedule.js"></script>
   <script src="/scripts/components/player-logs.js"></script>
+  <script src="/scripts/components/defense-table.js"></script>
   <script src="/scripts/components/player-projection.js"></script>
   <script>initPage();</script>
 
@@ -67,9 +68,10 @@
           </div>
         </div>
       </div>
-      <!-- defense-vs-players' filters button and modal, holding only its Show
-           toggles: the position is the player's, so there is nothing else to
-           filter. -->
+      <!-- defense-vs-players' filters button and modal, less its position
+           filter: the position is the player's. Each minimum shows only for a
+           position it can cut (no rush attempts for a WR or TE, no targets
+           for a QB). -->
       <button type="button" class="dd-btn dvp-filters-btn" id="f-more" aria-haspopup="dialog" aria-expanded="false" aria-label="More filters" title="Filters">
         <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true" focusable="false">
           <g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
@@ -89,6 +91,24 @@
           <button type="button" class="dvp-modal-x" data-close aria-label="Close">&times;</button>
         </div>
         <div class="dvp-modal-body">
+          <div class="dvp-filter" id="w-att" hidden>
+            <span class="dvp-flabel" id="l-att">Min. rush att</span>
+            <div class="dd" id="dd-att">
+              <button type="button" class="dd-btn" id="f-att" aria-haspopup="true" aria-expanded="false" aria-labelledby="l-att f-att">
+                <span class="dd-value">0+</span>
+              </button>
+              <div class="dd-pop dd-menu" id="att-menu" role="menu" aria-label="Minimum rush attempts" hidden></div>
+            </div>
+          </div>
+          <div class="dvp-filter" id="w-tgt" hidden>
+            <span class="dvp-flabel" id="l-tgt">Min. targets</span>
+            <div class="dd" id="dd-tgt">
+              <button type="button" class="dd-btn" id="f-tgt" aria-haspopup="true" aria-expanded="false" aria-labelledby="l-tgt f-tgt">
+                <span class="dd-value">0+</span>
+              </button>
+              <div class="dd-pop dd-menu" id="tgt-menu" role="menu" aria-label="Minimum targets" hidden></div>
+            </div>
+          </div>
           <div class="dvp-filter dvp-toggles" role="group" aria-labelledby="l-show">
             <span class="dvp-flabel" id="l-show">Show</span>
             <span class="dvp-toggle-set">
@@ -102,15 +122,17 @@
     </div>
 
     <div id="head"></div>
-    <!-- Before a player is picked: the week's DK yards lines the model
-         disagrees with most, in place of the views. -->
+    <!-- Before a player is picked: a pointer to Weekly Edges, in place of the views. -->
     <div id="top" hidden></div>
-    <!-- Three views of one matchup, one at a time: the projection, the
-         defense it is adjusted by, and his every game against it. -->
+    <!-- Four views, one at a time: the model, the defense's season
+         (defense-vs-players' table, at his position), his every game against
+         it — those two tabs named for the defense — and his career game logs,
+         which need no defense and so show on a bye week too. -->
     <div class="dvp-toggle-set pp-views" id="views" role="tablist" aria-label="View" hidden>
-      <button type="button" class="dd-btn dvp-toggle" role="tab" data-view="proj" id="tab-proj" aria-controls="proj">Projection</button>
+      <button type="button" class="dd-btn dvp-toggle" role="tab" data-view="proj" id="tab-proj" aria-controls="proj">Model</button>
       <button type="button" class="dd-btn dvp-toggle" role="tab" data-view="defense" id="tab-defense" aria-controls="defp">Defense</button>
       <button type="button" class="dd-btn dvp-toggle" role="tab" data-view="games" id="tab-games" aria-controls="games">Games</button>
+      <button type="button" class="dd-btn dvp-toggle" role="tab" data-view="logs" id="tab-logs" aria-controls="logs">Game logs</button>
     </div>
     <div id="proj" role="tabpanel" aria-labelledby="tab-proj"></div>
     <div id="defp" role="tabpanel" aria-labelledby="tab-defense" hidden></div>
@@ -118,6 +140,7 @@
       <div id="board"><p class="sched-empty">Loading players…</p></div>
       <p class="dvp-note" id="note"></p>
     </div>
+    <div id="logs" role="tabpanel" aria-labelledby="tab-logs" hidden></div>
   </div>
 
   <script>
@@ -145,15 +168,20 @@
     var doc = null;    // its /api/player-projections payload
     var def = '';      // the defense picked by hand; '' means this week's opponent
     var hide = {};     // column groups hidden: { pass, rush, rec }
+    var att = 0, tgt = 0; // the defense table's minimums: rush attempts, targets
     var stat = '';     // the projection's stat; '' means the position's first
     var lines = {};    // lines moved by hand, by stat; reset with the matchup
-    var view = 'proj'; // the tab: proj | defense | games
+    var view = 'proj'; // the tab: proj (Model) | defense (2026 NE) | games (vs NE) | logs
+    var logsOpen = {}; // Game logs seasons opened or shut by hand: season -> bool
 
     var board = document.getElementById('board');
     var proj = document.getElementById('proj');
     var defp = document.getElementById('defp');
     var viewsEl = document.getElementById('views');
-    var VIEWS = { proj: proj, defense: defp, games: document.getElementById('games') };
+    var logsEl = document.getElementById('logs');
+    var VIEWS = { proj: proj, defense: defp, games: document.getElementById('games'), logs: logsEl };
+    // The tabs that need a defense; Game logs does not.
+    var DEF_VIEWS = { proj: true, defense: true, games: true };
     var head = document.getElementById('head');
     var topEl = document.getElementById('top');
     var note = document.getElementById('note');
@@ -202,26 +230,35 @@
     function defense() { return def || scheduledOpp(); }
 
     /* ---------- the URL is the state ----------
-     *   ?player=Breece%20Hall&pos=RB[&def=NE][&hide=rec][&stat=rec_yds][&view=defense]
+     *   ?player=Breece%20Hall&pos=RB[&def=NE][&hide=rec][&att=4][&tgt=2][&stat=rec_yds][&view=defense]
      * `def` only when it is not this week's opponent, so a shared link keeps
      * following the schedule. `hide` only where it differs from what the
      * position hides on its own (posDefaults); an empty `hide=` shows every
      * group, as on defense-vs-players. */
     var GROUPS = ['pass', 'rush', 'rec'];
+    var ATT_STEPS = [0, 1, 4, 6, 8, 10];
+    var TGT_STEPS = [0, 1, 2, 3, 4, 5];
     function hideList(h) { return GROUPS.filter(function (g) { return h[g]; }).join(','); }
 
     // defense-vs-players' posDefaults with one position, which is all a
     // player has: no passing unless a QB, no rushing for a WR or TE, no
     // receiving for a QB.
     function posDefaults(pos) {
-      return { pass: pos !== 'QB', rush: pos === 'WR' || pos === 'TE', rec: pos === 'QB' };
+      return DefenseTable.posDefaults(pos ? [pos] : []);
     }
+
+    // The minimums by the same rule: rush attempts cut only QBs and RBs,
+    // targets only RBs, WRs and TEs.
+    function hasAtt(pos) { return pos === 'QB' || pos === 'RB'; }
+    function hasTgt(pos) { return pos === 'RB' || pos === 'WR' || pos === 'TE'; }
 
     function writeParams() {
       var q = new URLSearchParams();
       if (player) { q.set('player', player.name); q.set('pos', player.pos); }
       if (def && def !== scheduledOpp()) q.set('def', def);
       if (player && hideList(hide) !== hideList(posDefaults(player.pos))) q.set('hide', hideList(hide));
+      if (player && att) q.set('att', att);
+      if (player && tgt) q.set('tgt', tgt);
       if (player && stat && stat !== (PlayerProjection.BY_POS[player.pos] || [])[0]) q.set('stat', stat);
       if (player && view !== 'proj') q.set('view', view);
       syncMore();
@@ -251,6 +288,9 @@
         hide = {};
         GROUPS.forEach(function (g) { hide[g] = h.indexOf(g) >= 0; });
       }
+      var a = Number(q.get('att')), t = Number(q.get('tgt'));
+      att = player && hasAtt(player.pos) && ATT_STEPS.indexOf(a) >= 0 ? a : 0;
+      tgt = player && hasTgt(player.pos) && TGT_STEPS.indexOf(t) >= 0 ? t : 0;
       syncToggles();
     }
 
@@ -273,6 +313,7 @@
 
     function render() {
       renderHead();
+      renderLogs();
       var d = defense();
       if (!d) {
         proj.innerHTML = '';
@@ -288,15 +329,27 @@
     }
 
     /* ---------- the views ----------
-     * The tabs show once there is a matchup to show; before that (loading,
-     * a bye week) the games panel carries the page's message alone. With no
-     * player at all, the top 20 stands in for both. */
+     * The tabs show once his logs are in. The matchup tabs need a defense:
+     * on a bye week only Game logs shows, and any other tab falls back to
+     * the games panel and its message. Before the logs (loading), the games
+     * panel carries the page's message alone. With no player at all, the
+     * pointer to Weekly Edges stands in for all of it. */
+    function visibleViews() {
+      return Object.keys(VIEWS).filter(function (k) { return !DEF_VIEWS[k] || defense(); });
+    }
+
     function syncViews() {
-      var on = !!(doc && defense());
+      var on = !!doc, hasDef = !!defense();
       viewsEl.hidden = !on;
+      if (hasDef) {
+        document.getElementById('tab-defense').textContent = season + ' ' + defense();
+        document.getElementById('tab-games').textContent = 'vs ' + defense();
+      }
       topEl.hidden = !!player;
+      var shown = on && (hasDef || view === 'logs') ? view : 'games';
       Object.keys(VIEWS).forEach(function (k) {
-        VIEWS[k].hidden = on ? k !== view : k !== 'games' || !player;
+        VIEWS[k].hidden = on ? k !== shown : k !== 'games' || !player;
+        document.getElementById('tab-' + k).hidden = !!DEF_VIEWS[k] && !hasDef;
         var tab = document.getElementById('tab-' + k);
         tab.setAttribute('aria-selected', String(k === view));
         tab.setAttribute('aria-pressed', String(k === view));
@@ -311,6 +364,8 @@
       // The charts are drawn to the card's width, which is 0 while hidden.
       var c = document.getElementById('pp-card');
       if (v === 'proj' && model && !model.error && c && c.clientWidth !== drawnWidth) drawProj();
+      // Its pinned rows measure 0 while hidden, too.
+      if (v === 'defense') DefenseTable.pin(defp);
     }
 
     viewsEl.addEventListener('click', function (e) {
@@ -320,7 +375,7 @@
     // Arrow keys move between the tabs, as a tablist's should.
     viewsEl.addEventListener('keydown', function (e) {
       if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
-      var keys = Object.keys(VIEWS), i = keys.indexOf(view);
+      var keys = visibleViews(), i = Math.max(0, keys.indexOf(view));
       i = (i + (e.key === 'ArrowRight' ? 1 : keys.length - 1)) % keys.length;
       showView(keys[i]);
       document.getElementById('tab-' + keys[i]).focus();
@@ -343,6 +398,45 @@
         ', newest first, from balldontlie box scores · Avg is per game; its Lng is the longest' +
         (!hide.pass ? ' · balldontlie\'s box score carries no long completion, so Passing has no Lng' : '');
     }
+
+    /* ---------- game logs ----------
+     * Every game balldontlie has for him, a section per season, newest
+     * first and the playoffs above week 18. This season starts open and
+     * earlier ones shut; a click on a season's row flips it, kept until the
+     * next player. The Show toggles cut its columns as on the vs. tab. */
+    function renderLogs() {
+      if (!doc) { logsEl.innerHTML = ''; return; }
+      var bySeason = {};
+      doc.games.forEach(function (g) { (bySeason[g.season] = bySeason[g.season] || []).push(g); });
+      var seasons = Object.keys(bySeason).map(Number).sort(function (a, b) { return b - a; });
+      if (!seasons.length) {
+        logsEl.innerHTML = '<p class="sched-empty">' + esc(doc.player.name) + ' has no games in balldontlie.</p>';
+        return;
+      }
+      var sections = seasons.map(function (yr) {
+        var rows = bySeason[yr].slice().sort(function (a, b) {
+          return (b.postseason ? 1 : 0) - (a.postseason ? 1 : 0) || b.week - a.week;
+        });
+        var open = yr in logsOpen ? logsOpen[yr] : yr >= season;
+        return { title: String(yr), rows: rows, key: yr, open: open };
+      });
+      logsEl.innerHTML = playerLogTable({ team: playerTeam() }, sections,
+        { pass: !hide.pass, rush: !hide.rush, rec: !hide.rec }, { opp: true }) +
+        '<p class="dvp-note">Every regular-season and playoff game ' + esc(doc.player.name) +
+        ' has in balldontlie, by season, newest first · Avg is per game; its Lng is the longest' +
+        (!hide.pass ? ' · balldontlie\'s box score carries no long completion, so Passing has no Lng' : '') + '</p>';
+    }
+
+    logsEl.addEventListener('click', function (e) {
+      var row = e.target.closest ? e.target.closest('.pl-sec') : null;
+      var btn = row && row.querySelector('[data-sec]');
+      if (!btn) return;
+      var yr = Number(btn.getAttribute('data-sec'));
+      logsOpen[yr] = btn.getAttribute('aria-expanded') !== 'true';
+      renderLogs();
+      var again = logsEl.querySelector('[data-sec="' + yr + '"]');
+      if (again) again.focus();
+    });
 
     /* ---------- the projection ----------
      * scripts/components/player-projection.js: his season, his history against
@@ -411,6 +505,7 @@
     function renderProj(d) {
       var token = ++projToken;
       if (modelDef !== d) {
+        inputs = null;
         proj.innerHTML = '<p class="sched-empty">Projecting against ' + esc(d) + '…</p>';
         defp.innerHTML = '<p class="sched-empty">Loading the ' + esc(d) + ' defense…</p>';
       }
@@ -440,7 +535,8 @@
     function drawProj() {
       var d = modelDef;
       if (model.error) {
-        proj.innerHTML = defp.innerHTML = '<p class="sched-empty">' + esc(model.error) + '</p>';
+        proj.innerHTML = '<p class="sched-empty">' + esc(model.error) + '</p>';
+        renderDefense();
         return;
       }
       var keys = model.stats.map(function (m) { return m.key; });
@@ -452,7 +548,7 @@
             esc(x.spec.label) + '</button>';
         }).join('') + '</div>' +
         '<div class="pp-card" id="pp-card"></div><div id="pp-notes"></div>';
-      defp.innerHTML = PlayerProjection.defensePanel(model, d);
+      renderDefense();
       var cardEl = document.getElementById('pp-card');
       // Hidden behind another tab it measures 0; showView redraws it.
       drawnWidth = cardEl.clientWidth;
@@ -461,6 +557,23 @@
       document.getElementById('pp-notes').innerHTML = PlayerProjection.notes(m, d, Math.max(260, drawnWidth || 360));
       if (adjOpen && m.context) openAdjust(m);
       PlayerProjection.bindTips(proj);
+    }
+
+    /* ---------- the defense ----------
+     * scripts/components/defense-table.js, defense-vs-players' table at his
+     * position: every one the defense has faced this season, game by game,
+     * cut by the filters modal. Under it, the model's read of the same
+     * defense — what it allowed against what those players usually get. */
+    function renderDefense() {
+      if (!inputs || !player) return;
+      var d = inputs.d, dd = inputs.defDoc;
+      var pos = (doc && doc.player.pos) || player.pos;
+      var vw = { pos: {}, att: att, tgt: tgt, hide: hide };
+      vw.pos[pos] = true;
+      var table = dd && dd.rows ? DefenseTable.render(dd, vw) : '';
+      defp.innerHTML = (table || '<p class="sched-empty">' + esc(d) + ' has no completed games this season.</p>') +
+        (model && !model.error ? '<div class="pp-def-model">' + PlayerProjection.defensePanel(model, d) + '</div>' : '');
+      if (view === 'defense') DefenseTable.pin(defp);
       PlayerProjection.bindTips(defp);
     }
 
@@ -585,152 +698,25 @@
       }, 150);
     });
 
-    /* ---------- the top 20 ----------
-     * Before a pick: every DraftKings yards line in this week's games still
-     * to kick off (/api/player-projections?board=), each run through the
-     * same model as the card, ranked by how far its chance of going over
-     * lands from even. Either side can be bet, so a 32% over is a 68% under:
-     * 18 points off even, and an under pick. Each row opens the player on
-     * that stat. Built once per visit; the lines move slower than that. */
-    var TOP_N = 20;
-    var MIN_YDS_LINE = 5;
-    var TOP_STAT = { passing_yards: 'pass_yds', rushing_yards: 'rush_yds', receiving_yards: 'rec_yds' };
-    var topPromise = null, topRows = [];
-
     function addPlayer(name, pos, team) {
       var p = { name: name, pos: pos, team: team, key: fold(name) };
       players.push(p);
       return p;
     }
 
-    function weekGames() {
-      var wk = sched.weeks.filter(function (w) { return w.week === week; })[0];
-      var now = new Date();
-      return ((wk && wk.games) || []).filter(function (g) {
-        return g.id && g.kickoff && new Date(g.kickoff.replace(' ', 'T')) > now;
-      });
-    }
-
-    // -> { rows, lines } once every line is projected; rows is the top 20.
-    function loadTop() {
-      if (topPromise) return topPromise;
-      var ids = weekGames().map(function (g) { return g.id; });
-      if (!ids.length) return (topPromise = Promise.resolve({ rows: [], lines: 0, games: 0 }));
-      topPromise = getJson('/api/player-projections?board=' + ids.join(',')).then(function (d) {
-        if (!d || !d.players) { topPromise = null; throw new Error('DraftKings lines unavailable'); }
-        // Each game's team context, once per game, so the board ranks the
-        // same projection the card shows.
-        var gameIds = d.players.map(function (p) { return p.game_id; })
-          .filter(function (id, i, a) { return a.indexOf(id) === i; });
-        var ctxs = {};
-        return Promise.all(gameIds.map(function (id) {
-          return loadContext(id).then(function (c) { ctxs[id] = c; });
-        }).concat(d.players.map(function (p) { return defDoc(p.opp); }))).then(function (res) {
-          var docs = res.slice(gameIds.length);
-          var rows = [], count = 0;
-          d.players.forEach(function (p, i) {
-            var m = PlayerProjection.build({
-              games: p.games, pos: p.pos, season: season, def: p.opp, defDoc: docs[i], props: { props: p.lines },
-              context: contextOpts(ctxs[p.game_id], p.team, p.opp, p.id)
-            });
-            Object.keys(p.lines).forEach(function (mk) {
-              count++;
-              var st = !m.error && m.stats.filter(function (x) { return x.key === TOP_STAT[mk]; })[0];
-              // A player ruled out is no bet, whatever his line says. Nor is a
-              // yards line under MIN_YDS_LINE: a quarterback's 0.5 rushing
-              // yards is a bet on kneel-downs, whose negative yards the
-              // model's distribution, which starts at zero, cannot see.
-              if (!st || (m.context && m.context.out) || p.lines[mk].line < MIN_YDS_LINE) return;
-              var over = PlayerProjection.chances(st, p.lines[mk].line).over;
-              rows.push({ p: p, m: st, quote: p.lines[mk], over: over, edge: Math.abs(over - 0.5) });
-            });
-          });
-          rows.sort(function (a, b) { return b.edge - a.edge; });
-          return { rows: rows.slice(0, TOP_N), lines: count, games: ids.length };
-        });
-      });
-      return topPromise;
-    }
-
-    function odds(o) {
-      return o == null ? '' : o > 0 ? '+' + o : '−' + Math.abs(o);
-    }
-
-    // The board waits for the viewer to ask for it: it is a DraftKings call
-    // plus a context fetch per game, too much to spend on every visit.
+    /* ---------- before a pick ----------
+     * The week's biggest DraftKings yards-line edges live on Weekly Edges. */
     function showTop() {
       syncViews();
-      if (!topPromise) {
-        topEl.innerHTML = '<p class="sched-empty"><button type="button" class="dd-btn pp-top-load">' +
-          'Load week ' + esc(week) + '’s biggest edges</button></p>';
-        return;
-      }
-      if (!topRows.length) topEl.innerHTML = '<p class="sched-empty">Projecting this week\'s DraftKings yards lines…</p>';
-      loadTop().then(function (t) {
-        topRows = t.rows;
-        if (player) return;
-        if (!t.games) {
-          topEl.innerHTML = '<p class="sched-empty">No week ' + esc(week) + ' games left to kick off. Search for a player to see his games against any defense.</p>';
-          return;
-        }
-        if (!t.rows.length) {
-          topEl.innerHTML = '<p class="sched-empty">DraftKings has no yards lines up for week ' + esc(week) + ' yet. Search for a player to see his projection.</p>';
-          return;
-        }
-        topEl.innerHTML = '<h4 class="pp-h">Week ' + esc(week) + '’s biggest edges on DraftKings yards lines</h4>' +
-          '<div class="dvp-scroll pp-best-scroll"><table class="dvp-table pp-best">' +
-          '<thead><tr><th class="num">#</th><th>Player</th><th>Game</th><th>Stat</th><th class="num">Line</th>' +
-          '<th class="num">Proj</th><th>Pick</th><th class="num">Odds</th><th class="num">Chance</th><th class="num">Edge</th></tr></thead><tbody>' +
-          t.rows.map(function (r, i) {
-            var p = r.p, isOver = r.over > 0.5;
-            var href = '?' + new URLSearchParams({ player: p.name, pos: p.pos, stat: r.m.key }).toString();
-            return '<tr><td class="num pp-best-rank">' + (i + 1) + '</td>' +
-              '<td><a class="pp-best-who" href="' + esc(href) + '" data-i="' + i + '">' + logo(p.team) + esc(p.name) +
-              '<span class="pp-pos">' + esc(p.pos) + '</span></a></td>' +
-              '<td class="pp-best-game">' + (p.home ? 'vs' : '@') + ' ' + logo(p.opp) + esc(p.opp) + '</td>' +
-              '<td>' + esc(r.m.spec.label) + '</td>' +
-              '<td class="num">' + esc(r.quote.line) + '</td>' +
-              '<td class="num">' + Math.round(r.m.median) + '</td>' +
-              '<td class="pp-best-pick ' + (isOver ? 'is-over' : 'is-under') + '">' + (isOver ? '▲ Over' : '▼ Under') + '</td>' +
-              '<td class="num">' + odds(isOver ? r.quote.over : r.quote.under) + '</td>' +
-              '<td class="num">' + Math.round((isOver ? r.over : 1 - r.over) * 100) + '%</td>' +
-              '<td class="num pp-best-edge">+' + Math.round(r.edge * 100) + '%</td></tr>';
-          }).join('') + '</tbody></table></div>' +
-          '<p class="dvp-note">Every DraftKings passing, rushing and receiving yards line in the ' + esc(t.games) +
-          ' week ' + esc(week) + ' games still to kick off (' + esc(t.lines) + ' lines), run through the same projection as a player\'s card. ' +
-          'Chance is the model\'s for the pick; edge is how far that lands past 50%. Proj is the median. Pick a player for the whole projection.</p>';
-      }).catch(function (e) {
-        if (!player) topEl.innerHTML = '<p class="sched-empty">Error: ' + esc(e.message) + '</p>';
-      });
+      topEl.innerHTML = '<p class="sched-empty">Search for a player to see his projection. ' +
+        'The week\'s biggest edges are on <a href="/football/weekly-edges">Weekly Edges</a>.</p>';
     }
 
-    // A row opens that player on that stat, the way a search pick would.
-    topEl.addEventListener('click', function (e) {
-      if (e.target.closest && e.target.closest('.pp-top-load')) {
-        loadTop();
-        showTop();
-        return;
-      }
-      var a = e.target.closest ? e.target.closest('a[data-i]') : null;
-      if (!a || e.metaKey || e.ctrlKey || e.shiftKey || e.button) return;
-      e.preventDefault();
-      var r = topRows[Number(a.getAttribute('data-i'))], key = fold(r.p.name);
-      player = players.filter(function (x) { return x.key === key && x.pos === r.p.pos; })[0] ||
-        addPlayer(r.p.name, r.p.pos, r.p.team);
-      input.value = player.name;
-      def = '';
-      stat = r.m.key;
-      view = 'proj';
-      lines = {};
-      hide = posDefaults(player.pos);
-      syncToggles();
-      load();
-    });
-
-    /* ---------- the Show toggles ----------
-     * defense-vs-players' column-group toggles, in its filters modal. A pick
-     * resets them to the new player's position; after that they are the
-     * viewer's. The dot on the icon says they are off that default. */
+    /* ---------- the filters modal ----------
+     * defense-vs-players' minimums and column-group toggles. The minimums cut
+     * the defense table's players; the toggles cut both tables' columns. A
+     * pick resets them to the new player's position; after that they are the
+     * viewer's. The dot on the icon says something is off that default. */
     var moreBtn = document.getElementById('f-more');
     var moreModal = document.getElementById('more-modal');
     var toggles = [['t-pass', 'pass'], ['t-rush', 'rush'], ['t-rec', 'rec']];
@@ -739,10 +725,17 @@
       toggles.forEach(function (u) {
         document.getElementById(u[0]).setAttribute('aria-pressed', String(!hide[u[1]]));
       });
+      if (attSync) syncFilters();
     }
 
     function syncMore() {
-      moreBtn.classList.toggle('is-set', !!player && hideList(hide) !== hideList(posDefaults(player.pos)));
+      moreBtn.classList.toggle('is-set', !!player && (att || tgt || hideList(hide) !== hideList(posDefaults(player.pos))));
+    }
+
+    function redrawTables() {
+      if (doc && defense()) renderTable(defense());
+      renderDefense();
+      renderLogs();
     }
 
     toggles.forEach(function (t) {
@@ -750,18 +743,57 @@
         hide[t[1]] = !hide[t[1]];
         syncToggles();
         writeParams();
-        if (doc && defense()) renderTable(defense());
+        redrawTables();
       });
     });
+
+    function menu(id, steps, onPick) {
+      var dd = registerDropdown(document.getElementById('dd-' + id));
+      var btn = document.getElementById('f-' + id);
+      var mEl = document.getElementById(id + '-menu');
+      var options = steps.map(function (n) { return { value: n, label: n + '+' }; });
+      buildOptionMenu(mEl, options, id);
+      function sync(v) { syncOptionMenu(btn, mEl, v, v + '+', id); }
+      mEl.addEventListener('click', function (e) {
+        var opt = e.target.closest ? e.target.closest('.dd-opt') : null;
+        if (!opt || !mEl.contains(opt)) return;
+        var v = Number(opt.getAttribute('data-' + id));
+        onPick(v);
+        sync(v);
+        closeDropdown(dd, true);
+        writeParams();
+        renderDefense();
+      });
+      return sync;
+    }
+    var attSync = menu('att', ATT_STEPS, function (v) { att = v; });
+    var tgtSync = menu('tgt', TGT_STEPS, function (v) { tgt = v; });
+
+    // Each minimum only for a position it can cut.
+    function syncFilters() {
+      var pos = player ? player.pos : '';
+      document.getElementById('w-att').hidden = !hasAtt(pos);
+      document.getElementById('w-tgt').hidden = !hasTgt(pos);
+      attSync(att);
+      tgtSync(tgt);
+    }
 
     moreBtn.addEventListener('click', function () {
       closeAllDropdowns();
       moreModal.showModal();
       moreBtn.setAttribute('aria-expanded', 'true');
     });
-    moreModal.addEventListener('close', function () { moreBtn.setAttribute('aria-expanded', 'false'); });
+    moreModal.addEventListener('close', function () {
+      closeAllDropdowns();
+      moreBtn.setAttribute('aria-expanded', 'false');
+    });
     moreModal.addEventListener('click', function (e) {
       if (e.target === moreModal || e.target.closest('[data-close]')) moreModal.close();
+    });
+    // An Esc with a menu open inside is for the menu: the dropdowns' own
+    // handler shuts it, and the dialog stays.
+    moreModal.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && anyDropdownOpen()) e.preventDefault();
     });
 
     /* ---------- loading ---------- */
@@ -772,8 +804,10 @@
       doc = null;
       model = null;
       modelDef = '';
+      inputs = null;
       adjOpen = false;
       proj.innerHTML = '';
+      logsEl.innerHTML = '';
       defp.innerHTML = '';
       syncViews();
       note.textContent = '';
@@ -880,6 +914,9 @@
       view = 'proj';
       lines = {};
       hide = posDefaults(p.pos);
+      att = 0;
+      tgt = 0;
+      logsOpen = {};
       syncToggles();
       load();
     }
@@ -915,6 +952,18 @@
       closeList();
       input.value = player ? player.name : '';
     });
+
+    // The drawer's player search (nav.js) hands a pick made on this page
+    // here rather than reloading it. False until the page has its lists, and
+    // nav.js navigates instead.
+    window.playerProjectionsPick = function (name, pos, team) {
+      if (!sched) return false;
+      var key = fold(name);
+      var p = players.filter(function (x) { return x.key === key && x.pos === pos; })[0] || addPlayer(name, pos, team);
+      input.value = p.name;
+      pick(p);
+      return true;
+    };
 
     window.addEventListener('popstate', function () {
       if (!sched) return;

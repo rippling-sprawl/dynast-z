@@ -144,6 +144,10 @@
       "destination": "/views/football/defense-vs-players.html"
     },
     {
+      "source": "/football/weekly-edges",
+      "destination": "/views/football/weekly-edges.html"
+    },
+    {
       "source": "/football/player-projections",
       "destination": "/views/football/player-projections.html"
     },

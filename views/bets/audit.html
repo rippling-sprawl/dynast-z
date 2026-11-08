@@ -21,14 +21,16 @@
   <script src="/scripts/base/theme.js"></script>
   <link rel="stylesheet" href="/styles/base/theme.css">
   <link rel="stylesheet" href="/styles/base/styles.css">
-  <link rel="stylesheet" href="/styles/primary/bets.css">
+  <link rel="stylesheet" href="/styles/base/hub.css">
+  <!-- The same VegasInsider skin the /football hub wears. -->
+  <link rel="stylesheet" href="/styles/primary/hub.css">
   <link rel="stylesheet" href="/styles/base/lightbox.css">
   <!-- Vercel Web Analytics. The /_vercel/insights/* routes are injected by
        Vercel at deploy time, so this 404s harmlessly when serving locally. -->
   <script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
   <script defer src="/_vercel/insights/script.js"></script>
 </head>
-<body>
+<body class="masters-body">
   <div id="header-mount"></div>
   <div id="nav-drawer-mount"></div>
   <script src="/scripts/base/auth.js"></script>
@@ -37,11 +39,11 @@
   <script src="/scripts/base/lightbox.js"></script>
   <script>initPage();</script>
 
-  <main class="bets-content">
-    <div class="bets-breadcrumbs"><a href="/football">Football</a><span class="sep">/</span><a href="/bets">Bets</a><span class="sep">/</span><span>Audit</span></div>
+  <main class="masters-content">
+    <div class="masters-breadcrumbs"><a href="/football">Football</a><span class="separator">/</span><a href="/bets">Bets</a><span class="separator">/</span><span>Audit</span></div>
 
-    <h2 class="bets-h2">🛡️ Audit</h2>
-    <p class="bets-sub">View and manage any user's bets. Pick a user to begin.</p>
+    <h2>🛡️ Audit</h2>
+    <p class="subtitle">View and manage any user's bets. Pick a user to begin.</p>
 
     <div class="audit-picker">
       <label for="user-select">User</label>
@@ -52,11 +54,11 @@
     </div>
 
     <div id="audit-body" style="display:none">
-      <div class="bets-section-label">Recent Performance</div>
+      <div class="hub-section">Recent Performance</div>
       <div class="perf-grid" id="perf-grid"></div>
 
-      <div class="bets-section-label">All Time</div>
-      <p class="bets-sub" id="history-sub">All saved picks, pending and resolved.</p>
+      <div class="hub-section">All Time</div>
+      <p class="subtitle" id="history-sub">All saved picks, pending and resolved.</p>
 
       <div class="bets-filters">
         <div class="filter-row" id="league-chips"></div>

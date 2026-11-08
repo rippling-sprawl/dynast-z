@@ -21,14 +21,16 @@
   <script src="/scripts/base/theme.js"></script>
   <link rel="stylesheet" href="/styles/base/theme.css">
   <link rel="stylesheet" href="/styles/base/styles.css">
-  <link rel="stylesheet" href="/styles/primary/bets.css">
+  <link rel="stylesheet" href="/styles/base/hub.css">
+  <!-- The same VegasInsider skin the /football hub wears. -->
+  <link rel="stylesheet" href="/styles/primary/hub.css">
   <link rel="stylesheet" href="/styles/base/lightbox.css">
   <!-- Vercel Web Analytics. The /_vercel/insights/* routes are injected by
        Vercel at deploy time, so this 404s harmlessly when serving locally. -->
   <script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
   <script defer src="/_vercel/insights/script.js"></script>
 </head>
-<body>
+<body class="masters-body">
   <div id="header-mount"></div>
   <div id="nav-drawer-mount"></div>
   <script src="/scripts/base/auth.js"></script>
@@ -37,25 +39,25 @@
   <script src="/scripts/base/lightbox.js"></script>
   <script>initPage();</script>
 
-  <main class="bets-content">
-    <div class="bets-breadcrumbs"><a href="/football">Football</a><span class="sep">/</span><span>Bet Tracker</span></div>
+  <main class="masters-content">
+    <div class="masters-breadcrumbs"><a href="/football">Football</a><span class="separator">/</span><span>Bet Tracker</span></div>
 
-    <h2 class="bets-h2">🎯 Bet Tracker</h2>
-    <p class="bets-sub">Track your wagers and see how your picks shake out.</p>
+    <h2>🎯 Bet Tracker</h2>
+    <p class="subtitle">Track your wagers and see how your picks shake out.</p>
 
-    <div class="bets-actions">
-      <a class="bets-action" href="/bets/place">
-        <span class="title">➕ Track</span>
+    <div class="hub-grid">
+      <a class="hub-card is-title-only" href="/bets/place">
+        <h3>➕ Track</h3>
       </a>
-      <a class="bets-action" href="/bets/history">
-        <span class="title">📜 History</span>
+      <a class="hub-card is-title-only" href="/bets/history">
+        <h3>📜 History</h3>
       </a>
-      <a class="bets-action" href="/bets/settle">
-        <span class="title">💰 Settle Up</span>
+      <a class="hub-card is-title-only" href="/bets/settle">
+        <h3>💰 Settle Up</h3>
       </a>
     </div>
 
-    <div class="bets-section-label">Pending Bets</div>
+    <div class="hub-section">Pending Bets</div>
     <div id="pending-list" class="bet-list"></div>
   </main>
 
@@ -68,12 +70,12 @@
       if (!isLoggedIn()) { location.href = '/account'; return; }
       // Admin-only Audit entry: manage any user's bets.
       if (isAdmin()) {
-        const actions = document.querySelector('.bets-actions');
+        const actions = document.querySelector('.hub-grid');
         if (actions) {
           const card = document.createElement('a');
-          card.className = 'bets-action';
+          card.className = 'hub-card is-title-only';
           card.href = '/bets/audit';
-          card.innerHTML = '<span class="title">🛡️ Audit</span>';
+          card.innerHTML = '<h3>🛡️ Audit</h3>';
           actions.appendChild(card);
         }
       }

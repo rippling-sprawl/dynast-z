@@ -16,8 +16,13 @@ const CURRENT_GOLF_YEAR = 2026;
 // Item flags:
 //   hidden   — kept for the route it documents, rendered nowhere (see NFL Odds)
 //   admin    — only rendered for a signed-in admin (UI gating only; the pages
-//              themselves are static and served to anyone with the URL)
+//              themselves are static and served to anyone with the URL), and
+//              marked with a small lock so the admin can tell which rows only
+//              they see
 //   external — opens in a new tab
+//   beta     — a "beta" tag after the label, for pages still being proven out
+//   search   — the drawer shows the page's player search in place of the link
+//              (hub grids still show the card)
 //
 // A section may also carry `href` (its own landing page), `collapsed` (the
 // drawer shows that landing page as one link instead of listing the items) and
@@ -33,6 +38,10 @@ const NAV_SECTIONS = [
     items: [
       { label: "Baker's Action", href: '/football/action', emoji: '🏈', admin: true, hidden: true },
       { label: 'Bet Tracker', href: '/bets', emoji: '🎯' },
+      // Every Action Network bet, filterable, with a P/L chart over the
+      // filtered set. Admin-only, and enforced: /api/action-ledger checks
+      // X-User-Id, so the gate is more than this flag.
+      { label: 'Action Ledger', href: '/football/action-ledger', emoji: '📒', admin: true },
       // /football/schedule: the week's slate, read for its lines rather than
       // its kickoff times, which is what puts it under Gambling.
       { label: 'Schedule', href: '/football/schedule', emoji: '📅' },
@@ -41,7 +50,13 @@ const NAV_SECTIONS = [
       { label: 'Defense vs. Players', href: '/football/defense-vs-players', emoji: '🛡️' },
       // The same question from the other side: one player's career against
       // the defense he faces this week.
-      { label: 'Player Projections', href: '/football/player-projections', emoji: '🏃' },
+      // In the drawer this row is the page's player search: a pick goes
+      // straight to that player's projection.
+      { label: 'Player Projections', href: '/football/player-projections', emoji: '🏃', search: true },
+      // The week's slate read for its edges: the softest and toughest
+      // matchups, and the DraftKings yards lines the projection model
+      // disagrees with most.
+      { label: 'Weekly Edges', href: '/football/weekly-edges', emoji: '⚡', beta: true },
       // Season-to-date team numbers, read side by side across the league.
       // One card here; its pages are the Team Stats section below.
       { label: 'Team Stats', href: '/football/team-stats', emoji: '📈' },
@@ -65,10 +80,6 @@ const NAV_SECTIONS = [
       // listed for everyone.
       { label: "Baker's Oven", href: '/football/bakers-oven', emoji: '🔥' },
       { label: 'Trade Calculator', href: '/football/trade-calculator', emoji: '⚖️' },
-      // A finished season's waiver market, not a live board: the Cut Throat 2025
-      // FAAB log, frozen. Filed under Fantasy because it reads as league
-      // history rather than anything to act on this week.
-      { label: 'Waiver Board', href: '/football/waivers', emoji: '💸', admin: true },
     ],
   },
   {
@@ -80,10 +91,10 @@ const NAV_SECTIONS = [
       // The week's longest-reception prices against a likelihood built from
       // play-by-play rather than from the ladder being priced.
       { label: 'Longest Reception', href: '/football/long-reception', emoji: '📏' },
-      // Every Action Network bet, filterable, with a P/L chart over the
-      // filtered set. Admin-only, and enforced: /api/action-ledger checks
-      // X-User-Id, so the gate is more than this flag.
-      { label: 'Action Ledger', href: '/football/action-ledger', emoji: '📒', admin: true },
+      // A finished season's waiver market, not a live board: the Cut Throat 2025
+      // FAAB log, frozen. League history rather than anything to act on this
+      // week.
+      { label: 'Waiver Board', href: '/football/waivers', emoji: '💸', admin: true },
     ],
   },
   {
@@ -126,6 +137,16 @@ function navVisibleItems(section) {
   return section.items.filter(i => !i.hidden && (!i.admin || admin));
 }
 
+const NAV_BETA_HTML = ' <span class="nav-beta">beta</span>';
+const NAV_ADMIN_HTML = '<span class="nav-admin" title="Admin only" aria-label="Admin only">'
+  + '<svg viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">'
+  + '<rect x="3" y="7" width="10" height="7" rx="1.5"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></svg></span>';
+
+// What follows a label: the admin lock and the beta tag, whichever apply.
+function navTagsHTML(item) {
+  return (item.admin ? NAV_ADMIN_HTML : '') + (item.beta ? NAV_BETA_HTML : '');
+}
+
 // The drawer's flat list, sections included. A `collapsed` section contributes
 // a single link to its own landing page instead of a heading and its rows.
 function buildNavItems() {
@@ -138,7 +159,7 @@ function buildNavItems() {
     }
     items.push({ type: 'section', label: section.label, href: section.href });
     for (const item of navVisibleItems(section)) {
-      items.push({ type: 'link', label: item.label, href: item.href, external: item.external });
+      items.push({ type: item.search ? 'search' : 'link', label: item.label, href: item.href, external: item.external, beta: item.beta, admin: item.admin });
     }
   }
   return items;
@@ -154,7 +175,7 @@ function buildHubCardsHTML(sectionLabel) {
   return navVisibleItems(section).map(item => {
     const target = item.external ? ' target="_blank"' : '';
     const emoji = item.emoji ? `<span class="hub-emoji">${item.emoji}</span>` : '';
-    return `<a class="hub-card is-title-only" href="${item.href}"${target}><h3>${emoji}${item.label}</h3></a>`;
+    return `<a class="hub-card is-title-only" href="${item.href}"${target}><h3>${emoji}${item.label}${navTagsHTML(item)}</h3></a>`;
   }).join('\n      ');
 }
 
@@ -188,12 +209,13 @@ function buildNavDrawerHTML() {
         ? `<li><a class="nav-section-label" href="${item.href}">${item.label}</a></li>`
         : `<li><span class="nav-section-label">${item.label}</span></li>`;
     }
+    if (item.type === 'search') return buildNavSearchHTML(item);
     // `standalone` is a top-level destination with no heading over it, so it
     // needs a rule above it or it reads as one more row of the section before.
     const cls = item.standalone ? ' class="nav-standalone"'
       : item.type === 'sub' ? ' class="nav-sub"' : '';
     const target = item.external ? ' target="_blank"' : '';
-    return `<li${cls}><a href="${item.href}"${target}>${item.label}</a></li>`;
+    return `<li${cls}><a href="${item.href}"${target}>${item.label}${navTagsHTML(item)}</a></li>`;
   }).join('\n        ');
 
   return `<div class="nav-overlay" id="nav-overlay">
@@ -209,6 +231,149 @@ function buildNavDrawerHTML() {
       </ul>
     </div>
   </div>`;
+}
+
+// --- Player search ---
+// The Player Projections row, as the search box from that page: the Trade
+// Calculator's player list (/api/players), fetched on first focus, filtered on
+// every word typed. A pick opens the player on /football/player-projections —
+// or, on that page already, hands him to the page (window.playerProjectionsPick)
+// instead of reloading it.
+const NAV_SEARCH_POS = ['QB', 'RB', 'WR', 'TE'];
+const NAV_SEARCH_MAX = 10;
+// The dynasty sources' Washington; balldontlie and the schedule say WSH.
+const NAV_TEAM_ALIAS = { WAS: 'WSH' };
+
+function navEsc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+}
+
+// Case, accents and punctuation dropped, as on the page, so "amon ra" finds
+// Amon-Ra.
+function navFold(s) {
+  return String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase().replace(/[^a-z0-9 ]/g, '');
+}
+
+let navPlayersReq = null;
+function navLoadPlayers() {
+  if (!navPlayersReq) {
+    navPlayersReq = fetch('/api/players').then(r => r.json()).then(d => {
+      if (!Array.isArray(d)) throw new Error((d && d.error) || 'player list unavailable');
+      const seen = {};
+      return d.filter(p => NAV_SEARCH_POS.includes(p.position) && p.team && p.team !== 'FA')
+        .map(p => ({ name: p.name, pos: p.position, team: NAV_TEAM_ALIAS[p.team] || p.team, key: navFold(p.name) }))
+        .filter(p => {
+          const k = p.key + '|' + p.pos;
+          return seen[k] ? false : (seen[k] = true);
+        });
+    }).catch(e => { navPlayersReq = null; throw e; });
+  }
+  return navPlayersReq;
+}
+
+function buildNavSearchHTML(item) {
+  return `<li class="nav-search">
+          <label class="nav-search-glass" for="nav-player" title="${item.label}">
+            <svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true" focusable="false"><circle cx="7" cy="7" r="4.5"/><line x1="10.6" y1="10.6" x2="14" y2="14"/></svg>
+          </label>
+          <input type="text" class="nav-search-input" id="nav-player" placeholder="${item.label}…" aria-label="${item.label}: search players"
+                 autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list"
+                 aria-expanded="false" aria-controls="nav-player-list">
+          <div class="nav-search-list" id="nav-player-list" role="listbox" aria-label="Players" hidden></div>
+        </li>`;
+}
+
+// Arrows move, Enter picks, Escape clears. The list sits in the drawer's flow
+// rather than floating, so the drawer's own scroll carries it.
+function wireNavSearch(closeDrawer) {
+  const input = document.getElementById('nav-player');
+  const list = document.getElementById('nav-player-list');
+  if (!input || !list) return;
+  let shown = [], active = -1;
+
+  const markActive = () => {
+    list.querySelectorAll('.nav-search-opt').forEach((o, i) => {
+      o.setAttribute('aria-selected', String(i === active));
+      if (i === active) o.scrollIntoView({ block: 'nearest' });
+    });
+    if (active >= 0) input.setAttribute('aria-activedescendant', 'nav-opt-' + active);
+    else input.removeAttribute('aria-activedescendant');
+  };
+
+  const closeList = () => {
+    list.hidden = true;
+    input.setAttribute('aria-expanded', 'false');
+    input.removeAttribute('aria-activedescendant');
+  };
+
+  const showList = (html) => {
+    list.innerHTML = html;
+    list.hidden = false;
+    input.setAttribute('aria-expanded', 'true');
+    markActive();
+  };
+
+  const openList = () => {
+    const text = input.value;
+    navLoadPlayers().then(players => {
+      if (document.activeElement !== input || input.value !== text) return;
+      const words = navFold(text).split(/\s+/).filter(Boolean);
+      shown = players.filter(p => words.every(w => p.key.includes(w))).slice(0, NAV_SEARCH_MAX);
+      active = shown.length ? 0 : -1;
+      showList(shown.length ? shown.map((p, i) =>
+        `<button type="button" class="nav-search-opt" role="option" id="nav-opt-${i}" data-i="${i}" tabindex="-1" aria-selected="false">` +
+        `<img src="/assets/icons/nfl/${navEsc(p.team)}.svg" alt="">${navEsc(p.name)}<span class="nav-search-pos">${navEsc(p.pos)}</span></button>`
+      ).join('') : '<div class="nav-search-note">No match</div>');
+    }).catch(() => {
+      if (document.activeElement !== input) return;
+      shown = [];
+      active = -1;
+      showList('<div class="nav-search-note">Players unavailable</div>');
+    });
+  };
+
+  const pick = (p) => {
+    closeList();
+    if (!p) return;
+    input.value = '';
+    input.blur();
+    const onPage = location.pathname.replace(/\/+$/, '') === '/football/player-projections';
+    if (onPage && typeof window.playerProjectionsPick === 'function'
+        && window.playerProjectionsPick(p.name, p.pos, p.team)) {
+      closeDrawer();
+      return;
+    }
+    location.href = '/football/player-projections?' + new URLSearchParams({ player: p.name, pos: p.pos });
+  };
+
+  input.addEventListener('focus', openList);
+  input.addEventListener('input', openList);
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (list.hidden) { openList(); return; }
+      if (!shown.length) return;
+      active = (active + (e.key === 'ArrowDown' ? 1 : -1) + shown.length) % shown.length;
+      markActive();
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (!list.hidden && active >= 0) pick(shown[active]);
+    } else if (e.key === 'Escape') {
+      input.value = '';
+      closeList();
+      input.blur();
+    }
+  });
+  // mousedown, not click: the click would land after the blur below shut the list.
+  list.addEventListener('mousedown', (e) => {
+    const opt = e.target.closest('.nav-search-opt');
+    if (!opt) return;
+    e.preventDefault();
+    pick(shown[Number(opt.getAttribute('data-i'))]);
+  });
+  input.addEventListener('blur', closeList);
 }
 
 // --- Bar icons ---
@@ -345,6 +510,7 @@ function wireNavDrawer() {
 
   const drawer = overlay.querySelector('.nav-drawer');
   if (drawer) wireDrawerSwipe(drawer, close);
+  wireNavSearch(close);
 }
 
 function initPage() {

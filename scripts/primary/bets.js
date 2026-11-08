@@ -263,7 +263,7 @@ function fmtDateShort(s) {
 
 // ---- "Managing {username}" banner ------------------------------------------
 // Persistent callout shown across the bets section while an admin is managing
-// another user. Injects itself at the top of <main.bets-content>, so pages only
+// another user. Injects itself at the top of <main.masters-content>, so pages only
 // need to call mountAuditBanner() — no markup changes. Exit clears the audit
 // target, drops its cache key, and reloads back to the admin's own view.
 function mountAuditBanner() {
@@ -273,7 +273,7 @@ function mountAuditBanner() {
   document.querySelectorAll('.audit-banner').forEach(n => n.remove());
   if (!target || !admin) return;
 
-  const main = document.querySelector('main.bets-content') || document.body;
+  const main = document.querySelector('main.masters-content') || document.body;
   const bar = document.createElement('div');
   bar.className = 'audit-banner';
   const label = document.createElement('span');

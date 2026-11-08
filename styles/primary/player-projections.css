@@ -183,6 +183,8 @@
 .pp-svg [data-tip] { cursor: default; }
 
 /* The defense, game by game. */
+/* Under the defense-vs-players table, set off from it. */
+.pp-def-model { margin-top: 20px; }
 .pp-def-head { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 10px; margin-bottom: 8px; font-size: 12.5px; color: var(--text-3); }
 .pp-edge {
   padding: 2px 8px;
@@ -304,6 +306,9 @@
 
 /* The tabs are a flex row, which would otherwise outrank their [hidden]. */
 .pp-views[hidden] { display: none; }
+.pp-views .dd-btn[hidden] { display: none; }
+/* So is a filter: the modal hides the minimums a position cannot use. */
+.dvp-filter[hidden] { display: none; }
 /* On a phone the table scrolls sideways; the player stays put, as
  * defense-vs-players' does. */
 .pp-best td:nth-child(2), .pp-best th:nth-child(2) { position: sticky; left: 0; z-index: 1; background: var(--surface); }

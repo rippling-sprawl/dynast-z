@@ -21,14 +21,16 @@
   <script src="/scripts/base/theme.js"></script>
   <link rel="stylesheet" href="/styles/base/theme.css">
   <link rel="stylesheet" href="/styles/base/styles.css">
-  <link rel="stylesheet" href="/styles/primary/bets.css">
+  <link rel="stylesheet" href="/styles/base/hub.css">
+  <!-- The same VegasInsider skin the /football hub wears. -->
+  <link rel="stylesheet" href="/styles/primary/hub.css">
   <link rel="stylesheet" href="/styles/base/lightbox.css">
   <!-- Vercel Web Analytics. The /_vercel/insights/* routes are injected by
        Vercel at deploy time, so this 404s harmlessly when serving locally. -->
   <script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
   <script defer src="/_vercel/insights/script.js"></script>
 </head>
-<body>
+<body class="masters-body">
   <div id="header-mount"></div>
   <div id="nav-drawer-mount"></div>
   <script src="/scripts/base/auth.js"></script>
@@ -37,12 +39,12 @@
   <script src="/scripts/base/lightbox.js"></script>
   <script>initPage();</script>
 
-  <main class="bets-content">
+  <main class="masters-content">
     <div class="dupe-toast" id="dupe-toast" role="status">Dupe Created</div>
-    <div class="bets-breadcrumbs"><a href="/football">Football</a><span class="sep">/</span><a href="/bets">Bets</a><span class="sep">/</span><span id="crumb-leaf">Track a Bet</span></div>
+    <div class="masters-breadcrumbs"><a href="/football">Football</a><span class="separator">/</span><a href="/bets">Bets</a><span class="separator">/</span><span id="crumb-leaf">Track a Bet</span></div>
 
-    <h2 class="bets-h2" id="form-title">Track a Bet</h2>
-    <p class="bets-sub">Enter your pick. Only league, your side, and stake are required.</p>
+    <h2 id="form-title">Track a Bet</h2>
+    <p class="subtitle">Enter your pick. Only league, your side, and stake are required.</p>
 
     <form class="bet-form" id="bet-form" autocomplete="off">
       <div class="bet-row">
@@ -103,7 +105,7 @@
         </div>
       </div>
 
-      <div class="bets-section-label" style="margin-top:6px">Bet Preview</div>
+      <div class="hub-section" style="margin-top:6px">Bet Preview</div>
       <div id="bet-preview" class="bet-list"></div>
 
       <div class="bet-error" id="form-error"></div>

@@ -21,14 +21,16 @@
   <script src="/scripts/base/theme.js"></script>
   <link rel="stylesheet" href="/styles/base/theme.css">
   <link rel="stylesheet" href="/styles/base/styles.css">
-  <link rel="stylesheet" href="/styles/primary/bets.css">
+  <link rel="stylesheet" href="/styles/base/hub.css">
+  <!-- The same VegasInsider skin the /football hub wears. -->
+  <link rel="stylesheet" href="/styles/primary/hub.css">
   <link rel="stylesheet" href="/styles/base/lightbox.css">
   <!-- Vercel Web Analytics. The /_vercel/insights/* routes are injected by
        Vercel at deploy time, so this 404s harmlessly when serving locally. -->
   <script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
   <script defer src="/_vercel/insights/script.js"></script>
 </head>
-<body>
+<body class="masters-body">
   <div id="header-mount"></div>
   <div id="nav-drawer-mount"></div>
   <script src="/scripts/base/auth.js"></script>
@@ -37,13 +39,13 @@
   <script src="/scripts/base/lightbox.js"></script>
   <script>initPage();</script>
 
-  <main class="bets-content">
-    <div class="bets-breadcrumbs"><a href="/football">Football</a><span class="sep">/</span><a href="/bets">Bets</a><span class="sep">/</span><span>Settle Up</span></div>
+  <main class="masters-content">
+    <div class="masters-breadcrumbs"><a href="/football">Football</a><span class="separator">/</span><a href="/bets">Bets</a><span class="separator">/</span><span>Settle Up</span></div>
 
-    <h2 class="bets-h2">💰 Settle Up</h2>
-    <p class="bets-sub">Where the money stands across unsettled bets.</p>
+    <h2>💰 Settle Up</h2>
+    <p class="subtitle">Where the money stands across unsettled bets.</p>
 
-    <div class="bets-section-label">Settlement Summary</div>
+    <div class="hub-section">Settlement Summary</div>
     <div id="settle-summary"></div>
   </main>
 
@@ -192,7 +194,7 @@
             '</p>' +
             (feedback ? '<div class="settle-feedback ' + feedback.type + '" role="status">' + escapeHtml(feedback.message) + '</div>' : '') +
           '</div>' +
-          '<div class="bets-section-label">Unsettled Bets</div>' +
+          '<div class="hub-section">Unsettled Bets</div>' +
           '<div class="bet-list settle-bet-list">' +
             unsettled.map(bet => renderBetTile(bet, {
               actions: false,

@@ -63,21 +63,27 @@
     return '<td class="pl-rescol">' + n.W + '-' + n.L + (n.T ? '-' + n.T : '') + '</td>';
   }
 
-  // player: { team }. sections: [{ title?, rows, empty }].
+  // player: { team }. sections: [{ title?, rows, empty, key?, open? }].
   // show: { pass, rush, rec }; Total shows only beside both rush and rec.
-  function playerLogTable(player, sections, show) {
+  // opts.opp adds the opponent after the week, for logs against more than
+  // one defense. A section with a `key` is collapsible: its title is a
+  // button carrying data-sec=key, its rows drawn hidden unless `open`; the
+  // page keeps which are open and redraws.
+  function playerLogTable(player, sections, show, opts) {
+    opts = opts || {};
     var tot = show.rush && show.rec;
-    var cols = 3 + (show.pass ? 5 : 0) + (show.rush ? 4 : 0) + (show.rec ? 5 : 0) + (tot ? 2 : 0);
+    var cols = (opts.opp ? 4 : 3) + (show.pass ? 5 : 0) + (show.rush ? 4 : 0) + (show.rec ? 5 : 0) + (tot ? 2 : 0);
+    var oppHead = opts.opp ? '<th class="pl-oppcol">Opp</th>' : '';
 
     var head =
       '<thead>' +
-        '<tr class="dvp-groups"><th class="pl-yr"></th><th class="pl-wk"></th><th></th>' +
+        '<tr class="dvp-groups"><th class="pl-yr"></th><th class="pl-wk"></th>' + (opts.opp ? '<th></th>' : '') + '<th></th>' +
           (show.pass ? '<th colspan="5" class="grp">Passing</th>' : '') +
           (show.rush ? '<th colspan="4" class="grp">Rushing</th>' : '') +
           (show.rec ? '<th colspan="5" class="grp">Receiving</th>' : '') +
           (tot ? '<th colspan="2" class="grp">Total</th>' : '') +
         '</tr>' +
-        '<tr><th class="pl-yr">Yr</th><th class="pl-wk num">Wk</th><th class="pl-rescol">Result</th>' +
+        '<tr><th class="pl-yr">Yr</th><th class="pl-wk num">Wk</th>' + oppHead + '<th class="pl-rescol">Result</th>' +
           (show.pass ? '<th class="num grp-start">Cmp</th><th class="num">Att</th><th class="num">Yds</th><th class="num">TD</th><th class="num">Int</th>' : '') +
           (show.rush ? '<th class="num grp-start">Att</th><th class="num">Yds</th><th class="num">TD</th><th class="num">Lng</th>' : '') +
           (show.rec ? '<th class="num grp-start">Tgt</th><th class="num">Rec</th><th class="num">Yds</th><th class="num">TD</th><th class="num">Lng</th>' : '') +
@@ -97,20 +103,33 @@
     }
 
     var body = sections.map(function (s) {
-      var out = s.title ? '<tr class="dvp-game"><th colspan="' + cols + '"><span class="dvp-label"><span class="dvp-wk">' +
-        esc(s.title) + '</span></span></th></tr>' : '';
+      var collapsible = s.key != null;
+      // A closed section's rows are drawn hidden, so its title still counts them.
+      var tr = collapsible && !s.open ? '<tr hidden' : '<tr';
+      var out = '';
+      if (collapsible) {
+        out = '<tr class="dvp-game pl-sec"><th colspan="' + cols + '"><button type="button" class="pl-sec-btn" data-sec="' +
+          esc(s.key) + '" aria-expanded="' + !!s.open + '"><span class="pl-chev" aria-hidden="true"></span>' +
+          '<span class="dvp-wk">' + esc(s.title) + '</span>' +
+          '<span class="pl-sec-n">' + s.rows.length + (s.rows.length === 1 ? ' game' : ' games') + '</span></button></th></tr>';
+      } else if (s.title) {
+        out = '<tr class="dvp-game"><th colspan="' + cols + '"><span class="dvp-label"><span class="dvp-wk">' +
+          esc(s.title) + '</span></span></th></tr>';
+      }
       if (!s.rows.length) {
-        return out + '<tr><td class="dvp-none" colspan="' + cols + '">' + esc(s.empty || 'No games') + '</td></tr>';
+        return out + tr + '><td class="dvp-none" colspan="' + cols + '">' + esc(s.empty || 'No games') + '</td></tr>';
       }
       out += s.rows.map(function (g) {
         // A playoff game's week is its round: P1 is the wild card.
-        return '<tr><th class="pl-yr" scope="row" title="' + esc(g.season) + ' season">' + esc(shortYear(g.season)) + '</th>' +
+        return tr + '><th class="pl-yr" scope="row" title="' + esc(g.season) + ' season">' + esc(shortYear(g.season)) + '</th>' +
           '<td class="pl-wk num"' + (g.postseason ? ' title="Playoffs, round ' + esc(g.week) + '"' : '') + '>' +
             (g.postseason ? 'P' : '') + esc(g.week) + '</td>' +
+          (opts.opp ? '<td class="pl-oppcol">' + (g.home ? 'vs' : '@') + '<img src="/assets/icons/nfl/' + esc(g.opp) +
+            '.svg" alt="' + esc(g.opp) + '" title="' + esc(g.opp) + '"></td>' : '') +
           result(g, player.team) + line(g) + '</tr>';
       }).join('');
-      return out + '<tr class="pl-avg"><th class="pl-yr" colspan="2" scope="row" title="Per game; Lng is the longest">Avg (' +
-        s.rows.length + ')</th>' + record(s.rows) + line(null, s.rows) + '</tr>';
+      return out + tr + ' class="pl-avg"><th class="pl-yr" colspan="2" scope="row" title="Per game; Lng is the longest">Avg (' +
+        s.rows.length + ')</th>' + (opts.opp ? '<td class="pl-oppcol"></td>' : '') + record(s.rows) + line(null, s.rows) + '</tr>';
     }).join('');
 
     return '<div class="dvp-scroll pl-scroll"><table class="dvp-table pl-table">' + head +

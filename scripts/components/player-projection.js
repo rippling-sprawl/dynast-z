@@ -1175,9 +1175,16 @@
       // wild ratio (86 yards against a 7.8 norm is 11x), so a mark stops at
       // ALLOWED_MARK_CAP times his baseline; the factor itself is the
       // season's sums, untouched. The tip leads with where the mark is.
+      // A QB is one passer, not a group, so his marks are what the defense
+      // really gave up: scaling a backup's small baseline would put a
+      // 300-yard game under 100.
       dots: d.games.map(function (g) {
-        var r = clamp(g.ratio, 1 / ALLOWED_MARK_CAP, ALLOWED_MARK_CAP), v = base * r;
         var times = g.ratio >= 2.5 ? r1(g.ratio) + '× their usual' : signPct(g.ratio) + ' vs their usual';
+        if (m.pos === 'QB') {
+          return { v: g.allowed, tip: 'Wk ' + g.week + ' vs ' + g.opp + ': ' + fmt(g.allowed) + ' ' + unit + ' allowed · ' +
+            times + ' of ' + fmt(g.exp) };
+        }
+        var r = clamp(g.ratio, 1 / ALLOWED_MARK_CAP, ALLOWED_MARK_CAP), v = base * r;
         return { v: v, tip: 'Wk ' + g.week + ' vs ' + g.opp + ': ≈' + fmt(v) + ' ' + unit + ' in his terms' +
           (r !== g.ratio ? ' (capped at ' + ALLOWED_MARK_CAP + '×)' : '') + ' · ' + g.opp + '\'s ' + m.pos + 's had ' +
           fmt(g.allowed) + ', ' + times + ' of ' + fmt(g.exp) };
@@ -1617,9 +1624,11 @@
         'The rows below are what built it, each ▲ or ▼ a real game over or under the line. <i>This season</i> is the baseline: recent games count most, ' +
         'last season fills in early. ' +
         '<i>vs ' + esc(def) + ' career</i> gets a few percent of say at most, because a handful of games years apart predict little. ' +
-        '<i>' + esc(def) + ' allowed</i> puts each of its games in his terms: his baseline × how far that week\'s ' + esc(m.pos) +
-        's went over or under their norm, so a mark is not what that week\'s players had — hover one for both. ' +
-        'A mark stops at ' + ALLOWED_MARK_CAP + '× his baseline: against a small norm one big game makes a wild ratio. ' +
+        (m.pos === 'QB'
+          ? '<i>' + esc(def) + ' allowed</i> is what the QB it faced had each week — hover one for how far that was from his usual. '
+          : '<i>' + esc(def) + ' allowed</i> puts each of its games in his terms: his baseline × how far that week\'s ' + esc(m.pos) +
+            's went over or under their norm, so a mark is not what that week\'s players had — hover one for both. ' +
+            'A mark stops at ' + ALLOWED_MARK_CAP + '× his baseline: against a small norm one big game makes a wild ratio. ') +
         'Marks that would overlap are stacked a step apart.') +
       p('Game log', 'His games, oldest to newest, against the line, with ' + esc(unit) + ' under each. A ringed bar is a game against ' +
         'this defense; an outlined one is from last season.' +

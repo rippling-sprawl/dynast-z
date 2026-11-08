@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/assets/icons/app-touch-180.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Dynast-Z">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <title>Weekly Edges | Dynast-Z</title>
+  <script src="/scripts/base/theme.js"></script>
+  <link rel="stylesheet" href="/styles/base/theme.css">
+  <link rel="stylesheet" href="/styles/base/styles.css">
+  <link rel="stylesheet" href="/styles/base/hub.css">
+  <link rel="stylesheet" href="/styles/primary/nfl-schedule.css">
+  <!-- The matchup cards and the table are /football/defense-vs-players', the
+       edges rows Player Projections', from their sheets. -->
+  <link rel="stylesheet" href="/styles/primary/defense-vs-players.css">
+  <link rel="stylesheet" href="/styles/primary/player-projections.css">
+  <script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
+  <script defer src="/_vercel/insights/script.js"></script>
+</head>
+<body class="masters-body">
+  <div id="header-mount"></div>
+  <div id="nav-drawer-mount"></div>
+  <script src="/scripts/base/auth.js"></script>
+  <script src="/scripts/base/standalone.js"></script>
+  <script src="/scripts/base/nav.js"></script>
+  <script src="/scripts/components/nfl-schedule.js"></script>
+  <script src="/scripts/components/player-projection.js"></script>
+  <script>initPage();</script>
+
+  <div class="masters-content">
+    <div class="masters-breadcrumbs">
+      <a href="/football">Football</a><span class="separator">/</span><span>Weekly Edges</span>
+    </div>
+
+    <h2>Weekly Edges <span class="nav-beta">beta</span></h2>
+
+    <h3 class="dvp-mx-title" id="mx-title">This week's matchups</h3>
+    <div id="mx"><p class="sched-empty">Loading matchups…</p></div>
+
+    <div id="top"></div>
+  </div>
+
+  <script>
+  (function () {
+    'use strict';
+
+    /* The week's slate read for its edges, two ways. Matchups: the softest and
+     * toughest defenses on the slate by position, from
+     * /api/defense-vs-players?all=1 (the board on /football/defense-vs-players).
+     * Lines: every DraftKings yards line still to kick off, run through the
+     * Player Projections model and ranked by how far its chance of going over
+     * lands from even (the "Load edges" board that page used to carry). */
+
+    var season = SCHED_CURRENT_SEASON;
+    var sched = null;
+    var week = null;
+    var all = { teams: {} };
+
+    var mxEl = document.getElementById('mx');
+    var topEl = document.getElementById('top');
+
+    function esc(s) {
+      return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+      });
+    }
+
+    function logo(abbr) {
+      return '<img src="/assets/icons/nfl/' + esc(abbr) + '.svg" alt="' + esc(abbr) + '" title="' + esc(abbr) + '">';
+    }
+
+    /* ---------- the matchups ---------- */
+
+    // "Nico Collins" -> "N. Collins": the first name to its initial, the rest
+    // as given, so "Amon-Ra St. Brown" keeps his whole surname. The full name
+    // stays on the cell's tooltip.
+    function shortName(name) {
+      var parts = String(name || '').trim().split(/\s+/);
+      return parts.length > 1 ? parts[0].charAt(0) + '. ' + parts.slice(1).join(' ') : parts[0] || '';
+    }
+
+    // The card says the position, so the columns need not say pass/rush/rec.
+    // `rank` is what puts a matchup on the card; the other columns are
+    // context (Att and Recs are volume, never ranked). Every card has one TD
+    // column, which counts what that card is about: passing TDs thrown for
+    // the QB (never his sneaks), rushing plus receiving TDs for WRs and TEs.
+    // A back does both jobs, so he gets two cards, Rush and Rec, each with
+    // only its own TDs; his longs are shown but rank nothing.
+    var MX_POS = [
+      { pos: 'QB', label: 'Quarterbacks', names: 1, cols: ['att', 'yds', 'ptd', 'lng'],
+        rank: ['yds', 'ptd', 'lng'] },
+      { pos: 'RB', label: 'Running Backs (Rush)', names: 2, cols: ['rtd', 'att', 'yds', 'lng'],
+        rank: ['rtd', 'yds'] },
+      { pos: 'RB', label: 'Running Backs (Rec)', names: 2, cols: ['ctd', 'rec', 'ryds', 'rlng'],
+        rank: ['ctd', 'ryds'] },
+      { pos: 'WR', label: 'Wide receivers', names: 2, cols: ['rrtd', 'rec', 'yds', 'lng'],
+        rank: ['rrtd', 'yds', 'lng'] },
+      { pos: 'TE', label: 'Tight ends', names: 1, cols: ['rrtd', 'rec', 'yds', 'lng'],
+        rank: ['rrtd', 'yds', 'lng'] }
+    ];
+    var MX_LABEL = { att: 'Att', rec: 'Recs', yds: 'Yds', lng: 'Long', ryds: 'Yds', rlng: 'Long',
+                     ptd: 'TD', rrtd: 'TD', rtd: 'TD', ctd: 'TD' };
+    var MX_HINT = { ptd: 'Passing TDs', rrtd: 'Rush + rec TDs', rtd: 'Rushing TDs', ctd: 'Receiving TDs',
+                    ryds: 'Receiving yds', rlng: 'Longest reception' };
+    // TDs are read by their per-game mean — a median of mostly 0s and 1s says
+    // little — and everything else by its median.
+    var MX_TD = { ptd: true, rrtd: true, rtd: true, ctd: true };
+
+    function mxRanked(p) { return p.rank; }
+    function mxVal(c, stat) { return MX_TD[stat] ? c.avg : c.med; }
+    function mxTie(c, stat) { return MX_TD[stat] ? c.med : c.avg; }
+
+    // TDs and receptions to one decimal on every value, so 1 reads "1.0";
+    // attempts, yards and longs to the nearest whole number.
+    function mxNum(v, stat) {
+      v = Number(v || 0);
+      return MX_TD[stat] || stat === 'rec' ? v.toFixed(1) : String(Math.round(v));
+    }
+
+    function mxRow(m, p) {
+      var sum = all.teams[m.def].summary[p.pos];
+      var lead = (((all.teams[m.off] || {}).leaders || {})[p.pos] || []).slice(0, p.names);
+      return '<tr class="dvp-mx-link">' +
+        '<td class="dvp-mx-who">' +
+          '<span class="dvp-mx-match">' +
+            '<img src="/assets/icons/nfl/' + esc(m.off) + '.svg" alt="">' +
+            '<b>' + esc(m.off) + '</b>' +
+            '<span class="dvp-mx-at">' + (m.home ? 'vs' : '@') + '</span>' +
+            '<a href="' + esc('/football/defense-vs-players?' + new URLSearchParams({ team: m.def, pos: p.pos }).toString()) +
+              '" data-team="' + esc(m.def) + '" title="' + esc(m.def) + ' defense vs. ' + esc(p.pos) + 's, game by game">' +
+              '<img src="/assets/icons/nfl/' + esc(m.def) + '.svg" alt="">' + esc(m.def) + '</a>' +
+          '</span>' +
+          (lead.length ? '<span class="dvp-mx-names">' + lead.map(function (x) {
+            return '<span title="' + esc(x.player) + '">' + esc(shortName(x.player)) + '</span>';
+          }).join(', ') + '</span>' : '') +
+        '</td>' +
+        p.cols.map(function (stat) {
+          var c = sum[stat];
+          var cls = 'num';
+          if (!c) return '<td class="' + cls + '">—</td>';
+          var rank = m.ranks[stat];
+          return '<td class="' + cls + (rank ? ' is-ranked' : '') + '" title="' + esc(MX_HINT[stat] || MX_LABEL[stat]) +
+            ': mean ' + esc(Number(c.avg).toFixed(2)) + ', median ' + esc(c.med) +
+            (rank ? ' · #' + rank + ' on the slate' : '') + '">' + esc(mxNum(mxVal(c, stat), stat)) + '</td>';
+        }).join('') +
+        '</tr>';
+    }
+
+    // soft: most allowed first; stingy: least. Ranked on the value shown,
+    // the other measure breaking ties.
+    function mxSection(pairs, soft, title) {
+      var dir = soft ? -1 : 1;
+      var cards = MX_POS.map(function (p) {
+        var rows = {}, order = [];
+        var ranked = mxRanked(p);
+        ranked.forEach(function (stat) {
+          pairs.filter(function (m) { return all.teams[m.def].summary[p.pos][stat]; }).sort(function (a, b) {
+            var x = all.teams[a.def].summary[p.pos][stat], y = all.teams[b.def].summary[p.pos][stat];
+            return dir * (mxVal(x, stat) - mxVal(y, stat)) || dir * (mxTie(x, stat) - mxTie(y, stat)) ||
+              a.def.localeCompare(b.def);
+          }).slice(0, 3).forEach(function (m, i) {
+            if (!rows[m.def]) { rows[m.def] = { off: m.off, def: m.def, home: m.home, ranks: {} }; order.push(rows[m.def]); }
+            rows[m.def].ranks[stat] = i + 1;
+          });
+        });
+        // Yards allowed, the section's way round: most first when soft, least
+        // first when stingy. The mean breaks ties.
+        order.sort(function (a, b) {
+          var x = all.teams[a.def].summary[p.pos].yds, y = all.teams[b.def].summary[p.pos].yds;
+          return dir * (x.med - y.med) || dir * (x.avg - y.avg) || a.def.localeCompare(b.def);
+        });
+        return '<section class="dvp-mx-card"><h4>' + esc(p.label) + '</h4>' +
+          '<table class="dvp-mx-table"><thead>' +
+          '<tr><th class="dvp-mx-who">Matchup</th>' +
+          p.cols.map(function (k) {
+            return '<th class="num"' + (MX_HINT[k] ? ' title="' + esc(MX_HINT[k]) + '"' : '') + '>' + esc(MX_LABEL[k]) + '</th>';
+          }).join('') +
+          '</tr></thead><tbody>' + order.map(function (m) { return mxRow(m, p); }).join('') +
+          '</tbody></table></section>';
+      }).join('');
+      return '<div class="dvp-mx-section ' + (soft ? 'is-soft' : 'is-stingy') + '">' +
+        '<h3>' + esc(title) + '</h3>' +
+        '<div class="dvp-mx-grid">' + cards + '</div></div>';
+    }
+
+    function renderMatchups() {
+      var wk = sched.weeks.filter(function (w) { return w.week === week; })[0];
+      var pairs = [];
+      ((wk && wk.games) || []).forEach(function (g) {
+        [[g.away, g.home, false], [g.home, g.away, true]].forEach(function (s) {
+          var d = all.teams[s[1]];
+          if (d && d.summary && d.summary.QB) pairs.push({ off: s[0], def: s[1], home: s[2] });
+        });
+      });
+      if (!pairs.length) {
+        mxEl.innerHTML = '<p class="sched-empty">No defense data for week ' + esc(week) + ' yet.</p>';
+        return;
+      }
+      var n = 0;
+      pairs.forEach(function (m) { n = Math.max(n, all.teams[m.def].summary.QB.yds.n); });
+      mxEl.innerHTML =
+        mxSection(pairs, true, 'Softest defenses') +
+        mxSection(pairs, false, 'Toughest defenses') +
+        '<p class="dvp-note">Per game, what each defense allowed the position group: TDs as an average, everything else as a median, from up to ' +
+        n + ' games. Counts QBs with 10+ attempts, rushers with 3+ carries, receivers with 2+ targets. Names are the offense\'s season leaders. Click a defense for its game-by-game table.</p>';
+    }
+
+    var allLoad = null;
+    function loadAll() {
+      if (!allLoad) {
+        allLoad = fetch('/api/defense-vs-players?all=1&season=' + encodeURIComponent(season), { cache: 'no-store' })
+          .then(function (r) {
+            return r.json().then(function (body) {
+              if (r.status === 404) return { teams: {} };
+              if (!r.ok) throw new Error(body.error || ('HTTP ' + r.status));
+              return body;
+            });
+          })
+          .catch(function (e) { allLoad = null; throw e; });
+      }
+      return allLoad;
+    }
+
+
+    /* ---------- the lines ---------- */
+
+    var defDocs = {}, ctxDocs = {};
+
+    var defDocs = {}, propDocs = {}, ctxDocs = {};
+
+    function getJson(url) {
+      return fetch(url).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; });
+    }
+
+    function defDoc(d) {
+      return defDocs[d] || (defDocs[d] = getJson('/api/defense-vs-players?team=' + encodeURIComponent(d) +
+        '&season=' + encodeURIComponent(season)));
+    }
+
+    // Team context, both sides of one game: their seasons, the injury
+    // report and the line, cached six hours (these are pregame projections),
+    // then the hand adjustments, read fresh and set on each team as
+    // `adjust`. Once per visit per game; an editor's save replaces the
+    // adjustments in place (saveAdjust).
+    function loadContext(id) {
+      return ctxDocs[id] || (ctxDocs[id] = getJson('/api/player-projections?context=' + encodeURIComponent(id)).then(function (c) {
+        if (!c || !c.teams) return c;
+        var g = c.game;
+        return getJson('/api/player-projections?' + new URLSearchParams({
+          adjustments: 1, season: g.season, week: g.week, teams: g.away + ',' + g.home
+        }).toString()).then(function (adj) {
+          Object.keys(c.teams).forEach(function (t) { c.teams[t].adjust = (adj || {})[t] || null; });
+          return c;
+        });
+      }));
+    }
+
+    function contextOpts(c, team, opp, id) {
+      return c && c.teams && c.teams[team] ? { team: c.teams[team], opp: c.teams[opp], player_id: id } : null;
+    }
+
+    var TOP_N = 20;
+    var MIN_YDS_LINE = 5;
+    var TOP_STAT = { passing_yards: 'pass_yds', rushing_yards: 'rush_yds', receiving_yards: 'rec_yds' };
+    var topPromise = null, topRows = [];
+
+    function weekGames() {
+      var wk = sched.weeks.filter(function (w) { return w.week === week; })[0];
+      var now = new Date();
+      return ((wk && wk.games) || []).filter(function (g) {
+        return g.id && g.kickoff && new Date(g.kickoff.replace(' ', 'T')) > now;
+      });
+    }
+
+    // -> { rows, lines } once every line is projected; rows is the top 20.
+    function loadTop() {
+      if (topPromise) return topPromise;
+      var ids = weekGames().map(function (g) { return g.id; });
+      if (!ids.length) return (topPromise = Promise.resolve({ rows: [], lines: 0, games: 0 }));
+      topPromise = getJson('/api/player-projections?board=' + ids.join(',')).then(function (d) {
+        if (!d || !d.players) { topPromise = null; throw new Error('DraftKings lines unavailable'); }
+        // Each game's team context, once per game, so the board ranks the
+        // same projection the card shows.
+        var gameIds = d.players.map(function (p) { return p.game_id; })
+          .filter(function (id, i, a) { return a.indexOf(id) === i; });
+        var ctxs = {};
+        return Promise.all(gameIds.map(function (id) {
+          return loadContext(id).then(function (c) { ctxs[id] = c; });
+        }).concat(d.players.map(function (p) { return defDoc(p.opp); }))).then(function (res) {
+          var docs = res.slice(gameIds.length);
+          var rows = [], count = 0;
+          d.players.forEach(function (p, i) {
+            var m = PlayerProjection.build({
+              games: p.games, pos: p.pos, season: season, def: p.opp, defDoc: docs[i], props: { props: p.lines },
+              context: contextOpts(ctxs[p.game_id], p.team, p.opp, p.id)
+            });
+            Object.keys(p.lines).forEach(function (mk) {
+              count++;
+              var st = !m.error && m.stats.filter(function (x) { return x.key === TOP_STAT[mk]; })[0];
+              // A player ruled out is no bet, whatever his line says. Nor is a
+              // yards line under MIN_YDS_LINE: a quarterback's 0.5 rushing
+              // yards is a bet on kneel-downs, whose negative yards the
+              // model's distribution, which starts at zero, cannot see.
+              if (!st || (m.context && m.context.out) || p.lines[mk].line < MIN_YDS_LINE) return;
+              var over = PlayerProjection.chances(st, p.lines[mk].line).over;
+              rows.push({ p: p, m: st, quote: p.lines[mk], over: over, edge: Math.abs(over - 0.5) });
+            });
+          });
+          rows.sort(function (a, b) { return b.edge - a.edge; });
+          return { rows: rows.slice(0, TOP_N), lines: count, games: ids.length };
+        });
+      });
+      return topPromise;
+    }
+
+    function odds(o) {
+      return o == null ? '' : o > 0 ? '+' + o : '−' + Math.abs(o);
+    }
+
+    // The board waits for the viewer to ask for it: it is a DraftKings call
+    // plus a context fetch per game, too much to spend on every visit.
+    function showTop() {
+      if (!topPromise) {
+        topEl.innerHTML = '<p class="sched-empty"><button type="button" class="dd-btn pp-top-load">' +
+          'Load week ' + esc(week) + '’s biggest edges</button></p>';
+        return;
+      }
+      if (!topRows.length) topEl.innerHTML = '<p class="sched-empty">Projecting this week\'s DraftKings yards lines…</p>';
+      loadTop().then(function (t) {
+        topRows = t.rows;
+        if (!t.games) {
+          topEl.innerHTML = '<p class="sched-empty">No week ' + esc(week) + ' games left to kick off.</p>';
+          return;
+        }
+        if (!t.rows.length) {
+          topEl.innerHTML = '<p class="sched-empty">DraftKings has no yards lines up for week ' + esc(week) + ' yet.</p>';
+          return;
+        }
+        topEl.innerHTML = '<h4 class="pp-h">Week ' + esc(week) + '’s biggest edges on DraftKings yards lines</h4>' +
+          '<div class="dvp-scroll pp-best-scroll"><table class="dvp-table pp-best">' +
+          '<thead><tr><th class="num">#</th><th>Player</th><th>Game</th><th>Stat</th><th class="num">Line</th>' +
+          '<th class="num">Proj</th><th>Pick</th><th class="num">Odds</th><th class="num">Chance</th><th class="num">Edge</th></tr></thead><tbody>' +
+          t.rows.map(function (r, i) {
+            var p = r.p, isOver = r.over > 0.5;
+            var href = '/football/player-projections?' + new URLSearchParams({ player: p.name, pos: p.pos, stat: r.m.key }).toString();
+            return '<tr><td class="num pp-best-rank">' + (i + 1) + '</td>' +
+              '<td><a class="pp-best-who" href="' + esc(href) + '" data-i="' + i + '">' + logo(p.team) + esc(p.name) +
+              '<span class="pp-pos">' + esc(p.pos) + '</span></a></td>' +
+              '<td class="pp-best-game">' + (p.home ? 'vs' : '@') + ' ' + logo(p.opp) + esc(p.opp) + '</td>' +
+              '<td>' + esc(r.m.spec.label) + '</td>' +
+              '<td class="num">' + esc(r.quote.line) + '</td>' +
+              '<td class="num">' + Math.round(r.m.median) + '</td>' +
+              '<td class="pp-best-pick ' + (isOver ? 'is-over' : 'is-under') + '">' + (isOver ? '▲ Over' : '▼ Under') + '</td>' +
+              '<td class="num">' + odds(isOver ? r.quote.over : r.quote.under) + '</td>' +
+              '<td class="num">' + Math.round((isOver ? r.over : 1 - r.over) * 100) + '%</td>' +
+              '<td class="num pp-best-edge">+' + Math.round(r.edge * 100) + '%</td></tr>';
+          }).join('') + '</tbody></table></div>' +
+          '<p class="dvp-note">Every DraftKings passing, rushing and receiving yards line in the ' + esc(t.games) +
+          ' week ' + esc(week) + ' games still to kick off (' + esc(t.lines) + ' lines), run through the same projection as a player\'s card. ' +
+          'Chance is the model\'s for the pick; edge is how far that lands past 50%. Proj is the median. A player opens his whole projection.</p>';
+      }).catch(function (e) {
+        topEl.innerHTML = '<p class="sched-empty">Error: ' + esc(e.message) + '</p>';
+      });
+    }
+
+    topEl.addEventListener('click', function (e) {
+      if (!e.target.closest || !e.target.closest('.pp-top-load')) return;
+      loadTop();
+      showTop();
+    });
+
+    /* ---------- start ---------- */
+
+    schedLoad(season).then(function (d) {
+      sched = d;
+      week = schedCurrentWeek(sched);
+      document.getElementById('mx-title').textContent = 'Week ' + week + ' matchups';
+      showTop();
+      return loadAll().then(function (a) {
+        all = a;
+        renderMatchups();
+      });
+    }).catch(function (e) {
+      mxEl.innerHTML = '<p class="sched-empty">Error: ' + esc(e.message) + '</p>';
+    });
+  })();
+  </script>
+</body>
+</html>

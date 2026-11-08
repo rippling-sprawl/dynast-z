@@ -1939,6 +1939,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         elif self.path.split("?")[0] == "/football/player-projections":
             self.path = "/views/football/player-projections.html"
             super().do_GET()
+        # The week's softest/toughest matchups and biggest yards-line edges.
+        elif self.path.split("?")[0] == "/football/weekly-edges":
+            self.path = "/views/football/weekly-edges.html"
+            super().do_GET()
         # Its data: the player's whole career off balldontlie, live.
         elif self.path.split("?")[0] == "/api/player-projections":
             api = player_projections_api()

@@ -79,6 +79,27 @@
   color: var(--text-3);
 }
 
+/* --- / and /football: a tighter board -------------------------------------
+ * The two pages that are nothing but cards (marked .hub-home) close up the
+ * cards, the gaps between them and the bands over them, so more of the list
+ * fits on a screen. Every other hub page keeps the roomier spacing above. */
+
+.hub-home .hub-section { margin-top: 18px; }
+.hub-home .hub-section + .hub-grid { margin-top: 8px; }
+.hub-home .hub-grid { gap: 8px; }
+.hub-home .hub-card { padding: 10px 12px; }
+
+/* With the bottom bar up, the bar already says where you are, so the page
+ * title and subtitle go and the first band moves up to the top of the page.
+ * The signed-out sign-in card, when it shows, keeps its own gap below it. */
+@media (max-width: 640px) {
+  .hub-home > h2,
+  .hub-home > .subtitle { display: none; }
+
+  .hub-home > .hub-section:first-of-type { margin-top: 0; }
+  .hub-home > .home-auth { margin: 0 0 14px; }
+}
+
 /* --- The rest of the hub shell -------------------------------------------- */
 
 .masters-page-nav {
