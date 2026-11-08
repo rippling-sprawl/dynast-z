@@ -475,6 +475,13 @@ def load_props(game_id, player_id):
 # week's opponent, since his history against a defense is a ratio to his
 # average that season. ~140 players' whole careers would be megabytes.
 
+# The whole payload is memoized and cached at the CDN longer than the props
+# bundle: the board is built from hundreds of careers and a page of lines, and
+# the lines it ranks by move slower than a quarter of an hour matters.
+BOARD_TTL = 15 * 60
+BOARD_CACHE_CONTROL = f"s-maxage={BOARD_TTL}, stale-while-revalidate=3600"
+_board_memo = {}
+
 BOARD_MARKETS = ("passing_yards", "rushing_yards", "receiving_yards")
 BOARD_BOOK = "draftkings"
 BOARD_MAX_GAMES = 20
@@ -522,6 +529,16 @@ def board_games(games, opp, season):
 
 
 def load_board(game_ids):
+    key = tuple(game_ids)
+    hit = _board_memo.get(key)
+    if hit and time.time() - hit[0] < BOARD_TTL:
+        return hit[1]
+    payload = build_board(game_ids)
+    _board_memo[key] = (time.time(), payload)
+    return payload
+
+
+def build_board(game_ids):
     rows = supabase_get(f"game_odds?game_id=in.({','.join(game_ids)})"
                         "&select=game_id,game:data->game,players:data->players,"
                         "props:data->player_props->current")
@@ -979,7 +996,7 @@ class handler(BaseHTTPRequestHandler):
         except Exception as e:  # noqa: BLE001
             self._json(502, {"error": str(e)})
             return
-        self._json(200, payload, {"Cache-Control": PROPS_CACHE_CONTROL})
+        self._json(200, payload, {"Cache-Control": BOARD_CACHE_CONTROL})
 
     def _context(self, params):
         game_id, error = parse_context(params)

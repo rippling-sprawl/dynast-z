@@ -49,6 +49,25 @@ body.masters-body {
   color: var(--hairline-hi);
 }
 
+/* Adjacent pages over a title: "Pages: Game Logs | Quarter Splits". The
+ * breadcrumb's type, but a flat set rather than a trail, so the page you are
+ * on is named among the others, unlinked, instead of ending the row. */
+.page-siblings {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 0;
+  padding: 0 0 12px;
+  font-size: 12px;
+  font-family: monospace;
+  color: var(--text-5);
+}
+.page-siblings-label { margin-right: 6px; }
+.page-siblings a { color: var(--accent-2); text-decoration: none; }
+.page-siblings a:hover { text-decoration: underline; }
+.page-siblings [aria-current="page"] { color: var(--text-hi); }
+.page-siblings .separator { margin: 0 6px; color: var(--hairline-hi); }
+
 .masters-page-nav {
   display: flex;
   gap: 12px;

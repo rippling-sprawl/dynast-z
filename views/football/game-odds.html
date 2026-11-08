@@ -49,12 +49,6 @@
   <script>initPage();</script>
 
   <div class="masters-content go-wrap">
-    <div class="masters-breadcrumbs">
-      <a href="/football">Football</a><span class="separator">/</span>
-      <a href="/football/schedule">Games</a><span class="separator">/</span>
-      <span id="crumb">Game</span>
-    </div>
-
     <div id="page"></div>
   </div>
 
@@ -90,7 +84,6 @@
     var INDEX_URL = '/api/game-odds';
 
     var pageEl = document.getElementById('page');
-    var crumbEl = document.getElementById('crumb');
 
     function esc(s) {
       return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
@@ -3282,12 +3275,10 @@
       var head = 'No game selected', body;
 
       if (!id) {
-        crumbEl.textContent = 'Game';
         body = 'A game page is <code>/football/schedule/game/&lt;id&gt;</code>. ' +
           'Pick one below, or start from <a href="/football/schedule">the schedule</a>.';
       } else {
         var tag = row ? row.away + ' @ ' + row.home : 'game ' + id;
-        crumbEl.textContent = tag;
         head = 'Not captured yet — ' + tag;
         body = (row
           ? '<div class="go-miss-head">' +
@@ -3322,7 +3313,6 @@
        * keeps them folded through kickoff, and one who left them open keeps
        * them open. The default decides how a card opens, not how it stays. */
       cardPhase = b.phase;
-      crumbEl.textContent = g.away.abbr + ' @ ' + g.home.abbr;
       document.title = g.away.abbr + ' @ ' + g.home.abbr + ' | Dynast-Z';
       /* Before kickoff the prop board is the page: there is no box score and
        * no play log, and the lines are the only thing that has moved all week.

@@ -47,10 +47,6 @@
   <script>initPage();</script>
 
   <main class="oven-content">
-    <div class="oven-breadcrumbs">
-      <a href="/football">Football</a><span class="sep">/</span><a href="/football/bakers-oven">Baker's Oven</a><span class="sep">/</span><a id="crumb-league" href="/football/bakers-oven">League</a><span class="sep">/</span><span id="crumb-team">Board</span>
-    </div>
-
     <div id="loading">Loading draft board…</div>
 
     <div id="sections" style="display:none;">
@@ -380,12 +376,10 @@
 
         await OvenLeagues.load();
 
-        // Paint the league crumb from the saved record before any network call;
+        // Title the page from the saved record before any network call;
         // ctx.league.name replaces it below if the league was renamed.
         var rec = OvenLeagues.get(leagueId);
-        var leagueCrumb = document.getElementById('crumb-league');
-        leagueCrumb.href = '/football/bakers-oven/' + leagueId;
-        if (rec) { leagueCrumb.textContent = rec.name; setTitle(rec.name); }
+        if (rec) setTitle(rec.name);
 
         bk = OvenLeagues.boardKeys(leagueId);
         var results = await Promise.all([
@@ -430,8 +424,6 @@
         S.myRosterId = rosterId;
         ctx.teams.forEach(function (t) { S.teams[t.roster_id] = t; });
 
-        var me = S.teams[rosterId];
-        document.getElementById('crumb-team').textContent = me ? me.teamName : 'Roster ' + rosterId;
 
         // What this league starts, before the board is built from it — the
         // filter has to be in place first, because buildBoard is the gate every

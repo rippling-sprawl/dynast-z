@@ -38,10 +38,14 @@
   <script>initPage();</script>
 
   <div class="masters-content">
-    <div class="masters-breadcrumbs">
-      <a href="/football">Football</a><span class="separator">/</span><a href="/football/team-stats">Team Stats</a><span class="separator">/</span><span>Quarter Splits</span>
-    </div>
-
+    <!-- Adjacent pages, not a trail: every page in the set, this one unlinked.
+         Kept in step with the same list on the other page. -->
+    <nav class="page-siblings" aria-label="Pages">
+      <span class="page-siblings-label">Pages:</span>
+      <a href="/football/defense-vs-players">Game Logs</a>
+      <span class="separator" aria-hidden="true">|</span>
+      <span aria-current="page">Quarter Splits</span>
+    </nav>
     <h2>Quarter Splits</h2>
 
     <!-- Markup contract for scripts/components/nfl-pickers.js. -->

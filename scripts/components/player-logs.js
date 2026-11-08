@@ -66,24 +66,26 @@
   // player: { team }. sections: [{ title?, rows, empty, key?, open? }].
   // show: { pass, rush, rec }; Total shows only beside both rush and rec.
   // opts.opp adds the opponent after the week, for logs against more than
-  // one defense. A section with a `key` is collapsible: its title is a
+  // one defense. opts.noYr drops the year column, for sections that are each
+  // one season and say so in their titles. A section with a `key` is collapsible: its title is a
   // button carrying data-sec=key, its rows drawn hidden unless `open`; the
   // page keeps which are open and redraws.
   function playerLogTable(player, sections, show, opts) {
     opts = opts || {};
     var tot = show.rush && show.rec;
-    var cols = (opts.opp ? 4 : 3) + (show.pass ? 5 : 0) + (show.rush ? 4 : 0) + (show.rec ? 5 : 0) + (tot ? 2 : 0);
+    var yr = !opts.noYr;
+    var cols = (opts.opp ? 3 : 2) + (yr ? 1 : 0) + (show.pass ? 5 : 0) + (show.rush ? 4 : 0) + (show.rec ? 5 : 0) + (tot ? 2 : 0);
     var oppHead = opts.opp ? '<th class="pl-oppcol">Opp</th>' : '';
 
     var head =
       '<thead>' +
-        '<tr class="dvp-groups"><th class="pl-yr"></th><th class="pl-wk"></th>' + (opts.opp ? '<th></th>' : '') + '<th></th>' +
+        '<tr class="dvp-groups">' + (yr ? '<th class="pl-yr"></th>' : '') + '<th class="pl-wk"></th>' + (opts.opp ? '<th></th>' : '') + '<th></th>' +
           (show.pass ? '<th colspan="5" class="grp">Passing</th>' : '') +
           (show.rush ? '<th colspan="4" class="grp">Rushing</th>' : '') +
           (show.rec ? '<th colspan="5" class="grp">Receiving</th>' : '') +
           (tot ? '<th colspan="2" class="grp">Total</th>' : '') +
         '</tr>' +
-        '<tr><th class="pl-yr">Yr</th><th class="pl-wk num">Wk</th>' + oppHead + '<th class="pl-rescol">Result</th>' +
+        '<tr>' + (yr ? '<th class="pl-yr">Yr</th>' : '') + '<th class="pl-wk num">Wk</th>' + oppHead + '<th class="pl-rescol">Result</th>' +
           (show.pass ? '<th class="num grp-start">Cmp</th><th class="num">Att</th><th class="num">Yds</th><th class="num">TD</th><th class="num">Int</th>' : '') +
           (show.rush ? '<th class="num grp-start">Att</th><th class="num">Yds</th><th class="num">TD</th><th class="num">Lng</th>' : '') +
           (show.rec ? '<th class="num grp-start">Tgt</th><th class="num">Rec</th><th class="num">Yds</th><th class="num">TD</th><th class="num">Lng</th>' : '') +
@@ -121,18 +123,20 @@
       }
       out += s.rows.map(function (g) {
         // A playoff game's week is its round: P1 is the wild card.
-        return tr + '><th class="pl-yr" scope="row" title="' + esc(g.season) + ' season">' + esc(shortYear(g.season)) + '</th>' +
+        return tr + '>' + (yr ? '<th class="pl-yr" scope="row" title="' + esc(g.season) + ' season">' + esc(shortYear(g.season)) + '</th>' : '') +
           '<td class="pl-wk num"' + (g.postseason ? ' title="Playoffs, round ' + esc(g.week) + '"' : '') + '>' +
             (g.postseason ? 'P' : '') + esc(g.week) + '</td>' +
           (opts.opp ? '<td class="pl-oppcol">' + (g.home ? 'vs' : '@') + '<img src="/assets/icons/nfl/' + esc(g.opp) +
             '.svg" alt="' + esc(g.opp) + '" title="' + esc(g.opp) + '"></td>' : '') +
           result(g, player.team) + line(g) + '</tr>';
       }).join('');
-      return out + tr + ' class="pl-avg"><th class="pl-yr" colspan="2" scope="row" title="Per game; Lng is the longest">Avg (' +
-        s.rows.length + ')</th>' + (opts.opp ? '<td class="pl-oppcol"></td>' : '') + record(s.rows) + line(null, s.rows) + '</tr>';
+      // Avg spans the year and week, or without the year the week and opponent.
+      var span = yr ? 2 : opts.opp ? 2 : 1;
+      return out + tr + ' class="pl-avg"><th class="pl-yr" colspan="' + span + '" scope="row" title="Per game; Lng is the longest">Avg (' +
+        s.rows.length + ')</th>' + (yr && opts.opp ? '<td class="pl-oppcol"></td>' : '') + record(s.rows) + line(null, s.rows) + '</tr>';
     }).join('');
 
-    return '<div class="dvp-scroll pl-scroll"><table class="dvp-table pl-table">' + head +
+    return '<div class="dvp-scroll pl-scroll"><table class="dvp-table pl-table' + (yr ? '' : ' pl-noyr') + '">' + head +
       '<tbody>' + body + '</tbody></table></div>';
   }
 

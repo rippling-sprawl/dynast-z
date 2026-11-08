@@ -276,7 +276,9 @@ header a:hover { color: var(--accent); }
 
 /* Wide screens: the title is the home link and Odds and Buns are drawer rows,
  * so the bar is the menu button alone and it needs no label under it. */
-.site-header > a.nav-tab { display: none; }
+.site-header > a.nav-tab,
+.site-header .nav-search-tab,
+.nav-searchbar { display: none; }
 .site-header .hamburger { order: -1; }
 .site-header .hamburger .nav-tab-label { display: none; }
 
@@ -413,76 +415,11 @@ header a:hover { color: var(--accent); }
   padding-top: 8px;
 }
 
-/* The Player Projections row, as that page's player search (nav.js
-   wireNavSearch). The list hangs in the drawer's flow under the field, not
-   over the rows below it, so the drawer's own scroll reaches all of it. */
-.nav-drawer .nav-search {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 20px;
-}
-.nav-search-glass { display: flex; align-items: center; color: var(--text-4); cursor: text; }
-.nav-search-input {
-  flex: 1 1 0;
-  min-width: 0;
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  color: var(--text);
-  font: inherit;
-  font-size: 14px;
-  padding: 5px 9px;
-}
-.nav-search-input::placeholder { color: var(--text-4); }
-.nav-search-input:focus { outline: none; border-color: var(--accent); }
-.nav-search-list {
-  flex: 1 0 100%;
-  max-height: 300px;
-  overflow-y: auto;
-  padding: 4px;
-  background: var(--bg-alt);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-}
-.nav-search-list[hidden] { display: none; }
-.nav-search-opt {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  background: none;
-  border: none;
-  border-radius: 5px;
-  color: var(--text);
-  font: inherit;
-  font-size: 13px;
-  text-align: left;
-  padding: 6px 8px;
-  cursor: pointer;
-  white-space: nowrap;
-  overflow: hidden;
-}
-.nav-search-opt:hover, .nav-search-opt[aria-selected="true"] { background: var(--surface-3); }
-.nav-search-opt img { width: 16px; height: 16px; flex: none; }
-.nav-search-pos {
-  margin-left: auto;
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.07em;
-  color: var(--text-4);
-}
-.nav-search-note { padding: 5px 8px; font-size: 12px; color: var(--text-4); }
-
 /* --- Narrow screens: bottom bar + slide-up drawer ---
  * The header leaves the top of the page and becomes the tab bar; the drawer
  * follows the menu button down and comes up from the bottom edge rather than
  * in from the left, so it opens where the button that opened it is. */
 @media (max-width: 640px) {
-  /* Under 16px, iOS zooms the page in on focus. */
-  .nav-search-input { font-size: 16px; }
-
   /* 58px of bar over 18px of nothing: on a phone with no home indicator to
    * inset for, env(safe-area-inset-bottom) is 0 and the row of icons sat on
    * the bottom edge of the glass. --bottom-nav-h is the whole band, padding
@@ -543,7 +480,90 @@ header a:hover { color: var(--accent); }
    * whole width, and the Home tab is what replaces it. */
   .site-title { display: none; }
 
-  .site-header > a.nav-tab { display: flex; }
+  .site-header > a.nav-tab,
+  .site-header .nav-search-tab { display: flex; }
+
+  /* --- The player search (nav.js wireNavSearch) ---
+   * It rises out of the bar rather than floating over the page: the open tab
+   * and the panel share one fill, the panel covers the bar's gold rule and
+   * carries it on its own top edge instead, so tab and panel read as a single
+   * piece — a folder tab — with the field set into it in the tab's gold. */
+  .nav-searchbar {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 100%;
+    padding: 10px 16px 12px;
+    background: var(--nav-hover);
+    border-top: 3px solid var(--nav-rule);
+    box-shadow: 0 -10px 28px rgba(0, 0, 0, 0.35);
+  }
+  .nav-searchbar:not([hidden]) { display: block; }
+
+  .site-header.is-searching .nav-search-tab {
+    color: var(--nav-accent);
+    background: var(--nav-hover);
+    border-radius: 0 0 12px 12px;
+  }
+
+  .nav-search-field {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 12px;
+    background: var(--nav-bar);
+    border: 1.5px solid var(--nav-accent);
+    border-radius: 10px;
+    color: var(--nav-accent);
+  }
+  .nav-search-field .nav-tab-icon { width: 18px; height: 18px; }
+  /* 16px: under that, iOS zooms the page in on focus. */
+  .nav-search-input {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 10px 0;
+    background: none;
+    border: none;
+    outline: none;
+    color: var(--nav-ink);
+    font: inherit;
+    font-size: 16px;
+  }
+  .nav-search-input::placeholder { color: var(--nav-ink-3); }
+
+  .nav-search-list {
+    max-height: min(46vh, 380px);
+    overflow-y: auto;
+    margin-bottom: 8px;
+  }
+  .nav-search-list[hidden] { display: none; }
+  .nav-search-opt {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 9px 10px;
+    background: none;
+    border: none;
+    border-radius: 8px;
+    color: var(--nav-ink-2);
+    font: inherit;
+    font-size: 14px;
+    text-align: left;
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+  .nav-search-opt[aria-selected="true"] { background: var(--nav-bar); color: var(--nav-ink); }
+  .nav-search-opt img { width: 18px; height: 18px; flex: none; }
+  .nav-search-pos {
+    margin-left: auto;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.07em;
+    color: var(--nav-ink-3);
+  }
+  .nav-search-note { padding: 9px 10px; font-size: 13px; color: var(--nav-ink-3); }
 
   .site-header .nav-tab {
     flex: 1;

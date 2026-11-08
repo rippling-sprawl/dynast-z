@@ -21,8 +21,6 @@ const CURRENT_GOLF_YEAR = 2026;
 //              they see
 //   external — opens in a new tab
 //   beta     — a "beta" tag after the label, for pages still being proven out
-//   search   — the drawer shows the page's player search in place of the link
-//              (hub grids still show the card)
 //
 // A section may also carry `href` (its own landing page), `collapsed` (the
 // drawer shows that landing page as one link instead of listing the items) and
@@ -50,9 +48,7 @@ const NAV_SECTIONS = [
       { label: 'Defense vs. Players', href: '/football/defense-vs-players', emoji: '🛡️' },
       // The same question from the other side: one player's career against
       // the defense he faces this week.
-      // In the drawer this row is the page's player search: a pick goes
-      // straight to that player's projection.
-      { label: 'Player Projections', href: '/football/player-projections', emoji: '🏃', search: true },
+      { label: 'Player Projections', href: '/football/player-projections', emoji: '🏃' },
       // The week's slate read for its edges: the softest and toughest
       // matchups, and the DraftKings yards lines the projection model
       // disagrees with most.
@@ -64,15 +60,6 @@ const NAV_SECTIONS = [
     ],
   },
   {
-    // Pools, not fixtures: the same slate played by a set of rules against
-    // other people. Pick 'Em is every game, Survivor is one team a week.
-    label: 'Games',
-    items: [
-      { label: "Pick 'Em", href: '/football/pickem', emoji: '🏆' },
-      { label: 'Survivor', href: '/football/survivor', emoji: '☠️' },
-    ],
-  },
-  {
     label: 'Fantasy',
     items: [
       // Baker's Oven holds per-account leagues and boards, but the landing
@@ -80,6 +67,15 @@ const NAV_SECTIONS = [
       // listed for everyone.
       { label: "Baker's Oven", href: '/football/bakers-oven', emoji: '🔥' },
       { label: 'Trade Calculator', href: '/football/trade-calculator', emoji: '⚖️' },
+    ],
+  },
+  {
+    // Pools, not fixtures: the same slate played by a set of rules against
+    // other people. Pick 'Em is every game, Survivor is one team a week.
+    label: 'Games',
+    items: [
+      { label: "Pick 'Em", href: '/football/pickem', emoji: '🏆' },
+      { label: 'Survivor', href: '/football/survivor', emoji: '☠️' },
     ],
   },
   {
@@ -159,7 +155,7 @@ function buildNavItems() {
     }
     items.push({ type: 'section', label: section.label, href: section.href });
     for (const item of navVisibleItems(section)) {
-      items.push({ type: item.search ? 'search' : 'link', label: item.label, href: item.href, external: item.external, beta: item.beta, admin: item.admin });
+      items.push({ type: 'link', label: item.label, href: item.href, external: item.external, beta: item.beta, admin: item.admin });
     }
   }
   return items;
@@ -209,7 +205,6 @@ function buildNavDrawerHTML() {
         ? `<li><a class="nav-section-label" href="${item.href}">${item.label}</a></li>`
         : `<li><span class="nav-section-label">${item.label}</span></li>`;
     }
-    if (item.type === 'search') return buildNavSearchHTML(item);
     // `standalone` is a top-level destination with no heading over it, so it
     // needs a rule above it or it reads as one more row of the section before.
     const cls = item.standalone ? ' class="nav-standalone"'
@@ -233,14 +228,87 @@ function buildNavDrawerHTML() {
   </div>`;
 }
 
-// --- Player search ---
-// The Player Projections row, as the search box from that page: the Trade
-// Calculator's player list (/api/players), fetched on first focus, filtered on
-// every word typed. A pick opens the player on /football/player-projections —
-// or, on that page already, hands him to the page (window.playerProjectionsPick)
+// --- Bar icons ---
+// Drawn here rather than shipped as files so they inherit the bar's colour with
+// no second request: one path set each, stroked in currentColor, sized by the
+// stylesheet. 24x24 box, 1.8 stroke, so they read at one weight.
+const NAV_ICONS = {
+  // A house: the site root, which is where the hub grid lives.
+  home: '<path d="M3.5 10.7 12 4l8.5 6.7"/><path d="M5.8 9.2v9.9a1.9 1.9 0 0 0 1.9 1.9h8.6a1.9 1.9 0 0 0 1.9-1.9V9.2"/><path d="M9.9 21v-5.3a1.3 1.3 0 0 1 1.3-1.3h1.6a1.3 1.3 0 0 1 1.3 1.3V21"/>',
+  // A calendar: the slate is a week of dates before it is anything else.
+  odds: '<path d="M4 6.5a2.5 2.5 0 0 1 2.5-2.5h11A2.5 2.5 0 0 1 20 6.5v12a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 18.5z"/><path d="M8 2.5v4M16 2.5v4M4 10h16"/>',
+  menu: '<path d="M4 7h16M4 12h16M4 17h16"/>',
+  // A magnifying glass: the player search.
+  search: '<circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/>',
+};
+
+function navIconHTML(name) {
+  return `<svg class="nav-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${NAV_ICONS[name]}</svg>`;
+}
+
+// The shortcut destinations on the bar. Everything else is a drawer row —
+// these are here because they are the pages people come back to daily. Home
+// leads, because the bar has no title on it to be the way back to "/".
+const NAV_TABS = [
+  { label: 'Home', href: '/', icon: 'home' },
+  { label: 'Schedule', href: '/football/schedule', icon: 'odds' },
+];
+
+// The page a tab points at, or a page under it (a game page under /schedule),
+// marks that tab. Exact match on the site root only, so "/" is not a prefix of
+// everything.
+function navTabIsCurrent(href) {
+  const path = location.pathname.replace(/\/+$/, '') || '/';
+  return path === href || path.startsWith(href + '/');
+}
+
+// One header serves both shapes. Its DOM order is the mobile order — the
+// tabs, then search, then the menu button — and the desktop rule pulls the menu
+// button back in front of the title with `order`, so reading order and tab order match the
+// visual order at both widths without a second copy of the button.
+function buildHeaderHTML() {
+  const tabs = NAV_TABS.map(tab => {
+    const current = navTabIsCurrent(tab.href) ? ' aria-current="page"' : '';
+    return `<a class="nav-tab" href="${tab.href}"${current}>${navIconHTML(tab.icon)}<span class="nav-tab-label">${tab.label}</span></a>`;
+  }).join('\n    ');
+
+  return `<header class="site-header">
+    ${tabs}
+    <button class="nav-tab nav-search-tab" id="nav-search-toggle" aria-expanded="false" aria-controls="nav-searchbar">${navIconHTML('search')}<span class="nav-tab-label">Search</span></button>
+    ${buildNavSearchbarHTML()}
+    <button class="nav-tab hamburger" id="nav-toggle" aria-label="Menu">${navIconHTML('menu')}<span class="nav-tab-label">Menu</span></button>
+    <h1 class="site-title"><a href="/">Dynast-Z</a></h1>
+  </header>`;
+}
+
+// --- Player and team search ---
+// The bar's Search tab opens the search box from /football/player-projections
+// just above the bar: the Trade Calculator's player list (/api/players),
+// fetched on first open, filtered on every word typed, with the teams it
+// matches listed above the players. A player opens on that page, a team on
+// /football/defense-vs-players — or, on that page already, the pick goes to
+// the page (window.playerProjectionsPick, window.defenseVsPlayersPick)
 // instead of reloading it.
 const NAV_SEARCH_POS = ['QB', 'RB', 'WR', 'TE'];
 const NAV_SEARCH_MAX = 10;
+const NAV_SEARCH_TEAM_MAX = 3;
+// The schedule's abbreviations, which are the logo filenames and the `team`
+// param defense-vs-players reads. Kept here rather than read from the
+// schedule file, which most pages do not load.
+const NAV_TEAMS = [
+  ['ARI', 'Arizona', 'Cardinals'], ['ATL', 'Atlanta', 'Falcons'], ['BAL', 'Baltimore', 'Ravens'],
+  ['BUF', 'Buffalo', 'Bills'], ['CAR', 'Carolina', 'Panthers'], ['CHI', 'Chicago', 'Bears'],
+  ['CIN', 'Cincinnati', 'Bengals'], ['CLE', 'Cleveland', 'Browns'], ['DAL', 'Dallas', 'Cowboys'],
+  ['DEN', 'Denver', 'Broncos'], ['DET', 'Detroit', 'Lions'], ['GB', 'Green Bay', 'Packers'],
+  ['HOU', 'Houston', 'Texans'], ['IND', 'Indianapolis', 'Colts'], ['JAX', 'Jacksonville', 'Jaguars'],
+  ['KC', 'Kansas City', 'Chiefs'], ['LAC', 'Los Angeles', 'Chargers'], ['LAR', 'Los Angeles', 'Rams'],
+  ['LV', 'Las Vegas', 'Raiders'], ['MIA', 'Miami', 'Dolphins'], ['MIN', 'Minnesota', 'Vikings'],
+  ['NE', 'New England', 'Patriots'], ['NO', 'New Orleans', 'Saints'], ['NYG', 'New York', 'Giants'],
+  ['NYJ', 'New York', 'Jets'], ['PHI', 'Philadelphia', 'Eagles'], ['PIT', 'Pittsburgh', 'Steelers'],
+  ['SEA', 'Seattle', 'Seahawks'], ['SF', 'San Francisco', '49ers'], ['TB', 'Tampa Bay', 'Buccaneers'],
+  ['TEN', 'Tennessee', 'Titans'], ['WSH', 'Washington', 'Commanders'],
+].map(([abbr, city, nick]) => ({ abbr, name: city + ' ' + nick, key: navFold(abbr + ' ' + city + ' ' + nick) }));
 // The dynasty sources' Washington; balldontlie and the schedule say WSH.
 const NAV_TEAM_ALIAS = { WAS: 'WSH' };
 
@@ -273,24 +341,35 @@ function navLoadPlayers() {
   return navPlayersReq;
 }
 
-function buildNavSearchHTML(item) {
-  return `<li class="nav-search">
-          <label class="nav-search-glass" for="nav-player" title="${item.label}">
-            <svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true" focusable="false"><circle cx="7" cy="7" r="4.5"/><line x1="10.6" y1="10.6" x2="14" y2="14"/></svg>
-          </label>
-          <input type="text" class="nav-search-input" id="nav-player" placeholder="${item.label}…" aria-label="${item.label}: search players"
-                 autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list"
-                 aria-expanded="false" aria-controls="nav-player-list">
-          <div class="nav-search-list" id="nav-player-list" role="listbox" aria-label="Players" hidden></div>
-        </li>`;
+// The list comes first so it grows upward, away from the bar, as it fills.
+function buildNavSearchbarHTML() {
+  return `<div class="nav-searchbar" id="nav-searchbar" hidden>
+      <div class="nav-search-list" id="nav-player-list" role="listbox" aria-label="Players and teams" hidden></div>
+      <div class="nav-search-field">
+        ${navIconHTML('search')}
+        <input type="text" class="nav-search-input" id="nav-player" placeholder="Search players or teams…" aria-label="Search players and teams"
+               autocomplete="off" spellcheck="false" enterkeyhint="go" role="combobox" aria-autocomplete="list"
+               aria-expanded="false" aria-controls="nav-player-list">
+      </div>
+    </div>`;
 }
 
-// Arrows move, Enter picks, Escape clears. The list sits in the drawer's flow
-// rather than floating, so the drawer's own scroll carries it.
-function wireNavSearch(closeDrawer) {
+// Teams need a word typed — an empty box offers players — and match on the
+// abbreviation, city or nickname, so "ny" finds both New York teams.
+function navSearchTeams(words) {
+  if (!words.length) return [];
+  return NAV_TEAMS.filter(t => words.every(w => t.key.includes(w))).slice(0, NAV_SEARCH_TEAM_MAX);
+}
+
+// Arrows move, Enter picks, Escape closes. The bar closes on its own tab, on a
+// pick, on Escape, on a tap anywhere outside the bar, and when the menu opens.
+function wireNavSearch() {
+  const toggle = document.getElementById('nav-search-toggle');
+  const bar = document.getElementById('nav-searchbar');
   const input = document.getElementById('nav-player');
   const list = document.getElementById('nav-player-list');
-  if (!input || !list) return;
+  if (!toggle || !bar || !input || !list) return;
+  const header = toggle.closest('.site-header');
   let shown = [], active = -1;
 
   const markActive = () => {
@@ -302,12 +381,6 @@ function wireNavSearch(closeDrawer) {
     else input.removeAttribute('aria-activedescendant');
   };
 
-  const closeList = () => {
-    list.hidden = true;
-    input.setAttribute('aria-expanded', 'false');
-    input.removeAttribute('aria-activedescendant');
-  };
-
   const showList = (html) => {
     list.innerHTML = html;
     list.hidden = false;
@@ -315,121 +388,96 @@ function wireNavSearch(closeDrawer) {
     markActive();
   };
 
-  const openList = () => {
+  // Empty, it offers the top of the list, as the page does.
+  const search = () => {
     const text = input.value;
     navLoadPlayers().then(players => {
-      if (document.activeElement !== input || input.value !== text) return;
+      if (bar.hidden || input.value !== text) return;
       const words = navFold(text).split(/\s+/).filter(Boolean);
-      shown = players.filter(p => words.every(w => p.key.includes(w))).slice(0, NAV_SEARCH_MAX);
+      shown = navSearchTeams(words).map(t => ({ team: t.abbr, name: t.name, tag: 'DEF', isTeam: true }))
+        .concat(players.filter(p => words.every(w => p.key.includes(w))).slice(0, NAV_SEARCH_MAX)
+          .map(p => ({ ...p, tag: p.pos })));
       active = shown.length ? 0 : -1;
-      showList(shown.length ? shown.map((p, i) =>
-        `<button type="button" class="nav-search-opt" role="option" id="nav-opt-${i}" data-i="${i}" tabindex="-1" aria-selected="false">` +
-        `<img src="/assets/icons/nfl/${navEsc(p.team)}.svg" alt="">${navEsc(p.name)}<span class="nav-search-pos">${navEsc(p.pos)}</span></button>`
+      showList(shown.length ? shown.map((o, i) =>
+        `<button type="button" class="nav-search-opt${o.isTeam ? ' is-team' : ''}" role="option" id="nav-opt-${i}" data-i="${i}" tabindex="-1" aria-selected="false">` +
+        `<img src="/assets/icons/nfl/${navEsc(o.team)}.svg" alt="">${navEsc(o.name)}<span class="nav-search-pos">${navEsc(o.tag)}</span></button>`
       ).join('') : '<div class="nav-search-note">No match</div>');
     }).catch(() => {
-      if (document.activeElement !== input) return;
-      shown = [];
-      active = -1;
-      showList('<div class="nav-search-note">Players unavailable</div>');
+      // No player list: teams still work, from the list above.
+      if (bar.hidden) return;
+      const teams = navSearchTeams(navFold(input.value).split(/\s+/).filter(Boolean));
+      shown = teams.map(t => ({ team: t.abbr, name: t.name, tag: 'DEF', isTeam: true }));
+      active = shown.length ? 0 : -1;
+      showList(shown.map((o, i) =>
+        `<button type="button" class="nav-search-opt is-team" role="option" id="nav-opt-${i}" data-i="${i}" tabindex="-1" aria-selected="false">` +
+        `<img src="/assets/icons/nfl/${navEsc(o.team)}.svg" alt="">${navEsc(o.name)}<span class="nav-search-pos">DEF</span></button>`
+      ).join('') + '<div class="nav-search-note">Players unavailable</div>');
     });
   };
 
-  const pick = (p) => {
-    closeList();
-    if (!p) return;
-    input.value = '';
-    input.blur();
-    const onPage = location.pathname.replace(/\/+$/, '') === '/football/player-projections';
-    if (onPage && typeof window.playerProjectionsPick === 'function'
-        && window.playerProjectionsPick(p.name, p.pos, p.team)) {
-      closeDrawer();
-      return;
-    }
-    location.href = '/football/player-projections?' + new URLSearchParams({ player: p.name, pos: p.pos });
+  // Focus in the same tap that opens it, or iOS will not raise the keyboard.
+  const open = () => {
+    bar.hidden = false;
+    header.classList.add('is-searching');
+    toggle.setAttribute('aria-expanded', 'true');
+    input.focus();
+    search();
   };
 
-  input.addEventListener('focus', openList);
-  input.addEventListener('input', openList);
+  const close = () => {
+    if (bar.hidden) return;
+    bar.hidden = true;
+    list.hidden = true;
+    input.value = '';
+    input.blur();
+    input.setAttribute('aria-expanded', 'false');
+    input.removeAttribute('aria-activedescendant');
+    header.classList.remove('is-searching');
+    toggle.setAttribute('aria-expanded', 'false');
+  };
+
+  const pick = (o) => {
+    close();
+    if (!o) return;
+    const path = location.pathname.replace(/\/+$/, '');
+    if (o.isTeam) {
+      if (path === '/football/defense-vs-players' && typeof window.defenseVsPlayersPick === 'function'
+          && window.defenseVsPlayersPick(o.team)) return;
+      location.href = '/football/defense-vs-players?' + new URLSearchParams({ team: o.team });
+      return;
+    }
+    if (path === '/football/player-projections' && typeof window.playerProjectionsPick === 'function'
+        && window.playerProjectionsPick(o.name, o.pos, o.team)) return;
+    location.href = '/football/player-projections?' + new URLSearchParams({ player: o.name, pos: o.pos });
+  };
+
+  toggle.addEventListener('click', () => (bar.hidden ? open() : close()));
+  input.addEventListener('input', search);
   input.addEventListener('keydown', (e) => {
     if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
       e.preventDefault();
-      if (list.hidden) { openList(); return; }
       if (!shown.length) return;
       active = (active + (e.key === 'ArrowDown' ? 1 : -1) + shown.length) % shown.length;
       markActive();
     } else if (e.key === 'Enter') {
       e.preventDefault();
-      if (!list.hidden && active >= 0) pick(shown[active]);
+      if (active >= 0) pick(shown[active]);
     } else if (e.key === 'Escape') {
-      input.value = '';
-      closeList();
-      input.blur();
+      close();
     }
   });
-  // mousedown, not click: the click would land after the blur below shut the list.
+  // mousedown, not click: keeps the focus in the field, so the keyboard stays up.
   list.addEventListener('mousedown', (e) => {
     const opt = e.target.closest('.nav-search-opt');
     if (!opt) return;
     e.preventDefault();
     pick(shown[Number(opt.getAttribute('data-i'))]);
   });
-  input.addEventListener('blur', closeList);
-}
-
-// --- Bar icons ---
-// Drawn here rather than shipped as files so they inherit the bar's colour with
-// no second request: one path set each, stroked in currentColor, sized by the
-// stylesheet. 24x24 box, 1.8 stroke, so they read at one weight.
-const NAV_ICONS = {
-  // A house: the site root, which is where the hub grid lives.
-  home: '<path d="M3.5 10.7 12 4l8.5 6.7"/><path d="M5.8 9.2v9.9a1.9 1.9 0 0 0 1.9 1.9h8.6a1.9 1.9 0 0 0 1.9-1.9V9.2"/><path d="M9.9 21v-5.3a1.3 1.3 0 0 1 1.3-1.3h1.6a1.3 1.3 0 0 1 1.3 1.3V21"/>',
-  // A calendar: the slate is a week of dates before it is anything else.
-  odds: '<path d="M4 6.5a2.5 2.5 0 0 1 2.5-2.5h11A2.5 2.5 0 0 1 20 6.5v12a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 18.5z"/><path d="M8 2.5v4M16 2.5v4M4 10h16"/>',
-  // A trophy: cup, handles, stem and base.
-  trophy: '<path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/>',
-  // A flame: the Oven's mark.
-  oven: '<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>',
-  menu: '<path d="M4 7h16M4 12h16M4 17h16"/>',
-};
-
-function navIconHTML(name) {
-  return `<svg class="nav-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-    stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${NAV_ICONS[name]}</svg>`;
-}
-
-// The shortcut destinations on the bar. Everything else is a drawer row —
-// these are here because they are the pages people come back to daily. Home
-// leads, because the bar has no title on it to be the way back to "/".
-const NAV_TABS = [
-  { label: 'Home', href: '/', icon: 'home' },
-  { label: 'Schedule', href: '/football/schedule', icon: 'odds' },
-  { label: "Pick'em", href: '/football/pickem', icon: 'trophy' },
-  { label: 'Oven', href: '/football/bakers-oven', icon: 'oven' },
-];
-
-// The page a tab points at, or a page under it (a game page under /schedule),
-// marks that tab. Exact match on the site root only, so "/" is not a prefix of
-// everything.
-function navTabIsCurrent(href) {
-  const path = location.pathname.replace(/\/+$/, '') || '/';
-  return path === href || path.startsWith(href + '/');
-}
-
-// One header serves both shapes. Its DOM order is the mobile order — the four
-// tabs, then the menu button — and the desktop rule pulls the menu button back
-// in front of the title with `order`, so reading order and tab order match the
-// visual order at both widths without a second copy of the button.
-function buildHeaderHTML() {
-  const tabs = NAV_TABS.map(tab => {
-    const current = navTabIsCurrent(tab.href) ? ' aria-current="page"' : '';
-    return `<a class="nav-tab" href="${tab.href}"${current}>${navIconHTML(tab.icon)}<span class="nav-tab-label">${tab.label}</span></a>`;
-  }).join('\n    ');
-
-  return `<header class="site-header">
-    ${tabs}
-    <button class="nav-tab hamburger" id="nav-toggle" aria-label="Menu">${navIconHTML('menu')}<span class="nav-tab-label">Menu</span></button>
-    <h1 class="site-title"><a href="/">Dynast-Z</a></h1>
-  </header>`;
+  document.addEventListener('pointerdown', (e) => {
+    if (!header.contains(e.target)) close();
+  });
+  const menu = document.getElementById('nav-toggle');
+  if (menu) menu.addEventListener('click', close);
 }
 
 // --- Swipe the sheet down to close ---
@@ -510,7 +558,6 @@ function wireNavDrawer() {
 
   const drawer = overlay.querySelector('.nav-drawer');
   if (drawer) wireDrawerSwipe(drawer, close);
-  wireNavSearch(close);
 }
 
 function initPage() {
@@ -528,6 +575,7 @@ function initPage() {
   if (typeof Standalone !== 'undefined') Standalone.mount();
 
   wireNavDrawer();
+  wireNavSearch();
 }
 
 function initNavDrawer() {

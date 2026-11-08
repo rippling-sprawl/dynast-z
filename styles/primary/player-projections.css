@@ -5,27 +5,102 @@
  * styled in defense-vs-players.css (loaded first); this sheet adds only the
  * player search and the matchup line above the table. */
 
-/* The search box: the dd-btn look, as a text field, with the dd-menu list
- * hanging off it. Wide enough for a long name, narrower on a phone. */
-.pp-search { position: relative; flex: 0 1 auto; min-width: 0; }
-.pp-glass { display: flex; align-items: center; color: var(--text-4); cursor: text; }
-.pp-input {
-  width: 220px;
+/* The player, first under the title, and the Trade Calculator's search
+ * (calculator.css): the glass sits right of the name, and its bar slides in
+ * from the right over the name. The bar row clips the slide; the list
+ * hangs from the wrap around it, so the clip does not cut it off. */
+.pp-namebar-wrap { position: relative; margin: 2px 0 12px; }
+.pp-namebar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 34px;
+  overflow: hidden;
+}
+.pp-who {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   min-width: 0;
-  flex: 1 1 auto;
+  color: var(--text-hi);
+  font-size: 18px;
+  font-weight: 650;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pp-who img { width: 24px; height: 24px; display: block; flex: none; }
+.pp-who:empty { display: none; }
+
+.pp-search-toggle {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 26px;
+  padding: 0;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-3);
+  cursor: pointer;
+}
+.pp-search-toggle:hover { color: var(--text); border-color: var(--accent); }
+.pp-search-toggle[hidden], .pp-search-close[hidden] { display: none; }
+
+.pp-search-over {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--panel-lo);
+  transform: translateX(100%);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 0.22s ease, opacity 0.22s ease;
+}
+.pp-search-over.active { transform: translateX(0); opacity: 1; pointer-events: auto; }
+.pp-search-icon { flex-shrink: 0; color: var(--text-3); }
+.pp-input {
+  flex: 1;
+  min-width: 0;
+  max-width: 360px;
   background: var(--surface-2);
   border: 1px solid var(--border);
   border-radius: 6px;
   color: var(--text);
   font: inherit;
-  font-size: 12.5px;
-  padding: 4px 9px;
+  font-size: 13px;
+  padding: 6px 10px;
 }
 .pp-input::placeholder { color: var(--text-4); }
 .pp-input:focus { outline: none; border-color: var(--accent); }
+.pp-search-close {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  background: none;
+  border: none;
+  color: var(--text-3);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+.pp-search-close:hover { color: var(--text); }
+@media (prefers-reduced-motion: reduce) {
+  .pp-search-over { transition: none; }
+}
 
-.pp-list { min-width: 240px; }
-.pp-list .dd-opt { align-items: center; }
+/* Hangs under the bar, lined up with the field after the glass. */
+.pp-list { left: 23px; min-width: 240px; max-width: calc(100% - 23px); }
+.pp-list .dd-opt { align-items: center; font-size: 12px; }
 .pp-list .dd-opt[aria-selected="true"] { background: var(--surface); }
 .pp-list img { width: 16px; height: 16px; flex: none; }
 .pp-list .pp-pos {
@@ -36,21 +111,6 @@
   color: var(--text-4);
 }
 .pp-list .dd-note { padding: 5px 9px; color: var(--text-4); }
-
-/* Who, and who he sees this week. */
-.pp-head {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 4px 10px;
-  margin: 2px 0 10px;
-  color: var(--text-3);
-  font-size: 13px;
-}
-.pp-head img { width: 20px; height: 20px; display: block; }
-.pp-head .pp-who { display: inline-flex; align-items: center; gap: 6px; color: var(--text-hi); font-weight: 650; font-size: 15px; }
-.pp-head .pp-tag { font-size: 10px; font-weight: 600; letter-spacing: 0.07em; color: var(--text-4); }
-.pp-head .pp-match { display: inline-flex; align-items: center; gap: 5px; }
 
 /* ---------- the projection ----------
  * scripts/components/player-projection.js. One color rule on the whole page:

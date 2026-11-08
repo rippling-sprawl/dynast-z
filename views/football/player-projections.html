@@ -38,36 +38,32 @@
   <script>initPage();</script>
 
   <div class="masters-content">
-    <div class="masters-breadcrumbs">
-      <a href="/football">Football</a><span class="separator">/</span><span>Player Projections</span>
-    </div>
-
     <h2>Player Projections</h2>
 
-    <!-- The player, then the defense: this week's opponent once a player is
-         picked, any other team from the same picker as defense-vs-players. -->
-    <div class="dd-row dvp-controls">
-      <div class="dvp-filter pp-search">
-        <!-- The Trade Calculator's magnifying glass, as the field's label. -->
-        <label class="pp-glass" for="f-player" title="Search players">
+    <!-- The player, and the Trade Calculator's search: the magnifying glass
+         slides a search bar in from the right, over the name. With no player
+         picked there is no name to cover, so the bar stays open. The list
+         hangs outside the bar, which clips its slide. -->
+    <div class="pp-namebar-wrap">
+      <div class="pp-namebar">
+        <span class="pp-who" id="who"></span>
+        <button type="button" class="pp-search-toggle" id="search-toggle" hidden aria-label="Search players" title="Search players">
           <svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true" focusable="false"><circle cx="7" cy="7" r="4.5"/><line x1="10.6" y1="10.6" x2="14" y2="14"/></svg>
-        </label>
-        <input type="text" class="pp-input" id="f-player" placeholder="Search QB, RB, WR, TE…" aria-label="Search players"
-               autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list"
-               aria-expanded="false" aria-controls="player-list">
-        <div class="dd-pop dd-menu pp-list" id="player-list" role="listbox" aria-label="Players" hidden></div>
-      </div>
-      <div class="dvp-filter">
-        <span class="dvp-flabel" id="l-team">Def.</span>
-        <div class="dd" id="dd-team">
-          <button type="button" class="dd-btn" id="f-team" aria-haspopup="dialog" aria-expanded="false" aria-labelledby="l-team f-team">
-            <span class="dd-value">Opp.</span>
-          </button>
-          <div class="dd-pop dd-overlay" id="team-overlay" role="dialog" aria-modal="true" aria-label="Defense" hidden>
-            <div class="tp" id="team-grid"></div>
-          </div>
+        </button>
+        <div class="pp-search-over active" id="search-over">
+          <svg class="pp-search-icon" viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true" focusable="false"><circle cx="7" cy="7" r="4.5"/><line x1="10.6" y1="10.6" x2="14" y2="14"/></svg>
+          <input type="text" class="pp-input" id="f-player" placeholder="Search QB, RB, WR, TE…" aria-label="Search players"
+                 autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list"
+                 aria-expanded="false" aria-controls="player-list">
+          <button type="button" class="pp-search-close" id="search-close" aria-label="Close search" hidden>&times;</button>
         </div>
       </div>
+      <div class="dd-pop dd-menu pp-list" id="player-list" role="listbox" aria-label="Players" hidden></div>
+    </div>
+
+    <!-- Under the name, left-aligned: the filters, then the defense — this
+         week's opponent, or any other team from defense-vs-players' picker. -->
+    <div class="dd-row dvp-controls">
       <!-- defense-vs-players' filters button and modal, less its position
            filter: the position is the player's. Each minimum shows only for a
            position it can cut (no rush attempts for a WR or TE, no targets
@@ -119,9 +115,19 @@
           </div>
         </div>
       </dialog>
+      <div class="dvp-filter">
+        <span class="dvp-flabel" id="l-team">Def.</span>
+        <div class="dd" id="dd-team">
+          <button type="button" class="dd-btn" id="f-team" aria-haspopup="dialog" aria-expanded="false" aria-labelledby="l-team f-team">
+            <span class="dd-value">Opp.</span>
+          </button>
+          <div class="dd-pop dd-overlay" id="team-overlay" role="dialog" aria-modal="true" aria-label="Defense" hidden>
+            <div class="tp" id="team-grid"></div>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <div id="head"></div>
     <!-- Before a player is picked: a pointer to Weekly Edges, in place of the views. -->
     <div id="top" hidden></div>
     <!-- Four views, one at a time: the model, the defense's season
@@ -182,7 +188,10 @@
     var VIEWS = { proj: proj, defense: defp, games: document.getElementById('games'), logs: logsEl };
     // The tabs that need a defense; Game logs does not.
     var DEF_VIEWS = { proj: true, defense: true, games: true };
-    var head = document.getElementById('head');
+    var who = document.getElementById('who');
+    var searchOver = document.getElementById('search-over');
+    var searchToggle = document.getElementById('search-toggle');
+    var searchClose = document.getElementById('search-close');
     var topEl = document.getElementById('top');
     var note = document.getElementById('note');
     var input = document.getElementById('f-player');
@@ -276,7 +285,7 @@
       if (!player && name && POS.indexOf(pos) >= 0) player = addPlayer(q.get('player'), pos, '');
       var d = (q.get('def') || '').toUpperCase();
       def = d && schedTeamsByAbbr(sched)[d] ? d : '';
-      input.value = player ? player.name : '';
+      syncSearch();
       var vw = q.get('view') || '';
       view = VIEWS[vw] ? vw : 'proj';
       var st = q.get('stat') || '';
@@ -296,19 +305,11 @@
 
     /* ---------- the table ----------
      * scripts/components/player-logs.js: one row per game, the season and week
-     * then the result, the player and the defense being in the line above
-     * the table. Its column groups are the Show toggles. */
+     * then the result, the player being named over the page and the defense
+     * on its picker. Its column groups are the Show toggles. */
     function renderHead() {
-      if (!player) { head.innerHTML = ''; return; }
       var team = playerTeam();
-      var m = sched && team ? thisWeek(team) : null;
-      var match = m
-        ? 'Week ' + esc(week) + ' <span class="pp-match">' + (m.home ? 'vs' : '@') + ' ' + logo(m.opp) + esc(m.opp) + '</span>'
-        : 'Week ' + esc(week) + ': bye';
-      head.innerHTML = '<div class="pp-head">' +
-        '<span class="pp-who">' + (team ? logo(team) : '') + esc(doc ? doc.player.name : player.name) + '</span>' +
-        '<span class="pp-tag">' + esc(player.pos) + (team ? ' &middot; ' + esc(team) : '') + '</span>' +
-        '<span>' + match + '</span></div>';
+      who.innerHTML = player ? (team ? logo(team) : '') + esc(doc ? doc.player.name : player.name) : '';
     }
 
     function render() {
@@ -421,7 +422,7 @@
         return { title: String(yr), rows: rows, key: yr, open: open };
       });
       logsEl.innerHTML = playerLogTable({ team: playerTeam() }, sections,
-        { pass: !hide.pass, rush: !hide.rush, rec: !hide.rec }, { opp: true }) +
+        { pass: !hide.pass, rush: !hide.rush, rec: !hide.rec }, { opp: true, noYr: true }) +
         '<p class="dvp-note">Every regular-season and playoff game ' + esc(doc.player.name) +
         ' has in balldontlie, by season, newest first · Avg is per game; its Lng is the longest' +
         (!hide.pass ? ' · balldontlie\'s box score carries no long completion, so Passing has no Lng' : '') + '</p>';
@@ -814,7 +815,7 @@
       syncDef();
       writeParams();
       if (!player) {
-        head.innerHTML = '';
+        renderHead();
         board.innerHTML = '';
         showTop();
         return;
@@ -861,10 +862,41 @@
     });
 
     /* ---------- the player search ----------
-     * A combobox over the list: names matching every word typed, best-valued
-     * first, a dozen at most. Arrows move, Enter picks, Escape closes. Empty,
+     * The Trade Calculator's slide-over: the magnifying glass beside the name
+     * slides the bar in over it, and the × (or Escape, or leaving the box)
+     * slides it back out. With no player there is nothing to cover, so the
+     * bar stays out and has no ×.
+     *
+     * Inside it, a combobox over the list: names matching every word typed,
+     * best-valued first, a dozen at most. Arrows move, Enter picks. Empty,
      * it offers the top of the list. */
     var shown = [], active = -1;
+
+    function setSearch(open) {
+      searchOver.classList.toggle('active', open);
+      searchClose.hidden = !player;
+      searchToggle.hidden = !player;
+      input.tabIndex = searchClose.tabIndex = open ? 0 : -1;
+      if (!open) {
+        closeList();
+        input.value = '';
+      }
+    }
+
+    function syncSearch() { setSearch(!player); }
+
+    function closeSearch() {
+      if (!player) return;
+      var had = searchOver.contains(document.activeElement);
+      setSearch(false);
+      if (had) searchToggle.focus();
+    }
+
+    searchToggle.addEventListener('click', function () {
+      setSearch(true);
+      input.focus();
+    });
+    searchClose.addEventListener('click', closeSearch);
 
     function search(text) {
       var words = fold(text).split(/\s+/).filter(Boolean);
@@ -905,9 +937,10 @@
       closeList();
       if (!p) return;
       var same = p === player;
-      // Set before the blur, whose handler puts the picked name back.
+      // Set before the blur, whose handler slides the bar off the name.
       player = p;
       input.blur();
+      setSearch(false);
       if (same) return;
       def = '';
       stat = '';
@@ -921,7 +954,7 @@
       load();
     }
 
-    input.addEventListener('focus', function () { input.select(); openList(); });
+    input.addEventListener('focus', openList);
     input.addEventListener('input', openList);
     input.addEventListener('keydown', function (e) {
       if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
@@ -934,9 +967,8 @@
         if (!list.hidden && active >= 0) pick(shown[active]);
         e.preventDefault();
       } else if (e.key === 'Escape') {
-        closeList();
-        input.value = player ? player.name : '';
-        input.blur();
+        if (player) closeSearch();
+        else { closeList(); input.blur(); }
       }
     });
     // mousedown, not click: the click would land after the blur below shut the list.
@@ -946,21 +978,22 @@
       e.preventDefault();
       pick(shown[Number(opt.getAttribute('data-i'))]);
     });
-    // Typing is only a search: leaving the box without a pick puts back the
-    // player already shown.
-    input.addEventListener('blur', function () {
-      closeList();
-      input.value = player ? player.name : '';
+    // Typing is only a search: leaving the box without a pick slides it
+    // back off the player already shown. Not when the leaving is onto its
+    // own ×, whose click does that.
+    input.addEventListener('blur', function (e) {
+      if (e.relatedTarget === searchClose) return;
+      if (player) setSearch(false);
+      else closeList();
     });
 
-    // The drawer's player search (nav.js) hands a pick made on this page
-    // here rather than reloading it. False until the page has its lists, and
+    // The bar's player search (nav.js) hands a pick made on this page here
+    // rather than reloading it. False until the page has its lists, and
     // nav.js navigates instead.
     window.playerProjectionsPick = function (name, pos, team) {
       if (!sched) return false;
       var key = fold(name);
       var p = players.filter(function (x) { return x.key === key && x.pos === pos; })[0] || addPlayer(name, pos, team);
-      input.value = p.name;
       pick(p);
       return true;
     };

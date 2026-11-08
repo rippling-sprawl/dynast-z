@@ -34,10 +34,6 @@
   <script>initPage();</script>
 
   <div class="masters-content">
-    <div class="masters-breadcrumbs">
-      <a href="/football">Football</a><span class="separator">/</span><span>Weekly Edges</span>
-    </div>
-
     <h2>Weekly Edges <span class="nav-beta">beta</span></h2>
 
     <h3 class="dvp-mx-title" id="mx-title">This week's matchups</h3>
@@ -55,7 +51,7 @@
      * /api/defense-vs-players?all=1 (the board on /football/defense-vs-players).
      * Lines: every DraftKings yards line still to kick off, run through the
      * Player Projections model and ranked by how far its chance of going over
-     * lands from even (the "Load edges" board that page used to carry). */
+     * lands from even (the board that page used to carry behind a button). */
 
     var season = SCHED_CURRENT_SEASON;
     var sched = null;
@@ -278,11 +274,30 @@
       });
     }
 
+    /* The finished board is kept in localStorage for BOARD_TTL, keyed by the
+     * games it covers, so a return visit paints at once and spends no fetches.
+     * Only what the table prints is kept, not the models behind it. */
+    var BOARD_TTL = 15 * 60 * 1000;
+    function boardKey(ids) { return 'weekly-edges:' + season + ':' + ids.join(','); }
+
+    function readBoard(ids) {
+      try {
+        var c = JSON.parse(localStorage.getItem(boardKey(ids)));
+        return c && Date.now() - c.at < BOARD_TTL ? c.board : null;
+      } catch (e) { return null; }
+    }
+
+    function writeBoard(ids, board) {
+      try { localStorage.setItem(boardKey(ids), JSON.stringify({ at: Date.now(), board: board })); } catch (e) {}
+    }
+
     // -> { rows, lines } once every line is projected; rows is the top 20.
     function loadTop() {
       if (topPromise) return topPromise;
       var ids = weekGames().map(function (g) { return g.id; });
       if (!ids.length) return (topPromise = Promise.resolve({ rows: [], lines: 0, games: 0 }));
+      var cached = readBoard(ids);
+      if (cached) return (topPromise = Promise.resolve(cached));
       topPromise = getJson('/api/player-projections?board=' + ids.join(',')).then(function (d) {
         if (!d || !d.players) { topPromise = null; throw new Error('DraftKings lines unavailable'); }
         // Each game's team context, once per game, so the board ranks the
@@ -309,11 +324,17 @@
               // model's distribution, which starts at zero, cannot see.
               if (!st || (m.context && m.context.out) || p.lines[mk].line < MIN_YDS_LINE) return;
               var over = PlayerProjection.chances(st, p.lines[mk].line).over;
-              rows.push({ p: p, m: st, quote: p.lines[mk], over: over, edge: Math.abs(over - 0.5) });
+              rows.push({
+                p: { name: p.name, pos: p.pos, team: p.team, opp: p.opp, home: p.home },
+                m: { key: st.key, spec: { label: st.spec.label }, median: st.median },
+                quote: p.lines[mk], over: over, edge: Math.abs(over - 0.5)
+              });
             });
           });
           rows.sort(function (a, b) { return b.edge - a.edge; });
-          return { rows: rows.slice(0, TOP_N), lines: count, games: ids.length };
+          var board = { rows: rows.slice(0, TOP_N), lines: count, games: ids.length };
+          writeBoard(ids, board);
+          return board;
         });
       });
       return topPromise;
@@ -323,15 +344,10 @@
       return o == null ? '' : o > 0 ? '+' + o : '−' + Math.abs(o);
     }
 
-    // The board waits for the viewer to ask for it: it is a DraftKings call
-    // plus a context fetch per game, too much to spend on every visit.
+    // Loaded on arrival: the API and the finished board are both cached
+    // (BOARD_TTL), so a visit costs one fetch at most.
     function showTop() {
-      if (!topPromise) {
-        topEl.innerHTML = '<p class="sched-empty"><button type="button" class="dd-btn pp-top-load">' +
-          'Load week ' + esc(week) + '’s biggest edges</button></p>';
-        return;
-      }
-      if (!topRows.length) topEl.innerHTML = '<p class="sched-empty">Projecting this week\'s DraftKings yards lines…</p>';
+      topEl.innerHTML = '<p class="sched-empty">Projecting this week\'s DraftKings yards lines…</p>';
       loadTop().then(function (t) {
         topRows = t.rows;
         if (!t.games) {
@@ -368,12 +384,6 @@
         topEl.innerHTML = '<p class="sched-empty">Error: ' + esc(e.message) + '</p>';
       });
     }
-
-    topEl.addEventListener('click', function (e) {
-      if (!e.target.closest || !e.target.closest('.pp-top-load')) return;
-      loadTop();
-      showTop();
-    });
 
     /* ---------- start ---------- */
 

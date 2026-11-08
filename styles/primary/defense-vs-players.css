@@ -366,6 +366,7 @@
 .dvp-table .pl-wk { left: 34px; width: 34px; min-width: 34px; border-right: 1px solid var(--border-soft); color: var(--text-hi); font-weight: 650; }
 .dvp-table tbody th.pl-yr { font-size: 12.5px; }
 .dvp-table thead th.pl-yr, .dvp-table thead th.pl-wk { color: var(--text-4); font-weight: 600; }
+.dvp-table.pl-noyr .pl-wk { left: 0; }
 .pl-avg th.pl-yr { max-width: none; color: var(--text-hi); font-weight: 650; border-right: 1px solid var(--border-soft); }
 .pl-game { display: inline-flex; align-items: center; gap: 6px; }
 .pl-game b { font-weight: 600; }

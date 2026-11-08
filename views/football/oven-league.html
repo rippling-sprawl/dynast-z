@@ -45,9 +45,6 @@
   <script>initPage();</script>
 
   <main class="oven-content">
-    <div class="oven-breadcrumbs">
-      <a href="/football">Football</a><span class="sep">/</span><a href="/football/bakers-oven">Baker's Oven</a><span class="sep">/</span><span id="crumb-league">League</span>
-    </div>
     <h2 class="oven-h2">🔥 Baker's Oven</h2>
 
     <div id="loading">Loading league…</div>
@@ -741,7 +738,6 @@
 
         rec = OvenLeagues.get(leagueId);
         myRosterId = rec ? rec.my_roster_id : null;
-        if (rec) document.getElementById('crumb-league').textContent = rec.name;
 
         var bk = OvenLeagues.boardKeys(leagueId);
         var results = await Promise.all([
@@ -768,7 +764,6 @@
         OvenLeagues.refreshFromCtx(leagueId, ctx);
         OvenLeagues.setLastLeagueId(leagueId);
         rec = OvenLeagues.get(leagueId);
-        document.getElementById('crumb-league').textContent = ctx.league.name;
         document.title = ctx.league.name + " | Baker's Oven";
 
         if (ctx.draftId) {
