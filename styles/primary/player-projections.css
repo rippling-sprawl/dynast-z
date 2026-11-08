@@ -16,8 +16,42 @@
   font-size: 18px;
   font-weight: 650;
 }
+.pp-who[hidden] { display: none; }
+.pp-who-name { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .pp-who img { width: 24px; height: 24px; display: block; flex: none; }
-.pp-who:empty { display: none; }
+/* Far right of the name: the team's depth chart. */
+.pp-team-btn { margin-left: auto; flex: none; font-size: 13px; font-weight: 600; }
+.pp-team-btn::after { display: none; }
+.pp-team-btn[hidden] { display: none; }
+
+/* The depth chart: the bar's search modal (styles.css .nav-search-*), with the
+ * team where the field would be. */
+.pp-team-head { padding: 8px 4px 8px 12px; color: var(--nav-ink); }
+.pp-team-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 0;
+  min-width: 0;
+  font-size: 16px;
+  font-weight: 650;
+}
+.pp-team-title img { width: 22px; height: 22px; flex: none; }
+.pp-team-sub { margin-left: 4px; font-size: 12px; font-weight: 500; color: var(--nav-ink-3); }
+.pp-team-opt:hover, .pp-team-opt:focus-visible { background: var(--nav-bar); color: var(--nav-ink); outline: none; }
+.pp-team-opt[aria-current="true"] { color: var(--nav-accent); font-weight: 600; }
+.pp-team-name { overflow: hidden; text-overflow: ellipsis; }
+.pp-team-status {
+  flex: none;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: var(--nav-bar);
+  color: var(--nav-ink-3);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
 
 /* A text field in the dd-btn look: the Adjust form's inputs. */
 .pp-input {

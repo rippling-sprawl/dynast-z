@@ -26,6 +26,16 @@ anyone balldontlie's injury report has on IR, PUP, NFI or out. For each,
 `vs` is every career game against `defense` and `recent` his last five games
 of `season`, both newest first and in the row shape above.
 
+GET /api/player-projections?roster=NYJ&season=2026
+    -> {"team", "season", "players": [{"id", "name", "pos", "status",
+        "season_yds", "games"}]}
+
+The team's depth chart, for the page's Team button: the top QB, two RBs,
+four WRs and two TEs balldontlie has on the team now (ROSTER_TOP), each
+position ordered by this season's yards (ranked as in the matchup mode), then
+games played. As in the matchup mode, anyone the injury report has on IR,
+PUP, NFI or out is left out, and a questionable or doubtful `status` shown.
+
 GET /api/player-projections?props=1392309&player_id=36
     -> this week's lines for one player, for the page's projection. See
        load_props().
@@ -302,6 +312,80 @@ def load_matchup(offense, defense, season):
     payload = {"offense": offense, "defense": defense, "season": season, "players": players}
     _memo[key] = (time.time(), payload)
     return payload
+
+
+# How deep the depth chart goes at each position.
+ROSTER_TOP = {"QB": 1, "RB": 2, "WR": 4, "TE": 2}
+
+
+def load_roster(team, season):
+    key = ("roster", team, season)
+    hit = _memo.get(key)
+    if hit and time.time() - hit[0] < MEMO_TTL:
+        return hit[1]
+    tid = team_id(team)
+    if tid is None:
+        raise RuntimeError(f"unknown team {team}")
+    params = {"team_ids[]": tid, "per_page": 100}
+    with ThreadPoolExecutor(max_workers=3) as pool:
+        roster = pool.submit(bdl_get, "/players/active", params)
+        stats = pool.submit(bdl_get, "/season_stats", {"season": season, "team_id": tid, "per_page": 100})
+        injuries = pool.submit(bdl_get, "/player_injuries", params)
+        roster, stats, injuries = roster.result()["data"], stats.result()["data"], injuries.result()["data"]
+    # The same ten-day cut on game-status tags as offense_top.
+    stale = time.strftime("%Y-%m-%d", time.gmtime(time.time() - 10 * 86400))
+    status = {}
+    for r in injuries:
+        st = r.get("status") or ""
+        if st.upper() in ("QUESTIONABLE", "DOUBTFUL", "PROBABLE") and (r.get("date") or "")[:10] < stale:
+            continue
+        status[(r.get("player") or {}).get("id")] = st
+    season_line = {}
+    for r in stats:
+        p = r.get("player") or {}
+        if r.get("postseason") or p.get("position_abbreviation") not in POSITIONS:
+            continue
+        yds = sum(n(r.get(k)) for k in MATCHUP_YDS[p["position_abbreviation"]])
+        season_line[p.get("id")] = (yds, n(r.get("games_played")))
+    players = []
+    for p in roster:
+        pos = p.get("position_abbreviation")
+        st = status.get(p["id"], "")
+        if pos not in POSITIONS or any(x in st.upper() for x in SIDELINED):
+            continue
+        yds, gp = season_line.get(p["id"], (0, 0))
+        players.append({
+            "id": p["id"],
+            "name": f"{p['first_name']} {p['last_name']}",
+            "pos": pos,
+            "status": st,
+            "season_yds": yds,
+            "games": gp,
+            "_last": p.get("last_name") or "",
+        })
+    players.sort(key=lambda p: (POSITIONS.index(p["pos"]), -p["season_yds"], -p["games"], p["_last"]))
+    out, taken = [], {}
+    for p in players:
+        del p["_last"]
+        if taken.get(p["pos"], 0) < ROSTER_TOP[p["pos"]]:
+            taken[p["pos"]] = taken.get(p["pos"], 0) + 1
+            out.append(p)
+    players = out
+    payload = {"team": team, "season": season, "players": players}
+    _memo[key] = (time.time(), payload)
+    return payload
+
+
+def parse_roster(params):
+    """-> (team, season, error | None)."""
+    team = (params.get("roster") or [""])[0].strip().upper()
+    team = TEAM_ALIAS.get(team, team)
+    season = (params.get("season") or [""])[0].strip()
+    if not TEAM_RE.match(team):
+        return None, None, "roster must be an abbreviation, e.g. ?roster=NYJ&season=2026"
+    if not re.match(r"^[0-9]{4}$", season):
+        return None, None, "season must be a year"
+    return team, int(season), None
 
 
 def parse_matchup(params):
@@ -932,6 +1016,9 @@ class handler(BaseHTTPRequestHandler):
         if params.get("offense"):
             self._matchup(params)
             return
+        if params.get("roster"):
+            self._roster(params)
+            return
         if params.get("props"):
             self._props(params)
             return
@@ -969,6 +1056,18 @@ class handler(BaseHTTPRequestHandler):
             return
         try:
             payload = load_matchup(offense, defense, season)
+        except Exception as e:  # noqa: BLE001
+            self._json(502, {"error": str(e)})
+            return
+        self._json(200, payload, {"Cache-Control": CACHE_CONTROL})
+
+    def _roster(self, params):
+        team, season, error = parse_roster(params)
+        if error:
+            self._json(400, {"error": error})
+            return
+        try:
+            payload = load_roster(team, season)
         except Exception as e:  # noqa: BLE001
             self._json(502, {"error": str(e)})
             return

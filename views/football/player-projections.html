@@ -40,8 +40,19 @@
   <div class="masters-content">
     <h2>Player Projections</h2>
 
-    <!-- The player, picked in the bar's search (nav.js). -->
-    <div class="pp-who" id="who"></div>
+    <!-- The player, picked in the bar's search (nav.js), and on the far
+         right his team's depth chart, in a modal like that search's. -->
+    <div class="pp-who" id="who" hidden>
+      <span class="pp-who-name" id="who-name"></span>
+      <button type="button" class="dd-btn pp-team-btn" id="team-open" aria-haspopup="dialog" aria-controls="team-modal" hidden>Team</button>
+    </div>
+    <dialog class="nav-search-modal pp-team-modal" id="team-modal" aria-labelledby="team-title">
+      <div class="nav-search-field pp-team-head">
+        <span class="pp-team-title" id="team-title"></span>
+        <button type="button" class="nav-search-close" id="team-close" aria-label="Close depth chart">&times;</button>
+      </div>
+      <div class="nav-search-list" id="team-list"></div>
+    </dialog>
 
     <!-- Under the name, left-aligned: the defense — this week's opponent, or
          any other team from defense-vs-players' picker — then the filters. -->
@@ -284,8 +295,89 @@
      * on its picker. Its column groups are the Show toggles. */
     function renderHead() {
       var team = playerTeam();
-      who.innerHTML = player ? (team ? logo(team) : '') + esc(doc ? doc.player.name : player.name) : '';
+      who.hidden = !player;
+      whoName.innerHTML = player ? (team ? logo(team) : '') + esc(doc ? doc.player.name : player.name) : '';
+      teamOpen.hidden = !team;
     }
+
+    /* ---------- the depth chart ----------
+     * The Team button's modal: the player's team, QB → RB → WR → TE, each
+     * position by this season's yards (/api/player-projections?roster=).
+     * Picking a name loads him here, as the bar's search does. */
+    var whoName = document.getElementById('who-name');
+    var teamOpen = document.getElementById('team-open');
+    var teamModal = document.getElementById('team-modal');
+    var teamList = document.getElementById('team-list');
+    var rosters = {};
+    var shownRoster = [];
+
+    function loadRoster(team) {
+      if (!rosters[team]) {
+        rosters[team] = fetch('/api/player-projections?' + new URLSearchParams({ roster: team, season: season }))
+          .then(function (r) {
+            return r.json().then(function (body) {
+              if (!r.ok) throw new Error(body.error || ('HTTP ' + r.status));
+              return body;
+            });
+          })
+          .catch(function (e) { delete rosters[team]; throw e; });
+      }
+      return rosters[team];
+    }
+
+    function renderRoster(team, d) {
+      var current = fold(doc ? doc.player.name : player ? player.name : '');
+      shownRoster = d.players;
+      var lastPos = '';
+      teamList.innerHTML = d.players.map(function (p, i) {
+        var head = p.pos !== lastPos ? '<div class="nav-search-head">' + esc(p.pos) + '</div>' : '';
+        lastPos = p.pos;
+        var here = fold(p.name) === current;
+        return head + '<button type="button" class="nav-search-opt pp-team-opt" data-i="' + i + '"' +
+          (here ? ' aria-current="true"' : '') + '>' +
+          '<span class="pp-team-name">' + esc(p.name) + '</span>' +
+          (p.status ? '<span class="pp-team-status">' + esc(p.status) + '</span>' : '') +
+          '<span class="nav-search-pos">' + (p.season_yds ? p.season_yds.toLocaleString('en-US') + ' yds' : '') + '</span>' +
+          '</button>';
+      }).join('') || '<div class="nav-search-note">No players listed for ' + esc(team) + '.</div>';
+    }
+
+    function openTeam() {
+      var team = playerTeam();
+      if (!team) return;
+      var t = teams.filter(function (x) { return x.abbr === team; })[0];
+      document.getElementById('team-title').innerHTML = logo(team) + esc((t && (t.name || t.team)) || team) +
+        '<span class="pp-team-sub">' + esc(season) + ' depth chart</span>';
+      teamList.innerHTML = '<div class="nav-search-note">Loading…</div>';
+      teamModal.showModal();
+      loadRoster(team).then(function (d) {
+        if (teamModal.open && playerTeam() === team) renderRoster(team, d);
+      }).catch(function (e) {
+        if (teamModal.open) teamList.innerHTML = '<div class="nav-search-note">Error: ' + esc(e.message) + '</div>';
+      });
+    }
+
+    teamOpen.addEventListener('click', openTeam);
+    document.getElementById('team-close').addEventListener('click', function () { teamModal.close(); });
+    // A click on the dialog itself, not its contents, is the backdrop.
+    teamModal.addEventListener('click', function (e) {
+      if (e.target === teamModal) { teamModal.close(); return; }
+      var opt = e.target.closest('.pp-team-opt');
+      if (!opt) return;
+      var p = shownRoster[Number(opt.getAttribute('data-i'))];
+      teamModal.close();
+      if (p) window.playerProjectionsPick(p.name, p.pos, playerTeam());
+    });
+    // Up and down step through the names.
+    teamModal.addEventListener('keydown', function (e) {
+      if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+      var opts = Array.prototype.slice.call(teamList.querySelectorAll('.pp-team-opt'));
+      if (!opts.length) return;
+      e.preventDefault();
+      var i = opts.indexOf(document.activeElement);
+      i = i < 0 ? 0 : (i + (e.key === 'ArrowDown' ? 1 : -1) + opts.length) % opts.length;
+      opts[i].focus();
+    });
 
     function render() {
       renderHead();

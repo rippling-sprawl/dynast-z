@@ -1987,6 +1987,22 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     headers["Cache-Control"] = api.CACHE_CONTROL
                 send_json(self, 200, payload, headers)
                 return
+            # One team's depth chart, for the page's Team button.
+            if query.get("roster"):
+                team, season, error = api.parse_roster(query)
+                if error:
+                    self._json_response(400, {"error": error})
+                    return
+                try:
+                    payload = api.load_roster(team, season)
+                except Exception as e:  # noqa: BLE001
+                    self._json_response(502, {"error": str(e)})
+                    return
+                headers = {"Access-Control-Allow-Origin": "*"}
+                if IS_VERCEL:
+                    headers["Cache-Control"] = api.CACHE_CONTROL
+                send_json(self, 200, payload, headers)
+                return
             # This week's lines for one player, for the page's projection.
             if query.get("props"):
                 game_id, player_id, error = api.parse_props(query)
