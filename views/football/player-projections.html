@@ -40,30 +40,23 @@
   <div class="masters-content">
     <h2>Player Projections</h2>
 
-    <!-- The player, and the Trade Calculator's search: the magnifying glass
-         slides a search bar in from the right, over the name. With no player
-         picked there is no name to cover, so the bar stays open. The list
-         hangs outside the bar, which clips its slide. -->
-    <div class="pp-namebar-wrap">
-      <div class="pp-namebar">
-        <span class="pp-who" id="who"></span>
-        <button type="button" class="pp-search-toggle" id="search-toggle" hidden aria-label="Search players" title="Search players">
-          <svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true" focusable="false"><circle cx="7" cy="7" r="4.5"/><line x1="10.6" y1="10.6" x2="14" y2="14"/></svg>
-        </button>
-        <div class="pp-search-over active" id="search-over">
-          <svg class="pp-search-icon" viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true" focusable="false"><circle cx="7" cy="7" r="4.5"/><line x1="10.6" y1="10.6" x2="14" y2="14"/></svg>
-          <input type="text" class="pp-input" id="f-player" placeholder="Search QB, RB, WR, TE…" aria-label="Search players"
-                 autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list"
-                 aria-expanded="false" aria-controls="player-list">
-          <button type="button" class="pp-search-close" id="search-close" aria-label="Close search" hidden>&times;</button>
+    <!-- The player, picked in the bar's search (nav.js). -->
+    <div class="pp-who" id="who"></div>
+
+    <!-- Under the name, left-aligned: the defense — this week's opponent, or
+         any other team from defense-vs-players' picker — then the filters. -->
+    <div class="dd-row dvp-controls">
+      <div class="dvp-filter">
+        <span class="dvp-flabel" id="l-team">Def.</span>
+        <div class="dd" id="dd-team">
+          <button type="button" class="dd-btn" id="f-team" aria-haspopup="dialog" aria-expanded="false" aria-labelledby="l-team f-team">
+            <span class="dd-value">Opp.</span>
+          </button>
+          <div class="dd-pop dd-overlay" id="team-overlay" role="dialog" aria-modal="true" aria-label="Defense" hidden>
+            <div class="tp" id="team-grid"></div>
+          </div>
         </div>
       </div>
-      <div class="dd-pop dd-menu pp-list" id="player-list" role="listbox" aria-label="Players" hidden></div>
-    </div>
-
-    <!-- Under the name, left-aligned: the filters, then the defense — this
-         week's opponent, or any other team from defense-vs-players' picker. -->
-    <div class="dd-row dvp-controls">
       <!-- defense-vs-players' filters button and modal, less its position
            filter: the position is the player's. Each minimum shows only for a
            position it can cut (no rush attempts for a WR or TE, no targets
@@ -115,17 +108,6 @@
           </div>
         </div>
       </dialog>
-      <div class="dvp-filter">
-        <span class="dvp-flabel" id="l-team">Def.</span>
-        <div class="dd" id="dd-team">
-          <button type="button" class="dd-btn" id="f-team" aria-haspopup="dialog" aria-expanded="false" aria-labelledby="l-team f-team">
-            <span class="dd-value">Opp.</span>
-          </button>
-          <div class="dd-pop dd-overlay" id="team-overlay" role="dialog" aria-modal="true" aria-label="Defense" hidden>
-            <div class="tp" id="team-grid"></div>
-          </div>
-        </div>
-      </div>
     </div>
 
     <!-- Before a player is picked: a pointer to Weekly Edges, in place of the views. -->
@@ -153,16 +135,15 @@
   (function () {
     'use strict';
 
-    /* A player search and one table. The players are the Trade Calculator's
+    /* One player and his tables. The players are the Trade Calculator's
      * (/api/players: the ~500 QBs, RBs, WRs and TEs the dynasty sites value),
-     * not balldontlie's full roster list, so the search is not buried in
-     * long snappers. The pick goes to /api/player-projections, which finds him
+     * for reading a shared link's ?player= back; the pick itself is made in
+     * the bar's search (nav.js). It goes to /api/player-projections, which finds him
      * in balldontlie and returns every game of his career; the page keeps the
      * ones against the defense — this week's opponent unless another is
      * picked — and draws them in the defense-vs-players table. */
 
     var POS = ['QB', 'RB', 'WR', 'TE'];
-    var LIST_MAX = 12;
     // The dynasty sources' Washington; balldontlie and the schedule say WSH.
     var TEAM_ALIAS = { WAS: 'WSH' };
 
@@ -189,13 +170,8 @@
     // The tabs that need a defense; Game logs does not.
     var DEF_VIEWS = { proj: true, defense: true, games: true };
     var who = document.getElementById('who');
-    var searchOver = document.getElementById('search-over');
-    var searchToggle = document.getElementById('search-toggle');
-    var searchClose = document.getElementById('search-close');
     var topEl = document.getElementById('top');
     var note = document.getElementById('note');
-    var input = document.getElementById('f-player');
-    var list = document.getElementById('player-list');
     var teamBtn = document.getElementById('f-team');
     var teamGrid = document.getElementById('team-grid');
 
@@ -285,7 +261,6 @@
       if (!player && name && POS.indexOf(pos) >= 0) player = addPlayer(q.get('player'), pos, '');
       var d = (q.get('def') || '').toUpperCase();
       def = d && schedTeamsByAbbr(sched)[d] ? d : '';
-      syncSearch();
       var vw = q.get('view') || '';
       view = VIEWS[vw] ? vw : 'proj';
       var st = q.get('stat') || '';
@@ -709,7 +684,7 @@
      * The week's biggest DraftKings yards-line edges live on Weekly Edges. */
     function showTop() {
       syncViews();
-      topEl.innerHTML = '<p class="sched-empty">Search for a player to see his projection. ' +
+      topEl.innerHTML = '<p class="sched-empty">Search for a player in the bar above to see his projection. ' +
         'The week\'s biggest edges are on <a href="/football/weekly-edges">Weekly Edges</a>.</p>';
     }
 
@@ -861,87 +836,11 @@
       if (doc) render();
     });
 
-    /* ---------- the player search ----------
-     * The Trade Calculator's slide-over: the magnifying glass beside the name
-     * slides the bar in over it, and the × (or Escape, or leaving the box)
-     * slides it back out. With no player there is nothing to cover, so the
-     * bar stays out and has no ×.
-     *
-     * Inside it, a combobox over the list: names matching every word typed,
-     * best-valued first, a dozen at most. Arrows move, Enter picks. Empty,
-     * it offers the top of the list. */
-    var shown = [], active = -1;
-
-    function setSearch(open) {
-      searchOver.classList.toggle('active', open);
-      searchClose.hidden = !player;
-      searchToggle.hidden = !player;
-      input.tabIndex = searchClose.tabIndex = open ? 0 : -1;
-      if (!open) {
-        closeList();
-        input.value = '';
-      }
-    }
-
-    function syncSearch() { setSearch(!player); }
-
-    function closeSearch() {
-      if (!player) return;
-      var had = searchOver.contains(document.activeElement);
-      setSearch(false);
-      if (had) searchToggle.focus();
-    }
-
-    searchToggle.addEventListener('click', function () {
-      setSearch(true);
-      input.focus();
-    });
-    searchClose.addEventListener('click', closeSearch);
-
-    function search(text) {
-      var words = fold(text).split(/\s+/).filter(Boolean);
-      return players.filter(function (p) {
-        return words.every(function (w) { return p.key.indexOf(w) >= 0; });
-      }).slice(0, LIST_MAX);
-    }
-
-    function openList() {
-      shown = search(input.value);
-      active = shown.length ? 0 : -1;
-      list.innerHTML = shown.length ? shown.map(function (p, i) {
-        return '<button type="button" class="dd-opt" role="option" id="pp-opt-' + i + '" data-i="' + i + '" tabindex="-1"' +
-          ' aria-selected="' + (i === active) + '">' + logo(p.team) + esc(p.name) +
-          '<span class="pp-pos">' + esc(p.pos) + '</span></button>';
-      }).join('') : '<div class="dd-note">No match</div>';
-      list.hidden = false;
-      input.setAttribute('aria-expanded', 'true');
-      markActive();
-    }
-
-    function closeList() {
-      list.hidden = true;
-      input.setAttribute('aria-expanded', 'false');
-      input.removeAttribute('aria-activedescendant');
-    }
-
-    function markActive() {
-      [].forEach.call(list.querySelectorAll('.dd-opt'), function (o, i) {
-        o.setAttribute('aria-selected', String(i === active));
-        if (i === active) o.scrollIntoView({ block: 'nearest' });
-      });
-      if (active >= 0) input.setAttribute('aria-activedescendant', 'pp-opt-' + active);
-      else input.removeAttribute('aria-activedescendant');
-    }
-
+    /* ---------- the pick ----------
+     * Players are picked in the bar's search (nav.js), not on the page. */
     function pick(p) {
-      closeList();
-      if (!p) return;
-      var same = p === player;
-      // Set before the blur, whose handler slides the bar off the name.
+      if (!p || p === player) return;
       player = p;
-      input.blur();
-      setSearch(false);
-      if (same) return;
       def = '';
       stat = '';
       view = 'proj';
@@ -953,39 +852,6 @@
       syncToggles();
       load();
     }
-
-    input.addEventListener('focus', openList);
-    input.addEventListener('input', openList);
-    input.addEventListener('keydown', function (e) {
-      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-        if (list.hidden) openList();
-        if (!shown.length) return;
-        active = (active + (e.key === 'ArrowDown' ? 1 : -1) + shown.length) % shown.length;
-        markActive();
-        e.preventDefault();
-      } else if (e.key === 'Enter') {
-        if (!list.hidden && active >= 0) pick(shown[active]);
-        e.preventDefault();
-      } else if (e.key === 'Escape') {
-        if (player) closeSearch();
-        else { closeList(); input.blur(); }
-      }
-    });
-    // mousedown, not click: the click would land after the blur below shut the list.
-    list.addEventListener('mousedown', function (e) {
-      var opt = e.target.closest ? e.target.closest('.dd-opt') : null;
-      if (!opt) return;
-      e.preventDefault();
-      pick(shown[Number(opt.getAttribute('data-i'))]);
-    });
-    // Typing is only a search: leaving the box without a pick slides it
-    // back off the player already shown. Not when the leaving is onto its
-    // own ×, whose click does that.
-    input.addEventListener('blur', function (e) {
-      if (e.relatedTarget === searchClose) return;
-      if (player) setSearch(false);
-      else closeList();
-    });
 
     // The bar's player search (nav.js) hands a pick made on this page here
     // rather than reloading it. False until the page has its lists, and

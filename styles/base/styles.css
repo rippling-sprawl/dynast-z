@@ -401,16 +401,8 @@ header a:hover { color: var(--accent); }
   white-space: nowrap;
 }
 
-.nav-drawer .nav-sub a {
-  padding-left: 36px;
-  font-size: 13px;
-}
-
-/* A top-level link with no section heading over it (Appendix). The rule is what
-   stops it reading as one more row of the section above. */
+/* The Appendix row. The account row's own bottom rule separates the two. */
 .nav-drawer .nav-standalone {
-  border-top: 1px solid var(--border);
-  margin-top: 8px;
   padding-top: 8px;
 }
 
@@ -692,8 +684,7 @@ header a:hover { color: var(--accent); }
 /* --- Share this page (nav drawer, home-screen launches only) ---
  * Only rendered when the site was opened from a home-screen icon, where there
  * is no address bar to copy the URL out of — see scripts/base/standalone.js.
- * It sits on the last row under the same rule .nav-standalone draws, because
- * it acts on the page you are already on instead of leading somewhere.
+ * It sits on the last row, under Appendix.
  *
  * Shaped to match .nav-drawer a exactly, since it sits in the same column of
  * rows and should not read as a control dropped into a list of links. The

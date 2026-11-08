@@ -205,6 +205,11 @@ def action_api():
     return _action_api
 
 
+# /football/team and /football/team/<abbr>: one defense's opposing players,
+# game by game. Letters only, so it cannot swallow a future
+# /football/team/... route with a longer name.
+TEAM_PAGE_RE = re.compile(r"^/football/team(/[A-Za-z]{2,3})?/?$")
+
 # /football/schedule/game/<balldontlie game id>. Anchored and digits-only so it
 # cannot swallow a future /football/schedule/... route.
 GAME_PAGE_RE = re.compile(r"^/football/schedule/game/[0-9]{1,12}/?$")
@@ -1504,7 +1509,13 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                         # the name+position rookie signal so it isn't lost.
                         p["rookie"] = f"{p['name']}|{p['position']}" in rookie_fallback
                 return players
-            self._api_json(players_payload, cache=True)
+            # The player pool moves slowly (values drift daily, rosters
+            # weekly), and the merge behind it costs seconds. vercel.json
+            # leaves this path out of its blanket no-store so this header
+            # stands: browsers reuse it for half an hour, the CDN for six
+            # hours, then serves the stale copy for up to a week while it
+            # recomputes.
+            self._api_json(players_payload, cache="public, max-age=1800, s-maxage=21600, stale-while-revalidate=604800")
         elif re.match(r"/api/league/[^/]+/team/[^/]+", self.path):
             parts = self.path.split("/")
             league_id = parts[3]
@@ -1775,6 +1786,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         elif self.path == "/football/grading-system":
             self.path = "/views/home/grading-system.html"
             super().do_GET()
+        # How a player prop projection is built, linked from the drawer.
+        elif self.path == "/football/projection-model":
+            self.path = "/views/football/projection-model.html"
+            super().do_GET()
         # The Action Network book. One page per slate: /football/action is the
         # index, /futures the season book, /week/{n} one week of the schedule.
         #
@@ -1888,11 +1903,19 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         elif self.path.split("?")[0] == "/football/team-stats":
             self.path = "/views/football/team-stats.html"
             super().do_GET()
-        # What one defense has given up, player by player. Query string
-        # tolerated: the page keeps its team in ?team=.
-        elif self.path.split("?")[0] == "/football/defense-vs-players":
+        # What one defense has given up, player by player: the team in the
+        # path, the filters in the query string.
+        elif TEAM_PAGE_RE.match(self.path.split("?")[0]):
             self.path = "/views/football/defense-vs-players.html"
             super().do_GET()
+        # The page used to be /football/defense-vs-players?team=DAL. Old links
+        # keep their query and land in one hop, as in vercel.json; the page
+        # moves a ?team= into the path itself.
+        elif self.path.split("?")[0] == "/football/defense-vs-players":
+            query = urlparse(self.path).query
+            self.send_response(301)
+            self.send_header("Location", "/football/team" + ("?" + query if query else ""))
+            self.end_headers()
         # Its data, through the deployed function's own loader and validation.
         elif self.path.split("?")[0] == "/api/defense-vs-players":
             api = defense_vs_players_api()
@@ -1948,7 +1971,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             api = player_projections_api()
             query = parse_qs(urlparse(self.path).query)
             # This week's opposing players for one defense, for
-            # /football/defense-vs-players.
+            # /football/team.
             if query.get("offense"):
                 offense, defense, season, error = api.parse_matchup(query)
                 if error:
@@ -2794,8 +2817,12 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         except Exception as e:
             data = {"error": str(e)}
         headers = {"Access-Control-Allow-Origin": "*"}
-        if cache and IS_VERCEL:
+        # An error body is never cached: it would outlive the outage.
+        failed = isinstance(data, dict) and "error" in data
+        if cache and IS_VERCEL and not failed:
             headers["Cache-Control"] = "s-maxage=3600, stale-while-revalidate=86400" if cache is True else cache
+        elif cache and IS_VERCEL:
+            headers["Cache-Control"] = "no-store"
         send_json(self, 200, data, headers)
 
     def log_message(self, format, *args):

@@ -128,7 +128,7 @@
             '<img src="/assets/icons/nfl/' + esc(m.off) + '.svg" alt="">' +
             '<b>' + esc(m.off) + '</b>' +
             '<span class="dvp-mx-at">' + (m.home ? 'vs' : '@') + '</span>' +
-            '<a href="' + esc('/football/defense-vs-players?' + new URLSearchParams({ team: m.def, pos: p.pos }).toString()) +
+            '<a href="' + esc('/football/team/' + encodeURIComponent(m.def) + '?' + new URLSearchParams({ pos: p.pos }).toString()) +
               '" data-team="' + esc(m.def) + '" title="' + esc(m.def) + ' defense vs. ' + esc(p.pos) + 's, game by game">' +
               '<img src="/assets/icons/nfl/' + esc(m.def) + '.svg" alt="">' + esc(m.def) + '</a>' +
           '</span>' +

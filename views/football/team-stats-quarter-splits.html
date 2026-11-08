@@ -30,7 +30,7 @@
   <script src="/scripts/base/auth.js"></script>
   <script src="/scripts/base/standalone.js"></script>
   <script src="/scripts/base/nav.js"></script>
-  <!-- The team grid is /football/schedule's, as on /football/defense-vs-players;
+  <!-- The team grid is /football/schedule's, as on /football/team;
        the league's team list and the next opponent come from the same
        schedule file that page reads. -->
   <script src="/scripts/components/nfl-pickers.js"></script>
@@ -39,10 +39,11 @@
 
   <div class="masters-content">
     <!-- Adjacent pages, not a trail: every page in the set, this one unlinked.
-         Kept in step with the same list on the other page. -->
+         Kept in step with the same list on the other page. Each link carries
+         the picked team (syncPageSiblings in nfl-pickers.js). -->
     <nav class="page-siblings" aria-label="Pages">
       <span class="page-siblings-label">Pages:</span>
-      <a href="/football/defense-vs-players">Game Logs</a>
+      <a href="/football/team" data-team-href="/football/team/{team}">Game Logs</a>
       <span class="separator" aria-hidden="true">|</span>
       <span aria-current="page">Quarter Splits</span>
     </nav>
@@ -123,6 +124,7 @@
       var str = q.toString();
       var url = location.pathname + (str ? '?' + str : '');
       if (url !== location.pathname + location.search) history.replaceState(null, '', url);
+      syncPageSiblings(team);
     }
 
     function applyParams(search) {

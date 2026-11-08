@@ -2,6 +2,11 @@
   "buildCommand": "python3 build.py",
   "redirects": [
     {
+      "source": "/football/defense-vs-players",
+      "destination": "/football/team",
+      "statusCode": 301
+    },
+    {
       "source": "/football/player-vs-defense",
       "destination": "/football/player-projections",
       "statusCode": 301
@@ -108,6 +113,10 @@
       "destination": "/views/home/grading-system.html"
     },
     {
+      "source": "/football/projection-model",
+      "destination": "/views/football/projection-model.html"
+    },
+    {
       "source": "/football/live-stats",
       "destination": "/views/football/live-stats.html"
     },
@@ -140,7 +149,11 @@
       "destination": "/views/football/team-stats.html"
     },
     {
-      "source": "/football/defense-vs-players",
+      "source": "/football/team",
+      "destination": "/views/football/defense-vs-players.html"
+    },
+    {
+      "source": "/football/team/:team",
       "destination": "/views/football/defense-vs-players.html"
     },
     {
@@ -334,7 +347,7 @@
   ],
   "headers": [
     {
-      "source": "/(.*)",
+      "source": "/((?!api/players$).*)",
       "headers": [
         {
           "key": "Cache-Control",
@@ -343,7 +356,7 @@
       ]
     },
     {
-      "source": "/api/(.*)",
+      "source": "/api/((?!players$).*)",
       "headers": [
         {
           "key": "Cache-Control",

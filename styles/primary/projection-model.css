@@ -1,0 +1,45 @@
+/* /football/projection-model: a one-page explainer of how
+   scripts/components/player-projection.js builds a prop projection. Dressed
+   like /football/schedule: the VegasInsider skin, navy bands over bordered
+   panels. */
+@import url('/styles/base/vegasinsider.css');
+
+.pm-lede { color: var(--text-3); font-size: 15px; line-height: 1.5; margin: 0 0 20px; }
+
+.pm-panel { background: var(--panel); border: 1px solid var(--border); margin-bottom: 20px; }
+.pm-panel > .vi-band { padding: 8px 12px; font-size: 17px; }
+.pm-panel > .vi-band small { font-size: 14px; font-weight: 400; color: var(--vi-band-ink-2); margin-left: 8px; letter-spacing: 0.4px; }
+
+.pm-formula {
+  padding: 20px 16px; text-align: center;
+  font: 700 24px/1.4 var(--vi-display); letter-spacing: 0.4px; text-transform: uppercase; color: var(--text-hi);
+}
+.pm-formula b { color: var(--accent); }
+.pm-formula .pm-arrow { white-space: nowrap; color: var(--text-3); }
+
+/* Cells split by hairlines, like the schedule's rows. */
+.pm-cells { display: grid; grid-template-columns: repeat(4, 1fr); }
+.pm-cells.pm-two { grid-template-columns: 1fr 1fr; }
+.pm-cell { padding: 14px 14px 16px; border-left: 1px solid var(--hairline); }
+.pm-cell:first-child { border-left: 0; }
+.pm-cell h3 { font: 700 15px var(--vi-display); text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-hi); margin: 0 0 6px; }
+.pm-cell h3 span { color: var(--warn); margin-right: 6px; }
+.pm-cell p, .pm-text { color: var(--text-2); font-size: 14px; line-height: 1.5; margin: 0; }
+.pm-text { padding: 14px; }
+.pm-cell p b, .pm-text b { color: var(--text-hi); }
+.pm-tag { display: inline-block; margin-top: 10px; padding: 2px 6px; font-size: 12px; background: var(--vi-gold-soft); color: var(--warn); }
+
+.pm-foot { color: var(--text-5); font-size: 12px; display: flex; justify-content: space-between; gap: 12px; }
+
+@media (max-width: 900px) {
+  .pm-cells { grid-template-columns: 1fr 1fr; }
+  .pm-cells .pm-cell:nth-child(3) { border-left: 0; }
+  .pm-cells .pm-cell:nth-child(n+3) { border-top: 1px solid var(--hairline); }
+}
+@media (max-width: 640px) {
+  .pm-formula { font-size: 17px; padding: 16px 12px; }
+  .pm-cells, .pm-cells.pm-two { grid-template-columns: 1fr; }
+  .pm-cells .pm-cell { border-left: 0; }
+  .pm-cells .pm-cell + .pm-cell { border-top: 1px solid var(--hairline); }
+  .pm-foot { flex-direction: column; gap: 6px; }
+}

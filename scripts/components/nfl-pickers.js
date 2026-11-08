@@ -290,6 +290,27 @@
     }
   }
 
+  /* ---------- the page siblings ----------
+   *
+   * The "Pages:" row over a set of team pages carries the picked team from one
+   * page to the next. Each link's href is where it goes with no team; a
+   * `data-team-href` beside it is the same page for one team, `{team}` standing
+   * in for the abbreviation:
+   *
+   *   <a href="/football/team" data-team-href="/football/team/{team}">Game Logs</a>
+   *
+   * Called with the page's team on every change, '' for none. */
+  function syncPageSiblings(team) {
+    var links = document.querySelectorAll('.page-siblings a[data-team-href]');
+    for (var i = 0; i < links.length; i++) {
+      var a = links[i];
+      if (!a.hasAttribute('data-href')) a.setAttribute('data-href', a.getAttribute('href'));
+      a.setAttribute('href', team
+        ? a.getAttribute('data-team-href').replace('{team}', encodeURIComponent(team))
+        : a.getAttribute('data-href'));
+    }
+  }
+
   /* ---------- the option menu ---------- */
 
   /* Fill a `.dd-menu` with options.
@@ -345,6 +366,7 @@
   global.anyDropdownOpen = anyDropdownOpen;
   global.buildTeamPicker = buildTeamPicker;
   global.syncTeamPicker = syncTeamPicker;
+  global.syncPageSiblings = syncPageSiblings;
   global.buildOptionMenu = buildOptionMenu;
   global.syncOptionMenu = syncOptionMenu;
   global.buildWeekMenu = buildWeekMenu;

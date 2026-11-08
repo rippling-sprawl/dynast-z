@@ -1,8 +1,8 @@
 // Shared navigation data and hamburger drawer component
 //
-// One list drives three surfaces: the hamburger drawer (every page), the home
-// page grid, and the /football hub grid. Sections here are the site's shape —
-// keep them in sync with the breadcrumbs on the pages they point at.
+// One list drives the home page grid, the /football hub grid and /appendix.
+// The hamburger drawer is not a directory: it holds the account row, the theme
+// control and a link to /appendix, and nothing else.
 
 const GOLF_TOURNAMENTS = [
   { slug: 'masters', name: 'The Masters', dates: 'Apr 9-12' },
@@ -22,16 +22,12 @@ const CURRENT_GOLF_YEAR = 2026;
 //   external — opens in a new tab
 //   beta     — a "beta" tag after the label, for pages still being proven out
 //
-// A section may also carry `href` (its own landing page), `collapsed` (the
-// drawer shows that landing page as one link instead of listing the items) and
-// `hidden` (the drawer leaves the section out; its landing page still mounts it).
+// A section may also carry `href` (its own landing page) and `hidden` (left off
+// the hubs that list sections; its landing page still mounts it).
 const NAV_SECTIONS = [
   {
     // The football pages split three ways by what you are actually doing on
-    // them: betting, playing a pool, or running a fantasy roster. There is no
-    // Football heading over the three — /football is still the hub the
-    // breadcrumbs point at, but the drawer names the three things instead of
-    // the sport they share.
+    // them: betting, playing a pool, or running a fantasy roster.
     label: 'Gambling',
     items: [
       { label: "Baker's Action", href: '/football/action', emoji: '🏈', admin: true, hidden: true },
@@ -43,12 +39,6 @@ const NAV_SECTIONS = [
       // /football/schedule: the week's slate, read for its lines rather than
       // its kickoff times, which is what puts it under Gambling.
       { label: 'Schedule', href: '/football/schedule', emoji: '📅' },
-      // Every opposing rusher and receiver a defense has faced this season,
-      // game by game -- the matchup half of a player prop.
-      { label: 'Defense vs. Players', href: '/football/defense-vs-players', emoji: '🛡️' },
-      // The same question from the other side: one player's career against
-      // the defense he faces this week.
-      { label: 'Player Projections', href: '/football/player-projections', emoji: '🏃' },
       // The week's slate read for its edges: the softest and toughest
       // matchups, and the DraftKings yards lines the projection model
       // disagrees with most.
@@ -56,7 +46,6 @@ const NAV_SECTIONS = [
       // Season-to-date team numbers, read side by side across the league.
       // One card here; its pages are the Team Stats section below.
       { label: 'Team Stats', href: '/football/team-stats', emoji: '📈' },
-      { label: 'NFL Odds', href: '/odds', emoji: '🎲', hidden: true },
     ],
   },
   {
@@ -94,8 +83,7 @@ const NAV_SECTIONS = [
     ],
   },
   {
-    // The cards on /football/team-stats. `hidden` keeps the section out of the
-    // drawer, where the Gambling row above already links its landing page.
+    // The cards on /football/team-stats, which mounts them itself.
     label: 'Team Stats',
     href: '/football/team-stats',
     hidden: true,
@@ -108,9 +96,8 @@ const NAV_SECTIONS = [
   {
     label: 'Appendix',
     href: '/appendix',
-    // Collapsed in the drawer: one link to /appendix rather than a heading with
-    // a row per item under it. The items below are the cards on that page.
-    collapsed: true,
+    // The one section the drawer links, as a single row to /appendix. The
+    // items below are the cards on that page.
     items: [
       { label: 'Golf', href: '/golf', emoji: '🏌️' },
       // Reference rather than a football destination: it is not a slate to bet
@@ -143,24 +130,6 @@ function navTagsHTML(item) {
   return (item.admin ? NAV_ADMIN_HTML : '') + (item.beta ? NAV_BETA_HTML : '');
 }
 
-// The drawer's flat list, sections included. A `collapsed` section contributes
-// a single link to its own landing page instead of a heading and its rows.
-function buildNavItems() {
-  const items = [];
-  for (const section of NAV_SECTIONS) {
-    if (section.hidden) continue;
-    if (section.collapsed) {
-      items.push({ type: 'link', label: section.label, href: section.href, standalone: true });
-      continue;
-    }
-    items.push({ type: 'section', label: section.label, href: section.href });
-    for (const item of navVisibleItems(section)) {
-      items.push({ type: 'link', label: item.label, href: item.href, external: item.external, beta: item.beta, admin: item.admin });
-    }
-  }
-  return items;
-}
-
 // A section's cards, for the home page, the /football hub and /appendix. Title
 // only — the label and its emoji say what the destination is, and a sentence of
 // description under each one turned the grid into something to read rather than
@@ -183,14 +152,13 @@ function mountHubGrids(root) {
   });
 }
 
-// The account row leads the drawer rather than sitting in the header: it is a
-// destination like every other row, and the header is left with just the menu
-// button and the title. Signed out it reads "Sign In" and goes to the same page.
+// The account row leads the drawer rather than sitting in the header, which is
+// left with just the menu button and the title. Signed out it reads "Sign In"
+// and goes to the same page.
 //
-// The theme circles ride this row. They are a setting rather than a
-// destination, but they are also the only one, and two 24px buttons in the
-// space the name leaves empty cost nothing — where a footer of their own cost
-// a heading, a rule and the bottom of the drawer.
+// The theme circles ride this row: two 24px buttons in the space the name
+// leaves empty cost nothing, where a footer of their own cost a heading, a rule
+// and the bottom of the drawer.
 function buildNavAccountHTML() {
   const user = typeof getUser === 'function' ? getUser() : null;
   const label = user ? user.username : 'Sign In';
@@ -198,20 +166,13 @@ function buildNavAccountHTML() {
   return `<li class="nav-account"><a class="nav-section-label" href="/account">${label}</a>${themeHTML}</li>`;
 }
 
+// Account and theme, then Appendix and the projection model's explainer.
+// Every other destination is on a hub grid or the bar, so the drawer does not
+// list them again.
 function buildNavDrawerHTML() {
-  const items = buildNavItems().map(item => {
-    if (item.type === 'section') {
-      return item.href
-        ? `<li><a class="nav-section-label" href="${item.href}">${item.label}</a></li>`
-        : `<li><span class="nav-section-label">${item.label}</span></li>`;
-    }
-    // `standalone` is a top-level destination with no heading over it, so it
-    // needs a rule above it or it reads as one more row of the section before.
-    const cls = item.standalone ? ' class="nav-standalone"'
-      : item.type === 'sub' ? ' class="nav-sub"' : '';
-    const target = item.external ? ' target="_blank"' : '';
-    return `<li${cls}><a href="${item.href}"${target}>${item.label}${navTagsHTML(item)}</a></li>`;
-  }).join('\n        ');
+  const appendix = NAV_SECTIONS.find(s => s.label === 'Appendix');
+  const appendixHTML = `<li class="nav-standalone"><a href="${appendix.href}">${appendix.label}</a></li>`;
+  const modelHTML = '<li class="nav-standalone"><a href="/football/projection-model">Projection Model</a></li>';
 
   return `<div class="nav-overlay" id="nav-overlay">
     <div class="nav-drawer">
@@ -221,7 +182,8 @@ function buildNavDrawerHTML() {
       </div>
       <ul>
         ${buildNavAccountHTML()}
-        ${items}
+        ${appendixHTML}
+        ${modelHTML}
         ${typeof Standalone !== 'undefined' ? Standalone.rowHTML() : ''}
       </ul>
     </div>
@@ -247,8 +209,8 @@ function navIconHTML(name) {
     stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${NAV_ICONS[name]}</svg>`;
 }
 
-// The shortcut destinations on the bar. Everything else is a drawer row —
-// these are here because they are the pages people come back to daily. Home
+// The shortcut destinations on the bar. Everything else is reached from a hub
+// grid — these are here because they are the pages people come back to daily. Home
 // leads, because the bar has no title on it to be the way back to "/".
 const NAV_TABS = [
   { label: 'Home', href: '/', icon: 'home' },
@@ -284,17 +246,17 @@ function buildHeaderHTML() {
 
 // --- Player and team search ---
 // The bar's Search tab opens the search box from /football/player-projections
-// in a modal: the Trade Calculator's player list (/api/players), fetched once
-// two characters are typed, filtered on every word, with the teams it matches
+// in a modal: the Trade Calculator's player list (/api/players), warmed in the
+// background after launch, searched once two characters are typed, filtered on every word, with the teams it matches
 // listed above the players. Before that, the modal lists the last five picks. A player opens on that page, a team on
-// /football/defense-vs-players — or, on that page already, the pick goes to
+// /football/team/<abbr> — or, on that page already, the pick goes to
 // the page (window.playerProjectionsPick, window.defenseVsPlayersPick)
 // instead of reloading it.
 const NAV_SEARCH_POS = ['QB', 'RB', 'WR', 'TE'];
 const NAV_SEARCH_MAX = 10;
 const NAV_SEARCH_TEAM_MAX = 3;
 // The schedule's abbreviations, which are the logo filenames and the `team`
-// param defense-vs-players reads. Kept here rather than read from the
+// path segment /football/team reads. Kept here rather than read from the
 // schedule file, which most pages do not load.
 const NAV_TEAMS = [
   ['ARI', 'Arizona', 'Cardinals'], ['ATL', 'Atlanta', 'Falcons'], ['BAL', 'Baltimore', 'Ravens'],
@@ -324,21 +286,69 @@ function navFold(s) {
     .toLowerCase().replace(/[^a-z0-9 ]/g, '');
 }
 
+// The list is also kept in localStorage — slimmed to what the search reads,
+// ~30 KB against the endpoint's ~90 KB — so a search right after launch is
+// instant. A copy under a day old is used as is; past six hours it is still
+// used, and refreshed behind it for next time.
+const NAV_PLAYERS_KEY = 'dz_search_players';
+const NAV_PLAYERS_REFRESH = 6 * 3600 * 1000;
+const NAV_PLAYERS_MAX_AGE = 24 * 3600 * 1000;
+
+function navFetchPlayers() {
+  return fetch('/api/players').then(r => r.json()).then(d => {
+    if (!Array.isArray(d)) throw new Error((d && d.error) || 'player list unavailable');
+    const seen = {};
+    const players = d.filter(p => NAV_SEARCH_POS.includes(p.position) && p.team && p.team !== 'FA')
+      .map(p => ({ name: p.name, pos: p.position, team: NAV_TEAM_ALIAS[p.team] || p.team }))
+      .filter(p => {
+        const k = navFold(p.name) + '|' + p.pos;
+        return seen[k] ? false : (seen[k] = true);
+      });
+    try {
+      localStorage.setItem(NAV_PLAYERS_KEY, JSON.stringify({ t: Date.now(), players }));
+    } catch (e) { /* storage is a speed-up, not a requirement */ }
+    return players;
+  });
+}
+
+function navStoredPlayers() {
+  try {
+    const doc = JSON.parse(localStorage.getItem(NAV_PLAYERS_KEY) || 'null');
+    if (doc && Array.isArray(doc.players) && doc.players.length && Date.now() - doc.t < NAV_PLAYERS_MAX_AGE) return doc;
+  } catch (e) { /* fall through to the network */ }
+  return null;
+}
+
+// The search key is folded here rather than stored, so a change to navFold
+// never meets keys folded the old way.
 let navPlayersReq = null;
 function navLoadPlayers() {
   if (!navPlayersReq) {
-    navPlayersReq = fetch('/api/players').then(r => r.json()).then(d => {
-      if (!Array.isArray(d)) throw new Error((d && d.error) || 'player list unavailable');
-      const seen = {};
-      return d.filter(p => NAV_SEARCH_POS.includes(p.position) && p.team && p.team !== 'FA')
-        .map(p => ({ name: p.name, pos: p.position, team: NAV_TEAM_ALIAS[p.team] || p.team, key: navFold(p.name) }))
-        .filter(p => {
-          const k = p.key + '|' + p.pos;
-          return seen[k] ? false : (seen[k] = true);
-        });
-    }).catch(e => { navPlayersReq = null; throw e; });
+    const stored = navStoredPlayers();
+    let req;
+    if (stored) {
+      req = Promise.resolve(stored.players);
+      if (Date.now() - stored.t > NAV_PLAYERS_REFRESH) navFetchPlayers().catch(() => {});
+    } else {
+      req = navFetchPlayers();
+    }
+    navPlayersReq = req.then(players => players.map(p => ({ ...p, key: navFold(p.name) })))
+      .catch(e => { navPlayersReq = null; throw e; });
   }
   return navPlayersReq;
+}
+
+// Warm the list once the page has settled, so the first search does not wait
+// on it: in idle time where the browser offers it (not Safari), else shortly
+// after load. Only where the Search tab shows, which is the phone bar.
+function navPrefetchPlayers() {
+  if (!window.matchMedia('(max-width: 640px)').matches) return;
+  const warm = () => navLoadPlayers().catch(() => {});
+  const schedule = () => (window.requestIdleCallback
+    ? requestIdleCallback(warm, { timeout: 4000 })
+    : setTimeout(warm, 1500));
+  if (document.readyState === 'complete') schedule();
+  else window.addEventListener('load', schedule, { once: true });
 }
 
 const NAV_SEARCH_MIN = 2;
@@ -395,6 +405,7 @@ function wireNavSearch() {
   const list = document.getElementById('nav-player-list');
   if (!toggle || !modal || !input || !list || typeof modal.showModal !== 'function') return;
   let shown = [], active = -1;
+  navPrefetchPlayers();
 
   const markActive = () => {
     list.querySelectorAll('.nav-search-opt').forEach((o, i) => {
@@ -419,8 +430,8 @@ function wireNavSearch() {
     markActive();
   };
 
-  // Under two characters there is nothing to search yet and nothing is
-  // fetched: the box shows the recent picks instead.
+  // Under two characters there is nothing to search yet: the box shows the
+  // recent picks instead.
   const search = () => {
     const text = input.value;
     const words = navFold(text).split(/\s+/).filter(Boolean);
@@ -456,9 +467,9 @@ function wireNavSearch() {
     modal.close();
     const path = location.pathname.replace(/\/+$/, '');
     if (o.isTeam) {
-      if (path === '/football/defense-vs-players' && typeof window.defenseVsPlayersPick === 'function'
+      if (/^\/football\/team(\/|$)/.test(path) && typeof window.defenseVsPlayersPick === 'function'
           && window.defenseVsPlayersPick(o.team)) return;
-      location.href = '/football/defense-vs-players?' + new URLSearchParams({ team: o.team });
+      location.href = '/football/team/' + encodeURIComponent(o.team);
       return;
     }
     if (path === '/football/player-projections' && typeof window.playerProjectionsPick === 'function'

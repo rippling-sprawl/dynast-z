@@ -10,7 +10,7 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="Dynast-Z">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <title>Defense vs. Players | Dynast-Z</title>
+  <title>Team Stats | Dynast-Z</title>
   <!-- Theme first: theme.js sets <html data-theme> before the first paint,
        theme.css holds every colour token the sheets below spend. -->
   <script src="/scripts/base/theme.js"></script>
@@ -40,14 +40,15 @@
 
   <div class="masters-content">
     <!-- Adjacent pages, not a trail: every page in the set, this one unlinked.
-         Kept in step with the same list on the other page. -->
+         Kept in step with the same list on the other page. Each link carries
+         the picked team (syncPageSiblings in nfl-pickers.js). -->
     <nav class="page-siblings" aria-label="Pages">
       <span class="page-siblings-label">Pages:</span>
       <span aria-current="page">Game Logs</span>
       <span class="separator" aria-hidden="true">|</span>
-      <a href="/football/team-stats/quarter-splits">Quarter Splits</a>
+      <a href="/football/team-stats/quarter-splits" data-team-href="/football/team-stats/quarter-splits?team={team}">Quarter Splits</a>
     </nav>
-    <h2>Defense vs. Players</h2>
+    <h2>Team Stats</h2>
 
     <!-- Markup contract for scripts/components/nfl-pickers.js. -->
     <!-- The row holds the two filters that change most — which defense, which
@@ -183,12 +184,17 @@
     }
 
     /* ---------- the URL is the state ----------
-     * Every filter and toggle lives in the query string, so a link — the
-     * matchup board's included — opens exactly the view it was copied from:
-     *   ?team=DAL&pos=RB,WR&att=4&tgt=2&hide=pass&opp=QB,WR&oppoff=123,456
+     * The team is the path and every filter and toggle lives in the query
+     * string, so a link — the matchup board's included — opens exactly the
+     * view it was copied from:
+     *   /football/team/DAL?pos=RB,WR&att=4&tgt=2&hide=pass&opp=QB,WR&oppoff=123,456
+     * With no team the path is /football/team, the matchup board. A ?team=
+     * from the page's old address (/football/defense-vs-players, redirected
+     * here) is still read, and rewritten into the path.
      * Defaults are left out. `hide` is written only where it differs from what
      * the positions hide on their own (see posDefaults), and an empty `hide=`
      * means "show everything" where those positions would have hidden some. */
+    var TEAM_PATH = '/football/team';
     var POS = ['QB', 'RB', 'WR', 'TE'];
     var ATT_STEPS = [0, 1, 4, 6, 8, 10];
     var TGT_STEPS = [0, 1, 2, 3, 4, 5];
@@ -200,7 +206,6 @@
     function queryFor(s) {
       var q = new URLSearchParams();
       var pos = POS.filter(function (p) { return s.pos.indexOf(p) >= 0; });
-      if (s.team) q.set('team', s.team);
       if (pos.length) q.set('pos', pos.join(','));
       if (s.att) q.set('att', s.att);
       if (s.tgt) q.set('tgt', s.tgt);
@@ -213,7 +218,7 @@
       var off = Object.keys(s.oppOff || {});
       if (opp.length && off.length) q.set('oppoff', off.join(','));
       var str = q.toString().replace(/%2C/g, ',');
-      return location.pathname + (str ? '?' + str : '');
+      return TEAM_PATH + (s.team ? '/' + encodeURIComponent(s.team) : '') + (str ? '?' + str : '');
     }
 
     function current() {
@@ -224,13 +229,15 @@
       syncMore();
       var url = queryFor(current());
       if (url !== location.pathname + location.search) history.replaceState(null, '', url);
+      syncPageSiblings(team);
     }
 
-    // Reads a query string into the page's state and every control. Values the
+    // Reads the address into the page's state and every control. Values the
     // controls cannot show are dropped rather than trusted.
-    function applyParams(search) {
-      var q = new URLSearchParams(search);
-      var t = (q.get('team') || '').toUpperCase();
+    function applyParams() {
+      var q = new URLSearchParams(location.search);
+      var seg = location.pathname.slice(TEAM_PATH.length).replace(/^\/|\/$/g, '');
+      var t = decodeURIComponent(seg || q.get('team') || '').toUpperCase();
       team = t && sched && schedTeamsByAbbr(sched)[t] ? t : '';
       view.pos = {};
       (q.get('pos') || '').toUpperCase().split(',').forEach(function (p) {
@@ -458,14 +465,14 @@
       }
       e.preventDefault();
       history.pushState(null, '', href);
-      applyParams(location.search);
+      applyParams();
       window.scrollTo(0, 0);
       load();
     });
 
     window.addEventListener('popstate', function () {
       if (!sched) return;
-      applyParams(location.search);
+      applyParams();
       load();
     });
 
@@ -840,7 +847,7 @@
       sched = doc;
       teams = doc.teams;
       buildTeamPicker(teamGrid, teams, { anyLabel: 'No team — this week\'s matchups' });
-      applyParams(location.search);
+      applyParams();
       load();
     }).catch(function (e) {
       board.innerHTML = '<p class="sched-empty">Error: ' + esc(e.message) + '</p>';

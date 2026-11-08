@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/assets/icons/app-touch-180.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Dynast-Z">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <title>Projection Model | Dynast-Z</title>
+  <script src="/scripts/base/theme.js"></script>
+  <link rel="stylesheet" href="/styles/base/theme.css">
+  <link rel="stylesheet" href="/styles/base/styles.css">
+  <link rel="stylesheet" href="/styles/base/hub.css">
+  <link rel="stylesheet" href="/styles/primary/projection-model.css">
+  <script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
+  <script defer src="/_vercel/insights/script.js"></script>
+</head>
+<body class="masters-body">
+  <div id="header-mount"></div>
+  <div id="nav-drawer-mount"></div>
+  <script src="/scripts/base/auth.js"></script>
+  <script src="/scripts/base/standalone.js"></script>
+  <script src="/scripts/base/nav.js"></script>
+  <script>initPage();</script>
+
+  <!-- How scripts/components/player-projection.js builds a projection, in
+       plain words. Keep the numbers in step with its constants. -->
+  <div class="masters-content">
+    <h2>Projection Model</h2>
+    <p class="pm-lede">How a player prop projection is built: start from what the player usually gets and how well he uses it, adjust slightly for the matchup, then check the result against the sportsbook's line.</p>
+
+    <section class="pm-panel">
+      <div class="vi-band vi-label">The Formula</div>
+      <div class="pm-formula"><b>Volume</b> × <b>Efficiency</b> × Defense × History <span class="pm-arrow">→ blend with book line</span></div>
+    </section>
+
+    <section class="pm-panel">
+      <div class="vi-band vi-label">The Inputs<small>4 factors</small></div>
+      <div class="pm-cells">
+        <div class="pm-cell"><h3><span>1</span>Volume</h3><p>Targets, carries or pass attempts per game. Recent games count more, and last season counts as 3 games.</p><span class="pm-tag">each game back ×0.88</span></div>
+        <div class="pm-cell"><h3><span>2</span>Efficiency</h3><p>Yards per target, catch rate and similar, pulled toward the league average until he has enough opportunities to stand on his own.</p><span class="pm-tag">his rate + league avg</span></div>
+        <div class="pm-cell"><h3><span>3</span>Defense</h3><p>What this defense allowed his position, compared with what those same players usually get. Heavily regressed.</p><span class="pm-tag">capped at ±15%</span></div>
+        <div class="pm-cell"><h3><span>4</span>History</h3><p>His past games against this defense. Kept small on purpose, because there's no evidence it predicts anything.</p><span class="pm-tag">max 5% say</span></div>
+      </div>
+    </section>
+
+    <section class="pm-panel">
+      <div class="vi-band vi-label">Team Context</div>
+      <p class="pm-text">Also adjusts volume and efficiency: <b>teammates out</b> (and who gets their touches), <b>his injury tag</b>, <b>pace</b>, <b>the spread</b>, <b>offensive linemen out</b>, <b>a new starting QB</b>.</p>
+    </section>
+
+    <section class="pm-panel">
+      <div class="vi-band vi-label">From Number to Bet</div>
+      <div class="pm-cells pm-two">
+        <div class="pm-cell"><h3>Build a distribution</h3><p>Not just one number. Rushing and receiving yards are skewed right (one long play), passing yards follow a bell curve, and counts and TDs use count distributions. The spread is wider for low-volume roles. The over/under chances come from this curve, not from his hit rate.</p></div>
+        <div class="pm-cell"><h3>Respect the market</h3><p>When there's a line, the model keeps <b>35%</b> of its gap from the book. Big lines are shaded a few percent lower first, because the public bets overs on names it knows. Fit on 6,000+ 2025 lines: edges of 10% or more hit <b>58.7%</b>.</p></div>
+      </div>
+    </section>
+
+    <div class="pm-foot"><span>Projection = (book line) + 0.35 × (model − book line)</span><span>Constants are starting points — backtest before trusting</span></div>
+  </div>
+</body>
+</html>
