@@ -311,6 +311,35 @@ header a:hover { color: var(--accent); }
   transform: translateX(0);
 }
 
+/* --- One drawer, whatever the route or width ---
+ * The drawer wears the nav palette at every width, the same as the phone
+ * sheet: the tokens are redefined rather than the rules restated, so the rows,
+ * the account label and the theme circles below keep their single definitions
+ * and resolve against this palette. `html body .nav-overlay` outranks page
+ * sheets that repaint surfaces after this file. On a phone the media query
+ * below moves the gold rule from the right edge to the top. */
+html body .nav-overlay .nav-drawer {
+  background: var(--nav-bar);
+  border-right: 3px solid var(--nav-rule);
+  --surface: var(--nav-bar);
+  --surface-2: var(--nav-hover);
+  --surface-3: var(--nav-hover);
+  --border: var(--nav-line);
+  --text-hi: var(--nav-ink);
+  --text: var(--nav-ink-2);
+  --text-2: var(--nav-ink-2);
+  --text-3: var(--nav-ink-2);
+  --text-4: var(--nav-ink-3);
+  --text-5: var(--nav-ink-3);
+  --accent: var(--nav-accent);
+  --accent-ink: var(--nav-bar);
+  --on-accent: var(--nav-bar);
+}
+
+/* The scrim is part of the component too — a 0.3-alpha light-theme overlay
+ * left the drawer reading as a card rather than as something over the page. */
+html body .nav-overlay { background: var(--nav-scrim); }
+
 .nav-drawer-header {
   display: flex;
   align-items: center;
@@ -544,8 +573,7 @@ header a:hover { color: var(--accent); }
    * `html body header.site-header` outranks the two page sheets that reach the
    * header by element — vegasinsider.css's `header` and bakers-oven.css's
    * `body:has(.oven-content) header` — both of which load after this file. */
-  html body header.site-header,
-  html body .nav-overlay .nav-drawer {
+  html body header.site-header {
     background: var(--nav-bar);
     border-top: 3px solid var(--nav-rule);
     border-bottom: none;
@@ -564,9 +592,12 @@ header a:hover { color: var(--accent); }
     --on-accent: var(--nav-bar);
   }
 
-  /* The scrim is part of the component too — a 0.3-alpha light-theme overlay
-   * left the sheet reading as a card rather than as something over the page. */
-  html body .nav-overlay { background: var(--nav-scrim); }
+  /* The sheet's gold rule runs along the edge that faces the page: the top
+   * here, the right on wide screens (see the drawer palette above). */
+  html body .nav-overlay .nav-drawer {
+    border-top: 3px solid var(--nav-rule);
+    border-right: none;
+  }
 
   /* The title is the home link on desktop; down here the five buttons need the
    * whole width, and the Home tab is what replaces it. */

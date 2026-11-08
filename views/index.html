@@ -131,6 +131,37 @@
       margin-top: 8px;
     }
 
+    /* Player and team search, for wide screens only: under 641px the bottom
+       bar's Search tab is the way in, and this would be a second copy of it.
+       Drawn as a field but it is a button — it opens the bar's search modal
+       (nav.js wireNavSearch, via data-nav-search-open), so there is one search
+       with one list of recents, not two. */
+    .home-search {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      margin-top: 16px;
+      padding: 10px 12px;
+      background: var(--hairline);
+      border: 1px solid var(--hairline-hi);
+      border-radius: 6px;
+      color: var(--text-4);
+      font-family: inherit;
+      font-size: 14px;
+      text-align: left;
+      cursor: text;
+      transition: border-color 0.15s, color 0.15s;
+    }
+
+    .home-search:hover,
+    .home-search:focus-visible { outline: none; border-color: var(--accent-2); color: var(--text-3); }
+    .home-search .nav-tab-icon { width: 18px; height: 18px; flex: none; color: var(--accent-2); }
+
+    @media (max-width: 640px) {
+      .home-search { display: none; }
+    }
+
     @media (max-width: 600px) {
       .home-auth-row { flex-direction: column; align-items: stretch; }
       /* Stacked, the flex main axis is vertical, so the 160px basis above would
@@ -182,6 +213,13 @@
 
          The headings are plain text, not links — none of the three has a
          landing page of its own; /football is the hub for all three. -->
+    <!-- Opens the bar's player and team search; wide screens only, see
+         .home-search. The icon is filled in below from nav.js. -->
+    <button type="button" class="home-search" id="home-search" data-nav-search-open
+            aria-haspopup="dialog" aria-controls="nav-search-modal">
+      <span>Search players or teams…</span>
+    </button>
+
     <h3 class="hub-section">Gambling</h3>
     <div class="hub-grid" data-nav-section="Gambling"></div>
 
@@ -198,6 +236,7 @@
   <script src="/scripts/base/sync.js"></script>
   <script>
     mountHubGrids();
+    document.getElementById('home-search').insertAdjacentHTML('afterbegin', navIconHTML('search'));
 
     // Only offer the form to signed-out visitors. It ships `hidden` so a signed-in
     // visitor never sees it paint before this runs.

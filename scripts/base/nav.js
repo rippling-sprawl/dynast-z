@@ -340,10 +340,15 @@ function navLoadPlayers() {
 
 // Warm the list once the page has settled, so the first search does not wait
 // on it: in idle time where the browser offers it (not Safari), else shortly
-// after load. Only where the Search tab shows, which is the phone bar.
+// after load. Only where a way into search shows: the phone bar's Search tab,
+// or a page's own field (data-nav-search-open, the home page on wide screens).
+// Checked at warm time, since that field is parsed after initPage runs.
 function navPrefetchPlayers() {
-  if (!window.matchMedia('(max-width: 640px)').matches) return;
-  const warm = () => navLoadPlayers().catch(() => {});
+  const warm = () => {
+    const field = document.querySelector('[data-nav-search-open]');
+    if (!window.matchMedia('(max-width: 640px)').matches && !(field && field.offsetParent)) return;
+    navLoadPlayers().catch(() => {});
+  };
   const schedule = () => (window.requestIdleCallback
     ? requestIdleCallback(warm, { timeout: 4000 })
     : setTimeout(warm, 1500));
@@ -397,7 +402,8 @@ function navRecentSave(o) {
 }
 
 // Arrows move, Enter picks, Escape closes (the dialog's own cancel). The modal
-// also closes on its X, a tap on the backdrop, and a pick.
+// also closes on its X, a tap on the backdrop, and a pick. It opens from the
+// bar's Search tab or from any [data-nav-search-open] element on the page.
 function wireNavSearch() {
   const toggle = document.getElementById('nav-search-toggle');
   const modal = document.getElementById('nav-search-modal');
@@ -478,6 +484,11 @@ function wireNavSearch() {
   };
 
   toggle.addEventListener('click', open);
+  // A page's own field opens the same modal. Delegated, because the header —
+  // and so this — is mounted before the rest of the page is parsed.
+  document.addEventListener('click', (e) => {
+    if (e.target.closest('[data-nav-search-open]')) open();
+  });
   document.getElementById('nav-search-close').addEventListener('click', () => modal.close());
   // A click on the dialog element itself, not its contents, is the backdrop.
   modal.addEventListener('click', (e) => {
