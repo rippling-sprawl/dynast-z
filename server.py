@@ -1461,10 +1461,10 @@ def rookie_keys_from_resolver(index):
 
 
 class Handler(http.server.SimpleHTTPRequestHandler):
-    # Mirror vercel.json: HTML is no-store so a refresh always gets the current
-    # build. Locally we extend that to /styles and /scripts too, because dev
-    # serves them unhashed (build.py only runs on deploy) and a cached copy
-    # under an unversioned URL would survive an edit.
+    # Dev is no-store across HTML, /styles and /scripts. Prod (vercel.json)
+    # caches /styles and /scripts as immutable because build.py hashes their
+    # URLs on deploy; dev serves them unhashed, so a cached copy under an
+    # unversioned URL would survive an edit.
     NO_STORE_PREFIXES = ("/views/", "/styles/", "/scripts/")
 
     def send_head(self):

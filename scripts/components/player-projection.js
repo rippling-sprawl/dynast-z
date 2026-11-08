@@ -1129,9 +1129,27 @@
 
   function glyph(over) { return over ? '▲' : '▼'; }
 
+  // Minor ticks between the labeled ones: quarters of a step that starts
+  // with a 2 (20 → 5s), fifths of any other (10 → 2s, 25 → 5s); halves
+  // when those would sit closer than 6px, none when even halves would.
+  function minorSplits(step) {
+    var f = Math.round(step / Math.pow(10, Math.floor(Math.log10(step))) * 10) / 10;
+    return f === 2 ? [4, 2] : [5, 2];
+  }
+
   function axis(x, xmax, y, width, pad, count) {
     var s = '<line class="pp-base" x1="' + pad.l + '" x2="' + (width - pad.r) + '" y1="' + y + '" y2="' + y + '"/>';
-    ticks(xmax, count).forEach(function (t) {
+    var major = ticks(xmax, count);
+    var step = major.length > 1 ? major[1] - major[0] : 0;
+    var px = step ? x(step) - x(0) : 0;
+    var n = minorSplits(step || 1).filter(function (k) { return px / k >= 6; })[0] || 1;
+    var path = '';
+    for (var i = 0; step && i * step / n <= xmax + 1e-9; i++) {
+      var t = i * step / n, tx = x(t).toFixed(1);
+      path += 'M' + tx + ',' + y + 'v' + (i % n ? 3 : 5);
+    }
+    if (path) s += '<path class="pp-tick" d="' + path + '"/>';
+    major.forEach(function (t) {
       s += '<text class="pp-axis-t" x="' + x(t) + '" y="' + (y + 15) + '" text-anchor="middle">' + fmt(t) + '</text>';
     });
     return s;
