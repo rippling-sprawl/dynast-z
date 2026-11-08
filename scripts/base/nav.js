@@ -275,8 +275,8 @@ function buildHeaderHTML() {
 
   return `<header class="site-header">
     ${tabs}
-    <button class="nav-tab nav-search-tab" id="nav-search-toggle" aria-expanded="false" aria-controls="nav-searchbar">${navIconHTML('search')}<span class="nav-tab-label">Search</span></button>
-    ${buildNavSearchbarHTML()}
+    <button class="nav-tab nav-search-tab" id="nav-search-toggle" aria-haspopup="dialog" aria-controls="nav-search-modal">${navIconHTML('search')}<span class="nav-tab-label">Search</span></button>
+    ${buildNavSearchModalHTML()}
     <button class="nav-tab hamburger" id="nav-toggle" aria-label="Menu">${navIconHTML('menu')}<span class="nav-tab-label">Menu</span></button>
     <h1 class="site-title"><a href="/">Dynast-Z</a></h1>
   </header>`;
@@ -284,9 +284,9 @@ function buildHeaderHTML() {
 
 // --- Player and team search ---
 // The bar's Search tab opens the search box from /football/player-projections
-// just above the bar: the Trade Calculator's player list (/api/players),
-// fetched on first open, filtered on every word typed, with the teams it
-// matches listed above the players. A player opens on that page, a team on
+// in a modal: the Trade Calculator's player list (/api/players), fetched once
+// two characters are typed, filtered on every word, with the teams it matches
+// listed above the players. Before that, the modal lists the last five picks. A player opens on that page, a team on
 // /football/defense-vs-players — or, on that page already, the pick goes to
 // the page (window.playerProjectionsPick, window.defenseVsPlayersPick)
 // instead of reloading it.
@@ -341,35 +341,59 @@ function navLoadPlayers() {
   return navPlayersReq;
 }
 
-// The list comes first so it grows upward, away from the bar, as it fills.
-function buildNavSearchbarHTML() {
-  return `<div class="nav-searchbar" id="nav-searchbar" hidden>
-      <div class="nav-search-list" id="nav-player-list" role="listbox" aria-label="Players and teams" hidden></div>
+const NAV_SEARCH_MIN = 2;
+const NAV_RECENT_KEY = 'dz_recent_searches';
+const NAV_RECENT_MAX = 5;
+
+function buildNavSearchModalHTML() {
+  return `<dialog class="nav-search-modal" id="nav-search-modal" aria-label="Search players and teams">
       <div class="nav-search-field">
         ${navIconHTML('search')}
         <input type="text" class="nav-search-input" id="nav-player" placeholder="Search players or teams…" aria-label="Search players and teams"
                autocomplete="off" spellcheck="false" enterkeyhint="go" role="combobox" aria-autocomplete="list"
-               aria-expanded="false" aria-controls="nav-player-list">
+               aria-expanded="false" aria-controls="nav-player-list" autofocus>
+        <button type="button" class="nav-search-close" id="nav-search-close" aria-label="Close search">&times;</button>
       </div>
-    </div>`;
+      <div class="nav-search-list" id="nav-player-list" role="listbox" aria-label="Players and teams"></div>
+    </dialog>`;
 }
 
-// Teams need a word typed — an empty box offers players — and match on the
-// abbreviation, city or nickname, so "ny" finds both New York teams.
+// Teams match on the abbreviation, city or nickname, so "ny" finds both New
+// York teams.
 function navSearchTeams(words) {
   if (!words.length) return [];
   return NAV_TEAMS.filter(t => words.every(w => t.key.includes(w))).slice(0, NAV_SEARCH_TEAM_MAX);
 }
 
-// Arrows move, Enter picks, Escape closes. The bar closes on its own tab, on a
-// pick, on Escape, on a tap anywhere outside the bar, and when the menu opens.
+// The last few picks, newest first, in this browser only. Storage can be
+// missing or full (private windows); recents are a convenience, so any failure
+// is an empty list.
+function navRecentLoad() {
+  try {
+    const list = JSON.parse(localStorage.getItem(NAV_RECENT_KEY) || '[]');
+    return Array.isArray(list) ? list.filter(o => o && o.name && o.team).slice(0, NAV_RECENT_MAX) : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function navRecentSave(o) {
+  const entry = o.isTeam
+    ? { name: o.name, team: o.team, tag: 'DEF', isTeam: true }
+    : { name: o.name, pos: o.pos, team: o.team, tag: o.pos };
+  const same = r => !!r.isTeam === !!entry.isTeam && r.name === entry.name && (r.isTeam || r.pos === entry.pos);
+  const list = [entry].concat(navRecentLoad().filter(r => !same(r))).slice(0, NAV_RECENT_MAX);
+  try { localStorage.setItem(NAV_RECENT_KEY, JSON.stringify(list)); } catch (e) { /* recents are optional */ }
+}
+
+// Arrows move, Enter picks, Escape closes (the dialog's own cancel). The modal
+// also closes on its X, a tap on the backdrop, and a pick.
 function wireNavSearch() {
   const toggle = document.getElementById('nav-search-toggle');
-  const bar = document.getElementById('nav-searchbar');
+  const modal = document.getElementById('nav-search-modal');
   const input = document.getElementById('nav-player');
   const list = document.getElementById('nav-player-list');
-  if (!toggle || !bar || !input || !list) return;
-  const header = toggle.closest('.site-header');
+  if (!toggle || !modal || !input || !list || typeof modal.showModal !== 'function') return;
   let shown = [], active = -1;
 
   const markActive = () => {
@@ -381,64 +405,55 @@ function wireNavSearch() {
     else input.removeAttribute('aria-activedescendant');
   };
 
-  const showList = (html) => {
-    list.innerHTML = html;
-    list.hidden = false;
-    input.setAttribute('aria-expanded', 'true');
+  const optHTML = (o, i) =>
+    `<button type="button" class="nav-search-opt" role="option" id="nav-opt-${i}" data-i="${i}" tabindex="-1" aria-selected="false">` +
+    `<img src="/assets/icons/nfl/${navEsc(o.team)}.svg" alt="">${navEsc(o.name)}<span class="nav-search-pos">${navEsc(o.tag)}</span></button>`;
+
+  // `head` is a heading over the rows, `note` a line under them.
+  const showList = (rows, head, note) => {
+    shown = rows;
+    active = rows.length ? 0 : -1;
+    list.innerHTML = (head && rows.length ? `<div class="nav-search-head">${head}</div>` : '') +
+      rows.map(optHTML).join('') + (note ? `<div class="nav-search-note">${note}</div>` : '');
+    input.setAttribute('aria-expanded', String(rows.length > 0));
     markActive();
   };
 
-  // Empty, it offers the top of the list, as the page does.
+  // Under two characters there is nothing to search yet and nothing is
+  // fetched: the box shows the recent picks instead.
   const search = () => {
     const text = input.value;
+    const words = navFold(text).split(/\s+/).filter(Boolean);
+    if (navFold(text).replace(/\s+/g, '').length < NAV_SEARCH_MIN) {
+      const recent = navRecentLoad();
+      showList(recent, 'Recent', recent.length ? '' : 'Type at least 2 letters to search');
+      return;
+    }
+    const teams = navSearchTeams(words).map(t => ({ team: t.abbr, name: t.name, tag: 'DEF', isTeam: true }));
     navLoadPlayers().then(players => {
-      if (bar.hidden || input.value !== text) return;
-      const words = navFold(text).split(/\s+/).filter(Boolean);
-      shown = navSearchTeams(words).map(t => ({ team: t.abbr, name: t.name, tag: 'DEF', isTeam: true }))
-        .concat(players.filter(p => words.every(w => p.key.includes(w))).slice(0, NAV_SEARCH_MAX)
-          .map(p => ({ ...p, tag: p.pos })));
-      active = shown.length ? 0 : -1;
-      showList(shown.length ? shown.map((o, i) =>
-        `<button type="button" class="nav-search-opt${o.isTeam ? ' is-team' : ''}" role="option" id="nav-opt-${i}" data-i="${i}" tabindex="-1" aria-selected="false">` +
-        `<img src="/assets/icons/nfl/${navEsc(o.team)}.svg" alt="">${navEsc(o.name)}<span class="nav-search-pos">${navEsc(o.tag)}</span></button>`
-      ).join('') : '<div class="nav-search-note">No match</div>');
+      if (!modal.open || input.value !== text) return;
+      const rows = teams.concat(players.filter(p => words.every(w => p.key.includes(w)))
+        .slice(0, NAV_SEARCH_MAX).map(p => ({ ...p, tag: p.pos })));
+      showList(rows, '', rows.length ? '' : 'No match');
     }).catch(() => {
       // No player list: teams still work, from the list above.
-      if (bar.hidden) return;
-      const teams = navSearchTeams(navFold(input.value).split(/\s+/).filter(Boolean));
-      shown = teams.map(t => ({ team: t.abbr, name: t.name, tag: 'DEF', isTeam: true }));
-      active = shown.length ? 0 : -1;
-      showList(shown.map((o, i) =>
-        `<button type="button" class="nav-search-opt is-team" role="option" id="nav-opt-${i}" data-i="${i}" tabindex="-1" aria-selected="false">` +
-        `<img src="/assets/icons/nfl/${navEsc(o.team)}.svg" alt="">${navEsc(o.name)}<span class="nav-search-pos">DEF</span></button>`
-      ).join('') + '<div class="nav-search-note">Players unavailable</div>');
+      if (!modal.open || input.value !== text) return;
+      showList(teams, '', 'Players unavailable');
     });
   };
 
   // Focus in the same tap that opens it, or iOS will not raise the keyboard.
   const open = () => {
-    bar.hidden = false;
-    header.classList.add('is-searching');
-    toggle.setAttribute('aria-expanded', 'true');
+    input.value = '';
+    modal.showModal();
     input.focus();
     search();
   };
 
-  const close = () => {
-    if (bar.hidden) return;
-    bar.hidden = true;
-    list.hidden = true;
-    input.value = '';
-    input.blur();
-    input.setAttribute('aria-expanded', 'false');
-    input.removeAttribute('aria-activedescendant');
-    header.classList.remove('is-searching');
-    toggle.setAttribute('aria-expanded', 'false');
-  };
-
   const pick = (o) => {
-    close();
     if (!o) return;
+    navRecentSave(o);
+    modal.close();
     const path = location.pathname.replace(/\/+$/, '');
     if (o.isTeam) {
       if (path === '/football/defense-vs-players' && typeof window.defenseVsPlayersPick === 'function'
@@ -451,7 +466,17 @@ function wireNavSearch() {
     location.href = '/football/player-projections?' + new URLSearchParams({ player: o.name, pos: o.pos });
   };
 
-  toggle.addEventListener('click', () => (bar.hidden ? open() : close()));
+  toggle.addEventListener('click', open);
+  document.getElementById('nav-search-close').addEventListener('click', () => modal.close());
+  // A click on the dialog element itself, not its contents, is the backdrop.
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) modal.close();
+  });
+  modal.addEventListener('close', () => {
+    input.value = '';
+    input.blur();
+    input.removeAttribute('aria-activedescendant');
+  });
   input.addEventListener('input', search);
   input.addEventListener('keydown', (e) => {
     if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
@@ -462,8 +487,6 @@ function wireNavSearch() {
     } else if (e.key === 'Enter') {
       e.preventDefault();
       if (active >= 0) pick(shown[active]);
-    } else if (e.key === 'Escape') {
-      close();
     }
   });
   // mousedown, not click: keeps the focus in the field, so the keyboard stays up.
@@ -473,11 +496,6 @@ function wireNavSearch() {
     e.preventDefault();
     pick(shown[Number(opt.getAttribute('data-i'))]);
   });
-  document.addEventListener('pointerdown', (e) => {
-    if (!header.contains(e.target)) close();
-  });
-  const menu = document.getElementById('nav-toggle');
-  if (menu) menu.addEventListener('click', close);
 }
 
 // --- Swipe the sheet down to close ---
