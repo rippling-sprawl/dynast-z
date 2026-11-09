@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/assets/icons/app-touch-180.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Dynast-Z">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="theme-color" content="#14110c">
+  <title>Power Rankings | Dynast-Z</title>
+  <!-- Full-bleed page: no site header or drawer, one card per viewport. The
+       cards are built from /data/power_rankings_cards.json (the model), and
+       Edit mode keeps a local draft of it until it is exported back there. -->
+  <link rel="stylesheet" href="/styles/primary/power-rankings.css">
+  <script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
+  <script defer src="/_vercel/insights/script.js"></script>
+</head>
+<body class="pr-body">
+  <header class="pr-bar">
+    <a class="pr-bar-btn" href="/" aria-label="Home">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+    </a>
+    <div class="pr-bar-title">
+      <span id="pr-title">Power Rankings</span>
+      <span class="pr-bar-sub"><span id="pr-count">–</span><span id="pr-draft" class="pr-draft" hidden> · Draft</span></span>
+    </div>
+    <button class="pr-bar-btn" id="pr-edit-toggle" type="button" aria-pressed="false" hidden>Edit</button>
+  </header>
+
+  <main class="pr-stage" id="pr-stage">
+    <div class="pr-track" id="pr-track" aria-roledescription="carousel"></div>
+  </main>
+
+  <nav class="pr-dots" id="pr-dots" aria-label="Cards"></nav>
+
+  <section class="pr-editor" id="pr-editor" aria-label="Edit card" hidden></section>
+
+  <dialog class="pr-modal" id="pr-modal">
+    <form method="dialog" class="pr-modal-inner">
+      <header class="pr-modal-head">
+        <h2 id="pr-modal-title"></h2>
+        <button class="pr-modal-close" aria-label="Close">×</button>
+      </header>
+      <div class="pr-modal-body" id="pr-modal-body"></div>
+    </form>
+  </dialog>
+
+  <script src="/scripts/base/auth.js"></script>
+  <script src="/scripts/primary/power-rankings.js"></script>
+</body>
+</html>

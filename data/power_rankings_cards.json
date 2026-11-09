@@ -1,0 +1,115 @@
+{
+  "title": "JHBC Power Rankings",
+  "edition": "Bee Edition",
+  "countdown": true,
+  "tiers": [
+    { "id": "queen",   "name": "Queen Bees",     "stage": "Stage 2", "holo": true,  "tagline": "There can be only one queen in a hive." },
+    { "id": "hornets", "name": "Killer Hornets", "stage": "Stage 1", "holo": true,  "tagline": "Dangerous in swarms. Avoid on Sundays." },
+    { "id": "wasps",   "name": "W.A.S.P.S",      "stage": "Basic",   "holo": false, "tagline": "All buzz. Occasionally a sting." },
+    { "id": "notbees", "name": "Not Bees",       "stage": "Larva",   "holo": false, "tagline": "Still in the cocoon. Check back next year." }
+  ],
+  "cards": [
+    {
+      "id": "dylan", "tier": "queen", "name": "Cady Heron", "nickname": "Dylan", "image": "https://static.wikia.nocookie.net/meangirls/images/f/f3/Crown.png/revision/latest?cb=20140610152046",
+      "moves": [
+        { "name": "Three-Peat Sting", "damage": "×3", "cost": 3,
+          "text": "The only team to take down Kyle. Kyle’s last 3 losses have been at the hands of Dylan: last year in week 14, then in the Finals, and lastly in Week 3. I’ve been left bruised and broken.",
+          "links": [] }
+      ],
+      "weakness": "", "flavor": ""
+    },
+    {
+      "id": "kyle", "tier": "queen", "name": "Regina George with the broken neck", "nickname": "Kyle", "image": "", "video": "https://youtube.com/shorts/CIb1ZufblhI?is=YqG_fUhEx5_3OsKb",
+      "moves": [
+        { "name": "One Queen Per Hive", "damage": "", "cost": 2,
+          "text": "*There can be only 1 queen in a hive*",
+          "links": [ { "label": "Watch", "url": "https://youtube.com/shorts/CIb1ZufblhI?is=YqG_fUhEx5_3OsKb" } ] }
+      ],
+      "weakness": "humility", "flavor": ""
+    },
+    {
+      "id": "fama", "tier": "hornets", "name": "The Bees at Windy Ridge", "nickname": "Fama", "image": "",
+      "moves": [], "weakness": "Baker", "flavor": ""
+    },
+    {
+      "id": "ange", "tier": "hornets", "name": "The Wicker Man", "nickname": "Ange", "image": "", "video": "https://www.youtube.com/watch?v=UatQsjjOIAc",
+      "moves": [
+        { "name": "NO! NOT THE BEES!", "damage": "", "cost": 2, "text": "",
+          "links": [ { "label": "NO! NOT THE BEES!", "url": "https://www.youtube.com/watch?v=UatQsjjOIAc" } ] }
+      ],
+      "weakness": "", "flavor": ""
+    },
+    {
+      "id": "sal", "tier": "hornets", "name": "The bee keeper", "nickname": "Sal", "image": "",
+      "moves": [], "weakness": "", "flavor": ""
+    },
+    {
+      "id": "jody", "tier": "wasps", "name": "The Steelers jerseys", "nickname": "Jody", "image": "",
+      "moves": [
+        { "name": "Criminal Trade", "damage": "", "cost": 1,
+          "text": "Criminal for his trades. Traded away Hurts for Mahomes, Burden, Higgins… 1st??",
+          "links": [] },
+        { "name": "The Bee Movie", "damage": "49", "cost": 2,
+          "text": "Incredibly average. But there’s also something really provocative, trust me.",
+          "links": [
+            { "label": "49/53% on Rotten Tomatoes", "url": "https://www.rottentomatoes.com/m/bee_movie" },
+            { "label": "Movie recap", "url": "https://www.instagram.com/reel/DePQE4Wu6Dj/?srtk=MXJqcjIzcmEyMjRxYg==" }
+          ] }
+      ],
+      "weakness": "", "flavor": ""
+    },
+    {
+      "id": "reid", "tier": "wasps", "name": "Kyle Bieg", "nickname": "Reid", "image": "",
+      "moves": [
+        { "name": "Consolation Prize", "damage": "", "cost": 1, "text": "Here’s a marshmallow anyway?", "links": [] }
+      ],
+      "weakness": "", "flavor": ""
+    },
+    {
+      "id": "joe", "tier": "wasps", "name": "", "nickname": "Joe", "image": "",
+      "moves": [
+        { "name": "Missing QBs", "damage": "3.5", "cost": 1, "text": "Started Brandin Cooks at WR.", "links": [] }
+      ],
+      "weakness": "", "flavor": ""
+    },
+    {
+      "id": "stu", "tier": "wasps", "name": "Beedrill (super smash)", "nickname": "Stu", "image": "https://tcgplayer-cdn.tcgplayer.com/product/107012_in_1000x1000.jpg",
+      "moves": [
+        { "name": "Constant Needling", "damage": "", "cost": 1, "text": "Constant needling.", "links": [] },
+        { "name": "Pooh Bees", "damage": "", "cost": 1, "text": "", "links": [] }
+      ],
+      "weakness": "", "flavor": ""
+    },
+    {
+      "id": "louis", "tier": "wasps", "name": "“Catch and release” - Billy Strings", "nickname": "Louis", "image": "", "video": "https://www.youtube.com/watch?v=mWcMXujMpkQ",
+      "moves": [
+        { "name": "Catch and Release", "damage": "", "cost": 2,
+          "text": "He got stung by a bee, and it compiled and got worse because the cops saw him swerve, and there’s weed. TLDR — he was screwed, but he somehow has gotten let off the hook.",
+          "links": [],
+          "modal": {
+            "label": "Read the lyrics",
+            "title": "Catch and Release — Billy Strings",
+            "body": "Well I woke up this mornin' bout a quarter past four\nGrabbed my cap and bag, and slipped out the door\nHooked up my Tracker to the U-Haul hitch\nWent and picked up Vince, and we headed out to peep the sitch\nFigure we'd try to get into some Smallies in the clear water\nPrayin' there wasn't nothin' to get snagged up on\nSo we're cruisin' somewhere near Livingston\nHad some herb in my bowl and I lit it again\nI was jabbered in the jaw, and crimson in the eye\nOn the way to Dale Hollow I was floatin' like a butterfly\nThen I got stung by a bee\n\nHad to squeeze the mustard, Uncle Vinnie said \"wow\"\nThen I saw the lights flashin', my heart sank down\nAnd the man strolled up with a real nice lean\nAnd I rolled down my window and he smelled my weed\nHe said, \"I'm Officer Looper, the Tennessee State Trooper, and I'll take your license\"\n\"And your registration\"\n\"And your grass\"\nI guess it was only a matter of time\nHe said, \"Where you headed?\"\nI said, \"To catch some Bass\"\nHe said, \"Step on out, under my magnifying glass\"\nHe made me watch his fingers and touch my nose\nThen he made me count to thirty but then he let me go\nI reckon it was a little \"Catch and Release\"\n\nSo that there's my story and I want you to know\nIf you're gonna go fishin' you better take 'er slow\nBetter look both ways and keep her in line\nLet this be a lesson to you and your partners in crime\nAlways watch your six and nine\nDon't roll through the stop sign\nYou don't always need to make the verses rhyme\nDon't be mixing liquor with your wine\nIf you feel so inclined keep me in mind\nAnd by the way, only break one law at a time"
+          } }
+      ],
+      "weakness": "", "flavor": ""
+    },
+    {
+      "id": "evan", "tier": "notbees", "name": "Weedle", "nickname": "Evan", "image": "https://static0.thegamerimages.com/wordpress/wp-content/uploads/2021/03/old-man-viridian.gif?q=50&fit=crop&w=322&dpr=1.5",
+      "moves": [], "weakness": "", "flavor": ""
+    },
+    {
+      "id": "jeff", "tier": "notbees", "name": "Caterpie", "nickname": "Jeff", "image": "",
+      "moves": [
+        { "name": "Pokédex Entry", "damage": "", "cost": 1, "text": "",
+          "links": [ { "label": "JHBC Pokédex - Week 5 PR", "url": "https://docs.google.com/document/d/16I5Nvys5lWhlucGTCsqA1tGsq8QirTurUoDGfJH8B1Q/edit?usp=drivesdk" } ] }
+      ],
+      "weakness": "", "flavor": ""
+    }
+  ],
+  "unassigned": [
+    { "nickname": "Yellow jackets hbo", "text": "" },
+    { "nickname": "“I’m a bee”", "text": "Made money on instagram" },
+    { "nickname": "Bees in the trap", "text": "" }
+  ]
+}

@@ -2297,6 +2297,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         elif self.path == "/acknowledgements":
             self.path = "/views/home/acknowledgements.html"
             super().do_GET()
+        elif self.path.split("?")[0] == "/power-rankings":
+            self.path = "/views/league/power-rankings.html"
+            super().do_GET()
         elif self.path.split("?")[0] == "/trade-calculator":
             self.send_response(301)
             self.send_header("Location", "/football/trade-calculator")

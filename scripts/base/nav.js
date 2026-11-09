@@ -80,6 +80,9 @@ const NAV_SECTIONS = [
       // FAAB log, frozen. League history rather than anything to act on this
       // week.
       { label: 'Waiver Board', href: '/football/waivers', emoji: '💸', admin: true },
+      // The JHBC power rankings as swipeable trading cards, built from
+      // data/power_rankings_cards.json.
+      { label: 'Power Rankings', href: '/power-rankings', emoji: '🐝', admin: true },
     ],
   },
   {

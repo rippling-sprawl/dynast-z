@@ -341,6 +341,10 @@
       "destination": "/views/home/acknowledgements.html"
     },
     {
+      "source": "/power-rankings",
+      "destination": "/views/league/power-rankings.html"
+    },
+    {
       "source": "/api/:path*",
       "destination": "/api/:path*"
     }
