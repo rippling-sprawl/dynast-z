@@ -35,7 +35,15 @@
     <div class="pr-track" id="pr-track" aria-roledescription="carousel"></div>
   </main>
 
-  <nav class="pr-dots" id="pr-dots" aria-label="Cards"></nav>
+  <div class="pr-nav">
+    <button class="pr-nav-btn" id="pr-prev" type="button" aria-label="Previous card">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+    <nav class="pr-dots" id="pr-dots" aria-label="Cards"></nav>
+    <button class="pr-nav-btn" id="pr-next" type="button" aria-label="Next card">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
+    </button>
+  </div>
 
   <section class="pr-editor" id="pr-editor" aria-label="Edit card" hidden></section>
 

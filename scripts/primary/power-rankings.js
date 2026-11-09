@@ -60,6 +60,12 @@ function youtubeId(u) {
   return m ? m[1] : '';
 }
 
+// The share link's start time (?t=34, &t=1m2s, &start=34) in seconds, or 0.
+function youtubeStart(u) {
+  const m = String(u || '').match(/[?&](?:t|start)=(?:(\d+)h)?(?:(\d+)m)?(\d+)?s?(?:&|$)/);
+  return m ? (+m[1] || 0) * 3600 + (+m[2] || 0) * 60 + (+m[3] || 0) : 0;
+}
+
 function readDraft() {
   try {
     const raw = localStorage.getItem(DRAFT_KEY);
@@ -172,7 +178,7 @@ function cardHtml(card, i) {
         <div class="pr-art${tier.holo ? ' is-holo' : ''}">
           <div class="pr-art-inner">
             ${art}
-            ${yt ? `<button class="pr-play" type="button" data-play="${yt}" aria-label="Play video">
+            ${yt ? `<button class="pr-play" type="button" data-play="${yt}" data-start="${youtubeStart(card.video)}" aria-label="Play video">
               <svg viewBox="0 0 68 48" aria-hidden="true"><path d="M66.5 7.7a8.5 8.5 0 0 0-6-6C55.2.3 34 .3 34 .3s-21.2 0-26.5 1.4a8.5 8.5 0 0 0-6 6C.1 13 .1 24 .1 24s0 11 1.4 16.3a8.5 8.5 0 0 0 6 6c5.3 1.4 26.5 1.4 26.5 1.4s21.2 0 26.5-1.4a8.5 8.5 0 0 0 6-6C67.9 35 67.9 24 67.9 24s0-11-1.4-16.3z" fill="#e33"/><path d="M27 34V14l18 10z" fill="#fff"/></svg>
             </button>` : ''}
           </div>
@@ -214,6 +220,7 @@ function renderAll() {
   }).join('');
   els.draft.hidden = !hasDraft;
   playing = -1;
+  layout(false);
   markCurrent();
 }
 
@@ -233,7 +240,41 @@ function markCurrent() {
   if (card) history.replaceState(null, '', `${location.pathname}${location.search}#${card.id}`);
 }
 
-// Move one slide left/right on screen (which is down/up in rank when the
+// ---------- the deck ----------
+//
+// Not a strip: the slides are stacked. The current card is on top, the next two
+// sit under it, and every card already played has been thrown off the table in
+// the direction it was flung (remembered per card, so going back brings it in
+// from the same side). `k` is a slide's distance from the top of the deck.
+
+const exits = {};
+const DEFAULT_EXIT = { x: -1, y: -0.12 };
+
+function slideTransform(k, exit) {
+  if (k < 0) {
+    const d = Math.hypot(innerWidth, innerHeight) * 1.1;
+    return `translate(${exit.x * d}px, ${exit.y * d}px) rotate(${exit.x * 28}deg)`;
+  }
+  const depth = Math.min(k, 2);
+  return `translateY(${depth * 22}px) scale(${1 - depth * 0.04})`;
+}
+
+function layout(animate = true) {
+  const top = slot(index);
+  [...els.track.children].forEach((slide, p) => {
+    const k = p - top;
+    slide.style.transition = animate ? '' : 'none';
+    slide.style.transform = slideTransform(k, exits[model.cards[slot(p)].id] || DEFAULT_EXIT);
+    // Thrown cards ride above the deck on their way out (and back in).
+    slide.style.zIndex = String(k < 0 ? 200 + k : 100 - k);
+    slide.style.opacity = k < -1 || k > 2 ? '0' : '1';
+    slide.classList.toggle('is-top', k === 0);
+    slide.setAttribute('aria-hidden', k === 0 ? 'false' : 'true');
+  });
+  if (!animate) void els.track.offsetWidth; // commit, so the next change animates
+}
+
+// One card forward or back in the order shown (down or up in rank when the
 // deck counts down). Off either end, slot() clamps back via goTo.
 function step(d) {
   goTo(slot(slot(index) + d));
@@ -241,7 +282,7 @@ function step(d) {
 
 function goTo(i, smooth = true) {
   index = Math.max(0, Math.min(i, model.cards.length - 1));
-  els.track.scrollTo({ left: slot(index) * els.track.clientWidth, behavior: smooth ? 'smooth' : 'auto' });
+  layout(smooth);
   markCurrent();
   if (editing) renderEditor();
 }
@@ -258,7 +299,6 @@ function update(mutate, { structural = false } = {}) {
   writeDraft();
   if (structural) {
     renderAll();
-    goTo(index, false);
   } else {
     renderSlide(index);
     els.draft.hidden = false;
@@ -458,23 +498,11 @@ els.editor.addEventListener('click', e => {
 
 // ---------- deck interactions ----------
 
-let scrollRaf = 0;
-els.track.addEventListener('scroll', () => {
-  cancelAnimationFrame(scrollRaf);
-  scrollRaf = requestAnimationFrame(() => {
-    const i = slot(Math.round(els.track.scrollLeft / els.track.clientWidth));
-    if (i !== index && i >= 0 && i < model.cards.length) {
-      index = i;
-      markCurrent();
-      if (editing) renderEditor();
-    }
-  });
-}, { passive: true });
+// Thrown cards sit a viewport's diagonal away; keep them there on resize.
+window.addEventListener('resize', () => { if (model) layout(false); });
 
-// Keep the current card in view when the stage resizes (rotation, editor).
-new ResizeObserver(() => {
-  if (model) els.track.scrollLeft = slot(index) * els.track.clientWidth;
-}).observe(els.track);
+document.getElementById('pr-prev').addEventListener('click', () => step(-1));
+document.getElementById('pr-next').addEventListener('click', () => step(1));
 
 els.dots.addEventListener('click', e => {
   const b = e.target.closest('[data-go]');
@@ -503,7 +531,7 @@ els.track.addEventListener('click', e => {
   const art = b.closest('.pr-art');
   art.classList.add('is-playing');
   art.querySelector('.pr-art-inner').innerHTML =
-    `<iframe src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(b.dataset.play)}?autoplay=1&playsinline=1&rel=0"
+    `<iframe src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(b.dataset.play)}?autoplay=1&playsinline=1&rel=0&start=${parseInt(b.dataset.start, 10) || 0}"
       title="YouTube video" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>`;
   playing = slideIndex;
 });
@@ -523,41 +551,80 @@ document.addEventListener('keydown', e => {
   if (e.key === 'ArrowLeft') step(-1);
 });
 
-// Mouse drag to swipe. Touch and trackpads scroll the track natively; a mouse
-// can't, so drag it by hand with snapping off, then settle on the next card
-// if the drag went far enough. A drag also eats the click it ends in, so
-// letting go over a link doesn't open it.
+// Grab the top card with a finger or mouse and it follows, tilting with the
+// drag, while the card under it rises. Let go far or fast enough and it is
+// thrown off along the flick (velocity over the last ~100ms, or the drag
+// itself if the hand stopped) and the next card is on top; otherwise it
+// springs back. A drag also eats the click it ends in, so letting go over a
+// link doesn't open it.
 let drag = null;
 let dragClickGuard = false;
+
 els.track.addEventListener('pointerdown', e => {
-  if (e.pointerType !== 'mouse' || e.button !== 0 || e.target.closest('iframe')) return;
-  drag = { x: e.clientX, left: els.track.scrollLeft, moved: false, id: e.pointerId };
+  if (e.button !== 0 || !e.isPrimary || e.target.closest('iframe')) return;
+  const slide = e.target.closest('.pr-slide.is-top');
+  if (!slide) return;
+  drag = {
+    id: e.pointerId, x: e.clientX, y: e.clientY, slide, moved: false,
+    samples: [{ x: e.clientX, y: e.clientY, t: e.timeStamp }],
+  };
 });
+
 window.addEventListener('pointermove', e => {
   if (!drag || e.pointerId !== drag.id) return;
   const dx = e.clientX - drag.x;
-  if (!drag.moved && Math.abs(dx) < 6) return;
+  const dy = e.clientY - drag.y;
   if (!drag.moved) {
+    if (Math.hypot(dx, dy) < 8) return;
     drag.moved = true;
-    els.track.setPointerCapture(drag.id);
-    els.track.style.scrollSnapType = 'none';
+    try { els.track.setPointerCapture(drag.id); } catch (err) { /* pointer already gone */ }
     els.body.classList.add('is-dragging');
+    drag.under = els.track.children[slot(index) + 1] || null;
+    drag.slide.style.transition = 'none';
+    if (drag.under) drag.under.style.transition = 'none';
+    const card = drag.slide.querySelector('.pr-card');
+    if (card) resetTilt(card);
   }
-  els.track.scrollLeft = drag.left - dx;
+  drag.samples.push({ x: e.clientX, y: e.clientY, t: e.timeStamp });
+  while (drag.samples.length > 2 && e.timeStamp - drag.samples[0].t > 100) drag.samples.shift();
+  drag.slide.style.transform = `translate(${dx}px, ${dy}px) rotate(${dx * 0.05}deg)`;
+  if (drag.under) {
+    const p = Math.min(1, Math.hypot(dx, dy) / 220);
+    drag.under.style.transform = `translateY(${22 * (1 - p)}px) scale(${0.96 + 0.04 * p})`;
+  }
 });
+
 function endDrag(e) {
   if (!drag || e.pointerId !== drag.id) return;
-  const { moved, x } = drag;
+  const d = drag;
   drag = null;
-  if (!moved) return;
+  if (!d.moved) return;
   dragClickGuard = true;
   setTimeout(() => { dragClickGuard = false; }, 0);
   els.body.classList.remove('is-dragging');
-  const dx = e.clientX - x;
-  const dir = Math.abs(dx) > Math.min(80, els.track.clientWidth / 6) ? (dx < 0 ? 1 : -1) : 0;
-  step(dir);
-  // Snap back on once the smooth scroll has landed, or it fights it.
-  setTimeout(() => { els.track.style.scrollSnapType = ''; }, 450);
+  d.slide.style.transition = '';
+  if (d.under) d.under.style.transition = '';
+
+  const dx = e.clientX - d.x;
+  const dy = e.clientY - d.y;
+  const first = d.samples[0];
+  const last = d.samples[d.samples.length - 1];
+  const dt = Math.max(1, last.t - first.t);
+  const vx = (last.x - first.x) / dt;
+  const vy = (last.y - first.y) / dt;
+  const speed = Math.hypot(vx, vy);
+  const dist = Math.hypot(dx, dy);
+  const hasNext = slot(index) + 1 < model.cards.length;
+  // A cancelled pointer (the browser took over to scroll) always springs back.
+  const thrown = e.type !== 'pointercancel' && hasNext && (dist > 120 || (speed > 0.6 && dist > 50));
+  if (thrown) {
+    const [ux, uy] = speed > 0.6 ? [vx, vy] : [dx, dy];
+    const len = Math.hypot(ux, uy) || 1;
+    exits[model.cards[index].id] = { x: ux / len, y: uy / len };
+    step(1);
+  } else {
+    layout(true);
+  }
 }
 window.addEventListener('pointerup', endDrag);
 window.addEventListener('pointercancel', endDrag);
@@ -583,9 +650,13 @@ els.track.addEventListener('pointermove', e => {
 els.track.addEventListener('pointerout', e => {
   const card = e.target.closest('.pr-card');
   if (!card || card.contains(e.relatedTarget)) return;
+  resetTilt(card);
+});
+
+function resetTilt(card) {
   card.classList.remove('is-tracking');
   ['--rx', '--ry', '--hx', '--hy'].forEach(p => card.style.removeProperty(p));
-});
+}
 
 els.toggle.addEventListener('click', () => setEditing(!editing));
 
@@ -610,7 +681,6 @@ async function load() {
   const fromHash = model.cards.findIndex(c => c.id === hashId);
   index = fromHash >= 0 ? fromHash : slot(0);
   renderAll();
-  requestAnimationFrame(() => goTo(index, false));
 }
 
 // Admin-only page (a Sandbox item). requireAdmin bounces everyone else before

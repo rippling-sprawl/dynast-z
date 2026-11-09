@@ -19,7 +19,7 @@
       "weakness": "", "flavor": ""
     },
     {
-      "id": "kyle", "tier": "queen", "name": "Regina George with the broken neck", "nickname": "Kyle", "image": "", "video": "https://youtube.com/shorts/CIb1ZufblhI?is=YqG_fUhEx5_3OsKb",
+      "id": "kyle", "tier": "queen", "name": "Regina George with the broken neck", "nickname": "Kyle", "image": "", "video": "https://youtu.be/fjoO5927p80?t=34",
       "moves": [
         { "name": "One Queen Per Hive", "damage": "", "cost": 2,
           "text": "*There can be only 1 queen in a hive*",
@@ -28,7 +28,7 @@
       "weakness": "humility", "flavor": ""
     },
     {
-      "id": "fama", "tier": "hornets", "name": "The Bees at Windy Ridge", "nickname": "Fama", "image": "",
+      "id": "fama", "tier": "hornets", "name": "The bee keeper", "nickname": "Fama", "image": "",
       "moves": [], "weakness": "Baker", "flavor": ""
     },
     {
@@ -40,35 +40,38 @@
       "weakness": "", "flavor": ""
     },
     {
-      "id": "sal", "tier": "hornets", "name": "The bee keeper", "nickname": "Sal", "image": "",
-      "moves": [], "weakness": "", "flavor": ""
+      "id": "sal", "tier": "hornets", "name": "The Bees at Windy Ridge", "nickname": "Sal", "image": "",
+      "moves": [
+        { "name": "JHBC Constitution", "damage": "", "cost": 1, "text": "", "links": [] }
+      ], "weakness": "", "flavor": ""
     },
     {
-      "id": "jody", "tier": "wasps", "name": "The Steelers jerseys", "nickname": "Jody", "image": "",
+      "id": "jody", "tier": "wasps", "name": "The Steelers jerseys", "nickname": "Jody", "image": "https://image.cleveland.com/home/cleve-media/width2048/img/steelers/photo/2018/05/31/steelers-throwback-uniforms-football-9824f887f65ae4f4.jpg",
       "moves": [
         { "name": "Criminal Trade", "damage": "", "cost": 1,
           "text": "Criminal for his trades. Traded away Hurts for Mahomes, Burden, Higgins… 1st??",
-          "links": [] },
-        { "name": "The Bee Movie", "damage": "49", "cost": 2,
-          "text": "Incredibly average. But there’s also something really provocative, trust me.",
-          "links": [
-            { "label": "49/53% on Rotten Tomatoes", "url": "https://www.rottentomatoes.com/m/bee_movie" },
-            { "label": "Movie recap", "url": "https://www.instagram.com/reel/DePQE4Wu6Dj/?srtk=MXJqcjIzcmEyMjRxYg==" }
-          ] }
+          "links": [] }
       ],
       "weakness": "", "flavor": ""
     },
     {
       "id": "reid", "tier": "wasps", "name": "Kyle Bieg", "nickname": "Reid", "image": "",
       "moves": [
-        { "name": "Consolation Prize", "damage": "", "cost": 1, "text": "Here’s a marshmallow anyway?", "links": [] }
+        { "name": "Consolation Prize", "damage": "", "cost": 1, "text": "Here’s a marshmallow anyway?", "links": [] },
+        { "name": "Poorly Timed Injury", "damage": "", "cost": 1, "text": "", "links": [] }
       ],
       "weakness": "", "flavor": ""
     },
     {
-      "id": "joe", "tier": "wasps", "name": "", "nickname": "Joe", "image": "",
+      "id": "joe", "tier": "wasps", "name": "The Bee Movie", "nickname": "Joe", "image": "",
       "moves": [
-        { "name": "Missing QBs", "damage": "3.5", "cost": 1, "text": "Started Brandin Cooks at WR.", "links": [] }
+        { "name": "Missing QBs", "damage": "3.5", "cost": 1, "text": "Started Brandin Cooks at WR.", "links": [] },
+        { "name": "The Bee Movie", "damage": "49", "cost": 2,
+          "text": "Incredibly average. But there’s also something really provocative, trust me.",
+          "links": [
+            { "label": "49/53% on Rotten Tomatoes", "url": "https://www.rottentomatoes.com/m/bee_movie" },
+            { "label": "Movie recap", "url": "https://www.instagram.com/reel/DePQE4Wu6Dj/?srtk=MXJqcjIzcmEyMjRxYg==" }
+          ] }
       ],
       "weakness": "", "flavor": ""
     },
