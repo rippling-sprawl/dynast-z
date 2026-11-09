@@ -5,7 +5,6 @@
 
 :root {
   --pr-bg: #14110c;
-  --pr-bar: rgba(20, 17, 12, 0.86);
   --pr-ink: #1d1a14;
   --pr-ink-2: #4a4334;
   --pr-hp: #d8211f;
@@ -55,8 +54,7 @@ html, body { margin: 0; height: 100%; }
   display: flex;
   align-items: center;
   gap: 8px;
-  background: var(--pr-bar);
-  backdrop-filter: blur(10px);
+  background: var(--pr-bg);
   position: relative;
   z-index: 300; /* above thrown cards */
 }
@@ -116,11 +114,32 @@ html, body { margin: 0; height: 100%; }
   perspective: 1200px;
   pointer-events: none;
   transition: transform .5s cubic-bezier(.2, .8, .25, 1), opacity .35s ease;
-  will-change: transform;
 }
+/* Layers only for the two cards a drag actually moves. */
+.pr-slide.is-top,
+.pr-slide.is-under { will-change: transform; }
+/* Empty shells (cards out of reach) render nothing. */
+.pr-slide:empty { visibility: hidden; }
 .pr-slide.is-top .pr-card { pointer-events: auto; touch-action: none; }
 /* Long move lists still scroll vertically under a finger. */
 .pr-slide.is-top .pr-moves { touch-action: pan-y; }
+
+/* ---------- loading ---------- */
+
+.pr-loading {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  display: none;
+  place-items: center;
+  color: var(--pr-chrome-2);
+  font-size: 15px;
+  letter-spacing: .04em;
+  animation: pr-pulse 1.2s ease-in-out infinite alternate;
+}
+.pr-body.is-loading .pr-loading { display: grid; }
+.pr-body.is-loading .pr-nav { visibility: hidden; }
+@keyframes pr-pulse { from { opacity: .35; } to { opacity: 1; } }
 
 /* ---------- prev / dots / next ---------- */
 
@@ -147,7 +166,18 @@ html, body { margin: 0; height: 100%; }
   cursor: pointer;
 }
 .pr-nav-btn:hover { background: rgba(255,255,255,.07); }
-.pr-dots { display: flex; align-items: center; }
+.pr-dots {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  padding: 0 6px;
+  border-radius: 99px;
+  touch-action: none; /* a horizontal drag scrubs instead of scrolling */
+  cursor: pointer;
+  transition: background .15s;
+}
+.pr-dots.is-scrubbing { background: rgba(255,255,255,.07); }
+.pr-dots.is-scrubbing .pr-dot[aria-current="true"]::before { height: 9px; }
 .pr-dot {
   width: 18px;
   height: 30px;
@@ -352,6 +382,10 @@ html, body { margin: 0; height: 100%; }
   pointer-events: none;
   animation: pr-foil 7s ease-in-out infinite alternate;
 }
+/* Foil drift costs a blended repaint every frame: only the top card runs it,
+   and not while it is being dragged. */
+.pr-slide:not(.is-top) .pr-art.is-holo .pr-art-inner::after,
+.pr-body.is-dragging .pr-art.is-holo .pr-art-inner::after { animation-play-state: paused; }
 .pr-art.is-holo .pr-art-inner::before {
   content: "";
   position: absolute;
@@ -536,6 +570,15 @@ html, body { margin: 0; height: 100%; }
   font-size: 28px; line-height: 1;
   color: var(--pr-ink);
   cursor: pointer;
+}
+.pr-modal.is-video { width: min(420px, calc(100vw - 32px)); max-height: 92dvh; }
+.pr-modal.is-video .pr-modal-body { padding: 0; overflow: hidden; }
+.pr-modal.is-video iframe {
+  display: block;
+  width: 100%;
+  height: min(76dvh, 720px);
+  border: 0;
+  background: #fff;
 }
 .pr-modal-body {
   overflow-y: auto;

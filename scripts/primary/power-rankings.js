@@ -60,6 +60,13 @@ function youtubeId(u) {
   return m ? m[1] : '';
 }
 
+// instagram.com/reel/ID or /p/ID → its embed page; anything else → ''.
+// Instagram has no public thumbnail, so these cards need an `image` poster.
+function instagramEmbed(u) {
+  const m = String(u || '').match(/instagram\.com\/(reel|p)\/([\w-]+)/);
+  return m ? `https://www.instagram.com/${m[1]}/${m[2]}/embed/` : '';
+}
+
 // The share link's start time (?t=34, &t=1m2s, &start=34) in seconds, or 0.
 function youtubeStart(u) {
   const m = String(u || '').match(/[?&](?:t|start)=(?:(\d+)h)?(?:(\d+)m)?(\d+)?s?(?:&|$)/);
@@ -147,17 +154,24 @@ function statValue(v) {
   return GLYPHS[v] ? energy(v) : escapeHtml(v);
 }
 
+// What the art window shows before anything is tapped: the card's own image,
+// else its video's thumbnail.
+function posterOf(card) {
+  const yt = youtubeId(card.video);
+  return safeUrl(card.image) || (yt ? `https://i.ytimg.com/vi/${yt}/hqdefault.jpg` : '');
+}
+
 function cardHtml(card, i) {
   const n = model.cards.length;
   const tier = tierOf(card);
   const hp = (n - i) * 10;
-  const img = safeUrl(card.image);
   const yt = youtubeId(card.video);
-  const poster = img || (yt ? `https://i.ytimg.com/vi/${yt}/hqdefault.jpg` : '');
+  const ig = yt ? '' : instagramEmbed(card.video);
+  const poster = posterOf(card);
   const title = card.name || card.nickname || 'Unnamed';
   const titleLen = title.length;
   const art = poster
-    ? `<img src="${escapeHtml(poster)}" alt="${escapeHtml(title)}" loading="${Math.abs(slot(i) - slot(index)) < 2 ? 'eager' : 'lazy'}" referrerpolicy="no-referrer" draggable="false">`
+    ? `<img src="${escapeHtml(poster)}" alt="${escapeHtml(title)}" decoding="async" referrerpolicy="no-referrer" draggable="false">`
     : `<div class="pr-art-placeholder">${energy(tier.id)}<span>${escapeHtml(tier.name)}</span></div>`;
   const moves = (card.moves || []).map((m, mi) => moveHtml(m, i, mi, tier)).join('')
     || '<p class="pr-empty">No moves yet. Still charging up.</p>';
@@ -180,6 +194,8 @@ function cardHtml(card, i) {
             ${art}
             ${yt ? `<button class="pr-play" type="button" data-play="${yt}" data-start="${youtubeStart(card.video)}" aria-label="Play video">
               <svg viewBox="0 0 68 48" aria-hidden="true"><path d="M66.5 7.7a8.5 8.5 0 0 0-6-6C55.2.3 34 .3 34 .3s-21.2 0-26.5 1.4a8.5 8.5 0 0 0-6 6C.1 13 .1 24 .1 24s0 11 1.4 16.3a8.5 8.5 0 0 0 6 6c5.3 1.4 26.5 1.4 26.5 1.4s21.2 0 26.5-1.4a8.5 8.5 0 0 0 6-6C67.9 35 67.9 24 67.9 24s0-11-1.4-16.3z" fill="#e33"/><path d="M27 34V14l18 10z" fill="#fff"/></svg>
+            </button>` : ig ? `<button class="pr-play" type="button" data-reel="${escapeHtml(ig)}" data-title="${escapeHtml(title)}" aria-label="Play reel">
+              <svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="23" fill="rgba(0,0,0,.55)" stroke="#fff" stroke-width="2"/><path d="M19 15v18l15-9z" fill="#fff"/></svg>
             </button>` : ''}
           </div>
         </div>
@@ -212,7 +228,7 @@ function renderAll() {
   const order = model.cards.map((_, p) => slot(p));
   els.track.innerHTML = order.map(i => {
     const c = model.cards[i];
-    return `<section class="pr-slide" id="card-${escapeHtml(c.id)}" aria-roledescription="slide" aria-label="#${i + 1} of ${n}">${cardHtml(c, i)}</section>`;
+    return `<section class="pr-slide" id="card-${escapeHtml(c.id)}" aria-roledescription="slide" aria-label="#${i + 1} of ${n}"></section>`;
   }).join('');
   els.dots.innerHTML = order.map(i => {
     const c = model.cards[i];
@@ -228,7 +244,7 @@ function renderAll() {
 // editor's inputs are left alone and keep focus.
 function renderSlide(i) {
   const slide = els.track.children[slot(i)];
-  if (slide) slide.innerHTML = cardHtml(model.cards[i], i);
+  if (slide && slide.dataset.mounted) slide.innerHTML = cardHtml(model.cards[i], i);
 }
 
 function markCurrent() {
@@ -259,10 +275,27 @@ function slideTransform(k, exit) {
   return `translateY(${depth * 22}px) scale(${1 - depth * 0.04})`;
 }
 
+// Only the cards that can be seen are in the DOM: the one just thrown (so it
+// can come back), the top card and the two under it. Every other slide is an
+// empty shell that keeps its place and transform; it is filled when it comes
+// within reach and emptied when it leaves.
+const MOUNT_BEHIND = 1;
+const MOUNT_AHEAD = 2;
+
 function layout(animate = true) {
   const top = slot(index);
   [...els.track.children].forEach((slide, p) => {
     const k = p - top;
+    const near = k >= -MOUNT_BEHIND && k <= MOUNT_AHEAD;
+    if (near && !slide.dataset.mounted) {
+      slide.innerHTML = cardHtml(model.cards[slot(p)], slot(p));
+      slide.dataset.mounted = '1';
+    } else if (!near && slide.dataset.mounted) {
+      if (playing === slot(p)) playing = -1;
+      slide.innerHTML = '';
+      delete slide.dataset.mounted;
+    }
+    slide.classList.toggle('is-under', k === 1);
     slide.style.transition = animate ? '' : 'none';
     slide.style.transform = slideTransform(k, exits[model.cards[slot(p)].id] || DEFAULT_EXIT);
     // Thrown cards ride above the deck on their way out (and back in).
@@ -385,7 +418,7 @@ function renderEditor() {
       ${field('Nickname', 'nickname')}
     </div>
     ${field('Image URL', 'image', { type: 'url', placeholder: '/assets/power-rankings/name.jpg or https://…' })}
-    ${field('Video (YouTube URL)', 'video', { type: 'url', placeholder: 'Plays in the art window; its thumbnail is the poster' })}
+    ${field('Video (YouTube or Instagram URL)', 'video', { type: 'url', placeholder: 'YouTube plays in the art window; Instagram in a pop-up' })}
 
     <div class="pr-ed-section"><span>Moves</span><button class="pr-btn pr-btn-sm" type="button" data-action="move-add">+ Move</button></div>
     ${moves || '<p class="pr-ed-note" style="margin-top:0">No moves yet.</p>'}
@@ -509,11 +542,48 @@ els.dots.addEventListener('click', e => {
   if (b) goTo(parseInt(b.dataset.go, 10));
 });
 
+// The dots are a scrubber too: press anywhere on the row and slide, and the
+// deck follows the dot nearest the finger. (Click above still covers taps
+// from a keyboard.)
+let scrub = null;
+function dotAt(x) {
+  let best = null;
+  let bestDist = Infinity;
+  for (const d of els.dots.children) {
+    const r = d.getBoundingClientRect();
+    const dist = Math.abs(r.left + r.width / 2 - x);
+    if (dist < bestDist) { best = d; bestDist = dist; }
+  }
+  return best ? parseInt(best.dataset.go, 10) : -1;
+}
+function scrubTo(e) {
+  const i = dotAt(e.clientX);
+  if (i >= 0 && i !== index) goTo(i);
+}
+els.dots.addEventListener('pointerdown', e => {
+  if (e.button !== 0 || !e.isPrimary) return;
+  scrub = e.pointerId;
+  try { els.dots.setPointerCapture(e.pointerId); } catch (err) { /* pointer already gone */ }
+  els.dots.classList.add('is-scrubbing');
+  scrubTo(e);
+});
+els.dots.addEventListener('pointermove', e => {
+  if (e.pointerId === scrub) scrubTo(e);
+});
+function endScrub(e) {
+  if (e.pointerId !== scrub) return;
+  scrub = null;
+  els.dots.classList.remove('is-scrubbing');
+}
+els.dots.addEventListener('pointerup', endScrub);
+els.dots.addEventListener('pointercancel', endScrub);
+
 els.track.addEventListener('click', e => {
   const b = e.target.closest('[data-modal]');
   if (!b) return;
   const [ci, mi] = b.dataset.modal.split(':').map(Number);
   const modal = model.cards[ci].moves[mi].modal;
+  els.modal.classList.remove('is-video');
   els.modalTitle.textContent = modal.title || model.cards[ci].moves[mi].name || '';
   els.modalBody.textContent = modal.body || '';
   els.modal.showModal();
@@ -628,6 +698,22 @@ function endDrag(e) {
 }
 window.addEventListener('pointerup', endDrag);
 window.addEventListener('pointercancel', endDrag);
+// Reels are portrait, so they don't fit the art window; they play in the
+// modal instead, sized for them. Closing it drops the iframe, which stops it.
+els.track.addEventListener('click', e => {
+  const b = e.target.closest('[data-reel]');
+  if (!b) return;
+  stopVideo();
+  els.modal.classList.add('is-video');
+  els.modalTitle.textContent = b.dataset.title || '';
+  els.modalBody.innerHTML = `<iframe src="${escapeHtml(b.dataset.reel)}" title="Instagram reel"
+    allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen scrolling="no"></iframe>`;
+  els.modal.showModal();
+});
+els.modal.addEventListener('close', () => {
+  if (els.modal.classList.contains('is-video')) els.modalBody.innerHTML = '';
+});
+
 els.track.addEventListener('click', e => {
   if (dragClickGuard) { e.preventDefault(); e.stopImmediatePropagation(); }
 }, true);
@@ -680,7 +766,25 @@ async function load() {
   const hashId = decodeURIComponent(location.hash.slice(1));
   const fromHash = model.cards.findIndex(c => c.id === hashId);
   index = fromHash >= 0 ? fromHash : slot(0);
+  // Every poster is fetched and decoded before the deck is dealt, so no card
+  // paints in half-loaded mid-throw. A slow or dead image host can't hold the
+  // deck hostage: whatever hasn't arrived after a few seconds loads in place.
+  await preloadImages(model.cards.map(posterOf).filter(Boolean));
+  els.body.classList.remove('is-loading');
   renderAll();
+}
+
+function preloadImages(urls, timeoutMs = 5000) {
+  const loads = [...new Set(urls)].map(src => {
+    const img = new Image();
+    img.referrerPolicy = 'no-referrer';
+    img.src = src;
+    return img.decode().catch(() => {});
+  });
+  return Promise.race([
+    Promise.all(loads),
+    new Promise(resolve => setTimeout(resolve, timeoutMs)),
+  ]);
 }
 
 // Admin-only page (a Sandbox item). requireAdmin bounces everyone else before
@@ -688,6 +792,7 @@ async function load() {
 if (requireAdmin('/')) {
   if (canEdit()) els.toggle.hidden = false;
   load().catch(() => {
+    els.body.classList.remove('is-loading');
     els.track.innerHTML = '<p style="margin:auto;padding:24px;text-align:center">Couldn’t load the rankings.</p>';
   });
 }

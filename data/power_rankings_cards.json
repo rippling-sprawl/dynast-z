@@ -40,7 +40,7 @@
       "weakness": "", "flavor": ""
     },
     {
-      "id": "sal", "tier": "hornets", "name": "The Bees at Windy Ridge", "nickname": "Sal", "image": "",
+      "id": "sal", "tier": "hornets", "name": "The Bees at Windy Ridge", "nickname": "Sal", "image": "/assets/power-rankings/sal.jpg",
       "moves": [
         { "name": "JHBC Constitution", "damage": "", "cost": 1, "text": "", "links": [] }
       ], "weakness": "", "flavor": ""
@@ -55,7 +55,7 @@
       "weakness": "", "flavor": ""
     },
     {
-      "id": "reid", "tier": "wasps", "name": "Kyle Bieg", "nickname": "Reid", "image": "",
+      "id": "reid", "tier": "wasps", "name": "Kyle Bieg", "nickname": "Reid", "image": "/assets/power-rankings/reid.jpg",
       "moves": [
         { "name": "Consolation Prize", "damage": "", "cost": 1, "text": "Here’s a marshmallow anyway?", "links": [] },
         { "name": "Poorly Timed Injury", "damage": "", "cost": 1, "text": "", "links": [] }
@@ -63,9 +63,10 @@
       "weakness": "", "flavor": ""
     },
     {
-      "id": "joe", "tier": "wasps", "name": "The Bee Movie", "nickname": "Joe", "image": "",
+      "id": "joe", "tier": "wasps", "name": "The Bee Movie", "nickname": "Joe", "image": "/assets/power-rankings/joe.jpg", "video": "https://www.instagram.com/reel/DePQE4Wu6Dj/",
       "moves": [
         { "name": "Missing QBs", "damage": "3.5", "cost": 1, "text": "Started Brandin Cooks at WR.", "links": [] },
+        { "name": "05 Personnel", "damage": "", "cost": 1, "text": "He has no WRs.", "links": [] },
         { "name": "The Bee Movie", "damage": "49", "cost": 2,
           "text": "Incredibly average. But there’s also something really provocative, trust me.",
           "links": [
@@ -102,7 +103,7 @@
       "moves": [], "weakness": "", "flavor": ""
     },
     {
-      "id": "jeff", "tier": "notbees", "name": "Caterpie", "nickname": "Jeff", "image": "",
+      "id": "jeff", "tier": "notbees", "name": "Metapod", "nickname": "Jeff", "image": "/assets/power-rankings/jeff.png",
       "moves": [
         { "name": "Pokédex Entry", "damage": "", "cost": 1, "text": "",
           "links": [ { "label": "JHBC Pokédex - Week 5 PR", "url": "https://docs.google.com/document/d/16I5Nvys5lWhlucGTCsqA1tGsq8QirTurUoDGfJH8B1Q/edit?usp=drivesdk" } ] }
