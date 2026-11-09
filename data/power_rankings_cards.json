@@ -40,7 +40,7 @@
       "weakness": "", "flavor": ""
     },
     {
-      "id": "sal", "tier": "hornets", "name": "The Bees at Windy Ridge", "nickname": "Sal", "image": "/assets/power-rankings/sal.jpg",
+      "id": "sal", "tier": "hornets", "name": "Beedrill", "nickname": "Sal", "image": "https://tcgplayer-cdn.tcgplayer.com/product/107012_in_1000x1000.jpg",
       "moves": [
         { "name": "JHBC Constitution", "damage": "", "cost": 1, "text": "", "links": [] }
       ], "weakness": "", "flavor": ""
@@ -77,7 +77,7 @@
       "weakness": "", "flavor": ""
     },
     {
-      "id": "stu", "tier": "wasps", "name": "Beedrill (super smash)", "nickname": "Stu", "image": "https://tcgplayer-cdn.tcgplayer.com/product/107012_in_1000x1000.jpg",
+      "id": "stu", "tier": "wasps", "name": "Zinger", "nickname": "Stu", "image": "/assets/power-rankings/stu.jpg",
       "moves": [
         { "name": "Constant Needling", "damage": "", "cost": 1, "text": "Constant needling.", "links": [] },
         { "name": "Pooh Bees", "damage": "", "cost": 1, "text": "", "links": [] }

@@ -337,8 +337,19 @@ html, body { margin: 0; height: 100%; }
   display: grid;
   place-items: center;
 }
-.pr-art-inner img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.pr-art-inner iframe { width: 100%; height: 100%; border: 0; display: block; background: #000; }
+/* The art window's height comes from flex sizing, which a child's
+   height: 100% can't always resolve against; pinning media to all four edges
+   sizes it to the window for certain, so object-fit centres it. */
+.pr-art-inner img,
+.pr-art-inner iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.pr-art-inner img { object-fit: cover; object-position: center; }
+.pr-art-inner iframe { border: 0; background: #000; }
 .pr-play {
   position: absolute;
   inset: 0;
