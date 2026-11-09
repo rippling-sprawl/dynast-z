@@ -175,12 +175,21 @@ function cardHtml(card, i) {
     : `<div class="pr-art-placeholder">${energy(tier.id)}<span>${escapeHtml(tier.name)}</span></div>`;
   const moves = (card.moves || []).map((m, mi) => moveHtml(m, i, mi, tier)).join('')
     || '<p class="pr-empty">No moves yet. Still charging up.</p>';
+  // "Evolves from": the pre-evolution portrait tab in the top-left corner.
+  const evo = card.evolvesFrom && card.evolvesFrom.name ? card.evolvesFrom : null;
+  const evoImg = evo ? safeUrl(evo.image) : '';
 
   return `
     <article class="pr-card" data-tier="${escapeHtml(tier.id)}" aria-label="${escapeHtml(`#${i + 1} ${title}`)}">
-      <div class="pr-face">
+      <div class="pr-face${evo ? ' has-evo' : ''}">
+        ${evo ? `<div class="pr-evo" aria-hidden="true">
+          <span class="pr-evo-stage">${escapeHtml(tier.stage || '')}</span>
+          <span class="pr-evo-frame">${evoImg ? `<img src="${escapeHtml(evoImg)}" alt="" decoding="async" referrerpolicy="no-referrer" draggable="false">` : ''}</span>
+        </div>` : ''}
         <div class="pr-top">
-          <span class="pr-stage-badge">${escapeHtml(tier.stage || '')} · ${escapeHtml(tier.name)}</span>
+          ${evo
+            ? `<span class="pr-evo-from">Evolves from ${escapeHtml(evo.name)}</span>`
+            : `<span class="pr-stage-badge">${escapeHtml(tier.stage || '')} · ${escapeHtml(tier.name)}</span>`}
           <span>#${i + 1}</span>
         </div>
         <div class="pr-headline">
@@ -341,7 +350,7 @@ function update(mutate, { structural = false } = {}) {
 function setPath(obj, path, value) {
   const keys = path.split('.');
   let o = obj;
-  keys.slice(0, -1).forEach(k => { o = o[k]; });
+  keys.slice(0, -1).forEach(k => { o = o[k] ?? (o[k] = {}); });
   o[keys[keys.length - 1]] = value;
 }
 
@@ -419,6 +428,10 @@ function renderEditor() {
     </div>
     ${field('Image URL', 'image', { type: 'url', placeholder: '/assets/power-rankings/name.jpg or https://…' })}
     ${field('Video (YouTube or Instagram URL)', 'video', { type: 'url', placeholder: 'YouTube plays in the art window; Instagram in a pop-up' })}
+    <div class="pr-row">
+      ${field('Evolves from', 'evolvesFrom.name', { placeholder: 'Mike' })}
+      ${field('Evolves from image', 'evolvesFrom.image', { type: 'url', placeholder: '/assets/power-rankings/name.jpg' })}
+    </div>
 
     <div class="pr-ed-section"><span>Moves</span><button class="pr-btn pr-btn-sm" type="button" data-action="move-add">+ Move</button></div>
     ${moves || '<p class="pr-ed-note" style="margin-top:0">No moves yet.</p>'}
@@ -769,7 +782,9 @@ async function load() {
   // Every poster is fetched and decoded before the deck is dealt, so no card
   // paints in half-loaded mid-throw. A slow or dead image host can't hold the
   // deck hostage: whatever hasn't arrived after a few seconds loads in place.
-  await preloadImages(model.cards.map(posterOf).filter(Boolean));
+  await preloadImages(model.cards
+    .flatMap(c => [posterOf(c), c.evolvesFrom ? safeUrl(c.evolvesFrom.image) : ''])
+    .filter(Boolean));
   els.body.classList.remove('is-loading');
   renderAll();
 }

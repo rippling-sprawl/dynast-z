@@ -20,6 +20,7 @@
     },
     {
       "id": "kyle", "tier": "queen", "name": "Regina George with the broken neck", "nickname": "Kyle", "image": "", "video": "https://youtu.be/fjoO5927p80?t=34",
+      "evolvesFrom": { "name": "Mike", "image": "/assets/power-rankings/mike.jpg" },
       "moves": [
         { "name": "One Queen Per Hive", "damage": "", "cost": 2,
           "text": "*There can be only 1 queen in a hive*",
@@ -32,7 +33,8 @@
       "moves": [], "weakness": "Baker", "flavor": ""
     },
     {
-      "id": "ange", "tier": "hornets", "name": "The Wicker Man", "nickname": "Ange", "image": "", "video": "https://www.youtube.com/watch?v=UatQsjjOIAc",
+      "id": "ange", "tier": "hornets", "name": "The Wicker Man", "nickname": "Ange", "image": "", "video": "https://youtu.be/rz7cDquprIc?t=457",
+      "evolvesFrom": { "name": "Gill", "image": "/assets/power-rankings/gill.jpeg" },
       "moves": [
         { "name": "NO! NOT THE BEES!", "damage": "", "cost": 2, "text": "",
           "links": [ { "label": "NO! NOT THE BEES!", "url": "https://www.youtube.com/watch?v=UatQsjjOIAc" } ] }
@@ -42,7 +44,8 @@
     {
       "id": "sal", "tier": "hornets", "name": "Beedrill", "nickname": "Sal", "image": "https://tcgplayer-cdn.tcgplayer.com/product/107012_in_1000x1000.jpg",
       "moves": [
-        { "name": "JHBC Constitution", "damage": "", "cost": 1, "text": "", "links": [] }
+        { "name": "JHBC Constitution", "damage": "", "cost": 1, "text": "", "links": [] },
+        { "name": "Twineedle", "damage": "", "cost": 1, "text": "", "links": [] }
       ], "weakness": "", "flavor": ""
     },
     {

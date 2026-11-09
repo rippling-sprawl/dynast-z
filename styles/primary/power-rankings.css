@@ -285,6 +285,67 @@ html, body { margin: 0; height: 100%; }
   white-space: nowrap;
 }
 .pr-hp small { font-size: 4.2cqw; margin-left: .6cqw; }
+
+/* "Evolves from": the pre-evolution portrait tab hanging off the top-left
+   corner (after the Base Set Stage 2 cards). The header rows step right to
+   clear it. */
+.pr-evo {
+  position: absolute;
+  top: 1.2cqw;
+  left: 1.6cqw;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 14cqw;
+  pointer-events: none;
+}
+.pr-evo-stage {
+  position: relative;
+  z-index: 1;
+  padding: .3cqw 1.2cqw;
+  border-radius: .8cqw .8cqw 0 0;
+  background: linear-gradient(180deg, #fff6c8, #f2cf4a 55%, #d9a821);
+  box-shadow: 0 .3cqw .6cqw rgba(0,0,0,.25);
+  font-size: 2.4cqw;
+  font-weight: 800;
+  font-style: italic;
+  letter-spacing: .02em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: #2a1f08;
+}
+.pr-evo-frame {
+  display: block;
+  width: 13cqw;
+  aspect-ratio: 1;
+  padding: .9cqw;
+  margin-top: -.2cqw;
+  border-radius: 1cqw;
+  background: linear-gradient(145deg, #fff6c8, #e8bd35 40%, #b8861a 75%, #f6dc72);
+  box-shadow:
+    0 0 0 .3cqw rgba(90,60,0,.45),
+    0 .8cqw 1.6cqw rgba(0,0,0,.35);
+}
+.pr-evo-frame img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: .5cqw;
+  box-shadow: 0 0 0 .3cqw #e9ecef inset;
+  outline: .4cqw solid #cfd4da;
+  outline-offset: -.4cqw;
+  filter: saturate(.9);
+}
+.has-evo .pr-top,
+.has-evo .pr-headline,
+.has-evo .pr-nick { padding-left: 13.4cqw; }
+.pr-evo-from {
+  font-style: italic;
+  font-weight: 700;
+  color: var(--pr-ink);
+}
 .pr-nick {
   margin: .2cqw 0 1cqw;
   font-size: 3.3cqw;
