@@ -760,6 +760,21 @@ html, body { margin: 0; height: 100%; }
 .pr-btn-icon.pr-btn-sm { width: 32px; }
 .pr-btn:disabled { opacity: .35; cursor: default; }
 .pr-ed-note { font-size: 13px; color: var(--pr-chrome-2); line-height: 1.45; margin: 16px 0 0; }
+/* Edits that could not be applied (made on an older version): offered as a copy. */
+.pr-ed-stranded {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin: 0 0 14px;
+  padding: 10px 12px;
+  border: 1px solid var(--pr-accent);
+  border-radius: 10px;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--pr-chrome);
+}
+.pr-ed-stranded p { flex: 1 0 100%; margin: 0; }
 .pr-ed-note code { color: var(--pr-chrome); }
 
 /* ---------- larger screens ---------- */

@@ -81,7 +81,7 @@ const NAV_SECTIONS = [
       // week.
       { label: 'Waiver Board', href: '/football/waivers', emoji: '💸', admin: true },
       // The JHBC power rankings as swipeable trading cards, built from
-      // data/power_rankings_cards.json.
+      // the power_rankings table.
       { label: 'Power Rankings', href: '/power-rankings', emoji: '🐝', admin: true },
     ],
   },

@@ -1,20 +1,35 @@
 // Power Rankings cards.
 //
 // One controlled model drives the page: `model` is loaded from
-// /data/power_rankings_cards.json (or this browser's draft of it), every card
-// is rendered from it, and every edit goes through update(), which swaps in a
-// new model, saves the draft and re-renders. Nothing reads card state back out
-// of the DOM. Rank is array order; HP is derived from rank.
+// /api/power-rankings (the Supabase copy of record), every card is rendered
+// from it, and every edit goes through update(), which swaps in a new model,
+// re-renders and autosaves. Nothing reads card state back out of the DOM. Rank
+// is array order; HP is derived from rank.
 //
-// Publishing an edit = Export JSON, then replace the data file with it.
+// Saves carry the version they were edited from and the server refuses a
+// stale one (409), so no tab, script or deploy can overwrite newer cards. The
+// seed file is only read while the table is still empty, and the first load
+// saves it as version 1.
 
-const MODEL_URL = '/data/power_rankings_cards.json';
-const DRAFT_KEY = 'dz_power_rankings_draft';
+const API_URL = '/api/power-rankings';
+const SEED_URL = '/data/power_rankings_seed.json';
+// Unsaved edits, tagged with the version they started from, so a reload can
+// pick them back up. A draft from an older version can't be replayed safely;
+// it moves to STRANDED_KEY for the editor to offer as a copy.
+const DRAFT_KEY = 'dz_power_rankings_draft_v2';
+const STRANDED_KEY = 'dz_power_rankings_stranded';
+// Before the server copy existed, edits lived only here.
+const LEGACY_DRAFT_KEY = 'dz_power_rankings_draft';
 
 let model = null;
 let index = 0;
 let editing = false;
-let hasDraft = false;
+let version = 0;          // the server version `model` was edited from
+let dirty = false;        // edits not yet on the server
+let saving = false;
+let saveError = '';
+let saveTimer = 0;
+let stranded = null;      // { model, reason } a draft that could not be applied
 
 const els = {
   body: document.body,
@@ -73,22 +88,35 @@ function youtubeStart(u) {
   return m ? (+m[1] || 0) * 3600 + (+m[2] || 0) * 60 + (+m[3] || 0) : 0;
 }
 
-function readDraft() {
+function readStored(key) {
   try {
-    const raw = localStorage.getItem(DRAFT_KEY);
-    const parsed = raw && JSON.parse(raw);
-    return parsed && Array.isArray(parsed.cards) ? parsed : null;
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : null;
   } catch (e) {
     return null;
   }
 }
 
+function writeStored(key, value) {
+  try {
+    if (value == null) localStorage.removeItem(key);
+    else localStorage.setItem(key, JSON.stringify(value));
+  } catch (e) { /* private mode */ }
+}
+
+const isDeck = m => !!m && Array.isArray(m.cards) && Array.isArray(m.tiers);
+
 function writeDraft() {
-  try { localStorage.setItem(DRAFT_KEY, JSON.stringify(model)); } catch (e) { /* private mode */ }
+  writeStored(DRAFT_KEY, { version, model });
 }
 
 function clearDraft() {
-  try { localStorage.removeItem(DRAFT_KEY); } catch (e) { /* private mode */ }
+  writeStored(DRAFT_KEY, null);
+}
+
+function strand(m, reason) {
+  stranded = { model: m, reason };
+  writeStored(STRANDED_KEY, stranded);
 }
 
 function tierOf(card) {
@@ -243,7 +271,7 @@ function renderAll() {
     const c = model.cards[i];
     return `<button class="pr-dot" type="button" data-go="${i}" style="--dot:var(--dot-${escapeHtml(tierOf(c).id)})" aria-label="${escapeHtml(`#${i + 1} ${c.name || c.nickname}`)}"></button>`;
   }).join('');
-  els.draft.hidden = !hasDraft;
+  renderSaveState();
   playing = -1;
   layout(false);
   markCurrent();
@@ -337,14 +365,88 @@ function update(mutate, { structural = false } = {}) {
   const next = structuredClone(model);
   mutate(next);
   model = next;
-  hasDraft = true;
+  dirty = true;
+  saveError = '';
   writeDraft();
+  scheduleSave();
   if (structural) {
     renderAll();
   } else {
     renderSlide(index);
-    els.draft.hidden = false;
+    renderSaveState();
   }
+}
+
+// ---------- saving ----------
+
+function api(method, body) {
+  const me = typeof getUser === 'function' ? getUser() : null;
+  return fetch(API_URL, {
+    method,
+    cache: 'no-store',
+    headers: { 'Content-Type': 'application/json', 'X-User-Id': me ? me.user_id : '' },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+}
+
+function scheduleSave(delay = 700) {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(save, delay);
+}
+
+async function save() {
+  if (!dirty) return;
+  if (saving) { scheduleSave(300); return; }
+  saving = true;
+  dirty = false;
+  const sent = model;
+  renderSaveState();
+  let retry = false;
+  let saved = false;
+  try {
+    const res = await api('PUT', { model: sent, version });
+    const data = await res.json().catch(() => ({}));
+    if (res.ok) {
+      version = data.version;
+      saveError = '';
+      saved = true;
+      if (dirty) writeDraft(); else clearDraft();
+    } else if (res.status === 409) {
+      // Saved from somewhere else since this copy loaded. Keep these edits
+      // where they can be copied, and switch to the newer cards rather than
+      // writing over them.
+      saving = false;
+      strand(model, `Saved elsewhere${data.updatedBy ? ` by ${data.updatedBy}` : ''} while you were editing, so these edits were not applied.`);
+      clearDraft();
+      dirty = false;
+      await load();
+      if (editing) renderEditor();
+      return;
+    } else {
+      dirty = true;
+      saveError = data.error || `Save failed (${res.status})`;
+    }
+  } catch (e) {
+    dirty = true;
+    saveError = 'Offline. Will retry.';
+    retry = true;
+  }
+  saving = false;
+  renderSaveState(saved);
+  if (dirty && (retry || !saveError)) scheduleSave(retry ? 5000 : 300);
+}
+
+// The header's " · Saving…" / " · Saved" / " · Not saved" (hover for why).
+let savedFlash = 0;
+function renderSaveState(justSaved = false) {
+  if (justSaved) {
+    clearTimeout(savedFlash);
+    savedFlash = setTimeout(() => { savedFlash = 0; renderSaveState(); }, 1500);
+  }
+  const text = saveError ? 'Not saved' : saving || dirty ? 'Saving…' : savedFlash ? 'Saved' : '';
+  els.draft.textContent = text ? ` · ${text}` : '';
+  els.draft.title = saveError;
+  els.draft.hidden = !text;
 }
 
 function setPath(obj, path, value) {
@@ -410,6 +512,11 @@ function renderEditor() {
     </div>`).join('');
 
   els.editor.innerHTML = `
+    ${stranded ? `<div class="pr-ed-stranded" role="alert">
+      <p>${escapeHtml(stranded.reason)}</p>
+      <button class="pr-btn pr-btn-sm" type="button" data-action="stranded-copy">Copy those edits</button>
+      <button class="pr-btn pr-btn-sm pr-btn-danger" type="button" data-action="stranded-discard">Dismiss</button>
+    </div>` : ''}
     <div class="pr-ed-head">
       <h2>Card ${index + 1} of ${n}</h2>
       <button class="pr-btn pr-btn-icon" type="button" data-action="rank-up" ${index === 0 ? 'disabled' : ''} aria-label="Rank up">↑</button>
@@ -444,11 +551,10 @@ function renderEditor() {
     ${field('Flavor text', 'flavor', { area: true, placeholder: tier.tagline || '' })}
 
     <p class="pr-ed-note">
-      Edits save as a draft in this browser only. To publish, <strong>Export</strong> and replace
-      <code>data/power_rankings_cards.json</code> with the file.
+      Edits save to the server as you type (version ${version}), the same copy every device and
+      environment reads. <strong>Export</strong> or <strong>Copy</strong> for a backup.
       Weakness accepts a tier id (${model.tiers.map(t => `<code>${escapeHtml(t.id)}</code>`).join(', ')}) for an energy icon.
     </p>
-    ${hasDraft ? '<p style="margin-top:12px"><button class="pr-btn pr-btn-danger" type="button" data-action="discard">Discard draft, reload file</button></p>' : ''}
   `;
 }
 
@@ -532,11 +638,16 @@ els.editor.addEventListener('click', e => {
         setTimeout(() => { btn.textContent = 'Copy'; }, 1400);
       }, () => { btn.textContent = 'Copy failed'; });
       break;
-    case 'discard':
-      if (confirm('Discard the draft and reload the published file?')) {
-        clearDraft();
-        hasDraft = false;
-        load().then(() => renderEditor());
+    case 'stranded-copy':
+      navigator.clipboard.writeText(JSON.stringify(stranded.model, null, 2) + '\n').then(() => {
+        btn.textContent = 'Copied';
+      }, () => { btn.textContent = 'Copy failed'; });
+      break;
+    case 'stranded-discard':
+      if (confirm('Dismiss these unapplied edits? They can’t be recovered after this.')) {
+        stranded = null;
+        writeStored(STRANDED_KEY, null);
+        renderEditor();
       }
       break;
   }
@@ -766,16 +877,47 @@ window.addEventListener('hashchange', () => {
 
 // ---------- boot ----------
 
-async function load() {
-  const draft = readDraft();
-  if (draft) {
-    model = draft;
-    hasDraft = true;
-  } else {
-    const res = await fetch(MODEL_URL, { cache: 'no-cache' });
-    model = await res.json();
-    hasDraft = false;
+// The server copy, or the seed while the table is empty (version 0).
+async function fetchDeck() {
+  const res = await api('GET');
+  if (res.status === 404) {
+    const seed = await fetch(SEED_URL, { cache: 'no-cache' });
+    if (!seed.ok) throw new Error('No deck and no seed');
+    return { model: await seed.json(), version: 0 };
   }
+  if (!res.ok) throw new Error(`Load failed (${res.status})`);
+  return res.json();
+}
+
+async function load() {
+  const deck = await fetchDeck();
+  model = deck.model;
+  version = deck.version;
+
+  // Unsaved edits from this browser: replay them if they were made on this
+  // exact version, otherwise set them aside rather than write over newer cards.
+  const draft = readStored(DRAFT_KEY);
+  if (draft && isDeck(draft.model)) {
+    if (draft.version === version) {
+      model = draft.model;
+      dirty = true;
+    } else {
+      strand(draft.model, 'This browser had edits that were never saved, made on an older version of the cards.');
+      clearDraft();
+    }
+  }
+  const legacy = readStored(LEGACY_DRAFT_KEY);
+  if (isDeck(legacy)) {
+    strand(legacy, 'This browser has an old local draft from before the cards were saved to the server.');
+    writeStored(LEGACY_DRAFT_KEY, null);
+  }
+  if (!stranded) {
+    const kept = readStored(STRANDED_KEY);
+    if (kept && isDeck(kept.model)) stranded = kept;
+  }
+  // An empty table is seeded by the first load; replayed edits go up as well.
+  if (version === 0) dirty = true;
+  if (dirty) scheduleSave(0);
   const hashId = decodeURIComponent(location.hash.slice(1));
   const fromHash = model.cards.findIndex(c => c.id === hashId);
   index = fromHash >= 0 ? fromHash : slot(0);

@@ -341,6 +341,23 @@ def bun_notes_api():
     return _bun_notes_api
 
 
+_power_rankings_api = None
+
+
+def power_rankings_api():
+    """Load api/power-rankings.py and serve its read_deck/write_deck, so local
+    dev reads and writes the same Supabase deck, under the same version lock,
+    as production. Loaded by path for the hyphen, lazily like the others."""
+    global _power_rankings_api
+    if _power_rankings_api is None:
+        import importlib.util
+        path = os.path.join(DATA_DIR, "api", "power-rankings.py")
+        spec = importlib.util.spec_from_file_location("power_rankings_api", path)
+        _power_rankings_api = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(_power_rankings_api)
+    return _power_rankings_api
+
+
 _pickem_api = None
 _pickem_standings_api = None
 
@@ -1536,6 +1553,11 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 with open(trades_path, "r") as f:
                     return json.load(f)
             self._api_json(trades_payload)
+        elif self.path.startswith("/api/power-rankings"):
+            try:
+                self._json_response(*power_rankings_api().read_deck(self.headers.get("X-User-Id")))
+            except Exception as e:
+                self._json_response(500, {"error": str(e)})
         elif self.path.startswith("/api/sync"):
             user_id = self.headers.get("X-User-Id")
             if not user_id:
@@ -2504,7 +2526,18 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self.end_headers()
 
     def do_PUT(self):
-        if self.path == "/api/sync":
+        if self.path.startswith("/api/power-rankings"):
+            try:
+                length = int(self.headers.get("Content-Length", 0))
+                body = json.loads(self.rfile.read(length)) if length else {}
+            except Exception:
+                self._json_response(400, {"error": "Body must be JSON"})
+                return
+            try:
+                self._json_response(*power_rankings_api().write_deck(self.headers.get("X-User-Id"), body))
+            except Exception as e:
+                self._json_response(500, {"error": str(e)})
+        elif self.path == "/api/sync":
             user_id = self.headers.get("X-User-Id")
             if not user_id:
                 self._json_response(401, {"error": "Not authenticated"})
