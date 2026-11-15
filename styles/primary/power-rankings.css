@@ -22,6 +22,7 @@
   --dot-queen: #c9b2ea;
   --dot-hornets: #f5a066;
   --dot-wasps: #f3d867;
+  --dot-water: #7fb6e6;
   --dot-notbees: #9fcd74;
   --pr-font: "Gill Sans", "Gill Sans MT", "Seravek", "Trebuchet MS", system-ui, sans-serif;
   --bar-h: 52px;
@@ -30,7 +31,7 @@
 
 * { box-sizing: border-box; }
 
-html, body { margin: 0; height: 100%; }
+html, body { margin: 0; height: 100%; touch-action: manipulation; /* no double-tap zoom */ }
 
 .pr-body {
   background:
@@ -243,6 +244,7 @@ html, body { margin: 0; height: 100%; }
 .pr-card[data-tier="queen"]   { --face-1: #b9a3dc; --face-2: #e6dbf6; --face-3: #c9b2ea; --dot: #c9b2ea; }
 .pr-card[data-tier="hornets"] { --face-1: #f09a5c; --face-2: #fbd2ad; --face-3: #f5b07c; --dot: #f5a066; }
 .pr-card[data-tier="wasps"]   { --face-1: #f3d867; --face-2: #fcf0bd; --face-3: #f0d264; --dot: #f3d867; }
+.pr-card[data-tier="water"]   { --face-1: #7fb6e6; --face-2: #d6e9f8; --face-3: #a3cbef; --dot: #7fb6e6; }
 .pr-card[data-tier="notbees"] { --face-1: #9fcd74; --face-2: #dcefc6; --face-3: #b7db92; --dot: #9fcd74; }
 
 /* header: stage / rank, then name / HP / energy */
@@ -250,11 +252,11 @@ html, body { margin: 0; height: 100%; }
   display: flex;
   justify-content: space-between;
   align-items: baseline;
+  min-height: 1.3em; /* holds the header's spacing on cards with no "Evolves from" */
   font-size: 2.8cqw;
   font-weight: 700;
   color: var(--pr-ink-2);
 }
-.pr-stage-badge { letter-spacing: .02em; }
 .pr-headline {
   display: flex;
   align-items: center;
@@ -264,10 +266,13 @@ html, body { margin: 0; height: 100%; }
 .pr-name {
   flex: 1;
   min-width: 0;
-  margin: 0;
-  font-size: 8cqw;
+  /* Line-height tall enough that the clamp's overflow: hidden keeps the
+     descenders (g, y, p); the negative margin gives back the extra leading so
+     the header doesn't grow. */
+  margin: -.08em 0;
+  font-size: 7cqw;
   font-weight: 700;
-  line-height: 1.05;
+  line-height: 1.22;
   letter-spacing: -.01em;
   display: -webkit-box;
   -webkit-box-orient: vertical;
@@ -276,8 +281,8 @@ html, body { margin: 0; height: 100%; }
   text-wrap: balance;
 }
 /* The title is a nickname now, and some run long: step down, up to 2 lines. */
-.pr-name.is-mid { font-size: 6.4cqw; }
-.pr-name.is-long { font-size: 5.2cqw; line-height: 1.08; }
+.pr-name.is-mid { font-size: 5.8cqw; }
+.pr-name.is-long { font-size: 4.9cqw; }
 .pr-hp {
   color: var(--pr-hp);
   font-size: 6.4cqw;
@@ -299,21 +304,6 @@ html, body { margin: 0; height: 100%; }
   align-items: center;
   width: 14cqw;
   pointer-events: none;
-}
-.pr-evo-stage {
-  position: relative;
-  z-index: 1;
-  padding: .3cqw 1.2cqw;
-  border-radius: .8cqw .8cqw 0 0;
-  background: linear-gradient(180deg, #fff6c8, #f2cf4a 55%, #d9a821);
-  box-shadow: 0 .3cqw .6cqw rgba(0,0,0,.25);
-  font-size: 2.4cqw;
-  font-weight: 800;
-  font-style: italic;
-  letter-spacing: .02em;
-  text-transform: uppercase;
-  white-space: nowrap;
-  color: #2a1f08;
 }
 .pr-evo-frame {
   display: block;
@@ -348,15 +338,13 @@ html, body { margin: 0; height: 100%; }
 }
 .pr-nick {
   margin: .2cqw 0 1cqw;
-  font-size: 3.3cqw;
+  font-size: 4.6cqw;
   font-style: normal;
   letter-spacing: .02em;
   font-weight: 600;
   color: var(--pr-ink-2);
   min-height: 1.2em;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  line-height: 1.2;
 }
 
 /* energy glyph, also used for move cost and weakness */
@@ -375,6 +363,7 @@ html, body { margin: 0; height: 100%; }
 .pr-energy[data-tier="queen"]   { --en-1: #a77be0; --en-2: #5b2f9a; }
 .pr-energy[data-tier="hornets"] { --en-1: #f2733a; --en-2: #a1260f; }
 .pr-energy[data-tier="wasps"]   { --en-1: #f7cf2c; --en-2: #b5880a; color: #2a2208; }
+.pr-energy[data-tier="water"]   { --en-1: #3b8fe0; --en-2: #154f9a; }
 .pr-energy[data-tier="notbees"] { --en-1: #6cb546; --en-2: #2f6e1c; }
 .pr-energy[data-tier="none"]    { --en-1: #f2f2f2; --en-2: #9a9a9a; color: #333; }
 
@@ -410,6 +399,7 @@ html, body { margin: 0; height: 100%; }
   display: block;
 }
 .pr-art-inner img { object-fit: cover; object-position: center; }
+.pr-art-inner img.is-contain { object-fit: contain; }
 .pr-art-inner iframe { border: 0; background: #000; }
 .pr-play {
   position: absolute;
@@ -435,7 +425,6 @@ html, body { margin: 0; height: 100%; }
   text-align: center;
 }
 .pr-art-placeholder .pr-energy { --e: 20cqw; opacity: .9; }
-.pr-art-placeholder span { font-size: 3cqw; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
 
 /* holo foil, for the tiers marked holo in the model */
 .pr-art.is-holo .pr-art-inner::after {
@@ -524,6 +513,8 @@ html, body { margin: 0; height: 100%; }
   --e: 5.4cqw;
 }
 .pr-move-name { font-size: 4.9cqw; font-weight: 700; line-height: 1.1; }
+/* Ange's move names run long. */
+.pr-card[data-card="ange"] .pr-move-name { font-size: 4.2cqw; }
 .pr-move-text { font-size: 3.5cqw; line-height: 1.28; }
 .pr-move-text em { font-style: italic; }
 .pr-move-body > .pr-move-name + .pr-move-text { margin-top: .4cqw; }
@@ -711,6 +702,7 @@ html, body { margin: 0; height: 100%; }
 }
 .pr-field { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; min-width: 0; }
 .pr-field > span { font-size: 12px; color: var(--pr-chrome-2); }
+.pr-field.pr-check { flex-direction: row; align-items: center; gap: 8px; }
 .pr-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .pr-row-3 { grid-template-columns: 2fr 1fr 1fr; }
 .pr-editor input,
@@ -801,4 +793,295 @@ html, body { margin: 0; height: 100%; }
   .pr-art.is-holo .pr-art-inner::after { animation: none; }
   .pr-card { transition: none; }
   .pr-slide { transition-duration: .15s; }
+}
+
+/* ---------- intro + pack ----------
+   A fresh visit: the week's write-up, then a sealed booster pack torn open
+   across the top to deal the deck. Both sit under the bar, over the stage,
+   which stays hidden (but laid out) until the pack is open. */
+
+.pr-body.is-gated .pr-stage,
+.pr-body.is-gated .pr-nav,
+.pr-body.is-gated .pr-bar-sub,
+.pr-body.is-gated #pr-edit-toggle { visibility: hidden; }
+.pr-body.is-gated .pr-loading { display: none; }
+
+.pr-gate {
+  position: fixed;
+  inset: calc(var(--bar-h) + env(safe-area-inset-top)) 0 0;
+  z-index: 350;
+}
+.pr-gate[hidden] { display: none; }
+
+.pr-intro {
+  display: flex;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 20px 20px calc(28px + env(safe-area-inset-bottom));
+}
+.pr-intro-inner {
+  width: 100%;
+  max-width: 560px;
+  margin: auto;
+  animation: pr-rise .5s cubic-bezier(.2, .8, .25, 1) backwards;
+}
+.pr-intro-kicker {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--pr-accent);
+}
+.pr-intro h1 {
+  margin: 8px 0 20px;
+  font-size: clamp(32px, 10vw, 48px);
+  line-height: 1;
+  letter-spacing: -.01em;
+  color: var(--pr-chrome);
+  text-wrap: balance;
+}
+.pr-intro-body p {
+  margin: 0 0 14px;
+  font-size: 17px;
+  line-height: 1.55;
+  color: var(--pr-chrome);
+  text-wrap: pretty;
+}
+.pr-intro-body p:last-child { color: var(--pr-accent); font-weight: 600; }
+.pr-intro-cta {
+  display: block;
+  width: 100%;
+  height: 54px;
+  margin-top: 22px;
+  border: 0;
+  border-radius: 14px;
+  background: linear-gradient(180deg, var(--pr-border-1), var(--pr-border-2));
+  box-shadow: 0 1px 0 rgba(255,255,255,.5) inset, 0 10px 24px rgba(0,0,0,.45);
+  color: var(--pr-ink);
+  font: 700 18px var(--pr-font);
+  letter-spacing: .02em;
+  cursor: pointer;
+}
+.pr-intro-cta:disabled { opacity: .55; cursor: progress; }
+.pr-intro-cta:focus-visible { outline: 3px solid var(--pr-chrome); outline-offset: 3px; }
+
+@keyframes pr-rise {
+  from { opacity: 0; transform: translateY(16px); }
+}
+
+/* the pack */
+
+.pr-pack-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 8px 16px calc(14px + env(safe-area-inset-bottom));
+  overflow: hidden;
+}
+.pr-pack-hint {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--pr-accent);
+  animation: pr-glow 1.8s ease-in-out infinite;
+}
+.pr-pack-sub { margin: 0; font-size: 13px; color: var(--pr-chrome-2); }
+.pr-pack-stage.is-leaving .pr-pack-hint,
+.pr-pack-stage.is-leaving .pr-pack-sub { opacity: 0; transition: opacity .2s; }
+
+@keyframes pr-glow { 50% { opacity: .55; } }
+
+.pr-pack {
+  --tear: 0;
+  --tear-dir: 1;
+  position: relative;
+  flex: none;
+  width: min(80vw, (100dvh - var(--bar-h) - env(safe-area-inset-top) - 120px) * .613, 380px);
+  aspect-ratio: 1202 / 1962;
+  container-type: inline-size;
+  display: flex;
+  flex-direction: column;
+  border-radius: 1.6cqw;
+  /* the silver bag around the print */
+  background: linear-gradient(90deg, #8e97a1, #eef1f4 12%, #b7bec6 30%, #f4f6f8 55%, #a9b1ba 80%, #e6eaee);
+  filter: drop-shadow(0 24px 34px rgba(0,0,0,.6));
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: grab;
+  outline: none;
+  animation: pr-rise .5s cubic-bezier(.2, .8, .25, 1) backwards;
+}
+.pr-pack:focus-visible { box-shadow: 0 0 0 3px var(--pr-chrome); }
+.pr-pack.is-tearing { cursor: grabbing; }
+.pr-pack.is-nudged .is-top { animation: pr-nudge .45s ease; }
+
+@keyframes pr-nudge {
+  30% { transform: translateY(-2.4cqw); }
+  60% { transform: translateY(.6cqw); }
+}
+
+/* crimped foil ends */
+.pr-pack-crimp {
+  position: relative;
+  flex: none;
+  height: 12cqw;
+  background:
+    repeating-linear-gradient(90deg, transparent 0 1.1cqw, rgba(0,0,0,.16) 1.1cqw 1.5cqw, rgba(255,255,255,.55) 1.5cqw 1.9cqw),
+    linear-gradient(180deg, #f6f8fa 0%, #9aa3ad 24%, #f1f4f6 48%, #7f8994 72%, #e3e7eb 100%);
+}
+.pr-pack-crimp.is-top {
+  z-index: 2;
+  border-radius: 1.6cqw 1.6cqw 0 0;
+  transform-origin: right center;
+  transform: translateY(calc(var(--tear) * -2.5cqw)) rotate(calc(var(--tear) * var(--tear-dir) * 14deg));
+}
+.pr-pack[data-dir="rtl"] .is-top { transform-origin: left center; }
+.pr-pack:not(.is-tearing):not(.is-open) .is-top { transition: transform .35s cubic-bezier(.3, 1.5, .5, 1); }
+.pr-pack.is-open .is-top {
+  transform: translate(calc(var(--tear-dir) * 70cqw), -60cqw) rotate(calc(var(--tear-dir) * 50deg));
+  opacity: 0;
+  transition: transform .5s cubic-bezier(.4, 0, .7, .4), opacity .5s ease-in;
+}
+.pr-pack-crimp.is-bottom { border-radius: 0 0 1.6cqw 1.6cqw; }
+/* sawtooth edges where the bag was heat-sealed */
+.pr-pack-crimp::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1.4cqw;
+  background:
+    linear-gradient(135deg, #c7cdd4 50%, transparent 0) 0 0 / 2cqw 100%,
+    linear-gradient(225deg, #c7cdd4 50%, transparent 0) 0 0 / 2cqw 100%;
+}
+.pr-pack-crimp.is-top::before { top: -1.3cqw; transform: scaleY(-1); }
+.pr-pack-crimp.is-bottom::before { bottom: -1.3cqw; }
+
+/* The swipe cue: a fingertip sliding along the strip until the first grab. */
+.pr-pack-cue {
+  position: absolute;
+  top: 50%;
+  left: 10%;
+  width: 7cqw;
+  height: 7cqw;
+  margin-top: -3.5cqw;
+  border-radius: 50%;
+  background: rgba(255,255,255,.85);
+  box-shadow: 0 0 0 1.4cqw rgba(245,197,66,.45), 0 1cqw 2cqw rgba(0,0,0,.3);
+  animation: pr-cue 1.8s ease-in-out infinite;
+  pointer-events: none;
+}
+.pr-pack.is-tearing .pr-pack-cue,
+.pr-pack.is-open .pr-pack-cue { display: none; }
+
+@keyframes pr-cue {
+  0% { transform: translateX(0) scale(.7); opacity: 0; }
+  15% { transform: translateX(0) scale(1); opacity: 1; }
+  75% { transform: translateX(62cqw) scale(1); opacity: 1; }
+  100% { transform: translateX(62cqw) scale(.7); opacity: 0; }
+}
+
+/* The torn edge: a bright jagged line that runs along with the tear. */
+.pr-pack-tearline {
+  position: absolute;
+  z-index: 1;
+  top: 11cqw;
+  left: 0;
+  width: calc(var(--tear) * 100%);
+  height: 1.6cqw;
+  background:
+    linear-gradient(135deg, #fff 50%, transparent 0) 0 0 / 1.6cqw 100%,
+    linear-gradient(225deg, #fff 50%, transparent 0) 0 0 / 1.6cqw 100%;
+  filter: drop-shadow(0 0 1cqw rgba(255,255,255,.9));
+}
+.pr-pack[data-dir="rtl"] .pr-pack-tearline { left: auto; right: 0; }
+
+/* the print */
+.pr-pack-body {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  margin: 0 2.4cqw;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background:
+    repeating-conic-gradient(from 0deg at 50% 62%, rgba(255,255,255,.12) 0 5deg, transparent 5deg 15deg),
+    radial-gradient(60% 34% at 50% 60%, rgba(255,255,255,.45), transparent 70%),
+    linear-gradient(170deg, #17468f 0%, #2a7fd0 30%, #47b7e3 50%, #5cc65a 72%, #2e8f3e 100%);
+}
+/* foil sheen sweeping across the print */
+.pr-pack-body::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg, transparent 35%, rgba(255,255,255,.4) 48%, transparent 60%) -150% 0 / 250% 100% no-repeat;
+  animation: pr-sheen 3.6s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes pr-sheen { 60%, 100% { background-position: 150% 0; } }
+
+.pr-pack-logo {
+  margin-top: 6cqw;
+  font: 900 25cqw/0.9 "Arial Black", "Helvetica Neue", var(--pr-font);
+  letter-spacing: -.01em;
+  color: #ffd23f;
+  -webkit-text-stroke: 2cqw #1b4a9c;
+  paint-order: stroke fill;
+  text-shadow: 0 1.4cqw 0 #102f66, 0 2.4cqw 3cqw rgba(0,0,0,.35);
+  transform: rotate(-4deg) skewX(-6deg);
+}
+.pr-pack-banner {
+  position: relative;
+  z-index: 1;
+  margin-top: 2.6cqw;
+  padding: 1.2cqw 3.4cqw;
+  border: .9cqw solid #1b4a9c;
+  border-radius: .8cqw;
+  background: linear-gradient(180deg, #e8453f, #b5201b);
+  box-shadow: 0 0 0 .6cqw #fff inset, 0 1cqw 1.6cqw rgba(0,0,0,.3);
+  max-width: 88cqw;
+  color: #fff;
+  font: 800 4.5cqw/1 var(--pr-font);
+  letter-spacing: .03em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.pr-pack-art {
+  flex: 1;
+  min-height: 0;
+  width: 78cqw;
+  margin-top: -1cqw;
+  filter: drop-shadow(0 1.6cqw 1.6cqw rgba(0,0,0,.3));
+}
+.pr-pack-footer {
+  margin: 1cqw 0 4cqw;
+  font: 900 6.6cqw/1 "Arial Black", "Helvetica Neue", var(--pr-font);
+  letter-spacing: 0;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: #ffd23f;
+  -webkit-text-stroke: 1.2cqw #16191f;
+  paint-order: stroke fill;
+}
+
+/* Open: the pack drops away and the deck rises out of it. */
+.pr-pack-stage.is-leaving .pr-pack {
+  transform: translateY(115dvh) rotate(5deg);
+  transition: transform .7s cubic-bezier(.5, 0, .75, 0);
+}
+.pr-body.is-dealing .pr-track { animation: pr-deal .75s cubic-bezier(.2, .8, .25, 1) both; }
+@keyframes pr-deal {
+  from { transform: translateY(35%) scale(.82); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pr-pack-cue, .pr-pack-body::after, .pr-pack-hint { animation: none; }
 }

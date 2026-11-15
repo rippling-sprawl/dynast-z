@@ -30,6 +30,7 @@ let saving = false;
 let saveError = '';
 let saveTimer = 0;
 let stranded = null;      // { model, reason } a draft that could not be applied
+let standings = {};       // Sleeper roster_id -> { wins, losses, ties, pf }, read live
 
 const els = {
   body: document.body,
@@ -134,8 +135,10 @@ function canEdit() {
 const GLYPHS = {
   // crown
   queen: '<path d="M3 17h18l-1.5-9-4.5 4-3-6-3 6-4.5-4z" fill="currentColor"/><rect x="3.5" y="18.5" width="17" height="2" rx="1" fill="currentColor"/>',
-  // stinger
-  hornets: '<path d="M12 2c3.5 4 6 7.5 6 11a6 6 0 0 1-12 0c0-3.5 2.5-7 6-11z" fill="currentColor"/><path d="M12 19v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
+  // fire
+  hornets: '<path d="M12 2c.7 3.3 2.7 5 4.5 7a8 8 0 0 1 2.5 5.8 7 7 0 0 1-14 0c0-2.7 1.2-4.7 2.9-6.2.2 1.8.9 3 2.2 3.7C9.9 8.7 10.5 5.2 12 2z" fill="currentColor"/><path d="M12 13c1.7 1.7 2.9 3 2.9 4.7a2.9 2.9 0 0 1-5.8 0c0-1.6.9-2.7 2.9-4.7z" fill="rgba(0,0,0,.28)"/>',
+  // water drop
+  water: '<path d="M12 2.5C9 7 6 10.4 6 14.5a6 6 0 0 0 12 0C18 10.4 15 7 12 2.5z" fill="currentColor"/><path d="M9 14.8a3.2 3.2 0 0 0 2.8 3.1" stroke="rgba(0,0,0,.3)" stroke-width="1.6" stroke-linecap="round" fill="none"/>',
   // striped abdomen
   wasps: '<ellipse cx="12" cy="12" rx="6.5" ry="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M6 9h12M5.6 13h12.8M7 17h10" stroke="currentColor" stroke-width="2.4"/>',
   // leaf
@@ -156,7 +159,7 @@ const ICON_NOTE = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="tru
 
 function moveHtml(move, ci, mi, tier) {
   const cost = Math.max(1, Math.min(4, parseInt(move.cost, 10) || 1));
-  const costIcons = Array.from({ length: cost }, (_, k) => energy(k === 0 ? tier.id : 'none')).join('');
+  const costIcons = Array.from({ length: cost }, () => energy(tier.id)).join('');
   const links = (move.links || [])
     .map(l => ({ label: l.label || l.url, href: safeUrl(l.url) }))
     .filter(l => l.href)
@@ -189,6 +192,37 @@ function posterOf(card) {
   return safeUrl(card.image) || (yt ? `https://i.ytimg.com/vi/${yt}/hqdefault.jpg` : '');
 }
 
+// The deck names a Sleeper league (model.sleeperLeagueId) and each card its
+// roster in it (card.sleeperRosterId); the record is read live on every load,
+// never stored. A failed fetch just leaves the strips off.
+async function fetchStandings(leagueId) {
+  if (!leagueId) return {};
+  try {
+    const res = await fetch(`https://api.sleeper.app/v1/league/${encodeURIComponent(leagueId)}/rosters`);
+    if (!res.ok) return {};
+    const out = {};
+    for (const r of await res.json()) {
+      const s = r.settings || {};
+      out[r.roster_id] = {
+        wins: s.wins || 0,
+        losses: s.losses || 0,
+        ties: s.ties || 0,
+        pf: (s.fpts || 0) + (s.fpts_decimal || 0) / 100,
+      };
+    }
+    return out;
+  } catch {
+    return {};
+  }
+}
+
+function recordHtml(card) {
+  const st = standings[card.sleeperRosterId];
+  if (!st) return '';
+  const record = [st.wins, st.losses].concat(st.ties ? [st.ties] : []).join('–');
+  return `<div class="pr-strip">Record: ${record} · PF: ${st.pf.toFixed(2)}</div>`;
+}
+
 function cardHtml(card, i) {
   const n = model.cards.length;
   const tier = tierOf(card);
@@ -198,9 +232,13 @@ function cardHtml(card, i) {
   const poster = posterOf(card);
   const title = card.name || card.nickname || 'Unnamed';
   const titleLen = title.length;
+  // An image that shouldn't be cropped: fit it whole, and fill the window
+  // around it with the image's own background so the edges disappear.
+  const contain = card.imageFit === 'contain';
+  const artBg = contain && /^#[0-9a-f]{3,8}$/i.test(card.imageBg || '') ? ` style="background:${card.imageBg}"` : '';
   const art = poster
-    ? `<img src="${escapeHtml(poster)}" alt="${escapeHtml(title)}" decoding="async" referrerpolicy="no-referrer" draggable="false">`
-    : `<div class="pr-art-placeholder">${energy(tier.id)}<span>${escapeHtml(tier.name)}</span></div>`;
+    ? `<img src="${escapeHtml(poster)}" alt="${escapeHtml(title)}" decoding="async" referrerpolicy="no-referrer" draggable="false"${contain ? ' class="is-contain"' : ''}>`
+    : `<div class="pr-art-placeholder">${energy(tier.id)}</div>`;
   const moves = (card.moves || []).map((m, mi) => moveHtml(m, i, mi, tier)).join('')
     || '<p class="pr-empty">No moves yet. Still charging up.</p>';
   // "Evolves from": the pre-evolution portrait tab in the top-left corner.
@@ -208,17 +246,13 @@ function cardHtml(card, i) {
   const evoImg = evo ? safeUrl(evo.image) : '';
 
   return `
-    <article class="pr-card" data-tier="${escapeHtml(tier.id)}" aria-label="${escapeHtml(`#${i + 1} ${title}`)}">
+    <article class="pr-card" data-card="${escapeHtml(card.id)}" data-tier="${escapeHtml(tier.id)}" aria-label="${escapeHtml(`#${i + 1} ${title}`)}">
       <div class="pr-face${evo ? ' has-evo' : ''}">
         ${evo ? `<div class="pr-evo" aria-hidden="true">
-          <span class="pr-evo-stage">${escapeHtml(tier.stage || '')}</span>
           <span class="pr-evo-frame">${evoImg ? `<img src="${escapeHtml(evoImg)}" alt="" decoding="async" referrerpolicy="no-referrer" draggable="false">` : ''}</span>
         </div>` : ''}
         <div class="pr-top">
-          ${evo
-            ? `<span class="pr-evo-from">Evolves from ${escapeHtml(evo.name)}</span>`
-            : `<span class="pr-stage-badge">${escapeHtml(tier.stage || '')} · ${escapeHtml(tier.name)}</span>`}
-          <span>#${i + 1}</span>
+          ${evo ? `<span class="pr-evo-from">${evo.devolves ? 'Devolves' : 'Evolves'} from ${escapeHtml(evo.name)}</span>` : ''}
         </div>
         <div class="pr-headline">
           <h2 class="pr-name${titleLen > 24 ? ' is-long' : titleLen > 13 ? ' is-mid' : ''}">${escapeHtml(title)}</h2>
@@ -227,7 +261,7 @@ function cardHtml(card, i) {
         </div>
         <p class="pr-nick">${card.name && card.nickname ? escapeHtml(card.nickname) : ''}</p>
         <div class="pr-art${tier.holo ? ' is-holo' : ''}">
-          <div class="pr-art-inner">
+          <div class="pr-art-inner"${artBg}>
             ${art}
             ${yt ? `<button class="pr-play" type="button" data-play="${yt}" data-start="${youtubeStart(card.video)}" aria-label="Play video">
               <svg viewBox="0 0 68 48" aria-hidden="true"><path d="M66.5 7.7a8.5 8.5 0 0 0-6-6C55.2.3 34 .3 34 .3s-21.2 0-26.5 1.4a8.5 8.5 0 0 0-6 6C.1 13 .1 24 .1 24s0 11 1.4 16.3a8.5 8.5 0 0 0 6 6c5.3 1.4 26.5 1.4 26.5 1.4s21.2 0 26.5-1.4a8.5 8.5 0 0 0 6-6C67.9 35 67.9 24 67.9 24s0-11-1.4-16.3z" fill="#e33"/><path d="M27 34V14l18 10z" fill="#fff"/></svg>
@@ -236,7 +270,7 @@ function cardHtml(card, i) {
             </button>` : ''}
           </div>
         </div>
-        <div class="pr-strip">${escapeHtml(tier.name)} Manager. Rank: ${i + 1} of ${n}.</div>
+        ${recordHtml(card)}
         <div class="pr-moves">${moves}</div>
         <div class="pr-stats">
           <div>weakness<span class="pr-stat-val">${statValue(card.weakness)}</span></div>
@@ -245,7 +279,7 @@ function cardHtml(card, i) {
         <div class="pr-flavor">${richText(card.flavor || tier.tagline || '')}</div>
         <div class="pr-foot">
           <span>Illus. Dynast-Z · ${escapeHtml(model.edition || '')}</span>
-          <span>${i + 1}/${n} ${tier.holo ? '★' : '●'}</span>
+          <span>${tier.holo ? '★' : '●'}</span>
         </div>
       </div>
     </article>`;
@@ -290,7 +324,8 @@ function markCurrent() {
   els.count.textContent = `#${index + 1} of ${n} · ${model.cards[index] ? model.cards[index].name || model.cards[index].nickname : ''}`;
   [...els.dots.children].forEach(d => d.setAttribute('aria-current', +d.dataset.go === index ? 'true' : 'false'));
   const card = model.cards[index];
-  if (card) history.replaceState(null, '', `${location.pathname}${location.search}#${card.id}`);
+  // Not while the intro or pack is up: a reload there should land on them again.
+  if (card && gate === 'done') history.replaceState(null, '', `${location.pathname}${location.search}#${card.id}`);
 }
 
 // ---------- the deck ----------
@@ -462,8 +497,9 @@ function getPath(obj, path) {
 
 // ---------- editor ----------
 
+// A path starting with '@' is on the deck (model.intro.title), not the card.
 function field(label, path, { type = 'text', placeholder = '', area = false } = {}) {
-  const v = getPath(model.cards[index], path);
+  const v = path[0] === '@' ? getPath(model, path.slice(1)) : getPath(model.cards[index], path);
   const val = escapeHtml(v == null ? '' : v);
   const ph = escapeHtml(placeholder);
   const input = area
@@ -534,11 +570,16 @@ function renderEditor() {
       ${field('Nickname', 'nickname')}
     </div>
     ${field('Image URL', 'image', { type: 'url', placeholder: '/assets/power-rankings/name.jpg or https://…' })}
+    <div class="pr-row">
+      <label class="pr-field pr-check"><input type="checkbox" data-path="imageFit" data-on="contain"${card.imageFit === 'contain' ? ' checked' : ''}><span>Fit whole image</span></label>
+      ${field('Fill color', 'imageBg', { placeholder: '#edfee2' })}
+    </div>
     ${field('Video (YouTube or Instagram URL)', 'video', { type: 'url', placeholder: 'YouTube plays in the art window; Instagram in a pop-up' })}
     <div class="pr-row">
       ${field('Evolves from', 'evolvesFrom.name', { placeholder: 'Mike' })}
       ${field('Evolves from image', 'evolvesFrom.image', { type: 'url', placeholder: '/assets/power-rankings/name.jpg' })}
     </div>
+    <label class="pr-field pr-check"><input type="checkbox" data-path="evolvesFrom.devolves"${card.evolvesFrom && card.evolvesFrom.devolves ? ' checked' : ''}><span>Devolves (reads "Devolves from")</span></label>
 
     <div class="pr-ed-section"><span>Moves</span><button class="pr-btn pr-btn-sm" type="button" data-action="move-add">+ Move</button></div>
     ${moves || '<p class="pr-ed-note" style="margin-top:0">No moves yet.</p>'}
@@ -549,6 +590,19 @@ function renderEditor() {
       ${field('Resistance', 'resistance')}
     </div>
     ${field('Flavor text', 'flavor', { area: true, placeholder: tier.tagline || '' })}
+    <div class="pr-row">
+      ${field('Sleeper roster ID', 'sleeperRosterId', { placeholder: 'W–L · PF strip' })}
+      ${field('Sleeper league ID', '@sleeperLeagueId', { placeholder: 'whole deck' })}
+    </div>
+
+    <div class="pr-ed-section"><span>Intro &amp; pack (whole deck)</span></div>
+    ${field('Intro title', '@intro.title', { placeholder: 'Week 10 Power Rankings' })}
+    ${field('Intro text', '@intro.body', { area: true, placeholder: 'A blank line starts a new paragraph. *italic* works.' })}
+    <div class="pr-row">
+      ${field('Pack logo', '@pack.logo', { placeholder: 'JHBC' })}
+      ${field('Pack banner', '@pack.banner', { placeholder: 'Dynasty Football Game' })}
+    </div>
+    ${field('Pack footer', '@pack.footer', { placeholder: `${n} Additional Teams` })}
 
     <p class="pr-ed-note">
       Edits save to the server as you type (version ${version}), the same copy every device and
@@ -574,9 +628,12 @@ const NUMERIC = /(^|\.)cost$/;
 els.editor.addEventListener('input', e => {
   const path = e.target.dataset && e.target.dataset.path;
   if (!path) return;
-  const value = NUMERIC.test(path) ? (parseInt(e.target.value, 10) || 0) : e.target.value;
+  const value = e.target.type === 'checkbox'
+    ? (e.target.dataset.on ? (e.target.checked ? e.target.dataset.on : '') : e.target.checked)
+    : NUMERIC.test(path) ? (parseInt(e.target.value, 10) || 0) : e.target.value;
   // A tier change recolours the dots and the card, so redraw the deck.
-  update(m => setPath(m.cards[index], path, value), { structural: path === 'tier' });
+  update(m => (path[0] === '@' ? setPath(m, path.slice(1), value) : setPath(m.cards[index], path, value)),
+    { structural: path === 'tier' });
 });
 
 els.editor.addEventListener('click', e => {
@@ -875,6 +932,141 @@ window.addEventListener('hashchange', () => {
   if (i >= 0 && i !== index) goTo(i);
 });
 
+// ---------- intro + pack ----------
+//
+// A fresh visit opens on the week's intro (model.intro), then a sealed booster
+// pack (model.pack) that has to be torn open across the top before the deck is
+// dealt. A link straight to a card (#kyle) skips both.
+
+let gate = 'pending';       // 'pending' (no model yet) | 'intro' | 'pack' | 'done'
+let deckReady = false;      // images decoded and the deck rendered underneath
+const startHash = decodeURIComponent(location.hash.slice(1));
+
+const gateEls = {
+  intro: document.getElementById('pr-intro'),
+  introKicker: document.getElementById('pr-intro-kicker'),
+  introTitle: document.getElementById('pr-intro-title'),
+  introBody: document.getElementById('pr-intro-body'),
+  introGo: document.getElementById('pr-intro-go'),
+  packStage: document.getElementById('pr-pack-stage'),
+  pack: document.getElementById('pr-pack'),
+  packLogo: document.getElementById('pr-pack-logo'),
+  packBanner: document.getElementById('pr-pack-banner'),
+  packFooter: document.getElementById('pr-pack-footer'),
+};
+
+function renderGate() {
+  const intro = model.intro || {};
+  const pack = model.pack || {};
+  gateEls.introKicker.textContent = [model.title, model.edition].filter(Boolean).join(' · ');
+  gateEls.introTitle.textContent = intro.title || model.title || 'Power Rankings';
+  // A blank line starts a paragraph; a single newline is a line break.
+  gateEls.introBody.innerHTML = String(intro.body || '').split(/\n\s*\n/)
+    .map(p => p.trim()).filter(Boolean)
+    .map(p => `<p>${richText(p).replace(/\n/g, '<br>')}</p>`).join('');
+  gateEls.packLogo.textContent = pack.logo || 'JHBC';
+  gateEls.packBanner.textContent = pack.banner || 'Dynasty Football Game';
+  gateEls.packFooter.textContent = pack.footer || `${model.cards.length} Additional Teams`;
+}
+
+function setGate(state) {
+  gate = state;
+  els.body.classList.toggle('is-gated', state === 'intro' || state === 'pack');
+  gateEls.intro.hidden = state !== 'intro';
+  if (state !== 'done') gateEls.packStage.hidden = state !== 'pack';
+  if (state === 'intro') gateEls.introGo.focus({ preventScroll: true });
+  if (state === 'pack') gateEls.pack.focus({ preventScroll: true });
+}
+
+gateEls.introGo.addEventListener('click', () => setGate('pack'));
+
+// Tearing: grab the top of the pack and drag sideways. The torn strip peels
+// up from the side the drag started on, hinged on the far end, and follows the
+// pointer; past halfway (or a quick flick) it comes off, short of that it
+// settles back.
+const tear = { id: null, x0: 0, dir: 0, p: 0, t0: 0 };
+
+function setTear(p) {
+  tear.p = p;
+  gateEls.pack.style.setProperty('--tear', p.toFixed(3));
+}
+
+gateEls.pack.addEventListener('pointerdown', e => {
+  const pack = gateEls.pack;
+  if (gate !== 'pack' || !deckReady || pack.classList.contains('is-open') || e.button > 0) return;
+  const r = pack.getBoundingClientRect();
+  if (e.clientY - r.top > r.height * 0.35) {
+    // Grabbed the middle: point at the top instead.
+    pack.classList.remove('is-nudged');
+    void pack.offsetWidth;
+    pack.classList.add('is-nudged');
+    return;
+  }
+  tear.id = e.pointerId;
+  tear.x0 = e.clientX;
+  tear.t0 = performance.now();
+  tear.dir = 0;
+  setTear(0);
+  pack.setPointerCapture(e.pointerId);
+  pack.classList.add('is-tearing');
+});
+
+gateEls.pack.addEventListener('pointermove', e => {
+  if (e.pointerId !== tear.id) return;
+  const dx = e.clientX - tear.x0;
+  if (!tear.dir) {
+    if (Math.abs(dx) < 6) return;
+    tear.dir = Math.sign(dx);
+    gateEls.pack.style.setProperty('--tear-dir', tear.dir);
+    gateEls.pack.dataset.dir = tear.dir > 0 ? 'ltr' : 'rtl';
+  }
+  const width = gateEls.pack.getBoundingClientRect().width;
+  setTear(Math.max(0, Math.min(1, (dx * tear.dir) / (width * 0.8))));
+  if (tear.p >= 1) openPack();
+});
+
+function endTear(e) {
+  if (e.pointerId !== tear.id) return;
+  tear.id = null;
+  gateEls.pack.classList.remove('is-tearing');
+  const quick = tear.p > 0.25 && performance.now() - tear.t0 < 250;
+  if (tear.p >= 0.5 || quick) openPack();
+  else setTear(0);
+}
+gateEls.pack.addEventListener('pointerup', endTear);
+gateEls.pack.addEventListener('pointercancel', endTear);
+
+gateEls.pack.addEventListener('keydown', e => {
+  if ((e.key !== 'Enter' && e.key !== ' ') || !deckReady) return;
+  e.preventDefault();
+  if (!tear.dir) {
+    tear.dir = 1;
+    gateEls.pack.style.setProperty('--tear-dir', 1);
+    gateEls.pack.dataset.dir = 'ltr';
+  }
+  openPack();
+});
+
+// The strip flies off, then the pack drops away and the deck rises out of it.
+function openPack() {
+  const pack = gateEls.pack;
+  if (pack.classList.contains('is-open')) return;
+  tear.id = null;
+  pack.classList.remove('is-tearing');
+  pack.classList.add('is-open');
+  setTear(1);
+  setTimeout(() => {
+    setGate('done');
+    markCurrent();
+    gateEls.packStage.classList.add('is-leaving');
+    els.body.classList.add('is-dealing');
+    setTimeout(() => {
+      gateEls.packStage.hidden = true;
+      els.body.classList.remove('is-dealing');
+    }, 800);
+  }, 420);
+}
+
 // ---------- boot ----------
 
 // The server copy, or the seed while the table is empty (version 0).
@@ -921,14 +1113,26 @@ async function load() {
   const hashId = decodeURIComponent(location.hash.slice(1));
   const fromHash = model.cards.findIndex(c => c.id === hashId);
   index = fromHash >= 0 ? fromHash : slot(0);
+  // The intro goes up as soon as there's text for it; the cards' images keep
+  // loading behind it, and its button waits for them.
+  if (gate === 'pending') {
+    renderGate();
+    const deepLink = model.cards.some(c => c.id === startHash);
+    setGate(deepLink ? 'done' : model.intro ? 'intro' : 'pack');
+  }
   // Every poster is fetched and decoded before the deck is dealt, so no card
   // paints in half-loaded mid-throw. A slow or dead image host can't hold the
   // deck hostage: whatever hasn't arrived after a few seconds loads in place.
-  await preloadImages(model.cards
-    .flatMap(c => [posterOf(c), c.evolvesFrom ? safeUrl(c.evolvesFrom.image) : ''])
-    .filter(Boolean));
+  [standings] = await Promise.all([
+    fetchStandings(model.sleeperLeagueId),
+    preloadImages(model.cards
+      .flatMap(c => [posterOf(c), c.evolvesFrom ? safeUrl(c.evolvesFrom.image) : ''])
+      .filter(Boolean)),
+  ]);
   els.body.classList.remove('is-loading');
   renderAll();
+  deckReady = true;
+  gateEls.introGo.disabled = false;
 }
 
 function preloadImages(urls, timeoutMs = 5000) {
@@ -943,6 +1147,11 @@ function preloadImages(urls, timeoutMs = 5000) {
     new Promise(resolve => setTimeout(resolve, timeoutMs)),
   ]);
 }
+
+// No zooming: iOS ignores user-scalable=no, so block pinch (gesture*) and
+// double-tap (dblclick; touch-action: manipulation in the CSS) here.
+['gesturestart', 'gesturechange', 'dblclick'].forEach(type =>
+  document.addEventListener(type, e => e.preventDefault(), { passive: false }));
 
 // Admin-only page (a Sandbox item). requireAdmin bounces everyone else before
 // anything loads — UI-level gating, like the other admin pages.

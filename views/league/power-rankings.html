@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <link rel="icon" type="image/png" href="/favicon.png">
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="apple-touch-icon" href="/assets/icons/app-touch-180.png">
@@ -45,6 +45,58 @@
       <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
     </button>
   </div>
+
+  <!-- A fresh visit opens on the week's intro, then a sealed pack that is torn
+       open to deal the deck. Both are filled from the model (intro, pack). -->
+  <section class="pr-gate pr-intro" id="pr-intro" aria-labelledby="pr-intro-title" hidden>
+    <div class="pr-intro-inner">
+      <p class="pr-intro-kicker" id="pr-intro-kicker"></p>
+      <h1 id="pr-intro-title"></h1>
+      <div class="pr-intro-body" id="pr-intro-body"></div>
+      <button class="pr-intro-cta" id="pr-intro-go" type="button" disabled>View Rankings</button>
+    </div>
+  </section>
+
+  <section class="pr-gate pr-pack-stage" id="pr-pack-stage" aria-label="Card pack" hidden>
+    <p class="pr-pack-hint">Tear open the top</p>
+    <div class="pr-pack" id="pr-pack" role="button" tabindex="0" aria-label="Tear open the pack: swipe across the top, or press Enter">
+      <div class="pr-pack-crimp is-top"><span class="pr-pack-cue" aria-hidden="true"></span></div>
+      <div class="pr-pack-tearline" aria-hidden="true"></div>
+      <div class="pr-pack-body">
+        <span class="pr-pack-logo" id="pr-pack-logo"></span>
+        <span class="pr-pack-banner" id="pr-pack-banner"></span>
+        <svg class="pr-pack-art" viewBox="0 0 240 220" aria-hidden="true">
+          <defs><clipPath id="pr-pack-bee"><ellipse cx="120" cy="140" rx="62" ry="58"/></clipPath></defs>
+          <g fill="#eaf6ff" fill-opacity=".85" stroke="#16325c" stroke-width="4">
+            <ellipse cx="60" cy="96" rx="50" ry="30" transform="rotate(-28 60 96)"/>
+            <ellipse cx="180" cy="96" rx="50" ry="30" transform="rotate(28 180 96)"/>
+          </g>
+          <path d="M110 194 L120 216 L130 194Z" fill="#16191f"/>
+          <ellipse cx="120" cy="140" rx="62" ry="58" fill="#ffc928"/>
+          <g clip-path="url(#pr-pack-bee)" fill="#16191f">
+            <rect x="40" y="124" width="160" height="17"/>
+            <rect x="40" y="158" width="160" height="17"/>
+          </g>
+          <ellipse cx="120" cy="140" rx="62" ry="58" fill="none" stroke="#16191f" stroke-width="5"/>
+          <g transform="rotate(-28 176 150)">
+            <ellipse cx="176" cy="150" rx="28" ry="17" fill="#8b4a22" stroke="#16191f" stroke-width="4"/>
+            <path d="M162 150h28M168 145v10M176 145v10M184 145v10" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+          </g>
+          <path d="M150 168 Q166 178 180 166" fill="none" stroke="#16191f" stroke-width="5" stroke-linecap="round"/>
+          <path d="M104 44 Q96 22 80 18M136 44 Q144 22 160 18" fill="none" stroke="#16191f" stroke-width="4" stroke-linecap="round"/>
+          <circle cx="80" cy="18" r="6" fill="#16191f"/><circle cx="160" cy="18" r="6" fill="#16191f"/>
+          <circle cx="120" cy="80" r="40" fill="#ffc928" stroke="#16191f" stroke-width="5"/>
+          <ellipse cx="104" cy="80" rx="9" ry="12" fill="#16191f"/><ellipse cx="136" cy="80" rx="9" ry="12" fill="#16191f"/>
+          <circle cx="107" cy="75" r="3.5" fill="#fff"/><circle cx="139" cy="75" r="3.5" fill="#fff"/>
+          <path d="M90 62 L114 71M150 62 L126 71" stroke="#16191f" stroke-width="5" stroke-linecap="round"/>
+          <path d="M105 100 Q120 111 135 100" fill="none" stroke="#16191f" stroke-width="4" stroke-linecap="round"/>
+        </svg>
+        <span class="pr-pack-footer" id="pr-pack-footer"></span>
+      </div>
+      <div class="pr-pack-crimp is-bottom"></div>
+    </div>
+    <p class="pr-pack-sub">Swipe across the top, or click and drag</p>
+  </section>
 
   <section class="pr-editor" id="pr-editor" aria-label="Edit card" hidden></section>
 
