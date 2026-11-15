@@ -65,7 +65,7 @@ def resolve_admin(user_id):
     if not user or user.get("status") is not True:
         return None, (403, {"error": "Account is inactive"})
     if user.get("role") != "admin":
-        return None, (403, {"error": "Only an admin can open the power rankings"})
+        return None, (403, {"error": "Only an admin can edit the power rankings"})
     return user["username"], None
 
 
@@ -97,9 +97,7 @@ def validate(model):
 
 
 def read_deck(user_id):
-    _, err = resolve_admin(user_id)
-    if err:
-        return err
+    # Public: anyone can read the deck. Only write_deck is admin-gated.
     row = fetch_row()
     if not row:
         return 404, {"seed": True}

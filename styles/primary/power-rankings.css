@@ -825,16 +825,8 @@ html, body { margin: 0; height: 100%; touch-action: manipulation; /* no double-t
   margin: auto;
   animation: pr-rise .5s cubic-bezier(.2, .8, .25, 1) backwards;
 }
-.pr-intro-kicker {
-  margin: 0;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: .16em;
-  text-transform: uppercase;
-  color: var(--pr-accent);
-}
 .pr-intro h1 {
-  margin: 8px 0 20px;
+  margin: 0 0 20px;
   font-size: clamp(32px, 10vw, 48px);
   line-height: 1;
   letter-spacing: -.01em;

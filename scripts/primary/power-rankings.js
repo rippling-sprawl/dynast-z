@@ -125,9 +125,9 @@ function tierOf(card) {
 }
 
 function canEdit() {
-  if (new URLSearchParams(location.search).has('edit')) return true;
+  // Saving is admin-only on the server, so only an admin gets the Edit button.
   const role = typeof getUser === 'function' ? (getUser() || {}).role : null;
-  return role === 'editor' || role === 'admin';
+  return role === 'admin';
 }
 
 // ---------- energy glyphs ----------
@@ -944,7 +944,6 @@ const startHash = decodeURIComponent(location.hash.slice(1));
 
 const gateEls = {
   intro: document.getElementById('pr-intro'),
-  introKicker: document.getElementById('pr-intro-kicker'),
   introTitle: document.getElementById('pr-intro-title'),
   introBody: document.getElementById('pr-intro-body'),
   introGo: document.getElementById('pr-intro-go'),
@@ -958,7 +957,6 @@ const gateEls = {
 function renderGate() {
   const intro = model.intro || {};
   const pack = model.pack || {};
-  gateEls.introKicker.textContent = [model.title, model.edition].filter(Boolean).join(' · ');
   gateEls.introTitle.textContent = intro.title || model.title || 'Power Rankings';
   // A blank line starts a paragraph; a single newline is a line break.
   gateEls.introBody.innerHTML = String(intro.body || '').split(/\n\s*\n/)
@@ -1153,12 +1151,9 @@ function preloadImages(urls, timeoutMs = 5000) {
 ['gesturestart', 'gesturechange', 'dblclick'].forEach(type =>
   document.addEventListener(type, e => e.preventDefault(), { passive: false }));
 
-// Admin-only page (a Sandbox item). requireAdmin bounces everyone else before
-// anything loads — UI-level gating, like the other admin pages.
-if (requireAdmin('/')) {
-  if (canEdit()) els.toggle.hidden = false;
-  load().catch(() => {
-    els.body.classList.remove('is-loading');
-    els.track.innerHTML = '<p style="margin:auto;padding:24px;text-align:center">Couldn’t load the rankings.</p>';
-  });
-}
+// Public page; only an admin sees Edit.
+if (canEdit()) els.toggle.hidden = false;
+load().catch(() => {
+  els.body.classList.remove('is-loading');
+  els.track.innerHTML = '<p style="margin:auto;padding:24px;text-align:center">Couldn’t load the rankings.</p>';
+});
