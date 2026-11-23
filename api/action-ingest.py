@@ -80,6 +80,49 @@ def manifest():
     return {r["slug"]: r["etag"] for r in rows}
 
 
+def push(user_id, body):
+    """(status, response) for a PUT of the book. The handler below and the
+    server.py mirror both call this, so the two cannot disagree about it."""
+    if not user_id:
+        return 401, {"error": "Not authenticated"}
+    user = fetch_user(user_id)
+    if not user or user.get("status") is not True or user.get("role") != "admin":
+        return 403, {"error": "Not authorized to update the book"}
+
+    pages = body.get("pages") if isinstance(body, dict) else None
+    if not isinstance(pages, dict) or not pages:
+        return 400, {"error": "Body needs a non-empty 'pages' object"}
+    if len(pages) > MAX_PAGES:
+        return 400, {"error": f"{len(pages)} pages, max {MAX_PAGES}"}
+
+    rows = []
+    for slug, page in pages.items():
+        if not SLUG_RE.match(slug):
+            return 400, {"error": f"unknown slug {slug!r}"}
+        if not isinstance(page, dict) or "data" not in page or "etag" not in page:
+            return 400, {"error": f"{slug}: need both 'data' and 'etag'"}
+        rows.append({"slug": slug, "data": page["data"],
+                     "etag": page["etag"], "updated_at": "now()"})
+
+    before = manifest()
+    supabase_request(
+        "action_pages?on_conflict=slug",
+        method="POST",
+        body=rows,
+        headers={"Prefer": "resolution=merge-duplicates,return=minimal"},
+    )
+    # Anything the push did not mention is no longer part of the book.
+    gone = sorted(set(before) - set(pages))
+    for slug in gone:
+        supabase_request(
+            f"action_pages?slug=eq.{urllib.parse.quote(slug)}",
+            method="DELETE", headers={"Prefer": "return=minimal"})
+
+    changed = sorted(s for s, p in pages.items() if before.get(s) != p["etag"])
+    return 200, {"written": len(rows), "changed": changed,
+                 "unchanged": len(rows) - len(changed), "removed": gone}
+
+
 class handler(BaseHTTPRequestHandler):
     def do_GET(self):
         try:
@@ -88,66 +131,16 @@ class handler(BaseHTTPRequestHandler):
             self._json(500, {"error": str(e)})
 
     def do_PUT(self):
-        user_id = self.headers.get("X-User-Id")
-        if not user_id:
-            self._json(401, {"error": "Not authenticated"})
-            return
-        try:
-            user = fetch_user(user_id)
-        except Exception as e:                       # noqa: BLE001
-            self._json(500, {"error": str(e)})
-            return
-        if not user or user.get("status") is not True or user.get("role") != "admin":
-            self._json(403, {"error": "Not authorized to update the book"})
-            return
-
         try:
             length = int(self.headers.get("Content-Length") or 0)
             body = json.loads(self.rfile.read(length) or b"{}")
         except (ValueError, TypeError) as e:
             self._json(400, {"error": f"Body is not JSON: {e}"})
             return
-
-        pages = body.get("pages")
-        if not isinstance(pages, dict) or not pages:
-            self._json(400, {"error": "Body needs a non-empty 'pages' object"})
-            return
-        if len(pages) > MAX_PAGES:
-            self._json(400, {"error": f"{len(pages)} pages, max {MAX_PAGES}"})
-            return
-
-        rows = []
-        for slug, page in pages.items():
-            if not SLUG_RE.match(slug):
-                self._json(400, {"error": f"unknown slug {slug!r}"})
-                return
-            if not isinstance(page, dict) or "data" not in page or "etag" not in page:
-                self._json(400, {"error": f"{slug}: need both 'data' and 'etag'"})
-                return
-            rows.append({"slug": slug, "data": page["data"],
-                         "etag": page["etag"], "updated_at": "now()"})
-
         try:
-            before = manifest()
-            supabase_request(
-                "action_pages?on_conflict=slug",
-                method="POST",
-                body=rows,
-                headers={"Prefer": "resolution=merge-duplicates,return=minimal"},
-            )
-            # Anything the push did not mention is no longer part of the book.
-            gone = sorted(set(before) - set(pages))
-            for slug in gone:
-                supabase_request(
-                    f"action_pages?slug=eq.{urllib.parse.quote(slug)}",
-                    method="DELETE", headers={"Prefer": "return=minimal"})
+            self._json(*push(self.headers.get("X-User-Id"), body))
         except Exception as e:                       # noqa: BLE001
             self._json(500, {"error": str(e)})
-            return
-
-        changed = sorted(s for s, p in pages.items() if before.get(s) != p["etag"])
-        self._json(200, {"written": len(rows), "changed": changed,
-                         "unchanged": len(rows) - len(changed), "removed": gone})
 
     def _json(self, status, data):
         send_json(self, status, data, {

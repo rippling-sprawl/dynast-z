@@ -226,6 +226,21 @@ PICKEM_PICKS_RE = re.compile(r"^/football/pickem/picks(?:/[0-9]{1,2})?/?$")
 # week" itself.
 SURVIVOR_PICK_RE = re.compile(r"^/football/survivor/pick(?:/[0-9]{1,2})?/?$")
 
+_action_ingest_api = None
+
+
+def action_ingest_api():
+    """Load api/action-ingest.py, which build_action.py --push PUTs the book to."""
+    global _action_ingest_api
+    if _action_ingest_api is None:
+        import importlib.util
+        path = os.path.join(DATA_DIR, "api", "action-ingest.py")
+        spec = importlib.util.spec_from_file_location("action_ingest_api", path)
+        _action_ingest_api = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(_action_ingest_api)
+    return _action_ingest_api
+
+
 _action_ledger_api = None
 
 
@@ -1832,6 +1847,15 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self.serve_action(self.path.split("?")[0].rstrip("/").rsplit("/", 1)[1])
         elif self.path.split("?")[0] == "/football/action":
             self.serve_action("index")
+        # On Vercel the rewrites in vercel.json land the routes above here.
+        elif self.path.split("?")[0] == "/api/action":
+            params = parse_qs(urlparse(self.path).query)
+            self.serve_action(params.get("slug", [""])[0])
+        elif self.path.split("?")[0] == "/api/action-ingest":
+            try:
+                self._json_response(200, {"pages": action_ingest_api().manifest()})
+            except Exception as e:  # noqa: BLE001
+                self._json_response(500, {"error": str(e)})
         # The book used to be one page at /football/futures. Anything already
         # bookmarked lands on its replacement in one hop, as in vercel.json.
         elif self.path.split("?")[0] == "/football/futures":
@@ -2564,6 +2588,17 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 )
                 self._json_response(200, {"ok": True})
             except Exception as e:
+                self._json_response(500, {"error": str(e)})
+        elif self.path.split("?")[0] == "/api/action-ingest":
+            try:
+                length = int(self.headers.get("Content-Length", 0))
+                body = json.loads(self.rfile.read(length)) if length else {}
+            except Exception:
+                self._json_response(400, {"error": "Body must be JSON"})
+                return
+            try:
+                self._json_response(*action_ingest_api().push(self.headers.get("X-User-Id"), body))
+            except Exception as e:  # noqa: BLE001
                 self._json_response(500, {"error": str(e)})
         elif self.path.split("?")[0] == "/api/action-ledger":
             api = action_ledger_api()
