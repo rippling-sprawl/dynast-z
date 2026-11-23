@@ -18,7 +18,14 @@
  * chance as a percent: what the odds imply until an admin types their own,
  * which POSTs to /api/action-ledger, is kept server-side, and from then on is
  * the ticket's chance -- there is no going back to the odds') and an outlook
- * table that buckets the open tickets by that chance.
+ * table that buckets the open tickets by that chance. With it come a Chances
+ * filter (drop the 0% and/or 100% tickets), an Updated column (when the
+ * chance was last typed), and Type and Net drop out to make room.
+ *
+ * Beside it, a Now column and a line under each open future's description say
+ * where the bet stands today -- a live market price or a pace model, and the
+ * stats behind it. That is reference only, written by
+ * scripts/build_futures_status.py; it never changes a chance.
  */
 (function () {
   'use strict';
@@ -63,11 +70,13 @@
   let ROWS = [];
   let META = {};
   let CHANCES = {};
+  let STATUS = {};
+  let CHANCE_AT = {};
   let shown = PAGE;
   let lastChart = null;
   const expanded = new Set();
 
-  const DEFAULTS = { view: 'all', range: '60', from: '', to: '', type: '', league: '', team: '', result: '', q: '' };
+  const DEFAULTS = { view: 'all', range: '60', from: '', to: '', type: '', league: '', team: '', result: '', chance: '', q: '' };
   const state = Object.assign({}, DEFAULTS);
   const sorts = {
     all: { key: 'date', dir: 'desc' },
@@ -84,6 +93,8 @@
     { month: 'short', day: 'numeric', year: 'numeric', timeZone: tz });
   const fmtDay = (t, tz) => isNaN(t) ? 'No date' : new Date(t).toLocaleDateString('en-US',
     { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', timeZone: tz });
+  const fmtStamp = t => isNaN(t) ? '—' : new Date(t).toLocaleString('en-US',
+    { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
   const fmtOdds = o => o == null ? '—' : (o > 0 ? '+' + o : String(o));
   // Whole dollars stay whole; anything with cents shows both digits ($87.50).
   const money = v => {
@@ -104,6 +115,14 @@
     return v == null ? null : Math.round(v);
   };
   const pct = v => v == null ? '—' : v + '%';
+  // Only a live bet has a standing: pending and not yet past its end. A graded
+  // or finished one never shows one, even if an older push still carries it.
+  const isOpen = r => r.r === 'pending' && !(ts(r.en) <= Date.now());
+  const statusOf = r => isOpen(r) ? STATUS[r.id] : null;
+  const nowOf = r => { const s = statusOf(r); return s && s.c != null ? s.c : null; };
+  // How far apart the typed chance and today's reference must be before the
+  // Now cell flags it as worth a second look.
+  const NOW_GAP = 15;
   const showChances = () => state.type === 'Future';
   const isoDay = t => new Date(t - new Date(t).getTimezoneOffset() * 60000).toISOString().slice(0, 10);
 
@@ -152,6 +171,11 @@
       if (r.lg !== lg || !(r.tm || []).includes(team)) return false;
     }
     if (state.result && r.r !== state.result) return false;
+    if (showChances() && state.chance) {
+      const c = chanceOf(r);
+      if (c === 0 && state.chance !== 'no100') return false;
+      if (c === 100 && state.chance !== 'no0') return false;
+    }
     if (state.q) {
       const hay = (r.d + ' ' + (r.x || '') + ' ' + (r.m || '') + ' ' + (r.sub || '') + ' ' +
         (r.legs || []).map(l => l.d + ' ' + (l.m || '')).join(' ')).toLowerCase();
@@ -185,6 +209,10 @@
   ];
   const RESULT_OPTS = [{ value: '', label: 'Any result' }].concat(
     ['win', 'loss', 'push', 'pending'].map(v => ({ value: v, label: RESULT_LABEL[v] })));
+  const CHANCE_OPTS = [
+    { value: '', label: 'Any chance' }, { value: 'live', label: 'Exclude 0% & 100%' },
+    { value: 'no0', label: 'Exclude 0%' }, { value: 'no100', label: 'Exclude 100%' },
+  ];
 
   function picker(key) {
     const dd = registerDropdown($('dd-' + key));
@@ -210,6 +238,7 @@
   function fillOptions() {
     setOptions('range', RANGE_OPTS);
     setOptions('result', RESULT_OPTS);
+    setOptions('chance', CHANCE_OPTS);
     const types = new Set(ROWS.flatMap(typesOf));
     setOptions('type', [{ value: '', label: 'All types' }].concat(
       TYPE_ORDER.filter(t => types.has(t)).map(t => ({ value: t, label: t }))));
@@ -245,13 +274,14 @@
   }
 
   function syncControls() {
-    ['range', 'type', 'league', 'team', 'result'].forEach(syncPicker);
+    ['range', 'type', 'league', 'team', 'result', 'chance'].forEach(syncPicker);
     els.from.value = state.from;
     els.to.value = state.to;
     if (els.q.value.trim() !== state.q) els.q.value = state.q;
     document.querySelectorAll('.al-date-only').forEach(el => {
       el.hidden = state.view !== 'all' || (el.classList.contains('al-custom') && state.range !== 'custom');
     });
+    document.querySelectorAll('.al-chance-only').forEach(el => { el.hidden = !showChances(); });
     els.tabs.forEach(t => t.setAttribute('aria-selected', String(t.dataset.view === state.view)));
   }
 
@@ -511,16 +541,21 @@
     league: { label: 'League', get: r => r.lg || null },
     odds: { label: 'Odds', get: r => r.o, num: true, dir: 'desc', right: true },
     chance: { label: 'Chances', get: chanceOf, num: true, dir: 'desc', right: true },
+    updated: { label: 'Updated', get: r => CHANCE_AT[r.id] ? ts(CHANCE_AT[r.id]) : null, num: true, dir: 'desc' },
+    now: { label: 'Now', get: nowOf, num: true, dir: 'desc', right: true },
     stake: { label: 'Stake', get: r => r.s, num: true, dir: 'desc', right: true },
     towin: { label: 'To win', get: r => r.w, num: true, dir: 'desc', right: true },
     net: { label: 'Net', get: r => r.n, num: true, dir: 'desc', right: true },
   };
 
-  // The Chances column rides in after Odds, and only for futures.
+  // The Chances, Updated and Now columns ride in after Odds, and only for
+  // futures -- in place of Type (it is Future by then) and Net (open bets have
+  // none).
   function columns() {
     const cols = COLUMNS[state.view].slice();
-    if (showChances()) cols.splice(cols.indexOf('odds') + 1, 0, 'chance');
-    return cols;
+    if (!showChances()) return cols;
+    cols.splice(cols.indexOf('odds') + 1, 0, 'chance', 'updated', 'now');
+    return cols.filter(k => k !== 'type' && k !== 'net');
   }
 
   const dateSort = () => { const k = DATE_KEY[state.view]; return { key: k, dir: COL[k].dir }; };
@@ -543,11 +578,13 @@
       case 'bet': {
         const legs = r.legs && r.legs.length;
         const sub = [r.sub, r.m].filter(Boolean).map(esc).join(' · ');
+        const status = showChances() && statusOf(r);
         return `<td class="al-bet">` +
           (legs ? `<button type="button" class="al-legs-btn" data-id="${r.id}" aria-expanded="${expanded.has(r.id)}">${expanded.has(r.id) ? '▾' : '▸'}</button>` : '') +
           `<span class="al-desc">${esc(r.d)}</span>` +
           (r.x ? `<span class="al-detail">${esc(r.x)}</span>` : '') +
-          (sub ? `<span class="al-meta">${sub}</span>` : '') + '</td>';
+          (sub ? `<span class="al-meta">${sub}</span>` : '') +
+          (status && status.t ? `<span class="al-status">${esc(status.t)}</span>` : '') + '</td>';
       }
       case 'type': return `<td>${typesOf(r).map(t => `<span class="al-chip">${esc(t)}</span>`).join(' ')}</td>`;
       case 'league': return `<td>${esc(league(r.lg))}</td>`;
@@ -561,6 +598,15 @@
         return `<td class="al-r al-num al-chance-cell${own ? ' al-chance-own' : ''}">` +
           `<input class="al-chance" type="number" inputmode="numeric" min="0" max="100" step="1" data-id="${r.id}" ` +
           `value="${v == null ? '' : v}" aria-label="Win chance for ${esc(r.d)}"><span class="al-pct">%</span></td>`;
+      }
+      case 'updated': return `<td class="al-updated" data-id="${r.id}">${fmtStamp(ts(CHANCE_AT[r.id]))}</td>`;
+      case 'now': {
+        const s = statusOf(r);
+        if (!s || s.c == null) return '<td class="al-r al-num al-now">—</td>';
+        const mine = chanceOf(r);
+        const gap = mine != null && Math.abs(mine - s.c) >= NOW_GAP;
+        return `<td class="al-r al-num al-now${gap ? ' al-now-gap' : ''}" title="${esc(s.via || '')}">` +
+          `${s.c}%<span class="al-now-via">${esc(s.via || '')}</span></td>`;
       }
       case 'stake': return `<td class="al-r al-num">${money(r.s)}</td>`;
       case 'towin': return `<td class="al-r al-num">${money(r.w)}</td>`;
@@ -639,7 +685,7 @@
     }
     update(patch);
   }
-  ['range', 'type', 'league', 'team', 'result'].forEach(picker);
+  ['range', 'type', 'league', 'team', 'result', 'chance'].forEach(picker);
   els.from.addEventListener('change', () => update({ from: els.from.value }));
   els.to.addEventListener('change', () => update({ to: els.to.value }));
   let qTimer;
@@ -694,6 +740,11 @@
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+      if (data.updated) {
+        CHANCE_AT[key] = data.updated;
+        const cell = els.body.querySelector(`.al-updated[data-id="${id}"]`);
+        if (cell) cell.textContent = fmtStamp(ts(data.updated));
+      }
     } catch (err) {
       if (before == null) delete CHANCES[key]; else CHANCES[key] = before;
       paint();
@@ -734,13 +785,17 @@
       if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
       ROWS = data.rows || [];
       CHANCES = data.chances || {};
+      STATUS = (data.status && data.status.bets) || {};
+      CHANCE_AT = data.chance_updated || {};
       META = data;
     } catch (err) {
       els.sub.textContent = `Couldn't load the ledger: ${err.message}`;
       return;
     }
     const fetched = META.fetched_at ? fmtDate(ts(META.fetched_at)) : 'unknown';
-    els.sub.textContent = `${ROWS.length.toLocaleString()} tickets from Action Network · exported ${fetched}`;
+    const asOf = META.status && META.status.as_of;
+    els.sub.textContent = `${ROWS.length.toLocaleString()} tickets from Action Network · exported ${fetched}` +
+      (asOf ? ` · futures standing as of ${fmtDate(ts(asOf))}` : '');
     readUrl();
     fillOptions();
     render();

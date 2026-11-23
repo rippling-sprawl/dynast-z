@@ -87,6 +87,14 @@
         </button>
         <div class="dd-pop dd-menu" id="result-menu" role="menu" aria-label="Result" hidden></div>
       </div>
+      <!-- Bet type = Future only, alongside the Chances column: drops the
+           decided ends of the scale so the live ones are left to work. -->
+      <div class="dd al-chance-only" id="dd-chance" hidden>
+        <button type="button" class="dd-btn" id="f-chance" aria-haspopup="true" aria-expanded="false" aria-label="Chances">
+          <span class="dd-value">Any chance</span>
+        </button>
+        <div class="dd-pop dd-menu" id="chance-menu" role="menu" aria-label="Chances" hidden></div>
+      </div>
       <div class="al-search">
         <label class="al-glass" for="f-q" title="Search bets">
           <svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true" focusable="false"><circle cx="7" cy="7" r="4.5"/><line x1="10.6" y1="10.6" x2="14" y2="14"/></svg>
