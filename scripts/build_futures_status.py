@@ -22,8 +22,9 @@ WHERE THE REFERENCE CHANCE COMES FROM
   moving those lines once the season starts, and the feed keeps serving the
   preseason number (Kenneth Walker o950.5 at -115 with 872 yards banked), so a
   price there would be worse than none. The model assumes the player keeps his
-  per-game rate and plays every remaining team game -- "played 5 of 11" in the
-  line is the cue that it is too generous for someone hurt. Yards are normal
+  per-game rate and misses MISSED_GAMES of his team's remaining games, the
+  ordinary wear of a season -- "played 5 of 11" in the line is the cue that it
+  is still too generous for someone hurt now. Yards are normal
   around the pace, TDs Poisson, win totals binomial on a win rate shrunk toward
   .500.
 
@@ -77,6 +78,9 @@ INGEST_URL = os.environ.get("ACTION_LEDGER_URL",
                             "https://www.dynastz.com/api/action-ledger")
 SEASON = 2026
 GAMES = 17
+# Games the pace model expects a player to miss from here on. Applied to every
+# player alike; someone already out is not modelled as out.
+MISSED_GAMES = 1.5
 
 AN_API = "https://api.actionnetwork.com/web/v1/leagues"
 AN_LEAGUE = {"nfl": 1, "ncaaf": 2, "nba": 4, "ncaab": 6}
@@ -181,7 +185,7 @@ def stat_total(st, name, field, side, line):
     cur = v(r, field)
     gp = r["games_played"] or 0
     tg = st.team_games(r["_team"])
-    left = GAMES - tg
+    left = max(GAMES - tg - MISSED_GAMES, 0)
     rate = cur / gp if gp else 0
     if field.endswith("touchdowns"):
         need = math.floor(line) + 1 - cur
@@ -191,7 +195,7 @@ def stat_total(st, name, field, side, line):
         need = line - cur
         sd = max(SPREAD[field] * rate, 15) * math.sqrt(left) if left else 1e-9
         p_over = 1 - ncdf((need - rate * left) / sd) if left else float(cur > line)
-        need_txt = f"needs {need:,.1f} more ({need / left:.1f}/g)" if need > 0 and left else "cleared"
+        need_txt = f"needs {need:,.1f} more ({need / left:.1f}/g over {left:g})" if need > 0 and left else "cleared"
     if cur > line:
         p_over = 1.0
     played = f" of {tg}" if gp < tg - 1 else ""
