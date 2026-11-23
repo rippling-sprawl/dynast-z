@@ -78,11 +78,17 @@
 
   const DEFAULTS = { view: 'all', range: '60', from: '', to: '', type: '', league: '', team: '', result: '', chance: '', q: '' };
   const state = Object.assign({}, DEFAULTS);
-  const sorts = {
+  // What a view opens with, over DEFAULTS: Futures is for working the
+  // chances, so it lands on the futures with a live chance, the likeliest first.
+  const VIEW_DEFAULTS = { futures: { type: 'Future', chance: 'live' } };
+  const VIEW_SORT = {
     all: { key: 'date', dir: 'desc' },
     pending: { key: 'ends', dir: 'asc' },
-    futures: { key: 'ends', dir: 'asc' },
+    futures: { key: 'chance', dir: 'desc' },
   };
+  const sorts = {};
+  const resetSort = view => { sorts[view] = Object.assign({}, VIEW_SORT[view]); };
+  Object.keys(VIEW_SORT).forEach(resetSort);
 
   // ---- formatting ---------------------------------------------------------
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g,
@@ -129,6 +135,9 @@
   // ---- query string -------------------------------------------------------
   function readUrl() {
     const p = new URLSearchParams(location.search);
+    // A bare ?view=futures opens like the tab does; a link that names its own
+    // type or chance filter keeps them.
+    if (!p.has('type') && !p.has('chance')) Object.assign(state, VIEW_DEFAULTS[p.get('view')]);
     for (const k of Object.keys(DEFAULTS)) if (p.has(k)) state[k] = p.get(k);
   }
   function writeUrl() {
@@ -677,7 +686,11 @@
   }
 
   // ---- wiring -------------------------------------------------------------
-  els.tabs.forEach(t => t.addEventListener('click', () => update({ view: t.dataset.view })));
+  els.tabs.forEach(t => t.addEventListener('click', () => {
+    const view = t.dataset.view;
+    resetSort(view);
+    update(Object.assign({ view }, VIEW_DEFAULTS[view]));
+  }));
   function pick(key, v) {
     if (key === 'league') { state.league = v; fillTeams(); update({}); return; }
     const patch = { [key]: v };
@@ -698,7 +711,8 @@
     qTimer = setTimeout(() => update({ q: els.q.value.trim() }), 150);
   });
   els.reset.addEventListener('click', () => {
-    Object.assign(state, DEFAULTS, { view: state.view });
+    Object.assign(state, DEFAULTS, VIEW_DEFAULTS[state.view], { view: state.view });
+    resetSort(state.view);
     fillTeams();
     update({});
   });
