@@ -233,13 +233,16 @@
 .al-chance-done { color: var(--text-3); }
 /* When the chance was last typed; blank (—) for one never set by hand. */
 .al-updated { white-space: nowrap; font-size: 12px; color: var(--text-3); font-variant-numeric: tabular-nums; }
-/* Where an open future stands today: under the pick, and as a reference
- * chance beside the typed one. Reference only, so it stays quiet -- except
- * when it is far from the typed chance, which is the cue to revisit it. */
-.al-status { display: block; font-size: 11px; color: var(--text-3); margin-top: 3px; line-height: 1.35; }
-.al-now { color: var(--text-2); white-space: nowrap; }
-.al-now-via { display: block; font-size: 10.5px; color: var(--text-4); font-variant-numeric: normal; }
+/* Where an open future stands today, in the last column: a reference chance
+ * and its source, then the standing behind it. Reference only, so it stays
+ * quiet -- except when it is far from the typed chance, which is the cue to
+ * revisit it. */
+.al-now { color: var(--text-2); min-width: 220px; max-width: 340px; }
+.al-now-head { display: flex; align-items: baseline; gap: 6px; white-space: nowrap; }
+.al-now-pct { font-variant-numeric: tabular-nums; }
+.al-now-via { font-size: 10.5px; color: var(--text-4); }
 .al-now-gap { color: var(--warn); font-weight: 700; }
+.al-status { display: block; font-size: 11px; color: var(--text-3); margin-top: 2px; line-height: 1.35; }
 
 .al-buckets {
   background: var(--surface); border: 1px solid var(--border); border-radius: 8px;

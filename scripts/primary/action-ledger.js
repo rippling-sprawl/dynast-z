@@ -22,8 +22,8 @@
  * filter (drop the 0% and/or 100% tickets), an Updated column (when the
  * chance was last typed), and Type and Net drop out to make room.
  *
- * Beside it, a Now column and a line under each open future's description say
- * where the bet stands today -- a live market price or a pace model, and the
+ * Beside it, a Now column says where each open future stands today -- a
+ * reference chance from a live market price or a pace model, and under it the
  * stats behind it. That is reference only, written by
  * scripts/build_futures_status.py; it never changes a chance.
  */
@@ -542,7 +542,7 @@
     odds: { label: 'Odds', get: r => r.o, num: true, dir: 'desc', right: true },
     chance: { label: 'Chances', get: chanceOf, num: true, dir: 'desc', right: true },
     updated: { label: 'Updated', get: r => CHANCE_AT[r.id] ? ts(CHANCE_AT[r.id]) : null, num: true, dir: 'desc' },
-    now: { label: 'Now', get: nowOf, num: true, dir: 'desc', right: true },
+    now: { label: 'Now', get: nowOf, num: true, dir: 'desc' },
     stake: { label: 'Stake', get: r => r.s, num: true, dir: 'desc', right: true },
     towin: { label: 'To win', get: r => r.w, num: true, dir: 'desc', right: true },
     net: { label: 'Net', get: r => r.n, num: true, dir: 'desc', right: true },
@@ -578,13 +578,11 @@
       case 'bet': {
         const legs = r.legs && r.legs.length;
         const sub = [r.sub, r.m].filter(Boolean).map(esc).join(' · ');
-        const status = showChances() && statusOf(r);
         return `<td class="al-bet">` +
           (legs ? `<button type="button" class="al-legs-btn" data-id="${r.id}" aria-expanded="${expanded.has(r.id)}">${expanded.has(r.id) ? '▾' : '▸'}</button>` : '') +
           `<span class="al-desc">${esc(r.d)}</span>` +
           (r.x ? `<span class="al-detail">${esc(r.x)}</span>` : '') +
-          (sub ? `<span class="al-meta">${sub}</span>` : '') +
-          (status && status.t ? `<span class="al-status">${esc(status.t)}</span>` : '') + '</td>';
+          (sub ? `<span class="al-meta">${sub}</span>` : '') + '</td>';
       }
       case 'type': return `<td>${typesOf(r).map(t => `<span class="al-chip">${esc(t)}</span>`).join(' ')}</td>`;
       case 'league': return `<td>${esc(league(r.lg))}</td>`;
@@ -601,12 +599,18 @@
       }
       case 'updated': return `<td class="al-updated" data-id="${r.id}">${fmtStamp(ts(CHANCE_AT[r.id]))}</td>`;
       case 'now': {
+        // The reference chance and its source on one line, the standing
+        // behind it underneath. Either can be missing: a stat race has a
+        // standing but no chance.
         const s = statusOf(r);
-        if (!s || s.c == null) return '<td class="al-r al-num al-now">—</td>';
+        if (!s) return '<td class="al-now">—</td>';
         const mine = chanceOf(r);
-        const gap = mine != null && Math.abs(mine - s.c) >= NOW_GAP;
-        return `<td class="al-r al-num al-now${gap ? ' al-now-gap' : ''}" title="${esc(s.via || '')}">` +
-          `${s.c}%<span class="al-now-via">${esc(s.via || '')}</span></td>`;
+        const gap = s.c != null && mine != null && Math.abs(mine - s.c) >= NOW_GAP;
+        const head = s.c == null ? '' : `<span class="al-now-head">` +
+          `<span class="al-now-pct${gap ? ' al-now-gap' : ''}">${s.c}%</span>` +
+          (s.via ? `<span class="al-now-via">${esc(s.via)}</span>` : '') + '</span>';
+        return `<td class="al-now">${head}` +
+          (s.t ? `<span class="al-status">${esc(s.t)}</span>` : '') + '</td>';
       }
       case 'stake': return `<td class="al-r al-num">${money(r.s)}</td>`;
       case 'towin': return `<td class="al-r al-num">${money(r.w)}</td>`;
